@@ -490,17 +490,17 @@ table.reg td.ttd span{display:block;overflow:hidden;text-overflow:ellipsis;white
   border:1px solid var(--rule-hi);border-radius:var(--r);box-shadow:var(--shadow);
   opacity:0;pointer-events:none;transition:.2s var(--ease);display:flex;flex-direction:column;overflow:hidden}
 .intake.on{opacity:1;pointer-events:auto;transform:translate(-50%,-50%) scale(1)}
-.intake .ih{display:flex;align-items:center;gap:11px;padding:13px 15px;flex:0 0 auto;
+.intake .ih,.chase .ih{display:flex;align-items:center;gap:11px;padding:13px 15px;flex:0 0 auto;
   border-bottom:1px solid var(--rule);background:var(--paper-2)}
-.intake .ih .t{flex:1;min-width:0}
-.intake .ih h4{margin:0;font-size:14.5px;letter-spacing:.02em}
-.intake .ih .s{font-size:11px;color:var(--ink-3);margin-top:2px}
-.intake .iw{display:grid;grid-template-columns:1fr 288px;flex:1;min-height:0}
-.intake .ic{overflow-y:auto;padding:15px 16px}
-.intake .is{overflow-y:auto;padding:15px 15px;border-left:1px solid var(--rule);background:var(--paper-2)}
-.intake .if2{display:flex;align-items:center;gap:8px;padding:10px 15px;flex:0 0 auto;
+.intake .ih .t,.chase .ih .t{flex:1;min-width:0}
+.intake .ih h4,.chase .ih h4{margin:0;font-size:14.5px;letter-spacing:.02em}
+.intake .ih .s,.chase .ih .s{font-size:11px;color:var(--ink-3);margin-top:2px}
+.intake .iw,.chase .iw{display:grid;grid-template-columns:1fr 288px;flex:1;min-height:0}
+.intake .ic,.chase .ic{overflow-y:auto;padding:15px 16px}
+.intake .is,.chase .is{overflow-y:auto;padding:15px 15px;border-left:1px solid var(--rule);background:var(--paper-2)}
+.intake .if2,.chase .if2{display:flex;align-items:center;gap:8px;padding:10px 15px;flex:0 0 auto;
   border-top:1px solid var(--rule);background:var(--paper-2)}
-.intake .if2 .sp{margin-left:auto}
+.intake .if2 .sp,.chase .if2 .sp{margin-left:auto}
 .prov{display:flex;flex-direction:column;gap:9px}
 .prov .p{display:grid;grid-template-columns:9px 1fr;gap:9px;font-size:11.5px;line-height:1.45}
 .prov .p i{width:7px;height:7px;border-radius:50%;margin-top:5px;background:var(--rule-hi)}
@@ -522,7 +522,34 @@ table.reg td.ttd span{display:block;overflow:hidden;text-overflow:ellipsis;white
   border-radius:var(--r-xs);padding:6px 11px;font-size:12px;font-weight:600;cursor:pointer;
   white-space:nowrap;transition:.14s;flex:0 0 auto}
 .cbar .paste:hover{border-color:var(--accent);color:var(--accent)}
-@media (max-width:860px){ .intake .iw{grid-template-columns:1fr} .intake .is{border-left:0;border-top:1px solid var(--rule)} }
+@media (max-width:860px){ .intake .iw,.chase .iw{grid-template-columns:1fr}
+  .intake .is,.chase .is{border-left:0;border-top:1px solid var(--rule)} }
+
+/* ── chase sheet ─────────────────────────────────────────────────────────
+   Same shape as intake: the thing you will send on the left, the facts it was
+   built from on the right, and nothing written until you act. */
+.chase{position:fixed;top:50%;left:50%;transform:translate(-50%,-46%) scale(.98);
+  width:min(900px,96vw);max-height:88vh;z-index:60;background:var(--paper);
+  border:1px solid var(--rule-hi);border-radius:var(--r);box-shadow:var(--shadow);
+  opacity:0;pointer-events:none;transition:.2s var(--ease);display:flex;flex-direction:column;overflow:hidden}
+.chase.on{opacity:1;pointer-events:auto;transform:translate(-50%,-50%) scale(1)}
+.ctabs{display:flex;gap:2px;padding:8px 12px 0;border-bottom:1px solid var(--rule);
+  flex-wrap:wrap;flex:0 0 auto;background:var(--paper-2)}
+.ctab{border:0;background:transparent;color:var(--ink-2);padding:8px 12px;font-size:12.5px;
+  font-weight:600;cursor:pointer;border-bottom:2px solid transparent;display:flex;align-items:center;gap:7px}
+.ctab:hover{color:var(--ink)}
+.ctab.on{color:var(--accent);border-bottom-color:var(--accent)}
+.ctab .n{font-family:var(--f-mono);font-size:9.5px;color:var(--ink-3);
+  border:1px solid var(--rule);border-radius:999px;padding:0 6px}
+.ctab.on .n{color:var(--accent);border-color:var(--accent)}
+#chaseMsg{min-height:290px;font-family:var(--f-mono);font-size:12px;line-height:1.65;white-space:pre-wrap}
+.ctask{display:grid;grid-template-columns:14px 1fr;gap:9px;align-items:start;padding:7px 0;
+  font-size:11.5px;line-height:1.45;cursor:pointer;border-bottom:1px solid var(--rule)}
+.ctask:last-of-type{border-bottom:0}
+.ctask.off{opacity:.42}
+.ctask input{margin-top:2px}
+.ctask b{font-family:var(--f-mono);font-size:10.5px;color:var(--accent)}
+.ctask small{display:block;font-size:10.5px;color:var(--ink-3);margin-top:2px}
 
 .ring2{display:flex;align-items:center;gap:18px}
 .ring2 svg{transform:rotate(-90deg);flex:0 0 auto}
@@ -1067,6 +1094,24 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
   </div>
 </div>
 
+<div class="chase" id="chase">
+  <div class="ih">
+    <div class="t"><h4 id="chaseT">Chase</h4><div class="s" id="chaseS"></div></div>
+    <button class="ib" id="chaseX" title="Close (Esc)">✕</button>
+  </div>
+  <div class="ctabs" id="chaseTabs"></div>
+  <div class="iw">
+    <div class="ic"><textarea class="in" id="chaseMsg" spellcheck="false"></textarea></div>
+    <div class="is" id="chaseSide"></div>
+  </div>
+  <div class="if2">
+    <button class="btn sm" id="chaseSkip">Log it, I called them</button>
+    <span class="sp"></span>
+    <button class="btn" id="chaseCopy">Copy only</button>
+    <button class="btn pri" id="chaseGo">Copy and log the chase</button>
+  </div>
+</div>
+
 <div class="intake" id="intake">
   <div class="ih">
     <div class="t"><h4>Read this message</h4>
@@ -1309,7 +1354,7 @@ const S = {
   filters:{ st:{ open:true, processing:true, blocked:true, done:true, cancelled:false },
             sys:"", pri:"", type:"", who:"", range:"", q:"", day:"", hideRoutine:false,
             ids:null, idsLabel:"" },
-  sel:new Set(), open:null, drill:null, intake:null, folds:{}, sort:{ by:"due", dir:1 },
+  sel:new Set(), open:null, drill:null, intake:null, chase:null, folds:{}, sort:{ by:"due", dir:1 },
   weekStart:null, undo:[], dirty:false, saving:false, lastSaved:null,
   rows:[], cursor:-1, reminded:{}, blobCache:{}
 };
@@ -2290,11 +2335,13 @@ function clearWait(id, how){
   if (S.open === id) renderDrawer();
   announceFreed(freed.filter(x => x.id !== id));
 }
-function chaseWait(id){
+function chaseWait(id, quiet){
   const t = getTask(id); if (!t || !t.waitOn) return;
   t.chases = (t.chases || []).concat([new Date().toISOString()]);
   t.log.push({ at:new Date().toISOString(),
     text:"Chased " + t.waitOn + " (" + t.chases.length + " time(s), " + waitDays(t) + " day(s) waiting)" });
+  /* a whole round is logged in one go — the caller redraws once at the end */
+  if (quiet) return;
   touch(); renderAll();
   if (S.open === id) renderDrawer();
   toast("Chase logged against " + t.waitOn);
@@ -3047,7 +3094,8 @@ function dayHints(){
   if (stuck.length) out.push({ icon:"⏳", id:stuck[0].id,
     html: "<b>" + esc(stuck[0].waitOn) + "</b> has had " + (stuck.length > 1 ? stuck.length + " records" : "<b>" +
       esc(stuck[0].title.slice(0,44)) + "</b>") + " for " + waitDays(stuck[0]) + " day(s)" +
-      ((stuck[0].chases||[]).length ? ", last chased " + chaseDays(stuck[0]) + " day(s) ago." : ", never chased.") });
+      ((stuck[0].chases||[]).length ? ", last chased " + chaseDays(stuck[0]) + " day(s) ago." : ", never chased.") +
+      ' <button class="btn sm" data-chase="due" style="margin-left:8px">Write the chase</button>' });
 
   const freed = S.tasks.filter(t => t.status === "open" && !t.autoBlocked && !isHeld(t) &&
     (t.log || []).slice(-1).length && /nothing is holding/i.test((t.log.slice(-1)[0] || {}).text || ""));
@@ -3337,8 +3385,12 @@ function renderIns(){
     v => all.filter(t => t.waitOn === v || (t.waitLog || []).some(w => w.party === v)),
     "Records that waited on ");
 
+  const dueChase = chaseDue();
   h += '<div class="panel" style="grid-column:span 2"><h4>Held up right now</h4>' +
     '<div class="sub">Waiting on another record, or on someone else to act</div>' +
+    (dueChase.length ? '<div class="brow" style="margin:-4px 0 12px">' +
+      '<button class="btn sm pri" data-chase="due">Chase the ' +
+      chaseGroups(dueChase).length + ' team(s) that have gone quiet</button></div>' : "") +
     (heldNow.length ? '<div class="hb">' + sortTasks(heldNow).slice(0,10).map(t => {
       const ob = openBlockers(t);
       const why = t.waitOn ? t.waitOn + (waitDays(t) ? " · " + waitDays(t) + "d" : "")
@@ -3819,6 +3871,213 @@ function looksLikeMessage(s){
   return /\n/.test(v.trim()) || v.trim().length > 90;
 }
 
+/* ═══ CHASE — turning the wait clock into a message ═══════════════════════
+   Dossier could already tell you that the Data team has had something for
+   eleven days. That is evidence, and evidence on its own does not move work.
+   The thing you actually do next is open Teams and retype the context from
+   memory, which is why chasing slides: it costs a paragraph every time.
+
+   So the clock writes the paragraph. One message per team, not per record —
+   the Data team wants one note about their three items, not three notes —
+   and the tone climbs with the number of times you have already asked.
+   ════════════════════════════════════════════════════════════════════════ */
+
+/* a date you can put in front of someone else: "24 Aug", never "Sat" */
+function msgDate(iso){
+  if (!iso) return "";
+  const d = iso instanceof Date ? iso : new Date(iso);
+  if (isNaN(d)) return "";
+  const s = d.getDate() + " " + MON[d.getMonth()].slice(0, 3);
+  return d.getFullYear() === new Date().getFullYear() ? s : s + " " + d.getFullYear();
+}
+function refOf(t){ return t.ticket || t.code; }
+function times(n){ return n === 1 ? "once" : n === 2 ? "twice" : n + " times"; }
+
+/* everything that has gone quiet with someone else */
+function chaseDue(){
+  const limit = +S.settings.remindWait || 3, k = today();
+  return S.tasks.filter(t => t.waitOn && LIVE.indexOf(t.status) >= 0 &&
+    ((t.waitUntil && t.waitUntil <= k) || chaseDays(t) >= limit));
+}
+/* every open wait, whether or not it is due a chase yet */
+function chaseAll(){
+  return S.tasks.filter(t => t.waitOn && LIVE.indexOf(t.status) >= 0);
+}
+function chaseGroups(list){
+  const m = {};
+  list.forEach(t => (m[t.waitOn] = m[t.waitOn] || []).push(t));
+  return Object.keys(m).map(party => {
+    const tasks = m[party].slice().sort((a, b) => waitDays(b) - waitDays(a));
+    return { party, tasks,
+      days: Math.max.apply(null, tasks.map(waitDays)),
+      chases: Math.max.apply(null, tasks.map(t => (t.chases || []).length)) };
+  }).sort((a, b) => b.days - a.days);
+}
+
+/* how hard to push: the register follows how often you have already asked */
+function chaseTone(tasks){
+  const n = Math.max.apply(null, tasks.map(t => (t.chases || []).length));
+  const d = Math.max.apply(null, tasks.map(waitDays));
+  if (n >= 3 || d >= 14) return "firm";
+  return n >= 1 ? "follow" : "first";
+}
+const TONE_LABEL = { first:"First ask", follow:"Follow-up", firm:"Firm" };
+
+/* what it costs to keep waiting — the part that makes a chase land */
+function chaseCost(t){
+  const bits = [], k = today();
+  const held = dependentsOf(t).filter(x => LIVE.indexOf(x.status) >= 0);
+  if (held.length) bits.push("holding up " + held.map(refOf).join(", "));
+  if (t.due && t.due < k) bits.push("past its due date" + (t.carried ? " by " + t.carried + " day(s)" : ""));
+  else if (t.due === k) bits.push("due today");
+  if (t.priority === "P1") bits.push("raised as P1");
+  return bits;
+}
+
+function chaseText(party, tasks, tone, owner){
+  if (!tasks.length) return "";
+  const L = [], many = tasks.length > 1;
+  const you = (owner || S.settings.owner || "").trim();
+  L.push("Hi " + party + ",", "");
+
+  if (many){
+    const worst = Math.max.apply(null, tasks.map(waitDays));
+    L.push(tone === "firm"
+      ? tasks.length + " records are still sitting with you, the oldest for " + worst + " days:"
+      : tone === "follow"
+        ? "Chasing " + tasks.length + " records that are waiting with you:"
+        : "Following up on " + tasks.length + " records that are with you:");
+    L.push("");
+    tasks.forEach(t => {
+      const n = (t.chases || []).length;
+      const cost = chaseCost(t);
+      L.push("  \u2022 " + refOf(t) + ": " + t.title +
+        "  (" + waitDays(t) + "d, " + (n ? "chased " + times(n) : "not chased yet") + ")" +
+        (cost.length ? "  [" + cost.join(", ") + "]" : ""));
+      if (t.waitNote) L.push("      " + t.waitNote);
+    });
+    L.push("");
+  } else {
+    const t = tasks[0], n = (t.chases || []).length;
+    L.push(tone === "firm"
+      ? refOf(t) + ": " + t.title + " has now been with you for " + waitDays(t) + " days" +
+        (n ? ", and I have chased " + times(n) + "." : ", and I have had no reply.")
+      : tone === "follow"
+        ? "Chasing " + refOf(t) + " again: " + t.title + "."
+        : "Following up on " + refOf(t) + ": " + t.title + ".");
+    if (tone === "firm") L.push("It has been with you since " + msgDate(t.waitSince) + ".");
+    else {
+      const facts = ["With you since " + msgDate(t.waitSince) + " (" + waitDays(t) + " days)"];
+      facts.push(n ? "chased " + times(n) + ", last on " + msgDate(lastChase(t)) : "not chased yet");
+      L.push(facts.join(", ") + ".");
+    }
+    if (t.waitNote) L.push(t.waitNote + ".");
+    const cost = chaseCost(t);
+    if (cost.length) L.push(capFirst(cost.join(", ")) + ".");
+    L.push("");
+  }
+
+  L.push(tone === "firm"
+    ? "I need a date from you today - this is being reported as time waiting, and I would rather report a date than a silence."
+    : tone === "follow"
+      ? "Is there anything you need from me to move " + (many ? "these" : "this") +
+        " along? If not, when can I expect " + (many ? "them" : "it") + "?"
+      : "Could you let me know where " + (many ? "they stand" : "it stands") + "?");
+  L.push("", "Thanks,");
+  if (you) L.push(you);
+  return L.join("\n").replace(/\n{3,}/g, "\n\n").trim();
+}
+
+/* ── the sheet ────────────────────────────────────────────────────────── */
+function openChase(which){
+  const list = which === "all" ? chaseAll()
+             : Array.isArray(which) ? which
+             : which ? [which] : chaseDue();
+  const groups = chaseGroups(list.filter(t => t && t.waitOn));
+  if (!groups.length){
+    return toast(chaseAll().length
+      ? "Nothing has gone quiet yet — Menu → Chase everyone waiting to write anyway"
+      : "Nothing is waiting on anyone else");
+  }
+  S.chase = { groups, at:0, tone:null, off:{}, edited:false };
+  renderChase();
+  $("chase").classList.add("on");
+  $("scrim").classList.add("on");
+}
+function closeChase(){
+  S.chase = null;
+  $("chase").classList.remove("on");
+  if (!$("drawer").classList.contains("on") && !$("modal").classList.contains("on") &&
+      !$("ask").classList.contains("on")) $("scrim").classList.remove("on");
+}
+function chaseOn(){
+  const c = S.chase; if (!c) return [];
+  return (c.groups[c.at] || { tasks:[] }).tasks.filter(t => !c.off[t.id]);
+}
+function chaseCompose(){
+  const c = S.chase; if (!c) return;
+  const g = c.groups[c.at], on = chaseOn();
+  const tone = c.tone || chaseTone(on.length ? on : g.tasks);
+  $("chaseMsg").value = on.length ? chaseText(g.party, on, tone) : "";
+  c.edited = false;
+}
+function renderChase(){
+  const c = S.chase; if (!c) return;
+  const g = c.groups[c.at], on = chaseOn();
+  const tone = c.tone || chaseTone(on.length ? on : g.tasks);
+  const total = c.groups.reduce((s, x) => s + x.tasks.length, 0);
+
+  $("chaseT").textContent = "Chase " + g.party;
+  $("chaseS").textContent = c.groups.length > 1
+    ? c.groups.length + " teams are holding " + total + " records"
+    : g.tasks.length + " record(s), the oldest waiting " + g.days + " days";
+
+  $("chaseTabs").innerHTML = c.groups.length > 1
+    ? c.groups.map((x, i) => '<button class="ctab' + (i === c.at ? " on" : "") + '" data-cg="' + i + '">' +
+        esc(x.party) + '<span class="n">' + x.tasks.length + "</span></button>").join("")
+    : "";
+  $("chaseTabs").style.display = c.groups.length > 1 ? "" : "none";
+
+  $("chaseSide").innerHTML =
+    '<h5 class="eyebrow" style="margin:0 0 9px">What this covers</h5>' +
+    g.tasks.map(t => {
+      const n = (t.chases || []).length, cost = chaseCost(t);
+      return '<label class="ctask' + (c.off[t.id] ? " off" : "") + '">' +
+        '<input type="checkbox" class="cb" data-ct="' + t.id + '"' + (c.off[t.id] ? "" : " checked") + ">" +
+        "<div><b>" + esc(refOf(t)) + "</b> " + esc(clip(t.title, 46)) +
+        "<small>" + waitDays(t) + " day(s)" + (n ? ", chased " + times(n) : ", never chased") +
+        (cost.length ? " · " + esc(cost.join(", ")) : "") + "</small></div></label>";
+    }).join("") +
+    '<h5 class="eyebrow" style="margin:16px 0 8px">Tone</h5><div class="brow">' +
+    ["first","follow","firm"].map(x => '<button class="btn sm' + (x === tone ? " pri" : "") +
+      '" data-tone="' + x + '">' + TONE_LABEL[x] + "</button>").join("") + "</div>" +
+    '<p style="font-size:10.5px;color:var(--ink-3);line-height:1.6;margin:9px 0 0">' +
+      "Picked from how often you have already asked. " +
+      (S.settings.owner ? "Signed " + esc(S.settings.owner) + "."
+                        : "Put your name in Setup and it signs itself.") + "</p>";
+
+  chaseCompose();
+}
+/* copying is the moment the chase actually happened, so that is when it is logged */
+function chaseDo(alsoLog){
+  const c = S.chase; if (!c) return;
+  const on = chaseOn();
+  if (!on.length) return toast("Nothing selected to chase", { bad:true });
+  const txt = $("chaseMsg").value.trim();
+  if (txt) copyText(txt, alsoLog ? "Copied — paste it to " + c.groups[c.at].party : "Copied");
+  if (alsoLog){
+    on.forEach(t => chaseWait(t.id, true));
+    touch();
+    if (!txt) toast("Chase logged against " + c.groups[c.at].party);
+  }
+  /* drop the team that has just been chased; close when there are none left */
+  c.groups.splice(c.at, 1);
+  if (!c.groups.length) return closeChase();
+  c.at = Math.min(c.at, c.groups.length - 1);
+  c.off = {}; c.tone = null;
+  renderChase();
+}
+
 /* ═══ RENDER ALL ═════════════════════════════════════════════════════════ */
 function renderAll(){
   const c = { open:0, processing:0, blocked:0, done:0, cancelled:0 };
@@ -3977,7 +4236,7 @@ function renderDrawer(){
     '<datalist id="partyList">' + partyOpts.map(p => "<option>" + esc(p) + "</option>").join("") + "</datalist>" +
     '<div class="brow" style="margin-top:9px">' +
       '<button class="btn' + (t.waitOn ? "" : " pri") + '" id="waitSet">' + (t.waitOn ? "Update" : "Start the clock") + "</button>" +
-      (t.waitOn ? '<button class="btn" id="waitChase">Chased them</button>' +
+      (t.waitOn ? '<button class="btn" id="waitChase">Chase them…</button>' +
                   '<button class="btn" id="waitDone">They came back</button>' : "") + "</div>" +
     (t.waitOn
       ? '<div style="font-size:11px;color:var(--ink-3);margin-top:9px;line-height:1.7">' +
@@ -4584,6 +4843,18 @@ async function renderModal(){
       "None of this leaves the machine — it is word matching against your own systems, teams and past " +
       "records, not a model and not a service.</p>" +
 
+    '<h4 style="margin:18px 0 10px">Chasing</h4>' +
+    '<p style="font-size:12px;color:var(--ink-2);line-height:1.75;margin:0 0 8px">' +
+      "The wait clock is evidence, and evidence on its own does not move work — so Dossier writes the " +
+      "message too. <b>Chase them…</b> on a record, <b>Chase round</b> in the command palette, or the " +
+      "button on Day and on Insight when a team has gone quiet.</p>" +
+    '<p style="font-size:12px;color:var(--ink-2);line-height:1.75;margin:0 0 8px">' +
+      "It writes <b>one message per team, not per record</b> — the data team wants one note about their " +
+      "three items, not three notes. The message carries the reference, how long it has been sitting, how " +
+      "many times you have already asked, and what it is holding up. The tone climbs on its own: a first " +
+      "ask is polite, a fourth is firm. Edit it freely, then <b>Copy and log the chase</b> puts it on the " +
+      "clipboard and records the chase against every record it covered, so the count stays honest.</p>" +
+
     '<h4 style="margin:18px 0 10px">Target dates</h4>' +
     '<p style="font-size:12px;color:var(--ink-2);line-height:1.75;margin:0 0 8px">' +
       "A record with no due date never appears in Day and never counts as Slipping, so Dossier fills one " +
@@ -5078,6 +5349,8 @@ function buildCommands(q){
   });
   add("Do","⤓","Save now","Write dossier.json", () => saveNow(), "Ctrl+S");
   add("Do","↻","Create today's routines","", () => { const n = makeRoutines(); renderAll(); toast(n ? n + " created" : "Nothing due"); });
+  add("Do","⏳","Chase round","Write to every team that has gone quiet", () => openChase());
+  add("Do","⏳","Chase everyone waiting","Even the ones not due a chase yet", () => openChase("all"));
   add("Do","⎌","Undo","", doUndo, "Ctrl+Z");
   add("Report","▤","This week","For your PDD", () => runReport("week"));
   add("Report","▤","Standup note","", () => runReport("standup"));
@@ -5501,6 +5774,9 @@ $("q").addEventListener("input", debounce(function(){ S.filters.q = $("q").value
 
 /* main click routing */
 $("main").addEventListener("click", e => {
+  /* before the row underneath it claims the click */
+  const ch = e.target.dataset && e.target.dataset.chase;
+  if (ch){ e.stopPropagation(); return openChase(ch === "all" ? "all" : undefined); }
   const row = e.target.closest(".row[data-id]");
   if (row){
     const id = row.dataset.id, act = e.target.dataset.act;
@@ -5593,6 +5869,29 @@ $("qa").addEventListener("paste", e => {
   openIntake(txt);
 });
 
+/* ── the chase sheet ───────────────────────────────────────────────── */
+$("chaseX").addEventListener("click", closeChase);
+$("chaseSkip").addEventListener("click", () => chaseDo(true));
+$("chaseCopy").addEventListener("click", () => chaseDo(false));
+$("chaseGo").addEventListener("click", () => chaseDo(true));
+$("chaseMsg").addEventListener("input", () => { if (S.chase) S.chase.edited = true; });
+$("chaseTabs").addEventListener("click", e => {
+  const b = e.target.closest("[data-cg]"); if (!b || !S.chase) return;
+  S.chase.at = +b.dataset.cg; S.chase.off = {}; S.chase.tone = null;
+  renderChase();
+});
+$("chaseSide").addEventListener("click", e => {
+  const c = S.chase; if (!c) return;
+  const tone = e.target.dataset.tone;
+  if (tone){ c.tone = tone; return renderChase(); }
+});
+$("chaseSide").addEventListener("change", e => {
+  const c = S.chase, id = e.target.dataset.ct;
+  if (!c || !id) return;
+  if (e.target.checked) delete c.off[id]; else c.off[id] = 1;
+  renderChase();
+});
+
 /* the drill-down sheet */
 $("drillX").addEventListener("click", closeDrill);
 $("drillB").addEventListener("click", e => {
@@ -5682,6 +5981,7 @@ $("dClose").addEventListener("click", closeDrawer);
 $("scrim").addEventListener("click", () => {
   if ($("ask").classList.contains("on")) return closeAsk(null);
   if ($("intake").classList.contains("on")) return closeIntake();
+  if ($("chase").classList.contains("on")) return closeChase();
   if ($("drill").classList.contains("on")) return closeDrill();
   closeDrawer(); closeModal(); closeCmd();
 });
@@ -5720,7 +6020,7 @@ $("dBody").addEventListener("click", async e => {
     renderDrawer(); renderAll();
     return toast("Clock started against " + matchParty(who));
   }
-  if (e.target.id === "waitChase") return chaseWait(t.id);
+  if (e.target.id === "waitChase") return openChase(t);
   if (e.target.id === "waitDone") return clearWait(t.id, "Came back");
 
   /* ── scripts ───────────────────────────────────────────────────────── */
@@ -6056,6 +6356,7 @@ document.addEventListener("keydown", e => {
     if ($("ask").classList.contains("on")) return closeAsk(null);
     if ($("cmd").classList.contains("on")) return closeCmd();
     if ($("intake").classList.contains("on")) return closeIntake();
+    if ($("chase").classList.contains("on")) return closeChase();
     if ($("drill").classList.contains("on")) return closeDrill();
     if ($("modal").classList.contains("on")) return closeModal();
     if ($("drawer").classList.contains("on")) return closeDrawer();
