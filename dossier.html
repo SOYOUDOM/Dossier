@@ -481,6 +481,49 @@ table.reg td.ttd span{display:block;overflow:hidden;text-overflow:ellipsis;white
 .drill .dtf .nb{font-size:11px;color:var(--ink-3);margin-right:auto}
 .drill .none{padding:26px 16px;text-align:center;font-size:12.5px;color:var(--ink-3)}
 
+/* ── intake: reading a pasted message ────────────────────────────────────
+   Wide, two columns: the record on the left as ordinary editable fields, and
+   on the right every guess with the words it came from. A wrong guess you can
+   see beats a right one you cannot. */
+.intake{position:fixed;top:50%;left:50%;transform:translate(-50%,-46%) scale(.98);
+  width:min(900px,96vw);max-height:88vh;z-index:60;background:var(--paper);
+  border:1px solid var(--rule-hi);border-radius:var(--r);box-shadow:var(--shadow);
+  opacity:0;pointer-events:none;transition:.2s var(--ease);display:flex;flex-direction:column;overflow:hidden}
+.intake.on{opacity:1;pointer-events:auto;transform:translate(-50%,-50%) scale(1)}
+.intake .ih{display:flex;align-items:center;gap:11px;padding:13px 15px;flex:0 0 auto;
+  border-bottom:1px solid var(--rule);background:var(--paper-2)}
+.intake .ih .t{flex:1;min-width:0}
+.intake .ih h4{margin:0;font-size:14.5px;letter-spacing:.02em}
+.intake .ih .s{font-size:11px;color:var(--ink-3);margin-top:2px}
+.intake .iw{display:grid;grid-template-columns:1fr 288px;flex:1;min-height:0}
+.intake .ic{overflow-y:auto;padding:15px 16px}
+.intake .is{overflow-y:auto;padding:15px 15px;border-left:1px solid var(--rule);background:var(--paper-2)}
+.intake .if2{display:flex;align-items:center;gap:8px;padding:10px 15px;flex:0 0 auto;
+  border-top:1px solid var(--rule);background:var(--paper-2)}
+.intake .if2 .sp{margin-left:auto}
+.prov{display:flex;flex-direction:column;gap:9px}
+.prov .p{display:grid;grid-template-columns:9px 1fr;gap:9px;font-size:11.5px;line-height:1.45}
+.prov .p i{width:7px;height:7px;border-radius:50%;margin-top:5px;background:var(--rule-hi)}
+.prov .p.text i{background:var(--accent)}
+.prov .p.learned i{background:var(--teal)}
+.prov .p.sla i{background:var(--st-proc)}
+.prov .p b{font-weight:600;display:block;word-break:break-word}
+.prov .p small{display:block;font-size:10.5px;color:var(--ink-3);margin-top:1px}
+.plegend{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px;padding-top:11px;
+  border-top:1px solid var(--rule);font-size:10.5px;color:var(--ink-3)}
+.plegend span{display:flex;align-items:center;gap:5px}
+.plegend i{width:7px;height:7px;border-radius:50%;background:var(--rule-hi)}
+.plegend i.text{background:var(--accent)} .plegend i.learned{background:var(--teal)}
+.plegend i.sla{background:var(--st-proc)}
+.idupe{border:1px solid var(--p2);border-radius:var(--r-sm);padding:9px 11px;margin-bottom:14px;
+  font-size:11.5px;line-height:1.6;color:var(--ink-2)}
+.idupe b{color:var(--accent);cursor:pointer;text-decoration:underline}
+.cbar .paste{border:1px solid var(--rule);background:var(--paper-2);color:var(--ink-2);
+  border-radius:var(--r-xs);padding:6px 11px;font-size:12px;font-weight:600;cursor:pointer;
+  white-space:nowrap;transition:.14s;flex:0 0 auto}
+.cbar .paste:hover{border-color:var(--accent);color:var(--accent)}
+@media (max-width:860px){ .intake .iw{grid-template-columns:1fr} .intake .is{border-left:0;border-top:1px solid var(--rule)} }
+
 .ring2{display:flex;align-items:center;gap:18px}
 .ring2 svg{transform:rotate(-90deg);flex:0 0 auto}
 .lgd{display:flex;flex-direction:column;gap:7px;font-size:11.5px;flex:1;min-width:0}
@@ -919,6 +962,7 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
       <span class="n">New</span>
       <input id="qa" type="text" spellcheck="false" autocomplete="off"
              placeholder="What are you working on?   restart Imaging app pool p1 @Imaging #INC0012345 ~Sokha, Dara 2h today">
+      <button class="paste" id="qaPaste" title="Paste a Teams message or an email (Ctrl+Shift+V)">Paste a message</button>
       <button class="go" id="qaGo">Log it <kbd>⏎</kbd></button>
     </div>
     <div class="readout" id="readout"></div>
@@ -1020,6 +1064,24 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
     <div class="mp" data-m="look" id="pLook"></div>
     <div class="mp" data-m="setup" id="pSetup"></div>
     <div class="mp" data-m="help" id="pHelp"></div>
+  </div>
+</div>
+
+<div class="intake" id="intake">
+  <div class="ih">
+    <div class="t"><h4>Read this message</h4>
+      <div class="s">Nothing is saved until you log it. Correct anything that is wrong.</div></div>
+    <button class="ib" id="intakeX" title="Close (Esc)">✕</button>
+  </div>
+  <div class="iw">
+    <div class="ic" id="intakeB"></div>
+    <div class="is" id="intakeS"></div>
+  </div>
+  <div class="if2">
+    <button class="btn sm" id="intakeCmd">Edit as a command line</button>
+    <span class="sp"></span>
+    <button class="btn" id="intakeCancel">Cancel</button>
+    <button class="btn pri" id="intakeGo">Log it</button>
   </div>
 </div>
 
@@ -1232,6 +1294,9 @@ const S = {
     owner:"", systems: DEF_SYS.slice(), types: DEF_TYPE.slice(), parties: DEF_PARTY.slice(),
     theme:"archive", palettes: [], remind:false, lead:15, remindOverdue:true, remindWait:3,
     autoBlock:true, rememberFilters:true, savedFilters:null, rootPath:"",
+    /* hours from raising to due, by priority — an undated record is invisible
+       to the Day view and to Slipping, which is where work goes to die */
+    sla:{ on:true, P1:4, P2:24, P3:48, P4:120 },
     fonts:{ display:"auto", ui:"auto", mono:"auto" },
     templates:[
       'Morning health check @"Infra / IIS" :admin 20m today 08:30',
@@ -1244,7 +1309,7 @@ const S = {
   filters:{ st:{ open:true, processing:true, blocked:true, done:true, cancelled:false },
             sys:"", pri:"", type:"", who:"", range:"", q:"", day:"", hideRoutine:false,
             ids:null, idsLabel:"" },
-  sel:new Set(), open:null, drill:null, folds:{}, sort:{ by:"due", dir:1 },
+  sel:new Set(), open:null, drill:null, intake:null, folds:{}, sort:{ by:"due", dir:1 },
   weekStart:null, undo:[], dirty:false, saving:false, lastSaved:null,
   rows:[], cursor:-1, reminded:{}, blobCache:{}
 };
@@ -2294,6 +2359,7 @@ function hydrate(d){
   if (!S.settings.parties || !S.settings.parties.length) S.settings.parties = DEF_PARTY.slice();
   if (!Array.isArray(S.settings.palettes)) S.settings.palettes = [];
   if (!S.settings.fonts) S.settings.fonts = { display:"auto", ui:"auto", mono:"auto" };
+  S.settings.sla = Object.assign({ on:true, P1:4, P2:24, P3:48, P4:120 }, S.settings.sla || {});
   S.seq = Math.max(S.seq, S.tasks.reduce((m, t) => {
     const n = parseInt(String(t.code || "").replace(/\D/g,""), 10);
     return isNaN(n) ? m : Math.max(m, n);
@@ -3365,6 +3431,394 @@ function closeDrill(){
       !$("ask").classList.contains("on")) $("scrim").classList.remove("on");
 }
 
+/* ═══ INTAKE — read a pasted message into a record ════════════════════════
+   Work does not arrive as a tidy sentence. It arrives as a Teams message, a
+   forwarded mail, a ticket body — and the tax of retyping it is what kills a
+   personal tracker: the moment logging costs more than not logging, you stop,
+   and every number on Insight quietly becomes fiction.
+
+   So this reads the message instead. Everything here is a local heuristic —
+   no network, no model — and every guess is shown with the words it came
+   from, because a wrong guess you can see is worth more than a right one you
+   cannot. Nothing is written until you press the button.
+   ════════════════════════════════════════════════════════════════════════ */
+function rxEsc(s){ return String(s).replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); }
+
+/* lines that carry no record in them */
+const MSG_GREET  = /^\s*(hi|hello|hey|dear|good\s+(morning|afternoon|evening)|team|all|fyi)\b[\s,!.:-]*$/i;
+const MSG_HEADER = /^\s*(from|to|cc|bcc|sent|date|when|where|subject|subj|importance|priority|caller|opened|assigned to|status)\s*:/i;
+const MSG_TIME   = /^\s*\d{1,2}:\d{2}(\s*[ap]\.?m\.?)?\s*$/i;
+/* Teams puts the sender and the time on one line: "Sokha Huy   10:32 AM" */
+const MSG_SENDER = /^\s*([A-Zក-៿][\w.'’-]+(?:\s+[A-Zក-៿][\w.'’-]+){0,3})\s{2,}\d{1,2}:\d{2}\s*[ap]?\.?m?\.?\s*$/i;
+const MSG_RULE   = /^\s*[-_=*~#]{3,}\s*$/;
+
+function prettyName(s){
+  let v = String(s || "").trim();
+  v = v.replace(/<[^>]*>/g, " ").replace(/\(.*?\)/g, " ").trim();   // drop <mail@x> and (Team)
+  v = v.replace(/^["'<]+|["'>]+$/g, "").trim();
+  if (/@/.test(v) && !/\s/.test(v)) v = v.split("@")[0];            // an address on its own
+  v = v.replace(/[._]+/g, " ").replace(/\s+/g, " ").trim();
+  if (!v || v.length > 48) return "";
+  if (v === v.toLowerCase() || v === v.toUpperCase())
+    v = v.split(" ").map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(" ");
+  return /[A-Za-zក-៿]/.test(v) ? v : "";
+}
+
+function cleanLine(s){
+  return String(s)
+    .replace(/^\s*(short description|description|summary|subject|subj|title|issue|problem)\s*:\s*/i, "")
+    .replace(/^\s*(?:(?:re|fw|fwd|fyi)\s*:\s*)+/i, "")
+    .replace(/^[\s>*\-–—•·\d.)]+/, "")
+    .replace(/^(hi|hello|hey|dear)\b[^,.:;!]{0,40}[,.:;!]\s*/i, "")
+    .replace(/\s+/g, " ")
+    .replace(/[\s.,;:!-]+$/, "")
+    .trim();
+}
+function capFirst(s){ return s ? s.charAt(0).toUpperCase() + s.slice(1) : s; }
+/* a pasted paragraph is not a title — the first sentence usually is */
+function firstSentence(s){
+  const v = String(s).trim();
+  if (v.length <= 76) return v;
+  const m = v.match(/^(.{20,110}?[.!?])(\s|$)/);
+  if (m) return m[1].replace(/[.\s]+$/, "");
+  const semi = v.match(/^(.{20,110}?)[;,]\s/);
+  return semi ? semi[1] : v;
+}
+function clip(s, n){
+  if (s.length <= n) return s;
+  const cut = s.slice(0, n), sp = cut.lastIndexOf(" ");
+  return (sp > n * 0.6 ? cut.slice(0, sp) : cut).replace(/[\s,;:-]+$/, "");
+}
+
+/* ── which of your systems the message is about ───────────────────────── */
+function readSystem(text){
+  const hay = " " + text.toLowerCase().replace(/[^a-z0-9]+/g, " ") + " ";
+  const list = (S.settings.systems || []).filter(s => s.name && s.name.toLowerCase() !== "other");
+  /* the whole name wins over any single word of it */
+  let best = null;
+  list.forEach(s => {
+    const flat = s.name.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+    if (flat && hay.indexOf(" " + flat + " ") >= 0 && (!best || flat.length > best.len))
+      best = { name:s.name, word:s.name, len:flat.length + 100 };
+  });
+  if (best) return best;
+  list.forEach(s => {
+    s.name.split(/[^A-Za-z0-9]+/).filter(Boolean).forEach(tok => {
+      /* a short token only counts when it is an initialism in the name itself */
+      if (tok.length < 4 && !/^[A-Z0-9]{2,}$/.test(tok)) return;
+      const low = tok.toLowerCase();
+      if (hay.indexOf(" " + low + " ") >= 0 && (!best || low.length > best.len))
+        best = { name:s.name, word:tok, len:low.length };
+    });
+  });
+  return best;
+}
+
+/* ── incident, request, change, meeting ───────────────────────────────── */
+const TYPE_RULES = [
+  ["Incident",        /\b(error|errors|failed|failing|failure|not working|cannot|can ?not|can't|unable|crash(ed|ing)?|down|timeout|timed out|stuck|broken|exception|incident|outage|rejected)\b/i],
+  ["Service request", /\b(please\s+(add|create|update|change|provide|grant|reset|extend|enable|remove|check|help)|kindly|could you|would you|can you please|request(ed|ing)?\b|need access|new user|access to)\b/i],
+  ["Change",          /\b(deploy|deployment|release|roll ?out|change request|migrat(e|ion)|patch|upgrade|cutover)\b/i],
+  /* only when the meeting is the work, not when one is merely mentioned */
+  ["Meeting",         /\b(meeting (with|about|on|at)|schedule a meeting|catch ?up|stand ?up|workshop|zoom call|teams call)\b/i]
+];
+function readType(text, title){
+  const have = S.settings.types || [];
+  const pass = hay => {
+    for (const [name, re] of TYPE_RULES){
+      const m = hay.match(re);
+      if (!m) continue;
+      const real = have.find(x => x.toLowerCase() === name.toLowerCase());
+      if (real) return { name: real, word: m[0].trim() };
+    }
+    return null;
+  };
+  /* the title is what the message is about; the body is only corroboration */
+  return (title && pass(title)) || pass(text);
+}
+
+/* ── how loudly it was asked ──────────────────────────────────────────── */
+const PRI_RULES = [
+  ["P1", /\b(p1|sev\s?1|severity\s?1|critical|urgent(ly)?|asap|immediately|right away|production (is )?down|prod down|outage|all users)\b/i],
+  ["P2", /\b(p2|sev\s?2|high priority|important|escalat(e|ed|ing|ion)|blocking)\b/i],
+  ["P4", /\b(p4|low priority|no rush|whenever|when you (can|have time)|not urgent|nice to have)\b/i],
+  ["P3", /\bp3\b/i]
+];
+function readPriority(text){
+  /* "Priority: 2 - High", "Severity: 1", "Urgency: 3" */
+  const hdr = text.match(/^[ \t]*(?:priority|severity|urgency|impact)[ \t]*:[ \t]*(?:p|sev)?\s*([1-4])\b/im);
+  if (hdr) return { name:"P" + hdr[1], word: hdr[0].trim().replace(/\s+/g, " ") };
+  for (const [p, re] of PRI_RULES){
+    const m = text.match(re);
+    if (m) return { name:p, word:m[0].trim() };
+  }
+  return null;
+}
+
+/* ── who is asking ────────────────────────────────────────────────────── */
+function readRequester(text, lines){
+  const hdr = text.match(/^[ \t]*(?:from|caller|reported by|raised by|requested by|requester|sent by|asked by)[ \t]*:[ \t]*(.+)$/im);
+  if (hdr){
+    const n = prettyName(hdr[1]);
+    if (n) return { name: canonPerson(n), word: hdr[0].trim() };
+  }
+  for (const l of lines){
+    const m = l.match(MSG_SENDER);
+    if (m){
+      const n = prettyName(m[1]);
+      if (n) return { name: canonPerson(n), word: l.trim() };
+    }
+  }
+  const sign = text.match(/\b(?:thanks|thank you|many thanks|regards|best regards|brgds|br|cheers|sincerely)\b[\s,!.]*\n+[ \t]*([A-Zក-៿][\w.'’-]+(?:\s+[A-Zក-៿][\w.'’-]+){0,2})[ \t]*$/im);
+  if (sign){
+    const n = prettyName(sign[1]);
+    if (n) return { name: canonPerson(n), word: "the sign-off" };
+  }
+  /* someone you already log work for, named anywhere in the message */
+  const known = knownValues("requester");
+  for (const p of known){
+    if (p && p.length > 2 && new RegExp("\\b" + rxEsc(p) + "\\b", "i").test(text))
+      return { name: p, word: p };
+  }
+  return null;
+}
+
+/* ── whether it is already sitting with someone else ──────────────────── */
+const WAIT_CUE = /\b(waiting|wait for|pending (with|on)|with the|assigned to|escalated to|raised (with|to)|handed (over )?to|depends on|blocked by|referred to)\b/i;
+function readWaitOn(lines){
+  const parties = knownValues("waitOn").filter(p => p && p.length > 2);
+  for (const l of lines){
+    if (!WAIT_CUE.test(l)) continue;
+    const hit = parties.find(p => new RegExp("\\b" + rxEsc(p) + "\\b", "i").test(l));
+    if (!hit) continue;
+    /* show the words around the party, not the first 60 characters of the line */
+    const at = l.toLowerCase().indexOf(hit.toLowerCase());
+    const from = Math.max(0, at - 26);
+    return { name: hit, word: (from ? "…" : "") + clip(l.slice(from).trim(), 58) };
+  }
+  return null;
+}
+
+/* ── when it is wanted ────────────────────────────────────────────────── */
+const DOW_IX = { sun:0, sunday:0, mon:1, monday:1, tue:2, tues:2, tuesday:2, wed:3, wednesday:3,
+                 thu:4, thur:4, thurs:4, thursday:4, fri:5, friday:5, sat:6, saturday:6 };
+function readWhen(text){
+  const cue = text.match(/\b(?:by|before|due(?:\s+(?:on|by|date))?|deadline(?:\s+is)?|no(?:t)? later than|needed?\s+(?:by|before))\b[ \t]*([^\n.;)]{0,44})/i);
+  const eod = text.match(/\b(eod|cob|end of (?:the )?day|end of business|by tonight|today itself)\b/i);
+  if (!cue && !eod) return null;
+  const tail = cue ? cue[1] : "";
+  const src  = cue ? cue[0].trim() : eod[0].trim();
+  const out  = { due:"", dueTime:"", word: clip(src, 46) };
+
+  let m;
+  if ((m = tail.match(/\b(today|tonight|eod|cob|end of (?:the )?day)\b/i)) || eod){ out.due = today(); }
+  else if (tail.match(/\btomorrow\b/i)) out.due = addDays(today(), 1);
+  else if ((m = tail.match(/\b(\d{4})-(\d{2})-(\d{2})\b/))) out.due = m[1] + "-" + m[2] + "-" + m[3];
+  else if ((m = tail.match(/\b(\d{1,2})[\/.](\d{1,2})(?:[\/.](\d{2,4}))?\b/))){
+    const d = +m[1], mo = +m[2];
+    if (d >= 1 && d <= 31 && mo >= 1 && mo <= 12){
+      const y = m[3] ? (+m[3] < 100 ? 2000 + +m[3] : +m[3]) : new Date().getFullYear();
+      out.due = y + "-" + pad2(mo) + "-" + pad2(d);
+    }
+  }
+  else if ((m = tail.match(/\b(sun|mon|tue|tues|wed|thu|thur|thurs|fri|sat)(?:day|nesday|rsday|urday)?\b/i))){
+    const want = DOW_IX[m[1].toLowerCase()];
+    if (want != null){ let k = addDays(today(), 1); while (dow(k) !== want) k = addDays(k, 1); out.due = k; }
+  }
+  else if (tail.match(/\bin\s+(\d{1,2})\s*(day|days|week|weeks)\b/i)){
+    const n = tail.match(/\bin\s+(\d{1,2})\s*(day|days|week|weeks)\b/i);
+    out.due = addDays(today(), (+n[1]) * (/^w/i.test(n[2]) ? 7 : 1));
+  }
+
+  if ((m = tail.match(/\b(\d{1,2})(?::(\d{2}))?\s*([ap])\.?m\.?\b/i))){
+    let h = +m[1] % 12; if (/p/i.test(m[3])) h += 12;
+    out.dueTime = pad2(h) + ":" + (m[2] || "00");
+  } else if ((m = tail.match(/\b(\d{1,2}):(\d{2})\b/)) && +m[1] <= 23 && +m[2] <= 59){
+    out.dueTime = pad2(+m[1]) + ":" + m[2];
+  } else if (/\b(eod|cob|end of (?:the )?day|end of business)\b/i.test(src + " " + tail)){
+    out.dueTime = "17:00";
+  }
+  if (!out.due && out.dueTime) out.due = today();
+  return out.due ? out : null;
+}
+
+/* ── the whole read ───────────────────────────────────────────────────── */
+function readMessage(raw){
+  const text  = String(raw || "").replace(/\r\n?/g, "\n").replace(/ /g, " ").trim();
+  const lines = text.split("\n").map(l => l.replace(/\s+$/, ""));
+  const found = [];
+  const out = { title:"", notes:text, ticket:"", system:"", type:"", priority:"",
+                requester:"", waitOn:"", due:"", dueTime:"", estimate:0, found };
+  const say = (label, value, why, src) => { found.push({ label, value, why, src }); return value; };
+  if (!text) return out;
+
+  const tk = text.match(/\b(INC|REQ|RITM|CHG|PRB|TASK|TKT|SCTASK|SR|SD|IM)[-_ ]?(\d{4,12})\b/i);
+  if (tk) out.ticket = say("Ticket", (tk[1] + tk[2]).toUpperCase(), "found “" + tk[0].trim() + "”", "text");
+
+  /* title: a Subject line if there is one, else the first line that says something */
+  const subj = lines.find(l => /^\s*(subject|subj|title)\s*:/i.test(l));
+  let title = subj ? cleanLine(subj) : "";
+  let titleWhy = subj ? "the subject line" : "";
+  if (!title){
+    for (const l of lines){
+      if (!l.trim() || MSG_GREET.test(l) || MSG_HEADER.test(l) || MSG_TIME.test(l) ||
+          MSG_SENDER.test(l) || MSG_RULE.test(l)) continue;
+      const c = cleanLine(l);
+      if (c.length >= 12 && /\s/.test(c)){ title = c; titleWhy = "the first line with something in it"; break; }
+    }
+  }
+  if (!title) title = cleanLine(lines.find(l => cleanLine(l).length > 3) || "") || "Pasted message";
+  out.title = say("Title", capFirst(clip(firstSentence(title), 90)), titleWhy || "the message", "text");
+
+  const sys = readSystem(text);
+  if (sys) out.system = say("System", sys.name, "“" + sys.word + "” matches your systems", "text");
+
+  const ty = readType(text, out.title);
+  if (ty) out.type = say("Type", ty.name, "“" + ty.word + "”", "text");
+
+  const pr = readPriority(text);
+  if (pr) out.priority = say("Priority", pr.name, "“" + pr.word + "”", "text");
+
+  const who = readRequester(text, lines);
+  if (who) out.requester = say("Raised by", who.name, "from " + clip(who.word, 40), "text");
+
+  const wt = readWaitOn(lines);
+  if (wt) out.waitOn = say("Waiting on", wt.name, "“" + wt.word + "”", "text");
+
+  const wh = readWhen(text);
+  if (wh){
+    out.due = wh.due; out.dueTime = wh.dueTime;
+    say("Due", niceDate(wh.due) + (wh.dueTime ? " " + wh.dueTime : ""), "“" + wh.word + "”", "text");
+  }
+
+  /* whatever the words did not give, the app's own history might */
+  if (!out.system){ const g = predict("system", out.title) || predictFromPeople("system", out.requester);
+    if (g) out.system = say("System", g.value, "how you filed records like this before", "learned"); }
+  if (!out.type){ const g = predict("type", out.title) || predictFromPeople("type", out.requester);
+    if (g) out.type = say("Type", g.value, "how you filed records like this before", "learned"); }
+  if (!out.requester){ const g = predict("requester", out.title);
+    if (g) out.requester = say("Raised by", g.value, "who usually raises these", "learned"); }
+  const est = estimateFor(out.title);
+  if (est){ out.estimate = est.minutes;
+    say("Estimate", mins(est.minutes), "median of " + est.n + " records like it", "learned"); }
+  if (!out.due){
+    const s = slaDue(out.priority || "P3");
+    if (s){ out.due = s.due; out.dueTime = s.dueTime;
+      say("Due", niceDate(s.due) + (s.dueTime ? " " + s.dueTime : ""),
+          "your " + (out.priority || "P3") + " target", "sla"); }
+  }
+  return out;
+}
+
+/* ── the target date a priority implies ───────────────────────────────── */
+function slaDue(priority){
+  const s = S.settings.sla;
+  if (!s || !s.on) return null;
+  const h = +s[PRIS.indexOf(priority) >= 0 ? priority : "P3"];
+  if (!h || h <= 0) return null;
+  const d = new Date(Date.now() + h * 3600000);
+  return h < 24 ? { due: dkey(d), dueTime: pad2(d.getHours()) + ":" + pad2(d.getMinutes()) }
+                : { due: dkey(d), dueTime: "" };
+}
+
+/* ── the sheet ────────────────────────────────────────────────────────── */
+const SRC_LABEL = { text:"in the message", learned:"from your records", sla:"from the priority" };
+
+function openIntake(raw){
+  const r = readMessage(raw);
+  if (!r.notes) return toast("Nothing on the clipboard to read", { bad:true });
+  S.intake = r;
+  renderIntake();
+  $("intake").classList.add("on");
+  $("scrim").classList.add("on");
+  setTimeout(() => { const el = $("inTitle"); if (el){ el.focus(); el.select(); } }, 60);
+}
+function closeIntake(){
+  S.intake = null;
+  $("intake").classList.remove("on");
+  if (!$("drawer").classList.contains("on") && !$("modal").classList.contains("on") &&
+      !$("ask").classList.contains("on")) $("scrim").classList.remove("on");
+}
+/* what the form is showing right now — corrections always beat the guess */
+function intakeFields(){
+  const g = id => { const el = $(id); return el ? el.value.trim() : ""; };
+  return { title:g("inTitle"), system:g("inSys"), type:g("inType"), priority:g("inPri") || "P3",
+           ticket:g("inTicket"), requester:g("inWho"), waitOn:g("inWait"),
+           due:g("inDue"), dueTime:g("inTime"),
+           estimate:+g("inEst") || 0, notes:(($("inNotes")||{}).value || "").trim() };
+}
+function renderIntake(){
+  const r = S.intake; if (!r) return;
+  const opt = (list, cur) => ['<option value="">— none —</option>']
+    .concat(list.map(v => "<option" + (cur === v ? " selected" : "") + ">" + esc(v) + "</option>")).join("");
+
+  $("intakeB").innerHTML =
+    fr("Title", '<input class="in" id="inTitle" value="' + esc(r.title) + '">') +
+    fr("System", '<select class="in" id="inSys">' + opt((S.settings.systems||[]).map(s => s.name), r.system) + "</select>") +
+    fr("Type", '<select class="in" id="inType">' + opt(S.settings.types || [], r.type) + "</select>") +
+    fr("Priority", '<select class="in" id="inPri">' +
+      PRIS.map(p => "<option" + ((r.priority || "P3") === p ? " selected" : "") + ">" + p + "</option>").join("") + "</select>") +
+    fr("Ticket", '<input class="in" id="inTicket" value="' + esc(r.ticket) + '" placeholder="INC0012345">') +
+    fr("Raised by", '<input class="in" id="inWho" list="peopleList2" value="' + esc(r.requester) + '" placeholder="Sokha, Dara">') +
+    fr("Waiting on", '<input class="in" id="inWait" list="partyList2" value="' + esc(r.waitOn) +
+      '" placeholder="leave empty unless it is already with someone">') +
+    fr("Due", '<div style="display:flex;gap:6px"><input class="in" type="date" id="inDue" value="' + esc(r.due) + '">' +
+      '<input class="in" type="time" id="inTime" value="' + esc(r.dueTime) + '" style="max-width:112px"></div>') +
+    fr("Estimate", '<input class="in" type="number" min="0" step="5" id="inEst" value="' + (r.estimate || "") + '" placeholder="minutes">') +
+    '<datalist id="peopleList2">' + knownValues("requester").map(v => "<option>" + esc(v) + "</option>").join("") + "</datalist>" +
+    '<datalist id="partyList2">' + knownValues("waitOn").map(v => "<option>" + esc(v) + "</option>").join("") + "</datalist>" +
+    '<h5 class="eyebrow" style="margin:16px 0 7px">The message, kept as the notes</h5>' +
+    '<textarea class="in" id="inNotes" style="min-height:150px;font-size:12px">' + esc(r.notes) + "</textarea>";
+
+  const dupe = findDuplicate(r.title, r.ticket);
+  $("intakeS").innerHTML =
+    (dupe ? '<div class="idupe">Already open: <b data-goto2="' + dupe.id + '">' + esc(clip(dupe.title, 46)) +
+      "</b> (" + esc(dupe.code) + '). Log this anyway, or open that one.</div>' : "") +
+    '<h5 class="eyebrow" style="margin:0 0 9px">What it found</h5>' +
+    (r.found.length
+      ? '<div class="prov">' + r.found.map(f =>
+          '<div class="p ' + f.src + '"><i></i><div><b>' + esc(f.label) + ": " + esc(clip(String(f.value), 54)) +
+          "</b><small>" + esc(f.why) + "</small></div></div>").join("") + "</div>"
+      : '<div style="font-size:11.5px;color:var(--ink-3)">Nothing recognised — fill it in yourself.</div>') +
+    '<div class="plegend">' +
+      '<span><i class="text"></i>in the message</span>' +
+      '<span><i class="learned"></i>from your records</span>' +
+      '<span><i class="sla"></i>from the priority</span></div>';
+}
+function commitIntake(){
+  const f = intakeFields();
+  if (!f.title) return toast("Give the record a name", { bad:true });
+  const t = addTask({ title:f.title, priority:f.priority, system:f.system, type:f.type,
+    ticket:f.ticket, requester:f.requester, due:f.due, dueTime:f.dueTime,
+    estimate:f.estimate, notes:f.notes });
+  if (f.waitOn) setWait(t.id, f.waitOn, "");
+  closeIntake();
+  toast("Logged " + t.code + " from the message",
+    { action:"Open", onAction:() => openDrawer(t.id) });
+}
+/* drop the read back into the capture bar, for anyone who would rather tweak tokens */
+function intakeToCommand(){
+  const f = intakeFields(), bits = [f.title];
+  if (f.priority && f.priority !== "P3") bits.push(f.priority.toLowerCase());
+  if (f.system) bits.push('@"' + f.system + '"');
+  if (f.type) bits.push(":" + f.type.split(/\s+/)[0].toLowerCase());
+  if (f.ticket) bits.push("#" + f.ticket);
+  if (f.requester) bits.push('~"' + f.requester + '"');
+  if (f.waitOn) bits.push('%"' + f.waitOn + '"');
+  if (f.estimate) bits.push(f.estimate + "m");
+  if (f.due) bits.push(f.due);
+  if (f.dueTime) bits.push(f.dueTime);
+  closeIntake();
+  $("qa").value = bits.join(" ");
+  $("qa").focus();
+  preview();
+}
+/* is this worth reading, or is it just a phrase someone pasted? */
+function looksLikeMessage(s){
+  const v = String(s || "");
+  return /\n/.test(v.trim()) || v.trim().length > 90;
+}
+
 /* ═══ RENDER ALL ═════════════════════════════════════════════════════════ */
 function renderAll(){
   const c = { open:0, processing:0, blocked:0, done:0, cancelled:0 };
@@ -4023,6 +4477,7 @@ async function renderModal(){
     '<h5 class="eyebrow" style="margin:20px 0 9px">Palette</h5>' +
     '<div id="palWrap">' + paletteCards() + paletteEditor() + "</div>";
 
+  const sla = S.settings.sla || {};
   $("pSetup").innerHTML =
     fr("Your name", '<input class="in" id="sOwner" value="' + esc(st.owner) + '" placeholder="Shown on reports">') +
     fr("Reminders", '<select class="in" id="sRem"><option value="0"' + (!st.remind ? " selected" : "") +
@@ -4046,6 +4501,20 @@ async function renderModal(){
     '<div class="brow"><button class="btn" id="sWatch">Write scripts/dossier-watch.ps1</button>' +
       '<button class="btn" id="sWatchCmd">Copy the schtasks line</button></div>' +
     '<div class="cmdline">' + esc(watchCommand()) + "</div>" +
+
+    '<h5 class="eyebrow" style="margin:20px 0 8px">Target dates</h5>' +
+    '<p style="font-size:11.5px;color:var(--ink-2);line-height:1.7;margin:0 0 10px">' +
+      "Hours from raising a record to when it is due, by priority. Only ever fills a date you " +
+      "did not give — type one, or paste a message that names one, and yours wins. A record with " +
+      "no date never shows up in Day or in Slipping, which is where work quietly goes to die.</p>" +
+    fr("Set a target date", '<select class="in" id="sSla"><option value="1"' + (sla.on ? " selected" : "") +
+      '>Yes — from the priority</option><option value="0"' + (!sla.on ? " selected" : "") +
+      ">No — leave it empty</option></select>") +
+    fr("P1 within", '<input class="in" type="number" min="1" max="720" id="sSla1" value="' + (+sla.P1 || 4) + '"> ') +
+    fr("P2 within", '<input class="in" type="number" min="1" max="720" id="sSla2" value="' + (+sla.P2 || 24) + '">') +
+    fr("P3 within", '<input class="in" type="number" min="1" max="720" id="sSla3" value="' + (+sla.P3 || 48) + '">') +
+    fr("P4 within", '<input class="in" type="number" min="1" max="720" id="sSla4" value="' + (+sla.P4 || 120) + '">') +
+    '<p style="font-size:11px;color:var(--ink-3);margin:4px 0 0">In hours. Under 24 sets a time of day too.</p>' +
 
     '<h5 class="eyebrow" style="margin:20px 0 8px">Behaviour</h5>' +
     fr("Remember filters", '<select class="in" id="sMem"><option value="1"' + (st.rememberFilters ? " selected" : "") +
@@ -4098,6 +4567,29 @@ async function renderModal(){
       "spell a colleague the same way twice. <b>↑↓</b> moves, <b>Tab</b> or <b>Enter</b> inserts. " +
       "A name runs until a word that cannot be part of one — <code>~Sok Dara today</code> is Sok Dara, due today. " +
       "Quote anything awkward: <code>~\"ops team, dba\"</code>.</p>" +
+
+    '<h4 style="margin:18px 0 10px">Pasting a message</h4>' +
+    '<p style="font-size:12px;color:var(--ink-2);line-height:1.75;margin:0 0 8px">' +
+      "Work rarely arrives as a tidy sentence. Paste a Teams message, a forwarded mail or a ticket body " +
+      "into the compose bar — anything with a line break in it, or longer than a line — and Dossier reads " +
+      "it instead of pasting it: the ticket number, which of your systems it names, who is asking, how " +
+      "loudly, when it is wanted, and whether it is already sitting with another team. " +
+      "There is also <b>Paste a message</b> beside the compose bar, and Ctrl+V anywhere on the page.</p>" +
+    '<p style="font-size:12px;color:var(--ink-2);line-height:1.75;margin:0 0 8px">' +
+      "Every guess is listed with the words it came from, so a wrong one is obvious before it is saved. " +
+      "Nothing is written until you press <b>Log it</b>, and anything you correct in the sheet wins. " +
+      "The whole message is kept as the notes, so the evidence stays with the record. " +
+      "<b>Edit as a command line</b> hands the read back to the compose bar as ordinary tokens.</p>" +
+    '<p style="font-size:12px;color:var(--ink-2);line-height:1.75;margin:0 0 8px">' +
+      "None of this leaves the machine — it is word matching against your own systems, teams and past " +
+      "records, not a model and not a service.</p>" +
+
+    '<h4 style="margin:18px 0 10px">Target dates</h4>' +
+    '<p style="font-size:12px;color:var(--ink-2);line-height:1.75;margin:0 0 8px">' +
+      "A record with no due date never appears in Day and never counts as Slipping, so Dossier fills one " +
+      "in from the priority — P1 within 4 hours, P2 a day, P3 two days, P4 five — whenever you did not " +
+      "give one yourself. A date you type, or one the pasted message names, always wins. " +
+      "The hours are yours to change under Setup, and the whole thing can be turned off there.</p>" +
 
     '<h4 style="margin:18px 0 10px">Two ways a record gets stuck</h4>' +
     '<dl class="kv" style="font-size:12px">' +
@@ -4252,6 +4744,20 @@ function wireModal(){
   };
   const hd = $("sHold"); if (hd) hd.onchange = e => { S.settings.autoBlock = e.target.value === "1"; touch(); };
   on("sWatch", installWatcher);
+  ["sSla1","sSla2","sSla3","sSla4"].forEach((id, i) => {
+    const el = $(id); if (!el) return;
+    el.onchange = () => {
+      S.settings.sla["P" + (i+1)] = Math.max(1, Math.min(720, +el.value || 1));
+      el.value = S.settings.sla["P" + (i+1)];
+      touch(); preview();
+    };
+  });
+  if ($("sSla")) $("sSla").onchange = e => {
+    S.settings.sla.on = e.target.value === "1";
+    touch(); preview();
+    toast(S.settings.sla.on ? "New records get a target date from their priority"
+                            : "New records are left undated");
+  };
   on("sWatchCmd", () => copyText(watchCommand(),
     "Copied — paste it into a Command Prompt to register the 15-minute check"));
   on("pAdd", () => {
@@ -4317,6 +4823,9 @@ const preview = debounce(function(){
       if (g) c.push('<span class="rc guess"><span class="lg">Usually</span><b>~' + esc(g.value) + "</b></span>"); }
     if (!p.system && p.requester){ const g = predictFromPeople("system", p.requester);
       if (g) c.push('<span class="rc guess"><span class="lg">They ask about</span><b>@' + esc(g.value) + "</b></span>"); }
+    if (!p.due){ const sl = slaDue(p.priority || "P3");
+      if (sl) c.push('<span class="rc guess"><span class="lg">' + (p.priority || "P3") + ' target</span><b>' +
+        esc(niceDate(sl.due) + (sl.dueTime ? " " + sl.dueTime : "")) + "</b></span>"); }
   }
   $("readout").innerHTML = c.join("");
   renderSuggest(raw, p);
@@ -4518,8 +5027,10 @@ function submitQuick(){
   const gType = p.type || (predict("type", p.title) || {}).value || "";
   const gEst = p.estimate || ((estimateFor(p.title) || {}).minutes || 0);
   const gWho = p.requester || (predict("requester", p.title) || {}).value || "";
+  let gDue = p.due, gTime = p.dueTime;
+  if (!gDue){ const sl = slaDue(p.priority || "P3"); if (sl){ gDue = sl.due; gTime = sl.dueTime; } }
   const t = addTask({ title:p.title, priority:p.priority || "P3", system:gSys, type:gType,
-    ticket:p.ticket, requester:gWho, tags:p.tags, due:p.due, dueTime:p.dueTime, estimate:gEst,
+    ticket:p.ticket, requester:gWho, tags:p.tags, due:gDue, dueTime:gTime, estimate:gEst,
     scripts:p.scripts.slice() });
   p.deps.forEach(id => addDependency(t.id, id));
   if (p.waitOn) setWait(t.id, p.waitOn, "");
@@ -4530,6 +5041,7 @@ function submitQuick(){
   if (!p.type && gType) learned.push(":" + gType);
   if (!p.requester && gWho) learned.push("~" + gWho);
   if (!p.estimate && gEst) learned.push(mins(gEst));
+  if (!p.due && gDue) learned.push("due " + niceDate(gDue));
   toast(learned.length ? "Logged " + t.code + " — filled in " + learned.join(", ") + " from past records"
                        : "Logged " + t.code, { action:"Open", onAction:() => openDrawer(t.id) });
 }
@@ -4554,6 +5066,13 @@ function buildCommands(q){
   ["day","board","register","week","library","insight"].forEach((v, i) =>
     add("Views", String(i+1), v.charAt(0).toUpperCase()+v.slice(1), "", () => setView(v), String(i+1)));
   add("Do","+","New record","Focus the compose bar", () => $("qa").focus(), "N");
+  add("Do","⎘","Read a pasted message","Turn a Teams message or a mail into a record", async () => {
+    let txt = "";
+    try { txt = await navigator.clipboard.readText(); } catch(e){}
+    if (txt && txt.trim()) return openIntake(txt);
+    $("qa").focus();
+    toast("Paste it into the compose bar with Ctrl+V and Dossier will read it");
+  });
   add("Do","▤","Choose workspace folder","Where everything is stored", async () => {
     try { const h = await FS.pick(); await openWorkspace(h); } catch(e){}
   });
@@ -5025,6 +5544,55 @@ $("main").addEventListener("click", e => {
   if (drEl) return openDrill(drEl.dataset.dr);
 });
 
+/* ── intake: the ways a message gets read ──────────────────────────────
+   Pasting into the capture bar is the one that matters — that is where the
+   hand already is. The button is there so the feature can be found at all. */
+$("intakeX").addEventListener("click", closeIntake);
+$("intakeCancel").addEventListener("click", closeIntake);
+$("intakeGo").addEventListener("click", commitIntake);
+$("intakeCmd").addEventListener("click", intakeToCommand);
+$("intakeS").addEventListener("click", e => {
+  const g = e.target.closest("[data-goto2]");
+  if (g){ closeIntake(); openDrawer(g.dataset.goto2); }
+});
+$("intakeB").addEventListener("keydown", e => {
+  if (e.key === "Enter" && e.target.id !== "inNotes"){ e.preventDefault(); commitIntake(); }
+});
+/* the priority drives the target date, so re-read when it changes */
+$("intakeB").addEventListener("change", e => {
+  if (e.target.id !== "inPri" || !S.intake) return;
+  const f = intakeFields();
+  const fromSla = (S.intake.found.find(x => x.label === "Due") || {}).src === "sla";
+  if (f.due && !fromSla) return;                       // a real date from the message stays
+  const sla = slaDue(f.priority);
+  if (!sla) return;
+  S.intake = Object.assign({}, S.intake, f, { due:sla.due, dueTime:sla.dueTime });
+  S.intake.found = S.intake.found.filter(x => x.label !== "Due").concat([{
+    label:"Due", value: niceDate(sla.due) + (sla.dueTime ? " " + sla.dueTime : ""),
+    why:"your " + f.priority + " target", src:"sla" }]);
+  renderIntake();
+});
+
+$("qaPaste").addEventListener("click", async () => {
+  let txt = "";
+  try { txt = await navigator.clipboard.readText(); }
+  catch(e){
+    return toast("The browser would not hand over the clipboard — paste into the box with Ctrl+V instead",
+      { bad:true });
+  }
+  if (!txt || !txt.trim()) return toast("Nothing on the clipboard to read", { bad:true });
+  openIntake(txt);
+});
+/* a real paste into the capture bar: a whole message goes to intake, a short
+   phrase is left alone so typing a token by hand still works */
+$("qa").addEventListener("paste", e => {
+  const txt = (e.clipboardData || window.clipboardData || {}).getData
+    ? (e.clipboardData || window.clipboardData).getData("text") : "";
+  if (!looksLikeMessage(txt)) return;
+  e.preventDefault();
+  openIntake(txt);
+});
+
 /* the drill-down sheet */
 $("drillX").addEventListener("click", closeDrill);
 $("drillB").addEventListener("click", e => {
@@ -5113,6 +5681,7 @@ $("bulk").addEventListener("click", e => {
 $("dClose").addEventListener("click", closeDrawer);
 $("scrim").addEventListener("click", () => {
   if ($("ask").classList.contains("on")) return closeAsk(null);
+  if ($("intake").classList.contains("on")) return closeIntake();
   if ($("drill").classList.contains("on")) return closeDrill();
   closeDrawer(); closeModal(); closeCmd();
 });
@@ -5400,7 +5969,16 @@ document.addEventListener("paste", async e => {
         pad2(new Date().getMinutes()) + pad2(new Date().getSeconds()) + ".png", { type:f.type }));
     }
   }
-  if (!imgs.length) return;
+  if (!imgs.length){
+    /* not a screenshot — if it reads like a message, offer to file it */
+    const txt = (e.clipboardData || {}).getData ? e.clipboardData.getData("text") : "";
+    if (looksLikeMessage(txt) && !$("intake").classList.contains("on") &&
+        !$("drawer").classList.contains("on") && !$("modal").classList.contains("on")){
+      e.preventDefault();
+      openIntake(txt);
+    }
+    return;
+  }
   if (!FS.ok) return toast("Choose a workspace folder first", { bad:true });
   let t = S.open ? getTask(S.open) : curTask();
   if (!t) return toast("Open a record first, then paste", { bad:true });
@@ -5477,6 +6055,7 @@ document.addEventListener("keydown", e => {
   if (e.key === "Escape"){
     if ($("ask").classList.contains("on")) return closeAsk(null);
     if ($("cmd").classList.contains("on")) return closeCmd();
+    if ($("intake").classList.contains("on")) return closeIntake();
     if ($("drill").classList.contains("on")) return closeDrill();
     if ($("modal").classList.contains("on")) return closeModal();
     if ($("drawer").classList.contains("on")) return closeDrawer();
