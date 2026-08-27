@@ -1,0 +1,279 @@
+{
+  "app": "dossier",
+  "version": 3,
+  "savedAt": "2026-08-27T17:23:14.783Z",
+  "seq": 1,
+  "settings": {
+    "owner": "",
+    "systems": [
+      {
+        "name": "Imaging",
+        "colour": "#3B6CA8"
+      },
+      {
+        "name": "CX Portal",
+        "colour": "#1F7A5C"
+      },
+      {
+        "name": "E-Payment",
+        "colour": "#C8791A"
+      },
+      {
+        "name": "Medcare",
+        "colour": "#7E57C2"
+      },
+      {
+        "name": "Notification",
+        "colour": "#B5397A"
+      },
+      {
+        "name": "Reports",
+        "colour": "#1F4E5F"
+      },
+      {
+        "name": "Infra / IIS",
+        "colour": "#A31D3A"
+      },
+      {
+        "name": "Other",
+        "colour": "#6B7A90"
+      }
+    ],
+    "types": [
+      "Incident",
+      "Service request",
+      "Change",
+      "Development",
+      "Meeting",
+      "Admin"
+    ],
+    "parties": [
+      "Data team",
+      "DBA",
+      "Infra",
+      "Network",
+      "Security",
+      "Vendor",
+      "Agency ops",
+      "Finance",
+      "Release management",
+      "Business user"
+    ],
+    "theme": "vault",
+    "palettes": [],
+    "remind": true,
+    "lead": 15,
+    "remindOverdue": true,
+    "remindWait": 10,
+    "autoBlock": true,
+    "rememberFilters": true,
+    "savedFilters": {
+      "st": {
+        "open": true,
+        "processing": true,
+        "blocked": true,
+        "done": true,
+        "cancelled": false
+      },
+      "sys": "",
+      "pri": "",
+      "type": "",
+      "who": "",
+      "range": "",
+      "hideRoutine": false,
+      "sort": {
+        "by": "due",
+        "dir": 1
+      },
+      "view": "insight"
+    },
+    "rootPath": "",
+    "fonts": {
+      "display": "auto",
+      "ui": "auto",
+      "mono": "auto"
+    },
+    "templates": [
+      "Morning health check @\"Infra / IIS\" :admin 20m today 08:30",
+      "Investigate error in log @Imaging :incident p2 1h today",
+      "Data fix requested by user :service 45m today",
+      "Prepare deck and review before meeting :meeting 1h today"
+    ]
+  },
+  "routines": [],
+  "scripts": [
+    {
+      "id": "Swatchmtbrxsj1",
+      "file": "dossier-watch.ps1",
+      "name": "Dossier reminder watch",
+      "size": 2484,
+      "added": "2026-08-27T17:05:52.045Z",
+      "desc": "Windows toast reminders while Dossier is closed",
+      "tags": [
+        "dossier"
+      ],
+      "system": "",
+      "params": [],
+      "uses": 0,
+      "lastUsed": ""
+    }
+  ],
+  "tasks": [
+    {
+      "id": "tmtbrue30mfy2",
+      "code": "D-0001",
+      "folder": "D-0001 Morning health check",
+      "title": "Morning health check",
+      "notes": "",
+      "status": "open",
+      "priority": "P3",
+      "system": "Infra / IIS",
+      "type": "Admin",
+      "ticket": "",
+      "requester": "Soy Oudom",
+      "tags": [],
+      "blockedBy": [],
+      "autoBlocked": false,
+      "waitOn": "",
+      "waitNote": "",
+      "waitSince": "",
+      "waitUntil": "",
+      "chases": [],
+      "waitLog": [],
+      "scripts": [],
+      "scriptArgs": {},
+      "created": "2026-08-27T17:03:13.356Z",
+      "due": "2026-08-28",
+      "dueTime": "00:37",
+      "started": "2026-08-27T17:06:17.161Z",
+      "completed": "",
+      "estimate": 20,
+      "spent": 0,
+      "timerStart": 0,
+      "checklist": [],
+      "log": [
+        {
+          "at": "2026-08-27T17:03:13.356Z",
+          "kind": "status",
+          "text": "Opened"
+        },
+        {
+          "at": "2026-08-27T17:03:34.986Z",
+          "kind": "status",
+          "text": "Raised by → Soy"
+        },
+        {
+          "at": "2026-08-27T17:03:40.597Z",
+          "kind": "status",
+          "text": "Removed Soy"
+        },
+        {
+          "at": "2026-08-27T17:03:44.534Z",
+          "kind": "status",
+          "text": "Raised by → Soy Oudom"
+        },
+        {
+          "at": "2026-08-27T17:03:49.463Z",
+          "text": "notes → @"
+        },
+        {
+          "at": "2026-08-27T17:03:52.910Z",
+          "text": "notes → (cleared)"
+        },
+        {
+          "at": "2026-08-27T17:04:25.099Z",
+          "kind": "status",
+          "text": "Open → Done"
+        },
+        {
+          "at": "2026-08-27T17:06:17.161Z",
+          "kind": "status",
+          "text": "Done → Processing"
+        },
+        {
+          "at": "2026-08-27T17:06:18.560Z",
+          "kind": "status",
+          "text": "Processing → Open"
+        },
+        {
+          "at": "2026-08-27T17:06:21.227Z",
+          "kind": "status",
+          "text": "Open → Processing"
+        },
+        {
+          "at": "2026-08-27T17:06:26.367Z",
+          "text": "dueTime → 01:30"
+        },
+        {
+          "at": "2026-08-27T17:06:26.434Z",
+          "text": "dueTime → 00:30"
+        },
+        {
+          "at": "2026-08-27T17:06:30.699Z",
+          "text": "dueTime → (cleared)"
+        },
+        {
+          "at": "2026-08-27T17:06:30.887Z",
+          "text": "dueTime → 00:30"
+        },
+        {
+          "at": "2026-08-27T17:06:32.537Z",
+          "text": "dueTime → (cleared)"
+        },
+        {
+          "at": "2026-08-27T17:06:33.568Z",
+          "text": "dueTime → 00:30"
+        },
+        {
+          "at": "2026-08-27T17:06:35.910Z",
+          "text": "dueTime → 00:01"
+        },
+        {
+          "at": "2026-08-27T17:06:36.300Z",
+          "text": "dueTime → 00:15"
+        },
+        {
+          "at": "2026-08-27T17:07:21.780Z",
+          "text": "dueTime → 00:23"
+        },
+        {
+          "at": "2026-08-27T17:08:55.945Z",
+          "text": "dueTime → 00:26"
+        },
+        {
+          "at": "2026-08-27T17:09:05.952Z",
+          "text": "dueTime → 00:24"
+        },
+        {
+          "at": "2026-08-27T17:09:21.743Z",
+          "text": "dueTime → 00:26"
+        },
+        {
+          "at": "2026-08-27T17:09:31.447Z",
+          "text": "dueTime → 00:28"
+        },
+        {
+          "at": "2026-08-27T17:20:54.696Z",
+          "text": "dueTime → 00:36"
+        },
+        {
+          "at": "2026-08-27T17:21:08.686Z",
+          "kind": "status",
+          "text": "Processing → Open"
+        },
+        {
+          "at": "2026-08-27T17:21:12.411Z",
+          "text": "dueTime → 00:38"
+        },
+        {
+          "at": "2026-08-27T17:21:29.687Z",
+          "text": "dueTime → 00:37"
+        }
+      ],
+      "files": [],
+      "carried": 0,
+      "fromRoutine": "",
+      "forDate": ""
+    }
+  ]
+}
