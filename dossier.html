@@ -490,17 +490,17 @@ table.reg td.ttd span{display:block;overflow:hidden;text-overflow:ellipsis;white
   border:1px solid var(--rule-hi);border-radius:var(--r);box-shadow:var(--shadow);
   opacity:0;pointer-events:none;transition:.2s var(--ease);display:flex;flex-direction:column;overflow:hidden}
 .intake.on{opacity:1;pointer-events:auto;transform:translate(-50%,-50%) scale(1)}
-.intake .ih,.chase .ih{display:flex;align-items:center;gap:11px;padding:13px 15px;flex:0 0 auto;
+.intake .ih,.chase .ih,.problem .ih{display:flex;align-items:center;gap:11px;padding:13px 15px;flex:0 0 auto;
   border-bottom:1px solid var(--rule);background:var(--paper-2)}
-.intake .ih .t,.chase .ih .t{flex:1;min-width:0}
-.intake .ih h4,.chase .ih h4{margin:0;font-size:14.5px;letter-spacing:.02em}
-.intake .ih .s,.chase .ih .s{font-size:11px;color:var(--ink-3);margin-top:2px}
-.intake .iw,.chase .iw{display:grid;grid-template-columns:1fr 288px;flex:1;min-height:0}
-.intake .ic,.chase .ic{overflow-y:auto;padding:15px 16px}
-.intake .is,.chase .is{overflow-y:auto;padding:15px 15px;border-left:1px solid var(--rule);background:var(--paper-2)}
-.intake .if2,.chase .if2{display:flex;align-items:center;gap:8px;padding:10px 15px;flex:0 0 auto;
+.intake .ih .t,.chase .ih .t,.problem .ih .t{flex:1;min-width:0}
+.intake .ih h4,.chase .ih h4,.problem .ih h4{margin:0;font-size:14.5px;letter-spacing:.02em}
+.intake .ih .s,.chase .ih .s,.problem .ih .s{font-size:11px;color:var(--ink-3);margin-top:2px}
+.intake .iw,.chase .iw,.problem .iw{display:grid;grid-template-columns:1fr 288px;flex:1;min-height:0}
+.intake .ic,.chase .ic,.problem .ic{overflow-y:auto;padding:15px 16px}
+.intake .is,.chase .is,.problem .is{overflow-y:auto;padding:15px 15px;border-left:1px solid var(--rule);background:var(--paper-2)}
+.intake .if2,.chase .if2,.problem .if2{display:flex;align-items:center;gap:8px;padding:10px 15px;flex:0 0 auto;
   border-top:1px solid var(--rule);background:var(--paper-2)}
-.intake .if2 .sp,.chase .if2 .sp{margin-left:auto}
+.intake .if2 .sp,.chase .if2 .sp,.problem .if2 .sp{margin-left:auto}
 .prov{display:flex;flex-direction:column;gap:9px}
 .prov .p{display:grid;grid-template-columns:9px 1fr;gap:9px;font-size:11.5px;line-height:1.45}
 .prov .p i{width:7px;height:7px;border-radius:50%;margin-top:5px;background:var(--rule-hi)}
@@ -522,12 +522,37 @@ table.reg td.ttd span{display:block;overflow:hidden;text-overflow:ellipsis;white
   border-radius:var(--r-xs);padding:6px 11px;font-size:12px;font-weight:600;cursor:pointer;
   white-space:nowrap;transition:.14s;flex:0 0 auto}
 .cbar .paste:hover{border-color:var(--accent);color:var(--accent)}
-@media (max-width:860px){ .intake .iw,.chase .iw{grid-template-columns:1fr}
-  .intake .is,.chase .is{border-left:0;border-top:1px solid var(--rule)} }
+@media (max-width:860px){ .intake .iw,.chase .iw,.problem .iw{grid-template-columns:1fr}
+  .intake .is,.chase .is,.problem .is{border-left:0;border-top:1px solid var(--rule)} }
 
 /* ── chase sheet ─────────────────────────────────────────────────────────
    Same shape as intake: the thing you will send on the left, the facts it was
    built from on the right, and nothing written until you act. */
+.problem{position:fixed;top:50%;left:50%;transform:translate(-50%,-46%) scale(.98);
+  width:min(940px,96vw);max-height:88vh;z-index:60;background:var(--paper);
+  border:1px solid var(--rule-hi);border-radius:var(--r);box-shadow:var(--shadow);
+  opacity:0;pointer-events:none;transition:.2s var(--ease);display:flex;flex-direction:column;overflow:hidden}
+.problem.on{opacity:1;pointer-events:auto;transform:translate(-50%,-50%) scale(1)}
+/* these two sheets are one long piece of text — let it use the height */
+.chase .ic,.problem .ic{display:flex;flex-direction:column}
+#chaseMsg,#probMsg{flex:1}
+#probMsg{min-height:340px;font-family:var(--f-mono);font-size:11.5px;line-height:1.65;white-space:pre-wrap}
+.ctask .pdot{width:7px;height:7px;border-radius:50%;margin-top:5px}
+.ctask[data-goto3]:hover{background:var(--paper-3)}
+/* recurring problems, on Insight */
+.prob{display:flex;flex-direction:column;gap:2px}
+.prob .r{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center;
+  padding:8px 7px;border-radius:var(--r-xs);cursor:pointer;transition:background .14s}
+.prob .r:hover{background:var(--paper-2)}
+.prob .lb{font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.prob .sub2{font-size:10.5px;color:var(--ink-3);margin-top:2px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.prob .cost{font-family:var(--f-mono);font-size:12px;text-align:right;white-space:nowrap}
+.prob .cost b{display:block;font-weight:600}
+.prob .cost small{font-size:9.5px;color:var(--ink-3)}
+.prob .n{display:inline-block;font-family:var(--f-mono);font-size:9.5px;color:var(--accent);
+  border:1px solid var(--accent);border-radius:999px;padding:0 6px;margin-right:7px}
+
 .chase{position:fixed;top:50%;left:50%;transform:translate(-50%,-46%) scale(.98);
   width:min(900px,96vw);max-height:88vh;z-index:60;background:var(--paper);
   border:1px solid var(--rule-hi);border-radius:var(--r);box-shadow:var(--shadow);
@@ -1094,6 +1119,22 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
   </div>
 </div>
 
+<div class="problem" id="problem">
+  <div class="ih">
+    <div class="t"><h4 id="probT">Problem</h4><div class="s" id="probS"></div></div>
+    <button class="ib" id="probX" title="Close (Esc)">✕</button>
+  </div>
+  <div class="iw">
+    <div class="ic"><textarea class="in" id="probMsg" spellcheck="false"></textarea></div>
+    <div class="is" id="probSide"></div>
+  </div>
+  <div class="if2">
+    <button class="btn sm" id="probReg">Open these in Register</button>
+    <span class="sp"></span>
+    <button class="btn pri" id="probCopy">Copy the case</button>
+  </div>
+</div>
+
 <div class="chase" id="chase">
   <div class="ih">
     <div class="t"><h4 id="chaseT">Chase</h4><div class="s" id="chaseS"></div></div>
@@ -1354,7 +1395,7 @@ const S = {
   filters:{ st:{ open:true, processing:true, blocked:true, done:true, cancelled:false },
             sys:"", pri:"", type:"", who:"", range:"", q:"", day:"", hideRoutine:false,
             ids:null, idsLabel:"" },
-  sel:new Set(), open:null, drill:null, intake:null, chase:null, folds:{}, sort:{ by:"due", dir:1 },
+  sel:new Set(), open:null, drill:null, intake:null, chase:null, problem:null, folds:{}, sort:{ by:"due", dir:1 },
   weekStart:null, undo:[], dirty:false, saving:false, lastSaved:null,
   rows:[], cursor:-1, reminded:{}, blobCache:{}
 };
@@ -3354,6 +3395,29 @@ function renderIns(){
     '<div><i style="background:var(--st-done)"></i><span class="lb">Closed</span></div>' +
     '<div><i style="background:var(--rule-hi)"></i><span class="lb">Raised</span></div></div></div>';
 
+  /* built from every record, not the filtered set — a problem does not stop
+     being a problem because the rail is hiding half of it */
+  problemsCached();
+  const topProb = PROB.list.slice(0, 6);
+  if (topProb.length){
+    const burned = PROB.list.reduce((x, q) => x + q.cost, 0);
+    h += '<div class="panel" style="grid-column:span 2"><h4>What keeps coming back</h4>' +
+      '<div class="sub">' + PROB.list.length + " problem(s) behind " +
+      PROB.list.reduce((x, q) => x + q.n, 0) + " records" +
+      (burned >= 1 ? " and " + mins(burned) + " of tracked time" : "") +
+      " — click one for the case to fix it properly</div>" +
+      '<div class="prob">' + topProb.map((q, i) =>
+        '<div class="r" data-prob="' + i + '"><div style="min-width:0">' +
+        '<div class="lb"><span class="n">' + q.n + "\u00d7</span>" + esc(q.title) + "</div>" +
+        '<div class="sub2">' + (q.systems.length ? esc(q.systems.join(", ")) : "no system set") +
+        (q.every ? " · about every " + q.every + "d" : "") +
+        (q.open ? " · " + q.open + " still open" : "") +
+        (q.waited ? " · " + q.waited + "d waiting on others" : "") + "</div></div>" +
+        '<div class="cost"><b>' + (q.cost >= 1 ? mins(q.cost) : "—") + "</b>" +
+        "<small>" + (q.last ? "last " + niceDate(q.last) : "") + "</small></div></div>").join("") +
+      "</div></div>";
+  }
+
   const tot = Math.max(1, all.length), circ = 2*Math.PI*34;
   let acc = 0;
   const segs = stc.filter(x => x.n).map(x => {
@@ -3426,6 +3490,7 @@ function renderIns(){
     '<button class="btn" data-rep="month">This month</button>' +
     '<button class="btn" data-rep="standup">Standup</button>' +
     '<button class="btn" data-rep="handover">Handover</button>' +
+    '<button class="btn" data-rep="recurring">Recurring problems</button>' +
     '<button class="btn" data-rep="csv">CSV</button>' +
     '<button class="btn" data-rep="print">Print</button></div></div>';
   $("vIns").innerHTML = h;
@@ -4076,6 +4141,236 @@ function chaseDo(alsoLog){
   c.at = Math.min(c.at, c.groups.length - 1);
   c.off = {}; c.tone = null;
   renderChase();
+}
+
+/* ═══ PROBLEMS — the same thing biting you over and over ══════════════════
+   A record is one occurrence. A problem is the thing that keeps producing
+   them, and Dossier could already spot it one record at a time — "you have
+   handled this before" in the drawer — without ever adding the occurrences up.
+   Six incidents that each took ninety minutes look like six ordinary days.
+   Added up they are a day and a half spent on a cause nobody has been given
+   time to fix, and that total is the only argument that ever wins that time.
+
+   This is not repeatCandidates(). That looks for a regular cadence and offers
+   to make a routine, because work that repeats on a schedule should be
+   planned. A problem is the opposite: unplanned, irregular, and not supposed
+   to be happening at all.
+   ════════════════════════════════════════════════════════════════════════ */
+
+/* the member whose wording sits closest to all the others — a better name for
+   the problem than whichever occurrence happened to be logged last */
+/* Titles are tokenised once per run, not once per comparison. similar() is
+   fine for a handful of lookups; clustering asks n² of them, and re-splitting
+   every title inside that loop is what made Insight stutter on a real file. */
+function probDocs(){
+  const out = [];
+  S.tasks.forEach(t => {
+    if (t.fromRoutine) return;
+    const w = new Set(tok(t.title));
+    if (!w.size) return;
+    let norm = 0;
+    w.forEach(x => norm += idf(x));
+    if (norm) out.push({ t, w, norm });
+  });
+  return out;
+}
+/* the same score similar() uses, against a token set already built */
+function probScore(a, b){
+  let shared = 0;
+  a.w.forEach(x => { if (b.w.has(x)) shared += idf(x); });
+  if (!shared) return 0;
+  return shared / a.norm * (0.6 + 0.4 * Math.min(1, a.w.size / b.w.size));
+}
+/* the member whose wording sits closest to all the others — a better name for
+   the problem than whichever occurrence happened to be logged last. Large
+   clusters are sampled: the twelfth opinion does not change the answer. */
+function medoidOf(docs){
+  if (docs.length < 3) return docs[0].t.title;
+  let pool = docs;
+  if (pool.length > 12){
+    const step = pool.length / 12;
+    pool = [];
+    for (let i = 0; i < 12; i++) pool.push(docs[Math.floor(i * step)]);
+  }
+  let best = pool[0], bestScore = -1;
+  pool.forEach(a => {
+    let sc = 0;
+    pool.forEach(b => { if (a !== b) sc += probScore(a, b); });
+    if (sc > bestScore){ bestScore = sc; best = a; }
+  });
+  return best.t.title;
+}
+
+function summariseProblem(members, title){
+  const byDate = members.slice().sort((a, b) => (a.created || "") < (b.created || "") ? -1 : 1);
+  const gaps = [];
+  for (let i = 1; i < byDate.length; i++)
+    gaps.push((new Date(byDate[i].created) - new Date(byDate[i-1].created)) / 86400000);
+  gaps.sort((a, b) => a - b);
+  const every = gaps.length
+    ? Math.round(gaps.length % 2 ? gaps[(gaps.length-1)/2] : (gaps[gaps.length/2 - 1] + gaps[gaps.length/2]) / 2)
+    : 0;
+
+  let waited = 0;
+  members.forEach(t => {
+    if (t.waitOn && LIVE.indexOf(t.status) >= 0) waited += waitDays(t);
+    (t.waitLog || []).forEach(w => waited += (+w.days || 0));
+  });
+
+  const sysSet = {}, typeSet = {}, partySet = {};
+  members.forEach(t => {
+    if (t.system) sysSet[t.system] = (sysSet[t.system] || 0) + 1;
+    if (t.type) typeSet[t.type] = (typeSet[t.type] || 0) + 1;
+    if (t.waitOn) partySet[t.waitOn] = 1;
+    (t.waitLog || []).forEach(w => { if (w.party) partySet[w.party] = 1; });
+  });
+
+  return {
+    id: "P" + byDate[0].id,
+    title: title || members[0].title,
+    members: byDate.slice().reverse(),          // newest first, the way you read them
+    n: members.length,
+    cost: members.reduce((s, t) => s + live(t), 0),
+    waited,
+    systems: Object.keys(sysSet).sort((a, b) => sysSet[b] - sysSet[a]),
+    types: Object.keys(typeSet).sort((a, b) => typeSet[b] - typeSet[a]),
+    parties: Object.keys(partySet),
+    first: (byDate[0].created || "").slice(0, 10),
+    last: (byDate[byDate.length-1].created || "").slice(0, 10),
+    every,
+    open: members.filter(t => LIVE.indexOf(t.status) >= 0).length
+  };
+}
+
+/* Greedy clustering. n is small enough that O(n²) is free, and a greedy pass
+   beats anything cleverer here: the seeds are taken newest first, so a problem
+   is named by how you describe it now, not by how you described it in June. */
+function problems(minCount, minScore){
+  const want = minCount || 2, thr = minScore == null ? 0.42 : minScore;
+  const docs = probDocs();
+  /* newest first, so a problem is named by how you describe it now */
+  docs.sort((a, b) => (a.t.created || "") < (b.t.created || "") ? 1 : -1);
+  const used = {}, out = [];
+  docs.forEach(seed => {
+    if (used[seed.t.id]) return;
+    const group = [seed];
+    docs.forEach(d => {
+      if (d === seed || used[d.t.id]) return;
+      if (probScore(seed, d) >= thr) group.push(d);
+    });
+    if (group.length < want) return;
+    group.forEach(d => used[d.t.id] = 1);
+    out.push(summariseProblem(group.map(d => d.t), medoidOf(group)));
+  });
+  /* the costliest first — hours burned is the number that wins the argument */
+  return out.sort((a, b) => (b.cost - a.cost) || (b.n - a.n));
+}
+
+/* Insight redraws on every edit; the clustering only changes when the records
+   do, and buildModel() already stamps that moment. */
+function problemsCached(){
+  const key = MODEL.built + "|" + S.tasks.length;
+  if (PROB.key === key) return PROB.list;
+  PROB.list = problems(2);
+  PROB.key = key;
+  return PROB.list;
+}
+
+/* what you actually did each time — the evidence that it was worked around */
+function problemNotes(p){
+  return p.members.map(t => {
+    const note = (t.notes || "").trim() ||
+      ((t.log || []).filter(l => l.kind !== "status").slice(-1)[0] || {}).text || "";
+    return note ? { when: msgDate(t.completed || t.created), code: t.code, note } : null;
+  }).filter(Boolean);
+}
+
+/* the case for being given time to fix it, in words you can send */
+function problemCase(p){
+  const L = [];
+  L.push(p.title, "");
+  const spanDays = p.first && p.last ? Math.max(0, between(p.first, p.last)) : 0;
+  L.push("Seen " + p.n + " times" + (p.first ? " since " + msgDate(pk(p.first)) : "") +
+    (p.last ? ", most recently " + msgDate(pk(p.last)) : "") +
+    (p.every ? " — roughly every " + p.every + " day(s)" : "") + ".");
+  const cost = [];
+  if (p.cost >= 1) cost.push(mins(p.cost) + " of tracked time");
+  if (p.waited) cost.push(p.waited + " day(s) lost waiting on " +
+    (p.parties.length ? p.parties.join(", ") : "someone else"));
+  if (cost.length) L.push("Cost so far: " + cost.join(", ") + ".");
+  if (p.systems.length) L.push("Systems affected: " + p.systems.join(", ") + ".");
+  if (p.open) L.push(p.open + " of them " + (p.open === 1 ? "is" : "are") + " still open.");
+  L.push("");
+
+  L.push("Occurrences:");
+  p.members.forEach(t => {
+    L.push("  \u2022 " + (t.ticket || t.code) + "  " + msgDate(t.created) + "  " +
+      t.title + "  (" + stMeta(t.status).label.toLowerCase() +
+      (live(t) >= 1 ? ", " + mins(live(t)) : "") + ")");
+  });
+
+  const notes = problemNotes(p);
+  if (notes.length){
+    L.push("", "What was done each time:");
+    notes.forEach(n => L.push("  • " + n.when + "  " + clip(n.note.replace(/\s+/g, " "), 150)));
+  }
+
+  L.push("", "Each of these was closed on its own, so the cause is still in place. " +
+    "At the rate above, the next " + (spanDays > 60 ? "few months" : "few weeks") +
+    " will cost about the same again. Requesting time for a permanent fix.");
+  return L.join("\n");
+}
+
+/* ── the sheet ────────────────────────────────────────────────────────── */
+function openProblem(idx){
+  const list = PROB.list || [];
+  const p = typeof idx === "object" ? idx : list[+idx];
+  if (!p) return;
+  S.problem = p;
+  $("probT").textContent = p.title;
+  $("probS").textContent = p.n + " occurrences · " + (p.cost >= 1 ? mins(p.cost) : "no time booked") +
+    (p.waited ? " · " + p.waited + "d waiting" : "") + (p.every ? " · about every " + p.every + "d" : "");
+  $("probMsg").value = problemCase(p);
+  $("probSide").innerHTML =
+    '<h5 class="eyebrow" style="margin:0 0 9px">Occurrences</h5>' +
+    p.members.map(t =>
+      '<div class="ctask" data-goto3="' + t.id + '" style="cursor:pointer">' +
+      '<span class="pdot" style="background:' + stMeta(t.status).colour + '"></span>' +
+      "<div><b>" + esc(t.ticket || t.code) + "</b> " + esc(clip(t.title, 44)) +
+      "<small>" + ((t.created || "").slice(0, 10)) + " · " + esc(stMeta(t.status).label) +
+      (live(t) >= 1 ? " · " + mins(live(t)) : "") + "</small></div></div>").join("") +
+    (p.systems.length ? '<h5 class="eyebrow" style="margin:16px 0 7px">Systems</h5><div class="taglist">' +
+      p.systems.map(x => '<span class="tagx"><b style="background:' + sysColour(x) + '"></b>' + esc(x) + "</span>").join("") +
+      "</div>" : "") +
+    '<p style="font-size:10.5px;color:var(--ink-3);line-height:1.6;margin:14px 0 0">' +
+      "Grouped by how alike the titles are. Anything that does not belong, rename and it drops out.</p>";
+  $("problem").classList.add("on");
+  $("scrim").classList.add("on");
+}
+function closeProblem(){
+  S.problem = null;
+  $("problem").classList.remove("on");
+  if (!$("drawer").classList.contains("on") && !$("modal").classList.contains("on") &&
+      !$("ask").classList.contains("on")) $("scrim").classList.remove("on");
+}
+
+/* rebuilt once per Insight render, so the panel and the sheet agree */
+const PROB = { list: [], key: null };
+
+/* every problem, written out — for a PDD or a service review */
+function problemsMd(){
+  const list = problemsCached();
+  const L = ["# Recurring problems", "", "Generated " + stamp(new Date().toISOString()) +
+    (S.settings.owner ? " by " + S.settings.owner : ""), ""];
+  if (!list.length){
+    L.push("Nothing has come back often enough to call a pattern yet.");
+    return L.join("\n");
+  }
+  const hours = list.reduce((s, p) => s + p.cost, 0);
+  L.push(list.length + " problem(s) account for " +
+    list.reduce((s, p) => s + p.n, 0) + " records and " + mins(hours) + " of tracked time.", "");
+  list.forEach((p, i) => { L.push("## " + (i+1) + ". " + p.title, "", problemCase(p).split("\n").slice(2).join("\n"), ""); });
+  return L.join("\n");
 }
 
 /* ═══ RENDER ALL ═════════════════════════════════════════════════════════ */
@@ -4843,6 +5138,21 @@ async function renderModal(){
       "None of this leaves the machine — it is word matching against your own systems, teams and past " +
       "records, not a model and not a service.</p>" +
 
+    '<h4 style="margin:18px 0 10px">What keeps coming back</h4>' +
+    '<p style="font-size:12px;color:var(--ink-2);line-height:1.75;margin:0 0 8px">' +
+      "A record is one occurrence. The thing that keeps producing them is a <b>problem</b>, and six " +
+      "incidents that each took ninety minutes look like six ordinary days until you add them up. " +
+      "Insight groups records by how alike their titles are and shows the total — how many times, how " +
+      "many hours, how many days lost waiting, and whether any are still open.</p>" +
+    '<p style="font-size:12px;color:var(--ink-2);line-height:1.75;margin:0 0 8px">' +
+      "Click one and Dossier writes the case: the dates, the cost, every occurrence, and what you did " +
+      "each time — which is usually the proof it was worked around rather than fixed. Copy it into a " +
+      "service review or a PDD. <b>Reports → Recurring problems</b> writes them all out at once.</p>" +
+    '<p style="font-size:12px;color:var(--ink-2);line-height:1.75;margin:0 0 8px">' +
+      "This is not the same as a routine. Work that repeats on a schedule should be planned, and Day " +
+      "offers to make those into routines. A problem is the opposite: unplanned, irregular, and not " +
+      "supposed to be happening. Records your routines created are left out of it.</p>" +
+
     '<h4 style="margin:18px 0 10px">Chasing</h4>' +
     '<p style="font-size:12px;color:var(--ink-2);line-height:1.75;margin:0 0 8px">' +
       "The wait clock is evidence, and evidence on its own does not move work — so Dossier writes the " +
@@ -5056,7 +5366,9 @@ function runReport(kind){
   openModal("report");
   setTimeout(() => {
     const el = $("repOut");
-    if (el) el.textContent = (kind === "handover") ? handover() : reportMd(kind);
+    if (el) el.textContent = (kind === "handover") ? handover()
+                          : (kind === "recurring") ? problemsMd()
+                          : reportMd(kind);
   }, 60);
 }
 function refreshSelects(){
@@ -5355,6 +5667,7 @@ function buildCommands(q){
   add("Report","▤","This week","For your PDD", () => runReport("week"));
   add("Report","▤","Standup note","", () => runReport("standup"));
   add("Report","⇄","Handover note","For whoever covers your shift", () => runReport("handover"));
+  add("Report","↻","Recurring problems","What keeps coming back, and what it cost", () => runReport("recurring"));
   add("Report","⇩","Export CSV","", () => runReport("csv"));
   add("Report","⎙","Print","Whatever is filtered right now", () => printNow());
   add("Report","⎙","Print the open record","", () => S.open ? printNow({ kind:"record", id:S.open })
@@ -5777,6 +6090,8 @@ $("main").addEventListener("click", e => {
   /* before the row underneath it claims the click */
   const ch = e.target.dataset && e.target.dataset.chase;
   if (ch){ e.stopPropagation(); return openChase(ch === "all" ? "all" : undefined); }
+  const pb = e.target.closest("[data-prob]");
+  if (pb) return openProblem(pb.dataset.prob);
   const row = e.target.closest(".row[data-id]");
   if (row){
     const id = row.dataset.id, act = e.target.dataset.act;
@@ -5867,6 +6182,24 @@ $("qa").addEventListener("paste", e => {
   if (!looksLikeMessage(txt)) return;
   e.preventDefault();
   openIntake(txt);
+});
+
+/* ── the problem sheet ─────────────────────────────────────────────── */
+$("probX").addEventListener("click", closeProblem);
+$("probCopy").addEventListener("click", () => copyText($("probMsg").value, "The case is on the clipboard"));
+$("probSide").addEventListener("click", e => {
+  const g = e.target.closest("[data-goto3]");
+  if (g){ closeProblem(); openDrawer(g.dataset.goto3); }
+});
+$("probReg").addEventListener("click", () => {
+  const p = S.problem; if (!p) return;
+  S.filters = blankFilters();
+  STATUSES.forEach(x => S.filters.st[x.id] = true);
+  S.filters.ids = p.members.map(t => t.id);
+  S.filters.idsLabel = p.title;
+  ["fSys","fPri","fType","fWho","fRange","q"].forEach(id => $(id).value = "");
+  syncRail(); closeProblem(); setView("register");
+  toast(p.n + " occurrence(s) pinned — Reset clears it");
 });
 
 /* ── the chase sheet ───────────────────────────────────────────────── */
@@ -5982,6 +6315,7 @@ $("scrim").addEventListener("click", () => {
   if ($("ask").classList.contains("on")) return closeAsk(null);
   if ($("intake").classList.contains("on")) return closeIntake();
   if ($("chase").classList.contains("on")) return closeChase();
+  if ($("problem").classList.contains("on")) return closeProblem();
   if ($("drill").classList.contains("on")) return closeDrill();
   closeDrawer(); closeModal(); closeCmd();
 });
@@ -6357,6 +6691,7 @@ document.addEventListener("keydown", e => {
     if ($("cmd").classList.contains("on")) return closeCmd();
     if ($("intake").classList.contains("on")) return closeIntake();
     if ($("chase").classList.contains("on")) return closeChase();
+    if ($("problem").classList.contains("on")) return closeProblem();
     if ($("drill").classList.contains("on")) return closeDrill();
     if ($("modal").classList.contains("on")) return closeModal();
     if ($("drawer").classList.contains("on")) return closeDrawer();
