@@ -1404,6 +1404,16 @@ const S = {
 function dkey(d){ const x = d instanceof Date ? d : new Date(d);
   return x.getFullYear() + "-" + pad2(x.getMonth()+1) + "-" + pad2(x.getDate()); }
 function today(){ return dkey(new Date()); }
+/* Timestamps are stored in UTC; a day boundary is local. Slicing the ISO
+   string compares one against the other, so anything closed before your UTC
+   offset lands on yesterday — at UTC+7 that is every record closed before
+   07:00, which is exactly when the overnight incidents get closed. Always
+   turn a timestamp into a local day key before comparing it to one. */
+function dayOf(iso){
+  if (!iso) return "";
+  const d = new Date(iso);
+  return isNaN(d) ? "" : dkey(d);
+}
 function pk(k){ const p = String(k).split("-"); return new Date(+p[0], +p[1]-1, +p[2]); }
 function addDays(k, n){ const d = pk(k); d.setDate(d.getDate()+n); return dkey(d); }
 function dow(k){ return pk(k).getDay(); }
@@ -3060,14 +3070,16 @@ function renderDay(){
   const going   = sortTasks(vis.filter(t => t.status === "processing" && due.indexOf(t) < 0 && overdue.indexOf(t) < 0));
   const stuck   = sortTasks(vis.filter(t => t.status === "blocked" && due.indexOf(t) < 0 && overdue.indexOf(t) < 0));
   const undated = sortTasks(vis.filter(t => isLive(t) && !t.due && going.indexOf(t) < 0 && stuck.indexOf(t) < 0));
-  const soon    = sortTasks(vis.filter(t => isLive(t) && t.due && t.due > k)).slice(0, 12);
+  /* already shown under In progress or Blocked — one record, one place */
+  const soon    = sortTasks(vis.filter(t => isLive(t) && t.due && t.due > k &&
+                                            going.indexOf(t) < 0 && stuck.indexOf(t) < 0)).slice(0, 12);
   const shut    = sortTasks(vis.filter(t => (t.status === "done" || t.status === "cancelled") &&
-                                            (t.completed || "").slice(0,10) === k));
-  const closed = S.tasks.filter(t => t.status === "done" && (t.completed||"").slice(0,10) === k).length;
-  const planned = S.tasks.filter(t => t.due === k || (t.completed||"").slice(0,10) === k).length;
+                                            dayOf(t.completed) === k));
+  const closed = S.tasks.filter(t => t.status === "done" && dayOf(t.completed) === k).length;
+  const planned = S.tasks.filter(t => t.due === k || dayOf(t.completed) === k).length;
   const pct = planned ? Math.round(closed/planned*100) : 0;
   const spent = S.tasks.reduce((s, t) => {
-    const c = (t.completed || "").slice(0,10);
+    const c = dayOf(t.completed);
     return s + ((c === k || t.due === k) ? live(t) : 0);
   }, 0);
 
@@ -3117,7 +3129,7 @@ function dayHints(){
     html: "<b>" + esc(stale[0].title.slice(0,58)) + "</b> has been in progress for " +
           Math.round((Date.now()-new Date(stale[0].started))/86400000) + " days. Still moving?" });
 
-  const noNote = S.tasks.filter(t => t.status === "done" && (t.completed||"").slice(0,10) === k &&
+  const noNote = S.tasks.filter(t => t.status === "done" && dayOf(t.completed) === k &&
     !t.notes && t.log.filter(l => l.kind !== "status").length === 0);
   if (noNote.length) out.push({ icon:"✎", id:noNote[0].id,
     html: noNote.length + " record(s) closed today with no note. Future you will want to know what you did." });
@@ -3302,8 +3314,8 @@ function renderIns(){
   const all = visible(), k = today();
   const ws = mondayOf(k), mp = k.slice(0,7);
   const done = all.filter(t => t.status === "done");
-  const dw = done.filter(t => (t.completed||"").slice(0,10) >= ws);
-  const dm = done.filter(t => (t.completed||"").slice(0,7) === mp);
+  const dw = done.filter(t => dayOf(t.completed) >= ws);
+  const dm = done.filter(t => dayOf(t.completed).slice(0,7) === mp);
   const openNow = all.filter(t => LIVE.indexOf(t.status) >= 0);
   const cyc = done.filter(t => t.created && t.completed)
     .map(t => Math.max(0, (new Date(t.completed) - new Date(t.created))/3600000));
@@ -3319,8 +3331,8 @@ function renderIns(){
   for (let i = 20; i >= 0; i--){
     const key = addDays(k, -i);
     days.push({ key,
-      dl: all.filter(t => t.status === "done" && (t.completed||"").slice(0,10) === key),
-      ol: all.filter(t => (t.created||"").slice(0,10) === key) });
+      dl: all.filter(t => t.status === "done" && dayOf(t.completed) === key),
+      ol: all.filter(t => dayOf(t.created) === key) });
   }
   days.forEach(x => { x.d = x.dl.length; x.o = x.ol.length; });
   const mx = Math.max(1, ...days.map(x => Math.max(x.d, x.o)));
@@ -4235,8 +4247,8 @@ function summariseProblem(members, title){
     systems: Object.keys(sysSet).sort((a, b) => sysSet[b] - sysSet[a]),
     types: Object.keys(typeSet).sort((a, b) => typeSet[b] - typeSet[a]),
     parties: Object.keys(partySet),
-    first: (byDate[0].created || "").slice(0, 10),
-    last: (byDate[byDate.length-1].created || "").slice(0, 10),
+    first: dayOf(byDate[0].created),
+    last: dayOf(byDate[byDate.length-1].created),
     every,
     open: members.filter(t => LIVE.indexOf(t.status) >= 0).length
   };
@@ -4337,7 +4349,7 @@ function openProblem(idx){
       '<div class="ctask" data-goto3="' + t.id + '" style="cursor:pointer">' +
       '<span class="pdot" style="background:' + stMeta(t.status).colour + '"></span>' +
       "<div><b>" + esc(t.ticket || t.code) + "</b> " + esc(clip(t.title, 44)) +
-      "<small>" + ((t.created || "").slice(0, 10)) + " · " + esc(stMeta(t.status).label) +
+      "<small>" + dayOf(t.created) + " · " + esc(stMeta(t.status).label) +
       (live(t) >= 1 ? " · " + mins(live(t)) : "") + "</small></div></div>").join("") +
     (p.systems.length ? '<h5 class="eyebrow" style="margin:16px 0 7px">Systems</h5><div class="taglist">' +
       p.systems.map(x => '<span class="tagx"><b style="background:' + sysColour(x) + '"></b>' + esc(x) + "</span>").join("") +
@@ -4386,7 +4398,7 @@ function renderAll(){
     (S.filters.ids ? " · pinned from Insight" : "");
   $("sbT").textContent = S.tasks.length;
   const k = today();
-  $("sbD").textContent = S.tasks.filter(t => (t.completed||"").slice(0,10) === k).length;
+  $("sbD").textContent = S.tasks.filter(t => dayOf(t.completed) === k).length;
   $("sbF").textContent = S.tasks.reduce((s,t) => s + (t.files||[]).length, 0);
   $("sbH").textContent = mins(S.tasks.reduce((s,t) => s + live(t), 0));
 
@@ -4689,7 +4701,7 @@ function reportMd(kind){
     label = MON[pk(k).getMonth()] + " " + pk(k).getFullYear(); }
   else { from = addDays(k,-1); to = k; label = "Standup"; }
 
-  const inRange = t => { const c = (t.completed||"").slice(0,10); return c && c >= from && c <= to; };
+  const inRange = t => { const c = dayOf(t.completed); return c && c >= from && c <= to; };
   const closed = S.tasks.filter(t => t.status === "done" && inRange(t));
   const killed = S.tasks.filter(t => t.status === "cancelled" && inRange(t));
   const wip = S.tasks.filter(t => t.status === "processing");
@@ -4793,7 +4805,7 @@ function handover(){
   L.push("BLOCKED / WAITING (" + bl.length + ")");
   bl.length ? sortTasks(bl).forEach(t => {
                 const ob = openBlockers(t);
-                const why = t.waitOn ? "waiting on " + t.waitOn + " since " + (t.waitSince||"").slice(0,10) +
+                const why = t.waitOn ? "waiting on " + t.waitOn + " since " + dayOf(t.waitSince) +
                                        " (" + waitDays(t) + "d" +
                                        ((t.chases||[]).length ? ", chased " + t.chases.length + "×" : ", not chased") + ")"
                           : ob.length ? "waits for " + ob.map(x => x.code + " " + x.title.slice(0,34)).join(", ")
@@ -4813,7 +4825,7 @@ function handover(){
   nx.length ? nx.forEach(t => L.push(line(t) + (t.dueTime ? "  at " + t.dueTime : "")))
             : L.push("- nothing scheduled");
   L.push("");
-  const cl = S.tasks.filter(t => t.status === "done" && (t.completed||"").slice(0,10) === k);
+  const cl = S.tasks.filter(t => t.status === "done" && dayOf(t.completed) === k);
   L.push("CLOSED TODAY (" + cl.length + ")");
   cl.forEach(t => L.push(line(t)));
   return L.join("\n");
