@@ -428,6 +428,59 @@ table.reg td.ttd span{display:block;overflow:hidden;text-overflow:ellipsis;white
 .vb .c .a{background:var(--st-done);border-radius:2px 2px 0 0;min-height:2px;transition:height .55s var(--ease)}
 .vb .c .b{background:var(--rule-hi);border-radius:2px 2px 0 0}
 .vax{display:flex;justify-content:space-between;font-family:var(--f-mono);font-size:9.5px;color:var(--ink-3);margin-top:7px}
+/* ── a chart you can click through ───────────────────────────────────────
+   Every bar, segment, column and headline number on Insight stands for a set
+   of records. [data-dr] marks the ones that can be opened, and the affordance
+   has to read as clickable without turning the page into a field of buttons. */
+[data-dr]{cursor:pointer}
+.kpi[data-dr]{transition:border-color .14s,background .14s,transform .14s var(--ease)}
+.kpi[data-dr]:hover{border-color:var(--rule-hi);background:var(--paper-2);transform:translateY(-1px)}
+.kpi[data-dr]:active{transform:none}
+.kpi[data-dr].nil{cursor:default}
+.kpi[data-dr].nil:hover{border-color:var(--rule);background:var(--paper);transform:none}
+.hb .r[data-dr]{border-radius:var(--r-xs);transition:background .14s}
+.hb .r[data-dr]:hover{background:var(--paper-2)}
+.hb .r[data-dr]:hover .lb{color:var(--ink)}
+.lgd div[data-dr]{border-radius:var(--r-xs);padding:1px 4px;margin:-1px -4px;transition:background .14s}
+.lgd div[data-dr]:hover{background:var(--paper-2)}
+.lgd div[data-dr]:hover .lb{color:var(--ink)}
+.vb .c[data-dr]{border-radius:3px;transition:background .14s}
+.vb .c[data-dr]:hover{background:var(--sel)}
+.vb .c [data-dr]{transition:filter .14s}
+.vb .c [data-dr]:hover{filter:brightness(1.35) saturate(1.2)}
+.ring2 svg circle[data-dr]{transition:opacity .14s}
+.ring2 svg:hover circle[data-dr]{opacity:.5}
+.ring2 svg circle[data-dr]:hover{opacity:1}
+.panel .hint{font-size:10.5px;color:var(--ink-3);margin-top:12px;display:flex;align-items:center;gap:6px}
+.panel .hint b{font-weight:600;color:var(--ink-2)}
+
+/* the reading of the page, and what is narrowing it */
+.inshead{display:flex;align-items:center;gap:11px;flex-wrap:wrap;margin-bottom:14px;
+  border:1px solid var(--rule);border-radius:var(--r);background:var(--paper);padding:10px 14px}
+.inshead .ttl{font-family:var(--f-display);font-size:12.5px;font-weight:600;letter-spacing:.03em}
+.inshead .fs{font-size:11.5px;color:var(--ink-3);min-width:0;overflow:hidden;
+  text-overflow:ellipsis;white-space:nowrap}
+.inshead .fs b{color:var(--accent);font-weight:600}
+.inshead .sp{margin-left:auto}
+
+/* ── drill-down sheet ────────────────────────────────────────────────── */
+.drill{position:fixed;top:50%;left:50%;transform:translate(-50%,-46%) scale(.98);width:min(760px,95vw);
+  max-height:82vh;z-index:60;background:var(--paper);border:1px solid var(--rule-hi);border-radius:var(--r);
+  box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:.2s var(--ease);
+  display:flex;flex-direction:column;overflow:hidden}
+.drill.on{opacity:1;pointer-events:auto;transform:translate(-50%,-50%) scale(1)}
+.drill .dth{display:flex;align-items:center;gap:11px;padding:13px 15px;
+  border-bottom:1px solid var(--rule);background:var(--paper-2);flex:0 0 auto}
+.drill .dth .t{min-width:0;flex:1}
+.drill .dth h4{margin:0;font-size:14px;letter-spacing:.02em;overflow:hidden;
+  text-overflow:ellipsis;white-space:nowrap}
+.drill .dth .s{font-size:11px;color:var(--ink-3);margin-top:2px}
+.drill .dtb{overflow-y:auto;padding:8px 10px}
+.drill .dtf{display:flex;align-items:center;gap:8px;padding:10px 15px;
+  border-top:1px solid var(--rule);background:var(--paper-2);flex:0 0 auto}
+.drill .dtf .nb{font-size:11px;color:var(--ink-3);margin-right:auto}
+.drill .none{padding:26px 16px;text-align:center;font-size:12.5px;color:var(--ink-3)}
+
 .ring2{display:flex;align-items:center;gap:18px}
 .ring2 svg{transform:rotate(-90deg);flex:0 0 auto}
 .lgd{display:flex;flex-direction:column;gap:7px;font-size:11.5px;flex:1;min-width:0}
@@ -458,6 +511,29 @@ table.reg td.ttd span{display:block;overflow:hidden;text-overflow:ellipsis;white
   text-transform:uppercase;color:var(--ink-3);display:flex;align-items:center;gap:8px}
 .sec h5 .n{font-family:var(--f-mono);letter-spacing:0;color:var(--ink-3);
   border:1px solid var(--rule);border-radius:999px;padding:0 7px;font-size:9.5px}
+/* ── collapsible drawer sections ──────────────────────────────────────────
+   Dependencies, waiting, scripts and documents are the exception, not the
+   rule — most records never have any. They sit at the foot of the drawer,
+   folded, with a count on the summary so you can see there is something
+   inside without opening it. */
+.sec.acc{padding:0}
+.sec.acc>summary{list-style:none;cursor:pointer;padding:12px 16px;display:flex;align-items:center;gap:9px;
+  font-family:var(--f-display);font-size:10px;font-weight:600;letter-spacing:.11em;
+  text-transform:uppercase;color:var(--ink-3);transition:.14s;user-select:none}
+.sec.acc>summary::-webkit-details-marker,.sec.acc>summary::marker{display:none;content:""}
+.sec.acc>summary:hover{color:var(--ink);background:var(--paper-2)}
+.sec.acc[open]>summary{color:var(--ink-2)}
+.sec.acc>summary .cv{width:9px;flex:0 0 auto;color:var(--ink-3);font-size:11px;line-height:1;
+  transition:transform .16s var(--ease)}
+.sec.acc[open]>summary .cv{transform:rotate(90deg)}
+.sec.acc>summary .n{font-family:var(--f-mono);letter-spacing:0;text-transform:none;color:var(--ink-3);
+  border:1px solid var(--rule);border-radius:999px;padding:0 7px;font-size:9.5px}
+.sec.acc>summary .n.live{color:var(--accent);border-color:var(--accent)}
+.sec.acc>summary .hint{margin-left:auto;font-family:var(--f-ui);font-size:10.5px;font-weight:400;
+  letter-spacing:0;text-transform:none;color:var(--ink-3);overflow:hidden;
+  text-overflow:ellipsis;white-space:nowrap;max-width:52%}
+.accb{padding:2px 16px 15px}
+
 .fr{display:grid;grid-template-columns:98px 1fr;gap:10px;align-items:center;margin-bottom:9px}
 .fr:last-child{margin-bottom:0}
 .fr label{font-size:11.5px;color:var(--ink-2)}
@@ -521,14 +597,25 @@ textarea.in{resize:vertical;line-height:1.6;min-height:80px}
 .clock .big{font-family:var(--f-mono);font-size:23px;font-weight:600;font-variant-numeric:tabular-nums}
 .clock .big.run{color:var(--st-proc)}
 .clock .lb{font-size:11px;color:var(--ink-3)}
-.tl{position:relative;margin-bottom:10px}
-.tl::before{content:"";position:absolute;left:5px;top:8px;bottom:8px;width:1px;background:var(--rule)}
-.tli{display:grid;grid-template-columns:12px 1fr;gap:11px;padding:6px 0;position:relative}
+/* The kind of a log entry rides on a data attribute, never a second class.
+   It used to be written as class="tli status", and the footer's own .status
+   rule — same specificity, further down this sheet — won: every entry was
+   squashed into a 27px flex bar with the footer's background and padding,
+   and vanished entirely under 900px. */
+.tl{position:relative;margin:2px 0 11px}
+.tl::before{content:"";position:absolute;left:5px;top:10px;bottom:10px;width:1px;background:var(--rule)}
+.tli{display:grid;grid-template-columns:12px 1fr;gap:11px;padding:5px 0;position:relative;
+  align-items:start;height:auto;background:transparent;border:0}
 .tli i{width:7px;height:7px;border-radius:50%;background:var(--rule-hi);margin-top:6px;z-index:1;
   box-shadow:0 0 0 3px var(--paper)}
-.tli.status i{background:var(--accent)}
-.tli .tx{font-size:12.5px;line-height:1.5;word-break:break-word}
-.tli .dt{font-family:var(--f-mono);font-size:10px;color:var(--ink-3);margin-top:1px}
+.tli[data-kind="status"] i{background:var(--accent)}
+.tli .tx{font-size:12.5px;line-height:1.45;word-break:break-word}
+.tli .dt{font-family:var(--f-mono);font-size:10px;color:var(--ink-3);margin-top:2px}
+/* a long history stays folded until asked for */
+.tl.clip .tli:nth-child(n+7){display:none}
+.tlmore{border:0;background:transparent;color:var(--ink-3);font-size:11px;cursor:pointer;
+  padding:2px 0 0 23px;text-align:left;font-weight:600}
+.tlmore:hover{color:var(--accent)}
 
 .btn{border:1px solid var(--rule);background:var(--paper-2);color:var(--ink);border-radius:var(--r-xs);
   padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;transition:.14s;white-space:nowrap}
@@ -936,6 +1023,18 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
   </div>
 </div>
 
+<div class="drill" id="drill">
+  <div class="dth">
+    <div class="t"><h4 id="drillT">—</h4><div class="s" id="drillS"></div></div>
+    <button class="ib" id="drillX" title="Close (Esc)">✕</button>
+  </div>
+  <div class="dtb" id="drillB"></div>
+  <div class="dtf">
+    <span class="nb" id="drillN"></span>
+    <button class="btn sm" id="drillReg">Open these in Register</button>
+  </div>
+</div>
+
 <div class="ask" id="ask">
   <div class="ah"><h4 id="askT">—</h4><p id="askM"></p></div>
   <div class="ab"><div class="opts" id="askO"></div>
@@ -1143,8 +1242,9 @@ const S = {
   },
   view:"day",
   filters:{ st:{ open:true, processing:true, blocked:true, done:true, cancelled:false },
-            sys:"", pri:"", type:"", who:"", range:"", q:"", day:"", hideRoutine:false },
-  sel:new Set(), open:null, sort:{ by:"due", dir:1 },
+            sys:"", pri:"", type:"", who:"", range:"", q:"", day:"", hideRoutine:false,
+            ids:null, idsLabel:"" },
+  sel:new Set(), open:null, drill:null, folds:{}, sort:{ by:"due", dir:1 },
   weekStart:null, undo:[], dirty:false, saving:false, lastSaved:null,
   rows:[], cursor:-1, reminded:{}, blobCache:{}
 };
@@ -2623,6 +2723,8 @@ function attachScript(t, id){
 /* ═══ FILTERS ════════════════════════════════════════════════════════════ */
 function matches(t){
   const f = S.filters;
+  /* a set pinned from an Insight chart — narrower than any dropdown can say */
+  if (f.ids && f.ids.indexOf(t.id) < 0) return false;
   if (!f.st[t.status]) return false;
   if (f.hideRoutine && t.fromRoutine) return false;
   if (f.day && t.due !== f.day) return false;
@@ -2668,7 +2770,8 @@ function matches(t){
    The free-text search box is deliberately not remembered. */
 function blankFilters(){
   return { st:{ open:true, processing:true, blocked:true, done:true, cancelled:false },
-           sys:"", pri:"", type:"", who:"", range:"", q:"", day:"", hideRoutine:false };
+           sys:"", pri:"", type:"", who:"", range:"", q:"", day:"", hideRoutine:false,
+           ids:null, idsLabel:"" };
 }
 const rememberFilters = debounce(function(){
   if (S.hush || !S.settings.rememberFilters) return;
@@ -2704,6 +2807,7 @@ function filterSummary(){
   if (f.range) bits.push(($("fRange") && $("fRange").selectedOptions[0]
     ? $("fRange").selectedOptions[0].textContent : f.range).toLowerCase());
   if (f.day) bits.push("due " + niceDate(f.day));
+  if (f.ids) bits.push(f.idsLabel ? "from Insight: " + f.idsLabel : "a set picked from Insight");
   if (f.q) bits.push('search "' + f.q + '"');
   return bits.length ? bits.join(" · ") : "no filters";
 }
@@ -2784,8 +2888,11 @@ function group(title, arr, cls){
 function blank(g, h, p){
   return '<div class="blank"><div class="g">' + g + "</div><h4>" + esc(h) + "</h4><p>" + p + "</p></div>";
 }
-function kpi(k, v, d, pct, cls){
-  return '<div class="kpi ' + (cls||"") + '"><div class="k">' + esc(k) + '</div><div class="v">' + esc(String(v)) +
+/* `drAttr` is the data-dr produced by dr() — empty when the number stands for
+   no records, which is also when the card must not look clickable. */
+function kpi(k, v, d, pct, cls, drAttr){
+  return '<div class="kpi ' + (cls||"") + (drAttr === "" ? " nil" : "") + '"' + (drAttr || "") +
+    '><div class="k">' + esc(k) + '</div><div class="v">' + esc(String(v)) +
     '</div><div class="d">' + esc(d) + "</div>" +
     (pct ? '<div class="tr"><i style="width:' + Math.min(100, pct) + '%"></i></div>' : "") + "</div>";
 }
@@ -3014,9 +3121,30 @@ function renderLib(){
   });
 }
 
-/* ═══ VIEW: INSIGHT ══════════════════════════════════════════════════════ */
+/* ═══ VIEW: INSIGHT ══════════════════════════════════════════════════════
+   Insight reads the same set of records the rest of the app is showing. It
+   used to read S.tasks straight, which meant the rail's filters moved every
+   other view and left this one alone — the numbers said one thing and the
+   board said another.
+
+   Every figure on this page also stands for a list of records, and the whole
+   point of a figure like "1 raised" is the question it provokes: raised for
+   what? So each bar, column, segment and headline registers the records
+   behind it in INS.drills and carries a data-dr index. One click opens them.
+   ════════════════════════════════════════════════════════════════════════ */
+const INS = { drills: [] };
+
+/* Register a clickable set and return the attribute to hang on the element.
+   Empty sets return "" — nothing to open, so nothing pretends to be a button. */
+function dr(label, sub, list){
+  if (!list || !list.length) return "";
+  INS.drills.push({ label, sub, ids: list.map(t => t.id) });
+  return ' data-dr="' + (INS.drills.length - 1) + '"';
+}
+
 function renderIns(){
-  const all = S.tasks, k = today();
+  INS.drills = [];
+  const all = visible(), k = today();
   const ws = mondayOf(k), mp = k.slice(0,7);
   const done = all.filter(t => t.status === "done");
   const dw = done.filter(t => (t.completed||"").slice(0,10) >= ws);
@@ -3027,19 +3155,27 @@ function renderIns(){
   const avg = cyc.length ? cyc.reduce((a,b)=>a+b,0)/cyc.length : 0;
   const spent = all.reduce((s,t) => s + live(t), 0);
   const slip = openNow.filter(t => t.carried > 0);
+  const withDocs = all.filter(t => (t.files||[]).length);
   const docs = all.reduce((s,t) => s + (t.files||[]).length, 0);
+  const tracked = all.filter(t => live(t) > 0);
+  const closedCyc = done.filter(t => t.created && t.completed);
 
   const days = [];
   for (let i = 20; i >= 0; i--){
     const key = addDays(k, -i);
     days.push({ key,
-      d: all.filter(t => t.status === "done" && (t.completed||"").slice(0,10) === key).length,
-      o: all.filter(t => (t.created||"").slice(0,10) === key).length });
+      dl: all.filter(t => t.status === "done" && (t.completed||"").slice(0,10) === key),
+      ol: all.filter(t => (t.created||"").slice(0,10) === key) });
   }
+  days.forEach(x => { x.d = x.dl.length; x.o = x.ol.length; });
   const mx = Math.max(1, ...days.map(x => Math.max(x.d, x.o)));
-  const bySys = tally(all, t => t.system || "Unassigned");
+
+  const bySys  = tally(all, t => t.system || "Unassigned");
   const byType = tally(all, t => t.type || "Uncategorised");
-  const byReq = PEOPLE.list.slice(0, 9).map(p => [p.name, p.n]);
+  /* counted per person over the records in view, not over the whole file —
+     otherwise the filters would move the bars but not this panel */
+  const byReq  = tally(all.filter(t => peopleOf(t).length), t => peopleOf(t)).slice(0, 9);
+
   /* days lost per team — current waits plus every one already cleared */
   const waitAgg = {}, waitCount = {};
   all.forEach(t => {
@@ -3052,27 +3188,52 @@ function renderIns(){
       waitCount[w.party] = (waitCount[w.party] || 0) + 1;
     });
   });
-  const waitPairs = Object.keys(waitAgg).map(k => [k, waitAgg[k]]).sort((a,b) => b[1]-a[1]);
+  const waitPairs = Object.keys(waitAgg).map(x => [x, waitAgg[x]]).sort((a,b) => b[1]-a[1]);
   const heldNow = all.filter(t => isHeld(t));
   const timeSys = {};
-  all.forEach(t => { const s = t.system || "Unassigned"; timeSys[s] = (timeSys[s]||0) + live(t); });
-  const stc = STATUSES.map(s => ({ id:s.id, label:s.label, colour:s.colour, n: all.filter(t => t.status === s.id).length }));
+  all.forEach(t => { const x = t.system || "Unassigned"; timeSys[x] = (timeSys[x]||0) + live(t); });
+  const stc = STATUSES.map(x => ({ id:x.id, label:x.label, colour:x.colour,
+                                   list: all.filter(t => t.status === x.id) }));
+  stc.forEach(x => x.n = x.list.length);
 
-  let h = '<div class="cards">';
-  h += kpi("Closed this week", dw.length, "since " + niceDate(ws), 0, "good");
-  h += kpi("Closed this month", dm.length, MON[pk(k).getMonth()], 0, "good");
-  h += kpi("Open now", openNow.length, slip.length + " have slipped", 0, slip.length ? "bad" : "");
-  h += kpi("Turnaround", avg >= 24 ? (avg/24).toFixed(1) + "d" : avg.toFixed(1) + "h", "opened → closed", 0, "");
-  h += kpi("Time tracked", mins(spent), "across all records", 0, "");
-  h += kpi("Documents", docs, "attached evidence", 0, "");
+  const f = S.filters;
+  const filtered = all.length !== S.tasks.length || !!f.q || !!f.ids;
+  let h = '<div class="inshead">' +
+    '<span class="ttl">Reading ' + all.length + " of " + S.tasks.length + " records</span>" +
+    '<span class="fs">' + (filtered ? "<b>filtered</b> · " + esc(filterSummary()) : esc(filterSummary())) + "</span>" +
+    '<span class="sp"></span>' +
+    (filtered ? '<button class="btn sm" id="insClear">Clear filters</button>' : "") +
+    "</div>";
+
+  h += '<div class="cards">';
+  h += kpi("Closed this week", dw.length, "since " + niceDate(ws), 0, "good",
+           dr("Closed this week", "Closed since " + niceDate(ws), dw));
+  h += kpi("Closed this month", dm.length, MON[pk(k).getMonth()], 0, "good",
+           dr("Closed this month", MON[pk(k).getMonth()] + " " + pk(k).getFullYear(), dm));
+  h += kpi("Open now", openNow.length, slip.length + " have slipped", 0, slip.length ? "bad" : "",
+           dr("Open now", "Everything still live", openNow));
+  h += kpi("Turnaround", avg >= 24 ? (avg/24).toFixed(1) + "d" : avg.toFixed(1) + "h", "opened → closed", 0, "",
+           dr("Turnaround", "The " + closedCyc.length + " closed records this average is built from", closedCyc));
+  h += kpi("Time tracked", mins(spent), "across all records", 0, "",
+           dr("Time tracked", "Records with time on the clock", tracked));
+  h += kpi("Documents", docs, "attached evidence", 0, "",
+           dr("Documents", "Records carrying attachments", withDocs));
   h += "</div>";
 
   h += '<div class="panels">';
   h += '<div class="panel" style="grid-column:span 2"><h4>Daily throughput</h4>' +
-    '<div class="sub">Closed against raised, last 21 days</div><div class="vb">' +
-    days.map(x => '<div class="c" title="' + niceDate(x.key) + ": " + x.d + " closed, " + x.o + ' raised">' +
-      '<div class="b" style="height:' + (x.o/mx*40) + '%"></div>' +
-      '<div class="a" style="height:' + (x.d/mx*58) + '%"></div></div>').join("") +
+    '<div class="sub">Closed against raised, last 21 days — click a day to read it</div><div class="vb">' +
+    days.map(x => {
+      /* a one-record day is a two-pixel bar; the column around it is the
+         target you can actually hit, and closest() still prefers the bar */
+      const both = x.dl.concat(x.ol.filter(t => x.dl.indexOf(t) < 0));
+      return '<div class="c" title="' + niceDate(x.key) + ": " + x.d + " closed, " + x.o + ' raised"' +
+        dr(niceDate(x.key), x.o + " raised, " + x.d + " closed that day", both) + ">" +
+        '<div class="b" style="height:' + (x.o/mx*40) + '%"' +
+          dr("Raised " + niceDate(x.key), x.o + " record(s) opened that day", x.ol) + "></div>" +
+        '<div class="a" style="height:' + (x.d/mx*58) + '%"' +
+          dr("Closed " + niceDate(x.key), x.d + " record(s) closed that day", x.dl) + "></div></div>";
+    }).join("") +
     '</div><div class="vax"><span>' + niceDate(days[0].key) + "</span><span>" + niceDate(days[10].key) +
     "</span><span>Today</span></div>" +
     '<div class="lgd" style="flex-direction:row;gap:16px;margin-top:12px">' +
@@ -3081,26 +3242,34 @@ function renderIns(){
 
   const tot = Math.max(1, all.length), circ = 2*Math.PI*34;
   let acc = 0;
-  const segs = stc.filter(s => s.n).map(s => {
-    const fr = s.n/tot;
-    const g = '<circle cx="42" cy="42" r="34" fill="none" stroke="' + s.colour + '" stroke-width="14" stroke-dasharray="' +
-      (fr*circ).toFixed(2) + " " + circ.toFixed(2) + '" stroke-dashoffset="' + (-acc*circ).toFixed(2) + '"></circle>';
+  const segs = stc.filter(x => x.n).map(x => {
+    const fr = x.n/tot;
+    const g = '<circle cx="42" cy="42" r="34" fill="none" stroke="' + x.colour + '" stroke-width="14" stroke-dasharray="' +
+      (fr*circ).toFixed(2) + " " + circ.toFixed(2) + '" stroke-dashoffset="' + (-acc*circ).toFixed(2) + '"' +
+      dr(x.label, "Every record sitting at " + x.label.toLowerCase(), x.list) + "></circle>";
     acc += fr; return g;
   }).join("");
-  h += '<div class="panel"><h4>Status mix</h4><div class="sub">All ' + all.length + ' records</div>' +
+  h += '<div class="panel"><h4>Status mix</h4><div class="sub">All ' + all.length + ' records in view</div>' +
     '<div class="ring2"><svg width="84" height="84"><circle cx="42" cy="42" r="34" fill="none" stroke="var(--paper-3)" stroke-width="14"></circle>' +
-    segs + '</svg><div class="lgd">' + stc.map(s =>
-      '<div><i style="background:' + s.colour + '"></i><span class="lb">' + s.label + '</span><span class="v">' + s.n + "</span></div>").join("") +
+    segs + '</svg><div class="lgd">' + stc.map(x =>
+      "<div" + dr(x.label, "Every record sitting at " + x.label.toLowerCase(), x.list) + '><i style="background:' +
+      x.colour + '"></i><span class="lb">' + x.label + '</span><span class="v">' + x.n + "</span></div>").join("") +
     "</div></div></div>";
 
-  h += bars("Workload by system", "Every record on file", bySys, null, true);
-  h += bars("Work by type", "What your days are made of", byType);
+  h += bars("Workload by system", "Every record on file", bySys, null, true,
+            v => all.filter(t => (t.system || "Unassigned") === v), "Every record on ");
+  h += bars("Work by type", "What your days are made of", byType, null, false,
+            v => all.filter(t => (t.type || "Uncategorised") === v), "Every record of type ");
   h += bars("Time by system", "Where the hours actually go",
-    Object.keys(timeSys).map(x => [x, timeSys[x]]).sort((a,b) => b[1]-a[1]), v => mins(v), true);
-  if (byReq.length) h += bars("Who asks the most", "Counted per person, not per record", byReq);
+    Object.keys(timeSys).map(x => [x, timeSys[x]]).sort((a,b) => b[1]-a[1]), v => mins(v), true,
+    v => all.filter(t => (t.system || "Unassigned") === v && live(t) > 0), "Time booked against ");
+  if (byReq.length) h += bars("Who asks the most", "Counted per person, not per record", byReq, null, false,
+    v => all.filter(t => peopleOf(t).indexOf(v) >= 0), "Raised by ");
   if (waitPairs.length) h += bars("Days lost waiting on others",
     "Time these records sat with someone outside your permission",
-    waitPairs, v => v + "d");
+    waitPairs, v => v + "d", false,
+    v => all.filter(t => t.waitOn === v || (t.waitLog || []).some(w => w.party === v)),
+    "Records that waited on ");
 
   h += '<div class="panel" style="grid-column:span 2"><h4>Held up right now</h4>' +
     '<div class="sub">Waiting on another record, or on someone else to act</div>' +
@@ -3108,20 +3277,27 @@ function renderIns(){
       const ob = openBlockers(t);
       const why = t.waitOn ? t.waitOn + (waitDays(t) ? " · " + waitDays(t) + "d" : "")
                            : ob.map(x => x.code).join(", ");
-      return '<div class="r"><span class="lb" title="' + esc(t.title) + '">' + esc(t.title.slice(0,32)) + "</span>" +
+      return '<div class="r"' + dr(t.code + " " + t.title, "Held up — " + why, [t]) +
+        '><span class="lb" title="' + esc(t.title) + '">' + esc(t.title.slice(0,32)) + "</span>" +
         '<div class="tr"><i style="width:' + Math.min(100, Math.max(8, waitDays(t) * 7)) +
         '%;background:var(--st-block)"></i></div>' +
         '<span class="vv" title="' + esc(why) + '">' + esc(why.slice(0,18)) + "</span></div>";
-    }).join("") + "</div>"
+    }).join("") + "</div>" +
+      (heldNow.length > 10 ? '<div class="hint"' + dr("Held up right now",
+        "Everything waiting on another record or another person", sortTasks(heldNow)) +
+        "><b>See all " + heldNow.length + "</b></div>" : "")
       : '<div style="font-size:12.5px;color:var(--ink-3)">Nothing is held up. Everything open is yours to move.</div>') +
     "</div>";
 
   h += '<div class="panel" style="grid-column:span 2"><h4>Slipping</h4>' +
     '<div class="sub">Open records past their due date — the ones to explain or reschedule</div>' +
     (slip.length ? '<div class="hb">' + sortTasks(slip).slice(0,10).map(t =>
-      '<div class="r"><span class="lb" title="' + esc(t.title) + '">' + esc(t.title.slice(0,32)) + "</span>" +
+      '<div class="r"' + dr(t.code + " " + t.title, "Overdue by " + t.carried + " day(s)", [t]) +
+      '><span class="lb" title="' + esc(t.title) + '">' + esc(t.title.slice(0,32)) + "</span>" +
       '<div class="tr"><i style="width:' + Math.min(100, t.carried*8) + '%;background:var(--p1)"></i></div>' +
-      '<span class="vv">+' + t.carried + "d</span></div>").join("") + "</div>"
+      '<span class="vv">+' + t.carried + "d</span></div>").join("") + "</div>" +
+      (slip.length > 10 ? '<div class="hint"' + dr("Slipping", "Every open record past its due date", sortTasks(slip)) +
+        "><b>See all " + slip.length + "</b></div>" : "")
       : '<div style="font-size:12.5px;color:var(--ink-3)">Nothing overdue.</div>') + "</div>";
   h += "</div>";
 
@@ -3136,20 +3312,57 @@ function renderIns(){
     '<button class="btn" data-rep="print">Print</button></div></div>';
   $("vIns").innerHTML = h;
 }
+
+/* fn may return one key or an array of them (a record can have two requesters) */
 function tally(arr, fn){
   const m = {};
-  arr.forEach(x => { const k = fn(x); m[k] = (m[k]||0)+1; });
+  arr.forEach(x => {
+    const r = fn(x);
+    (Array.isArray(r) ? r : [r]).forEach(k => { m[k] = (m[k]||0)+1; });
+  });
   return Object.keys(m).map(k => [k, m[k]]).sort((a,b) => b[1]-a[1]);
 }
-function bars(title, sub, pairs, fmt, colourBySystem){
+
+/* `pick` turns a bar's label back into the records behind it, so the bar can
+   be opened. Panels that pass no picker stay as plain reading. */
+function bars(title, sub, pairs, fmt, colourBySystem, pick, drSub){
   const mx = Math.max(1, ...pairs.map(p => p[1]));
   return '<div class="panel"><h4>' + esc(title) + '</h4><div class="sub">' + esc(sub) + "</div>" +
     (pairs.length ? '<div class="hb">' + pairs.slice(0,9).map(p =>
-      '<div class="r"><span class="lb" title="' + esc(p[0]) + '">' + esc(p[0]) + "</span>" +
+      '<div class="r"' + (pick ? dr(p[0], (drSub || "") + p[0], pick(p[0])) : "") +
+      '><span class="lb" title="' + esc(p[0]) + '">' + esc(p[0]) + "</span>" +
       '<div class="tr"><i style="width:' + (p[1]/mx*100).toFixed(1) + "%;background:" +
       (colourBySystem ? sysColour(p[0]) : "var(--accent)") + '"></i></div>' +
       '<span class="vv">' + (fmt ? fmt(p[1]) : p[1]) + "</span></div>").join("") + "</div>"
       : '<div style="font-size:12.5px;color:var(--ink-3)">Nothing recorded yet.</div>') + "</div>";
+}
+
+/* ═══ DRILL-DOWN ═════════════════════════════════════════════════════════
+   The list behind a number on Insight. Rows are the ordinary record rows, so
+   clicking one opens the record exactly as it would anywhere else. */
+/* `ref` is either the index a rendered element carries, or the drill object
+   itself — Insight re-renders on every edit and rebuilds the index, so a
+   sheet refreshing itself after a status change has to hold the object. */
+function openDrill(ref){
+  const d = (ref && typeof ref === "object") ? ref : INS.drills[+ref];
+  if (!d) return;
+  const list = sortTasks(d.ids.map(getTask).filter(Boolean));
+  S.drill = d;
+  $("drillT").textContent = d.label;
+  $("drillS").textContent = d.sub || "";
+  $("drillN").textContent = list.length + (list.length === 1 ? " record" : " records");
+  $("drillB").innerHTML = list.length
+    ? '<div class="rows">' + list.map(rowHtml).join("") + "</div>"
+    : '<div class="none">These records are no longer on file.</div>';
+  $("drillReg").disabled = !list.length;
+  $("drill").classList.add("on");
+  $("scrim").classList.add("on");
+}
+function closeDrill(){
+  S.drill = null;
+  $("drill").classList.remove("on");
+  if (!$("drawer").classList.contains("on") && !$("modal").classList.contains("on") &&
+      !$("ask").classList.contains("on")) $("scrim").classList.remove("on");
 }
 
 /* ═══ RENDER ALL ═════════════════════════════════════════════════════════ */
@@ -3161,7 +3374,8 @@ function renderAll(){
 
   const vis = visible();
   $("railCt").textContent = vis.length + " of " + S.tasks.length +
-    (S.filters.day ? " · due " + niceDate(S.filters.day) : "");
+    (S.filters.day ? " · due " + niceDate(S.filters.day) : "") +
+    (S.filters.ids ? " · pinned from Insight" : "");
   $("sbT").textContent = S.tasks.length;
   const k = today();
   $("sbD").textContent = S.tasks.filter(t => (t.completed||"").slice(0,10) === k).length;
@@ -3282,8 +3496,9 @@ function renderDrawer(){
     (kind === "up" ? '<button data-dx="' + b.id + '">Unlink</button>' : "") + "</div>";
 
   const pickable = S.tasks.filter(x => x.id !== t.id).slice(0, 300);
-  const depsHtml = '<div class="sec"><h5>Dependencies' +
-      (allB.length || deps.length ? '<span class="n">' + (allB.length + deps.length) + "</span>" : "") + "</h5>" +
+  const depsHtml = fold("deps", "Dependencies", allB.length + deps.length,
+      allB.length ? "waits for " + allB.map(b => b.code).join(", ") : (deps.length ? deps.length + " held up by this" : ""),
+      isHeld(t) && ob.length,
     (allB.length ? '<div class="eyebrow" style="margin-bottom:6px">This one waits for</div>' +
       allB.map(b => depRow(b, "up")).join("") : "") +
     '<div style="display:flex;gap:6px;margin-top:' + (allB.length ? "8px" : "0") + '">' +
@@ -3295,11 +3510,11 @@ function renderDrawer(){
       deps.map(b => depRow(b, "down")).join("") : "") +
     '<div style="font-size:11px;color:var(--ink-3);margin-top:8px;line-height:1.6">' +
       "Linking a record that is still open moves this one to Blocked. When the last one closes, " +
-      "Dossier reopens this by itself and tells you.</div></div>";
+      "Dossier reopens this by itself and tells you.</div>");
 
   const partyOpts = knownValues("waitOn");
-  const waitHtml = '<div class="sec"><h5>Waiting on someone else' +
-      (t.waitOn ? '<span class="n">' + waitDays(t) + "d</span>" : "") + "</h5>" +
+  const waitHtml = fold("wait", "Waiting on someone else", t.waitOn ? waitDays(t) + "d" : 0,
+      t.waitOn ? t.waitOn + (t.waitNote ? " — " + t.waitNote : "") : "", !!t.waitOn,
     fr("Who", '<input class="in" id="waitWho" list="partyList" value="' + esc(t.waitOn) +
       '" placeholder="Data team, vendor, DBA…">') +
     fr("Because", '<input class="in" id="waitNote" value="' + esc(t.waitNote) +
@@ -3318,11 +3533,11 @@ function renderDrawer(){
         " This time is counted separately in Insight, so you can show where it actually went.</div>"
       : '<div style="font-size:11px;color:var(--ink-3);margin-top:9px;line-height:1.6">' +
         "For the ones you have no permission to fix — the data team has to sync first, the vendor has to " +
-        "reply. The clock is the evidence.</div>") + "</div>";
+        "reply. The clock is the evidence.</div>"));
 
   /* ── scripts tied to this record ───────────────────────────────────────── */
-  const scHtml = '<div class="sec"><h5>Scripts' +
-      ((t.scripts || []).length ? '<span class="n">' + t.scripts.length + "</span>" : "") + "</h5>" +
+  const scHtml = fold("scripts", "Scripts", (t.scripts || []).length,
+      (t.scripts || []).map(id => (scriptById(id) || {}).name || "?").join(", "), false,
     (t.scripts || []).map(id => {
       const sc = scriptById(id);
       if (!sc) return "";
@@ -3352,7 +3567,7 @@ function renderDrawer(){
     '<div style="font-size:11px;color:var(--ink-3);margin-top:8px;line-height:1.6">' +
       "The browser is not allowed to run anything on your machine, and Dossier does not try. " +
       "It keeps the file in <b>scripts/</b>, fills in the blanks, and gives you the command " +
-      "or a ready copy in this record's own folder.</div></div>";
+      "or a ready copy in this record's own folder.</div>");
 
   const files = (t.files || []).map(f =>
     '<div class="att" data-file="' + esc(f.name) + '"><span class="ex">' + extOf(f.name) + "</span>" +
@@ -3360,18 +3575,22 @@ function renderDrawer(){
     "<small>" + bytes(f.size||0) + " · added " + stamp(f.added) + "</small></span>" +
     '<button data-fa="open">Open</button><button data-fa="rm">Remove</button></div>').join("");
 
-  $("dBody").innerHTML =
-    '<div class="sec"><h5>Status</h5>' + holdHtml + '<div class="stg">' +
-      STATUSES.map(s => '<button class="sb' + (t.status === s.id ? " on" : "") + '" data-st="' + s.id + '" data-v="' + s.id + '">' + s.label + "</button>").join("") +
-    "</div></div>" + depsHtml + waitHtml + sug + priorHtml + scHtml +
-
-    '<div class="sec"><h5>Documents <span class="n">' + (t.files||[]).length + "</span></h5>" +
-      '<div class="dz" id="dz"><b>Drop files here, or click to choose</b>' +
+  const docsHtml = fold("docs", "Documents", (t.files || []).length,
+      (t.files || []).map(x => x.name).join(", "), false,
+    '<div class="dz" id="dz"><b>Drop files here, or click to choose</b>' +
       "<small>" + (FS.ok ? "tasks/" + esc(t.folder) + "/" : "link a workspace folder first") + "</small></div>" +
       files +
       (FS.ok ? '<div style="font-size:11px;color:var(--ink-3);margin-top:8px;line-height:1.6">' +
-        "Files are copied into this record's own folder inside your workspace. Ctrl+V pastes a screenshot straight in.</div>" : "") +
-    "</div>" +
+        "Files are copied into this record's own folder inside your workspace. Ctrl+V pastes a screenshot straight in.</div>" : ""));
+
+  /* The order is the order of a working day: what state is it in, what is it,
+     how long did it take, what is left, what did you find, what happened.
+     Dependencies, waiting, scripts and documents are the exceptions — most
+     records have none — so they fold up at the foot of the drawer. */
+  $("dBody").innerHTML =
+    '<div class="sec"><h5>Status</h5>' + holdHtml + '<div class="stg">' +
+      STATUSES.map(s => '<button class="sb' + (t.status === s.id ? " on" : "") + '" data-st="' + s.id + '" data-v="' + s.id + '">' + s.label + "</button>").join("") +
+    "</div></div>" + sug + priorHtml +
 
     '<div class="sec"><h5>Details</h5>' +
       fr("Priority", '<select class="in" data-f="priority">' + priOpt + "</select>") +
@@ -3410,13 +3629,21 @@ function renderDrawer(){
     '<div class="sec"><h5>Notes</h5>' +
       '<textarea class="in" data-f="notes" placeholder="What you found, what you changed, what to watch. This is what shows up next time a similar record appears.">' + esc(t.notes) + "</textarea></div>" +
 
-    '<div class="sec"><h5>Work log</h5><div class="tl">' +
+    '<div class="sec"><h5>Work log' + ((t.log||[]).length ? '<span class="n">' + t.log.length + "</span>" : "") +
+      "</h5>" +
+      '<div class="tl' + ((t.log||[]).length > 6 && !S.folds.logAll ? " clip" : "") + '">' +
       ((t.log||[]).length ? t.log.slice().reverse().map(l =>
-        '<div class="tli ' + (l.kind||"") + '"><i></i><div><div class="tx">' + esc(l.text) + "</div>" +
+        '<div class="tli" data-kind="' + esc(l.kind||"") + '"><i></i><div><div class="tx">' + esc(l.text) + "</div>" +
         '<div class="dt">' + stamp(l.at) + "</div></div></div>").join("")
-        : '<div style="font-size:12px;color:var(--ink-3);padding-left:22px">Nothing logged.</div>') + "</div>" +
-      '<div style="display:flex;gap:6px"><input class="in" id="lgNew" placeholder="Add an update…">' +
+        : '<div style="font-size:12px;color:var(--ink-3);padding-left:23px">Nothing logged.</div>') + "</div>" +
+      ((t.log||[]).length > 6
+        ? '<button class="tlmore" id="lgMore">' +
+          (S.folds.logAll ? "Show the last 6 only" : "Show all " + t.log.length + " entries") + "</button>"
+        : "") +
+      '<div style="display:flex;gap:6px;margin-top:9px"><input class="in" id="lgNew" placeholder="Add an update…">' +
       '<button class="btn sm" id="lgAdd">Log</button></div></div>' +
+
+    depsHtml + waitHtml + scHtml + docsHtml +
 
     '<div class="sec"><div class="brow">' +
       '<button class="btn" id="tDup">Duplicate</button>' +
@@ -3426,6 +3653,23 @@ function renderDrawer(){
       '<button class="btn danger" id="tDel">Delete</button></div></div>';
 }
 function fr(label, html){ return '<div class="fr"><label>' + esc(label) + "</label>" + html + "</div>"; }
+
+/* A drawer section that stays folded until it has something to say.
+     key    remembers open/shut across the re-render every edit causes
+     n      count on the summary — you can see there is something inside
+     hint   a one-line preview of what that something is
+     urgent paints the count in accent: this record is actually held up
+   The section opens by itself the first time it has content, and whatever
+   the user does with it after that is remembered for the session. */
+function fold(key, title, n, hint, urgent, inner){
+  const state = S.folds[key];
+  const open = state === undefined ? !!n : state;
+  return '<details class="sec acc" data-acc="' + key + '"' + (open ? " open" : "") + ">" +
+    '<summary><span class="cv">›</span>' + esc(title) +
+    (n ? '<span class="n' + (urgent ? " live" : "") + '">' + esc(String(n)) + "</span>" : "") +
+    (!open && hint ? '<span class="hint">' + esc(String(hint).slice(0, 64)) + "</span>" : "") +
+    "</summary><div class=\"accb\">" + inner + "</div></details>";
+}
 
 /* ═══ REPORTS ════════════════════════════════════════════════════════════ */
 function reportMd(kind){
@@ -4727,12 +4971,13 @@ $("fPri").addEventListener("change", e => { S.filters.pri = e.target.value; reme
 $("fType").addEventListener("change", e => { S.filters.type = e.target.value; rememberFilters(); renderAll(); });
 $("fWho").addEventListener("change", e => { S.filters.who = e.target.value; rememberFilters(); renderAll(); });
 $("fRange").addEventListener("change", e => { S.filters.range = e.target.value; rememberFilters(); renderAll(); });
-$("clearF").addEventListener("click", () => {
+function clearFilters(){
   S.filters = blankFilters();
   ["fSys","fPri","fType","fWho","fRange","q"].forEach(id => $(id).value = "");
   syncRail(); rememberFilters(); renderAll();
   toast("Filters cleared");
-});
+}
+$("clearF").addEventListener("click", clearFilters);
 $("q").addEventListener("input", debounce(function(){ S.filters.q = $("q").value.trim().toLowerCase(); renderAll(); }, 180));
 
 /* main click routing */
@@ -4774,6 +5019,35 @@ $("main").addEventListener("click", e => {
   if (e.target.id === "wkT"){ S.weekStart = mondayOf(today()); return renderWeek(); }
   const rep = e.target.dataset && e.target.dataset.rep;
   if (rep) return runReport(rep);
+  if (e.target.id === "insClear") return clearFilters();
+  /* a bar, a column, a ring segment or a headline number on Insight */
+  const drEl = e.target.closest("[data-dr]");
+  if (drEl) return openDrill(drEl.dataset.dr);
+});
+
+/* the drill-down sheet */
+$("drillX").addEventListener("click", closeDrill);
+$("drillB").addEventListener("click", e => {
+  const row = e.target.closest(".row[data-id]");
+  if (!row) return;
+  const id = row.dataset.id, act = e.target.dataset.act;
+  const d = S.drill;
+  if (act === "cycle"){ cycleStatus(id); return openDrill(d); }
+  if (act === "timer"){ toggleTimer(id); return openDrill(d); }
+  closeDrill(); openDrawer(id);
+});
+/* carry the set over to the board, where it can be worked rather than read */
+$("drillReg").addEventListener("click", () => {
+  const d = S.drill; if (!d) return;
+  S.filters = blankFilters();
+  STATUSES.forEach(x => S.filters.st[x.id] = true);
+  S.filters.ids = d.ids.slice();
+  S.filters.idsLabel = d.label;
+  ["fSys","fPri","fType","fWho","fRange","q"].forEach(id => $(id).value = "");
+  syncRail();
+  closeDrill();
+  setView("register");
+  toast(d.ids.length + " record(s) pinned — Reset clears it");
 });
 
 /* drag & drop between board columns and week days */
@@ -4839,6 +5113,7 @@ $("bulk").addEventListener("click", e => {
 $("dClose").addEventListener("click", closeDrawer);
 $("scrim").addEventListener("click", () => {
   if ($("ask").classList.contains("on")) return closeAsk(null);
+  if ($("drill").classList.contains("on")) return closeDrill();
   closeDrawer(); closeModal(); closeCmd();
 });
 $("dTitle").addEventListener("blur", e => {
@@ -4927,6 +5202,7 @@ $("dBody").addEventListener("click", async e => {
   if (id === "tp0"){ t.spent = 0; t.timerStart = 0; touch(); renderDrawer(); return renderAll(); }
   if (id === "ckAdd") return addCheck();
   if (id === "lgAdd") return addLog();
+  if (id === "lgMore"){ S.folds.logAll = !S.folds.logAll; return renderDrawer(); }
   if (id === "tDup"){
     const c = clone(t);
     delete c.id; delete c.code; delete c.folder;
@@ -5003,6 +5279,18 @@ $("dBody").addEventListener("keydown", e => {
   if (e.target.id === "scQ"){ e.preventDefault(); attachFromBox(); }
   if (e.target.id === "waitWho"){ e.preventDefault(); const b = $("waitSet"); if (b) b.click(); }
 });
+/* what you fold stays folded — the drawer re-renders on nearly every edit */
+$("dBody").addEventListener("toggle", e => {
+  const d = e.target.closest("details[data-acc]");
+  if (d) S.folds[d.dataset.acc] = d.open;
+}, true);
+/* dragging a file at the drawer should reveal where it is about to land */
+$("drawer").addEventListener("dragenter", e => {
+  if (!e.dataTransfer || Array.prototype.indexOf.call(e.dataTransfer.types || [], "Files") < 0) return;
+  const d = $("dBody").querySelector('details[data-acc="docs"]');
+  if (d && !d.open){ d.open = true; S.folds.docs = true; }
+});
+
 /* a half-typed name is not lost when you click away */
 $("dBody").addEventListener("focusout", e => {
   if (e.target.id === "peopleIn" && e.target.value.trim()) commitPeople(false);
@@ -5189,6 +5477,7 @@ document.addEventListener("keydown", e => {
   if (e.key === "Escape"){
     if ($("ask").classList.contains("on")) return closeAsk(null);
     if ($("cmd").classList.contains("on")) return closeCmd();
+    if ($("drill").classList.contains("on")) return closeDrill();
     if ($("modal").classList.contains("on")) return closeModal();
     if ($("drawer").classList.contains("on")) return closeDrawer();
     if (S.sel.size){ S.sel.clear(); renderAll(); }
