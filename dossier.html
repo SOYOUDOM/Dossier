@@ -1593,6 +1593,7 @@ function applyTheme(id){
   document.documentElement.setAttribute("data-theme", p.id);
   document.documentElement.setAttribute("data-mode", p.mode === "dark" ? "dark" : "light");
   S.settings.theme = p.id;
+  if (typeof CON !== "undefined" && CON.win && !CON.win.closed) syncConsoleTheme();
 }
 /* which custom palette the editor is pointed at */
 let palEdit = null;
@@ -4385,6 +4386,238 @@ function problemsMd(){
   return L.join("\n");
 }
 
+/* ═══ THE CONSOLE — a small window that stays above the work ══════════════
+   The record is in the browser; the work is in RDP, or SSMS, or the vendor's
+   portal. Every status change and every note therefore costs a window switch,
+   which is why in-progress records go stale: not because you forgot what you
+   did, but because saying so meant leaving what you were doing.
+
+   documentPictureInPicture gives a real operating-system window — one Windows
+   keeps above everything, that you drag and size like any other — holding our
+   own DOM. So the record can sit on top of the work instead of behind it.
+
+   It deliberately introduces no new ideas. A step is a work-log entry and a
+   screenshot is an attachment, both of which already exist, so a record worked
+   through the console is indistinguishable from one worked without it. If you
+   never open it, nothing about Dossier changes.
+   ════════════════════════════════════════════════════════════════════════ */
+const CON = { win:null, id:null };
+
+function consoleTask(){
+  const t = CON.id ? getTask(CON.id) : null;
+  if (t) return t;
+  /* whatever was pinned is gone — fall back to what is plainly in hand */
+  const run = S.tasks.find(x => x.timerStart);
+  return run || (S.open ? getTask(S.open) : null) ||
+         sortTasks(S.tasks.filter(x => x.status === "processing"))[0] ||
+         sortTasks(S.tasks.filter(x => LIVE.indexOf(x.status) >= 0))[0] || null;
+}
+
+async function openConsole(id){
+  if (!window.documentPictureInPicture || !documentPictureInPicture.requestWindow)
+    return toast("The floating console needs Microsoft Edge or Chrome", { bad:true });
+  const first = id ? getTask(id) : consoleTask();
+  if (!first) return toast("Nothing open to work on yet");
+  CON.id = first.id;
+
+  if (CON.win && !CON.win.closed){ renderConsole(); try { CON.win.focus(); } catch(e){} return; }
+  let w;
+  try { w = await documentPictureInPicture.requestWindow({ width:400, height:268 }); }
+  catch(e){ return toast("The console could not open — click the button again", { bad:true }); }
+  CON.win = w;
+
+  /* the stylesheet does not come across on its own, and neither do the fonts
+     and palette the app resolved at boot */
+  $$("style").forEach(src => {                    /* includes the custom palettes */
+    const s = w.document.createElement("style");
+    s.textContent = src.textContent;
+    w.document.head.appendChild(s);
+  });
+  const s2 = w.document.createElement("style");
+  s2.textContent = CONSOLE_CSS;
+  w.document.head.appendChild(s2);
+  syncConsoleTheme();
+
+  w.document.body.className = "conbody";
+  w.document.body.innerHTML = '<div class="con" id="con"></div>';
+
+  w.addEventListener("pagehide", () => { CON.win = null; });
+  w.document.addEventListener("click", onConsoleClick);
+  w.document.addEventListener("change", onConsoleChange);
+  w.document.addEventListener("keydown", onConsoleKey);
+  w.document.addEventListener("paste", onConsolePaste);
+  renderConsole();
+}
+function closeConsole(){
+  if (CON.win && !CON.win.closed) try { CON.win.close(); } catch(e){}
+  CON.win = null;
+}
+/* the theme is an attribute on the root, so it has to be copied every time */
+function syncConsoleTheme(){
+  if (!CON.win || CON.win.closed) return;
+  const from = document.documentElement, to = CON.win.document.documentElement;
+  ["data-theme","data-mode"].forEach(a => {
+    const v = from.getAttribute(a);
+    if (v) to.setAttribute(a, v);
+  });
+  ["display","ui","mono"].forEach(r =>
+    to.style.setProperty("--f-" + r, from.style.getPropertyValue("--f-" + r)));
+}
+
+function renderConsole(){
+  if (!CON.win || CON.win.closed) return;
+  const d = CON.win.document, box = d.getElementById("con");
+  if (!box) return;
+  syncConsoleTheme();
+  const t = consoleTask();
+  if (!t){
+    box.innerHTML = '<div class="cnone">Nothing open to work on.<br><small>Log something in the main window.</small></div>';
+    return;
+  }
+  CON.id = t.id;
+  const running = !!t.timerStart;
+  const sec = t.spent*60 + (running ? (Date.now()-t.timerStart)/1000 : 0);
+  /* switching is a plain select — nothing new to learn, and it keeps the
+     window at four rows however many records are open */
+  const live = sortTasks(S.tasks.filter(x => LIVE.indexOf(x.status) >= 0 || x.id === t.id));
+  const steps = (t.log || []).filter(l => l.kind !== "status").length;
+  const files = (t.files || []).length;
+
+  box.innerHTML =
+    '<div class="crow ctop">' +
+      '<select id="conPick">' + live.map(x =>
+        '<option value="' + x.id + '"' + (x.id === t.id ? " selected" : "") + '>' +
+        esc(x.code) + (x.ticket ? " · " + esc(x.ticket) : "") + " — " + esc(clip(x.title, 40)) +
+        "</option>").join("") + "</select>" +
+    "</div>" +
+    '<div class="crow ctitle" title="' + esc(t.title) + '">' + esc(t.title) + "</div>" +
+    '<div class="crow cclock">' +
+      '<b class="' + (running ? "run" : "") + '" id="conClock">' + clock(sec) + "</b>" +
+      '<button class="cbtn' + (running ? " on" : "") + '" data-c="timer">' + (running ? "Stop" : "Start") + "</button>" +
+      '<span class="cmeta">' + steps + " step(s) · " + files + " file(s)</span>" +
+    "</div>" +
+    '<div class="crow cstat">' + STATUSES.map(s =>
+      '<button class="cst' + (t.status === s.id ? " on" : "") + '" data-cs="' + s.id +
+      '" style="--c:' + s.colour + '">' + s.label + "</button>").join("") + "</div>" +
+    /* the last few steps, so you can see the logging landed without switching */
+    '<div class="csteps">' + ((t.log || []).filter(l => l.kind !== "status").slice(-3).reverse()
+      .map(l => '<div class="cs1"><i></i><span>' + esc(clip(l.text, 58)) + "</span>" +
+                "<em>" + stamp(l.at).split(" ").slice(-1)[0] + "</em></div>").join("")
+      || '<div class="cs0">No steps logged yet.</div>') + "</div>" +
+    '<div class="crow cadd">' +
+      '<input id="conStep" placeholder="what did you just do…" spellcheck="false">' +
+      '<button class="cbtn" data-c="log">Log</button>' +
+    "</div>" +
+    '<div class="crow chint" id="conHint">Ctrl+V pastes a screenshot straight onto this record</div>';
+}
+
+function onConsoleClick(e){
+  const t = consoleTask(); if (!t) return;
+  const st = e.target.dataset && e.target.dataset.cs;
+  if (st){ setStatus(t.id, st); afterConsole(); return; }
+  const c = e.target.dataset && e.target.dataset.c;
+  if (c === "timer"){ toggleTimer(t.id); afterConsole(); return; }
+  if (c === "log") return consoleLog();
+}
+function onConsoleChange(e){
+  if (e.target.id !== "conPick") return;
+  CON.id = e.target.value;
+  renderConsole();
+}
+function onConsoleKey(e){
+  if (e.key === "Enter" && e.target.id === "conStep"){ e.preventDefault(); consoleLog(); }
+}
+function consoleLog(){
+  const t = consoleTask(); if (!t || !CON.win) return;
+  const el = CON.win.document.getElementById("conStep");
+  const v = (el.value || "").trim();
+  if (!v) return;
+  t.log.push({ at:new Date().toISOString(), text:v });
+  el.value = "";
+  touch(); afterConsole();
+  consoleSay("Logged");
+}
+/* a screenshot from Win+Shift+S, pasted where your hands already are */
+async function onConsolePaste(e){
+  const t = consoleTask(); if (!t) return;
+  const items = (e.clipboardData || {}).items || [];
+  const imgs = [];
+  for (const it of items){
+    if (it.kind === "file" && /^image\//.test(it.type)){
+      const f = it.getAsFile();
+      if (f) imgs.push(new File([f], "step-" + today() + "-" + pad2(new Date().getHours()) +
+        pad2(new Date().getMinutes()) + pad2(new Date().getSeconds()) + ".png", { type:f.type }));
+    }
+  }
+  if (!imgs.length) return;
+  e.preventDefault();
+  if (!FS.ok) return consoleSay("Link a workspace folder first", true);
+  const n = await attachFiles(t, imgs);
+  if (n){
+    t.log.push({ at:new Date().toISOString(), text:"Attached " + imgs[0].name + " from the console" });
+    touch(); afterConsole();
+    consoleSay(n + " screenshot(s) filed");
+  }
+}
+function consoleSay(msg, bad){
+  if (!CON.win || CON.win.closed) return;
+  const el = CON.win.document.getElementById("conHint");
+  if (!el) return;
+  el.textContent = msg;
+  el.className = "crow chint " + (bad ? "bad" : "good");
+  setTimeout(() => {
+    if (!CON.win || CON.win.closed) return;
+    const e2 = CON.win.document.getElementById("conHint");
+    if (e2){ e2.textContent = "Ctrl+V pastes a screenshot straight onto this record";
+             e2.className = "crow chint"; }
+  }, 2600);
+}
+/* both windows are looking at the same record, so both redraw together */
+function afterConsole(){
+  renderAll();
+  if (S.open) renderDrawer();
+  renderConsole();
+}
+
+const CONSOLE_CSS = [
+  "html,body{height:100%}",
+  "body.conbody{margin:0;background:var(--canvas);color:var(--ink);font-family:var(--f-ui);",
+  "  font-size:13px;overflow:hidden}",
+  ".con{display:flex;flex-direction:column;height:100%;padding:9px 10px;gap:7px;box-sizing:border-box}",
+  ".crow{display:flex;align-items:center;gap:7px;flex:0 0 auto}",
+  ".ctop select{width:100%;background:var(--paper-2);border:1px solid var(--rule);border-radius:4px;",
+  "  color:var(--ink);font-family:var(--f-mono);font-size:10.5px;padding:5px 6px;outline:none}",
+  ".ctitle{font-family:var(--f-display);font-size:14px;font-weight:600;line-height:1.25;",
+  "  display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}",
+  ".cclock b{font-family:var(--f-mono);font-size:19px;font-weight:600;font-variant-numeric:tabular-nums}",
+  ".cclock b.run{color:var(--st-proc)}",
+  ".cmeta{margin-left:auto;font-size:10px;color:var(--ink-3);white-space:nowrap}",
+  ".cbtn{border:1px solid var(--rule);background:var(--paper-2);color:var(--ink);border-radius:4px;",
+  "  padding:4px 10px;font-size:11.5px;font-weight:600;cursor:pointer;font-family:inherit}",
+  ".cbtn:hover{border-color:var(--accent);color:var(--accent)}",
+  ".cbtn.on{background:var(--st-proc);border-color:var(--st-proc);color:#fff}",
+  ".cstat{display:grid;grid-template-columns:repeat(5,1fr);gap:4px}",
+  ".cst{border:1px solid var(--rule);background:var(--paper-2);color:var(--ink-2);border-radius:4px;",
+  "  padding:5px 2px;font-size:10.5px;font-weight:600;cursor:pointer;font-family:inherit;",
+  "  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}",
+  ".cst:hover{border-color:var(--c);color:var(--c)}",
+  ".cst.on{background:var(--c);border-color:var(--c);color:#fff}",
+  ".csteps{flex:1;min-height:0;overflow-y:auto;margin:1px 0;display:flex;flex-direction:column;gap:3px}",
+  ".cs1{display:grid;grid-template-columns:6px 1fr auto;gap:7px;align-items:baseline;font-size:11px;",
+  "  line-height:1.35;color:var(--ink-2)}",
+  ".cs1 i{width:4px;height:4px;border-radius:50%;background:var(--rule-hi);margin-top:5px}",
+  ".cs1 span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}",
+  ".cs1 em{font-family:var(--f-mono);font-size:9px;font-style:normal;color:var(--ink-3)}",
+  ".cs0{font-size:10.5px;color:var(--ink-3);text-align:center;padding:8px 0}",
+  ".cadd{margin-top:0}",
+  ".cadd input{flex:1;min-width:0;background:var(--paper-2);border:1px solid var(--rule);border-radius:4px;",
+  "  color:var(--ink);font-size:12px;padding:6px 8px;outline:none;font-family:inherit}",
+  ".cadd input:focus{border-color:var(--accent)}",
+  ".chint{font-size:10px;color:var(--ink-3);justify-content:center;min-height:13px}",
+  ".chint.good{color:var(--st-done)} .chint.bad{color:var(--p1)}",
+  ".cnone{padding:26px 12px;text-align:center;font-size:12.5px;color:var(--ink-3)}"
+].join("\n");
+
 /* ═══ RENDER ALL ═════════════════════════════════════════════════════════ */
 function renderAll(){
   const c = { open:0, processing:0, blocked:0, done:0, cancelled:0 };
@@ -4409,6 +4642,7 @@ function renderAll(){
   else if (S.view === "library") renderLib();
   else if (S.view === "insight") renderIns();
 
+  if (CON.win && !CON.win.closed) renderConsole();
   $("bulk").classList.toggle("on", S.sel.size > 0);
   $("bulkN").textContent = S.sel.size;
 
@@ -4666,6 +4900,7 @@ function renderDrawer(){
     depsHtml + waitHtml + scHtml + docsHtml +
 
     '<div class="sec"><div class="brow">' +
+      '<button class="btn pri" id="tCon">Work on this ▣</button>' +
       '<button class="btn" id="tDup">Duplicate</button>' +
       '<button class="btn" id="tRout">Make routine</button>' +
       '<button class="btn" id="tCopy">Copy summary</button>' +
@@ -5149,6 +5384,21 @@ async function renderModal(){
     '<p style="font-size:12px;color:var(--ink-2);line-height:1.75;margin:0 0 8px">' +
       "None of this leaves the machine — it is word matching against your own systems, teams and past " +
       "records, not a model and not a service.</p>" +
+
+    '<h4 style="margin:18px 0 10px">The work console</h4>' +
+    '<p style="font-size:12px;color:var(--ink-2);line-height:1.75;margin:0 0 8px">' +
+      "The record lives in this window; the work happens in RDP, or SSMS, or the vendor's portal. " +
+      "<b>Work on this</b> on a record — or <b>W</b>, or the command palette — opens a small window that " +
+      "Windows keeps <b>above everything</b>, and that you drag and size like any other. Change status in " +
+      "one click, log what you just did, and watch the clock, without leaving what you are doing.</p>" +
+    '<p style="font-size:12px;color:var(--ink-2);line-height:1.75;margin:0 0 8px">' +
+      "<b>Win+Shift+S</b> then <b>Ctrl+V</b> into the console files a screenshot against the record, into " +
+      "its own folder, exactly as dragging one in would. Snip only what matters — a full screen catches " +
+      "more than you meant when you are inside a customer's policy.</p>" +
+    '<p style="font-size:12px;color:var(--ink-2);line-height:1.75;margin:0 0 8px">' +
+      "It adds nothing new to a record. A step is a work-log entry and a screenshot is an attachment, so a " +
+      "record worked through the console is the same record you would have written by hand — the reports " +
+      "and the evidence pack pick it up without knowing the difference. Needs Edge or Chrome.</p>" +
 
     '<h4 style="margin:18px 0 10px">What keeps coming back</h4>' +
     '<p style="font-size:12px;color:var(--ink-2);line-height:1.75;margin:0 0 8px">' +
@@ -5675,6 +5925,7 @@ function buildCommands(q){
   add("Do","↻","Create today's routines","", () => { const n = makeRoutines(); renderAll(); toast(n ? n + " created" : "Nothing due"); });
   add("Do","⏳","Chase round","Write to every team that has gone quiet", () => openChase());
   add("Do","⏳","Chase everyone waiting","Even the ones not due a chase yet", () => openChase("all"));
+  add("Do","▣","Work console","A small window that stays above everything", () => openConsole(), "W");
   add("Do","⎌","Undo","", doUndo, "Ctrl+Z");
   add("Report","▤","This week","For your PDD", () => runReport("week"));
   add("Report","▤","Standup note","", () => runReport("standup"));
@@ -6433,6 +6684,7 @@ $("dBody").addEventListener("click", async e => {
       checklist:(t.checklist||[]).map(c => c.text), notes:t.notes });
     touch(); return toast("Added as a weekday routine");
   }
+  if (id === "tCon") return openConsole(t.id);
   if (id === "tCopy") return copyText(taskSummary(t), "Summary copied");
   if (id === "tDel"){ const i = t.id; closeDrawer(); return deleteTasks([i]); }
 
@@ -6713,6 +6965,7 @@ document.addEventListener("keydown", e => {
   if (typing) return;
   if (e.key === "/"){ e.preventDefault(); return $("q").focus(); }
   if (e.key.toLowerCase() === "n"){ e.preventDefault(); return $("qa").focus(); }
+  if (e.key.toLowerCase() === "w"){ e.preventDefault(); return openConsole(); }
   if (e.key === "j" || e.key === "ArrowDown"){ e.preventDefault(); return moveCursor(1); }
   if (e.key === "k" || e.key === "ArrowUp"){ e.preventDefault(); return moveCursor(-1); }
   if (["1","2","3","4","5","6"].indexOf(e.key) >= 0)
@@ -6740,6 +6993,10 @@ setInterval(() => {
     if (el) el.textContent = clock(r.spent*60 + (Date.now()-r.timerStart)/1000);
   }
   $$(".row[data-id='" + r.id + "'] .tm").forEach(el => el.textContent = mins(live(r)));
+  if (CON.win && !CON.win.closed && CON.id === r.id){
+    const c = CON.win.document.getElementById("conClock");
+    if (c) c.textContent = clock(r.spent*60 + (Date.now()-r.timerStart)/1000);
+  }
 }, 1000);
 setInterval(checkReminders, 30000);
 
