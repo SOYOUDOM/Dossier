@@ -392,6 +392,10 @@ table.reg td.ttd span{display:block;overflow:hidden;text-overflow:ellipsis;white
 .wch em{font-style:normal;font-family:var(--f-mono);font-size:10px;color:var(--ink-3)}
 .wch .n{margin-left:auto;font-family:var(--f-mono);font-size:10px;color:var(--ink-3)}
 .wcb{padding:7px;display:flex;flex-direction:column;gap:6px;min-height:60px;flex:1}
+.calwarn{margin:14px 18px 0;padding:9px 12px;border:1px dashed var(--rule-hi);border-radius:var(--r-sm);
+  display:flex;align-items:center;gap:9px;flex-wrap:wrap;font-size:11.5px;color:var(--ink-2)}
+.calwarn b{color:var(--ink)}
+.calwarn span{color:var(--ink-3);font-size:11px}
 /* week / month switch */
 .calsw{display:flex;border:1px solid var(--rule);border-radius:var(--r-xs);overflow:hidden}
 .calsw button{border:0;background:var(--paper-2);color:var(--ink-2);padding:5px 13px;font-size:11.5px;
@@ -3306,6 +3310,37 @@ const KH_HOLIDAYS = [
   ["2026-12-29","Peace Day"]
 ].map(x => ({ d:x[0], n:x[1], k:"public" }));
 
+/* Half of Cambodia's holidays are anniversaries — independence, the coronation,
+   the constitution — and an anniversary does not move, so those can be
+   generated for any year. The other half are lunar: Visak Bochea, the Royal
+   Ploughing Ceremony, Pchum Ben and the Water Festival are set against the
+   Khmer calendar and published in that year's sub-decree. There is no formula
+   for them, so they are never invented — the app asks for them instead. */
+const KH_FIXED = [
+  ["01-01","International New Year Day"], ["01-07","Victory over Genocide Day"],
+  ["03-08","International Women's Day"],
+  ["04-14","Khmer New Year"], ["04-15","Khmer New Year"], ["04-16","Khmer New Year"],
+  ["05-01","International Labour Day"], ["05-14","King Sihamoni's Birthday"],
+  ["06-18","Queen Mother's Birthday"], ["09-24","Constitution Day"],
+  ["10-15","King Sihanouk Commemoration"], ["10-29","Coronation Day"],
+  ["11-09","Independence Day"], ["12-10","Human Rights Day"], ["12-29","Peace Day"]
+];
+const KH_LUNAR = "Visak Bochea, the Royal Ploughing Ceremony, Pchum Ben and the Water Festival";
+
+function yearOfHolidays(year){ return holidays().filter(h => h.d.slice(0,4) === String(year)); }
+/* returns how many were added — nothing already marked is disturbed */
+function addFixedYear(year){
+  const y = String(year);
+  if (!/^\d{4}$/.test(y)) return 0;
+  const have = {};
+  holidays().forEach(h => have[h.d] = 1);
+  const add = KH_FIXED.map(x => ({ d:y + "-" + x[0], n:x[1], k:"public" })).filter(h => !have[h.d]);
+  if (!add.length) return 0;
+  S.settings.holidays = holidays().concat(add).sort((a, b) => a.d < b.d ? -1 : a.d > b.d ? 1 : 0);
+  touch();
+  return add.length;
+}
+
 function holidays(){
   /* seeded on first read, not at boot — a list you emptied is still an array,
      so it stays empty instead of quietly coming back */
@@ -3342,9 +3377,15 @@ function renderWeek(){
 }
 
 /* the header both modes share */
-function calHead(title, tot, done, spent){
+function calHead(title, tot, done, spent, year){
   const m = calMode();
-  return '<div class="wkh"><button class="ib" id="wkP">‹</button><button class="ib" id="wkN">›</button>' +
+  const bare = year && !yearOfHolidays(year).length
+    ? '<div class="calwarn">No holidays marked for <b>' + year + '</b>. ' +
+      '<button class="btn sm" data-fixyear="' + year + '">Add the ' + KH_FIXED.length +
+      " dates that never move</button>" +
+      '<span>Then add ' + KH_LUNAR + " from that year's sub-decree — those are lunar and cannot be worked out here.</span></div>"
+    : "";
+  return bare + '<div class="wkh"><button class="ib" id="wkP">‹</button><button class="ib" id="wkN">›</button>' +
     "<h3>" + esc(title) + "</h3>" +
     '<button class="btn sm" id="wkT">' + (m === "month" ? "This month" : "This week") + "</button>" +
     '<div class="calsw"><button class="' + (m === "week" ? "on" : "") + '" data-cal="week">Week</button>' +
@@ -3388,7 +3429,8 @@ function renderWeek7(){
       "</div></div>";
   }
   $("vWeek").innerHTML =
-    calHead(niceDate(start) + " – " + niceDate(addDays(start, 6)), tot, done, spent) +
+    calHead(niceDate(start) + " – " + niceDate(addDays(start, 6)), tot, done, spent,
+            addDays(start, 3).slice(0, 4)) +
     calBacklog(loose) + '<div class="week">' + cols + "</div>";
 }
 
@@ -3426,7 +3468,7 @@ function renderMonth(){
       (more > 0 ? '<div class="mmore">+' + more + " more</div>" : "") + "</div></div>";
   }
   $("vWeek").innerHTML =
-    calHead(monthName(first), tot, done, spent) + calBacklog(loose) +
+    calHead(monthName(first), tot, done, spent, first.slice(0, 4)) + calBacklog(loose) +
     '<div class="mdow">' + [1,2,3,4,5,6,0].map(x => "<span>" + DOW[x] + "</span>").join("") + "</div>" +
     '<div class="month">' + cells + "</div>";
 }
@@ -5510,6 +5552,13 @@ async function renderModal(){
     '<div class="brow" style="margin-bottom:8px">' +
       '<button class="btn sm" id="holSeed">Restore the Cambodia 2026 list</button>' +
       '<button class="btn sm" id="holWipe">Remove them all</button></div>' +
+    '<div style="display:flex;gap:6px;align-items:center;margin-bottom:10px">' +
+      '<input class="in" id="holY" type="number" min="2000" max="2100" step="1" value="' +
+      (new Date().getFullYear() + 1) + '" style="max-width:96px">' +
+      '<button class="btn sm" id="holYear">Add that year\'s fixed dates</button>' +
+      '<span style="font-size:10.5px;color:var(--ink-3);line-height:1.5">' +
+      "The " + KH_FIXED.length + " anniversaries that never move. " + KH_LUNAR +
+      " are lunar — add those by hand from the sub-decree.</span></div>" +
     '<div style="max-height:190px;overflow-y:auto;border:1px solid var(--rule);' +
       'border-radius:var(--r-sm);padding:4px 10px">' +
       (holidays().length ? holidays().map((h, i) =>
@@ -5606,10 +5655,21 @@ async function renderModal(){
       "Visak Bochea, the Royal Ploughing Ceremony, Pchum Ben and the Water Festival are lunar and move " +
       "every year, and the list is reissued annually.</p>" +
     '<p style="font-size:12px;color:var(--ink-2);line-height:1.75;margin:0 0 8px">' +
-      "So it is yours to edit, under <b>Setup → Holidays and festivals</b>. Add next year when the " +
-      "sub-decree lands, add your own office closures, and add the festivals you mark but still work " +
-      "through — those are <i>marked only</i> rather than a day off. Everything lives in dossier.json " +
-      "and travels with the folder.</p>" +
+      "So it is yours to edit, under <b>Setup → Holidays and festivals</b>. Add your own office " +
+      "closures, and the festivals you mark but still work through — those are <i>marked only</i> " +
+      "rather than a day off. Everything lives in dossier.json and travels with the folder.</p>" +
+    '<p style="font-size:12px;color:var(--ink-2);line-height:1.75;margin:0 0 8px">' +
+      "Open a year nothing is marked in and the calendar offers to fill in the " +
+      "<b>anniversaries</b> — New Year, Victory Day, Khmer New Year, Labour Day, the King's and Queen " +
+      "Mother's birthdays, Constitution Day, the Commemoration, the Coronation, Independence, Human " +
+      "Rights Day, Peace Day. Those fall on the same date every year, so Dossier can work them out for " +
+      "any year, and Setup will do the same for a year you name.</p>" +
+    '<p style="font-size:12px;color:var(--ink-2);line-height:1.75;margin:0 0 8px">' +
+      "It will never invent the rest. Visak Bochea, the Royal Ploughing Ceremony, Pchum Ben and the " +
+      "Water Festival are set against the Khmer calendar and move every year — there is no formula to " +
+      "derive them from, so Dossier asks you for them rather than guessing and being quietly wrong. " +
+      "Khmer New Year is offered as 14–16 April, which is where it has fallen recently, but it has run " +
+      "13–16 before now: worth checking too.</p>" +
 
     '<h4 style="margin:18px 0 10px">The work console</h4>' +
     '<p style="font-size:12px;color:var(--ink-2);line-height:1.75;margin:0 0 8px">' +
@@ -5821,6 +5881,13 @@ function wireModal(){
       .sort((a, b) => a.d < b.d ? -1 : a.d > b.d ? 1 : 0);
     touch(); renderModal(); renderAll();
     toast(niceDate(d) + " marked");
+  });
+  on("holYear", () => {
+    const y = ($("holY").value || "").trim();
+    const n = addFixedYear(y);
+    if (!n) return toast(/^\d{4}$/.test(y) ? "They are all there already" : "Give it a four-digit year", { bad:true });
+    renderModal(); renderAll();
+    toast(n + " fixed dates added for " + y);
   });
   on("holSeed", () => {
     const have = {};
@@ -6652,6 +6719,13 @@ $("main").addEventListener("click", e => {
   if (e.target.id === "wkT"){ S.weekStart = calMode() === "month" ? today() : mondayOf(today()); return renderWeek(); }
   const cm = e.target.dataset && e.target.dataset.cal;
   if (cm){ S.settings.calMode = cm; touch(); return renderWeek(); }
+  const fy = e.target.dataset && e.target.dataset.fixyear;
+  if (fy){
+    const n = addFixedYear(fy);
+    renderAll();
+    return toast(n ? n + " fixed dates added for " + fy + " — the lunar ones are still yours to add"
+                   : "They are all there already");
+  }
   const rep = e.target.dataset && e.target.dataset.rep;
   if (rep) return runReport(rep);
   if (e.target.id === "insClear") return clearFilters();
