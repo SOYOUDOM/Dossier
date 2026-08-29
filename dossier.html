@@ -2479,6 +2479,15 @@ function makeRoutines(){
   });
   return made;
 }
+/* the next day this routine would raise a record, or "" if it never would */
+function routineNextDue(r){
+  const k = today();
+  for (let i = 0; i < 400; i++){
+    const key = addDays(k, i);
+    if (routineDue(r, key)) return key;
+  }
+  return "";
+}
 function rollOver(){
   const key = today(); let n = 0;
   S.tasks.forEach(t => {
@@ -5831,15 +5840,43 @@ function wireModal(){
       system:$("rS").value, time:$("rH").value,
       checklist:$("rC").value.split(",").map(s => s.trim()).filter(Boolean), priority:"P3", type:"Admin",
       scripts: $("rSc") && $("rSc").value ? [$("rSc").value] : [] });
-    touch(); renderModal(); toast("Routine added");
+    touch();
+    /* makeRoutines only ever ran when a workspace opened, so a routine added
+       during the day sat there doing nothing until the next reload — which
+       reads exactly like a routine that does not work. Raise it now. */
+    const made = makeRoutines();
+    renderModal(); renderAll();
+    const r = S.routines[S.routines.length - 1];
+    const nxt = routineNextDue(r);
+    toast(made ? "Routine added — today's record is on the sheet"
+               : "Routine added — next due " + (nxt ? niceDate(nxt) : "never, check the days"),
+      made ? { action:"Open it", onAction:() => {
+          const t = S.tasks.find(x => x.fromRoutine === r.id && x.forDate === today());
+          if (t){ closeModal(); openDrawer(t.id); }
+        } } : {});
     $$("#mt button").forEach(b => { if (b.dataset.m === "routine") b.click(); });
   });
-  on("rRun", () => { const n = makeRoutines(); renderAll(); toast(n ? n + " created" : "Nothing new due today"); });
+  on("rRun", () => {
+    const n = makeRoutines();
+    renderAll();
+    if (n) return toast(n + " created");
+    const due = S.routines.filter(r => routineDue(r, today()));
+    toast(!S.routines.length ? "No routines yet"
+        : due.length ? "Today's " + due.length + " already exist — routines are raised once a day"
+        : "Nothing due today");
+  });
   $$("#rD .sb").forEach(b => b.onclick = () => b.classList.toggle("on"));
   $$("[data-rd]").forEach(b => b.onclick = () => { S.routines = S.routines.filter(r => r.id !== b.dataset.rd); touch(); renderModal(); });
   $$("[data-rp]").forEach(b => b.onclick = () => {
     const r = S.routines.find(x => x.id === b.dataset.rp);
-    if (r){ r.paused = !r.paused; touch(); renderModal(); }
+    if (!r) return;
+    r.paused = !r.paused;
+    touch();
+    const made = r.paused ? 0 : makeRoutines();
+    renderModal(); renderAll();
+    toast(r.paused ? "Paused — it will not raise anything"
+                   : (made ? "Resumed — today's record is on the sheet"
+                           : "Resumed — next due " + (niceDate(routineNextDue(r)) || "never")));
   });
 
   ["fD","fU","fM"].forEach((id, i) => {
@@ -7446,7 +7483,7 @@ async function boot(){
   } catch(e){ /* first run, or IDB unavailable */ }
 
   if (!restored && !$("banner").classList.contains("on")){
-    seedDemo(); rollOver(); renderAll();
+    seedDemo(); makeRoutines(); rollOver(); renderAll();
     showBanner("Nothing is being saved yet. Pick a folder and Dossier keeps every record, note and document " +
       "there — clearing your browser can never touch it.",
       [{ label:"Choose workspace folder…", run: async () => {
