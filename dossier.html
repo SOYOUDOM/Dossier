@@ -392,6 +392,49 @@ table.reg td.ttd span{display:block;overflow:hidden;text-overflow:ellipsis;white
 .wch em{font-style:normal;font-family:var(--f-mono);font-size:10px;color:var(--ink-3)}
 .wch .n{margin-left:auto;font-family:var(--f-mono);font-size:10px;color:var(--ink-3)}
 .wcb{padding:7px;display:flex;flex-direction:column;gap:6px;min-height:60px;flex:1}
+/* week / month switch */
+.calsw{display:flex;border:1px solid var(--rule);border-radius:var(--r-xs);overflow:hidden}
+.calsw button{border:0;background:var(--paper-2);color:var(--ink-2);padding:5px 13px;font-size:11.5px;
+  font-weight:600;cursor:pointer;font-family:inherit}
+.calsw button:hover{color:var(--ink)}
+.calsw button.on{background:var(--accent);color:#fff}
+/* a day the country is not at work */
+.wc.holiday{background:var(--accent-soft);border-color:var(--accent)}
+.wc.holiday.today{box-shadow:0 0 0 1px var(--accent)}
+.hol{display:flex;align-items:center;gap:5px;padding:4px 9px;font-size:10px;line-height:1.3;
+  color:var(--accent);background:var(--accent-soft);border-bottom:1px solid var(--rule)}
+.hol i{width:5px;height:5px;border-radius:50%;background:var(--accent);flex:0 0 auto}
+.hol span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
+.hol.obs{color:var(--teal);background:transparent}
+.hol.obs i{background:var(--teal)}
+/* month grid — same cells as the week, at a different zoom */
+.mdow{display:grid;grid-template-columns:repeat(7,1fr);gap:7px;padding:0 18px 6px}
+.mdow span{font-family:var(--f-display);font-size:10px;font-weight:600;letter-spacing:.09em;
+  text-transform:uppercase;color:var(--ink-3);text-align:center}
+.month{display:grid;grid-template-columns:repeat(7,1fr);gap:7px;padding:0 18px 30px;align-items:stretch}
+.month .mc{min-height:94px}
+.month .mc.out{opacity:.34}
+.mch{padding:5px 8px 3px;display:flex;align-items:baseline;gap:6px}
+.mch b{font-family:var(--f-mono);font-size:12px;font-weight:600}
+.mch .n{margin-left:auto;font-family:var(--f-mono);font-size:9.5px;color:var(--ink-3)}
+.mcb{padding:2px 5px 6px;display:flex;flex-direction:column;gap:3px;flex:1}
+.wkm{display:grid;grid-template-columns:6px 1fr;gap:6px;align-items:center;cursor:grab;
+  font-size:10.5px;line-height:1.3;padding:2px 3px;border-radius:3px}
+.wkm:hover{background:var(--paper-3)}
+.wkm i{width:5px;height:5px;border-radius:50%}
+.wkm span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wkm.done span{text-decoration:line-through;opacity:.6}
+.wkm.drag{opacity:.4}
+.mmore{font-size:9.5px;color:var(--ink-3);padding:1px 3px}
+/* the holiday editor */
+.holrow{display:grid;grid-template-columns:96px 1fr auto auto;gap:7px;align-items:center;
+  padding:5px 0;border-bottom:1px solid var(--rule);font-size:11.5px}
+.holrow:last-of-type{border-bottom:0}
+.holrow .hd2{font-family:var(--f-mono);font-size:10.5px;color:var(--ink-3)}
+.holrow .hk{font-size:9.5px;color:var(--ink-3);border:1px solid var(--rule);border-radius:999px;padding:0 6px}
+.holrow button{border:0;background:none;color:var(--ink-3);cursor:pointer;font-size:13px;padding:0 3px}
+.holrow button:hover{color:var(--p1)}
+
 .wk{border:1px solid var(--rule);border-radius:var(--r-xs);background:var(--paper);padding:7px 8px;
   cursor:grab;font-size:11.5px;line-height:1.35;transition:.13s}
 .wk:hover{border-color:var(--rule-hi)}
@@ -1383,6 +1426,7 @@ const S = {
     /* hours from raising to due, by priority — an undated record is invisible
        to the Day view and to Slipping, which is where work goes to die */
     sla:{ on:true, P1:4, P2:24, P3:48, P4:120 },
+    calMode:"week", holidays: null,      /* null = seed the built-in list once */
     fonts:{ display:"auto", ui:"auto", mono:"auto" },
     templates:[
       'Morning health check @"Infra / IIS" :admin 20m today 08:30',
@@ -2459,6 +2503,7 @@ function hydrate(d){
   if (!Array.isArray(S.settings.palettes)) S.settings.palettes = [];
   if (!S.settings.fonts) S.settings.fonts = { display:"auto", ui:"auto", mono:"auto" };
   S.settings.sla = Object.assign({ on:true, P1:4, P2:24, P3:48, P4:120 }, S.settings.sla || {});
+  holidays().sort((a, b) => a.d < b.d ? -1 : a.d > b.d ? 1 : 0);
   S.seq = Math.max(S.seq, S.tasks.reduce((m, t) => {
     const n = parseInt(String(t.code || "").replace(/\D/g,""), 10);
     return isNaN(n) ? m : Math.max(m, n);
@@ -3124,6 +3169,11 @@ function renderDay(){
 }
 function dayHints(){
   const out = [], k = today();
+  const htoday = holidayOn(k);
+  if (htoday) out.push({ icon:"◈",
+    html: "<b>" + esc(htoday.n) + "</b>" +
+      (htoday.k === "public" ? " — a public holiday. Anything due today was scheduled onto a day off."
+                             : " — marked today.") });
   const stale = S.tasks.filter(t => t.status === "processing" && t.started &&
     (Date.now() - new Date(t.started)) > 3*86400000);
   if (stale.length) out.push({ icon:"◷", id:stale[0].id,
@@ -3220,9 +3270,103 @@ function renderReg(){
 }
 
 /* ═══ VIEW: WEEK ═════════════════════════════════════════════════════════ */
+/* ═══ HOLIDAYS ═══════════════════════════════════════════════════════════
+   Cambodia's public holidays are set by sub-decree each year, and roughly
+   half of them are lunar — Visak Bochea, the Royal Ploughing Ceremony, Pchum
+   Ben and the Water Festival all move. There is no formula to compute them
+   from, so they are data, and data with a shelf life: this list is 2026, set
+   by Sub-Decree No. 167 of 18 September 2025.
+
+   Which is exactly why the list is editable in Setup rather than baked in.
+   When the 2027 sub-decree lands, or your office closes for something the
+   government never listed, you add it — no new version of this file needed.
+   ════════════════════════════════════════════════════════════════════════ */
+const KH_HOLIDAYS = [
+  ["2026-01-01","International New Year Day"],
+  ["2026-01-07","Victory over Genocide Day"],
+  ["2026-03-08","International Women's Day"],
+  ["2026-04-14","Khmer New Year"],
+  ["2026-04-15","Khmer New Year"],
+  ["2026-04-16","Khmer New Year"],
+  ["2026-05-01","Labour Day · Visak Bochea"],
+  ["2026-05-05","Royal Ploughing Ceremony"],
+  ["2026-05-14","King Sihamoni's Birthday"],
+  ["2026-06-18","Queen Mother's Birthday"],
+  ["2026-09-24","Constitution Day"],
+  ["2026-10-10","Pchum Ben"],
+  ["2026-10-11","Pchum Ben"],
+  ["2026-10-12","Pchum Ben"],
+  ["2026-10-15","King Sihanouk Commemoration"],
+  ["2026-10-29","Coronation Day"],
+  ["2026-11-09","Independence Day"],
+  ["2026-11-24","Water Festival"],
+  ["2026-11-25","Water Festival"],
+  ["2026-11-26","Water Festival"],
+  ["2026-12-10","Human Rights Day"],
+  ["2026-12-29","Peace Day"]
+].map(x => ({ d:x[0], n:x[1], k:"public" }));
+
+function holidays(){
+  /* seeded on first read, not at boot — a list you emptied is still an array,
+     so it stays empty instead of quietly coming back */
+  if (!Array.isArray(S.settings.holidays))
+    S.settings.holidays = KH_HOLIDAYS.map(h => Object.assign({}, h));
+  return S.settings.holidays;
+}
+function holidayOn(key){ return holidays().find(h => h.d === key) || null; }
+/* a day nobody is expected to be at a desk */
+function isOffDay(key){
+  const h = holidayOn(key);
+  return (h && h.k === "public") || [0,6].indexOf(dow(key)) >= 0;
+}
+function addMonths(key, n){
+  const d = pk(key), day = d.getDate();
+  d.setDate(1); d.setMonth(d.getMonth() + n);
+  const last = new Date(d.getFullYear(), d.getMonth()+1, 0).getDate();
+  d.setDate(Math.min(day, last));
+  return dkey(d);
+}
+function monthName(key){ return MON[pk(key).getMonth()] + " " + pk(key).getFullYear(); }
+
+/* ═══ VIEW: CALENDAR (week or month) ══════════════════════════════════════
+   The same grid at two zoom levels. A week is for working — the whole record
+   on the card. A month is for planning around what you cannot move: the three
+   days of Pchum Ben, the week Khmer New Year eats. So the month keeps only
+   what you can read at a glance and leans on the marks instead.
+   ════════════════════════════════════════════════════════════════════════ */
+function calMode(){ return S.settings.calMode === "month" ? "month" : "week"; }
+
 function renderWeek(){
   if (!S.weekStart) S.weekStart = mondayOf(today());
-  const start = S.weekStart, vis = visible(), k = today();
+  return calMode() === "month" ? renderMonth() : renderWeek7();
+}
+
+/* the header both modes share */
+function calHead(title, tot, done, spent){
+  const m = calMode();
+  return '<div class="wkh"><button class="ib" id="wkP">‹</button><button class="ib" id="wkN">›</button>' +
+    "<h3>" + esc(title) + "</h3>" +
+    '<button class="btn sm" id="wkT">' + (m === "month" ? "This month" : "This week") + "</button>" +
+    '<div class="calsw"><button class="' + (m === "week" ? "on" : "") + '" data-cal="week">Week</button>' +
+      '<button class="' + (m === "month" ? "on" : "") + '" data-cal="month">Month</button></div>' +
+    '<div class="wsum"><span><b>' + tot + "</b> scheduled</span><span><b>" + done +
+    "</b> closed</span><span><b>" + mins(spent) + "</b> logged</span></div></div>";
+}
+function calBacklog(loose){
+  return '<div class="backlog" data-day=""><span class="eyebrow">Undated — drag onto a day to plan it</span>' +
+    '<div class="bb">' + (loose.length ? loose.slice(0,24).map(wk).join("")
+      : '<span style="font-size:11.5px;color:var(--ink-3)">Everything has a date.</span>') + "</div></div>";
+}
+/* the holiday strip inside a day cell */
+function holidayMark(key, compact){
+  const h = holidayOn(key);
+  if (!h) return "";
+  return '<div class="hol' + (h.k === "public" ? "" : " obs") + '" title="' + esc(h.n) + '">' +
+    (compact ? "" : '<i></i>') + "<span>" + esc(h.n) + "</span></div>";
+}
+
+function renderWeek7(){
+  const start = mondayOf(S.weekStart), vis = visible(), k = today();
   const byDay = {};
   vis.forEach(t => { if (t.due) (byDay[t.due] = byDay[t.due] || []).push(t); });
   const loose = sortTasks(vis.filter(t => !t.due && LIVE.indexOf(t.status) >= 0));
@@ -3231,26 +3375,66 @@ function renderWeek(){
   for (let i = 0; i < 7; i++){
     const key = addDays(start, i);
     const arr = sortTasks(byDay[key] || []);
-    const d = pk(key);
+    const d = pk(key), h = holidayOn(key);
     const dn = arr.filter(t => t.status === "done").length;
     tot += arr.length; done += dn; arr.forEach(t => spent += live(t));
     cols += '<div class="wc' + (key === k ? " today" : "") + (key < k ? " past" : "") +
-      ([0,6].indexOf(d.getDay()) >= 0 ? " weekend" : "") + '" data-day="' + key + '">' +
+      ([0,6].indexOf(d.getDay()) >= 0 ? " weekend" : "") +
+      (h && h.k === "public" ? " holiday" : "") + '" data-day="' + key + '">' +
       '<div class="wch"><b>' + DOW[d.getDay()] + "</b><em>" + pad2(d.getDate()) + "/" + pad2(d.getMonth()+1) + "</em>" +
       (arr.length ? '<span class="n">' + dn + "/" + arr.length + "</span>" : "") + "</div>" +
+      holidayMark(key) +
       '<div class="wcb">' + (arr.map(wk).join("") || '<div style="text-align:center;color:var(--ink-3);font-size:10.5px;padding:8px">—</div>') +
       "</div></div>";
   }
   $("vWeek").innerHTML =
-    '<div class="wkh"><button class="ib" id="wkP">‹</button><button class="ib" id="wkN">›</button>' +
-    "<h3>" + niceDate(start) + " – " + niceDate(addDays(start, 6)) + "</h3>" +
-    '<button class="btn sm" id="wkT">This week</button>' +
-    '<div class="wsum"><span><b>' + tot + "</b> scheduled</span><span><b>" + done +
-    "</b> closed</span><span><b>" + mins(spent) + "</b> logged</span></div></div>" +
-    '<div class="backlog" data-day=""><span class="eyebrow">Undated — drag onto a day to plan it</span>' +
-    '<div class="bb">' + (loose.length ? loose.slice(0,24).map(wk).join("")
-      : '<span style="font-size:11.5px;color:var(--ink-3)">Everything has a date.</span>') + "</div></div>" +
-    '<div class="week">' + cols + "</div>";
+    calHead(niceDate(start) + " – " + niceDate(addDays(start, 6)), tot, done, spent) +
+    calBacklog(loose) + '<div class="week">' + cols + "</div>";
+}
+
+function renderMonth(){
+  const anchor = S.weekStart, vis = visible(), k = today();
+  const first = anchor.slice(0, 8) + "01";
+  const gridStart = mondayOf(first);
+  const lastDay = new Date(pk(first).getFullYear(), pk(first).getMonth()+1, 0).getDate();
+  const lastKey = anchor.slice(0, 8) + pad2(lastDay);
+  /* always whole weeks, and never a trailing row of nothing */
+  let weeks = Math.ceil((between(gridStart, lastKey) + 1) / 7);
+  weeks = Math.max(4, Math.min(6, weeks));
+
+  const byDay = {};
+  vis.forEach(t => { if (t.due) (byDay[t.due] = byDay[t.due] || []).push(t); });
+  const loose = sortTasks(vis.filter(t => !t.due && LIVE.indexOf(t.status) >= 0));
+  const mp = first.slice(0, 7);
+
+  let cells = "", tot = 0, done = 0, spent = 0;
+  for (let i = 0; i < weeks * 7; i++){
+    const key = addDays(gridStart, i);
+    const d = pk(key), h = holidayOn(key);
+    const arr = sortTasks(byDay[key] || []);
+    const out = key.slice(0, 7) !== mp;
+    const dn = arr.filter(t => t.status === "done").length;
+    if (!out){ tot += arr.length; done += dn; arr.forEach(t => spent += live(t)); }
+    const show = arr.slice(0, 3), more = arr.length - show.length;
+    cells += '<div class="wc mc' + (key === k ? " today" : "") + (key < k ? " past" : "") +
+      ([0,6].indexOf(d.getDay()) >= 0 ? " weekend" : "") +
+      (h && h.k === "public" ? " holiday" : "") + (out ? " out" : "") + '" data-day="' + key + '">' +
+      '<div class="mch"><b>' + d.getDate() + "</b>" +
+      (arr.length ? '<span class="n">' + dn + "/" + arr.length + "</span>" : "") + "</div>" +
+      holidayMark(key, true) +
+      '<div class="mcb">' + show.map(wkMini).join("") +
+      (more > 0 ? '<div class="mmore">+' + more + " more</div>" : "") + "</div></div>";
+  }
+  $("vWeek").innerHTML =
+    calHead(monthName(first), tot, done, spent) + calBacklog(loose) +
+    '<div class="mdow">' + [1,2,3,4,5,6,0].map(x => "<span>" + DOW[x] + "</span>").join("") + "</div>" +
+    '<div class="month">' + cells + "</div>";
+}
+/* one line per record — a month has no room for the card */
+function wkMini(t){
+  return '<div class="wkm ' + t.status + '" draggable="true" data-id="' + t.id + '" title="' +
+    esc(t.title) + '"><i style="background:' + stMeta(t.status).colour + '"></i>' +
+    "<span>" + esc(clip(t.title, 30)) + "</span></div>";
 }
 function wk(t){
   return '<div class="wk ' + t.status + '" draggable="true" data-id="' + t.id + '" title="' + esc(t.title) + '">' +
@@ -5317,6 +5501,31 @@ async function renderModal(){
     fr("P4 within", '<input class="in" type="number" min="1" max="720" id="sSla4" value="' + (+sla.P4 || 120) + '">') +
     '<p style="font-size:11px;color:var(--ink-3);margin:4px 0 0">In hours. Under 24 sets a time of day too.</p>' +
 
+    '<h5 class="eyebrow" style="margin:20px 0 8px">Holidays and festivals</h5>' +
+    '<p style="font-size:11.5px;color:var(--ink-2);line-height:1.7;margin:0 0 10px">' +
+      "Marked on Week and Month so you plan around the days nobody is at a desk. " +
+      "Seeded with Cambodia 2026 (Sub-Decree No. 167, 18 Sep 2025) — <b>check it against the " +
+      "sub-decree</b>, because half of these are lunar and move, and the list is reissued every " +
+      "year. Add your own office closures and the festivals you mark but still work.</p>" +
+    '<div class="brow" style="margin-bottom:8px">' +
+      '<button class="btn sm" id="holSeed">Restore the Cambodia 2026 list</button>' +
+      '<button class="btn sm" id="holWipe">Remove them all</button></div>' +
+    '<div style="max-height:190px;overflow-y:auto;border:1px solid var(--rule);' +
+      'border-radius:var(--r-sm);padding:4px 10px">' +
+      (holidays().length ? holidays().map((h, i) =>
+        '<div class="holrow"><span class="hd2">' + esc(h.d) + "</span>" +
+        "<span>" + esc(h.n) + "</span>" +
+        '<span class="hk">' + (h.k === "public" ? "day off" : "marked") + "</span>" +
+        '<button data-hold="' + i + '" title="Remove">✕</button></div>').join("")
+        : '<div style="font-size:11.5px;color:var(--ink-3);padding:8px 0">Nothing marked.</div>') +
+    "</div>" +
+    '<div style="display:flex;gap:6px;margin-top:9px">' +
+      '<input class="in" type="date" id="holD" style="max-width:150px">' +
+      '<input class="in" id="holN" placeholder="Meak Bochea, office closed, team offsite…">' +
+      '<select class="in" id="holK" style="max-width:112px">' +
+        '<option value="public">Day off</option><option value="observance">Marked only</option></select>' +
+      '<button class="btn sm" id="holAdd">Add</button></div>' +
+
     '<h5 class="eyebrow" style="margin:20px 0 8px">Behaviour</h5>' +
     fr("Remember filters", '<select class="in" id="sMem"><option value="1"' + (st.rememberFilters ? " selected" : "") +
       '>Yes — come back to the same view</option><option value="0"' + (!st.rememberFilters ? " selected" : "") +
@@ -5384,6 +5593,23 @@ async function renderModal(){
     '<p style="font-size:12px;color:var(--ink-2);line-height:1.75;margin:0 0 8px">' +
       "None of this leaves the machine — it is word matching against your own systems, teams and past " +
       "records, not a model and not a service.</p>" +
+
+    '<h4 style="margin:18px 0 10px">Week, month and the days off</h4>' +
+    '<p style="font-size:12px;color:var(--ink-2);line-height:1.75;margin:0 0 8px">' +
+      "The calendar reads at two zooms. <b>Week</b> is for working — the whole record on the card, " +
+      "drag one onto another day to move it. <b>Month</b> is for planning around what you cannot move, " +
+      "so it keeps one line per record and leans on the marks. Dragging works in both, and the arrows " +
+      "step by week or by month depending on which you are in.</p>" +
+    '<p style="font-size:12px;color:var(--ink-2);line-height:1.75;margin:0 0 8px">' +
+      "Public holidays are tinted and named on the day. The list is seeded with <b>Cambodia 2026</b> " +
+      "(Sub-Decree No. 167 of 18 September 2025) — worth checking against the sub-decree, because " +
+      "Visak Bochea, the Royal Ploughing Ceremony, Pchum Ben and the Water Festival are lunar and move " +
+      "every year, and the list is reissued annually.</p>" +
+    '<p style="font-size:12px;color:var(--ink-2);line-height:1.75;margin:0 0 8px">' +
+      "So it is yours to edit, under <b>Setup → Holidays and festivals</b>. Add next year when the " +
+      "sub-decree lands, add your own office closures, and add the festivals you mark but still work " +
+      "through — those are <i>marked only</i> rather than a day off. Everything lives in dossier.json " +
+      "and travels with the folder.</p>" +
 
     '<h4 style="margin:18px 0 10px">The work console</h4>' +
     '<p style="font-size:12px;color:var(--ink-2);line-height:1.75;margin:0 0 8px">' +
@@ -5587,6 +5813,39 @@ function wireModal(){
   };
   const hd = $("sHold"); if (hd) hd.onchange = e => { S.settings.autoBlock = e.target.value === "1"; touch(); };
   on("sWatch", installWatcher);
+  on("holAdd", () => {
+    const d = ($("holD").value || "").trim(), n = ($("holN").value || "").trim();
+    if (!d || !n) return toast("A date and a name, please", { bad:true });
+    S.settings.holidays = holidays().filter(h => h.d !== d)
+      .concat([{ d, n, k: $("holK").value === "observance" ? "observance" : "public" }])
+      .sort((a, b) => a.d < b.d ? -1 : a.d > b.d ? 1 : 0);
+    touch(); renderModal(); renderAll();
+    toast(niceDate(d) + " marked");
+  });
+  on("holSeed", () => {
+    const have = {};
+    holidays().forEach(h => have[h.d] = 1);
+    const add = KH_HOLIDAYS.filter(h => !have[h.d]).map(h => Object.assign({}, h));
+    if (!add.length) return toast("They are all there already");
+    S.settings.holidays = holidays().concat(add).sort((a, b) => a.d < b.d ? -1 : a.d > b.d ? 1 : 0);
+    touch(); renderModal(); renderAll();
+    toast(add.length + " restored");
+  });
+  on("holWipe", async () => {
+    if (!holidays().length) return;
+    const r = await askUser("Remove every marked day?", holidays().length + " date(s) will be cleared.",
+      [{ label:"Remove them all", hint:"you can restore the Cambodia list afterwards" },
+       { label:"Cancel", hint:"" }], false);
+    if (!r || r.choice !== 0) return;
+    S.settings.holidays = []; touch(); renderModal(); renderAll();
+    toast("Cleared");
+  });
+  $$("[data-hold]").forEach(b => b.onclick = () => {
+    const h = holidays()[+b.dataset.hold];
+    S.settings.holidays = holidays().filter((_, i) => i !== +b.dataset.hold);
+    touch(); renderModal(); renderAll();
+    if (h) toast(h.n + " removed");
+  });
   ["sSla1","sSla2","sSla3","sSla4"].forEach((id, i) => {
     const el = $(id); if (!el) return;
     el.onchange = () => {
@@ -6363,7 +6622,7 @@ $("main").addEventListener("click", e => {
     return openDrawer(id);
   }
   const kc = e.target.closest(".kc"); if (kc) return openDrawer(kc.dataset.id);
-  const wkc = e.target.closest(".wk"); if (wkc) return openDrawer(wkc.dataset.id);
+  const wkc = e.target.closest(".wk,.wkm"); if (wkc) return openDrawer(wkc.dataset.id);
   const doc = e.target.closest(".doc");
   if (doc){ const t = getTask(doc.dataset.id); if (t) openAttachment(t, doc.dataset.file); return; }
   const tr = e.target.closest("tr[data-id]");
@@ -6387,9 +6646,12 @@ $("main").addEventListener("click", e => {
     if (arr.every(t => S.sel.has(t.id))) S.sel.clear(); else arr.forEach(t => S.sel.add(t.id));
     return renderAll();
   }
-  if (e.target.id === "wkP"){ S.weekStart = addDays(S.weekStart,-7); return renderWeek(); }
-  if (e.target.id === "wkN"){ S.weekStart = addDays(S.weekStart, 7); return renderWeek(); }
-  if (e.target.id === "wkT"){ S.weekStart = mondayOf(today()); return renderWeek(); }
+  const step = calMode() === "month" ? (n => addMonths(S.weekStart, n)) : (n => addDays(S.weekStart, n*7));
+  if (e.target.id === "wkP"){ S.weekStart = step(-1); return renderWeek(); }
+  if (e.target.id === "wkN"){ S.weekStart = step(1); return renderWeek(); }
+  if (e.target.id === "wkT"){ S.weekStart = calMode() === "month" ? today() : mondayOf(today()); return renderWeek(); }
+  const cm = e.target.dataset && e.target.dataset.cal;
+  if (cm){ S.settings.calMode = cm; touch(); return renderWeek(); }
   const rep = e.target.dataset && e.target.dataset.rep;
   if (rep) return runReport(rep);
   if (e.target.id === "insClear") return clearFilters();
@@ -6518,13 +6780,13 @@ let dragId = null;
 ["vBoard","vWeek"].forEach(id => {
   const host = $(id);
   host.addEventListener("dragstart", e => {
-    const c = e.target.closest(".kc,.wk"); if (!c) return;
+    const c = e.target.closest(".kc,.wk,.wkm"); if (!c) return;
     dragId = c.dataset.id; c.classList.add("drag");
     e.dataTransfer.effectAllowed = "move";
     try { e.dataTransfer.setData("text/plain", dragId); } catch(err){}
   });
   host.addEventListener("dragend", e => {
-    const c = e.target.closest(".kc,.wk"); if (c) c.classList.remove("drag");
+    const c = e.target.closest(".kc,.wk,.wkm"); if (c) c.classList.remove("drag");
     $$(".col,.wc,.backlog").forEach(x => x.classList.remove("over"));
     dragId = null;
   });
