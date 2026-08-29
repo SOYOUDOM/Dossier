@@ -439,6 +439,9 @@ table.reg td.ttd span{display:block;overflow:hidden;text-overflow:ellipsis;white
 .holrow button{border:0;background:none;color:var(--ink-3);cursor:pointer;font-size:13px;padding:0 3px}
 .holrow button:hover{color:var(--p1)}
 /* a script you have already run today — the answer to "did I do this?" */
+.chip.sched{color:var(--teal);border-color:var(--teal);background:transparent}
+.mb.run{font-family:var(--f-mono);font-weight:700;color:var(--accent)}
+.mb.run:hover{border-color:var(--accent);background:var(--accent-soft)}
 .rantoday{margin-left:7px;font-family:var(--f-mono);font-size:9px;font-weight:600;
   letter-spacing:.02em;color:var(--st-done);border:1px solid var(--st-done);
   border-radius:999px;padding:0 6px;vertical-align:1px}
@@ -2461,12 +2464,16 @@ function routineDue(r, key){
   if (r.freq === "monthly") return pk(key).getDate() === (+r.dom || 1);
   return false;
 }
-function makeRoutines(){
+/* `only` raises one routine; `force` raises it again even though today's
+   already exists, for the round you genuinely have to do twice. */
+function makeRoutines(only, force){
   const key = today();
   let made = 0;
   S.routines.forEach(r => {
-    if (!routineDue(r, key)) return;
-    if (S.tasks.some(t => t.fromRoutine === r.id && t.forDate === key)) return;
+    if (only && r.id !== only) return;
+    if (!force && !routineDue(r, key)) return;
+    if (force && r.paused) return;
+    if (!force && S.tasks.some(t => t.fromRoutine === r.id && t.forDate === key)) return;
     addTask({
       title:r.title, system:r.system, type:r.type || "Admin", priority:r.priority || "P3",
       estimate:+r.estimate || 0, due:key, dueTime:r.time || "", fromRoutine:r.id, forDate:key,
@@ -2897,6 +2904,27 @@ async function openScript(sc){
     setTimeout(() => URL.revokeObjectURL(url), 60000);
   } catch(e){ toast("Could not open " + sc.file + " — is it still in scripts/?", { bad:true }); }
 }
+/* One click from wherever the record is: the command goes to the clipboard,
+   the script is stamped as used, and the record's log says so. Dossier still
+   does not execute — a browser cannot — but everything up to the paste is
+   done for you, and afterwards there is a trail saying it happened. */
+function runScriptFor(id, scriptId){
+  const t = getTask(id); if (!t) return;
+  const sc = scriptById(scriptId || (t.scripts || [])[0]);
+  if (!sc) return toast("No script on this record", { bad:true });
+  const vals = (t.scriptArgs || {})[sc.id] || {};
+  const cmd = scriptCommand(sc, vals);
+  const blanks = (sc.params || []).filter(x => !vals[x]);
+  markScriptUse(sc);
+  t.log.push({ at:new Date().toISOString(), text:"Ran " + sc.name + " — " + cmd });
+  if (!t.started) t.started = new Date().toISOString();
+  touch();
+  copyText(cmd, blanks.length
+    ? "Copied — " + blanks.join(", ") + " still blank, fill them in the record"
+    : "Copied — paste it into a terminal");
+  renderAll();
+  if (S.open === t.id) renderDrawer();
+}
 function markScriptUse(sc){
   sc.uses = (sc.uses || 0) + 1;
   sc.lastUsed = new Date().toISOString();
@@ -3079,7 +3107,11 @@ function chips(t, compact){
   }
   if ((t.files || []).length) b.push('<span class="chip clip">▤ ' + t.files.length + "</span>");
   if (t.carried > 0 && LIVE.indexOf(t.status) >= 0) b.push('<span class="chip slip">+' + t.carried + "d</span>");
-  if (t.fromRoutine) b.push('<span class="chip">↻</span>');
+  if (t.fromRoutine){
+    const r = (S.routines || []).find(x => x.id === t.fromRoutine);
+    b.push('<span class="chip sched" title="Raised by the routine ' +
+      esc(r ? r.title : "(deleted)") + '">↻ scheduled</span>');
+  }
   const ob = openBlockers(t);
   if (ob.length) b.push('<span class="chip dep" title="Cannot finish until ' +
     esc(ob.map(x => x.code + " " + x.title).join(" · ")) + '">⛓ ' + esc(ob.map(x => x.code).join(" ")) + "</span>");
@@ -3105,6 +3137,8 @@ function rowHtml(t){
     '<button class="mark ' + m + '" data-act="cycle" title="Cycle status"></button>' +
     '<div class="body"><div class="tt">' + esc(t.title) + '</div><div class="meta">' + chips(t) + "</div></div>" +
     '<div class="side">' +
+      ((t.scripts || []).length ? '<button class="mb run" data-act="run" title="Copy the command for ' +
+        esc(((scriptById(t.scripts[0]) || {}).name) || "this script") + '">$</button>' : "") +
       (sp >= 1 || t.timerStart ? '<span class="tm' + (t.timerStart ? " run" : "") + '">' + mins(sp) + "</span>" : "") +
       '<button class="mb ' + (t.timerStart ? "on" : "") + '" data-act="timer" title="Timer">' + (t.timerStart ? "■" : "▶") + "</button>" +
       '<button class="mb" data-act="open" title="Open">›</button>' +
@@ -5450,9 +5484,17 @@ async function renderModal(){
       '<small style="display:block;color:var(--ink-3);font-size:11px">' + esc(freqLabel(r)) +
       (r.system ? " · " + esc(r.system) : "") + (r.time ? " · " + r.time : "") +
       ((r.scripts || []).length ? " · $" + esc(((scriptById(r.scripts[0]) || {}).name) || "missing script") : "") +
-      "</small></span>" +
-      '<button data-rp="' + r.id + '">' + (r.paused ? "▶" : "❚❚") + "</button>" +
-      '<button data-rd="' + r.id + '">✕</button></div>').join("")
+      (r.paused ? " · paused" : (() => {
+        const last = S.tasks.filter(t => t.fromRoutine === r.id)
+          .map(t => t.forDate).sort().slice(-1)[0];
+        return last === today() ? " · raised today"
+             : last ? " · last raised " + niceDate(last)
+             : " · never raised";
+      })()) + "</small></span>" +
+      '<button data-rr="' + r.id + '" title="Raise it again now">↻</button>' +
+      '<button data-rp="' + r.id + '" title="' + (r.paused ? "Resume" : "Pause") + '">' +
+        (r.paused ? "▶" : "❚❚") + "</button>" +
+      '<button data-rd="' + r.id + '" title="Delete">✕</button></div>').join("")
       : '<div style="font-size:12.5px;color:var(--ink-3);margin-bottom:14px">No routines yet.</div>') +
     '<div style="border-top:1px solid var(--rule);margin-top:14px;padding-top:14px">' +
       fr("Title", '<input class="in" id="rT" placeholder="Morning health check">') +
@@ -5686,6 +5728,22 @@ async function renderModal(){
       "Windows Task Scheduler's job; give the script a stamp file so it does its work once a day and " +
       "exits quietly the rest of the time.</p>" +
 
+    '<h4 style="margin:18px 0 10px">Running a script</h4>' +
+    '<p style="font-size:12px;color:var(--ink-2);line-height:1.75;margin:0 0 8px">' +
+      "Any record carrying a script shows a <b>$</b> button on its row. One press puts the command on " +
+      "the clipboard, stamps the script as used, and writes <i>Ran &lt;script&gt;</i> into the record's " +
+      "work log — so afterwards there is a trail saying it happened, and the script shows <b>ran " +
+      "today</b>. If a blank is still unfilled it says which one rather than handing you a broken line.</p>" +
+    '<p style="font-size:12px;color:var(--ink-2);line-height:1.75;margin:0 0 8px">' +
+      "Then you paste it. Dossier cannot execute anything — no page in a browser can, and a file that " +
+      "could would be a file you should not trust. If you would rather double-click than paste, " +
+      "<b>Build a filled copy</b> writes the finished script into that record's own folder, ready to " +
+      "run from Explorer and filed as evidence beside the incident.</p>" +
+    '<p style="font-size:12px;color:var(--ink-2);line-height:1.75;margin:0 0 8px">' +
+      "Records the scheduler raised are marked <b>↻ scheduled</b> so they never look like something you " +
+      "typed. In Routines, <b>↻</b> raises today's again for the round you have to do twice, and each " +
+      "routine says whether it was raised today, when it last was, or that it never has been.</p>" +
+
     '<h4 style="margin:18px 0 10px">Week, month and the days off</h4>' +
     '<p style="font-size:12px;color:var(--ink-2);line-height:1.75;margin:0 0 8px">' +
       "The calendar reads at two zooms. <b>Week</b> is for working — the whole record on the card, " +
@@ -5867,6 +5925,17 @@ function wireModal(){
   });
   $$("#rD .sb").forEach(b => b.onclick = () => b.classList.toggle("on"));
   $$("[data-rd]").forEach(b => b.onclick = () => { S.routines = S.routines.filter(r => r.id !== b.dataset.rd); touch(); renderModal(); });
+  $$("[data-rr]").forEach(b => b.onclick = () => {
+    const r = S.routines.find(x => x.id === b.dataset.rr);
+    if (!r) return;
+    if (r.paused) return toast("It is paused — resume it first", { bad:true });
+    const n = makeRoutines(r.id, true);
+    renderModal(); renderAll();
+    if (!n) return toast("Could not raise it", { bad:true });
+    const t = S.tasks.find(x => x.fromRoutine === r.id);
+    toast("Raised again — " + (t ? t.code : "a new record") + " on today's sheet",
+      { action:"Open it", onAction:() => { if (t){ closeModal(); openDrawer(t.id); } } });
+  });
   $$("[data-rp]").forEach(b => b.onclick = () => {
     const r = S.routines.find(x => x.id === b.dataset.rp);
     if (!r) return;
@@ -6758,6 +6827,7 @@ $("main").addEventListener("click", e => {
     const id = row.dataset.id, act = e.target.dataset.act;
     if (act === "cycle") return cycleStatus(id);
     if (act === "timer") return toggleTimer(id);
+    if (act === "run") return runScriptFor(id);
     return openDrawer(id);
   }
   const kc = e.target.closest(".kc"); if (kc) return openDrawer(kc.dataset.id);
@@ -7037,7 +7107,7 @@ $("dBody").addEventListener("click", async e => {
     const act = e.target.dataset.sa;
     const vals = (t.scriptArgs || {})[sc.id] || {};
     if (act === "open") return openScript(sc);
-    if (act === "copy"){ markScriptUse(sc); return copyText(scriptCommand(sc, vals), "Command copied"); }
+    if (act === "copy") return runScriptFor(t.id, sc.id);
     if (act === "fill") return buildFilledCopy(t, sc, vals);
     if (act === "detach"){
       t.scripts = (t.scripts || []).filter(x => x !== sc.id);
