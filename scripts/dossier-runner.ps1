@@ -10,6 +10,8 @@ $scripts = $PSScriptRoot
 $root    = Split-Path -Parent $scripts
 $queue   = Join-Path $scripts 'queue'
 $data    = Join-Path $root 'dossier.json'
+$seen     = @{}
+$announced = $false
 if (-not (Test-Path -LiteralPath $queue)) { New-Item -ItemType Directory -Path $queue | Out-Null }
 Write-Host "Dossier runner watching $queue"
 Write-Host "and the routines in $data"
@@ -78,6 +80,12 @@ while ($true) {
       $doc   = Get-Content -Raw -LiteralPath $data | ConvertFrom-Json
       $now   = Get-Date
       $stamp = $now.ToString('yyyy-MM-dd')
+      $auto  = @($doc.routines) | Where-Object { $_.autoRun }
+      if (-not $announced) { $announced = $true
+        if (@($auto).Count -eq 0) {
+          Write-Host 'No routine is set to run on its own (Menu > Routines > On its own).' }
+        else { Write-Host ("Watching {0} self-running routine(s): {1}" -f @($auto).Count,
+          (($auto | ForEach-Object { $_.title + ' @' + $_.time }) -join ', ')) } }
       foreach ($rt in @($doc.routines)) {
         if (-not $rt.autoRun) { continue }
         if (-not $rt.scripts -or @($rt.scripts).Count -eq 0) { continue }
@@ -85,12 +93,18 @@ while ($true) {
 
         # once a day, whatever else happens - the marker is the guarantee
         $mark = Join-Path $queue ('.auto-' + $rt.id + '-' + $stamp + '.txt')
-        if (Test-Path -LiteralPath $mark) { continue }
+        if (Test-Path -LiteralPath $mark) {
+          if (-not $seen[$rt.id]) { $seen[$rt.id] = $true
+            Write-Host ("  '{0}' already ran today - delete {1} to run it again" -f $rt.title, $mark) }
+          continue }
 
         # not before its time; if the machine was off, it catches up
         $at = $null
         [void][datetime]::TryParse(($stamp + ' ' + [string]$rt.time), [ref]$at)
-        if ($at -and $now -lt $at) { continue }
+        if ($at -and $now -lt $at) {
+          if (-not $seen[$rt.id]) { $seen[$rt.id] = $true
+            Write-Host ("  '{0}' waits until {1}" -f $rt.title, $rt.time) }
+          continue }
 
         $sid  = [string]@($rt.scripts)[0]
         $sc   = @($doc.scripts) | Where-Object { $_.id -eq $sid } | Select-Object -First 1
@@ -103,8 +117,11 @@ while ($true) {
         try {
           $r = Invoke-DossierScript ([string]$sc.file) $null
           Write-Result $done $id $r.exit $r.output $rt.id $stamp
+          $first = (($r.output -split "`n") | Where-Object { $_.Trim() } | Select-Object -First 1)
+          Write-Host ("           exit {0}  {1}" -f $r.exit, $first)
         } catch {
           Write-Result $done $id -1 $_.Exception.Message $rt.id $stamp
+          Write-Host ("           FAILED  {0}" -f $_.Exception.Message)
         }
       }
     } catch { }
