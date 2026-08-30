@@ -1438,6 +1438,7 @@ const S = {
        to the Day view and to Slipping, which is where work goes to die */
     sla:{ on:true, P1:4, P2:24, P3:48, P4:120 },
     calMode:"week", holidays: null,      /* null = seed the built-in list once */
+    runner:false,                        /* the companion process that executes scripts */
     fonts:{ display:"auto", ui:"auto", mono:"auto" },
     templates:[
       'Morning health check @"Infra / IIS" :admin 20m today 08:30',
@@ -2913,6 +2914,9 @@ function runScriptFor(id, scriptId){
   const sc = scriptById(scriptId || (t.scripts || [])[0]);
   if (!sc) return toast("No script on this record", { bad:true });
   const vals = (t.scriptArgs || {})[sc.id] || {};
+  /* with the runner installed this actually executes; without it, the most a
+     browser can do is hand you the line to paste */
+  if (S.settings.runner && FS.ok) return queueRun(t, sc, vals);
   const cmd = scriptCommand(sc, vals);
   const blanks = (sc.params || []).filter(x => !vals[x]);
   markScriptUse(sc);
@@ -3137,7 +3141,8 @@ function rowHtml(t){
     '<button class="mark ' + m + '" data-act="cycle" title="Cycle status"></button>' +
     '<div class="body"><div class="tt">' + esc(t.title) + '</div><div class="meta">' + chips(t) + "</div></div>" +
     '<div class="side">' +
-      ((t.scripts || []).length ? '<button class="mb run" data-act="run" title="Copy the command for ' +
+      ((t.scripts || []).length ? '<button class="mb run" data-act="run" title="' +
+        (S.settings.runner ? "Run " : "Copy the command for ") +
         esc(((scriptById(t.scripts[0]) || {}).name) || "this script") + '">$</button>' : "") +
       (sp >= 1 || t.timerStart ? '<span class="tm' + (t.timerStart ? " run" : "") + '">' + mins(sp) + "</span>" : "") +
       '<button class="mb ' + (t.timerStart ? "on" : "") + '" data-act="timer" title="Timer">' + (t.timerStart ? "■" : "▶") + "</button>" +
@@ -5598,6 +5603,30 @@ async function renderModal(){
       '<button class="btn" id="sWatchCmd">Copy the schtasks line</button></div>' +
     '<div class="cmdline">' + esc(watchCommand()) + "</div>" +
 
+    '<h5 class="eyebrow" style="margin:20px 0 8px">Running a script</h5>' +
+    '<p style="font-size:12px;color:var(--ink-2);line-height:1.75;margin:0 0 10px">' +
+      "A page in a browser cannot start a program, and a browser that could would be one you " +
+      "should not install. So Dossier writes the request to a file instead, and a small PowerShell " +
+      "process of your own watches for it, runs the script, and writes the output back — which lands " +
+      "in the record's work log.<br><br>" +
+      "It only ever runs a file that is <b>already in scripts/</b>. The request names a file, never a " +
+      "command, and the runner refuses anything with a path in it. Nothing here touches the network.</p>" +
+    fr("Run button", '<select class="in" id="sRun"><option value="1"' + (st.runner ? " selected" : "") +
+      '>Send it to the runner</option><option value="0"' + (!st.runner ? " selected" : "") +
+      ">Just copy the command</option></select>") +
+    '<div class="brow" style="margin-top:9px">' +
+      '<button class="btn" id="sRunner">Write scripts/dossier-runner.ps1</button>' +
+      '<button class="btn" id="sRunnerCmd">Copy the schtasks line</button></div>' +
+    '<div class="cmdline">' + esc(runnerCommand()) + "</div>" +
+    '<p style="font-size:11px;color:' + (st.rootPath ? "var(--ink-3)" : "var(--p2)") +
+      ';margin:8px 0 0;line-height:1.6">' +
+      (st.rootPath
+        ? "Write the file, then either run that line once so it starts at every logon, or just " +
+          "double-click <b>dossier-runner.ps1</b> to try it now. Close its window to stop it."
+        : "Put your workspace's full path in <b>Menu → Scripts → Folder path</b> first, or that " +
+          "line will point nowhere. Until then, double-click <b>scripts\\dossier-runner.ps1</b> " +
+          "to start it by hand.") + "</p>" +
+
     '<h5 class="eyebrow" style="margin:20px 0 8px">Target dates</h5>' +
     '<p style="font-size:11.5px;color:var(--ink-2);line-height:1.7;margin:0 0 10px">' +
       "Hours from raising a record to when it is due, by priority. Only ever fills a date you " +
@@ -5743,6 +5772,21 @@ async function renderModal(){
       "Records the scheduler raised are marked <b>↻ scheduled</b> so they never look like something you " +
       "typed. In Routines, <b>↻</b> raises today's again for the round you have to do twice, and each " +
       "routine says whether it was raised today, when it last was, or that it never has been.</p>" +
+
+    '<h4 style="margin:18px 0 10px">Making a script actually run</h4>' +
+    '<p style="font-size:12px;color:var(--ink-2);line-height:1.75;margin:0 0 8px">' +
+      "A page in a browser cannot start a program. So Dossier writes the request to a file instead, " +
+      "and a small PowerShell process of your own — <b>Setup → Running a script</b> writes it for you — " +
+      "watches <b>scripts/queue/</b>, runs the script, and writes the output back. Dossier picks that " +
+      "up and files it in the record's work log, with the exit code if it failed.</p>" +
+    '<p style="font-size:12px;color:var(--ink-2);line-height:1.75;margin:0 0 8px">' +
+      "Press <b>$</b> on any record carrying a script and it goes to the runner. Turn the runner off " +
+      "in Setup and the same button falls back to putting the command on your clipboard.</p>" +
+    '<p style="font-size:12px;color:var(--ink-2);line-height:1.75;margin:0 0 8px">' +
+      "It will only run a file <b>already sitting in scripts/</b>. The request names a file, never a " +
+      "command line, and the runner refuses anything containing a path separator or a <code>..</code> " +
+      "— so the worst a stray request can do is run one of the scripts you put there yourself. It runs " +
+      "as you, with no elevation, and touches no network.</p>" +
 
     '<h4 style="margin:18px 0 10px">Week, month and the days off</h4>' +
     '<p style="font-size:12px;color:var(--ink-2);line-height:1.75;margin:0 0 8px">' +
@@ -6014,6 +6058,14 @@ function wireModal(){
   };
   const hd = $("sHold"); if (hd) hd.onchange = e => { S.settings.autoBlock = e.target.value === "1"; touch(); };
   on("sWatch", installWatcher);
+  on("sRunner", installRunner);
+  on("sRunnerCmd", () => copyText(runnerCommand(),
+    "Paste it into a terminal — it starts the runner at every logon"));
+  if ($("sRun")) $("sRun").onchange = e => {
+    S.settings.runner = e.target.value === "1";
+    touch(); renderAll();
+    toast(S.settings.runner ? "Run sends the script to the runner" : "Run copies the command");
+  };
   on("holAdd", () => {
     const d = ($("holD").value || "").trim(), n = ($("holN").value || "").trim();
     if (!d || !n) return toast("A date and a name, please", { bad:true });
@@ -6615,6 +6667,145 @@ async function installWatcher(){
     touch(); renderModal();
     toast("Written to scripts/dossier-watch.ps1");
   } catch(e){ toast("Could not write the watcher: " + e.message, { bad:true }); }
+}
+
+/* ═══ THE RUN QUEUE — actually running the thing ══════════════════════════
+   A page in a browser cannot start a program, and that is not going to
+   change. But it can write a file, and something outside the browser can
+   watch for that file. So Dossier drops a small request into
+   scripts/queue/, a companion PowerShell process picks it up, runs the
+   script, and writes the output back beside it. Dossier reads the result and
+   files it in the record's work log.
+
+   The request names a FILE, never a command. The runner refuses anything
+   with a path separator in it and anything that is not already sitting in
+   scripts/ — so a stray request cannot be turned into "run this arbitrary
+   line", only into "run one of the scripts you put there yourself".
+   ════════════════════════════════════════════════════════════════════════ */
+function runnerCommand(){
+  const root = String(S.settings.rootPath || "").replace(/[\\/]+$/, "");
+  const p = (root ? root + "\\" : "") + "scripts\\dossier-runner.ps1";
+  return 'schtasks /Create /TN "Dossier runner" /SC ONLOGON /F /RL LIMITED /TR ' +
+    '"powershell -NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File \\"' + p + '\\""';
+}
+
+function runnerScript(){
+  return [
+    "# Dossier runner",
+    "# Written by Dossier. Watches scripts\\queue for run requests, runs the named",
+    "# file from scripts\\, and writes the output back. Makes no network calls.",
+    "# Start it with the schtasks line Dossier showed you, or just double-click it.",
+    "param([int]$PollSeconds = 2)",
+    "",
+    "$ErrorActionPreference = 'SilentlyContinue'",
+    "$scripts = $PSScriptRoot",
+    "$queue   = Join-Path $scripts 'queue'",
+    "if (-not (Test-Path -LiteralPath $queue)) { New-Item -ItemType Directory -Path $queue | Out-Null }",
+    "Write-Host \"Dossier runner watching $queue\"",
+    "",
+    "function Write-Result($path, $id, $exit, $text) {",
+    "  $o = [pscustomobject]@{ id = $id; exit = $exit; at = (Get-Date).ToString('o');",
+    "                          output = ([string]$text).Trim() }",
+    "  $o | ConvertTo-Json -Depth 3 | Set-Content -LiteralPath $path -Encoding UTF8",
+    "}",
+    "",
+    "while ($true) {",
+    "  foreach ($req in @(Get-ChildItem -LiteralPath $queue -Filter '*.run.json' -File)) {",
+    "    $id   = $req.Name -replace '\\.run\\.json$',''",
+    "    $done = Join-Path $queue ($id + '.done.json')",
+    "    try {",
+    "      $j    = Get-Content -Raw -LiteralPath $req.FullName | ConvertFrom-Json",
+    "      $name = [string]$j.script",
+    "",
+    "      # A file already in scripts\\, nothing else. No paths, no command lines.",
+    "      if (-not $name -or $name -match '[\\\\/:]' -or $name -match '\\.\\.') {",
+    "        throw \"refused: '$name' is not a plain file name\" }",
+    "      $path = Join-Path $scripts $name",
+    "      if (-not (Test-Path -LiteralPath $path -PathType Leaf)) { throw \"not found: $name\" }",
+    "",
+    "      $argList = @()",
+    "      if ($j.args) { foreach ($p in $j.args.PSObject.Properties) {",
+    "        if ($null -ne $p.Value -and \"$($p.Value)\" -ne '') { $argList += \"$($p.Value)\" } } }",
+    "",
+    "      $ext = [IO.Path]::GetExtension($name).ToLower()",
+    "      $global:LASTEXITCODE = 0",
+    "      switch ($ext) {",
+    "        '.ps1' { $out = & powershell -NoProfile -ExecutionPolicy Bypass -File $path @argList 2>&1 }",
+    "        '.bat' { $out = & cmd.exe /c $path @argList 2>&1 }",
+    "        '.cmd' { $out = & cmd.exe /c $path @argList 2>&1 }",
+    "        '.py'  { $out = & python $path @argList 2>&1 }",
+    "        default { throw \"cannot run a $ext file\" }",
+    "      }",
+    "      $code = $LASTEXITCODE",
+    "      Write-Result $done $id $code (($out | Out-String))",
+    "    } catch {",
+    "      Write-Result $done $id -1 $_.Exception.Message",
+    "    }",
+    "    Remove-Item -LiteralPath $req.FullName -Force",
+    "  }",
+    "",
+    "  # results older than a day are nobody's business any more",
+    "  foreach ($old in @(Get-ChildItem -LiteralPath $queue -Filter '*.done.json' -File)) {",
+    "    if ($old.LastWriteTime -lt (Get-Date).AddDays(-1)) { Remove-Item -LiteralPath $old.FullName -Force }",
+    "  }",
+    "  Start-Sleep -Seconds $PollSeconds",
+    "}"
+  ].join("\n");
+}
+
+async function installRunner(){
+  if (!FS.ok) return toast("Pick a workspace folder first", { bad:true });
+  try {
+    const dir = await scriptsDir(true);
+    await FS.writeText(dir, "dossier-runner.ps1", runnerScript());
+    await FS.dir(["scripts", "queue"], true);
+    S.settings.runner = true;
+    touch(); renderModal(); renderAll();
+    toast("Written to scripts/dossier-runner.ps1 — start it once, then Run works from any record");
+  } catch(e){ toast("Could not write the runner: " + e.message, { bad:true }); }
+}
+
+/* ── ask the runner to run something, and wait for the answer ─────────── */
+async function queueRun(t, sc, vals){
+  let dir;
+  try { dir = await FS.dir(["scripts", "queue"], true); }
+  catch(e){ return toast("Could not reach scripts/queue — " + e.message, { bad:true }); }
+
+  const id = "r" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  await FS.writeText(dir, id + ".run.json", JSON.stringify({
+    id, script: sc.file, args: vals || {}, task: t.id, code: t.code,
+    at: new Date().toISOString()
+  }, null, 2));
+
+  markScriptUse(sc);
+  if (!t.started) t.started = new Date().toISOString();
+  toast("Sent to the runner — " + sc.name);
+
+  /* the runner wakes every couple of seconds; allow a minute for a slow job */
+  const started = Date.now();
+  while (Date.now() - started < 60000){
+    await new Promise(r => setTimeout(r, 700));
+    let txt = null;
+    try { txt = await FS.readText(dir, id + ".done.json"); } catch(e){}
+    if (txt == null) continue;
+
+    let res = {};
+    try { res = JSON.parse(txt); } catch(e){ res = { exit:-1, output:"unreadable result" }; }
+    const ok = +res.exit === 0;
+    const out = String(res.output || "").slice(0, 4000);
+    const task = getTask(t.id);
+    if (task){
+      task.log.push({ at:new Date().toISOString(),
+        text:(ok ? "Ran " : "Ran (failed, exit " + res.exit + ") ") + sc.name +
+             (out ? "\n" + out : "") });
+      touch();
+    }
+    renderAll();
+    if (S.open === t.id) renderDrawer();
+    return toast(ok ? sc.name + " finished" : sc.name + " failed — exit " + res.exit,
+      { bad: !ok, action:"See the log", onAction:() => openDrawer(t.id) });
+  }
+  toast("No answer from the runner — is it started? Setup → Running a script", { bad:true });
 }
 
 /* ═══ PRINT ══════════════════════════════════════════════════════════════
