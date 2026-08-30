@@ -5626,7 +5626,11 @@ async function renderModal(){
       "process of your own watches for it, runs the script, and writes the output back — which lands " +
       "in the record's work log.<br><br>" +
       "It only ever runs a file that is <b>already in scripts/</b>. The request names a file, never a " +
-      "command, and the runner refuses anything with a path in it. Nothing here touches the network.</p>" +
+      "command, and the runner refuses anything with a path in it. Nothing here touches the network.<br><br>" +
+      "It reads the queue several times a second, so <b>$</b> and <b>Run now</b> start the script " +
+      "straight away — there is no interval to wait out. The routines in dossier.json are re-read " +
+      "on a slower timer, every 20 seconds, which only affects how precisely a routine hits its " +
+      "own time.</p>" +
     fr("Run button", '<select class="in" id="sRun"><option value="1"' + (st.runner ? " selected" : "") +
       '>Send it to the runner</option><option value="0"' + (!st.runner ? " selected" : "") +
       ">Just copy the command</option></select>") +
@@ -6741,6 +6745,9 @@ function runnerScript(){
     "#   1. scripts\\queue        - run what Dossier asked for when you pressed $",
     "#   2. routines in dossier.json marked 'run automatically' - fire them on time",
     "# Start it with the schtasks line Dossier showed you, or double-click this file.",
+    "# The queue is checked several times a second, so pressing $ or Run now",
+    "# starts the script straight away. $PollSeconds is only how often the",
+    "# routines in dossier.json are re-read to see if one is due.",
     "param([int]$PollSeconds = 20)",
     "",
     "$ErrorActionPreference = 'SilentlyContinue'",
@@ -6750,9 +6757,11 @@ function runnerScript(){
     "$data    = Join-Path $root 'dossier.json'",
     "$seen     = @{}",
     "$announced = $false",
+    "$nextScan  = Get-Date",
     "if (-not (Test-Path -LiteralPath $queue)) { New-Item -ItemType Directory -Path $queue | Out-Null }",
     "Write-Host \"Dossier runner watching $queue\"",
     "Write-Host \"and the routines in $data\"",
+    "Write-Host \"Queued runs start within a second. Routines are checked every $PollSeconds s.\"",
     "",
     "function Write-Result($path, $id, $exit, $text, $routine, $forDate) {",
     "  $o = [pscustomobject]@{ id = $id; exit = $exit; at = (Get-Date).ToString('o');",
@@ -6813,6 +6822,10 @@ function runnerScript(){
     "  }",
     "",
     "  # ---- 2. routines that run themselves -----------------------------------",
+    "  # This half parses dossier.json, so it is the half that waits. The queue",
+    "  # above does not - a request you just wrote is picked up on the next pass.",
+    "  if ((Get-Date) -lt $nextScan) { Start-Sleep -Milliseconds 400; continue }",
+    "  $nextScan = (Get-Date).AddSeconds($PollSeconds)",
     "  if (Test-Path -LiteralPath $data) {",
     "    try {",
     "      $doc   = Get-Content -Raw -LiteralPath $data | ConvertFrom-Json",
@@ -6872,7 +6885,7 @@ function runnerScript(){
     "    if ($old.Name -like '.auto-*' -and $old.LastWriteTime -lt (Get-Date).AddDays(-7)) {",
     "      Remove-Item -LiteralPath $old.FullName -Force }",
     "  }",
-    "  Start-Sleep -Seconds $PollSeconds",
+    "  Start-Sleep -Milliseconds 400",
     "}"
   ].join("\n");
 }
@@ -6957,11 +6970,11 @@ async function testRunner(){
       id, script: sc.file, args:{}, task:"", code:"TEST", at:new Date().toISOString() }, null, 2));
   } catch(e){ return say("Could not write the request — " + esc(e.message), "bad"); }
   say("Wrote <b>scripts/queue/" + id + ".run.json</b> asking for <b>" + esc(sc.file) + "</b>", "ok");
-  say("Waiting up to 30 seconds for the runner…");
+  say("Waiting for the runner — it should answer in about a second…");
 
   const started = Date.now();
   while (Date.now() - started < 30000){
-    await new Promise(r => setTimeout(r, 600));
+    await new Promise(r => setTimeout(r, 250));
     let txt = null;
     try { txt = await FS.readText(dir, id + ".done.json"); } catch(e){}
     if (txt == null) continue;
@@ -7060,10 +7073,11 @@ async function queueRun(t, sc, vals){
   if (!t.started) t.started = new Date().toISOString();
   toast("Sent to the runner — " + sc.name);
 
-  /* the runner wakes every couple of seconds; allow a minute for a slow job */
+  /* the runner picks the request up within half a second; the minute is for
+     the script itself, which may take that long to finish */
   const started = Date.now();
   while (Date.now() - started < 60000){
-    await new Promise(r => setTimeout(r, 700));
+    await new Promise(r => setTimeout(r, 250));
     let txt = null;
     try { txt = await FS.readText(dir, id + ".done.json"); } catch(e){}
     if (txt == null) continue;

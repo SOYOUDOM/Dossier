@@ -55,6 +55,12 @@ Now press the **`$`** button on any record carrying a script — **D-0004** has
 `restart-app-pool` with its parameters already filled, **D-0007** has
 `open-morning-tabs`. It runs, and the output appears in that record's work log.
 
+The runner reads the queue several times a second, so `$` and **Run now** start
+the script straight away — there is no interval to wait out. It re-reads the
+routines in `dossier.json` on a slower timer (`-PollSeconds`, 20 by default),
+which only affects how precisely a routine hits its own time; pass a smaller
+number if you want it tighter.
+
 To start the runner at every logon: put this folder's full path into
 **Menu → Scripts → Folder path**, then
 **Menu → Setup → Running a script → Copy the schtasks line** and run it once.
@@ -79,10 +85,14 @@ tour*, then add it again with the time set two minutes from now, Script =
 The result is filed into that day's record as **Ran on schedule**, with the
 exit code if it failed. D-0004 already has one so you can see the shape of it.
 
-Note `open-morning-tabs.bat` has its own once-a-day stamp file, so a second run
-the same day prints *"Already opened today"* and does nothing. Delete
-`scripts\.ran-open-morning-tabs.txt` to test it again, or drop that block from
-the script for things you want to run repeatedly.
+Once a day is guaranteed by the runner's own marker,
+`scripts\queue\.auto-<routine>-<date>.txt` — delete today's to let it fire
+again. The `.bat` deliberately has no second guard of its own: two guards meant
+that testing it by double-click would quietly cancel the scheduled run.
+
+**To run it this second instead:** Menu → Routines → **`▶`** on *Morning tour*.
+That raises today's record and starts the script immediately, clearing the
+marker first so the scheduled run still happens.
 
 ---
 
@@ -94,7 +104,7 @@ dossier.json                  every record, routine, script and setting
 logo.png, favicon.ico         yours — the app picks them up automatically
 scripts/
   dossier-runner.ps1          runs queued scripts, fires routines on time
-  open-morning-tabs.bat       sample: opens your morning tabs, once a day
+  open-morning-tabs.bat       sample: opens your morning tabs
   restart-app-pool.bat        sample: parameters, and a filled copy per record
   queue/                      run requests and their results (transient)
 backups/                      one snapshot per day, 30 kept

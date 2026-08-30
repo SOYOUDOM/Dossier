@@ -3,6 +3,9 @@
 #   1. scripts\queue        - run what Dossier asked for when you pressed $
 #   2. routines in dossier.json marked 'run automatically' - fire them on time
 # Start it with the schtasks line Dossier showed you, or double-click this file.
+# The queue is checked several times a second, so pressing $ or Run now
+# starts the script straight away. $PollSeconds is only how often the
+# routines in dossier.json are re-read to see if one is due.
 param([int]$PollSeconds = 20)
 
 $ErrorActionPreference = 'SilentlyContinue'
@@ -12,9 +15,11 @@ $queue   = Join-Path $scripts 'queue'
 $data    = Join-Path $root 'dossier.json'
 $seen     = @{}
 $announced = $false
+$nextScan  = Get-Date
 if (-not (Test-Path -LiteralPath $queue)) { New-Item -ItemType Directory -Path $queue | Out-Null }
 Write-Host "Dossier runner watching $queue"
 Write-Host "and the routines in $data"
+Write-Host "Queued runs start within a second. Routines are checked every $PollSeconds s."
 
 function Write-Result($path, $id, $exit, $text, $routine, $forDate) {
   $o = [pscustomobject]@{ id = $id; exit = $exit; at = (Get-Date).ToString('o');
@@ -75,6 +80,10 @@ while ($true) {
   }
 
   # ---- 2. routines that run themselves -----------------------------------
+  # This half parses dossier.json, so it is the half that waits. The queue
+  # above does not - a request you just wrote is picked up on the next pass.
+  if ((Get-Date) -lt $nextScan) { Start-Sleep -Milliseconds 400; continue }
+  $nextScan = (Get-Date).AddSeconds($PollSeconds)
   if (Test-Path -LiteralPath $data) {
     try {
       $doc   = Get-Content -Raw -LiteralPath $data | ConvertFrom-Json
@@ -134,5 +143,5 @@ while ($true) {
     if ($old.Name -like '.auto-*' -and $old.LastWriteTime -lt (Get-Date).AddDays(-7)) {
       Remove-Item -LiteralPath $old.FullName -Force }
   }
-  Start-Sleep -Seconds $PollSeconds
+  Start-Sleep -Milliseconds 400
 }
