@@ -67,6 +67,23 @@ Write-Host "Dossier runner watching $queue"
 Write-Host "and the routines in $data"
 Write-Host 'Looking once a second. Nothing here waits out a timer.'
 
+# A routine can be set to nudge rather than to run something. Dossier does that
+# itself while its tab is open; this is the same nudge for when it is not.
+$ToastApp = '{1AC14E77-02E7-4E5D-B744-2EB1AE5198B7}\WindowsPowerShell\v1.0\powershell.exe'
+function Show-Toast([string]$Title, [string]$Body) {
+  try {
+    [void][Windows.UI.Notifications.ToastNotificationManager, Windows.UI.Notifications, ContentType=WindowsRuntime]
+    $tpl = [Windows.UI.Notifications.ToastNotificationManager]::GetTemplateContent([Windows.UI.Notifications.ToastTemplateType]::ToastText02)
+    $txt = $tpl.GetElementsByTagName('text')
+    $txt.Item(0).AppendChild($tpl.CreateTextNode($Title)) | Out-Null
+    $txt.Item(1).AppendChild($tpl.CreateTextNode($Body))  | Out-Null
+    $toast = New-Object Windows.UI.Notifications.ToastNotification $tpl
+    [Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier($ToastApp).Show($toast)
+  } catch {
+    msg * /TIME:120 "$Title - $Body"
+  }
+}
+
 function Write-Result($path, $id, $exit, $text, $routine, $forDate, $task) {
   # Capped, because a chatty script left running all day should not be able to
   # fill the folder. Dossier only keeps the first 4 KB in the log anyway.
@@ -276,7 +293,7 @@ while ($true) {
     try {
       $now   = Get-Date
       $stamp = $now.ToString('yyyy-MM-dd')
-      $auto  = @($doc.routines) | Where-Object { $_.autoRun }
+      $auto  = @($doc.routines) | Where-Object { $_.autoRun -or $_.remind }
 
       # A new day, or an edit you just made in Dossier - say what is watched
       # now. Seeing your own change echoed here is the proof the runner is
@@ -290,8 +307,9 @@ while ($true) {
         else { Write-Host ("Watching {0} self-running routine(s): {1}" -f @($auto).Count, $now_sig) } }
 
       foreach ($rt in @($doc.routines)) {
-        if (-not $rt.autoRun) { continue }
-        if (-not $rt.scripts -or @($rt.scripts).Count -eq 0) { continue }
+        $willRun    = ($rt.autoRun -and $rt.scripts -and @($rt.scripts).Count -gt 0)
+        $willRemind = [bool]$rt.remind
+        if (-not $willRun -and -not $willRemind) { continue }
         if (-not (Routine-Due $rt $now)) { continue }
 
         # When is it next owed, and what marks that it has been paid? A cron
@@ -322,24 +340,35 @@ while ($true) {
             Write-Host ("  '{0}' waits until {1}" -f $rt.title, $at.ToString('HH:mm')) }
           continue }
 
-        $sid  = [string]@($rt.scripts)[0]
-        $sc   = @($doc.scripts) | Where-Object { $_.id -eq $sid } | Select-Object -First 1
-        if (-not $sc) { continue }
+        $sc = $null
+        if ($willRun) {
+          $sid = [string]@($rt.scripts)[0]
+          $sc  = @($doc.scripts) | Where-Object { $_.id -eq $sid } | Select-Object -First 1
+          if (-not $sc -and -not $willRemind) { continue }
+        }
 
-        # marked before it is run: a script that crashes the runner must not
-        # be retried in a loop for the rest of the day
+        # marked before anything happens: a script that crashes the runner must
+        # not be retried in a loop for the rest of the day
         Set-Content -LiteralPath $mark -Value $now.ToString('o') -Encoding UTF8
-        $id   = 'auto-' + $rt.id + '-' + $slot
-        $done = Join-Path $queue ($id + '.done.json')
-        Write-Host ("[{0}] running {1} for routine '{2}'" -f $now.ToString('HH:mm:ss'), $sc.file, $rt.title)
-        try {
-          $r = Invoke-DossierScript ([string]$sc.file) $null $id
-          Write-Result $done $id $r.exit $r.output $rt.id $stamp $null
-          $first = (($r.output -split "`n") | Where-Object { $_.Trim() } | Select-Object -First 1)
-          Write-Host ("           exit {0}  {1}" -f $r.exit, $first)
-        } catch {
-          Write-Result $done $id -1 $_.Exception.Message $rt.id $stamp $null
-          Write-Host ("           FAILED  {0}" -f $_.Exception.Message)
+
+        if ($willRemind) {
+          Write-Host ("[{0}] reminding '{1}'" -f $now.ToString('HH:mm:ss'), $rt.title)
+          Show-Toast ([string]$rt.title) $(if ($rt.notes) { [string]$rt.notes } else { "It is " + $at.ToString('HH:mm') + "." })
+        }
+
+        if ($sc) {
+          $id   = 'auto-' + $rt.id + '-' + $slot
+          $done = Join-Path $queue ($id + '.done.json')
+          Write-Host ("[{0}] running {1} for routine '{2}'" -f $now.ToString('HH:mm:ss'), $sc.file, $rt.title)
+          try {
+            $r = Invoke-DossierScript ([string]$sc.file) $null $id
+            Write-Result $done $id $r.exit $r.output $rt.id $stamp $null
+            $first = (($r.output -split "`n") | Where-Object { $_.Trim() } | Select-Object -First 1)
+            Write-Host ("           exit {0}  {1}" -f $r.exit, $first)
+          } catch {
+            Write-Result $done $id -1 $_.Exception.Message $rt.id $stamp $null
+            Write-Host ("           FAILED  {0}" -f $_.Exception.Message)
+          }
         }
       }
     } catch { }

@@ -126,6 +126,27 @@ the sheet would be unreadable otherwise. The runner fires the **script** at
 every occurrence, and each run is its own line in that record's work log. The
 Time box is ignored for a cron routine; the expression carries the time.
 
+### Using one as a reminder
+
+Set **Remind me** to *Yes — a notification at every firing* and the routine
+nudges you on its own schedule, with no script involved:
+
+```
+Title     Drink water
+Repeats   On a cron schedule
+Cron      0 9-17 * * 1-5        on the hour through the working day
+Remind me Yes
+```
+
+While Dossier's tab is open it raises a Windows notification at each firing.
+With the runner started it does the same when the tab is closed. Either way
+you get one nudge per firing and no more, and a firing more than five minutes
+past is skipped — opening Dossier in the afternoon should not announce the
+quarter past nine.
+
+Reminders have to be switched on in **Setup → Reminders** first, and Windows
+has to have allowed notifications for the page.
+
 Both halves were checked against each other: the browser's cron and the
 runner's PowerShell cron agree on all 770 day-and-time decisions across eleven
 expressions and seventy days.

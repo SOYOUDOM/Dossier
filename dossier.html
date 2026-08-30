@@ -2488,7 +2488,14 @@ const STRINGS = {
   CronNextRuns: "Next runs: {p0}",
   CronManyPerDay: "{p0} times a day \u2014 the record is raised once, at the first; the runner fires the script at every one.",
   CronTimeIgnored: "The Time box above is ignored for a cron routine \u2014 the expression carries the time.",
-  CronHelp: "minute hour day-of-month month day-of-week. <b>0 8 * * 1-5</b> is 08:00 on weekdays; <b>*/30 9-17 * * *</b> is every half hour through the working day; <b>@hourly</b> and <b>@daily</b> work too."
+  CronHelp: "minute hour day-of-month month day-of-week. <b>0 8 * * 1-5</b> is 08:00 on weekdays; <b>*/30 9-17 * * *</b> is every half hour through the working day; <b>@hourly</b> and <b>@daily</b> work too.",
+
+  /* routine reminders */
+  RemindMe: "Remind me",
+  NoJustRaiseTheRecord: "No \u2014 just raise the record",
+  YesNotifyAtEveryFiring: "Yes \u2014 a notification at every firing",
+  RemindsYou: "reminds you",
+  RoutineReminderBody: "It is {p0}."
 };
 
 /* Loaded files, keyed by culture code. "en" is always present, from STRINGS. */
@@ -3978,6 +3985,21 @@ function routineDue(r, key){
     try { return cronDay(cronParse(r.cron), pk(key)); } catch(e){ return false; }
   }
   return false;
+}
+
+/* The most recent firing at or before `now`, as "HH:MM", or "" if the routine
+   owes nothing yet today. A cron routine can be owed many times a day; the
+   others are owed once, at their time. */
+function routineLastDue(r, now){
+  const k = dkey(now);
+  if (!routineDue(r, k)) return "";
+  const hm = pad2(now.getHours()) + ":" + pad2(now.getMinutes());
+  if (r.freq !== "cron") return (r.time && r.time <= hm) ? r.time : "";
+  let best = "";
+  try {
+    cronTimesOn(cronParse(r.cron), pk(k)).forEach(t => { if (t <= hm) best = t; });
+  } catch(e){ return ""; }
+  return best;
 }
 
 /* a cron routine carries its time in the expression, not in the time box */
@@ -7017,6 +7039,7 @@ async function renderModal(){
             L("ColorVarPRunsItselfBut") +
             'style="display:block;color:var(--ink-3);font-size:11px">'
           : L("RunsItself")) : "") : "") +
+      (r.remind ? " · " + LE("RemindsYou") : "") +
       (r.paused ? " · paused" : (() => {
         const last = S.tasks.filter(t => t.fromRoutine === r.id)
           .map(t => t.forDate).sort().slice(-1)[0];
@@ -7048,6 +7071,8 @@ async function renderModal(){
       fr(L("Script"), "<select class=\"in\" id=\"rSc\"><option value=\"\">" + L("None") + "</option>" +
         S.scripts.map(x => '<option value="' + esc(x.id) + '">' + esc(x.name) + " — " + esc(x.file) +
         "</option>").join("") + "</select>") +
+      fr(L("RemindMe"), "<select class=\"in\" id=\"rRem\"><option value=\"0\">" + L("NoJustRaiseTheRecord") + "</option>" +
+        "<option value=\"1\">" + L("YesNotifyAtEveryFiring") + "</option></select>") +
       fr(L("OnItsOwn"), "<select class=\"in\" id=\"rAuto\"><option value=\"0\">" + L("NoIWillPressRun") + "</option>" +
         "<option value=\"1\">" + L("YesTheRunnerFiresItAt") + "</option></select>") +
       '<p style="font-size:11px;color:var(--ink-3);margin:2px 0 0;line-height:1.6">' +
@@ -7540,6 +7565,7 @@ function wireModal(){
       system:$("rS").value, time:$("rH").value,
       checklist:$("rC").value.split(",").map(s => s.trim()).filter(Boolean), priority:"P3", type:L("Admin"),
       scripts: $("rSc") && $("rSc").value ? [$("rSc").value] : [],
+      remind: !!($("rRem") && $("rRem").value === "1"),
       autoRun: !!($("rAuto") && $("rAuto").value === "1" && $("rSc") && $("rSc").value) });
     touch();
     /* makeRoutines only ever ran when a workspace opened, so a routine added
@@ -8216,6 +8242,26 @@ function checkReminders(){
   if (!S.settings.remind) return;
   const now = new Date(), k = today(), lead = +S.settings.lead || 15;
 
+  /* Routines set to nudge. A record is raised once a day, so it could only
+     ever remind once — useless for anything you want to be told repeatedly.
+     This fires on the routine's own schedule instead, which is what makes a
+     cron every fifteen minutes worth writing. Keyed by the occurrence, so a
+     tab left open all day gets one nudge per firing and no more; and only
+     within a few minutes of it, so opening Dossier in the afternoon does not
+     announce the quarter past nine. */
+  S.routines.forEach(r => {
+    if (!r.remind || r.paused) return;
+    const slot = routineLastDue(r, now);
+    if (!slot) return;
+    const p = slot.split(":");
+    const when = new Date(now.getFullYear(), now.getMonth(), now.getDate(), +p[0], +p[1]);
+    if ((now - when) / 60000 > 5) return;
+    remindOnce("rem|" + r.id + "|" + k + "|" + slot, () => {
+      toast(r.title);
+      notify(r.title, r.notes || L("RoutineReminderBody", { p0: slot }), null, "rem" + r.id);
+    });
+  });
+
   S.tasks.forEach(t => {
     if (LIVE.indexOf(t.status) < 0) return;
 
@@ -8446,6 +8492,23 @@ function runnerScript(){
     "Write-Host \"and the routines in $data\"",
     "Write-Host 'Looking once a second. Nothing here waits out a timer.'",
     "",
+    "# A routine can be set to nudge rather than to run something. Dossier does that",
+    "# itself while its tab is open; this is the same nudge for when it is not.",
+    "$ToastApp = '{1AC14E77-02E7-4E5D-B744-2EB1AE5198B7}\\WindowsPowerShell\\v1.0\\powershell.exe'",
+    "function Show-Toast([string]$Title, [string]$Body) {",
+    "  try {",
+    "    [void][Windows.UI.Notifications.ToastNotificationManager, Windows.UI.Notifications, ContentType=WindowsRuntime]",
+    "    $tpl = [Windows.UI.Notifications.ToastNotificationManager]::GetTemplateContent([Windows.UI.Notifications.ToastTemplateType]::ToastText02)",
+    "    $txt = $tpl.GetElementsByTagName('text')",
+    "    $txt.Item(0).AppendChild($tpl.CreateTextNode($Title)) | Out-Null",
+    "    $txt.Item(1).AppendChild($tpl.CreateTextNode($Body))  | Out-Null",
+    "    $toast = New-Object Windows.UI.Notifications.ToastNotification $tpl",
+    "    [Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier($ToastApp).Show($toast)",
+    "  } catch {",
+    "    msg * /TIME:120 \"$Title - $Body\"",
+    "  }",
+    "}",
+    "",
     "function Write-Result($path, $id, $exit, $text, $routine, $forDate, $task) {",
     "  # Capped, because a chatty script left running all day should not be able to",
     "  # fill the folder. Dossier only keeps the first 4 KB in the log anyway.",
@@ -8655,7 +8718,7 @@ function runnerScript(){
     "    try {",
     "      $now   = Get-Date",
     "      $stamp = $now.ToString('yyyy-MM-dd')",
-    "      $auto  = @($doc.routines) | Where-Object { $_.autoRun }",
+    "      $auto  = @($doc.routines) | Where-Object { $_.autoRun -or $_.remind }",
     "",
     "      # A new day, or an edit you just made in Dossier - say what is watched",
     "      # now. Seeing your own change echoed here is the proof the runner is",
@@ -8669,8 +8732,9 @@ function runnerScript(){
     "        else { Write-Host (\"Watching {0} self-running routine(s): {1}\" -f @($auto).Count, $now_sig) } }",
     "",
     "      foreach ($rt in @($doc.routines)) {",
-    "        if (-not $rt.autoRun) { continue }",
-    "        if (-not $rt.scripts -or @($rt.scripts).Count -eq 0) { continue }",
+    "        $willRun    = ($rt.autoRun -and $rt.scripts -and @($rt.scripts).Count -gt 0)",
+    "        $willRemind = [bool]$rt.remind",
+    "        if (-not $willRun -and -not $willRemind) { continue }",
     "        if (-not (Routine-Due $rt $now)) { continue }",
     "",
     "        # When is it next owed, and what marks that it has been paid? A cron",
@@ -8701,24 +8765,35 @@ function runnerScript(){
     "            Write-Host (\"  '{0}' waits until {1}\" -f $rt.title, $at.ToString('HH:mm')) }",
     "          continue }",
     "",
-    "        $sid  = [string]@($rt.scripts)[0]",
-    "        $sc   = @($doc.scripts) | Where-Object { $_.id -eq $sid } | Select-Object -First 1",
-    "        if (-not $sc) { continue }",
+    "        $sc = $null",
+    "        if ($willRun) {",
+    "          $sid = [string]@($rt.scripts)[0]",
+    "          $sc  = @($doc.scripts) | Where-Object { $_.id -eq $sid } | Select-Object -First 1",
+    "          if (-not $sc -and -not $willRemind) { continue }",
+    "        }",
     "",
-    "        # marked before it is run: a script that crashes the runner must not",
-    "        # be retried in a loop for the rest of the day",
+    "        # marked before anything happens: a script that crashes the runner must",
+    "        # not be retried in a loop for the rest of the day",
     "        Set-Content -LiteralPath $mark -Value $now.ToString('o') -Encoding UTF8",
-    "        $id   = 'auto-' + $rt.id + '-' + $slot",
-    "        $done = Join-Path $queue ($id + '.done.json')",
-    "        Write-Host (\"[{0}] running {1} for routine '{2}'\" -f $now.ToString('HH:mm:ss'), $sc.file, $rt.title)",
-    "        try {",
-    "          $r = Invoke-DossierScript ([string]$sc.file) $null $id",
-    "          Write-Result $done $id $r.exit $r.output $rt.id $stamp $null",
-    "          $first = (($r.output -split \"`n\") | Where-Object { $_.Trim() } | Select-Object -First 1)",
-    "          Write-Host (\"           exit {0}  {1}\" -f $r.exit, $first)",
-    "        } catch {",
-    "          Write-Result $done $id -1 $_.Exception.Message $rt.id $stamp $null",
-    "          Write-Host (\"           FAILED  {0}\" -f $_.Exception.Message)",
+    "",
+    "        if ($willRemind) {",
+    "          Write-Host (\"[{0}] reminding '{1}'\" -f $now.ToString('HH:mm:ss'), $rt.title)",
+    "          Show-Toast ([string]$rt.title) $(if ($rt.notes) { [string]$rt.notes } else { \"It is \" + $at.ToString('HH:mm') + \".\" })",
+    "        }",
+    "",
+    "        if ($sc) {",
+    "          $id   = 'auto-' + $rt.id + '-' + $slot",
+    "          $done = Join-Path $queue ($id + '.done.json')",
+    "          Write-Host (\"[{0}] running {1} for routine '{2}'\" -f $now.ToString('HH:mm:ss'), $sc.file, $rt.title)",
+    "          try {",
+    "            $r = Invoke-DossierScript ([string]$sc.file) $null $id",
+    "            Write-Result $done $id $r.exit $r.output $rt.id $stamp $null",
+    "            $first = (($r.output -split \"`n\") | Where-Object { $_.Trim() } | Select-Object -First 1)",
+    "            Write-Host (\"           exit {0}  {1}\" -f $r.exit, $first)",
+    "          } catch {",
+    "            Write-Result $done $id -1 $_.Exception.Message $rt.id $stamp $null",
+    "            Write-Host (\"           FAILED  {0}\" -f $_.Exception.Message)",
+    "          }",
     "        }",
     "      }",
     "    } catch { }",

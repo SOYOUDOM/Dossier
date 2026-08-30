@@ -1135,5 +1135,10 @@ Nothing is holding this any more." value="" />
     <text name="CronManyPerDay" source="{p0} times a day — the record is raised once, at the first; the runner fires the script at every one." value="" />
     <text name="CronTimeIgnored" source="The Time box above is ignored for a cron routine — the expression carries the time." value="" />
     <text name="CronHelp" source="minute hour day-of-month month day-of-week. &lt;b&gt;0 8 * * 1-5&lt;/b&gt; is 08:00 on weekdays; &lt;b&gt;*/30 9-17 * * *&lt;/b&gt; is every half hour through the working day; &lt;b&gt;@hourly&lt;/b&gt; and &lt;b&gt;@daily&lt;/b&gt; work too." value="" />
+    <text name="RemindMe" source="Remind me" value="" />
+    <text name="NoJustRaiseTheRecord" source="No — just raise the record" value="" />
+    <text name="YesNotifyAtEveryFiring" source="Yes — a notification at every firing" value="" />
+    <text name="RemindsYou" source="reminds you" value="" />
+    <text name="RoutineReminderBody" source="It is {p0}." value="" />
   </texts>
 </localizationDictionary>
