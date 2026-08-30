@@ -9,7 +9,7 @@
 <!-- Drop your own favicon.ico / logo.png beside this HTML file and they are picked up.
      Both are optional: if the files are missing, Dossier falls back to the built-in seal.
      These are same-folder files, so nothing is fetched over the network. -->
-<link rel="icon" href="favicon.ico">
+<link rel="icon" href="./favicon.ico">
 <link rel="apple-touch-icon" href="logo.png">
 <title>Dossier — Support Operations Record</title>
 <style>
@@ -109,9 +109,10 @@ h1,h2,h3,h4,.disp{font-family:var(--f-display);font-weight:600;letter-spacing:.0
   background:linear-gradient(90deg,var(--accent) 0,var(--accent) 78px,transparent 78px)}
 .brand{display:flex;align-items:center;gap:11px;user-select:none;flex:0 0 auto}
 .brand .seal{
-  width:34px;height:34px;border-radius:var(--r-sm);display:grid;place-items:center;flex:0 0 auto;
+  width: 32px;;height: 32px;;border-radius:var(--r-sm);display:grid;place-items:center;flex:0 0 auto;
   background:var(--accent);color:#fff;font-family:var(--f-display);font-weight:700;
   font-size:15px;letter-spacing:.06em;box-shadow:0 2px 8px var(--ring);position:relative;overflow:hidden;
+  padding: 2px;
 }
 .brand .seal img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
 .brand .seal.hasimg{background:transparent;box-shadow:none}
@@ -1027,7 +1028,7 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
   <header class="mast">
     <div class="brand">
       <span class="seal" id="seal"><img id="brandLogo" src="logo.png" alt=""
-            onload="this.parentNode.classList.add('hasimg')" onerror="this.remove()">DS</span>
+            onload="this.parentNode.classList.add('hasimg')" onerror="this.remove()"></span>
       <span class="wm"><b>Dossier</b><span>Support operations record</span></span>
     </div>
 
