@@ -3,10 +3,16 @@
 #   1. scripts\queue        - run what Dossier asked for when you pressed $
 #   2. routines in dossier.json marked 'run automatically' - fire them on time
 # Start it with the schtasks line Dossier showed you, or double-click this file.
-# The queue is checked several times a second, so pressing $ or Run now
-# starts the script straight away. $PollSeconds is only how often the
-# routines in dossier.json are re-read to see if one is due.
-param([int]$PollSeconds = 20)
+# Everything is checked every 400ms - the queue and the routines both, so
+# pressing $ or Run now starts the script straight away and a routine fires
+# within half a second of its time.
+#
+# dossier.json is re-parsed only when its modified-time moves. Parsing is
+# the one thing here that gets slower as your work piles up, so it must not
+# happen on a timer. $PollSeconds is only a long-stop re-read for folders
+# whose modified-time cannot be trusted (OneDrive, network shares); on a
+# normal local disk it never does anything useful. Leave it alone.
+param([int]$PollSeconds = 300)
 
 $ErrorActionPreference = 'SilentlyContinue'
 $scripts = $PSScriptRoot
@@ -14,12 +20,16 @@ $root    = Split-Path -Parent $scripts
 $queue   = Join-Path $scripts 'queue'
 $data    = Join-Path $root 'dossier.json'
 $seen     = @{}
-$announced = $false
-$nextScan  = Get-Date
+$doc      = $null      # last good parse of dossier.json
+$docStamp = $null      # its modified-time, so we only parse again when it moves
+$sig      = ''         # the self-running routines, so a change gets announced
+$today    = ''
+$nextRead = Get-Date
+$nextTidy = Get-Date
 if (-not (Test-Path -LiteralPath $queue)) { New-Item -ItemType Directory -Path $queue | Out-Null }
 Write-Host "Dossier runner watching $queue"
 Write-Host "and the routines in $data"
-Write-Host "Queued runs start within a second. Routines are checked every $PollSeconds s."
+Write-Host 'Checking every 400ms. Nothing here waits out a timer.'
 
 function Write-Result($path, $id, $exit, $text, $routine, $forDate) {
   $o = [pscustomobject]@{ id = $id; exit = $exit; at = (Get-Date).ToString('o');
@@ -79,22 +89,41 @@ while ($true) {
     Remove-Item -LiteralPath $req.FullName -Force
   }
 
-  # ---- 2. routines that run themselves -----------------------------------
-  # This half parses dossier.json, so it is the half that waits. The queue
-  # above does not - a request you just wrote is picked up on the next pass.
-  if ((Get-Date) -lt $nextScan) { Start-Sleep -Milliseconds 400; continue }
-  $nextScan = (Get-Date).AddSeconds($PollSeconds)
+  # ---- 2. read dossier.json, but only when it has actually changed --------
+  # Parsing it is the one expensive thing here and it grows with your work,
+  # so we check the modified-time instead - microseconds - and re-parse only
+  # when it moves. That is what lets the routines be checked every pass
+  # rather than on a timer. If the parse fails we keep the last good
+  # copy: Dossier truncates the file to rewrite it, so a read can land
+  # mid-save, and that is not a reason to stop firing routines.
   if (Test-Path -LiteralPath $data) {
+    $lw = $null
+    try { $lw = (Get-Item -LiteralPath $data).LastWriteTimeUtc } catch { }
+    if ($lw -and ($lw -ne $docStamp -or (Get-Date) -ge $nextRead)) {
+      $nextRead = (Get-Date).AddSeconds($PollSeconds)
+      try {
+        $fresh = Get-Content -Raw -LiteralPath $data | ConvertFrom-Json
+        if ($fresh) { $doc = $fresh; $docStamp = $lw }
+      } catch { }
+    }
+  }
+
+  # ---- 3. routines that run themselves ------------------------------------
+  if ($doc) {
     try {
-      $doc   = Get-Content -Raw -LiteralPath $data | ConvertFrom-Json
       $now   = Get-Date
       $stamp = $now.ToString('yyyy-MM-dd')
       $auto  = @($doc.routines) | Where-Object { $_.autoRun }
-      if (-not $announced) { $announced = $true
+
+      # A new day, or an edit you just made in Dossier - say what is watched
+      # now. Seeing your own change echoed here is the proof the runner is
+      # reading the copy of the workspace you think it is.
+      $now_sig = (($auto | ForEach-Object { $_.title + ' @' + $_.time }) -join ', ')
+      if ($stamp -ne $today) { $today = $stamp; $seen = @{}; $sig = '' }
+      if ($now_sig -ne $sig) { $sig = $now_sig; $seen = @{}
         if (@($auto).Count -eq 0) {
           Write-Host 'No routine is set to run on its own (Menu > Routines > On its own).' }
-        else { Write-Host ("Watching {0} self-running routine(s): {1}" -f @($auto).Count,
-          (($auto | ForEach-Object { $_.title + ' @' + $_.time }) -join ', ')) } }
+        else { Write-Host ("Watching {0} self-running routine(s): {1}" -f @($auto).Count, $now_sig) } }
       foreach ($rt in @($doc.routines)) {
         if (-not $rt.autoRun) { continue }
         if (-not $rt.scripts -or @($rt.scripts).Count -eq 0) { continue }
@@ -136,12 +165,15 @@ while ($true) {
     } catch { }
   }
 
-  # ---- tidy up -----------------------------------------------------------
+  # ---- tidy up, once a minute ---------------------------------------------
+  if ((Get-Date) -ge $nextTidy) {
+  $nextTidy = (Get-Date).AddSeconds(60)
   foreach ($old in @(Get-ChildItem -LiteralPath $queue -File)) {
     if ($old.Name -like '*.done.json' -and $old.LastWriteTime -lt (Get-Date).AddDays(-2)) {
       Remove-Item -LiteralPath $old.FullName -Force }
     if ($old.Name -like '.auto-*' -and $old.LastWriteTime -lt (Get-Date).AddDays(-7)) {
       Remove-Item -LiteralPath $old.FullName -Force }
+  }
   }
   Start-Sleep -Milliseconds 400
 }

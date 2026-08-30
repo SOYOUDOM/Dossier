@@ -55,11 +55,20 @@ Now press the **`$`** button on any record carrying a script — **D-0004** has
 `restart-app-pool` with its parameters already filled, **D-0007** has
 `open-morning-tabs`. It runs, and the output appears in that record's work log.
 
-The runner reads the queue several times a second, so `$` and **Run now** start
-the script straight away — there is no interval to wait out. It re-reads the
-routines in `dossier.json` on a slower timer (`-PollSeconds`, 20 by default),
-which only affects how precisely a routine hits its own time; pass a smaller
-number if you want it tighter.
+The runner checks everything every 400ms — the queue and your routines both —
+so `$` and **Run now** start the script straight away, and a routine fires
+within half a second of its time. There is no interval to wait out anywhere.
+
+It can afford to look that often because it does not re-read `dossier.json`
+every time. Parsing that file is the one thing here that gets slower as your
+work piles up — at 20 records a day it is a few megabytes within a year — so
+the runner compares its modified-time instead, which costs nothing, and parses
+only when you have actually saved something. Over two days of running that is
+about 600 parses rather than 8,600.
+
+`-PollSeconds` (300) is only a long-stop re-read for folders whose
+modified-time cannot be trusted, such as OneDrive or a network share. On a
+normal local disk it never does anything useful.
 
 To start the runner at every logon: put this folder's full path into
 **Menu → Scripts → Folder path**, then
