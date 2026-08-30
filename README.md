@@ -380,6 +380,27 @@ What you open stays open.
 
 ---
 
+## How it feels
+
+**Menu → Appearance → Feel.** Three settings, saved with the workspace:
+
+- **Motion** — Full, Subtle, or None. If your machine asks for reduced motion,
+  Dossier follows it; picking **Full** here on purpose overrides that, which is
+  the only way round that respects someone who set it deliberately.
+- **Density** — Comfortable or Compact. Compact takes about a third off the
+  padding, worth roughly four more records on a laptop screen.
+- **Text size** — 80% to 140%, and it scales the layout, not just the letters.
+
+**Press `?` for the keyboard shortcuts.** There were eighteen of them and no
+way to discover any: `1`–`6` for views, `J`/`K` to move, `Space` to cycle a
+status, `D` done, `T` to today, `S` for the clock, `Ctrl K` for the palette.
+
+The keyboard now behaves properly everywhere: opening a panel puts focus in
+it, Tab stays inside it, Escape closes it, and closing gives focus back to
+where you were.
+
+---
+
 ## Notes
 
 - **Holidays** are seeded with Cambodia 2026 (Sub-Decree No. 167, 18 Sep 2025).

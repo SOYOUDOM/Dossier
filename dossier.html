@@ -120,7 +120,10 @@ h1,h2,h3,h4,.disp{font-family:var(--f-display);font-weight:600;letter-spacing:.0
 .eyebrow{font-family:var(--f-display);font-size:10.5px;font-weight:600;letter-spacing:.12em;
   text-transform:uppercase;color:var(--ink-3)}
 
-.app{height:100dvh;display:flex;flex-direction:column}
+/* CSS zoom deliberately does not scale viewport units, so a zoomed shell
+   asking for 100dvh becomes 130% of the window and pushes the footer off
+   the bottom. Divide it back out. --z is 1 unless text size is changed. */
+.app{height:calc(100dvh / var(--z, 1));display:flex;flex-direction:column}
 
 /* ═══ MASTHEAD ═══════════════════════════════════════════════════════════ */
 .mast{
@@ -353,7 +356,7 @@ main{flex:1;min-height:0;overflow:auto;position:relative}
 /* ═══ BOARD ══════════════════════════════════════════════════════════════ */
 .board{display:flex;gap:11px;padding:18px;align-items:flex-start;overflow-x:auto;min-height:100%}
 .col{flex:1 1 0;min-width:230px;max-width:390px;background:var(--paper-2);border:1px solid var(--rule);
-  border-radius:var(--r);display:flex;flex-direction:column;max-height:calc(100dvh - 230px)}
+  border-radius:var(--r);display:flex;flex-direction:column;max-height:calc((100dvh / var(--z, 1)) - 230px)}
 .col.over{border-color:var(--accent);background:var(--accent-soft)}
 .colh{display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--rule);flex:0 0 auto}
 .colh .sw{width:8px;height:8px;border-radius:2px}
@@ -1040,7 +1043,50 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
   #printSheet pre{font-family:var(--f-mono);font-size:8.5pt;white-space:pre-wrap;word-break:break-word;
     margin:0;line-height:1.55}
 }
-@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+/* ── how it feels ─────────────────────────────────────────────────────────
+   Motion, density and text size are settings, not opinions baked into the
+   file. The operating system's own "reduce motion" wins unless the reader
+   has explicitly asked for the full thing here, which is the way round that
+   respects someone who set it for a reason. */
+:root[data-motion="subtle"] *{ animation-duration:.11s!important;transition-duration:.11s!important }
+:root[data-motion="none"]   *{ animation-duration:.01ms!important;transition-duration:.01ms!important;
+  animation-iteration-count:1!important }
+/* last, so it beats the two above at equal specificity: a machine asking for
+   reduced motion gets it whatever is set here, unless Full was chosen on
+   purpose — which is the only way round that respects the person who set it. */
+@media (prefers-reduced-motion:reduce){
+  :root:not([data-motion="full"]) *{ animation-duration:.01ms!important;transition-duration:.01ms!important }
+}
+
+/* Compact takes a third off the padding everywhere it counts, which is worth
+   about four more records on a laptop screen. */
+:root[data-density="compact"] .row{ padding:7px 11px;gap:9px }
+:root[data-density="compact"] .kpi{ padding:11px 13px }
+:root[data-density="compact"] .kpi .v{ font-size:26px }
+:root[data-density="compact"] .sch{ padding:6px 9px }
+:root[data-density="compact"] .pill{ padding-top:3px;padding-bottom:3px }
+:root[data-density="compact"] .tabs button{ padding-top:6px;padding-bottom:6px }
+:root[data-density="compact"] .hd{ margin:12px 0 6px }
+:root[data-density="compact"] .rows{ gap:5px }
+:root[data-density="compact"] .fr{ margin-bottom:7px }
+
+/* Something arriving should be seen to arrive; something leaving should not
+   just blink out. Both are off entirely when motion is. */
+@keyframes riseIn{ from{ opacity:0;transform:translateY(6px) } to{ opacity:1;transform:none } }
+@keyframes popIn{ from{ opacity:0;transform:translateY(10px) scale(.97) } to{ opacity:1;transform:none } }
+@keyframes flash{ 0%{ background:var(--accent-soft,rgba(127,127,127,.16)) } 100%{ background:transparent } }
+.toast{ animation:popIn .22s var(--ease) both }
+.row.isnew{ animation:riseIn .24s var(--ease) both }
+.row.changed::after{ content:"";position:absolute;inset:0;pointer-events:none;
+  animation:flash .9s ease-out both;border-radius:inherit }
+.view.on{ animation:riseIn .18s var(--ease) both }
+:root[data-motion="none"] .view.on,
+:root[data-motion="none"] .row.isnew,
+:root[data-motion="none"] .toast{ animation:none }
+
+/* A keyboard user should always be able to see where they are. */
+:focus-visible{ outline:2px solid var(--accent);outline-offset:2px;border-radius:3px }
+.row:focus-visible,.sch:focus-visible{ outline-offset:-2px }
 
 /* ── Khmer ────────────────────────────────────────────────────────────────
    Khmer stacks subscript consonants below the baseline and vowel signs
@@ -1145,6 +1191,33 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
 /* Help's headings are sentences, not labels — keep them readable as such */
 .panelsec.plain>summary{ text-transform:none;letter-spacing:0;font-size:12.5px;
   color:var(--ink-1);font-weight:600 }
+
+.scalerow{ display:flex;align-items:center;gap:10px }
+.scalerow input[type="range"]{ flex:1;accent-color:var(--accent);min-width:90px }
+.scalerow span{ font-size:11.5px;color:var(--ink-2);min-width:38px;text-align:right;
+  font-family:var(--f-mono) }
+
+/* ── the shortcut sheet ─────────────────────────────────────────────────── */
+.keysb{ padding:14px 18px 18px;overflow-y:auto }
+.keysb .kg{ margin-bottom:16px }
+.keysb .kg h6{ margin:0 0 7px;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--ink-3);font-weight:600 }
+.keysb .kr{ display:flex;align-items:baseline;gap:12px;padding:4px 0;font-size:12.5px }
+.keysb .kk{ flex:0 0 128px;display:flex;gap:4px;flex-wrap:wrap }
+.keysb .kd{ color:var(--ink-2) }
+.keysb .kfoot{ font-size:11px;color:var(--ink-3);margin:2px 0 0;border-top:1px solid var(--rule);
+  padding-top:11px }
+
+/* ── closed panels must be out of the way, not merely out of sight ────────
+   Every one of these hides with opacity or a transform, which leaves its
+   buttons in the tab order: tabbing through the app walked into the closed
+   "problem" sheet and out the other side. visibility takes them out of it,
+   delayed on the way out so the fade still plays. */
+.drawer,.cmd,.modal,.problem,.chase,.intake,.drill,.ask{
+  visibility:hidden;transition-property:transform,opacity,visibility;
+  transition-delay:0s,0s,.28s }
+.drawer.on,.cmd.on,.modal.on,.problem.on,.chase.on,.intake.on,.drill.on,.ask.on{
+  visibility:visible;transition-delay:0s }
 </style>
 </head>
 <body>
@@ -1286,6 +1359,13 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
 <div class="cmd" id="cmd">
   <input id="cmdq" type="text" placeholder="Type a command or search…" spellcheck="false">
   <div class="cmdl" id="cmdl"></div>
+</div>
+
+<!-- Everything below already worked; nobody could have known it was there. -->
+<div class="modal" id="keys">
+  <div class="mh"><h3 data-i18n="KeyboardShortcuts">Keyboard shortcuts</h3>
+    <button class="ib" id="keysX">✕</button></div>
+  <div class="keysb" id="keysBody"></div>
 </div>
 
 <div class="modal" id="modal">
@@ -1573,7 +1653,6 @@ const STRINGS = {
   AttachedFromTheConsole: "Attached {p0} from the console",
   AttachedToTheRecordThisRoutine: "Attached to the record this routine raises. Set to run on its own and ",
   AvgTurnaround: "| Avg turnaround | ",
-  Backspace: "Backspace",
   BackupsOneSnapshotPerDayKept: "  backups/                  one snapshot per day, 30 kept\n",
   BannerOn: "banner on",
   Because: "Because",
@@ -1700,7 +1779,6 @@ const STRINGS = {
   EachTimeWhichIsUsuallyThe: "each time — which is usually the proof it was worked around rather than fixed. Copy it into a ",
   EchoOffRemBuiltByDossier: "@echo off\r\nrem Built by Dossier for ",
   Enter: "Enter",
-  Escape: "Escape",
   Estimate: "Estimate",
   EvenTheOnesNotDueA: "Even the ones not due a chase yet",
   EveryDay: "Every day",
@@ -1717,7 +1795,6 @@ const STRINGS = {
   EverythingWaitingOnAnotherRecordOr: "Everything waiting on another record or another person",
   ExitsQuietlyTheRestOfThe: "exits quietly the rest of the time.</p>",
   ExportCsv: "Export CSV",
-  Files: "Files",
   FilesAreCopiedIntoThisRecords: "Files are copied into this record's own folder inside your workspace. Ctrl+V pastes a screenshot straight in.</div>",
   Filter: "Filter",
   FiltersCleared: "Filters cleared",
@@ -2104,7 +2181,6 @@ const STRINGS = {
   System2: "System    : ",
   Systems: "Systems",
   SystemsAffected: "Systems affected: ",
-  Tab: "Tab",
   Tag: "Tag",
   Tags: "Tags",
   TakeItOutOfTheList: "Take it out of the list",
@@ -2590,7 +2666,44 @@ const STRINGS = {
   RunsItselfButNothingIs: "runs itself \u2014 but nothing is running it",
   AtTime: " at {p0}",
   MessagePlaceholder: "Time to drink water. Two glasses before the next call.",
-  MessageHint: "Shown in the reminder, and copied onto the record it raises. Leave it empty and the reminder just says the name."
+  MessageHint: "Shown in the reminder, and copied onto the record it raises. Leave it empty and the reminder just says the name.",
+
+  /* how it feels */
+  Feel: "Feel",
+  Motion: "Motion",
+  MotionFull: "Full",
+  MotionSubtle: "Subtle",
+  MotionNone: "None \u2014 nothing moves",
+  Density: "Density",
+  DensityComfortable: "Comfortable",
+  DensityCompact: "Compact \u2014 more on screen",
+  TextSize: "Text size",
+  ResetToDefaults: "Reset to defaults",
+  FeelIntro: "How the app behaves, rather than how it is lettered. If your system asks for reduced motion, Dossier follows it unless you pick <b>Full</b> here on purpose.",
+  KeyboardShortcuts: "Keyboard shortcuts",
+  PressQuestionAnyTime: "Press ? at any time to see this.",
+  Typeface: "Typeface",
+
+  /* the shortcut sheet */
+  MovingAround: "Moving around",
+  OnTheRecordUnderTheCursor: "On the record under the cursor",
+  Anywhere: "Anywhere",
+  NextRecord: "Next record",
+  PreviousRecord: "Previous record",
+  CloseWhatIsOpen: "Close whatever is open",
+  CycleItsStatus: "Cycle its status",
+  MarkItDone: "Mark it done",
+  MoveItToToday: "Move it to today",
+  StartOrStopTheClock: "Start or stop the clock",
+  SelectIt: "Select it",
+  UndoTheLastChange: "Undo the last change",
+  PasteAScreenshotOntoTheOpenRecord: "Paste a screenshot onto the open record",
+  OpenTheWorkConsole: "Open the work console",
+  ThisSheet: "This sheet",
+  KeySwitchView: "Switch view",
+  KeySearch: "Search everything",
+  KeyNewRecord: "New record",
+  KeyCommandPalette: "Command palette"
 };
 
 /* Loaded files, keyed by culture code. "en" is always present, from STRINGS. */
@@ -2796,6 +2909,21 @@ function detectFonts(){
   });
   KHMER_FOUND = KHMER_POOL.filter(n => n === KHMER_BUNDLED || khmerInstalled(n));
 }
+/* Motion, density and text size, applied to the root so every rule can see
+   them. Kept separate from applyFonts() because these change how the app
+   behaves, not how it is lettered. */
+function applyFeel(){
+  const st = S.settings, r = document.documentElement;
+  r.setAttribute("data-motion", ["full","subtle","none"].indexOf(st.motion) >= 0 ? st.motion : "full");
+  r.setAttribute("data-density", st.density === "compact" ? "compact" : "comfortable");
+  const pc = Math.min(140, Math.max(80, +st.textScale || 100));
+  /* zoom rather than a font-size cascade: every size in this file is in px,
+     so nothing else would move with it — and unlike a transform, zoom takes
+     layout with it, so nothing overlaps at 130%. */
+  r.style.zoom = pc === 100 ? "" : (pc / 100);
+  r.style.setProperty("--z", pc === 100 ? "1" : String(pc / 100));
+}
+
 function applyFonts(){
   ["display","ui","mono"].forEach(role => {
     const chosen = S.settings.fonts && S.settings.fonts[role];
@@ -2942,6 +3070,8 @@ const S = {
     calMode:"week", holidays: null,      /* null = seed the built-in list once */
     runner:false,                        /* the companion process that executes scripts */
     fonts:{ display:"auto", ui:"auto", mono:"auto", khmer:"auto" },
+    /* how it feels, rather than what it looks like */
+    motion:"full", density:"comfortable", textScale:100,
     templates:[
       'Morning health check @"Infra / IIS" :admin 20m today 08:30',
       "Investigate error in log @Imaging :incident p2 1h today",
@@ -4271,7 +4401,7 @@ async function openWorkspace(handle, quiet){
   if (langErrs.length) toast(L("LanguageFileSkipped") + langErrs[0], { bad:true });
   S.hush = true;
   restoreFilters();
-  applyFonts(); applyTheme(S.settings.theme || "archive");
+  applyFonts(); applyFeel(); applyTheme(S.settings.theme || "archive");
   refreshSelects(); syncRail(); renderTemplates();
   setView(S.view);
   setTimeout(() => { S.hush = false; }, 1500);
@@ -6573,7 +6703,7 @@ function onConsoleChange(e){
   renderConsole();
 }
 function onConsoleKey(e){
-  if (e.key === L("Enter") && e.target.id === "conStep"){ e.preventDefault(); consoleLog(); }
+  if (e.key === "Enter" && e.target.id === "conStep"){ e.preventDefault(); consoleLog(); }
 }
 function consoleLog(){
   const t = consoleTask(); if (!t || !CON.win) return;
@@ -6727,6 +6857,7 @@ function openDrawer(id){
 function closeDrawer(){
   S.open = null;
   $("drawer").classList.remove("on");
+  untrap();
   if (!$("modal").classList.contains("on") && !$("ask").classList.contains("on")) $("scrim").classList.remove("on");
   renderAll();
 }
@@ -7222,15 +7353,93 @@ async function saveReportToFolder(name, text){
 }
 
 /* ═══ MODAL ══════════════════════════════════════════════════════════════ */
+/* One table, so the sheet cannot drift from what the keys actually do. */
+const KEYS = [
+  ["MovingAround", [
+    ["1 – 6", "KeySwitchView"], ["/", "KeySearch"], ["N", "KeyNewRecord"],
+    ["J  ↓", "NextRecord"], ["K  ↑", "PreviousRecord"], ["Esc", "CloseWhatIsOpen"]]],
+  ["OnTheRecordUnderTheCursor", [
+    ["Enter  E", "OpenIt"], ["Space", "CycleItsStatus"], ["D", "MarkItDone"],
+    ["T", "MoveItToToday"], ["S", "StartOrStopTheClock"], ["X", "SelectIt"]]],
+  ["Anywhere", [
+    ["Ctrl K", "KeyCommandPalette"], ["Ctrl S", "SaveNow"], ["Ctrl Z", "UndoTheLastChange"],
+    ["Ctrl V", "PasteAScreenshotOntoTheOpenRecord"], ["W", "OpenTheWorkConsole"], ["?", "ThisSheet"]]]
+];
+function renderKeys(){
+  $("keysBody").innerHTML = KEYS.map(g =>
+    '<div class="kg"><h6>' + LE(g[0]) + "</h6>" +
+    g[1].map(r => '<div class="kr"><span class="kk">' +
+      r[0].split(/\s+/).map(k => "<kbd>" + esc(k) + "</kbd>").join("") +
+      '</span><span class="kd">' + LE(r[1]) + "</span></div>").join("") + "</div>").join("") +
+    '<p class="kfoot">' + LE("PressQuestionAnyTime") + "</p>";
+}
+function openKeys(){ renderKeys(); $("keys").classList.add("on"); $("scrim").classList.add("on"); trapIn("keys"); }
+function closeKeys(){
+  $("keys").classList.remove("on");
+  if (!$("modal").classList.contains("on") && !$("drawer").classList.contains("on") &&
+      !$("ask").classList.contains("on")) $("scrim").classList.remove("on");
+  untrap();
+}
+
+/* ── focus ────────────────────────────────────────────────────────────────
+   Opening a panel should put the keyboard in it, Tab should stay inside it,
+   and closing it should give focus back to whatever you were on. Without
+   that, a keyboard or screen-reader user is tabbing around a page they
+   cannot see behind a panel they cannot leave. */
+const TRAP = { el:null, from:null };
+function focusables(el){
+  return Array.prototype.filter.call(
+    el.querySelectorAll('a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),' +
+                        'textarea:not([disabled]),summary,[tabindex]:not([tabindex="-1"])'),
+    x => x.offsetParent !== null || x === document.activeElement);
+}
+function trapIn(id){
+  const el = $(id); if (!el) return;
+  if (!TRAP.el) TRAP.from = document.activeElement;
+  TRAP.el = el;
+  const grab = () => {
+    if (TRAP.el !== el || !el.classList.contains("on")) return;
+    if (el.contains(document.activeElement)) return;
+    const f = focusables(el);
+    if (f.length) f[0].focus();
+    else { el.setAttribute("tabindex", "-1"); el.focus(); }
+  };
+  setTimeout(grab, 30);
+  setTimeout(grab, 120);   /* again once an async render has settled */
+}
+/* Tab is not the only way focus leaves: clicking, or an element being
+   re-rendered out from under it, drops focus to <body>. Catching it here
+   covers every route rather than only the one. */
+document.addEventListener("focusout", () => {
+  if (!TRAP.el) return;
+  /* after the event, so we can see where focus actually landed — including
+     nowhere, which is what happens when a panel re-renders under it */
+  setTimeout(() => {
+    const el = TRAP.el;
+    if (!el || !el.classList.contains("on")) return;
+    if (el.contains(document.activeElement)) return;
+    const f = focusables(el);
+    if (f.length) f[0].focus();
+  }, 0);
+});
+
+function untrap(){
+  const back = TRAP.from;
+  TRAP.el = null; TRAP.from = null;
+  if (back && document.body.contains(back)) { try { back.focus(); } catch(e){} }
+}
+
 function openModal(tab){
   renderModal();
   if (tab) $$("#mt button").forEach(b => { if (b.dataset.m === tab) b.click(); });
   $("modal").classList.add("on");
   $("scrim").classList.add("on");
+  trapIn("modal");
 }
 function closeModal(){
   $("modal").classList.remove("on");
   if (!$("drawer").classList.contains("on") && !$("ask").classList.contains("on")) $("scrim").classList.remove("on");
+  untrap();
 }
 async function renderModal(){
   const st = S.settings;
@@ -7423,6 +7632,21 @@ async function renderModal(){
     '<p style="font-size:12px;color:var(--ink-2);margin:0 0 14px;line-height:1.7">' +
       L("WebFontsWouldMeanDownloadingFrom") +
       "<b>" + (FONTS_FOUND.display.length + FONTS_FOUND.ui.length + FONTS_FOUND.mono.length) + " " + L("Detected") + "</b>.</p>" +
+    '<h5 class="eyebrow" style="margin:2px 0 8px">' + LE("Feel") + "</h5>" +
+    '<p style="font-size:11.5px;color:var(--ink-2);margin:0 0 10px;line-height:1.7">' +
+      L("FeelIntro") + "</p>" +
+    fr(L("Motion"), '<select class="in" id="fMo">' +
+      '<option value="full"'   + (st.motion !== "subtle" && st.motion !== "none" ? " selected" : "") + ">" + LE("MotionFull") + "</option>" +
+      '<option value="subtle"' + (st.motion === "subtle" ? " selected" : "") + ">" + LE("MotionSubtle") + "</option>" +
+      '<option value="none"'   + (st.motion === "none" ? " selected" : "") + ">" + LE("MotionNone") + "</option></select>") +
+    fr(L("Density"), '<select class="in" id="fDe">' +
+      '<option value="comfortable"' + (st.density !== "compact" ? " selected" : "") + ">" + LE("DensityComfortable") + "</option>" +
+      '<option value="compact"'     + (st.density === "compact" ? " selected" : "") + ">" + LE("DensityCompact") + "</option></select>") +
+    fr(L("TextSize"), '<div class="scalerow"><input type="range" id="fTs" min="80" max="140" step="5" value="' +
+      (+st.textScale || 100) + '"><span id="fTsV">' + (+st.textScale || 100) + '%</span>' +
+      '<button class="btn sm" id="fFeelReset">' + LE("ResetToDefaults") + "</button></div>") +
+
+    '<h5 class="eyebrow" style="margin:20px 0 8px">' + LE("Typeface") + "</h5>" +
     fr(L("Headings"), '<select class="in" id="fD">' + opts("display") + "</select>") +
     fr(L("BodyText"), '<select class="in" id="fU">' + opts("ui") + "</select>") +
     fr(L("DataCode"), '<select class="in" id="fM">' + opts("mono") + "</select>") +
@@ -8058,6 +8282,18 @@ function wireModal(){
   if ($("rX")) $("rX").oninput = () => { cronPreview(); syncRoutineForm(); };
   if ($("rF")) $("rF").addEventListener("change", cronPreview);
   cronPreview();
+
+  const feel = (k, v) => { S.settings[k] = v; applyFeel(); touch(); };
+  if ($("fMo")) $("fMo").onchange = () => feel("motion", $("fMo").value);
+  if ($("fDe")) $("fDe").onchange = () => feel("density", $("fDe").value);
+  if ($("fTs")) $("fTs").oninput = () => {
+    $("fTsV").textContent = $("fTs").value + "%";
+    feel("textScale", +$("fTs").value);
+  };
+  on("fFeelReset", () => {
+    S.settings.motion = "full"; S.settings.density = "comfortable"; S.settings.textScale = 100;
+    applyFeel(); touch(); renderModal();
+  });
 
   if ($("fK")) $("fK").onchange = () => {
     S.settings.fonts.khmer = $("fK").value; applyFonts(); touch();
@@ -9726,20 +9962,20 @@ $("qaGo").addEventListener("click", submitQuick);
 $("qa").addEventListener("keydown", e => {
   if (e.key === "ArrowDown" && sugItems.length){ e.preventDefault(); sugCur = Math.min(sugItems.length-1, sugCur+1); renderSuggest($("qa").value, parseQuick($("qa").value)); return; }
   if (e.key === "ArrowUp" && sugItems.length){ e.preventDefault(); sugCur = Math.max(-1, sugCur-1); renderSuggest($("qa").value, parseQuick($("qa").value)); return; }
-  if (e.key === L("Tab") && sugItems.length && sugItems[0].kind === "token"){
+  if (e.key === "Tab" && sugItems.length && sugItems[0].kind === "token"){
     e.preventDefault();
     sugItems[sugCur >= 0 ? sugCur : 0].apply();
     sugCur = -1; return;
   }
-  if (e.key === L("Enter") && sugCur < 0 && sugItems.length && sugItems[0].kind === "token"){
+  if (e.key === "Enter" && sugCur < 0 && sugItems.length && sugItems[0].kind === "token"){
     e.preventDefault(); sugItems[0].apply(); return;
   }
-  if (e.key === L("Enter")){
+  if (e.key === "Enter"){
     e.preventDefault();
     if (sugCur >= 0 && sugItems[sugCur]){ sugItems[sugCur].apply(); sugCur = -1; return; }
     submitQuick();
   }
-  if (e.key === L("Escape")){ $("qa").value = ""; $("readout").innerHTML = ""; hideSuggest(); $("qa").blur(); }
+  if (e.key === "Escape"){ $("qa").value = ""; $("readout").innerHTML = ""; hideSuggest(); $("qa").blur(); }
 });
 $("sugg").addEventListener("mousedown", e => {
   const el = e.target.closest(".si"); if (!el) return;
@@ -9847,7 +10083,7 @@ $("intakeS").addEventListener("click", e => {
   if (g){ closeIntake(); openDrawer(g.dataset.goto2); }
 });
 $("intakeB").addEventListener("keydown", e => {
-  if (e.key === L("Enter") && e.target.id !== "inNotes"){ e.preventDefault(); commitIntake(); }
+  if (e.key === "Enter" && e.target.id !== "inNotes"){ e.preventDefault(); commitIntake(); }
 });
 /* the priority drives the target date, so re-read when it changes */
 $("intakeB").addEventListener("change", e => {
@@ -10012,6 +10248,7 @@ $("bulk").addEventListener("click", e => {
 /* drawer */
 $("dClose").addEventListener("click", closeDrawer);
 $("scrim").addEventListener("click", () => {
+  if ($("keys").classList.contains("on")) return closeKeys();
   if ($("ask").classList.contains("on")) return closeAsk(null);
   if ($("intake").classList.contains("on")) return closeIntake();
   if ($("chase").classList.contains("on")) return closeChase();
@@ -10024,7 +10261,7 @@ $("dTitle").addEventListener("blur", e => {
   const v = e.target.textContent.trim();
   if (v && v !== t.title){ updateTask(t.id, { title:v }, L("Renamed")); renderAll(); }
 });
-$("dTitle").addEventListener("keydown", e => { if (e.key === L("Enter")){ e.preventDefault(); e.target.blur(); } });
+$("dTitle").addEventListener("keydown", e => { if (e.key === "Enter"){ e.preventDefault(); e.target.blur(); } });
 
 $("dBody").addEventListener("click", async e => {
   const t = getTask(S.open); if (!t) return;
@@ -10167,7 +10404,7 @@ $("dBody").addEventListener("keydown", e => {
   if (e.target.id === "peopleIn" && (e.key === "," || e.key === ";")){
     e.preventDefault(); return commitPeople(false);
   }
-  if (e.target.id === "peopleIn" && e.key === L("Backspace") && !e.target.value){
+  if (e.target.id === "peopleIn" && e.key === "Backspace" && !e.target.value){
     const t = getTask(S.open); if (!t) return;
     const list = peopleOf(t);
     if (!list.length) return;
@@ -10199,7 +10436,7 @@ $("modal").addEventListener("toggle", e => {
 
 /* dragging a file at the drawer should reveal where it is about to land */
 $("drawer").addEventListener("dragenter", e => {
-  if (!e.dataTransfer || Array.prototype.indexOf.call(e.dataTransfer.types || [], L("Files")) < 0) return;
+  if (!e.dataTransfer || Array.prototype.indexOf.call(e.dataTransfer.types || [], "Files") < 0) return;
   const d = $("dBody").querySelector('details[data-acc="docs"]');
   if (d && !d.open){ d.open = true; S.folds.docs = true; }
 });
@@ -10266,12 +10503,12 @@ function addLog(){
 /* drawer drop zone + global file drop */
 let dragDepth = 0;
 document.addEventListener("dragenter", e => {
-  if (!e.dataTransfer || Array.prototype.indexOf.call(e.dataTransfer.types || [], L("Files")) < 0) return;
+  if (!e.dataTransfer || Array.prototype.indexOf.call(e.dataTransfer.types || [], "Files") < 0) return;
   dragDepth++; $("veil").classList.add("on");
 });
 document.addEventListener("dragleave", () => { if (--dragDepth <= 0){ dragDepth = 0; $("veil").classList.remove("on"); } });
 document.addEventListener("dragover", e => {
-  if (e.dataTransfer && Array.prototype.indexOf.call(e.dataTransfer.types || [], L("Files")) >= 0) e.preventDefault();
+  if (e.dataTransfer && Array.prototype.indexOf.call(e.dataTransfer.types || [], "Files") >= 0) e.preventDefault();
 });
 document.addEventListener("drop", async e => {
   if (!e.dataTransfer || !e.dataTransfer.files || !e.dataTransfer.files.length) return;
@@ -10374,14 +10611,15 @@ $("mt").addEventListener("click", e => {
   $("mTitle").textContent = b.textContent;
 });
 $("mClose").addEventListener("click", closeModal);
+$("keysX").addEventListener("click", closeKeys);
 
 /* command palette */
 $("cmdq").addEventListener("input", () => { cmdCur = 0; renderCmd(); });
 $("cmdq").addEventListener("keydown", e => {
   if (e.key === "ArrowDown"){ e.preventDefault(); cmdCur = Math.min(cmdItems.length-1, cmdCur+1); renderCmd(); }
   if (e.key === "ArrowUp"){ e.preventDefault(); cmdCur = Math.max(0, cmdCur-1); renderCmd(); }
-  if (e.key === L("Enter")){ e.preventDefault(); const it = cmdItems[cmdCur]; if (it){ closeCmd(); setTimeout(it.run, 40); } }
-  if (e.key === L("Escape")) closeCmd();
+  if (e.key === "Enter"){ e.preventDefault(); const it = cmdItems[cmdCur]; if (it){ closeCmd(); setTimeout(it.run, 40); } }
+  if (e.key === "Escape") closeCmd();
 });
 $("cmdl").addEventListener("click", e => {
   const el = e.target.closest(".ci"); if (!el) return;
@@ -10396,7 +10634,18 @@ document.addEventListener("keydown", e => {
   if (mod && e.key.toLowerCase() === "k"){ e.preventDefault(); return openCmd(); }
   if (mod && e.key.toLowerCase() === "s"){ e.preventDefault(); return saveNow().then(ok => ok && toast(L("SavedTo") + FS.name)); }
   if (mod && e.key.toLowerCase() === "z" && !typing){ e.preventDefault(); return doUndo(); }
-  if (e.key === L("Escape")){
+  /* Tab must not wander out of an open panel onto the page behind it */
+  if (e.key === "Tab" && TRAP.el && TRAP.el.classList.contains("on")){
+    const f = focusables(TRAP.el);
+    if (f.length){
+      const i = f.indexOf(document.activeElement);
+      if (e.shiftKey && (i <= 0)){ e.preventDefault(); f[f.length-1].focus(); }
+      else if (!e.shiftKey && i === f.length - 1){ e.preventDefault(); f[0].focus(); }
+      else if (i < 0){ e.preventDefault(); f[0].focus(); }
+    }
+  }
+  if (e.key === "Escape"){
+    if ($("keys").classList.contains("on")) return closeKeys();
     if ($("ask").classList.contains("on")) return closeAsk(null);
     if ($("cmd").classList.contains("on")) return closeCmd();
     if ($("intake").classList.contains("on")) return closeIntake();
@@ -10409,6 +10658,7 @@ document.addEventListener("keydown", e => {
     return;
   }
   if (typing) return;
+  if (e.key === "?" || (e.key === "/" && e.shiftKey)){ e.preventDefault(); return openKeys(); }
   if (e.key === "/"){ e.preventDefault(); return $("q").focus(); }
   if (e.key.toLowerCase() === "n"){ e.preventDefault(); return $("qa").focus(); }
   if (e.key.toLowerCase() === "w"){ e.preventDefault(); return openConsole(); }
@@ -10418,7 +10668,7 @@ document.addEventListener("keydown", e => {
     return setView(["day","board","register","week","library","insight"][+e.key-1]);
   const ct = curTask();
   if (ct){
-    if (e.key === L("Enter") || e.key === "e"){ e.preventDefault(); return openDrawer(ct.id); }
+    if (e.key === "Enter" || e.key === "e"){ e.preventDefault(); return openDrawer(ct.id); }
     if (e.key === " "){ e.preventDefault(); return cycleStatus(ct.id); }
     if (e.key === "x"){ e.preventDefault(); S.sel.has(ct.id) ? S.sel.delete(ct.id) : S.sel.add(ct.id); return renderAll(); }
     if (e.key === "d"){ e.preventDefault(); return setStatus(ct.id, "done"); }

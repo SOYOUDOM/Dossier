@@ -153,7 +153,6 @@
     <text name="AttachedFromTheConsole" source="Attached {p0} from the console" value="" />
     <text name="AttachedToTheRecordThisRoutine" source="Attached to the record this routine raises. Set to run on its own and " value="" />
     <text name="AvgTurnaround" source="| Avg turnaround | " value="" />
-    <text name="Backspace" source="Backspace" value="" />
     <text name="BackupsOneSnapshotPerDayKept" source="  backups/                  one snapshot per day, 30 kept
 " value="" />
     <text name="BannerOn" source="banner on" value="" />
@@ -285,7 +284,6 @@
     <text name="EchoOffRemBuiltByDossier" source="@echo off
 rem Built by Dossier for " value="" />
     <text name="Enter" source="Enter" value="" />
-    <text name="Escape" source="Escape" value="" />
     <text name="Estimate" source="Estimate" value="" />
     <text name="EvenTheOnesNotDueA" source="Even the ones not due a chase yet" value="" />
     <text name="EveryDay" source="Every day" value="" />
@@ -302,7 +300,6 @@ rem Built by Dossier for " value="" />
     <text name="EverythingWaitingOnAnotherRecordOr" source="Everything waiting on another record or another person" value="" />
     <text name="ExitsQuietlyTheRestOfThe" source="exits quietly the rest of the time.&lt;/p&gt;" value="" />
     <text name="ExportCsv" source="Export CSV" value="" />
-    <text name="Files" source="Files" value="" />
     <text name="FilesAreCopiedIntoThisRecords" source="Files are copied into this record's own folder inside your workspace. Ctrl+V pastes a screenshot straight in.&lt;/div&gt;" value="" />
     <text name="Filter" source="Filter" value="" />
     <text name="FiltersCleared" source="Filters cleared" value="" />
@@ -693,7 +690,6 @@ Nothing is holding this any more." value="" />
     <text name="System2" source="System    : " value="" />
     <text name="Systems" source="Systems" value="" />
     <text name="SystemsAffected" source="Systems affected: " value="" />
-    <text name="Tab" source="Tab" value="" />
     <text name="Tag" source="Tag" value="" />
     <text name="Tags" source="Tags" value="" />
     <text name="TakeItOutOfTheList" source="Take it out of the list" value="" />
@@ -1166,5 +1162,38 @@ Nothing is holding this any more." value="" />
     <text name="AtTime" source=" at {p0}" value="" />
     <text name="MessagePlaceholder" source="Time to drink water. Two glasses before the next call." value="" />
     <text name="MessageHint" source="Shown in the reminder, and copied onto the record it raises. Leave it empty and the reminder just says the name." value="" />
+    <text name="Feel" source="Feel" value="" />
+    <text name="Motion" source="Motion" value="" />
+    <text name="MotionFull" source="Full" value="" />
+    <text name="MotionSubtle" source="Subtle" value="" />
+    <text name="MotionNone" source="None — nothing moves" value="" />
+    <text name="Density" source="Density" value="" />
+    <text name="DensityComfortable" source="Comfortable" value="" />
+    <text name="DensityCompact" source="Compact — more on screen" value="" />
+    <text name="TextSize" source="Text size" value="" />
+    <text name="ResetToDefaults" source="Reset to defaults" value="" />
+    <text name="FeelIntro" source="How the app behaves, rather than how it is lettered. If your system asks for reduced motion, Dossier follows it unless you pick &lt;b&gt;Full&lt;/b&gt; here on purpose." value="" />
+    <text name="KeyboardShortcuts" source="Keyboard shortcuts" value="" />
+    <text name="PressQuestionAnyTime" source="Press ? at any time to see this." value="" />
+    <text name="Typeface" source="Typeface" value="" />
+    <text name="MovingAround" source="Moving around" value="" />
+    <text name="OnTheRecordUnderTheCursor" source="On the record under the cursor" value="" />
+    <text name="Anywhere" source="Anywhere" value="" />
+    <text name="NextRecord" source="Next record" value="" />
+    <text name="PreviousRecord" source="Previous record" value="" />
+    <text name="CloseWhatIsOpen" source="Close whatever is open" value="" />
+    <text name="CycleItsStatus" source="Cycle its status" value="" />
+    <text name="MarkItDone" source="Mark it done" value="" />
+    <text name="MoveItToToday" source="Move it to today" value="" />
+    <text name="StartOrStopTheClock" source="Start or stop the clock" value="" />
+    <text name="SelectIt" source="Select it" value="" />
+    <text name="UndoTheLastChange" source="Undo the last change" value="" />
+    <text name="PasteAScreenshotOntoTheOpenRecord" source="Paste a screenshot onto the open record" value="" />
+    <text name="OpenTheWorkConsole" source="Open the work console" value="" />
+    <text name="ThisSheet" source="This sheet" value="" />
+    <text name="KeySwitchView" source="Switch view" value="" />
+    <text name="KeySearch" source="Search everything" value="" />
+    <text name="KeyNewRecord" source="New record" value="" />
+    <text name="KeyCommandPalette" source="Command palette" value="" />
   </texts>
 </localizationDictionary>
