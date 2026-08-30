@@ -55,16 +55,25 @@ Now press the **`$`** button on any record carrying a script — **D-0004** has
 `restart-app-pool` with its parameters already filled, **D-0007** has
 `open-morning-tabs`. It runs, and the output appears in that record's work log.
 
-The runner checks everything every 400ms — the queue and your routines both —
-so `$` and **Run now** start the script straight away, and a routine fires
-within half a second of its time. There is no interval to wait out anywhere.
+The runner looks **once a second** — at the queue and at your routines both —
+so `$` and **Run now** start the script straight away, and a routine fires on
+its minute. There is no interval to wait out anywhere.
 
-It can afford to look that often because it does not re-read `dossier.json`
-every time. Parsing that file is the one thing here that gets slower as your
+It can afford to look that often because a pass is only a handful of file
+stats. Parsing `dossier.json` is the one thing here that gets slower as your
 work piles up — at 20 records a day it is a few megabytes within a year — so
-the runner compares its modified-time instead, which costs nothing, and parses
-only when you have actually saved something. Over two days of running that is
-about 600 parses rather than 8,600.
+the runner compares its modified-time instead and parses only when you have
+actually saved something.
+
+Three things keep it out of trouble:
+
+- **One runner per folder.** Starting a second by accident — a double-click on
+  top of the logon task — is refused, so a script cannot run twice. A different
+  workspace still gets its own runner.
+- **A stuck script is stopped after five minutes** (`-TimeoutSeconds`) instead
+  of freezing the queue and every routine behind it.
+- **A request is taken before it is run**, so killing the runner mid-script
+  cannot make it run again on restart.
 
 `-PollSeconds` (300) is only a long-stop re-read for folders whose
 modified-time cannot be trusted, such as OneDrive or a network share. On a
@@ -128,8 +137,14 @@ tasks/                        one folder per record, for its attachments
 
 The runner will only execute a file **already sitting in `scripts/`**. The
 request names a file, never a command line, and any name containing a path
-separator or `..` is refused. It runs as you, with no elevation, and makes no
-network calls — nor does `dossier.html`.
+separator or `..` is refused. Parameter values are handed to `cmd.exe`, which
+re-reads its own metacharacters, so a value containing one (`& | < > ^ " \``
+or a newline) is refused rather than quoted. It runs as you, with no elevation,
+and makes no network calls — nor does `dossier.html`.
+
+Nothing in `scripts/queue/` grows without bound: a script's output is kept to
+8 KB, results Dossier never collected are deleted after a day, and the
+double-click transcripts start over once they pass 256 KB.
 
 Attachments and screenshots are copied into `tasks/<record>/` as ordinary
 unencrypted files. Worth a thought before that folder lives on shared storage.
