@@ -4,87 +4,104 @@ A support operations record. One HTML file, no install, no server, no network.
 Everything you log lives in a folder you choose, as plain JSON and ordinary
 files you can read without this app.
 
+**This repository folder is itself a ready-to-use workspace.** Clone it, open
+`dossier.html`, point it at this folder, and there is already work on the
+sheet, a routine that runs a script by itself, and the scripts to go with it.
+
 ---
 
-## Run it — two minutes
+## Run it
 
-1. **Copy the `workspace` folder somewhere you own**, e.g. `C:\Users\you\Dossier-workspace`.
-   It already has records, routines, scripts and Cambodia's 2026 holidays in it.
-2. **Open `dossier.html`** in Microsoft Edge or Chrome (double-click it).
-3. Click **Choose workspace folder…** in the banner and pick the folder from step 1.
-   Allow "Edit files" when the browser asks.
+```
+git clone https://github.com/SOYOUDOM/Dossier
+```
 
-That's it. You should see records on the Day tab, a Morning tour routine under
-Menu → Routines, and three scripts under Menu → Scripts.
+1. **Open `dossier.html`** in Microsoft Edge or Chrome — double-click it.
+2. Click **Choose workspace folder…** in the banner and pick **this repository
+   folder** (the one holding `dossier.html`). Allow "Edit files" when asked.
+
+That is the whole setup. You should see:
+
+- records on the **Day** tab, including today's **Morning tour**
+- **Menu → Routines** — *Morning tour*, every day 08:30, `$open-morning-tabs`, **runs itself**
+- **Menu → Scripts** — three files, already registered
+- **Insight** — a recurring problem, with the case written for you
 
 > Firefox and Safari cannot open a folder, so Dossier can only show demo data
 > there. Use Edge or Chrome.
 
 ---
 
-## Make a script actually run
+## Make the scripts actually run
 
 A page in a browser cannot start a program. So Dossier writes a request to a
 file, and a small PowerShell process of yours picks it up, runs the script, and
 writes the output back — which lands in the record's work log.
 
-1. **Menu → Scripts → Folder path** — paste the full path of your workspace
-   folder, e.g. `C:\Users\you\Dossier-workspace`. (This is only used to build
-   the scheduled-task line; Dossier itself already has the folder.)
-2. **Double-click `workspace\scripts\dossier-runner.ps1`.** A window opens:
+**Double-click `scripts\dossier-runner.ps1`.** A window opens:
 
-   ```
-   Dossier runner watching C:\...\workspace\scripts\queue
-   and the routines in C:\...\workspace\dossier.json
-   ```
+```
+Dossier runner watching C:\...\Dossier\scripts\queue
+and the routines in C:\...\Dossier\dossier.json
+```
 
-   Leave it open. If Windows blocks it, right-click → *Run with PowerShell*, or
-   start it from a terminal with
-   `powershell -ExecutionPolicy Bypass -File .\workspace\scripts\dossier-runner.ps1`
+Leave it open. If Windows blocks it, right-click → *Run with PowerShell*, or:
 
-3. In Dossier, press the **`$`** button on any record that carries a script.
-   It runs, and the output appears in that record's work log.
+```
+powershell -ExecutionPolicy Bypass -File .\scripts\dossier-runner.ps1
+```
 
-To start the runner automatically at every logon, use
-**Menu → Setup → Running a script → Copy the schtasks line** and run that once
-in a terminal.
+Now press the **`$`** button on any record carrying a script — **D-0004** has
+`restart-app-pool` with its parameters already filled, **D-0007** has
+`open-morning-tabs`. It runs, and the output appears in that record's work log.
+
+To start the runner at every logon: put this folder's full path into
+**Menu → Scripts → Folder path**, then
+**Menu → Setup → Running a script → Copy the schtasks line** and run it once.
 
 ---
 
-## Make a routine run itself on time
+## Watch a routine fire itself
 
-The included **Morning tour** routine is already set up this way: every weekday
-at 08:30 it runs `open-morning-tabs.bat`.
+*Morning tour* is already set to run `open-morning-tabs.bat` on its own, every
+day at 08:30. With the runner started, nothing else is needed — it reads the
+routines out of `dossier.json` and fires them **whether Dossier is open or
+not**, once a day, catching up later if the machine was off at the hour.
 
-With the runner started, nothing else is needed — it reads the routines out of
-`dossier.json` and fires them at their time **whether Dossier is open or not**.
-Once per day, and it catches up later if the machine was off at the hour.
+**To see it now rather than tomorrow:** Menu → Routines → delete *Morning
+tour*, then add it again with the time set two minutes from now, Script =
+`open-morning-tabs`, and **On its own** = *Yes*. Watch the runner window:
 
-To try it without waiting until tomorrow: Menu → Routines, delete *Morning
-tour*, and add it again with the time set two minutes from now and **On its
-own** = *Yes*. Watch the runner window.
+```
+[08:32:04] running open-morning-tabs.bat for routine 'Morning tour'
+```
 
-Results are filed into that day's record as **Ran on schedule**, with the exit
-code if it failed.
+The result is filed into that day's record as **Ran on schedule**, with the
+exit code if it failed. D-0004 already has one so you can see the shape of it.
+
+Note `open-morning-tabs.bat` has its own once-a-day stamp file, so a second run
+the same day prints *"Already opened today"* and does nothing. Delete
+`scripts\.ran-open-morning-tabs.txt` to test it again, or drop that block from
+the script for things you want to run repeatedly.
 
 ---
 
 ## What is in the folder
 
 ```
-dossier.html                     the whole application
-workspace/
-  dossier.json                   every record, routine, script and setting
-  scripts/
-    dossier-runner.ps1           runs queued scripts, fires routines on time
-    open-morning-tabs.bat        sample: opens your morning tabs, once a day
-    restart-app-pool.bat         sample: parameters, and a filled copy per record
-    queue/                       run requests and their results (transient)
-  tasks/                         one folder per record, for its attachments
-  backups/                       one snapshot per day, 30 kept
+dossier.html                  the whole application
+dossier.json                  every record, routine, script and setting
+logo.png, favicon.ico         yours — the app picks them up automatically
+scripts/
+  dossier-runner.ps1          runs queued scripts, fires routines on time
+  open-morning-tabs.bat       sample: opens your morning tabs, once a day
+  restart-app-pool.bat        sample: parameters, and a filled copy per record
+  queue/                      run requests and their results (transient)
+backups/                      one snapshot per day, 30 kept
+tasks/                        one folder per record, for its attachments
 ```
 
-`tasks/` and `backups/` are created by Dossier the first time it needs them.
+`tasks/` is created the first time you attach something.
 
 ---
 
@@ -95,7 +112,7 @@ request names a file, never a command line, and any name containing a path
 separator or `..` is refused. It runs as you, with no elevation, and makes no
 network calls — nor does `dossier.html`.
 
-Screenshots and attachments are copied into `tasks/<record>/` as ordinary
+Attachments and screenshots are copied into `tasks/<record>/` as ordinary
 unencrypted files. Worth a thought before that folder lives on shared storage.
 
 ---
@@ -104,9 +121,8 @@ unencrypted files. Worth a thought before that folder lives on shared storage.
 
 - **Holidays** are seeded with Cambodia 2026 (Sub-Decree No. 167, 18 Sep 2025).
   Roughly half are lunar and move every year, and the list is reissued
-  annually — check it, and edit it under Menu → Setup. Opening a year that has
+  annually — check it, and edit it under Menu → Setup. Opening a year with
   nothing marked offers to fill in the dates that never move.
-- **Backups** are written to `backups/` once a day, 30 kept. The records
-  themselves are just `dossier.json`; copy it anywhere.
-- **Press `?`** — Menu → Help explains every feature, including the quick-add
-  tokens (`p1 @Imaging #INC0012345 ~Sokha 2h today`).
+- **Quick add** takes tokens: `p1 @Imaging #INC0012345 ~Sokha 2h today`.
+  Paste a Teams message or an email into the bar and it reads it instead.
+- **Menu → Help** explains every feature.
