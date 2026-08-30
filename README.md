@@ -133,6 +133,9 @@ marker first so the scheduled run still happens.
 ```
 dossier.html                  the whole application
 dossier.json                  every record, routine, script and setting
+fonts/
+  NotoSansKhmer-Khmer-*.woff2 the bundled Khmer face, also embedded in the HTML
+  OFL.txt                     its licence
 lang/
   en.xml                      the English master, generated from the code
   km.xml                      Khmer — all 1,107 phrases, ready to translate
@@ -215,7 +218,26 @@ never redo work.
 written, but move them wherever the sentence needs them — `"{shown} of {total}"`
 becoming `"{shown} ក្នុងចំណោម {total}"` is the point of them.
 
-**Khmer typography is handled in CSS, not in the translation.** Khmer stacks
+**A Khmer typeface ships with the app.** Everywhere else Dossier refuses to
+bundle a font, because a web font means fetching from someone else's server.
+Khmer is the exception: Windows ships only Khmer UI and DaunPenh, neither
+designed for dense interface text, and a machine without them draws Khmer as
+empty boxes. So **Noto Sans Khmer** (SIL OFL 1.1 — `fonts/OFL.txt`) is carried
+inside `dossier.html` as data. It is still not a download; nothing is fetched,
+and that is checked in the tests by asserting the page makes zero network
+requests.
+
+Both weights are subset to the Khmer and Khmer Symbols blocks — 32 KB for the
+pair, +8% on the file — and render pixel-identically to the full faces on coeng
+stacking and every pre-, post-, above- and below-base form. Latin is untouched:
+the browser only reaches for it on Khmer codepoints, so your chosen Latin face
+still sets everything else.
+
+It applies whatever the interface language, so a record you typed in Khmer
+reads properly with Dossier in English. **Menu → Appearance → Khmer text**
+picks a different face if you have one installed you prefer.
+
+**The rest of Khmer typography is handled in CSS, not in the translation.** Khmer stacks
 subscript consonants below the baseline and vowel signs above, and it has no
 spaces between words. Under `lang="km"` Dossier adds a Khmer font to each stack
 rather than replacing it (so ticket numbers and system names keep their face),
