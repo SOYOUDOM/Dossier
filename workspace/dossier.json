@@ -1,0 +1,543 @@
+{
+  "app": "dossier",
+  "version": 3,
+  "savedAt": "2026-08-30T04:34:45.564Z",
+  "seq": 5,
+  "settings": {
+    "owner": "",
+    "systems": [
+      {
+        "name": "Imaging",
+        "colour": "#3B6CA8"
+      },
+      {
+        "name": "CX Portal",
+        "colour": "#1F7A5C"
+      },
+      {
+        "name": "E-Payment",
+        "colour": "#C8791A"
+      },
+      {
+        "name": "Medcare",
+        "colour": "#7E57C2"
+      },
+      {
+        "name": "Notification",
+        "colour": "#B5397A"
+      },
+      {
+        "name": "Reports",
+        "colour": "#1F4E5F"
+      },
+      {
+        "name": "Infra / IIS",
+        "colour": "#A31D3A"
+      },
+      {
+        "name": "Other",
+        "colour": "#6B7A90"
+      }
+    ],
+    "types": [
+      "Incident",
+      "Service request",
+      "Change",
+      "Development",
+      "Meeting",
+      "Admin"
+    ],
+    "parties": [
+      "Data team",
+      "DBA",
+      "Infra",
+      "Network",
+      "Security",
+      "Vendor",
+      "Agency ops",
+      "Finance",
+      "Release management",
+      "Business user"
+    ],
+    "theme": "archive",
+    "palettes": [],
+    "remind": false,
+    "lead": 15,
+    "remindOverdue": true,
+    "remindWait": 3,
+    "autoBlock": true,
+    "rememberFilters": true,
+    "savedFilters": null,
+    "rootPath": "",
+    "sla": {
+      "on": true,
+      "P1": 4,
+      "P2": 24,
+      "P3": 48,
+      "P4": 120
+    },
+    "calMode": "week",
+    "holidays": [
+      {
+        "d": "2026-01-01",
+        "n": "International New Year Day",
+        "k": "public"
+      },
+      {
+        "d": "2026-01-07",
+        "n": "Victory over Genocide Day",
+        "k": "public"
+      },
+      {
+        "d": "2026-03-08",
+        "n": "International Women's Day",
+        "k": "public"
+      },
+      {
+        "d": "2026-04-14",
+        "n": "Khmer New Year",
+        "k": "public"
+      },
+      {
+        "d": "2026-04-15",
+        "n": "Khmer New Year",
+        "k": "public"
+      },
+      {
+        "d": "2026-04-16",
+        "n": "Khmer New Year",
+        "k": "public"
+      },
+      {
+        "d": "2026-05-01",
+        "n": "Labour Day · Visak Bochea",
+        "k": "public"
+      },
+      {
+        "d": "2026-05-05",
+        "n": "Royal Ploughing Ceremony",
+        "k": "public"
+      },
+      {
+        "d": "2026-05-14",
+        "n": "King Sihamoni's Birthday",
+        "k": "public"
+      },
+      {
+        "d": "2026-06-18",
+        "n": "Queen Mother's Birthday",
+        "k": "public"
+      },
+      {
+        "d": "2026-09-24",
+        "n": "Constitution Day",
+        "k": "public"
+      },
+      {
+        "d": "2026-10-10",
+        "n": "Pchum Ben",
+        "k": "public"
+      },
+      {
+        "d": "2026-10-11",
+        "n": "Pchum Ben",
+        "k": "public"
+      },
+      {
+        "d": "2026-10-12",
+        "n": "Pchum Ben",
+        "k": "public"
+      },
+      {
+        "d": "2026-10-15",
+        "n": "King Sihanouk Commemoration",
+        "k": "public"
+      },
+      {
+        "d": "2026-10-29",
+        "n": "Coronation Day",
+        "k": "public"
+      },
+      {
+        "d": "2026-11-09",
+        "n": "Independence Day",
+        "k": "public"
+      },
+      {
+        "d": "2026-11-24",
+        "n": "Water Festival",
+        "k": "public"
+      },
+      {
+        "d": "2026-11-25",
+        "n": "Water Festival",
+        "k": "public"
+      },
+      {
+        "d": "2026-11-26",
+        "n": "Water Festival",
+        "k": "public"
+      },
+      {
+        "d": "2026-12-10",
+        "n": "Human Rights Day",
+        "k": "public"
+      },
+      {
+        "d": "2026-12-29",
+        "n": "Peace Day",
+        "k": "public"
+      }
+    ],
+    "runner": true,
+    "fonts": {
+      "display": "auto",
+      "ui": "auto",
+      "mono": "auto"
+    },
+    "templates": [
+      "Morning health check @\"Infra / IIS\" :admin 20m today 08:30",
+      "Investigate error in log @Imaging :incident p2 1h today",
+      "Data fix requested by user :service 45m today",
+      "Prepare deck and review before meeting :meeting 1h today"
+    ]
+  },
+  "routines": [
+    {
+      "id": "Rmorningtour",
+      "title": "Morning tour",
+      "freq": "weekdays",
+      "days": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "dom": 1,
+      "system": "Infra / IIS",
+      "time": "08:30",
+      "priority": "P3",
+      "type": "Admin",
+      "checklist": [
+        "App pools running",
+        "Disk above 15%",
+        "Overnight job failures",
+        "Event log errors"
+      ],
+      "notes": "Anything red becomes its own record.",
+      "scripts": [
+        "Sopenmorning"
+      ],
+      "autoRun": true
+    },
+    {
+      "id": "Rweekcheck",
+      "title": "Friday housekeeping",
+      "freq": "weekly",
+      "days": [
+        5
+      ],
+      "dom": 1,
+      "system": "Infra / IIS",
+      "time": "16:00",
+      "priority": "P4",
+      "type": "Admin",
+      "checklist": [
+        "Archive old logs",
+        "Check backup job"
+      ],
+      "notes": "",
+      "scripts": [],
+      "autoRun": false
+    }
+  ],
+  "scripts": [
+    {
+      "id": "Sopenmorning",
+      "file": "open-morning-tabs.bat",
+      "name": "open-morning-tabs",
+      "size": 1710,
+      "added": "2026-08-28T04:34:45.562Z",
+      "desc": "Opens the tabs you start the day with, once per day",
+      "tags": [
+        "morning"
+      ],
+      "system": "",
+      "params": [],
+      "uses": 0,
+      "lastUsed": ""
+    },
+    {
+      "id": "Srestartpool",
+      "file": "restart-app-pool.bat",
+      "name": "restart-app-pool",
+      "size": 1364,
+      "added": "2026-08-28T04:34:45.562Z",
+      "desc": "Recycles an IIS application pool on a named server",
+      "tags": [
+        "iis"
+      ],
+      "system": "Infra / IIS",
+      "params": [
+        "server",
+        "pool"
+      ],
+      "uses": 0,
+      "lastUsed": ""
+    },
+    {
+      "id": "Srunner",
+      "file": "dossier-runner.ps1",
+      "name": "Dossier runner",
+      "size": 5200,
+      "added": "2026-08-28T04:34:45.562Z",
+      "desc": "Runs queued scripts and fires routines on time",
+      "tags": [
+        "dossier"
+      ],
+      "system": "",
+      "params": [],
+      "uses": 0,
+      "lastUsed": ""
+    }
+  ],
+  "tasks": [
+    {
+      "id": "tmtfbff0b8kx9",
+      "code": "D-0005",
+      "folder": "D-0005 KHQR callback signature mismatch on 2 transactions",
+      "title": "KHQR callback signature mismatch on 2 transactions",
+      "notes": "",
+      "status": "blocked",
+      "priority": "P2",
+      "system": "E-Payment",
+      "type": "Incident",
+      "ticket": "INC0012350",
+      "requester": "Finance",
+      "tags": [],
+      "blockedBy": [],
+      "autoBlocked": true,
+      "waitOn": "Vendor",
+      "waitNote": "Key rotation not confirmed",
+      "waitSince": "2026-08-25T04:34:45.562Z",
+      "waitUntil": "",
+      "chases": [],
+      "waitLog": [],
+      "scripts": [],
+      "scriptArgs": {},
+      "created": "2026-08-25T04:34:45.562Z",
+      "due": "2026-08-30",
+      "dueTime": "",
+      "started": "",
+      "completed": "",
+      "estimate": 60,
+      "spent": 0,
+      "timerStart": 0,
+      "checklist": [],
+      "log": [
+        {
+          "at": "2026-08-30T04:34:45.563Z",
+          "kind": "status",
+          "text": "Opened"
+        },
+        {
+          "at": "2026-08-30T04:34:45.564Z",
+          "text": "Waiting on Vendor — Key rotation not confirmed"
+        },
+        {
+          "at": "2026-08-30T04:34:45.564Z",
+          "kind": "status",
+          "text": "Open → Blocked — waiting on Vendor"
+        }
+      ],
+      "files": [],
+      "carried": 0,
+      "fromRoutine": "",
+      "forDate": ""
+    },
+    {
+      "id": "tmtfbff0bo9kt",
+      "code": "D-0004",
+      "folder": "D-0004 Add policy status column to monthly renewal report",
+      "title": "Add policy status column to monthly renewal report",
+      "notes": "",
+      "status": "open",
+      "priority": "P3",
+      "system": "Reports",
+      "type": "Service request",
+      "ticket": "REQ0004411",
+      "requester": "Sok Dara",
+      "tags": [],
+      "blockedBy": [],
+      "autoBlocked": false,
+      "waitOn": "",
+      "waitNote": "",
+      "waitSince": "",
+      "waitUntil": "",
+      "chases": [],
+      "waitLog": [],
+      "scripts": [],
+      "scriptArgs": {},
+      "created": "2026-08-27T04:34:45.562Z",
+      "due": "2026-09-01",
+      "dueTime": "",
+      "started": "",
+      "completed": "",
+      "estimate": 180,
+      "spent": 0,
+      "timerStart": 0,
+      "checklist": [],
+      "log": [
+        {
+          "at": "2026-08-30T04:34:45.563Z",
+          "kind": "status",
+          "text": "Opened"
+        }
+      ],
+      "files": [],
+      "carried": 0,
+      "fromRoutine": "",
+      "forDate": ""
+    },
+    {
+      "id": "tmtfbff0b3kqk",
+      "code": "D-0003",
+      "folder": "D-0003 Imaging nightly sync timeout on GetPendingAsync",
+      "title": "Imaging nightly sync timeout on GetPendingAsync",
+      "notes": "",
+      "status": "processing",
+      "priority": "P1",
+      "system": "Imaging",
+      "type": "Incident",
+      "ticket": "INC0012390",
+      "requester": "Operations",
+      "tags": [],
+      "blockedBy": [],
+      "autoBlocked": false,
+      "waitOn": "",
+      "waitNote": "",
+      "waitSince": "",
+      "waitUntil": "",
+      "chases": [],
+      "waitLog": [],
+      "scripts": [
+        "Srestartpool"
+      ],
+      "scriptArgs": {
+        "Srestartpool": {
+          "server": "APP02",
+          "pool": "ImagingPool"
+        }
+      },
+      "created": "2026-08-30T04:34:45.562Z",
+      "due": "2026-08-30",
+      "dueTime": "11:00",
+      "started": "",
+      "completed": "",
+      "estimate": 90,
+      "spent": 25,
+      "timerStart": 0,
+      "checklist": [],
+      "log": [
+        {
+          "at": "2026-08-30T04:34:45.563Z",
+          "kind": "status",
+          "text": "Opened"
+        }
+      ],
+      "files": [],
+      "carried": 0,
+      "fromRoutine": "",
+      "forDate": ""
+    },
+    {
+      "id": "tmtfbff0a2ag7",
+      "code": "D-0002",
+      "folder": "D-0002 Imaging sync timeout again after deploy",
+      "title": "Imaging sync timeout again after deploy",
+      "notes": "Same root cause. Raised max pool size to 200.",
+      "status": "done",
+      "priority": "P2",
+      "system": "Imaging",
+      "type": "Incident",
+      "ticket": "",
+      "requester": "",
+      "tags": [],
+      "blockedBy": [],
+      "autoBlocked": false,
+      "waitOn": "",
+      "waitNote": "",
+      "waitSince": "",
+      "waitUntil": "",
+      "chases": [],
+      "waitLog": [],
+      "scripts": [],
+      "scriptArgs": {},
+      "created": "2026-08-18T04:34:45.562Z",
+      "due": "",
+      "dueTime": "",
+      "started": "",
+      "completed": "2026-08-19T04:34:45.562Z",
+      "estimate": 90,
+      "spent": 70,
+      "timerStart": 0,
+      "checklist": [],
+      "log": [
+        {
+          "at": "2026-08-30T04:34:45.562Z",
+          "kind": "status",
+          "text": "Opened"
+        }
+      ],
+      "files": [],
+      "carried": 0,
+      "fromRoutine": "",
+      "forDate": ""
+    },
+    {
+      "id": "tmtfbff0af6ck",
+      "code": "D-0001",
+      "folder": "D-0001 Imaging nightly sync failed — SQL timeout on GetPend",
+      "title": "Imaging nightly sync failed — SQL timeout on GetPendingAsync",
+      "notes": "Connection pool exhausted at 02:15. Recycled the app pool.",
+      "status": "done",
+      "priority": "P1",
+      "system": "Imaging",
+      "type": "Incident",
+      "ticket": "INC0012345",
+      "requester": "Operations",
+      "tags": [],
+      "blockedBy": [],
+      "autoBlocked": false,
+      "waitOn": "",
+      "waitNote": "",
+      "waitSince": "",
+      "waitUntil": "",
+      "chases": [],
+      "waitLog": [],
+      "scripts": [],
+      "scriptArgs": {},
+      "created": "2026-08-09T04:34:45.562Z",
+      "due": "",
+      "dueTime": "",
+      "started": "",
+      "completed": "2026-08-10T04:34:45.562Z",
+      "estimate": 120,
+      "spent": 95,
+      "timerStart": 0,
+      "checklist": [],
+      "log": [
+        {
+          "at": "2026-08-30T04:34:45.562Z",
+          "kind": "status",
+          "text": "Opened"
+        }
+      ],
+      "files": [],
+      "carried": 0,
+      "fromRoutine": "",
+      "forDate": ""
+    }
+  ]
+}
