@@ -1149,5 +1149,31 @@ Nothing is holding this any more." />
     <text name="YesNotifyAtEveryFiring" source="Yes — a notification at every firing" value="Yes — a notification at every firing" />
     <text name="RemindsYou" source="reminds you" value="reminds you" />
     <text name="RoutineReminderBody" source="It is {p0}." value="It is {p0}." />
+    <text name="AddManyAtOnce" source="Add many at once" value="Add many at once" />
+    <text name="ADateRange" source="A date range" value="A date range" />
+    <text name="OrPasteAList" source="Or paste a list" value="Or paste a list" />
+    <text name="To" source="To" value="To" />
+    <text name="SkipWeekends" source="skip weekends" value="skip weekends" />
+    <text name="AnnualLeaveOfficeClosed" source="Annual leave, office closed…" value="Annual leave, office closed…" />
+    <text name="AddThesePastedDays" source="Add these days" value="Add these days" />
+    <text name="CopyWhatIsMarkedNow" source="Copy what is marked now" value="Copy what is marked now" />
+    <text name="PasteHolidaysHelp" source="JSON as Dossier writes it, JSON from anywhere else (&lt;b&gt;date&lt;/b&gt;/&lt;b&gt;name&lt;/b&gt;/&lt;b&gt;kind&lt;/b&gt; work too), or one a line as &lt;b&gt;date, name, kind&lt;/b&gt;. Dates may be &lt;b&gt;2027-01-01&lt;/b&gt; or &lt;b&gt;01/01/2027&lt;/b&gt;. Leave the kind off and it counts as a day off. Anything unreadable is listed rather than swallowed." value="JSON as Dossier writes it, JSON from anywhere else (&lt;b&gt;date&lt;/b&gt;/&lt;b&gt;name&lt;/b&gt;/&lt;b&gt;kind&lt;/b&gt; work too), or one a line as &lt;b&gt;date, name, kind&lt;/b&gt;. Dates may be &lt;b&gt;2027-01-01&lt;/b&gt; or &lt;b&gt;01/01/2027&lt;/b&gt;. Leave the kind off and it counts as a day off. Anything unreadable is listed rather than swallowed." />
+    <text name="HolidaysAdded" source="{added} added, {replaced} replaced" value="{added} added, {replaced} replaced" />
+    <text name="HolidaysNothingRead" source="Nothing could be read from that" value="Nothing could be read from that" />
+    <text name="HolidaysSomeBad" source="{n} line(s) could not be read: {p0}" value="{n} line(s) could not be read: {p0}" />
+    <text name="HolidaysCopied" source="{n} marked day(s) copied as JSON" value="{n} marked day(s) copied as JSON" />
+    <text name="PickBothDates" source="Pick both dates first" value="Pick both dates first" />
+    <text name="RangeBackwards" source="The second date is before the first" value="The second date is before the first" />
+    <text name="ANewSchedule" source="A new schedule" value="A new schedule" />
+    <text name="EditingX" source="Editing “{p0}”" value="Editing “{p0}”" />
+    <text name="SaveChanges" source="Save changes" value="Save changes" />
+    <text name="AddSchedule" source="Add schedule" value="Add schedule" />
+    <text name="ScheduleSaved" source="“{p0}” saved" value="“{p0}” saved" />
+    <text name="Edit" source="Edit" value="Edit" />
+    <text name="Message" source="Message" value="Message" />
+    <text name="RunsItselfButNothingIs" source="runs itself — but nothing is running it" value="runs itself — but nothing is running it" />
+    <text name="AtTime" source=" at {p0}" value=" at {p0}" />
+    <text name="MessagePlaceholder" source="Time to drink water. Two glasses before the next call." value="Time to drink water. Two glasses before the next call." />
+    <text name="MessageHint" source="Shown in the reminder, and copied onto the record it raises. Leave it empty and the reminder just says the name." value="Shown in the reminder, and copied onto the record it raises. Leave it empty and the reminder just says the name." />
   </texts>
 </localizationDictionary>

@@ -1080,6 +1080,71 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
 :root[lang="km"] .tabs button{ font-size:13.5px; }
 :root[lang="km"] .eyebrow{ font-size:12px; }
 :root[lang="km"] .btn.sm{ padding-top:4px;padding-bottom:4px;line-height:1.75; }
+
+/* ── bulk holiday entry ─────────────────────────────────────────────────── */
+.hbulk h6{ margin:2px 0 6px;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--ink-3);font-weight:600 }
+.hbulk h6+.hrow{ margin-bottom:12px }
+.hbulk .hrow{ display:flex;gap:6px;align-items:center;flex-wrap:wrap }
+/* .in is full width by default, which stacks a row of five into a column */
+.hbulk .hrow .in{ width:auto;flex:0 0 auto }
+.hbulk .hrow input[type="date"]{ width:138px }
+.hbulk .hrow select.in{ width:104px }
+.hbulk .hrow #hrN{ flex:1 1 140px;min-width:100px;width:auto }
+.hbulk .hrow .to{ color:var(--ink-3);font-size:12px }
+.hbulk .chk{ display:flex;align-items:center;gap:5px;font-size:11.5px;color:var(--ink-2);
+  white-space:nowrap;cursor:pointer }
+.hbulk .hhelp{ font-size:11px;color:var(--ink-3);line-height:1.65;margin:0 0 6px }
+.hbulk textarea.in{ width:100%;font-family:var(--f-mono);font-size:11.5px;line-height:1.6;
+  resize:vertical;min-height:78px }
+.hbulk .hmsg{ font-size:11px;color:var(--ink-3) }
+.hbulk .hmsg.bad{ color:var(--p2) }
+
+/* ── the schedule editor ────────────────────────────────────────────────── */
+.lede{ font-size:12px;color:var(--ink-2);margin:0 0 14px;line-height:1.6 }
+.blank2{ font-size:12.5px;color:var(--ink-3);margin-bottom:14px;padding:14px;text-align:center;
+  border:1px dashed var(--rule);border-radius:var(--r-sm) }
+.schl{ display:flex;flex-direction:column;gap:6px;margin-bottom:16px }
+.sch{ display:flex;align-items:flex-start;gap:9px;padding:9px 10px;border:1px solid var(--rule);
+  border-radius:var(--r-sm);background:var(--paper-2) }
+.sch.on{ border-color:var(--p1);box-shadow:0 0 0 1px var(--p1) inset }
+.sch.off{ opacity:.55 }
+.sch .sw{ width:3px;align-self:stretch;border-radius:2px;flex:0 0 3px }
+.sch .who{ flex:1;min-width:0 }
+.sch .who .t{ font-weight:650;font-size:12.5px;line-height:1.35 }
+.sch .who .s{ font-size:11px;color:var(--ink-2);line-height:1.55;margin-top:1px }
+.sch .who .s2{ font-size:10.5px;color:var(--ink-3);line-height:1.5 }
+.sch .acts{ display:flex;gap:2px;flex:0 0 auto }
+.sch .acts button{ all:unset;cursor:pointer;width:24px;height:24px;line-height:24px;text-align:center;
+  border-radius:var(--r-xs);color:var(--ink-3);font-size:11px }
+.sch .acts button:hover{ background:var(--paper-3);color:var(--ink-1) }
+
+.schform{ border-top:1px solid var(--rule);margin-top:16px;padding-top:14px }
+.schform .fh{ display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px }
+.schform .fh span{ font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--ink-3);font-weight:600 }
+.schform [data-when][hidden]{ display:none }
+.hint2{ font-size:11px;color:var(--ink-3);line-height:1.65;margin:-4px 0 10px }
+.schsum{ font-size:11.5px;color:var(--ink-1);background:var(--paper-3);border-radius:var(--r-xs);
+  padding:7px 10px;margin:2px 0 12px;line-height:1.5;min-height:16px }
+.schsum:empty{ display:none }
+.dowpick{ display:flex;gap:4px;flex-wrap:wrap }
+.schform textarea.in{ resize:vertical;min-height:44px;line-height:1.55 }
+
+/* ── foldable panel sections ────────────────────────────────────────────── */
+.panelsec{ border-top:1px solid var(--rule);margin:0 }
+.panelsec>summary{ display:flex;align-items:center;gap:7px;cursor:pointer;list-style:none;
+  padding:11px 2px;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--ink-2);font-weight:600;user-select:none }
+.panelsec>summary::-webkit-details-marker{ display:none }
+.panelsec>summary:hover{ color:var(--ink-1) }
+.panelsec>summary .cv{ transition:transform .12s ease;font-size:13px;color:var(--ink-3);
+  display:inline-block;width:9px;flex:0 0 9px }
+.panelsec[open]>summary .cv{ transform:rotate(90deg) }
+.panelsec>.accb{ padding:0 0 14px }
+/* Help's headings are sentences, not labels — keep them readable as such */
+.panelsec.plain>summary{ text-transform:none;letter-spacing:0;font-size:12.5px;
+  color:var(--ink-1);font-weight:600 }
 </style>
 </head>
 <body>
@@ -2495,7 +2560,37 @@ const STRINGS = {
   NoJustRaiseTheRecord: "No \u2014 just raise the record",
   YesNotifyAtEveryFiring: "Yes \u2014 a notification at every firing",
   RemindsYou: "reminds you",
-  RoutineReminderBody: "It is {p0}."
+  RoutineReminderBody: "It is {p0}.",
+
+  /* holidays in bulk */
+  AddManyAtOnce: "Add many at once",
+  ADateRange: "A date range",
+  OrPasteAList: "Or paste a list",
+  To: "To",
+  SkipWeekends: "skip weekends",
+  AnnualLeaveOfficeClosed: "Annual leave, office closed\u2026",
+  AddThesePastedDays: "Add these days",
+  CopyWhatIsMarkedNow: "Copy what is marked now",
+  PasteHolidaysHelp: "JSON as Dossier writes it, JSON from anywhere else (<b>date</b>/<b>name</b>/<b>kind</b> work too), or one a line as <b>date, name, kind</b>. Dates may be <b>2027-01-01</b> or <b>01/01/2027</b>. Leave the kind off and it counts as a day off. Anything unreadable is listed rather than swallowed.",
+  HolidaysAdded: "{added} added, {replaced} replaced",
+  HolidaysNothingRead: "Nothing could be read from that",
+  HolidaysSomeBad: "{n} line(s) could not be read: {p0}",
+  HolidaysCopied: "{n} marked day(s) copied as JSON",
+  PickBothDates: "Pick both dates first",
+  RangeBackwards: "The second date is before the first",
+
+  /* the schedule editor */
+  ANewSchedule: "A new schedule",
+  EditingX: "Editing \u201c{p0}\u201d",
+  SaveChanges: "Save changes",
+  AddSchedule: "Add schedule",
+  ScheduleSaved: "\u201c{p0}\u201d saved",
+  Edit: "Edit",
+  Message: "Message",
+  RunsItselfButNothingIs: "runs itself \u2014 but nothing is running it",
+  AtTime: " at {p0}",
+  MessagePlaceholder: "Time to drink water. Two glasses before the next call.",
+  MessageHint: "Shown in the reminder, and copied onto the record it raises. Leave it empty and the reminder just says the name."
 };
 
 /* Loaded files, keyed by culture code. "en" is always present, from STRINGS. */
@@ -2858,7 +2953,7 @@ const S = {
   filters:{ st:{ open:true, processing:true, blocked:true, done:true, cancelled:false },
             sys:"", pri:"", type:"", who:"", range:"", q:"", day:"", hideRoutine:false,
             ids:null, idsLabel:"" },
-  sel:new Set(), open:null, drill:null, intake:null, chase:null, problem:null, folds:{}, sort:{ by:"due", dir:1 },
+  sel:new Set(), open:null, drill:null, intake:null, chase:null, problem:null, folds:{}, editRoutine:null, sort:{ by:"due", dir:1 },
   weekStart:null, undo:[], dirty:false, saving:false, lastSaved:null,
   rows:[], cursor:-1, reminded:{}, blobCache:{}
 };
@@ -4005,8 +4100,14 @@ function routineLastDue(r, now){
 /* a cron routine carries its time in the expression, not in the time box */
 function routineTime(r, key){
   if (r.freq !== "cron") return r.time || "";
-  try { return cronTimesOn(cronParse(r.cron), pk(key || today()))[0] || ""; }
-  catch(e){ return ""; }
+  try {
+    const c = cronParse(r.cron);
+    const on = cronTimesOn(c, pk(key || today()))[0];
+    if (on || key) return on || "";
+    /* no firing today — say when it next fires rather than nothing at all */
+    const n = cronNext(c, new Date());
+    return n ? pad2(n.getHours()) + ":" + pad2(n.getMinutes()) : "";
+  } catch(e){ return ""; }
 }
 /* `only` raises one routine; `force` raises it again even though today's
    already exists, for the round you genuinely have to do twice. */
@@ -4021,7 +4122,8 @@ function makeRoutines(only, force){
     addTask({
       title:r.title, system:r.system, type:r.type || L("Admin"), priority:r.priority || "P3",
       estimate:+r.estimate || 0, due:key, dueTime:routineTime(r, key), fromRoutine:r.id, forDate:key,
-      checklist:(r.checklist || []).map(c => ({ text:c, done:false })), notes:r.notes || "",
+      checklist:(r.checklist || []).map(c => ({ text:c, done:false })),
+      notes:r.message || r.notes || "",
       /* the routine already knows which file does the job — carry it over so
          the morning record arrives with the command ready, not a memory of it */
       scripts:(r.scripts || []).filter(id => scriptById(id))
@@ -4945,6 +5047,124 @@ function addFixedYear(year){
   S.settings.holidays = holidays().concat(add).sort((a, b) => a.d < b.d ? -1 : a.d > b.d ? 1 : 0);
   touch();
   return add.length;
+}
+
+/* ═══ HOLIDAYS IN BULK ════════════════════════════════════════════════════
+   A year of public holidays plus your own leave is thirty-odd dates, and
+   adding them one at a time is not a thing anyone will do twice. So paste
+   them instead — as the JSON Dossier itself exports, as the JSON a
+   spreadsheet or an HR system tends to produce, or as lines typed by hand.
+
+   Nothing is guessed silently: every row that cannot be read is reported
+   with the text that failed, so a list of thirty with two typos gives you
+   twenty-eight marked days and two lines to fix, rather than an error. */
+const HOL_PUBLIC = ["public","day off","dayoff","off","holiday","ph","closed"];
+const HOL_MARK   = ["observance","marked","mark","note","observed","event"];
+
+/* 2027-01-01 · 2027/01/01 · 01/01/2027 · 1.1.2027 — day first when it is
+   ambiguous, which is what this part of the world writes and what Dossier
+   already shows everywhere else. */
+function holDate(v){
+  const s = String(v == null ? "" : v).trim();
+  if (!s) return "";
+  let y, m, d;
+  let x = /^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})$/.exec(s);
+  if (x){ y = +x[1]; m = +x[2]; d = +x[3]; }
+  else {
+    x = /^(\d{1,2})[-/.](\d{1,2})[-/.](\d{4})$/.exec(s);
+    if (x){ d = +x[1]; m = +x[2]; y = +x[3]; }
+    else return "";
+  }
+  if (m < 1 || m > 12 || d < 1 || d > 31) return "";
+  const dt = new Date(y, m - 1, d);
+  if (dt.getFullYear() !== y || dt.getMonth() !== m - 1 || dt.getDate() !== d) return "";
+  return y + "-" + pad2(m) + "-" + pad2(d);
+}
+
+function holKind(v){
+  const s = String(v == null ? "" : v).trim().toLowerCase();
+  if (!s) return "public";
+  if (HOL_MARK.indexOf(s) >= 0) return "observance";
+  if (HOL_PUBLIC.indexOf(s) >= 0) return "public";
+  return "public";
+}
+
+function parseHolidays(text){
+  const rows = [], errs = [];
+  const t = String(text || "").trim();
+  if (!t) return { rows, errs };
+
+  const take = (d, n, k, where) => {
+    const day = holDate(d);
+    if (!day){ errs.push(where); return; }
+    rows.push({ d:day, n:String(n == null ? "" : n).trim() || "Holiday", k:holKind(k) });
+  };
+
+  if (t[0] === "[" || t[0] === "{"){
+    let j;
+    try { j = JSON.parse(t); }
+    catch(e){ return { rows, errs:["JSON: " + e.message] }; }
+    if (Array.isArray(j)){
+      j.forEach((o, i) => {
+        if (o && typeof o === "object")
+          take(o.d ?? o.date ?? o.day, o.n ?? o.name ?? o.title ?? o.label,
+               o.k ?? o.kind ?? o.type, "item " + (i+1) + ": " + JSON.stringify(o).slice(0,54));
+        else errs.push("item " + (i+1) + ": " + JSON.stringify(o));
+      });
+    } else {
+      Object.keys(j).forEach(key => {
+        const v = j[key];
+        if (v && typeof v === "object") take(key, v.n ?? v.name ?? v.title, v.k ?? v.kind, key);
+        else take(key, v, "", key);
+      });
+    }
+    return { rows, errs };
+  }
+
+  t.split(/\r?\n/).forEach(line => {
+    const raw = line.trim();
+    if (!raw || raw[0] === "#") return;
+    const bits = raw.split(/\t|\s*[,;|]\s*|\s{2,}/).map(x => x.trim()).filter(Boolean);
+    if (bits.length === 1){
+      /* "2027-01-01 New Year" — one space between the date and the name */
+      const m = /^(\S+)\s+(.*)$/.exec(raw);
+      if (m) take(m[1], m[2], "", raw); else errs.push(raw);
+      return;
+    }
+    take(bits[0], bits[1], bits[2], raw);
+  });
+  return { rows, errs };
+}
+
+/* every day from a to b inclusive, optionally skipping Sat and Sun */
+function holRange(a, b, name, kind, skipWeekend){
+  const from = holDate(a), to = holDate(b);
+  if (!from || !to) return { rows:[], errs:["dates"] };
+  if (to < from) return { rows:[], errs:["order"] };
+  const rows = [];
+  let d = pk(from);
+  const end = pk(to);
+  for (let guard = 0; d <= end && guard < 800; guard++){
+    const wd = d.getDay();
+    if (!(skipWeekend && (wd === 0 || wd === 6)))
+      rows.push({ d:dkey(d), n:name || "Leave", k:kind || "public" });
+    d = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1);
+  }
+  return { rows, errs:[] };
+}
+
+/* Merge a parsed batch in. A date already marked is replaced rather than
+   doubled, so pasting a corrected list twice is safe. */
+function addHolidays(rows){
+  const have = {};
+  holidays().forEach((h, i) => { have[h.d] = i; });
+  let added = 0, replaced = 0;
+  rows.forEach(r => {
+    if (have[r.d] != null){ S.settings.holidays[have[r.d]] = r; replaced++; }
+    else { S.settings.holidays.push(r); have[r.d] = S.settings.holidays.length - 1; added++; }
+  });
+  S.settings.holidays.sort((a, b) => a.d < b.d ? -1 : a.d > b.d ? 1 : 0);
+  return { added, replaced };
 }
 
 function holidays(){
@@ -6743,6 +6963,39 @@ function fr(label, html){ return '<div class="fr"><label>' + esc(label) + "</lab
      urgent paints the count in accent: this record is actually held up
    The section opens by itself the first time it has content, and whatever
    the user does with it after that is remembered for the session. */
+/* Setup is forty controls in one column and Help is an essay. Both are written
+   as a run of <h5> headings with their controls after them, so rather than
+   restructure every panel, each heading is folded together with what follows
+   it once the panel is on the page. Closed by default: someone opening Setup
+   should see a short list of what is in there, not a wall of switches. What
+   you open stays open. */
+function foldSections(panelId){
+  const el = $(panelId);
+  if (!el) return;
+  Array.prototype.slice.call(el.children).forEach(h => {
+    const eyebrow = h.tagName === "H5" && String(h.className).indexOf("eyebrow") >= 0;
+    if (!eyebrow && h.tagName !== "H4") return;
+    const key = panelId + "|" + h.textContent.trim().slice(0, 48);
+    const det = document.createElement("details");
+    det.className = "sec acc panelsec" + (eyebrow ? "" : " plain");
+    det.setAttribute("data-acc", key);
+    det.open = !!S.folds[key];
+    const sum = document.createElement("summary");
+    sum.innerHTML = '<span class="cv">\u203a</span>' + esc(h.textContent.trim());
+    det.appendChild(sum);
+    const body = document.createElement("div");
+    body.className = "accb";
+    let n = h.nextSibling;
+    while (n && !(n.nodeType === 1 && (n.tagName === "H5" || n.tagName === "H4"))){
+      const next = n.nextSibling;
+      body.appendChild(n);
+      n = next;
+    }
+    det.appendChild(body);
+    h.parentNode.replaceChild(det, h);
+  });
+}
+
 function fold(key, title, n, hint, urgent, inner){
   const state = S.folds[key];
   const open = state === undefined ? !!n : state;
@@ -7022,66 +7275,110 @@ async function renderModal(){
       "<button class=\"btn\" id=\"repSave\">" + L("SaveToReports") + "</button>" +
       "<button class=\"btn\" id=\"repPrint\">" + L("Print") + "</button></div>";
 
+  /* ── the schedule editor ───────────────────────────────────────────────
+     A schedule is not a task and the old panel treated it like one: ten
+     fields on show at once whichever kind you picked, no message beyond a
+     title, and no way to change one — you deleted it and typed it again.
+     This is a list you can edit, a form that shows only the fields the
+     chosen kind actually uses, and the rest folded away until wanted. */
+  const edit = S.editRoutine ? S.routines.find(x => x.id === S.editRoutine) : null;
+  const rv = edit || { freq:"weekdays", time:"08:30", days:[], dom:1, cron:"", title:"",
+                       message:"", system:"", checklist:[], scripts:[], priority:"P3" };
+  const sel = (v, on) => v === on ? " selected" : "";
+  /* several of these phrases carry their own " · " from the old one-line
+     layout; the card supplies its own separators, so strip theirs */
+  const bare = x => String(x == null ? "" : x).replace(/^[\s·]+/, "");
+  const when = (kind, inner) => '<div data-when="' + kind + '">' + inner + "</div>";
+
   $("pRoutine").innerHTML =
-    '<p style="font-size:12px;color:var(--ink-2);margin:0 0 14px;line-height:1.6">' +
-      L("RecurringChecksAppearOnTheirOwn") +
-    (S.routines.length ? S.routines.map(r =>
-      '<div class="tagx" style="display:flex;width:100%;margin-bottom:7px;border-radius:var(--r-sm);padding:9px 11px">' +
-      '<b style="background:' + sysColour(r.system) + '"></b>' +
-      '<span style="flex:1"><b style="all:unset;font-weight:650">' + esc(r.title) + "</b>" +
-      '<small style="display:block;color:var(--ink-3);font-size:11px">' + esc(freqLabel(r)) +
-      (r.system ? " · " + esc(r.system) : "") +
-      /* a cron routine's time comes from the expression, so showing the unused
-         Time box beside it would be a second, contradictory answer */
-      ((rt => rt ? " · " + esc(rt) : "")(routineTime(r))) +
-      ((r.scripts || []).length ? " · $" + esc(((scriptById(r.scripts[0]) || {}).name) || L("MissingScript")) +
-        (r.autoRun ? (runnerTrouble() ? '</small><small style="display:block;font-size:11px;' +
-            L("ColorVarPRunsItselfBut") +
-            'style="display:block;color:var(--ink-3);font-size:11px">'
-          : L("RunsItself")) : "") : "") +
-      (r.remind ? " · " + LE("RemindsYou") : "") +
-      (r.paused ? " · paused" : (() => {
-        const last = S.tasks.filter(t => t.fromRoutine === r.id)
-          .map(t => t.forDate).sort().slice(-1)[0];
-        return last === today() ? L("RaisedToday")
-             : last ? L("LastRaised") + niceDate(last)
-             : L("NeverRaised");
-      })()) + "</small></span>" +
-      '<button data-rr="' + r.id + '" title="' +
-        ((r.scripts || []).length ? L("RunItNow") : L("RaiseItAgainNow")) + '">▶</button>' +
-      '<button data-rp="' + r.id + '" title="' + (r.paused ? L("Resume") : L("Pause")) + '">' +
-        (r.paused ? "▶" : "❚❚") + "</button>" +
-      '<button data-rd="' + r.id + '" title="Delete">✕</button></div>').join("")
-      : "<div style=\"font-size:12.5px;color:var(--ink-3);margin-bottom:14px\">" + L("NoRoutinesYet2") + "</div>") +
-    '<div style="border-top:1px solid var(--rule);margin-top:14px;padding-top:14px">' +
-      fr(L("Title"), '<input class="in" id="rT" placeholder="Morning health check">') +
-      fr(L("Repeats"), "<select class=\"in\" id=\"rF\"><option value=\"weekdays\">" + L("EveryWeekday") + "</option>" +
-        "<option value=\"daily\">" + L("EveryDay") + "</option><option value=\"weekly\">" + L("CertainWeekdays") + "</option>" +
-        "<option value=\"monthly\">" + L("Monthly") + "</option>" +
-        "<option value=\"cron\">" + L("OnACronSchedule") + "</option></select>") +
-      fr(L("Weekdays"), '<div id="rD" style="display:flex;gap:4px;flex-wrap:wrap">' +
-        DOW.map((d,i) => '<button class="sb" data-d="' + i + '" style="padding:5px 8px">' + LCE(d) + "</button>").join("") + "</div>") +
-      fr(L("DayOfMonth"), '<input class="in" id="rM" type="number" min="1" max="31" value="1">') +
-      fr(L("CronExpression"), '<input class="in" id="rX" spellcheck="false" placeholder="0 8 * * 1-5">') +
-      '<div id="rXp" style="font-size:11.5px;color:var(--ink-3);margin:-4px 0 10px;line-height:1.7"></div>' +
-      fr(L("System"), "<select class=\"in\" id=\"rS\"><option value=\"\">" + L("None") + "</option>" +
-        S.settings.systems.map(s => "<option>" + esc(s.name) + "</option>").join("") + "</select>") +
-      fr(L("Time2"), '<input class="in" id="rH" type="time" value="08:30">') +
-      fr(L("Steps"), '<input class="in" id="rC" placeholder="App pools, disk space, failed jobs (comma separated)">') +
-      fr(L("Script"), "<select class=\"in\" id=\"rSc\"><option value=\"\">" + L("None") + "</option>" +
-        S.scripts.map(x => '<option value="' + esc(x.id) + '">' + esc(x.name) + " — " + esc(x.file) +
-        "</option>").join("") + "</select>") +
-      fr(L("RemindMe"), "<select class=\"in\" id=\"rRem\"><option value=\"0\">" + L("NoJustRaiseTheRecord") + "</option>" +
-        "<option value=\"1\">" + L("YesNotifyAtEveryFiring") + "</option></select>") +
-      fr(L("OnItsOwn"), "<select class=\"in\" id=\"rAuto\"><option value=\"0\">" + L("NoIWillPressRun") + "</option>" +
-        "<option value=\"1\">" + L("YesTheRunnerFiresItAt") + "</option></select>") +
-      '<p style="font-size:11px;color:var(--ink-3);margin:2px 0 0;line-height:1.6">' +
-        L("AttachedToTheRecordThisRoutine") +
-        "<b>" + L("ScriptsDossierRunnerPs") + "</b> " + L("FiresItAtThatTimeWhether") + " " +
-        L("OnceADayCatchingUpLater") +
-        (S.scripts.length ? "" : L("AddAFileUnderMenuScripts")) + "</p>" +
-      "<div class=\"brow\" style=\"margin-top:10px\"><button class=\"btn pri\" id=\"rAdd\">" + L("AddRoutine") + "</button>" +
-      "<button class=\"btn\" id=\"rRun\">" + L("CreateTodaysNow") + "</button></div></div>";
+    '<p class="lede">' + L("RecurringChecksAppearOnTheirOwn") +
+
+    (S.routines.length
+      ? '<div class="schl">' + S.routines.map(r =>
+          '<div class="sch' + (r.id === S.editRoutine ? " on" : "") + (r.paused ? " off" : "") + '">' +
+          '<b class="sw" style="background:' + sysColour(r.system) + '"></b>' +
+          '<div class="who"><div class="t">' + esc(r.title) + "</div>" +
+          '<div class="s">' + esc(plainSchedule(r)) +
+            ((r.scripts || []).length
+              ? " · " + esc(((scriptById(r.scripts[0]) || {}).name) || L("MissingScript")) : "") +
+            (r.remind ? " · " + esc(bare(L("RemindsYou"))) : "") +
+            (r.autoRun ? " · " + esc(bare(runnerTrouble() ? L("RunsItselfButNothingIs") : L("RunsItself"))) : "") +
+          "</div>" +
+          '<div class="s2">' + (() => {
+            const last = S.tasks.filter(t => t.fromRoutine === r.id).map(t => t.forDate).sort().slice(-1)[0];
+            return bare(r.paused ? L("Paused")
+                 : last === today() ? L("RaisedToday")
+                 : last ? L("LastRaised") + niceDate(last)
+                 : L("NeverRaised"));
+          })() + "</div></div>" +
+          '<div class="acts">' +
+            '<button data-rr="' + r.id + '" title="' +
+              ((r.scripts || []).length ? LE("RunItNow") : LE("RaiseItAgainNow")) + '">▶</button>' +
+            '<button data-re="' + r.id + '" title="' + LE("Edit") + '">✎</button>' +
+            '<button data-rp="' + r.id + '" title="' + (r.paused ? LE("Resume") : LE("Pause")) + '">' +
+              (r.paused ? "❙▶" : "❚❚") + "</button>" +
+            '<button data-rd="' + r.id + '" title="' + LE("Delete") + '">✕</button>' +
+          "</div></div>").join("") + "</div>"
+      : '<div class="blank2">' + L("NoRoutinesYet2") + "</div>") +
+
+    '<div class="schform">' +
+      '<div class="fh"><span>' + (edit ? LE("EditingX", { p0: rv.title }) : LE("ANewSchedule")) + "</span>" +
+        (edit ? '<button class="btn sm" id="rCancel">' + LE("Cancel") + "</button>" : "") + "</div>" +
+
+      fr(L("Name"), '<input class="in" id="rT" value="' + esc(rv.title) +
+        '" placeholder="Morning health check">') +
+      fr(L("Message"), '<textarea class="in" id="rMsg" rows="2" placeholder="' +
+        LE("MessagePlaceholder") + '">' + esc(rv.message || rv.notes || "") + "</textarea>") +
+      '<p class="hint2">' + L("MessageHint") + "</p>" +
+
+      fr(L("Repeats"), '<select class="in" id="rF">' +
+        '<option value="weekdays"' + sel(rv.freq,"weekdays") + ">" + LE("EveryWeekday") + "</option>" +
+        '<option value="daily"'    + sel(rv.freq,"daily")    + ">" + LE("EveryDay") + "</option>" +
+        '<option value="weekly"'   + sel(rv.freq,"weekly")   + ">" + LE("CertainWeekdays") + "</option>" +
+        '<option value="monthly"'  + sel(rv.freq,"monthly")  + ">" + LE("Monthly") + "</option>" +
+        '<option value="cron"'     + sel(rv.freq,"cron")     + ">" + LE("OnACronSchedule") + "</option></select>") +
+
+      when("weekly", fr(L("Weekdays"), '<div id="rD" class="dowpick">' +
+        DOW.map((d,i) => '<button class="sb' + ((rv.days||[]).indexOf(i) >= 0 ? " on" : "") +
+          '" data-d="' + i + '">' + LCE(d) + "</button>").join("") + "</div>")) +
+      when("monthly", fr(L("DayOfMonth"),
+        '<input class="in" id="rM" type="number" min="1" max="31" value="' + (+rv.dom || 1) + '">')) +
+      when("cron", fr(L("CronExpression"), '<input class="in" id="rX" spellcheck="false" value="' +
+        esc(rv.cron || "") + '" placeholder="0 8 * * 1-5">') +
+        '<div id="rXp" class="hint2"></div>') +
+      when("clock", fr(L("Time2"), '<input class="in" id="rH" type="time" value="' +
+        esc(rv.time || "08:30") + '">')) +
+
+      '<div class="schsum" id="rSum"></div>' +
+
+      fold("rtDoes", L("WhatItDoes"), 0, "", false,
+        fr(L("Script"), '<select class="in" id="rSc"><option value="">' + LE("None") + "</option>" +
+          S.scripts.map(x => '<option value="' + esc(x.id) + '"' +
+            sel((rv.scripts||[])[0], x.id) + ">" + esc(x.name) + " — " + esc(x.file) +
+            "</option>").join("") + "</select>") +
+        fr(L("RemindMe"), '<select class="in" id="rRem">' +
+          '<option value="0"' + (rv.remind ? "" : " selected") + ">" + LE("NoJustRaiseTheRecord") + "</option>" +
+          '<option value="1"' + (rv.remind ? " selected" : "") + ">" + LE("YesNotifyAtEveryFiring") + "</option></select>") +
+        fr(L("OnItsOwn"), '<select class="in" id="rAuto">' +
+          '<option value="0"' + (rv.autoRun ? "" : " selected") + ">" + LE("NoIWillPressRun") + "</option>" +
+          '<option value="1"' + (rv.autoRun ? " selected" : "") + ">" + LE("YesTheRunnerFiresItAt") + "</option></select>") +
+        '<p class="hint2">' + L("AttachedToTheRecordThisRoutine") +
+          "<b>" + L("ScriptsDossierRunnerPs") + "</b> " + L("FiresItAtThatTimeWhether") + " " +
+          L("OnceADayCatchingUpLater") +
+          (S.scripts.length ? "" : L("AddAFileUnderMenuScripts")) + "</p>") +
+
+      fold("rtMore", L("Details"), 0, "", false,
+        fr(L("System"), '<select class="in" id="rS"><option value="">' + LE("None") + "</option>" +
+          S.settings.systems.map(x => '<option' + sel(rv.system, x.name) + ">" + esc(x.name) +
+            "</option>").join("") + "</select>") +
+        fr(L("Priority"), '<select class="in" id="rP">' +
+          PRIS.map(x => '<option' + sel(rv.priority || "P3", x) + ">" + x + "</option>").join("") + "</select>") +
+        fr(L("Steps"), '<input class="in" id="rC" value="' + esc((rv.checklist||[]).join(", ")) +
+          '" placeholder="App pools, disk space, failed jobs (comma separated)">')) +
+
+      '<div class="brow" style="margin-top:12px">' +
+        '<button class="btn pri" id="rAdd">' + (edit ? LE("SaveChanges") : LE("AddSchedule")) + "</button>" +
+        '<button class="btn" id="rRun">' + LE("CreateTodaysNow") + "</button></div></div>";
 
   $("pScripts").innerHTML =
     '<p style="font-size:12px;color:var(--ink-2);margin:0 0 14px;line-height:1.7">' +
@@ -7276,6 +7573,35 @@ async function renderModal(){
       '<select class="in" id="holK" style="max-width:112px">' +
         "<option value=\"public\">" + L("DayOff2") + "</option><option value=\"observance\">" + L("MarkedOnly") + "</option></select>" +
       "<button class=\"btn sm\" id=\"holAdd\">" + L("Add") + "</button></div>" +
+
+    /* One at a time is fine for one day. A year of public holidays plus your
+       own leave is thirty-odd, so there are two ways to do it in one go. */
+    fold("holBulk", L("AddManyAtOnce"), 0, "", false,
+      '<div class="hbulk">' +
+        "<h6>" + LE("ADateRange") + "</h6>" +
+        '<div class="hrow">' +
+          '<input class="in" type="date" id="hrA" title="' + LE("From") + '">' +
+          '<span class="to">→</span>' +
+          '<input class="in" type="date" id="hrB" title="' + LE("To") + '">' +
+          '<input class="in" id="hrN" placeholder="' + LE("AnnualLeaveOfficeClosed") + '">' +
+          '<select class="in" id="hrK">' +
+            '<option value="public">' + LE("DayOff2") + "</option>" +
+            '<option value="observance">' + LE("MarkedOnly") + "</option></select>" +
+          '<label class="chk"><input type="checkbox" id="hrW" checked> ' + LE("SkipWeekends") + "</label>" +
+          '<button class="btn sm" id="hrAdd">' + LE("Add") + "</button>" +
+        "</div>" +
+
+        "<h6>" + LE("OrPasteAList") + "</h6>" +
+        '<p class="hhelp">' + L("PasteHolidaysHelp") + "</p>" +
+        '<textarea class="in" id="hpT" rows="6" spellcheck="false" placeholder=\'' +
+          esc('[{"d":"2027-01-01","n":"International New Year","k":"public"},\n' +
+              ' {"d":"2027-04-14","n":"Khmer New Year","k":"public"}]\n\n' +
+              '…or one a line:  2027-01-01, International New Year, public') + '\'></textarea>' +
+        '<div class="hrow" style="margin-top:6px">' +
+          '<button class="btn sm pri" id="hpAdd">' + LE("AddThesePastedDays") + "</button>" +
+          '<button class="btn sm" id="hpCopy">' + LE("CopyWhatIsMarkedNow") + "</button>" +
+          '<span id="hpMsg" class="hmsg"></span>' +
+        "</div></div>") +
 
     "<h5 class=\"eyebrow\" style=\"margin:20px 0 8px\">" + L("Behaviour") + "</h5>" +
     fr(L("RememberFilters"), '<select class="in" id="sMem"><option value="1"' + (st.rememberFilters ? " selected" : "") +
@@ -7521,8 +7847,16 @@ async function renderModal(){
       L("InstructionTheBrowserEnforcesNoFetch") +
       L("WillSeeNothingLeaveThereAre") +
       L("FromCountingWordsInYourOwn");
+  ["pWs","pReport","pScripts","pLook","pSetup","pHelp"].forEach(foldSections);
   wireModal();
 }
+/* What the schedule does, in words. freqLabel() gives the shape; this adds
+   the time, because "Every weekday" alone tells you nothing about when. */
+function plainSchedule(r){
+  const t = routineTime(r);
+  return freqLabel(r) + (t ? L("AtTime", { p0: t }) : "");
+}
+
 function freqLabel(r){
   if (r.freq === "cron") return "cron " + (r.cron || "?");
   if (r.freq === "daily") return L("EveryDay");
@@ -7559,21 +7893,39 @@ function wireModal(){
       const why = cronOk($("rX") ? $("rX").value : "");
       if (why) return toast(L("CronNotValid", { p0: why }), { bad:true });
     }
-    S.routines.push({ id:"R" + Date.now().toString(36), title, freq:$("rF").value,
-      days:$$("#rD .sb.on").map(b => +b.dataset.d), dom:+$("rM").value || 1,
-      cron:($("rX") ? $("rX").value.trim() : ""),
-      system:$("rS").value, time:$("rH").value,
-      checklist:$("rC").value.split(",").map(s => s.trim()).filter(Boolean), priority:"P3", type:L("Admin"),
-      scripts: $("rSc") && $("rSc").value ? [$("rSc").value] : [],
-      remind: !!($("rRem") && $("rRem").value === "1"),
-      autoRun: !!($("rAuto") && $("rAuto").value === "1" && $("rSc") && $("rSc").value) });
+    const fields = {
+      title,
+      message:  ($("rMsg") ? $("rMsg").value : "").trim(),
+      freq:     $("rF").value,
+      days:     $$("#rD .sb.on").map(b => +b.dataset.d),
+      dom:      +$("rM").value || 1,
+      cron:     ($("rX") ? $("rX").value.trim() : ""),
+      system:   $("rS").value,
+      time:     $("rH").value,
+      priority: ($("rP") && $("rP").value) || "P3",
+      checklist:$("rC").value.split(",").map(x => x.trim()).filter(Boolean),
+      scripts:  $("rSc") && $("rSc").value ? [$("rSc").value] : [],
+      remind:   !!($("rRem") && $("rRem").value === "1"),
+      autoRun:  !!($("rAuto") && $("rAuto").value === "1" && $("rSc") && $("rSc").value)
+    };
+
+    /* Editing keeps the id, so the records it already raised stay attached to
+       it and today's does not get raised a second time under a new name. */
+    const was = S.editRoutine ? S.routines.find(x => x.id === S.editRoutine) : null;
+    if (was){
+      Object.assign(was, fields);
+      S.editRoutine = null;
+      touch(); makeRoutines(); renderModal(); renderAll();
+      return toast(L("ScheduleSaved", { p0: title }));
+    }
+
+    const r = Object.assign({ id:"R" + Date.now().toString(36), type:L("Admin") }, fields);
+    S.routines.push(r);
     touch();
     /* makeRoutines only ever ran when a workspace opened, so a routine added
-       during the day sat there doing nothing until the next reload — which
-       reads exactly like a routine that does not work. Raise it now. */
+       during the day sat there doing nothing until the next reload. */
     const made = makeRoutines();
     renderModal(); renderAll();
-    const r = S.routines[S.routines.length - 1];
     const nxt = routineNextDue(r);
     toast(made ? L("RoutineAddedTodaysRecordIsOn")
                : L("RoutineAddedNextDue") + (nxt ? niceDate(nxt) : L("NeverCheckTheDays")),
@@ -7581,7 +7933,6 @@ function wireModal(){
           const t = S.tasks.find(x => x.fromRoutine === r.id && x.forDate === today());
           if (t){ closeModal(); openDrawer(t.id); }
         } } : {});
-    $$("#mt button").forEach(b => { if (b.dataset.m === "routine") b.click(); });
   });
   on("rRun", () => {
     const n = makeRoutines();
@@ -7593,7 +7944,16 @@ function wireModal(){
         : L("NothingDueToday"));
   });
   $$("#rD .sb").forEach(b => b.onclick = () => b.classList.toggle("on"));
-  $$("[data-rd]").forEach(b => b.onclick = () => { S.routines = S.routines.filter(r => r.id !== b.dataset.rd); touch(); renderModal(); });
+  $$("[data-rd]").forEach(b => b.onclick = () => {
+    S.routines = S.routines.filter(r => r.id !== b.dataset.rd);
+    if (S.editRoutine === b.dataset.rd) S.editRoutine = null;
+    touch(); renderModal();
+  });
+  $$("[data-re]").forEach(b => b.onclick = () => {
+    S.editRoutine = S.editRoutine === b.dataset.re ? null : b.dataset.re;
+    renderModal();
+    const f = $("rT"); if (f){ f.focus(); f.select(); }
+  });
   /* Run, the way Task Scheduler means it: raise today's record AND set the
      script going now, rather than only putting a row on the sheet. */
   $$("[data-rr]").forEach(b => b.onclick = async () => {
@@ -7636,6 +7996,38 @@ function wireModal(){
       applyFonts(); touch();
     };
   });
+  /* Only the fields the chosen kind uses. Showing a weekday picker to someone
+     who chose "every day" is not more information, it is more to read. */
+  const showFor = { weekdays:["clock"], daily:["clock"], weekly:["weekly","clock"],
+                    monthly:["monthly","clock"], cron:["cron"] };
+  const syncRoutineForm = () => {
+    const f = $("rF"); if (!f) return;
+    const want = showFor[f.value] || ["clock"];
+    $$('#pRoutine [data-when]').forEach(el => {
+      el.hidden = want.indexOf(el.getAttribute("data-when")) < 0;
+    });
+    const sum = $("rSum");
+    if (sum){
+      const r = { freq:f.value, time:($("rH")||{}).value, cron:($("rX")||{}).value,
+                  days:$$("#rD .sb.on").map(x => +x.dataset.d), dom:+($("rM")||{}).value || 1 };
+      let txt = "";
+      try { txt = plainSchedule(r); } catch(e){ txt = ""; }
+      const bits = [];
+      if ($("rRem") && $("rRem").value === "1") bits.push(L("RemindsYou"));
+      if ($("rAuto") && $("rAuto").value === "1" && $("rSc") && $("rSc").value)
+        bits.push(String(L("RunsItself")).replace(/^[\s·]+/, ""));
+      sum.textContent = txt ? txt + (bits.length ? " · " + bits.join(" · ") : "") : "";
+    }
+  };
+  if ($("rF")) $("rF").addEventListener("change", syncRoutineForm);
+  ["rH","rM","rRem","rAuto","rSc"].forEach(id => {
+    const el = $(id); if (el) el.addEventListener("change", syncRoutineForm);
+  });
+  if ($("rD")) $("rD").addEventListener("click", () => setTimeout(syncRoutineForm, 0));
+  syncRoutineForm();
+
+  on("rCancel", () => { S.editRoutine = null; renderModal(); });
+
   /* A cron expression is unreadable until you see what it actually does, so
      the next three runs are shown as it is typed. Wrong is said plainly and
      immediately, rather than by a routine that never fires. */
@@ -7663,7 +8055,7 @@ function wireModal(){
       (perDay > 1 ? "<br>" + L("CronManyPerDay", { p0: perDay }) : "") +
       "<br>" + L("CronTimeIgnored");
   };
-  if ($("rX")) $("rX").oninput = cronPreview;
+  if ($("rX")) $("rX").oninput = () => { cronPreview(); syncRoutineForm(); };
   if ($("rF")) $("rF").addEventListener("change", cronPreview);
   cronPreview();
 
@@ -7778,6 +8170,41 @@ function wireModal(){
     touch(); renderAll();
     toast(S.settings.runner ? L("RunSendsTheScriptToThe") : L("RunCopiesTheCommand"));
   };
+  const holMsg = (txt, bad) => {
+    const el = $("hpMsg");
+    if (el){ el.textContent = txt; el.className = "hmsg" + (bad ? " bad" : ""); }
+  };
+  const holApply = (res, where) => {
+    if (res.errs.length && !res.rows.length){
+      holMsg(res.errs[0].indexOf("JSON") === 0 ? res.errs[0] : L("HolidaysNothingRead"), true);
+      return;
+    }
+    const n = addHolidays(res.rows);
+    touch(); renderModal(); renderAll();
+    let msg = L("HolidaysAdded", n);
+    if (res.errs.length) msg += " · " + L("HolidaysSomeBad", { n:res.errs.length, p0:res.errs.slice(0,2).join(" | ") });
+    toast(msg, res.errs.length ? { bad:true } : {});
+  };
+
+  on("hrAdd", () => {
+    const a = $("hrA") && $("hrA").value, b = $("hrB") && $("hrB").value;
+    if (!a || !b) return toast(L("PickBothDates"), { bad:true });
+    const res = holRange(a, b, ($("hrN").value || "").trim(), $("hrK").value, $("hrW").checked);
+    if (res.errs.indexOf("order") >= 0) return toast(L("RangeBackwards"), { bad:true });
+    if (!res.rows.length) return toast(L("HolidaysNothingRead"), { bad:true });
+    holApply(res, "range");
+  });
+
+  on("hpAdd", () => holApply(parseHolidays($("hpT") ? $("hpT").value : ""), "paste"));
+
+  on("hpCopy", async () => {
+    const json = JSON.stringify(holidays(), null, 1);
+    try { await navigator.clipboard.writeText(json); }
+    catch(e){ const t = $("hpT"); if (t){ t.value = json; t.focus(); } }
+    const t = $("hpT"); if (t && !t.value) t.value = json;
+    toast(L("HolidaysCopied", { n: holidays().length }));
+  });
+
   on("holAdd", () => {
     const d = ($("holD").value || "").trim(), n = ($("holN").value || "").trim();
     if (!d || !n) return toast(L("ADateAndANamePlease"), { bad:true });
@@ -8258,7 +8685,7 @@ function checkReminders(){
     if ((now - when) / 60000 > 5) return;
     remindOnce("rem|" + r.id + "|" + k + "|" + slot, () => {
       toast(r.title);
-      notify(r.title, r.notes || L("RoutineReminderBody", { p0: slot }), null, "rem" + r.id);
+      notify(r.title, r.message || r.notes || L("RoutineReminderBody", { p0: slot }), null, "rem" + r.id);
     });
   });
 
@@ -8778,7 +9205,8 @@ function runnerScript(){
     "",
     "        if ($willRemind) {",
     "          Write-Host (\"[{0}] reminding '{1}'\" -f $now.ToString('HH:mm:ss'), $rt.title)",
-    "          Show-Toast ([string]$rt.title) $(if ($rt.notes) { [string]$rt.notes } else { \"It is \" + $at.ToString('HH:mm') + \".\" })",
+    "          $body = $(if ($rt.message) { [string]$rt.message } elseif ($rt.notes) { [string]$rt.notes } else { \"It is \" + $at.ToString('HH:mm') + \".\" })",
+    "          Show-Toast ([string]$rt.title) $body",
     "        }",
     "",
     "        if ($sc) {",
@@ -9757,6 +10185,13 @@ $("dBody").addEventListener("toggle", e => {
   const d = e.target.closest("details[data-acc]");
   if (d) S.folds[d.dataset.acc] = d.open;
 }, true);
+/* the same for the panels: a section you closed stays closed when the modal
+   re-renders, which it does after nearly every change */
+$("modal").addEventListener("toggle", e => {
+  const d = e.target.closest("details[data-acc]");
+  if (d) S.folds[d.dataset.acc] = d.open;
+}, true);
+
 /* dragging a file at the drawer should reveal where it is about to land */
 $("drawer").addEventListener("dragenter", e => {
   if (!e.dataTransfer || Array.prototype.indexOf.call(e.dataTransfer.types || [], L("Files")) < 0) return;

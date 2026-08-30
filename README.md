@@ -99,6 +99,23 @@ To start the runner at every logon: put this folder's full path into
 
 ---
 
+## Schedules
+
+**Menu → Routines** is a schedule editor, not a task form. A schedule is a
+different thing from a record: it repeats, it can carry a message, and it does
+not have a status or a due date of its own.
+
+- **Click ✎ on any schedule to edit it.** It keeps its id, so the records it
+  has already raised stay attached to it.
+- **Message** is shown in the reminder and copied onto the record it raises.
+  Leave it empty and the reminder just says the name.
+- The form shows only the fields the chosen kind uses — a weekday picker
+  appears for *Certain weekdays* and not otherwise — and says in plain words
+  what it will do: *Mon–Fri at 07:45 · reminds you*.
+- **What it does** and **Details** are folded away until you want them.
+
+---
+
 ## Cron, when the dropdowns are not enough
 
 A routine can repeat every day, on weekdays, on chosen weekdays or on a day of
@@ -315,6 +332,45 @@ rather than the interface: system names, record types and the teams you wait on
 (`DEF_SYS`, `DEF_TYPE`, `DEF_PARTY`). These are stored on every record and
 matched against, so translating them would rewrite your records and break every
 filter. Edit them in **Setup** instead, in whatever language you like.
+
+---
+
+## Holidays, a year at a time
+
+**Setup → Holidays and festivals → Add many at once.** Thirty dates one at a
+time is not something anyone does twice, so there are two ways to do it in one
+go.
+
+**A date range** — from, to, a name, and *skip weekends*. Two weeks of annual
+leave is one click and ten working days.
+
+**Or paste a list.** It takes the JSON Dossier itself writes, JSON from
+anywhere else (`date`/`name`/`kind` spellings work as well as `d`/`n`/`k`), a
+plain `{"2027-01-01": "New Year"}` map, or one a line:
+
+```
+2027-01-01, International New Year, public
+2027-04-14, Khmer New Year, public
+14/04/2027  Khmer New Year          ← day-first dates work too
+```
+
+Leave the kind off and it counts as a day off. A date already marked is
+**replaced rather than doubled**, so pasting a corrected list twice is safe.
+Anything unreadable is listed back at you with the line that failed — thirty
+dates with two typos gives you twenty-eight marked days and two lines to fix,
+not an error.
+
+**Copy what is marked now** puts the whole list on the clipboard as JSON, so
+you can edit a year in a text editor and paste it back.
+
+---
+
+## Panels fold
+
+Setup and Help were a single long column each. Every heading in them is now a
+section you can fold, closed by default — Setup opens as a nine-line list of
+what is in there, and Help went from 4,000 pixels of essay to a contents page.
+What you open stays open.
 
 ---
 

@@ -353,7 +353,8 @@ while ($true) {
 
         if ($willRemind) {
           Write-Host ("[{0}] reminding '{1}'" -f $now.ToString('HH:mm:ss'), $rt.title)
-          Show-Toast ([string]$rt.title) $(if ($rt.notes) { [string]$rt.notes } else { "It is " + $at.ToString('HH:mm') + "." })
+          $body = $(if ($rt.message) { [string]$rt.message } elseif ($rt.notes) { [string]$rt.notes } else { "It is " + $at.ToString('HH:mm') + "." })
+          Show-Toast ([string]$rt.title) $body
         }
 
         if ($sc) {

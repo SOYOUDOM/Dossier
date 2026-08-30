@@ -1140,5 +1140,31 @@ Nothing is holding this any more." value="" />
     <text name="YesNotifyAtEveryFiring" source="Yes — a notification at every firing" value="" />
     <text name="RemindsYou" source="reminds you" value="" />
     <text name="RoutineReminderBody" source="It is {p0}." value="" />
+    <text name="AddManyAtOnce" source="Add many at once" value="" />
+    <text name="ADateRange" source="A date range" value="" />
+    <text name="OrPasteAList" source="Or paste a list" value="" />
+    <text name="To" source="To" value="" />
+    <text name="SkipWeekends" source="skip weekends" value="" />
+    <text name="AnnualLeaveOfficeClosed" source="Annual leave, office closed…" value="" />
+    <text name="AddThesePastedDays" source="Add these days" value="" />
+    <text name="CopyWhatIsMarkedNow" source="Copy what is marked now" value="" />
+    <text name="PasteHolidaysHelp" source="JSON as Dossier writes it, JSON from anywhere else (&lt;b&gt;date&lt;/b&gt;/&lt;b&gt;name&lt;/b&gt;/&lt;b&gt;kind&lt;/b&gt; work too), or one a line as &lt;b&gt;date, name, kind&lt;/b&gt;. Dates may be &lt;b&gt;2027-01-01&lt;/b&gt; or &lt;b&gt;01/01/2027&lt;/b&gt;. Leave the kind off and it counts as a day off. Anything unreadable is listed rather than swallowed." value="" />
+    <text name="HolidaysAdded" source="{added} added, {replaced} replaced" value="" />
+    <text name="HolidaysNothingRead" source="Nothing could be read from that" value="" />
+    <text name="HolidaysSomeBad" source="{n} line(s) could not be read: {p0}" value="" />
+    <text name="HolidaysCopied" source="{n} marked day(s) copied as JSON" value="" />
+    <text name="PickBothDates" source="Pick both dates first" value="" />
+    <text name="RangeBackwards" source="The second date is before the first" value="" />
+    <text name="ANewSchedule" source="A new schedule" value="" />
+    <text name="EditingX" source="Editing “{p0}”" value="" />
+    <text name="SaveChanges" source="Save changes" value="" />
+    <text name="AddSchedule" source="Add schedule" value="" />
+    <text name="ScheduleSaved" source="“{p0}” saved" value="" />
+    <text name="Edit" source="Edit" value="" />
+    <text name="Message" source="Message" value="" />
+    <text name="RunsItselfButNothingIs" source="runs itself — but nothing is running it" value="" />
+    <text name="AtTime" source=" at {p0}" value="" />
+    <text name="MessagePlaceholder" source="Time to drink water. Two glasses before the next call." value="" />
+    <text name="MessageHint" source="Shown in the reminder, and copied onto the record it raises. Leave it empty and the reminder just says the name." value="" />
   </texts>
 </localizationDictionary>
