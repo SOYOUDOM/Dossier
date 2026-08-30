@@ -135,7 +135,7 @@ dossier.html                  the whole application
 dossier.json                  every record, routine, script and setting
 lang/
   en.xml                      the English master, generated from the code
-  km.xml                      Khmer — every phrase listed, ready to translate
+  km.xml                      Khmer — a starter file; top it up in Appearance
 logo.png, favicon.ico         yours — the app picks them up automatically
 scripts/
   dossier-runner.ps1          runs queued scripts, fires routines on time
@@ -194,13 +194,19 @@ perfectly usable.
 To add one:
 
 1. **Menu → Appearance → Language**, type a code (`km`, `th`, `pt-br`) and press
-   **Write a new language file**. It writes `lang/<code>.xml` with every phrase
-   listed and every value blank. It will not overwrite a file that exists.
+   **Write or top up a language file**. A new file lists every phrase with a
+   blank value.
 2. Open it and fill in each `value=""`.
 3. Press **Reload the language files**, then pick it from the dropdown.
 
-The dropdown shows progress per language — *ភាសាខ្មែរ — 41 of 93 phrases
+The dropdown shows progress per language — *ភាសាខ្មែរ — 412 of 1107 phrases
 translated* — and the panel lists exactly which names are still blank.
+
+**Pressing it again on a file that already exists tops it up rather than
+replacing it.** Every value you have filled in is read back out and written
+again unchanged, and only phrases Dossier has gained since are added as new
+blanks. So when the app grows, you top up and translate the difference — you
+never redo work.
 
 `{shown}`, `{n}` and the like are values Dossier drops in. Keep them exactly as
 written, but move them wherever the sentence needs them — `"{shown} of {total}"`
@@ -214,12 +220,22 @@ raises line-height, drops the letter-spacing that mangles Khmer clusters, and
 steps the small chrome up from 11px to 13px — measured in the browser, because
 Khmer at Latin's small sizes turns to mud whoever writes the words.
 
-**What is covered so far:** the 93 phrases in the persistent chrome — the view
-tabs, the compose bar, every filter, the Day sheet's headings and figures, the
-footer and the menu tabs. The record drawer, Insight, Reports and Help are
-still English in the code; they follow the same pattern when their turn comes,
-and any phrase added to `STRINGS` appears in every language file as a new blank
-the next time one is written.
+**What is covered:** 1,107 phrases — every view, every panel, the record
+drawer, all six menu tabs, the filters, the reports and chase text, toasts and
+error messages, weekday and month names, status names and column headings.
+
+Coverage was measured rather than assumed: a pseudo-language replaces *every*
+phrase with a marker, the app is driven through all six views, all seven menu
+panels and the drawer, and anything still showing English is a phrase that
+cannot be translated. What remains is 35 words, and they are correct as they
+are — the `schtasks` command line, file extensions like `.msg` and `.png`, the
+`tasks/` folder name, and the names languages call themselves.
+
+Three things are deliberately **not** translated, because they are your data
+rather than the interface: system names, record types and the teams you wait on
+(`DEF_SYS`, `DEF_TYPE`, `DEF_PARTY`). These are stored on every record and
+matched against, so translating them would rewrite your records and break every
+filter. Edit them in **Setup** instead, in whatever language you like.
 
 ---
 
