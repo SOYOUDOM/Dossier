@@ -442,6 +442,13 @@ table.reg td.ttd span{display:block;overflow:hidden;text-overflow:ellipsis;white
 .chip.sched{color:var(--teal);border-color:var(--teal);background:transparent}
 .mb.run{font-family:var(--f-mono);font-weight:700;color:var(--accent)}
 .mb.run:hover{border-color:var(--accent);background:var(--accent-soft)}
+.diag{margin-top:10px;display:flex;flex-direction:column;gap:4px}
+.diag .dg{font-size:11.5px;line-height:1.55;padding:5px 9px;border-radius:var(--r-xs);
+  background:var(--paper-2);border-left:2px solid var(--rule-hi);color:var(--ink-2)}
+.diag .dg.ok{border-left-color:var(--st-done)}
+.diag .dg.warn{border-left-color:var(--st-proc)}
+.diag .dg.bad{border-left-color:var(--p1);color:var(--ink)}
+.diag code{font-family:var(--f-mono);font-size:10.5px}
 .rantoday{margin-left:7px;font-family:var(--f-mono);font-size:9px;font-weight:600;
   letter-spacing:.02em;color:var(--st-done);border:1px solid var(--st-done);
   border-radius:999px;padding:0 6px;vertical-align:1px}
@@ -5092,6 +5099,8 @@ function renderDrawer(){
           '<input class="in" data-prm="' + esc(p) + '" value="' + esc(vals[p] || "") + '" placeholder="value"></div>').join("") +
         '<div class="cmdline">' + esc(scriptCommand(sc, vals)) + "</div>" +
         '<div class="brow" style="margin-top:8px">' +
+          '<button class="btn sm pri" data-sa="run">Run now</button>' +
+          '<button class="btn sm" data-sa="launcher">Make a double-click file</button>' +
           '<button class="btn sm" data-sa="copy">Copy command</button>' +
           ((sc.params || []).length ? '<button class="btn sm" data-sa="fill">Build a filled copy</button>' : "") +
         "</div></div>";
@@ -5498,7 +5507,8 @@ async function renderModal(){
              : last ? " · last raised " + niceDate(last)
              : " · never raised";
       })()) + "</small></span>" +
-      '<button data-rr="' + r.id + '" title="Raise it again now">↻</button>' +
+      '<button data-rr="' + r.id + '" title="' +
+        ((r.scripts || []).length ? "Run it now" : "Raise it again now") + '">▶</button>' +
       '<button data-rp="' + r.id + '" title="' + (r.paused ? "Resume" : "Pause") + '">' +
         (r.paused ? "▶" : "❚❚") + "</button>" +
       '<button data-rd="' + r.id + '" title="Delete">✕</button></div>').join("")
@@ -5622,7 +5632,9 @@ async function renderModal(){
       ">Just copy the command</option></select>") +
     '<div class="brow" style="margin-top:9px">' +
       '<button class="btn" id="sRunner">Write scripts/dossier-runner.ps1</button>' +
+      '<button class="btn pri" id="sRunTest">Test it end to end</button>' +
       '<button class="btn" id="sRunnerCmd">Copy the schtasks line</button></div>' +
+    '<div id="runDiag" class="diag"></div>' +
     '<div class="cmdline">' + esc(runnerCommand()) + "</div>" +
     '<p style="font-size:11px;color:' + (st.rootPath ? "var(--ink-3)" : "var(--p2)") +
       ';margin:8px 0 0;line-height:1.6">' +
@@ -5786,8 +5798,15 @@ async function renderModal(){
       "watches <b>scripts/queue/</b>, runs the script, and writes the output back. Dossier picks that " +
       "up and files it in the record's work log, with the exit code if it failed.</p>" +
     '<p style="font-size:12px;color:var(--ink-2);line-height:1.75;margin:0 0 8px">' +
-      "Press <b>$</b> on any record carrying a script and it goes to the runner. Turn the runner off " +
-      "in Setup and the same button falls back to putting the command on your clipboard.</p>" +
+      "Press <b>$</b> on any record carrying a script and it goes to the runner. <b>▶</b> beside a " +
+      "routine does the same thing on demand — raises today's record and sets the script going, the " +
+      "way Run does in Task Scheduler. If nothing happens, <b>Setup → Test it end to end</b> walks " +
+      "the whole path and says which step stopped.</p>" +
+    '<p style="font-size:12px;color:var(--ink-2);line-height:1.75;margin:0 0 8px">' +
+      "Would rather not keep a process running? <b>Make a double-click file</b> in the record's " +
+      "Scripts section writes a <code>run-….cmd</code> into that record\'s own folder. Double-click " +
+      "it and the script runs, keeping its transcript beside the record. Nothing to install, nothing " +
+      "to leave open.</p>" +
     '<p style="font-size:12px;color:var(--ink-2);line-height:1.75;margin:0 0 8px">' +
       "A routine set to <b>run on its own</b> needs nobody at all. The runner reads the routines out " +
       "of dossier.json, and at the routine's time it runs the script — <b>whether Dossier is open or " +
@@ -5982,7 +6001,9 @@ function wireModal(){
   });
   $$("#rD .sb").forEach(b => b.onclick = () => b.classList.toggle("on"));
   $$("[data-rd]").forEach(b => b.onclick = () => { S.routines = S.routines.filter(r => r.id !== b.dataset.rd); touch(); renderModal(); });
-  $$("[data-rr]").forEach(b => b.onclick = () => {
+  /* Run, the way Task Scheduler means it: raise today's record AND set the
+     script going now, rather than only putting a row on the sheet. */
+  $$("[data-rr]").forEach(b => b.onclick = async () => {
     const r = S.routines.find(x => x.id === b.dataset.rr);
     if (!r) return;
     if (r.paused) return toast("It is paused — resume it first", { bad:true });
@@ -5990,8 +6011,18 @@ function wireModal(){
     renderModal(); renderAll();
     if (!n) return toast("Could not raise it", { bad:true });
     const t = S.tasks.find(x => x.fromRoutine === r.id);
-    toast("Raised again — " + (t ? t.code : "a new record") + " on today's sheet",
-      { action:"Open it", onAction:() => { if (t){ closeModal(); openDrawer(t.id); } } });
+    const sc = scriptById((r.scripts || [])[0]);
+    if (!t || !sc){
+      return toast("Raised again — " + (t ? t.code : "a new record") + " on today's sheet",
+        { action:"Open it", onAction:() => { if (t){ closeModal(); openDrawer(t.id); } } });
+    }
+    closeModal();
+    /* clear today's marker so the schedule is not blocked by this manual run */
+    try {
+      const q = await FS.dir(["scripts", "queue"], true);
+      await q.removeEntry(".auto-" + r.id + "-" + today() + ".txt");
+    } catch(e){}
+    runScriptFor(t.id, sc.id);
   });
   $$("[data-rp]").forEach(b => b.onclick = () => {
     const r = S.routines.find(x => x.id === b.dataset.rp);
@@ -6072,6 +6103,7 @@ function wireModal(){
   const hd = $("sHold"); if (hd) hd.onchange = e => { S.settings.autoBlock = e.target.value === "1"; touch(); };
   on("sWatch", installWatcher);
   on("sRunner", installRunner);
+  on("sRunTest", testRunner);
   on("sRunnerCmd", () => copyText(runnerCommand(),
     "Paste it into a terminal — it starts the runner at every logon"));
   if ($("sRun")) $("sRun").onchange = e => {
@@ -6891,6 +6923,76 @@ async function sweepAutoRuns(){
 }
 const SWEEP = { busy:false };
 
+/* ═══ WHY DIDN'T IT RUN ═══════════════════════════════════════════════════
+   The queue has too many places to fail quietly: the folder might not be
+   linked, the runner might not be started, it might be watching a different
+   folder, the request might be written and never picked up. Guessing at that
+   from a toast is hopeless, so this walks the whole path and says exactly
+   which step stopped. ════════════════════════════════════════════════════ */
+async function testRunner(){
+  const say = (txt, cls) => {
+    const el = $("runDiag");
+    if (el) el.innerHTML += '<div class="dg ' + (cls || "") + '">' + txt + "</div>";
+  };
+  const el = $("runDiag");
+  if (el) el.innerHTML = "";
+
+  if (!FS.ok){
+    say("No workspace folder is linked. Choose one from the banner first.", "bad");
+    return;
+  }
+  say("Workspace: <b>" + esc(FS.name) + "</b>", "ok");
+
+  let dir;
+  try { dir = await FS.dir(["scripts", "queue"], true); }
+  catch(e){ return say("Cannot create <b>scripts/queue</b> — " + esc(e.message), "bad"); }
+  say("scripts/queue is writable", "ok");
+
+  const sc = S.scripts[0];
+  if (!sc) return say("No scripts registered. Add one under Menu → Scripts.", "bad");
+
+  const id = "test" + Date.now().toString(36);
+  try {
+    await FS.writeText(dir, id + ".run.json", JSON.stringify({
+      id, script: sc.file, args:{}, task:"", code:"TEST", at:new Date().toISOString() }, null, 2));
+  } catch(e){ return say("Could not write the request — " + esc(e.message), "bad"); }
+  say("Wrote <b>scripts/queue/" + id + ".run.json</b> asking for <b>" + esc(sc.file) + "</b>", "ok");
+  say("Waiting up to 30 seconds for the runner…");
+
+  const started = Date.now();
+  while (Date.now() - started < 30000){
+    await new Promise(r => setTimeout(r, 600));
+    let txt = null;
+    try { txt = await FS.readText(dir, id + ".done.json"); } catch(e){}
+    if (txt == null) continue;
+    let res = {}; try { res = JSON.parse(txt); } catch(e){}
+    const secs = ((Date.now() - started)/1000).toFixed(1);
+    try { await dir.removeEntry(id + ".done.json"); } catch(e){}
+    if (+res.exit === 0){
+      say("The runner answered in " + secs + "s. <b>It works.</b>", "ok");
+      say("Output: <code>" + esc(String(res.output || "").split("\n")[0] || "(none)") + "</code>");
+    } else {
+      say("The runner answered in " + secs + "s but the script failed, exit " + esc(String(res.exit)), "warn");
+      say("Output: <code>" + esc(String(res.output || "").slice(0, 200)) + "</code>");
+    }
+    return;
+  }
+
+  /* nothing came back — say which of the three causes it is */
+  let still = true;
+  try { await FS.readText(dir, id + ".run.json"); } catch(e){ still = false; }
+  try { await dir.removeEntry(id + ".run.json"); } catch(e){}
+  if (still){
+    say("No answer, and the request is <b>still sitting there</b>. Nothing is reading the queue.", "bad");
+    say("Start it: double-click <b>scripts\\dossier-runner.ps1</b>. Its window must say it is " +
+        "watching <b>this</b> folder — if it names a different path, you have two copies of the " +
+        "workspace and Dossier is pointed at the other one.", "bad");
+  } else {
+    say("The request was taken but no result came back. The runner is running but the script " +
+        "did not finish — check its window for an error.", "warn");
+  }
+}
+
 async function installRunner(){
   if (!FS.ok) return toast("Pick a workspace folder first", { bad:true });
   try {
@@ -6901,6 +7003,45 @@ async function installRunner(){
     touch(); renderModal(); renderAll(); sweepAutoRuns();
     toast("Written to scripts/dossier-runner.ps1 — start it once, then Run works from any record");
   } catch(e){ toast("Could not write the runner: " + e.message, { bad:true }); }
+}
+
+/* ── the no-daemon way ────────────────────────────────────────────────
+   If the runner is not running, or you would rather not keep a process alive,
+   Dossier writes a one-shot launcher into the record's own folder. Double-click
+   it and the script runs, with its output kept beside the record. Nothing to
+   install and nothing to leave open — the cost is the double-click. */
+async function writeLauncher(t, sc, vals){
+  if (!FS.ok) return toast("Pick a workspace folder first", { bad:true });
+  const args = (sc.params || []).map(k => (vals && vals[k]) || "").filter(Boolean)
+    .map(v => '"' + String(v).replace(/"/g, '') + '"').join(" ");
+  const out = "run-" + splitExt(sc.file)[0] + ".cmd";
+  const body = [
+    "@echo off",
+    "rem Written by Dossier for " + t.code + " - " + t.title.replace(/[\r\n]/g, " "),
+    "rem Double-click this file to run the script. The transcript is kept beside it.",
+    "setlocal",
+    'set "LOG=%~dp0' + splitExt(out)[0] + '.log"',
+    'echo === %DATE% %TIME% ===>>"%LOG%"',
+    'pushd "%~dp0..\\..\\scripts"',
+    'call "' + sc.file + '" ' + args + ' >>"%LOG%" 2>&1',
+    "set RC=%ERRORLEVEL%",
+    "popd",
+    'echo exit %RC%>>"%LOG%"',
+    "echo.",
+    "echo Finished with exit code %RC%. Transcript: %LOG%",
+    "echo.",
+    "pause"
+  ].join("\r\n");
+  try {
+    const dir = await taskDir(t, true);
+    await FS.writeText(dir, out, body);
+    t.log.push({ at:new Date().toISOString(),
+      text:"Wrote " + out + " into this record's folder — double-click it to run " + sc.name });
+    touch(); renderAll();
+    if (S.open === t.id) renderDrawer();
+    toast("Wrote " + out + " into tasks/" + t.folder + "/ — double-click it",
+      { action:"Open the folder", onAction:() => openAttachment(t, out) });
+  } catch(e){ toast("Could not write it — " + e.message, { bad:true }); }
 }
 
 /* ── ask the runner to run something, and wait for the answer ─────────── */
@@ -7436,7 +7577,9 @@ $("dBody").addEventListener("click", async e => {
     const act = e.target.dataset.sa;
     const vals = (t.scriptArgs || {})[sc.id] || {};
     if (act === "open") return openScript(sc);
-    if (act === "copy") return runScriptFor(t.id, sc.id);
+    if (act === "run") return runScriptFor(t.id, sc.id);
+    if (act === "launcher") return writeLauncher(t, sc, vals);
+    if (act === "copy"){ markScriptUse(sc); return copyText(scriptCommand(sc, vals), "Command copied"); }
     if (act === "fill") return buildFilledCopy(t, sc, vals);
     if (act === "detach"){
       t.scripts = (t.scripts || []).filter(x => x !== sc.id);
