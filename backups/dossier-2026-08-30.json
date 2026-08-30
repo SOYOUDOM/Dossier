@@ -1,10 +1,10 @@
 {
   "app": "dossier",
   "version": 3,
-  "savedAt": "2026-08-30T15:19:44.518Z",
-  "seq": 11,
+  "savedAt": "2026-08-30T15:28:48.469Z",
+  "seq": 12,
   "settings": {
-    "owner": "",
+    "owner": "Soy Oudom",
     "systems": [
       {
         "name": "Imaging",
@@ -61,7 +61,7 @@
     ],
     "theme": "vault",
     "palettes": [],
-    "remind": false,
+    "remind": true,
     "lead": 15,
     "remindOverdue": true,
     "remindWait": 3,
@@ -237,6 +237,81 @@
         "d": "2026-12-29",
         "n": "Peace Day",
         "k": "public"
+      },
+      {
+        "d": "2027-01-01",
+        "n": "International New Year Day",
+        "k": "public"
+      },
+      {
+        "d": "2027-01-07",
+        "n": "Victory over Genocide Day",
+        "k": "public"
+      },
+      {
+        "d": "2027-03-08",
+        "n": "International Women's Day",
+        "k": "public"
+      },
+      {
+        "d": "2027-04-14",
+        "n": "Khmer New Year",
+        "k": "public"
+      },
+      {
+        "d": "2027-04-15",
+        "n": "Khmer New Year",
+        "k": "public"
+      },
+      {
+        "d": "2027-04-16",
+        "n": "Khmer New Year",
+        "k": "public"
+      },
+      {
+        "d": "2027-05-01",
+        "n": "International Labour Day",
+        "k": "public"
+      },
+      {
+        "d": "2027-05-14",
+        "n": "King Sihamoni's Birthday",
+        "k": "public"
+      },
+      {
+        "d": "2027-06-18",
+        "n": "Queen Mother's Birthday",
+        "k": "public"
+      },
+      {
+        "d": "2027-09-24",
+        "n": "Constitution Day",
+        "k": "public"
+      },
+      {
+        "d": "2027-10-15",
+        "n": "King Sihanouk Commemoration",
+        "k": "public"
+      },
+      {
+        "d": "2027-10-29",
+        "n": "Coronation Day",
+        "k": "public"
+      },
+      {
+        "d": "2027-11-09",
+        "n": "Independence Day",
+        "k": "public"
+      },
+      {
+        "d": "2027-12-10",
+        "n": "Human Rights Day",
+        "k": "public"
+      },
+      {
+        "d": "2027-12-29",
+        "n": "Peace Day",
+        "k": "public"
       }
     ],
     "runner": true,
@@ -318,5 +393,50 @@
       "lastUsed": ""
     }
   ],
-  "tasks": []
+  "tasks": [
+    {
+      "id": "tmtfysielrj3x",
+      "code": "D-0012",
+      "folder": "D-0012 Morning health check",
+      "title": "Morning health check",
+      "notes": "",
+      "status": "open",
+      "priority": "P3",
+      "system": "Infra / IIS",
+      "type": "Admin",
+      "ticket": "",
+      "requester": "",
+      "tags": [],
+      "blockedBy": [],
+      "autoBlocked": false,
+      "waitOn": "",
+      "waitNote": "",
+      "waitSince": "",
+      "waitUntil": "",
+      "chases": [],
+      "waitLog": [],
+      "scripts": [],
+      "scriptArgs": {},
+      "created": "2026-08-30T15:28:47.661Z",
+      "due": "2026-08-30",
+      "dueTime": "08:30",
+      "started": "",
+      "completed": "",
+      "estimate": 20,
+      "spent": 0,
+      "timerStart": 0,
+      "checklist": [],
+      "log": [
+        {
+          "at": "2026-08-30T15:28:47.661Z",
+          "kind": "status",
+          "text": "Opened"
+        }
+      ],
+      "files": [],
+      "carried": 0,
+      "fromRoutine": "",
+      "forDate": ""
+    }
+  ]
 }
