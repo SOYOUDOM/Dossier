@@ -22,12 +22,14 @@ $MaxOut  = 8KB           # how much of a script's output is kept
 
 $seen     = @{}
 $tries    = @{}          # requests that did not parse yet - see below
+$auto     = @()          # the self-running routines, as of the last read
 $doc      = $null        # last good parse of dossier.json
 $docStamp = $null        # its modified-time, so we only parse again when it moves
 $sig      = ''           # the self-running routines, so a change gets announced
 $today    = ''
 $nextRead = Get-Date
 $nextTidy = Get-Date
+$nextBeat = Get-Date
 
 # Pasted into a PowerShell window rather than run as a file, $PSScriptRoot is
 # empty and everything below would quietly watch the wrong place.
@@ -261,6 +263,18 @@ while ($true) {
         }
       }
     } catch { }
+  }
+
+  # ---- say we are alive, every ten seconds --------------------------------
+  # Dossier cannot see processes, so without this it has no way to know whether
+  # anything is going to honour a routine marked 'runs itself'. One small file,
+  # rewritten in place, naming the folder we are actually watching - which is
+  # what tells you apart the two cases: no runner, or a runner on another copy.
+  if ((Get-Date) -ge $nextBeat) {
+    $nextBeat = (Get-Date).AddSeconds(10)
+    ([pscustomobject]@{ at = (Get-Date).ToString('o'); root = $root; pid = $PID
+                        auto = @($auto).Count } | ConvertTo-Json -Compress) |
+      Set-Content -LiteralPath (Join-Path $queue '.runner.json') -Encoding UTF8
   }
 
   # ---- tidy up, once a minute ---------------------------------------------

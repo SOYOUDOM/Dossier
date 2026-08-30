@@ -1123,6 +1123,7 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
     <span><b id="sbF">0</b> documents</span>
     <span><b id="sbH">0h</b> tracked</span>
     <span id="sbSave">—</span>
+    <span id="sbRun" hidden></span>
     <span class="sp"></span>
     <span><kbd>Ctrl</kbd><kbd>K</kbd> commands</span>
     <span><kbd>N</kbd> new</span>
@@ -2624,6 +2625,7 @@ async function openWorkspace(handle, quiet){
   setSaveState("saved");
   makeRoutines(); rollOver(); syncHolds();
   sweepAutoRuns();
+  checkRunner().then(paintRunner);
   S.hush = true;
   restoreFilters();
   applyFonts(); applyTheme(S.settings.theme || "archive");
@@ -3236,6 +3238,9 @@ function renderDay(){
 }
 function dayHints(){
   const out = [], k = today();
+  const bad = runnerTrouble();
+  if (bad) out.push({ icon:"⚠", html: bad +
+    ' <button class="btn sm" data-runhelp="1" style="margin-left:8px">How to start it</button>' });
   const htoday = holidayOn(k);
   if (htoday) out.push({ icon:"◈",
     html: "<b>" + esc(htoday.n) + "</b>" +
@@ -5499,7 +5504,10 @@ async function renderModal(){
       '<small style="display:block;color:var(--ink-3);font-size:11px">' + esc(freqLabel(r)) +
       (r.system ? " · " + esc(r.system) : "") + (r.time ? " · " + r.time : "") +
       ((r.scripts || []).length ? " · $" + esc(((scriptById(r.scripts[0]) || {}).name) || "missing script") +
-        (r.autoRun ? " · runs itself" : "") : "") +
+        (r.autoRun ? (runnerTrouble() ? '</small><small style="display:block;font-size:11px;' +
+            'color:var(--p2)">runs itself — but nothing is running it</small><small ' +
+            'style="display:block;color:var(--ink-3);font-size:11px">'
+          : " · runs itself") : "") : "") +
       (r.paused ? " · paused" : (() => {
         const last = S.tasks.filter(t => t.fromRoutine === r.id)
           .map(t => t.forDate).sort().slice(-1)[0];
@@ -5633,7 +5641,10 @@ async function renderModal(){
       "something, so this costs nothing to leave running all day.<br><br>" +
       "Only one runner watches a folder at a time, so starting a second by accident cannot run " +
       "your script twice. A script that never finishes is stopped after five minutes rather than " +
-      "being left to freeze everything behind it.</p>" +
+      "being left to freeze everything behind it.<br><br>" +
+      "It writes a heartbeat every ten seconds, so the footer can tell you <b>runner on</b> or " +
+      "<b>runner off</b> at a glance — and if a routine says it runs itself while nothing is " +
+      "listening, the Day sheet says so rather than leaving you to find out at 8:30.</p>" +
     fr("Run button", '<select class="in" id="sRun"><option value="1"' + (st.runner ? " selected" : "") +
       '>Send it to the runner</option><option value="0"' + (!st.runner ? " selected" : "") +
       ">Just copy the command</option></select>") +
@@ -6767,12 +6778,14 @@ function runnerScript(){
     "",
     "$seen     = @{}",
     "$tries    = @{}          # requests that did not parse yet - see below",
+    "$auto     = @()          # the self-running routines, as of the last read",
     "$doc      = $null        # last good parse of dossier.json",
     "$docStamp = $null        # its modified-time, so we only parse again when it moves",
     "$sig      = ''           # the self-running routines, so a change gets announced",
     "$today    = ''",
     "$nextRead = Get-Date",
     "$nextTidy = Get-Date",
+    "$nextBeat = Get-Date",
     "",
     "# Pasted into a PowerShell window rather than run as a file, $PSScriptRoot is",
     "# empty and everything below would quietly watch the wrong place.",
@@ -7008,6 +7021,18 @@ function runnerScript(){
     "    } catch { }",
     "  }",
     "",
+    "  # ---- say we are alive, every ten seconds --------------------------------",
+    "  # Dossier cannot see processes, so without this it has no way to know whether",
+    "  # anything is going to honour a routine marked 'runs itself'. One small file,",
+    "  # rewritten in place, naming the folder we are actually watching - which is",
+    "  # what tells you apart the two cases: no runner, or a runner on another copy.",
+    "  if ((Get-Date) -ge $nextBeat) {",
+    "    $nextBeat = (Get-Date).AddSeconds(10)",
+    "    ([pscustomobject]@{ at = (Get-Date).ToString('o'); root = $root; pid = $PID",
+    "                        auto = @($auto).Count } | ConvertTo-Json -Compress) |",
+    "      Set-Content -LiteralPath (Join-Path $queue '.runner.json') -Encoding UTF8",
+    "  }",
+    "",
     "  # ---- tidy up, once a minute ---------------------------------------------",
     "  # Results Dossier has read are deleted by Dossier; these are the orphans -",
     "  # written while it was closed, or for a record since deleted.",
@@ -7095,6 +7120,81 @@ async function sweepAutoRuns(){
 const SWEEP = { busy:false };
 /* run ids queueRun is still waiting on, so the sweep leaves them alone */
 const PENDING = new Set();
+
+/* ═══ IS ANYTHING ACTUALLY GOING TO RUN IT ═══════════════════════════════
+   A routine marked "runs itself" is a promise Dossier cannot keep on its
+   own: a page in a browser cannot start a program, so the PowerShell runner
+   has to be alive. When it is not, the record still appears on the sheet at
+   its hour and the script silently does not run — which looks exactly like a
+   broken app and has cost this workspace days.
+
+   So the runner now writes scripts/queue/.runner.json every ten seconds with
+   the folder it is watching, and Dossier reads it. Three states worth telling
+   apart, because the fix differs: alive; nothing there at all; and alive but
+   watching a different copy of the workspace — which no amount of restarting
+   will fix and which nothing else can detect. ═══════════════════════════ */
+const RUNNER = { at:0, root:"", pid:0, auto:0, seen:false, busy:false };
+
+async function checkRunner(){
+  if (!FS.ok || RUNNER.busy) return;
+  RUNNER.busy = true;
+  try {
+    const dir = await FS.dir(["scripts", "queue"], false);
+    const j = JSON.parse(await FS.readText(dir, ".runner.json"));
+    RUNNER.at   = Date.parse(j.at) || 0;
+    RUNNER.root = String(j.root || "");
+    RUNNER.pid  = +j.pid || 0;
+    RUNNER.auto = +j.auto || 0;
+    RUNNER.seen = true;
+  } catch(e){ RUNNER.seen = false; RUNNER.at = 0; }
+  RUNNER.busy = false;
+}
+
+/* three ticks missed before we call it gone, so a busy machine is not libelled */
+function runnerLive(){ return RUNNER.seen && (Date.now() - RUNNER.at) < 45000; }
+
+/* the runner names its folder; we know ours only if the user typed it in */
+function runnerElsewhere(){
+  if (!runnerLive()) return false;
+  const mine = String(S.settings.rootPath || "").replace(/[\\/]+$/, "").toLowerCase();
+  const theirs = RUNNER.root.replace(/[\\/]+$/, "").toLowerCase();
+  if (mine) return mine !== theirs;
+  const leaf = String(FS.name || "").toLowerCase();
+  return leaf ? theirs.split("\\").pop() !== leaf : false;
+}
+
+/* the footer carries it at all times, because a banner can be scrolled past */
+function paintRunner(){
+  const el = $("sbRun");
+  if (!el) return;
+  if (!S.settings.runner){ el.hidden = true; return; }
+  el.hidden = false;
+  if (runnerElsewhere()){
+    el.innerHTML = '<b style="color:var(--p2)">runner on another folder</b>';
+    el.title = "The runner is watching " + RUNNER.root + ", not this one.";
+  } else if (runnerLive()){
+    el.innerHTML = '<b style="color:var(--ok,#5bbf8a)">runner on</b>';
+    el.title = "Watching " + RUNNER.root + " (pid " + RUNNER.pid + "), " +
+               RUNNER.auto + " routine(s) set to run themselves.";
+  } else {
+    el.innerHTML = '<b style="color:var(--p2)">runner off</b>';
+    el.title = "Nothing is running your scripts. Menu → Setup → Running a script.";
+  }
+}
+
+/* one sentence, or "" when there is nothing to say */
+function runnerTrouble(){
+  if (!S.settings.runner) return "";
+  if (!S.routines.some(r => r.autoRun && (r.scripts || []).length) &&
+      !S.scripts.length) return "";
+  if (runnerElsewhere())
+    return "The runner is watching <b>" + esc(RUNNER.root) + "</b>, which is not this folder. " +
+           "Your scripts will never run from here — start it from the copy you actually use.";
+  if (!runnerLive())
+    return "Nothing is running your scripts. A routine set to <b>run itself</b> will raise its " +
+           "record on time and then do nothing, because the runner is not started.";
+  return "";
+}
 
 /* ═══ WHY DIDN'T IT RUN ═══════════════════════════════════════════════════
    The queue has too many places to fail quietly: the folder might not be
@@ -7472,6 +7572,7 @@ $("main").addEventListener("click", e => {
   /* before the row underneath it claims the click */
   const ch = e.target.dataset && e.target.dataset.chase;
   if (ch){ e.stopPropagation(); return openChase(ch === "all" ? "all" : undefined); }
+  if (e.target.dataset && e.target.dataset.runhelp){ e.stopPropagation(); return openModal("setup"); }
   const pb = e.target.closest("[data-prob]");
   if (pb) return openProblem(pb.dataset.prob);
   const row = e.target.closest(".row[data-id]");
@@ -8133,6 +8234,7 @@ setInterval(() => {
 setInterval(checkReminders, 30000);
 /* the runner may have fired a routine minutes ago; collect what it left */
 setInterval(() => { if (S.settings.runner) sweepAutoRuns(); }, 45000);
+setInterval(() => { if (S.settings.runner) checkRunner().then(paintRunner); }, 15000);
 
 /* ═══ BOOT ═══════════════════════════════════════════════════════════════ */
 function seedDemo(){

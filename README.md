@@ -45,6 +45,20 @@ Dossier runner watching C:\...\Dossier\scripts\queue
 and the routines in C:\...\Dossier\dossier.json
 ```
 
+**Dossier tells you whether it is actually there.** The runner writes a
+heartbeat every ten seconds, and the footer shows `runner on` or `runner off`
+at all times. If a routine is set to run itself and nothing is listening, the
+Day sheet says so outright instead of leaving you to wonder:
+
+> ⚠ Nothing is running your scripts. A routine set to **run itself** will raise
+> its record on time and then do nothing, because the runner is not started.
+
+The heartbeat also carries the folder the runner is watching, so the worst case
+— a runner alive but pointed at a *different copy* of the workspace, which no
+amount of restarting fixes — is named directly rather than looking like a dead
+runner. Put your workspace path in **Menu → Scripts → Folder path** to catch
+that even when both copies have the same folder name.
+
 Leave it open. If Windows blocks it, right-click → *Run with PowerShell*, or:
 
 ```
