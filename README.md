@@ -344,9 +344,15 @@ go.
 **A date range** — from, to, a name, and *skip weekends*. Two weeks of annual
 leave is one click and ten working days.
 
-**Or paste a list.** It takes the JSON Dossier itself writes, JSON from
-anywhere else (`date`/`name`/`kind` spellings work as well as `d`/`n`/`k`), a
-plain `{"2027-01-01": "New Year"}` map, or one a line:
+**Or paste a list.** Three fields — `date`, `name` and `kind`:
+
+- **`kind: "public"`** — a day off. Tinted on the calendar, and target dates
+  are kept clear of it.
+- **`kind: "observance"`** — marked on the day, but still a working day.
+- Leave `kind` off and it counts as a day off.
+
+It takes that JSON, a plain `{"2027-01-01": "New Year"}` map, the short
+`d`/`n`/`k` spelling the file itself stores, or one a line:
 
 ```
 2027-01-01, International New Year, public

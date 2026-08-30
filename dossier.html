@@ -2571,7 +2571,7 @@ const STRINGS = {
   AnnualLeaveOfficeClosed: "Annual leave, office closed\u2026",
   AddThesePastedDays: "Add these days",
   CopyWhatIsMarkedNow: "Copy what is marked now",
-  PasteHolidaysHelp: "JSON as Dossier writes it, JSON from anywhere else (<b>date</b>/<b>name</b>/<b>kind</b> work too), or one a line as <b>date, name, kind</b>. Dates may be <b>2027-01-01</b> or <b>01/01/2027</b>. Leave the kind off and it counts as a day off. Anything unreadable is listed rather than swallowed.",
+  PasteHolidaysHelp: "JSON with <b>date</b>, <b>name</b> and <b>kind</b>, or one a line as <b>date, name, kind</b>. Dates may be <b>2027-01-01</b> or <b>01/01/2027</b>. <b>kind</b> is either <b>public</b> \u2014 a day off, tinted on the calendar and kept clear of target dates \u2014 or <b>observance</b>, marked on the day but still a working day. Leave it off and it counts as a day off. The short <b>d</b>/<b>n</b>/<b>k</b> spelling Dossier used to write is still read. Anything unreadable is listed rather than swallowed.",
   HolidaysAdded: "{added} added, {replaced} replaced",
   HolidaysNothingRead: "Nothing could be read from that",
   HolidaysSomeBad: "{n} line(s) could not be read: {p0}",
@@ -7594,8 +7594,8 @@ async function renderModal(){
         "<h6>" + LE("OrPasteAList") + "</h6>" +
         '<p class="hhelp">' + L("PasteHolidaysHelp") + "</p>" +
         '<textarea class="in" id="hpT" rows="6" spellcheck="false" placeholder=\'' +
-          esc('[{"d":"2027-01-01","n":"International New Year","k":"public"},\n' +
-              ' {"d":"2027-04-14","n":"Khmer New Year","k":"public"}]\n\n' +
+          esc('[{"date":"2027-01-01","name":"International New Year","kind":"public"},\n' +
+              ' {"date":"2027-04-14","name":"Khmer New Year","kind":"public"}]\n\n' +
               '…or one a line:  2027-01-01, International New Year, public') + '\'></textarea>' +
         '<div class="hrow" style="margin-top:6px">' +
           '<button class="btn sm pri" id="hpAdd">' + LE("AddThesePastedDays") + "</button>" +
@@ -8198,7 +8198,12 @@ function wireModal(){
   on("hpAdd", () => holApply(parseHolidays($("hpT") ? $("hpT").value : ""), "paste"));
 
   on("hpCopy", async () => {
-    const json = JSON.stringify(holidays(), null, 1);
+    /* Written out in words rather than the d/n/k the file stores: someone
+       reading k:"" in a Khmer app quite reasonably reads it as "Khmer".
+       The reader takes either spelling, so this costs nothing. */
+    const json = JSON.stringify(holidays().map(h => ({
+      date:h.d, name:h.n, kind:h.k === "observance" ? "observance" : "public"
+    })), null, 1);
     try { await navigator.clipboard.writeText(json); }
     catch(e){ const t = $("hpT"); if (t){ t.value = json; t.focus(); } }
     const t = $("hpT"); if (t && !t.value) t.value = json;
