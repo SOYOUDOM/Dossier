@@ -135,7 +135,7 @@ dossier.html                  the whole application
 dossier.json                  every record, routine, script and setting
 lang/
   en.xml                      the English master, generated from the code
-  km.xml                      Khmer — a starter file; top it up in Appearance
+  km.xml                      Khmer — all 1,107 phrases, ready to translate
 logo.png, favicon.ico         yours — the app picks them up automatically
 scripts/
   dossier-runner.ps1          runs queued scripts, fires routines on time
@@ -201,6 +201,9 @@ To add one:
 
 The dropdown shows progress per language — *ភាសាខ្មែរ — 412 of 1107 phrases
 translated* — and the panel lists exactly which names are still blank.
+
+`lang/km.xml` already carries all 1,107 phrases with blank values, so Khmer
+needs no setup — open it and start filling in.
 
 **Pressing it again on a file that already exists tops it up rather than
 replacing it.** Every value you have filled in is read back out and written
