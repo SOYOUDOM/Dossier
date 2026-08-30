@@ -1,0 +1,1170 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Dossier language file.
+  Fill in each value="" using the source="" beside it as the English.
+  Leave a value empty and that phrase stays English — translating in
+  passes is fine. {name} in a phrase is a number or word Dossier drops
+  in; keep it exactly as it is, but move it wherever the sentence needs.
+  Save the file, then press Reload in Menu → Appearance.
+-->
+<localizationDictionary culture="km" name="ភាសាខ្មែរ">
+  <texts>
+    <text name="Day" source="Day" value="" />
+    <text name="Board" source="Board" value="" />
+    <text name="Register" source="Register" value="" />
+    <text name="Week" source="Week" value="" />
+    <text name="Library" source="Library" value="" />
+    <text name="Insight" source="Insight" value="" />
+    <text name="AppName" source="Dossier" value="" />
+    <text name="AppTagline" source="Support operations record" value="" />
+    <text name="SearchEverything" source="Search everything…" value="" />
+    <text name="TodaysCompletion" source="Today's completion" value="" />
+    <text name="Reminders" source="Reminders" value="" />
+    <text name="Theme" source="Theme" value="" />
+    <text name="Menu" source="Menu" value="" />
+    <text name="New" source="New" value="" />
+    <text name="LogIt" source="Log it" value="" />
+    <text name="PasteAMessage" source="Paste a message" value="" />
+    <text name="PasteHint" source="Paste a Teams message or an email (Ctrl+Shift+V)" value="" />
+    <text name="ComposePlaceholder" source="What are you working on?   restart Imaging app pool p1 @Imaging #INC0012345 ~Sokha, Dara 2h today" value="" />
+    <text name="Status_Open" source="Open" value="" />
+    <text name="Status_Processing" source="Processing" value="" />
+    <text name="Status_Blocked" source="Blocked" value="" />
+    <text name="Status_Done" source="Done" value="" />
+    <text name="Status_Cancelled" source="Cancelled" value="" />
+    <text name="HideRoutines" source="Hide routines" value="" />
+    <text name="HideRoutinesHint" source="Hide the records your routines created" value="" />
+    <text name="AllSystems" source="All systems" value="" />
+    <text name="AnyPriority" source="Any priority" value="" />
+    <text name="AnyType" source="Any type" value="" />
+    <text name="Anyone" source="Anyone" value="" />
+    <text name="AnyDate" source="Any date" value="" />
+    <text name="Reset" source="Reset" value="" />
+    <text name="Filter_DueToday" source="Due today" value="" />
+    <text name="Filter_Overdue" source="Overdue" value="" />
+    <text name="Filter_ThisWeek" source="This week" value="" />
+    <text name="Filter_ThisMonth" source="This month" value="" />
+    <text name="Filter_NoDueDate" source="No due date" value="" />
+    <text name="Filter_HasAttachments" source="Has attachments" value="" />
+    <text name="Filter_WaitingOnSomeone" source="Waiting on someone" value="" />
+    <text name="Filter_HeldByAnother" source="Held by another record" value="" />
+    <text name="Filter_ReadyToStart" source="Ready to start" value="" />
+    <text name="Filter_HasAScript" source="Has a script" value="" />
+    <text name="ShowingXofY" source="{shown} of {total}" value="" />
+    <text name="Kpi_ClosedToday" source="Closed today" value="" />
+    <text name="Kpi_ClosedTodayHint" source="{n} on the sheet" value="" />
+    <text name="Kpi_Open" source="Open" value="" />
+    <text name="Kpi_OpenHint" source="{n} past due" value="" />
+    <text name="Kpi_InProgress" source="In progress" value="" />
+    <text name="Kpi_InProgressHint" source="being worked now" value="" />
+    <text name="Kpi_LoggedToday" source="Logged today" value="" />
+    <text name="Kpi_LoggedTodayHint" source="time against today" value="" />
+    <text name="Kpi_Documents" source="Documents" value="" />
+    <text name="Kpi_DocumentsHint" source="filed in this workspace" value="" />
+    <text name="Group_Noticed" source="Noticed" value="" />
+    <text name="Group_Overdue" source="Overdue" value="" />
+    <text name="Group_DueToday" source="Due today" value="" />
+    <text name="Group_InProgress" source="In progress" value="" />
+    <text name="Group_Blocked" source="Blocked" value="" />
+    <text name="Group_Undated" source="Undated" value="" />
+    <text name="Group_ComingUp" source="Coming up" value="" />
+    <text name="Group_ClosedToday" source="Closed today" value="" />
+    <text name="NothingOnTheSheet" source="Nothing on the sheet" value="" />
+    <text name="NothingOnTheSheetHint" source="Type what you're working on in the bar above. Try &lt;b&gt;check nightly job failures p2 @Imaging 30m today&lt;/b&gt; — the pieces get pulled out automatically, and Dossier starts learning your patterns from the first record." value="" />
+    <text name="Foot_Records" source="records" value="" />
+    <text name="Foot_ClosedToday" source="closed today" value="" />
+    <text name="Foot_Documents" source="documents" value="" />
+    <text name="Foot_Tracked" source="tracked" value="" />
+    <text name="Foot_Commands" source="commands" value="" />
+    <text name="Foot_New" source="new" value="" />
+    <text name="Foot_PasteAScreenshot" source="paste a screenshot" value="" />
+    <text name="Foot_RunnerOn" source="runner on" value="" />
+    <text name="Foot_RunnerOff" source="runner off" value="" />
+    <text name="Foot_RunnerElsewhere" source="runner on another folder" value="" />
+    <text name="Tab_Workspace" source="Workspace" value="" />
+    <text name="Tab_Reports" source="Reports" value="" />
+    <text name="Tab_Routines" source="Routines" value="" />
+    <text name="Tab_Scripts" source="Scripts" value="" />
+    <text name="Tab_Appearance" source="Appearance" value="" />
+    <text name="Tab_Setup" source="Setup" value="" />
+    <text name="Tab_Help" source="Help" value="" />
+    <text name="Language" source="Language" value="" />
+    <text name="LanguageHeading" source="Language" value="" />
+    <text name="LanguageIntro" source="Phrases live in &lt;b&gt;lang/&lt;/b&gt; in your workspace, one XML file per language. Dossier reads every file it finds there when it opens." value="" />
+    <text name="LanguageAddHint" source="Type a code and press &lt;b&gt;Write or top up a language file&lt;/b&gt;. A new file lists every phrase with a blank value; an existing one keeps every translation you have already done and adds only what is new. Anything left blank stays English, so you can translate in passes." value="" />
+    <text name="WriteLanguageFile" source="Write or top up a language file" value="" />
+    <text name="RefreshLanguages" source="Reload the language files" value="" />
+    <text name="LanguageCode" source="Code, e.g. km or th" value="" />
+    <text name="TranslatedCount" source="{done} of {total} phrases translated" value="" />
+    <text name="LanguageWrote" source="Wrote lang/{file} — fill in the blanks and press Reload" value="" />
+    <text name="LanguageReloaded" source="{n} language(s) loaded" value="" />
+    <text name="LanguageNeedsWorkspace" source="Pick a workspace folder first" value="" />
+    <text name="LanguageBadCode" source="Use two or three letters, like km or th" value="" />
+    <text name="LanguageToppedUp" source="lang/{file} topped up — {kept} translation(s) kept, {added} new phrase(s) added" value="" />
+    <text name="LanguageMissingList" source="Not yet translated ({n})" value="" />
+    <text name="ADateAndANamePlease" source="A date and a name, please" value="" />
+    <text name="AHandfulOfFileStatsDossier" source="a handful of file stats: dossier.json is re-parsed only when you have actually saved " value="" />
+    <text name="ALaptopRebuild" source="a laptop rebuild.&lt;/p&gt;" value="" />
+    <text name="ANameRunsUntilAWord" source="A name runs until a word that cannot be part of one — &lt;code&gt;~Sok Dara today&lt;/code&gt; is Sok Dara, due today. " value="" />
+    <text name="APageInABrowserCannot" source="A page in a browser cannot start a program, and a browser that could would be one you " value="" />
+    <text name="APageInABrowserCannot2" source="A page in a browser cannot start a program. So Dossier writes the request to a file instead, " value="" />
+    <text name="APublicHolidayAnythingDueToday" source=" — a public holiday. Anything due today was scheduled onto a day off." value="" />
+    <text name="ARecordCannotWaitForItself" source="A record cannot wait for itself" value="" />
+    <text name="ARecordIsOneOccurrenceThe" source="A record is one occurrence. The thing that keeps producing them is a &lt;b&gt;problem&lt;/b&gt;, and six " value="" />
+    <text name="ARecordItWasWaitingFor" source="A record it was waiting for was deleted" value="" />
+    <text name="ARecordWithNoDueDate" source="A record with no due date never appears in Day and never counts as Slipping, so Dossier fills one " value="" />
+    <text name="ARoutineCanNameAFile" source="A routine can name a file from &lt;b&gt;scripts/&lt;/b&gt;. The record it raises each morning then arrives " value="" />
+    <text name="ARoutineSetToRunOn" source="A routine set to &lt;b&gt;run on its own&lt;/b&gt; needs nobody at all. The runner reads the routines out " value="" />
+    <text name="ASetPickedFromInsight" source="a set picked from Insight" value="" />
+    <text name="ASmallWindowThatStaysAbove" source="A small window that stays above everything" value="" />
+    <text name="AboutEvery" source=" · about every " value="" />
+    <text name="AcrossAllRecords" source="across all records" value="" />
+    <text name="AddAFileUnderMenuScripts" source="Add a file under Menu → Scripts first." value="" />
+    <text name="AddAnother" source="add another…" value="" />
+    <text name="AddAsANewName" source="add as a new name" value="" />
+    <text name="AddAsANewParty" source="add as a new party" value="" />
+    <text name="AddThe" source="&quot;&gt;Add the " value="" />
+    <text name="AddedAsAWeekdayRoutine" source="Added as a weekday routine" value="" />
+    <text name="AddedChangeTheFiveColoursBelow" source="Added {p0} — change the five colours below" value="" />
+    <text name="AddsAnother" source=" · , adds another" value="" />
+    <text name="Admin" source="Admin" value="" />
+    <text name="After" source="After" value="" />
+    <text name="AlreadyExistRoutinesAreRaisedOnce" source=" already exist — routines are raised once a day" value="" />
+    <text name="AlreadyOpenPressAgainToLog" source="Already open: {p0} — press again to log it anyway" value="" />
+    <text name="AlreadyWaitsOnThisOneThat" source=" already waits on this one — that would be a loop" value="" />
+    <text name="AndASmallPowershellProcessOf" source="and a small PowerShell process of your own — &lt;b&gt;Setup → Running a script&lt;/b&gt; writes it for you — " value="" />
+    <text name="AndHandYouTheCommandOr" source="and hand you the command or a ready copy in the record's own folder.&lt;/p&gt;" value="" />
+    <text name="AndIHaveChased" source=", and I have chased " value="" />
+    <text name="AndIHaveHadNoReply" source=", and I have had no reply." value="" />
+    <text name="AndNoNetworkInvolved" source="and no network involved.&lt;/p&gt;" value="" />
+    <text name="AndTheEvidencePackPickIt" source="and the evidence pack pick it up without knowing the difference. Needs Edge or Chrome.&lt;/p&gt;" value="" />
+    <text name="AnniversariesThatNeverMove" source=" anniversaries that never move. " value="" />
+    <text name="AnyRecordCarryingAScriptShows" source="Any record carrying a script shows a &lt;b&gt;$&lt;/b&gt; button on its row. One press puts the command on " value="" />
+    <text name="AnyYearAndSetupWillDo" source="any year, and Setup will do the same for a year you name.&lt;/p&gt;" value="" />
+    <text name="AnythingYouDoMoreThanTwice" source="Anything you do more than twice belongs in a file. Drop the .ps1, .bat, .sql or .py here and it is " value="" />
+    <text name="AppliedSuggestion" source="Applied suggestion: " value="" />
+    <text name="ArchiveAndVaultStayExactlyAs" source="Archive and Vault stay exactly as they are and cannot be deleted. Copy one, change the five colours, and the twenty-odd others — rules, muted text, hover states, shadows — are worked out from them.&lt;/p&gt;" value="" />
+    <text name="AreLunarAddThoseByHand" source=" are lunar — add those by hand from the sub-decree.&lt;/span&gt;&lt;/div&gt;" value="" />
+    <text name="AsYouWithNoElevationAnd" source="as you, with no elevation, and touches no network.&lt;/p&gt;" value="" />
+    <text name="AskIsPoliteAFourthIs" source="ask is polite, a fourth is firm. Edit it freely, then &lt;b&gt;Copy and log the chase&lt;/b&gt; puts it on the " value="" />
+    <text name="AttachAScriptByName" source="Attach a script by name" value="" />
+    <text name="Attached" source="Attached " value="" />
+    <text name="AttachedEvidence" source="attached evidence" value="" />
+    <text name="AttachedFromTheConsole" source="Attached {p0} from the console" value="" />
+    <text name="AttachedToTheRecordThisRoutine" source="Attached to the record this routine raises. Set to run on its own and " value="" />
+    <text name="AvgTurnaround" source="| Avg turnaround | " value="" />
+    <text name="Backspace" source="Backspace" value="" />
+    <text name="BackupsOneSnapshotPerDayKept" source="  backups/                  one snapshot per day, 30 kept
+" value="" />
+    <text name="BannerOn" source="banner on" value="" />
+    <text name="Because" source="Because" value="" />
+    <text name="BeforeNowWorthCheckingToo" source="13–16 before now: worth checking too.&lt;/p&gt;" value="" />
+    <text name="BeingLeftToFreezeEverythingBehind" source="being left to freeze everything behind it.&lt;br&gt;&lt;br&gt;" value="" />
+    <text name="BlockedOpenNothingIsHoldingThis" source="Blocked → Open — nothing is holding this any more" value="" />
+    <text name="BodyText" source="Body text" value="" />
+    <text name="Built" source="Built " value="" />
+    <text name="BuiltIn" source=" · built in" value="" />
+    <text name="BulkDue" source="bulk due" value="" />
+    <text name="BulkStatus" source="bulk status" value="" />
+    <text name="ButtonOnDayAndOnInsight" source="button on Day and on Insight when a team has gone quiet.&lt;/p&gt;" value="" />
+    <text name="CameBack" source="Came back" value="" />
+    <text name="Cancel" source="Cancel" value="" />
+    <text name="CannotCreateScriptsQueue" source="Cannot create &lt;b&gt;scripts/queue&lt;/b&gt; — " value="" />
+    <text name="ChangesShowAsYouDragThe" source="Changes show as you drag. The palette is stored in dossier.json, so it travels with the folder.&lt;/p&gt;&lt;/div&gt;" value="" />
+    <text name="Chase" source="Chase " value="" />
+    <text name="ChaseAfter" source="Chase after" value="" />
+    <text name="ChaseEveryoneWaiting" source="Chase everyone waiting" value="" />
+    <text name="ChaseLoggedAgainst" source="Chase logged against " value="" />
+    <text name="ChaseOn" source="Chase on" value="" />
+    <text name="ChaseRound" source="Chase round" value="" />
+    <text name="Chased" source="Chased " value="" />
+    <text name="Chasing" source="Chasing " value="" />
+    <text name="ChasingRecordsThatAreWaitingWith" source="Chasing {p0} records that are waiting with you:" value="" />
+    <text name="ChecksForItTheScriptItself" source="checks for it. The script itself also shows &lt;b&gt;ran today&lt;/b&gt; once you have used it, so you can " value="" />
+    <text name="ChooseAWorkspaceFolderBeforeAttaching" source="Choose a workspace folder before attaching files" value="" />
+    <text name="ChooseAWorkspaceFolderFirst" source="Choose a workspace folder first" value="" />
+    <text name="ChooseAnother" source="Choose another…" value="" />
+    <text name="ChooseWorkspaceFolder" source="Choose workspace folder…" value="" />
+    <text name="ChooseWorkspaceFolder2" source="Choose workspace folder" value="" />
+    <text name="Cleared" source="Cleared" value="" />
+    <text name="ClickOneAndDossierWritesThe" source="Click one and Dossier writes the case: the dates, the cost, every occurrence, and what you did " value="" />
+    <text name="ClickOneForTheCaseTo" source=" — click one for the case to fix it properly&lt;/div&gt;" value="" />
+    <text name="ClickToApplyIgnoreToDismiss" source="Click to apply, ignore to dismiss.&lt;/div&gt;&lt;/div&gt;" value="" />
+    <text name="ClipboardAndRecordsTheChaseAgainst" source="clipboard and records the chase against every record it covered, so the count stays honest.&lt;/p&gt;" value="" />
+    <text name="ClockStartedAgainst" source="Clock started against " value="" />
+    <text name="Closed" source="Closed " value="" />
+    <text name="Closed2" source="Closed    : " value="" />
+    <text name="Closed3" source="Closed" value="" />
+    <text name="ClosedSince" source="Closed since " value="" />
+    <text name="ClosedThatDay" source=" closed that day" value="" />
+    <text name="ClosedThisMonth" source="Closed this month" value="" />
+    <text name="ClosedThisWeek" source="Closed this week" value="" />
+    <text name="ClosuresAndTheFestivalsYouMark" source="closures, and the festivals you mark but still work through — those are &lt;i&gt;marked only&lt;/i&gt; " value="" />
+    <text name="CodeIfItFailed" source="code if it failed.&lt;/p&gt;" value="" />
+    <text name="ColorVarPRunsItselfBut" source="color:var(--p2)&quot;&gt;runs itself — but nothing is running it&lt;/small&gt;&lt;small " value="" />
+    <text name="CommandAndTheRunnerRefusesAnything" source="command, and the runner refuses anything with a path in it. Nothing here touches the network.&lt;br&gt;&lt;br&gt;" value="" />
+    <text name="CommandCopied" source="Command copied" value="" />
+    <text name="CommandLineAndTheRunnerRefuses" source="command line, and the runner refuses anything containing a path separator or a &lt;code&gt;..&lt;/code&gt; " value="" />
+    <text name="ComposeBarListsThemSoA" source="compose bar lists them, so a new record arrives with its script already attached." value="" />
+    <text name="Copied" source="Copied" value="" />
+    <text name="CopiedInto" source="copied into &lt;b&gt;" value="" />
+    <text name="CopiedPasteItIntoACommand" source="Copied — paste it into a Command Prompt to register the 15-minute check" value="" />
+    <text name="CopiedPasteItIntoATerminal" source="Copied — paste it into a terminal" value="" />
+    <text name="CopiedPasteItTo" source="Copied — paste it to " value="" />
+    <text name="CopiedStillBlankFillThemIn" source="Copied — {p0} still blank, fill them in the record" value="" />
+    <text name="CopiedTo" source="Copied to " value="" />
+    <text name="CopyBlockedSelectManually" source="Copy blocked — select manually" value="" />
+    <text name="CopyTheCommandFor" source="Copy the command for " value="" />
+    <text name="CostSoFar" source="Cost so far: " value="" />
+    <text name="CouldNotCreateTheRecordFolder" source="Could not create the record folder: " value="" />
+    <text name="CouldNotCreateTheScriptsFolder" source="Could not create the scripts folder: " value="" />
+    <text name="CouldNotOpenIsItStill" source="Could not open {p0} — is it still in the folder?" value="" />
+    <text name="CouldNotOpenIsItStill2" source="Could not open {p0} — is it still in scripts/?" value="" />
+    <text name="CouldNotOpenThatFolder" source="Could not open that folder: " value="" />
+    <text name="CouldNotRaiseIt" source="Could not raise it" value="" />
+    <text name="CouldNotReachScriptsQueue" source="Could not reach scripts/queue — " value="" />
+    <text name="CouldNotSave" source="Could not save " value="" />
+    <text name="CouldNotWriteTheCopy" source="Could not write the copy: " value="" />
+    <text name="CouldNotWriteTheRequest" source="Could not write the request — " value="" />
+    <text name="CouldNotWriteTheRunner" source="Could not write the runner: " value="" />
+    <text name="CouldNotWriteTheWatcher" source="Could not write the watcher: " value="" />
+    <text name="CouldNotWriteToTheFolder" source="Could not write to the folder: " value="" />
+    <text name="CouldWouldBeAFileYou" source="could would be a file you should not trust. If you would rather double-click than paste, " value="" />
+    <text name="CouldYouLetMeKnowWhere" source="Could you let me know where " value="" />
+    <text name="CountedPerPersonNotPerRecord" source="Counted per person, not per record" value="" />
+    <text name="CreateTodaysRoutines" source="Create today's routines" value="" />
+    <text name="CreatedASecondTimeBecauseThe" source="created a second time, because the record is stamped with the date it was raised and the routine " value="" />
+    <text name="CrowChint" source="crow chint " value="" />
+    <text name="CrowChint2" source="crow chint" value="" />
+    <text name="CtrlVPastesAScreenshotStraight" source="Ctrl+V pastes a screenshot straight onto this record" value="" />
+    <text name="DLate" source="d late" value="" />
+    <text name="DRenewalReportReview" source="    D-0002 renewal report review/
+" value="" />
+    <text name="DRestartImagingAppPool" source="    D-0001 restart imaging app pool/
+" value="" />
+    <text name="DWaiting" source="d waiting" value="" />
+    <text name="DWaitingOnOthers" source="d waiting on others" value="" />
+    <text name="DataCode" source="Data / code" value="" />
+    <text name="DateSWillBeCleared" source=" date(s) will be cleared." value="" />
+    <text name="DatesThatNeverMove" source=" dates that never move&lt;/button&gt;" value="" />
+    <text name="DayEachMonth" source="Day {p0} each month" value="" />
+    <text name="DayOfMonth" source="Day of month" value="" />
+    <text name="DayOff" source="day off" value="" />
+    <text name="DaySLostWaitingOn" source=" day(s) lost waiting on " value="" />
+    <text name="DaySSoFar" source=" day(s) so far" value="" />
+    <text name="DaysARecordCanSitWith" source="Days a record can sit with someone else before Dossier reminds you to chase them.&lt;/p&gt;" value="" />
+    <text name="DaysLostWaitingOnOthers" source="Days lost waiting on others" value="" />
+    <text name="DaysStillMoving" source=" days. Still moving?" value="" />
+    <text name="DeleteTheFileToo" source="Delete the file too" value="" />
+    <text name="Deleted" source="Deleted " value="" />
+    <text name="DeletedTheFoldersStayOnDisk" source=" deleted — the folders stay on disk" value="" />
+    <text name="Dependencies" source="Dependencies" value="" />
+    <text name="DeriveThemFromSoDossierAsks" source="derive them from, so Dossier asks you for them rather than guessing and being quietly wrong. " value="" />
+    <text name="DesktopAlertsUnavailableHereInApp" source="Desktop alerts unavailable here — in-app reminders " value="" />
+    <text name="DidNotGiveTypeOneOr" source="did not give — type one, or paste a message that names one, and yours wins. A record with " value="" />
+    <text name="DiscardsTheCurrentRecords" source="discards the current records" value="" />
+    <text name="DocumentsFiled" source="| Documents filed | " value="" />
+    <text name="DocumentsTasks" source="Documents (tasks/" value="" />
+    <text name="DossierIsFallingBackToThe" source="Dossier is falling back to the system font.&lt;/p&gt;" value="" />
+    <text name="DossierJsonEveryRecordNoteAnd" source="  dossier.json              every record, note and work log
+" value="" />
+    <text name="DossierRemembersYourFolderBrowsersRequire" source="Dossier remembers your folder &lt;b&gt;{p0}&lt;/b&gt;. Browsers require one click before handing access back." value="" />
+    <text name="DossierReminderWatch" source="Dossier reminder watch" value="" />
+    <text name="DossierStillNeverExecutesAnythingA" source="Dossier still never executes anything — a browser cannot, and this one does not try. It hands you " value="" />
+    <text name="DotBad" source="dot bad" value="" />
+    <text name="DotWarn" source="dot warn" value="" />
+    <text name="DragAFileOntoAnyRecord" source="Drag a file onto any record — a meeting deck, an incident email, a screenshot. It gets copied into " value="" />
+    <text name="DragOneOntoAnotherDayTo" source="drag one onto another day to move it. &lt;b&gt;Month&lt;/b&gt; is for planning around what you cannot move, " value="" />
+    <text name="Due" source="Due" value="" />
+    <text name="Due2" source="Due       : " value="" />
+    <text name="DueAt" source=" — due at " value="" />
+    <text name="DueAt2" source=" · due at " value="" />
+    <text name="DueToday" source="due today" value="" />
+    <text name="EachOfTheseWasClosedOn" source="Each of these was closed on its own, so the cause is still in place. At the rate above, the next {p0} will cost about the same again. Requesting time for a permanent fix." value="" />
+    <text name="EachTimeWhichIsUsuallyThe" source="each time — which is usually the proof it was worked around rather than fixed. Copy it into a " value="" />
+    <text name="EchoOffRemBuiltByDossier" source="@echo off
+rem Built by Dossier for " value="" />
+    <text name="Enter" source="Enter" value="" />
+    <text name="Escape" source="Escape" value="" />
+    <text name="Estimate" source="Estimate" value="" />
+    <text name="EvenTheOnesNotDueA" source="Even the ones not due a chase yet" value="" />
+    <text name="EveryDay" source="Every day" value="" />
+    <text name="EveryGuessIsListedWithThe" source="Every guess is listed with the words it came from, so a wrong one is obvious before it is saved. " value="" />
+    <text name="EveryOneOfThoseSignsOpens" source="Every one of those signs opens a list as you type it, so you never have to remember a system name or " value="" />
+    <text name="EveryOpenRecordPastItsDue" source="Every open record past its due date" value="" />
+    <text name="EveryRecordOfType" source="Every record of type " value="" />
+    <text name="EveryRecordOn" source="Every record on " value="" />
+    <text name="EveryRecordOnFile" source="Every record on file" value="" />
+    <text name="EveryRecordSittingAt" source="Every record sitting at " value="" />
+    <text name="EveryYearAndTheListIs" source="every year, and the list is reissued annually.&lt;/p&gt;" value="" />
+    <text name="EverythingLivesInTheFolderYou" source="Everything lives in the folder you choose. Clearing browser data cannot touch it — the worst that happens " value="" />
+    <text name="EverythingStillLive" source="Everything still live" value="" />
+    <text name="EverythingWaitingOnAnotherRecordOr" source="Everything waiting on another record or another person" value="" />
+    <text name="ExitsQuietlyTheRestOfThe" source="exits quietly the rest of the time.&lt;/p&gt;" value="" />
+    <text name="ExportCsv" source="Export CSV" value="" />
+    <text name="Files" source="Files" value="" />
+    <text name="FilesAreCopiedIntoThisRecords" source="Files are copied into this record's own folder inside your workspace. Ctrl+V pastes a screenshot straight in.&lt;/div&gt;" value="" />
+    <text name="Filter" source="Filter" value="" />
+    <text name="FiltersCleared" source="Filters cleared" value="" />
+    <text name="FiltersResetOnEveryOpen" source="Filters reset on every open" value="" />
+    <text name="FiltersWillBeWaitingForYou" source="Filters will be waiting for you next time" value="" />
+    <text name="FinishedAfterDossierStoppedWaiting" source="— finished after Dossier stopped waiting" value="" />
+    <text name="FixedDatesAddedFor" source=" fixed dates added for " value="" />
+    <text name="FixedDatesAddedForTheLunar" source=" fixed dates added for {p0} — the lunar ones are still yours to add" value="" />
+    <text name="FocusTheComposeBar" source="Focus the compose bar" value="" />
+    <text name="FolderPath" source="Folder path" value="" />
+    <text name="FollowingUpOn" source="Following up on " value="" />
+    <text name="FollowingUpOnRecordsThatAre" source="Following up on {p0} records that are with you:" value="" />
+    <text name="FontsAndTheme" source="Fonts and theme" value="" />
+    <text name="ForTheOnesYouHaveNo" source="For the ones you have no permission to fix — the data team has to sync first, the vendor has to reply. The clock is the evidence.&lt;/div&gt;" value="" />
+    <text name="ForWhoeverCoversYourShift" source="For whoever covers your shift" value="" />
+    <text name="ForYourPdd" source="For your PDD" value="" />
+    <text name="From" source="From " value="" />
+    <text name="FromCountingWordsInYourOwn" source="from counting words in your own records, in this tab, and nothing else.&lt;/p&gt;" value="" />
+    <text name="FromThatYearsSubDecreeThose" source=" from that year's sub-decree — those are lunar and cannot be worked out here.&lt;/span&gt;&lt;/div&gt;" value="" />
+    <text name="Generated" source="Generated " value="" />
+    <text name="GiveItAFourDigitYear" source="Give it a four-digit year" value="" />
+    <text name="GiveOneYourselfADateYou" source="give one yourself. A date you type, or one the pasted message names, always wins. " value="" />
+    <text name="GiveTheRecordAName" source="Give the record a name" value="" />
+    <text name="GiveTheRecordANameToo" source="Give the record a name too" value="" />
+    <text name="GiveTheRoutineAName" source="Give the routine a name" value="" />
+    <text name="GroupedByHowAlikeTheTitles" source="Grouped by how alike the titles are. Anything that does not belong, rename and it drops out.&lt;/p&gt;" value="" />
+    <text name="HAdded" source="+1h added" value="" />
+    <text name="HandoverNote" source="Handover note" value="" />
+    <text name="HasNowBeenWithYouFor" source=" has now been with you for " value="" />
+    <text name="HaveSlipped" source=" have slipped" value="" />
+    <text name="Headings" source="Headings" value="" />
+    <text name="HeldThisFor" source=" held this for " value="" />
+    <text name="HeldUp" source="Held up — " value="" />
+    <text name="HeldUpByThis" source=" held up by this" value="" />
+    <text name="HeldUpRightNow" source="Held up right now" value="" />
+    <text name="HeldWaitingOnARecordOr" source="Held — waiting on a record or a person" value="" />
+    <text name="HelpFolderLayout" source="Help &amp; folder layout" value="" />
+    <text name="HoldingUp" source="holding up " value="" />
+    <text name="Holds" source="Holds" value="" />
+    <text name="HoldsUp" source="Holds up" value="" />
+    <text name="HoursFromRaisingARecordTo" source="Hours from raising a record to when it is due, by priority. Only ever fills a date you " value="" />
+    <text name="HowYouFiledRecordsLikeThis" source="how you filed records like this before" value="" />
+    <text name="INeedADateFromYou" source="I need a date from you today - this is being reported as time waiting, and I would rather report a date than a silence." value="" />
+    <text name="Import" source="Import " value="" />
+    <text name="Imported" source="Imported " value="" />
+    <text name="InFromThePriorityPWithin" source="in from the priority — P1 within 4 hours, P2 a day, P3 two days, P4 five — whenever you did not " value="" />
+    <text name="InProgress" source="| In progress | " value="" />
+    <text name="InTheRecordsWorkLog" source="in the record's work log.&lt;br&gt;&lt;br&gt;" value="" />
+    <text name="InUse" source=" · in use" value="" />
+    <text name="IncidentsThatEachTookNinetyMinutes" source="incidents that each took ninety minutes look like six ordinary days until you add them up. " value="" />
+    <text name="InsightGroupsRecordsByHowAlike" source="Insight groups records by how alike their titles are and shows the total — how many times, how " value="" />
+    <text name="InstructionTheBrowserEnforcesNoFetch" source="instruction the browser enforces: no fetch, no XHR, no WebSocket, no form post. Open F12 → Network and you " value="" />
+    <text name="IntoTheComposeBarAnythingWith" source="into the compose bar — anything with a line break in it, or longer than a line — and Dossier reads " value="" />
+    <text name="IsDossierForgetsWhichFolderIt" source="is Dossier forgets which folder it was, and you point it back. Keep the folder in OneDrive and it survives " value="" />
+    <text name="IsThereAnythingYouNeedFrom" source="Is there anything you need from me to move {p0} along? If not, when can I expect " value="" />
+    <text name="IsUnblocked" source=" is unblocked — " value="" />
+    <text name="ItAddsNothingNewToA" source="It adds nothing new to a record. A step is a work-log entry and a screenshot is an attachment, so a " value="" />
+    <text name="ItAlreadyExistsIn" source="
+
+It already exists in " value="" />
+    <text name="ItAndTheScriptRunsKeeping" source="it and the script runs, keeping its transcript beside the record. Nothing to install, nothing " value="" />
+    <text name="ItHasBeenWithYouSince" source="It has been with you since " value="" />
+    <text name="ItInsteadOfPastingItThe" source="it instead of pasting it: the ticket number, which of your systems it names, who is asking, how " value="" />
+    <text name="ItIsPausedResumeItFirst" source="It is paused — resume it first" value="" />
+    <text name="ItIsRaisedOnceForThe" source="It is raised &lt;b&gt;once for the day it is due&lt;/b&gt;. Close Dossier and open it again and nothing is " value="" />
+    <text name="ItLooksOnceASecondAt" source="It looks once a second — at the queue and at your routines both — so &lt;b&gt;$&lt;/b&gt; and " value="" />
+    <text name="ItOnlyEverRunsAFile" source="It only ever runs a file that is &lt;b&gt;already in scripts/&lt;/b&gt;. The request names a file, never a " value="" />
+    <text name="ItStands" source="it stands" value="" />
+    <text name="ItWillNeverInventTheRest" source="It will never invent the rest. Visak Bochea, the Royal Ploughing Ceremony, Pchum Ben and the " value="" />
+    <text name="ItWillOnlyRunAFile" source="It will only run a file &lt;b&gt;already sitting in scripts/&lt;/b&gt;. The request names a file, never a " value="" />
+    <text name="ItWritesAHeartbeatEveryTen" source="It writes a heartbeat every ten seconds, so the footer can tell you &lt;b&gt;runner on&lt;/b&gt; or " value="" />
+    <text name="ItWritesOneMessagePerTeam" source="It writes &lt;b&gt;one message per team, not per record&lt;/b&gt; — the data team wants one note about their " value="" />
+    <text name="ItsOwnFolderExactlyAsDragging" source="its own folder, exactly as dragging one in would. Snip only what matters — a full screen catches " value="" />
+    <text name="JustCopyTheCommand" source="&gt;Just copy the command&lt;/option&gt;&lt;/select&gt;" value="" />
+    <text name="JustUnlinkIt" source="Just unlink it" value="" />
+    <text name="KeepBoth" source="Keep both" value="" />
+    <text name="KeepsWhatYouAlreadyHave" source="keeps what you already have" value="" />
+    <text name="KhmerNewYearIsOfferedAs" source="Khmer New Year is offered as 14–16 April, which is where it has fallen recently, but it has run " value="" />
+    <text name="LanguageFileSkipped" source="Language file skipped — " value="" />
+    <text name="LastChased" source=", last chased " value="" />
+    <text name="LastChasedDAgo" source=", last chased {p0}d ago" value="" />
+    <text name="LastOn" source=", last on " value="" />
+    <text name="LastRaised" source=" · last raised " value="" />
+    <text name="LastUpdate" source="    last update: " value="" />
+    <text name="LastUsed" source=" · last used " value="" />
+    <text name="LastWeek" source="Last week" value="" />
+    <text name="LeaveTheExistingFileAlone" source="leave the existing file alone" value="" />
+    <text name="LeaveTheExistingOneAlone" source="leave the existing one alone" value="" />
+    <text name="LeaveTheStatusAlone" source="&gt;Leave the status alone&lt;/option&gt;&lt;/select&gt;" value="" />
+    <text name="LinkAWorkspaceFolderFirst" source="Link a workspace folder first" value="" />
+    <text name="LinkAWorkspaceFolderFirst2" source="link a workspace folder first" value="" />
+    <text name="LinkAWorkspaceFolderFirstThen" source="Link a workspace folder first, then drag files onto a record." value="" />
+    <text name="LinkItAndThisOneMoves" source="Link it and this one moves to Blocked; when the other closes, Dossier reopens it and says so.&lt;/dd&gt;" value="" />
+    <text name="LinkingARecordThatIsStill" source="Linking a record that is still open moves this one to Blocked. When the last one closes, Dossier reopens this by itself and tells you.&lt;/div&gt;" value="" />
+    <text name="ListeningTheDaySheetSaysSo" source="listening, the Day sheet says so rather than leaving you to find out at 8:30.&lt;/p&gt;" value="" />
+    <text name="LogThisAnywayOrOpenThat" source="). Log this anyway, or open that one.&lt;/div&gt;" value="" />
+    <text name="Logged" source="Logged" value="" />
+    <text name="Logged2" source="Logged " value="" />
+    <text name="LoggedFilledInFromPastRecords" source="Logged {p0} — filled in {p1} from past records" value="" />
+    <text name="LoggedFromTheMessage" source="Logged {p0} from the message" value="" />
+    <text name="LoosenTheFiltersAboveOrClear" source="Loosen the filters above, or clear the search box." value="" />
+    <text name="LoudlyWhenItIsWantedAnd" source="loudly, when it is wanted, and whether it is already sitting with another team. " value="" />
+    <text name="MAdded" source="+15m added" value="" />
+    <text name="MachineWhichIsExactlyTheRule" source="machine, which is exactly the rule you want in place. What it does is hold the file, fill in the blanks, " value="" />
+    <text name="ManyHoursHowManyDaysLost" source="many hours, how many days lost waiting, and whether any are still open.&lt;/p&gt;" value="" />
+    <text name="ManyTimesYouHaveAlreadyAsked" source="many times you have already asked, and what it is holding up. The tone climbs on its own: a first " value="" />
+    <text name="MarkedOnWeekAndMonthSo" source="Marked on Week and Month so you plan around the days nobody is at a desk. " value="" />
+    <text name="MarkedToday" source=" — marked today." value="" />
+    <text name="MatchesYourSystems" source="” matches your systems" value="" />
+    <text name="MedianOfRecordsLikeIt" source="median of {p0} records like it" value="" />
+    <text name="MemoryOfWhichFileDidThe" source="memory of which file did the job.&lt;/p&gt;" value="" />
+    <text name="MergeIntoThisWorkspace" source="Merge into this workspace" value="" />
+    <text name="MessageTooChaseThemOnA" source="message too. &lt;b&gt;Chase them…&lt;/b&gt; on a record, &lt;b&gt;Chase round&lt;/b&gt; in the command palette, or the " value="" />
+    <text name="MissingScript" source="missing script" value="" />
+    <text name="Mode" source="Mode" value="" />
+    <text name="MoreThanYouMeantWhenYou" source="more than you meant when you are inside a customer's policy.&lt;/p&gt;" value="" />
+    <text name="MostRecently" source=", most recently " value="" />
+    <text name="MothersBirthdaysConstitutionDayTheCommemorat" source="Mother's birthdays, Constitution Day, the Commemoration, the Coronation, Independence, Human " value="" />
+    <text name="MoveARecordToBlockedWhen" source="&gt;Move a record to Blocked when something holds it&lt;/option&gt;&lt;option value=&quot;0&quot;" value="" />
+    <text name="MovedTo" source="Moved to " value="" />
+    <text name="MovedToToday" source=" moved to today" value="" />
+    <text name="MovedToToday2" source="Moved to today" value="" />
+    <text name="MovedToUndated" source="Moved to undated" value="" />
+    <text name="NagAboutLate" source="Nag about late" value="" />
+    <text name="Name" source="Name" value="" />
+    <text name="NameWhoYouAreWaitingOn" source="Name who you are waiting on" value="" />
+    <text name="NeitherIsFetchedOverTheNetwork" source="Neither is fetched over the network — they are files sitting next to the page. If they are missing, " value="" />
+    <text name="NeverChased" source=", never chased." value="" />
+    <text name="NeverChased2" source=", never chased" value="" />
+    <text name="NeverCheckTheDays" source="never, check the days" value="" />
+    <text name="NeverRaised" source=" · never raised" value="" />
+    <text name="NeverUsed" source=" · never used" value="" />
+    <text name="NewDayRoutinesCreatedAndOverdue" source="New day — routines created and overdue records carried over" value="" />
+    <text name="NewFileSPickedUpFrom" source=" new file(s) picked up from scripts/" value="" />
+    <text name="NewRecord" source="new record" value="" />
+    <text name="NewRecord2" source="New record" value="" />
+    <text name="NewRecordsAreLeftUndated" source="New records are left undated" value="" />
+    <text name="NewRecordsGetATargetDate" source="New records get a target date from their priority" value="" />
+    <text name="NewTag" source="new tag" value="" />
+    <text name="NewWorkspaceStartedIn" source="New workspace started in " value="" />
+    <text name="NextRef" source=" · next ref " value="" />
+    <text name="NoAlwaysStartClean" source="&gt;No — always start clean&lt;/option&gt;&lt;/select&gt;" value="" />
+    <text name="NoAnswerAndTheRequestIs" source="No answer, and the request is &lt;b&gt;still sitting there&lt;/b&gt;. Nothing is reading the queue." value="" />
+    <text name="NoAnswerFromTheRunnerIs" source="No answer from the runner — is it started? Setup → Running a script" value="" />
+    <text name="NoDateNeverShowsUpIn" source="no date never shows up in Day or in Slipping, which is where work quietly goes to die.&lt;/p&gt;" value="" />
+    <text name="NoDocumentsYet" source="No documents yet" value="" />
+    <text name="NoEstimate" source="no estimate" value="" />
+    <text name="NoFilters" source="no filters" value="" />
+    <text name="NoLeaveItEmpty" source="&gt;No — leave it empty&lt;/option&gt;&lt;/select&gt;" value="" />
+    <text name="NoLongerWaitingFor" source="No longer waiting for " value="" />
+    <text name="NoNotesWereKept" source="No notes were kept." value="" />
+    <text name="NoRecordMatches" source="No record matches " value="" />
+    <text name="NoRecordsFoundInThatFile" source="No records found in that file" value="" />
+    <text name="NoRecordsMatch" source="No records match" value="" />
+    <text name="NoRoutinesYet" source="No routines yet" value="" />
+    <text name="NoScriptCalledAddItUnder" source="No script called {p0} — add it under Menu → Scripts" value="" />
+    <text name="NoScriptOnThisRecord" source="No script on this record" value="" />
+    <text name="NoScriptsRegisteredAddOneUnder" source="No scripts registered. Add one under Menu → Scripts." value="" />
+    <text name="NoScriptsYetAddThemUnder" source="No scripts yet — add them under Menu → Scripts" value="" />
+    <text name="NoSystemSet" source="no system set" value="" />
+    <text name="NoTimeBooked" source="no time booked" value="" />
+    <text name="NoWorkspaceFolder" source="No workspace folder" value="" />
+    <text name="NoWorkspaceFolder2" source="no workspace folder" value="" />
+    <text name="NoWorkspaceFolderIsLinkedChoose" source="No workspace folder is linked. Choose one from the banner first." value="" />
+    <text name="NoneOfThisLeavesTheMachine" source="None of this leaves the machine — it is word matching against your own systems, teams and past " value="" />
+    <text name="NotChased" source=", not chased" value="" />
+    <text name="NotChasedYet" source="not chased yet" value="" />
+    <text name="NotChasedYet2" source=", not chased yet" value="" />
+    <text name="NotLinkedToAFolder" source="not linked to a folder" value="" />
+    <text name="NotOnceADayAndCatching" source="not&lt;/b&gt;, once a day, and catching up later if the machine was off at the hour. The output is " value="" />
+    <text name="NotYetChased" source=", not yet chased" value="" />
+    <text name="NothingBlocked" source="- nothing blocked" value="" />
+    <text name="NothingBreaksAndTheBuiltIn" source="nothing breaks and the built-in seal stays.&lt;/p&gt;" value="" />
+    <text name="NothingClosed" source="(nothing closed)" value="" />
+    <text name="NothingDue" source="Nothing due" value="" />
+    <text name="NothingDueToday" source="Nothing due today" value="" />
+    <text name="NothingHasComeBackOftenEnough" source="Nothing has come back often enough to call a pattern yet." value="" />
+    <text name="NothingHasGoneQuietYetMenu" source="Nothing has gone quiet yet — Menu → Chase everyone waiting to write anyway" value="" />
+    <text name="NothingIsBeingSavedYetPick" source="Nothing is being saved yet. Pick a folder and Dossier keeps every record, note and document there — clearing your browser can never touch it." value="" />
+    <text name="NothingIsHoldingThisAnyMore" source="
+Nothing is holding this any more." value="" />
+    <text name="NothingIsRunningYourScriptsA" source="Nothing is running your scripts. A routine set to &lt;b&gt;run itself&lt;/b&gt; will raise its record on time and then do nothing, because the runner is not started." value="" />
+    <text name="NothingIsRunningYourScriptsMenu" source="Nothing is running your scripts. Menu → Setup → Running a script." value="" />
+    <text name="NothingIsWaitingOnAnyoneElse" source="Nothing is waiting on anyone else" value="" />
+    <text name="NothingIsWrittenUntilYouPress" source="Nothing is written until you press &lt;b&gt;Log it&lt;/b&gt;, and anything you correct in the sheet wins. " value="" />
+    <text name="NothingLeftToUndo" source="Nothing left to undo" value="" />
+    <text name="NothingMidFlight" source="- nothing mid-flight" value="" />
+    <text name="NothingNewInScripts" source="Nothing new in scripts/" value="" />
+    <text name="NothingOnTheClipboardToRead" source="Nothing on the clipboard to read" value="" />
+    <text name="NothingOpenToWorkOnYet" source="Nothing open to work on yet" value="" />
+    <text name="NothingScheduled" source="(nothing scheduled)" value="" />
+    <text name="NothingScheduled2" source="- nothing scheduled" value="" />
+    <text name="NothingSelectedToChase" source="Nothing selected to chase" value="" />
+    <text name="NowWaitsFor" source=" now waits for " value="" />
+    <text name="OccurrenceSPinnedResetClearsIt" source=" occurrence(s) pinned — Reset clears it" value="" />
+    <text name="OfDossierJsonAndAtThe" source="of dossier.json, and at the routine's time it runs the script — &lt;b&gt;whether Dossier is open or " value="" />
+    <text name="OfThemStillOpen" source=" of them {p0} still open." value="" />
+    <text name="OfTrackedTime" source=" of tracked time" value="" />
+    <text name="OffersToMakeThoseIntoRoutines" source="offers to make those into routines. A problem is the opposite: unplanned, irregular, and not " value="" />
+    <text name="OnItsOwn" source="On its own" value="" />
+    <text name="OnceADayCatchingUpLater" source="once a day, catching up later if the machine was off. " value="" />
+    <text name="OneClickLogWhatYouJust" source="one click, log what you just did, and watch the clock, without leaving what you are doing.&lt;/p&gt;" value="" />
+    <text name="Only" source="Only " value="" />
+    <text name="OnlyOneRunnerWatchesAFolder" source="Only one runner watches a folder at a time, so starting a second by accident cannot run " value="" />
+    <text name="OpenARecordFirst" source="Open a record first" value="" />
+    <text name="OpenARecordFirstThenPaste" source="Open a record first, then paste" value="" />
+    <text name="OpenAYearNothingIsMarked" source="Open a year nothing is marked in and the calendar offers to fill in the " value="" />
+    <text name="OpenExisting" source="Open existing" value="" />
+    <text name="OpenIt" source="Open it" value="" />
+    <text name="OpenNow" source="Open now" value="" />
+    <text name="Opened" source="Opened" value="" />
+    <text name="Opened2" source="Opened    : " value="" />
+    <text name="Opened3" source="Opened " value="" />
+    <text name="OtherRecordsHaveToLandFirst" source=" other records&lt;/b&gt; have to land first" value="" />
+    <text name="OverdueBy" source="Overdue by " value="" />
+    <text name="OverwriteItWithThisVersion" source="overwrite it with this version" value="" />
+    <text name="OverwritesTheExistingFile" source="overwrites the existing file" value="" />
+    <text name="PartlyFromWhoRaisedItThat" source="Partly from who raised it — that is the pattern in your own records. " value="" />
+    <text name="PastItsDueDate" source="past its due date" value="" />
+    <text name="PasteItIntoATerminalIt" source="Paste it into a terminal — it starts the runner at every logon" value="" />
+    <text name="PasteItIntoTheComposeBar" source="Paste it into the compose bar with Ctrl+V and Dossier will read it" value="" />
+    <text name="PastedMessage" source="Pasted message" value="" />
+    <text name="Pause" source="Pause" value="" />
+    <text name="PausedItWillNotRaiseAnything" source="Paused — it will not raise anything" value="" />
+    <text name="PerTeamWhichIsTheNumber" source="per team — which is the number to bring to the meeting.&lt;/dd&gt;&lt;/dl&gt;" value="" />
+    <text name="PermissionDeniedInAppToastsOnly" source="Permission denied — in-app toasts only" value="" />
+    <text name="PermissionToThatFolderWasNot" source="Permission to that folder was not granted" value="" />
+    <text name="PickAWorkspaceFolderBeforeAdding" source="Pick a workspace folder before adding scripts" value="" />
+    <text name="PickAWorkspaceFolderBeforeAttaching" source="Pick a workspace folder before attaching files" value="" />
+    <text name="PickedFromHowOftenYouHave" source="Picked from how often you have already asked. " value="" />
+    <text name="PinnedFromInsight" source=" · pinned from Insight" value="" />
+    <text name="PressOnAnyRecordCarryingA" source="Press &lt;b&gt;$&lt;/b&gt; on any record carrying a script and it goes to the runner. &lt;b&gt;▶&lt;/b&gt; beside a " value="" />
+    <text name="Print" source="Print" value="" />
+    <text name="PrintTheOpenRecord" source="Print the open record" value="" />
+    <text name="PrintedFromTheOpenRecord" source=" · printed from the open record" value="" />
+    <text name="Priority" source="Priority" value="" />
+    <text name="ProblemSAccountForRecordsAnd" source=" problem(s) account for {p0} records and {p1} of tracked time." value="" />
+    <text name="ProcessOfYourOwnWatchesFor" source="process of your own watches for it, runs the script, and writes the output back — which lands " value="" />
+    <text name="PublicHolidaysAreTintedAndNamed" source="Public holidays are tinted and named on the day. The list is seeded with &lt;b&gt;Cambodia 2026&lt;/b&gt; " value="" />
+    <text name="PutLogoPngAndFaviconIco" source="Put &lt;code&gt;logo.png&lt;/code&gt; and &lt;code&gt;favicon.ico&lt;/code&gt; in the same folder as this HTML file. " value="" />
+    <text name="PutYourNameInSetupAnd" source="Put your name in Setup and it signs itself." value="" />
+    <text name="PutYourWorkspacesFullPathIn" source="Put your workspace's full path in &lt;b&gt;Menu → Scripts → Folder path&lt;/b&gt; first, or that line will point nowhere. Until then, double-click &lt;b&gt;scripts\dossier-runner.ps1&lt;/b&gt; to start it by hand." value="" />
+    <text name="PxPxRgbaPxPxRgba" source="0 1px 2px rgba(0,0,0,.5),0 14px 38px rgba(0,0,0,.45)" value="" />
+    <text name="PxPxRgbaPxPxRgba2" source="0 1px 2px rgba(0,0,0,.06),0 12px 30px rgba(0,0,0,.08)" value="" />
+    <text name="QuoteAnythingAwkwardOpsTeamDba" source="Quote anything awkward: &lt;code&gt;~&quot;ops team, dba&quot;&lt;/code&gt;.&lt;/p&gt;" value="" />
+    <text name="RaiseItAgainNow" source="Raise it again now" value="" />
+    <text name="Raised" source="Raised " value="" />
+    <text name="RaisedAgainOnTodaysSheet" source="Raised again — {p0} on today's sheet" value="" />
+    <text name="RaisedAsP" source="raised as P1" value="" />
+    <text name="RaisedBy" source="Raised by" value="" />
+    <text name="RaisedBy2" source="raised by " value="" />
+    <text name="RaisedBy3" source="Raised by " value="" />
+    <text name="RaisedBy4" source="&quot;&gt;Raised by: " value="" />
+    <text name="RaisedBy5" source="Raised by : " value="" />
+    <text name="RaisedBy6" source="Raised by → " value="" />
+    <text name="RaisedToday" source=" · raised today" value="" />
+    <text name="Ran" source="Ran " value="" />
+    <text name="RanFailedExit" source="Ran (failed, exit " value="" />
+    <text name="RanOnSchedule" source="Ran on schedule" value="" />
+    <text name="RatherThanADayOffEverything" source="rather than a day off. Everything lives in dossier.json and travels with the folder.&lt;/p&gt;" value="" />
+    <text name="ReadAPastedMessage" source="Read a pasted message" value="" />
+    <text name="Reconnect" source="Reconnect " value="" />
+    <text name="RecordSCameUnblockedAndAre" source=" record(s) came unblocked and are waiting for you to pick them back up." value="" />
+    <text name="RecordSClosedThatDay" source=" record(s) closed that day" value="" />
+    <text name="RecordSClosedTodayWithNo" source=" record(s) closed today with no note. Future you will want to know what you did." value="" />
+    <text name="RecordSHaveSlippedDaysEither" source=" record(s) have slipped 5+ days. Either reschedule them honestly or close them." value="" />
+    <text name="RecordSHeldByThem" source=" record(s) held by them" value="" />
+    <text name="RecordSOpenedThatDay" source=" record(s) opened that day" value="" />
+    <text name="RecordSPinnedResetClearsIt" source=" record(s) pinned — Reset clears it" value="" />
+    <text name="RecordSTheOldestWaiting" source=" record(s), the oldest waiting " value="" />
+    <text name="RecordSTypesAs" source=" record(s) · types as :" value="" />
+    <text name="RecordWorkedThroughTheConsoleIs" source="record worked through the console is the same record you would have written by hand — the reports " value="" />
+    <text name="Records" source="Records" value="" />
+    <text name="RecordsAreStillSittingWithYou" source=" records are still sitting with you, the oldest for " value="" />
+    <text name="RecordsAreUnblocked" source=" records are unblocked" value="" />
+    <text name="RecordsCarryingAttachments" source="Records carrying attachments" value="" />
+    <text name="RecordsClosed" source="| Records closed | " value="" />
+    <text name="RecordsInView" source=" records in view&lt;/div&gt;" value="" />
+    <text name="RecordsLoadedFrom" source=" records loaded from " value="" />
+    <text name="RecordsNotAModelAndNot" source="records, not a model and not a service.&lt;/p&gt;" value="" />
+    <text name="RecordsThatWaitedOn" source="Records that waited on " value="" />
+    <text name="RecordsTheSchedulerRaisedAreMarked" source="Records the scheduler raised are marked &lt;b&gt;↻ scheduled&lt;/b&gt; so they never look like something you " value="" />
+    <text name="RecordsWithTimeOnTheClock" source="Records with time on the clock" value="" />
+    <text name="RecurringChecksAppearOnTheirOwn" source="Recurring checks appear on their own each day they are due, so the morning round is never a memory test.&lt;/p&gt;" value="" />
+    <text name="RecurringProblems" source="Recurring problems" value="" />
+    <text name="Ref" source="Ref       : " value="" />
+    <text name="RememberFilters" source="Remember filters" value="" />
+    <text name="Reminders2" source="Reminders " value="" />
+    <text name="RemindersOnTheyArriveEvenWhen" source="Reminders on — they arrive even when this tab is in the background" value="" />
+    <text name="Remove" source="Remove " value="" />
+    <text name="RemoveEveryMarkedDay" source="Remove every marked day?" value="" />
+    <text name="RemoveThemAll" source="Remove them all" value="" />
+    <text name="RemoveThisDocument" source="Remove this document?" value="" />
+    <text name="Removed" source="Removed " value="" />
+    <text name="RemovedFromTheListTheFile" source="Removed {p0} from the list — the file stays in scripts/" value="" />
+    <text name="RemovedFromTheRecordButThe" source="Removed from the record, but the file could not be deleted" value="" />
+    <text name="RemovesItFromTheFolderOn" source="removes it from the folder on disk" value="" />
+    <text name="Renamed" source="Renamed" value="" />
+    <text name="Repeats" source="Repeats" value="" />
+    <text name="Replace" source="Replace" value="" />
+    <text name="ReplaceEverything" source="Replace everything" value="" />
+    <text name="Report" source="Report" value="" />
+    <text name="ReportCopied" source="Report copied" value="" />
+    <text name="ReportsSummariesYouSave" source="  reports/                  summaries you save
+" value="" />
+    <text name="Resume" source="Resume" value="" />
+    <text name="ResumedNextDue" source="Resumed — next due " value="" />
+    <text name="ResumedTodaysRecordIsOnThe" source="Resumed — today's record is on the sheet" value="" />
+    <text name="ReuseThisWording" source=" · reuse this wording" value="" />
+    <text name="RightsDayPeaceDayThoseFall" source="Rights Day, Peace Day. Those fall on the same date every year, so Dossier can work them out for " value="" />
+    <text name="RoughlyEvery" source=" — roughly every " value="" />
+    <text name="RoutineAddedNextDue" source="Routine added — next due " value="" />
+    <text name="RoutineAddedTodaysRecordIsOn" source="Routine added — today's record is on the sheet" value="" />
+    <text name="RoutineDoesTheSameThingOn" source="routine does the same thing on demand — raises today's record and sets the script going, the " value="" />
+    <text name="RoutineSaysWhetherItWasRaised" source="routine says whether it was raised today, when it last was, or that it never has been.&lt;/p&gt;" value="" />
+    <text name="RoutinesHidden" source="routines hidden" value="" />
+    <text name="Run" source="Run " value="" />
+    <text name="RunButton" source="Run button" value="" />
+    <text name="RunCopiesTheCommand" source="Run copies the command" value="" />
+    <text name="RunFromExplorerAndFiledAs" source="run from Explorer and filed as evidence beside the incident.&lt;/p&gt;" value="" />
+    <text name="RunItNow" source="Run it now" value="" />
+    <text name="RunSendsTheScriptToThe" source="Run sends the script to the runner" value="" />
+    <text name="RunsItEveryMinutesItReads" source="runs it every 15 minutes, it reads dossier.json off the disk and raises the same toasts with no browser " value="" />
+    <text name="RunsItself" source=" · runs itself" value="" />
+    <text name="SaveNow" source="Save now" value="" />
+    <text name="SavedTo" source="Saved to " value="" />
+    <text name="SavesItAs" source="saves it as " value="" />
+    <text name="Saving" source="saving…" value="" />
+    <text name="ScheduledRunSFiledIntoTodays" source=" scheduled run(s) filed into today's records" value="" />
+    <text name="SchtasksCreateTnDossierRemindersSc" source="schtasks /Create /TN &quot;Dossier reminders&quot; /SC MINUTE /MO 15 /F /TR " value="" />
+    <text name="ScreenshotFiledUnder" source="Screenshot filed under " value="" />
+    <text name="Script" source="Script" value="" />
+    <text name="ScriptAttached" source="Script attached: " value="" />
+    <text name="ScriptSAddedToScripts" source=" script(s) added to scripts/" value="" />
+    <text name="ScriptSPickedUpFromScripts" source=" script(s) picked up from scripts/" value="" />
+    <text name="ScriptUnlinked" source="Script unlinked: " value="" />
+    <text name="Scripts" source="Scripts   : " value="" />
+    <text name="ScriptsAfterThatTypingInThe" source="/scripts/&lt;/b&gt;. After that, typing &lt;b&gt;$&lt;/b&gt; in the " value="" />
+    <text name="ScriptsQueueIsWritable" source="scripts/queue is writable" value="" />
+    <text name="ScriptsSectionWritesARunCmd" source="Scripts section writes a &lt;code&gt;run-….cmd&lt;/code&gt; into that record's own folder. Double-click " value="" />
+    <text name="SeeAll" source="&gt;&lt;b&gt;See all " value="" />
+    <text name="SeeAtAGlanceWhetherThe" source="see at a glance whether the morning round is done.&lt;/p&gt;" value="" />
+    <text name="SeeTheLog" source="See the log" value="" />
+    <text name="SeededWithCambodiaSubDecreeNo" source="Seeded with Cambodia 2026 (Sub-Decree No. 167, 18 Sep 2025) — &lt;b&gt;check it against the " value="" />
+    <text name="SeemToAreCallingAServer" source="seem to are calling a server, which this file will never do." value="" />
+    <text name="Seen" source="Seen " value="" />
+    <text name="SendItToTheRunnerOption" source="&gt;Send it to the runner&lt;/option&gt;&lt;option value=&quot;0&quot;" value="" />
+    <text name="SentToTheRunner" source="Sent to the runner — " value="" />
+    <text name="ServiceReviewOrAPddReports" source="service review or a PDD. &lt;b&gt;Reports → Recurring problems&lt;/b&gt; writes them all out at once.&lt;/p&gt;" value="" />
+    <text name="SetATargetDate" source="Set a target date" value="" />
+    <text name="SetTo" source=" set to " value="" />
+    <text name="Settings" source="Settings" value="" />
+    <text name="ShouldNotInstallSoDossierWrites" source="should not install. So Dossier writes the request to a file instead, and a small PowerShell " value="" />
+    <text name="ShowAll" source="Show all " value="" />
+    <text name="ShowTheLastOnly" source="Show the last 6 only" value="" />
+    <text name="Signed" source="Signed " value="" />
+    <text name="SimilarRecordsYouHaveLogged" source="Similar records you have logged" value="" />
+    <text name="SinceYesterday" source="Since yesterday:" value="" />
+    <text name="Skip" source="Skip" value="" />
+    <text name="Slipping" source="Slipping" value="" />
+    <text name="SoItIsYoursToEdit" source="So it is yours to edit, under &lt;b&gt;Setup → Holidays and festivals&lt;/b&gt;. Add your own office " value="" />
+    <text name="SoItKeepsOneLinePer" source="so it keeps one line per record and leans on the marks. Dragging works in both, and the arrows " value="" />
+    <text name="SoTheWorstAStrayRequest" source="— so the worst a stray request can do is run one of the scripts you put there yourself. It runs " value="" />
+    <text name="SokhaDaraCommaSeparatesThem" source="Sokha, Dara — comma separates them" value="" />
+    <text name="SomeoneElse" source="someone else" value="" />
+    <text name="SomethingSoThisCostsNothingTo" source="something, so this costs nothing to leave running all day.&lt;br&gt;&lt;br&gt;" value="" />
+    <text name="SpellAColleagueTheSameWay" source="spell a colleague the same way twice. &lt;b&gt;↑↓&lt;/b&gt; moves, &lt;b&gt;Tab&lt;/b&gt; or &lt;b&gt;Enter&lt;/b&gt; inserts. " value="" />
+    <text name="Standup" source="Standup" value="" />
+    <text name="StandupNote" source="Standup note" value="" />
+    <text name="Start" source="Start" value="" />
+    <text name="StartItDoubleClickScriptsDossier" source="Start it: double-click &lt;b&gt;scripts\dossier-runner.ps1&lt;/b&gt;. Its window must say it is watching &lt;b&gt;this&lt;/b&gt; folder — if it names a different path, you have two copies of the workspace and Dossier is pointed at the other one." value="" />
+    <text name="StartTheClock" source="Start the clock" value="" />
+    <text name="Status" source="Status    : " value="" />
+    <text name="Status2" source="Status" value="" />
+    <text name="StaysOnDiskEitherWayThis" source=" stays on disk either way — this only takes it out of the list." value="" />
+    <text name="StepByWeekOrByMonth" source="step by week or by month depending on which you are in.&lt;/p&gt;" value="" />
+    <text name="Steps" source="Steps" value="" />
+    <text name="StillOpen" source=" still open" value="" />
+    <text name="Stop" source="Stop" value="" />
+    <text name="SubDecreeBecauseHalfOfThese" source="sub-decree&lt;/b&gt;, because half of these are lunar and move, and the list is reissued every " value="" />
+    <text name="SubDecreeNoOfSeptemberWorth" source="(Sub-Decree No. 167 of 18 September 2025) — worth checking against the sub-decree, because " value="" />
+    <text name="SummaryCopied" source="Summary copied" value="" />
+    <text name="SupportedByThisBrowser" source="supported by this browser" value="" />
+    <text name="SupposedToBeHappeningRecordsYour" source="supposed to be happening. Records your routines created are left out of it.&lt;/p&gt;" value="" />
+    <text name="Swatch" source="Swatch" value="" />
+    <text name="SwitchFolder" source="Switch folder…" value="" />
+    <text name="System" source="System" value="" />
+    <text name="System2" source="System    : " value="" />
+    <text name="Systems" source="Systems" value="" />
+    <text name="SystemsAffected" source="Systems affected: " value="" />
+    <text name="Tab" source="Tab" value="" />
+    <text name="Tag" source="Tag" value="" />
+    <text name="Tags" source="Tags" value="" />
+    <text name="TakeItOutOfTheList" source="Take it out of the list" value="" />
+    <text name="TeamSThatHaveGoneQuiet" source=" team(s) that have gone quiet&lt;/button&gt;&lt;/div&gt;" value="" />
+    <text name="TeamYouCanWaitOn" source="team you can wait on" value="" />
+    <text name="TeamsAreHolding" source=" teams are holding " value="" />
+    <text name="Templates" source="Templates" value="" />
+    <text name="TerminalLeaveItBlankAndThe" source="terminal. Leave it blank and the commands stay relative to the workspace folder.&lt;/p&gt;" value="" />
+    <text name="ThatFileIsAlreadyInThis" source="That file is already in this record" value="" />
+    <text name="ThatFileIsNotReadableText" source="That file is not readable text, so there is nothing to fill in" value="" />
+    <text name="ThatIsNotValidJson" source="That is not valid JSON" value="" />
+    <text name="ThatScriptIsAlreadyInThe" source="That script is already in the folder" value="" />
+    <text name="The" source="The " value="" />
+    <text name="TheBrowserIsNeverToldThe" source="The browser is never told the real path of the folder you picked — that is part of the sandbox. " value="" />
+    <text name="TheBrowserIsNotAllowedTo" source="The browser is not allowed to run anything on your machine, and Dossier does not try. It keeps the file in &lt;b&gt;scripts/&lt;/b&gt;, fills in the blanks, and gives you the command or a ready copy in this record's own folder.&lt;/div&gt;" value="" />
+    <text name="TheBrowserWouldNotHandOver" source="The browser would not hand over the clipboard — paste into the box with Ctrl+V instead" value="" />
+    <text name="TheCalendarReadsAtTwoZooms" source="The calendar reads at two zooms. &lt;b&gt;Week&lt;/b&gt; is for working — the whole record on the card, " value="" />
+    <text name="TheCaseIsOnTheClipboard" source="The case is on the clipboard" value="" />
+    <text name="TheClipboardStampsTheScriptAs" source="the clipboard, stamps the script as used, and writes &lt;i&gt;Ran &amp;lt;script&amp;gt;&lt;/i&gt; into the record's " value="" />
+    <text name="TheClosedRecordsThisAverageIs" source="The {p0} closed records this average is built from" value="" />
+    <text name="TheCommandForSomethingThatMust" source="the command. For something that must fire at a fixed hour whether or not Dossier is open, that is " value="" />
+    <text name="TheConsoleCouldNotOpenClick" source="The console could not open — click the button again" value="" />
+    <text name="TheFileIsLeftAlone" source="the file is left alone" value="" />
+    <text name="TheFileStaysInTheFolder" source="the file stays in the folder" value="" />
+    <text name="TheFirstLineWithSomethingIn" source="the first line with something in it" value="" />
+    <text name="TheFloatingConsoleNeedsMicrosoftEdge" source="The floating console needs Microsoft Edge or Chrome" value="" />
+    <text name="TheHoursAreYoursToChange" source="The hours are yours to change under Setup, and the whole thing can be turned off there.&lt;/p&gt;" value="" />
+    <text name="TheLogoReplacesTheSealIn" source="The logo replaces the seal in the corner and is used on notifications; the icon shows on the tab. " value="" />
+    <text name="TheMessage" source="the message" value="" />
+    <text name="TheRecordLivesInThisWindow" source="The record lives in this window; the work happens in RDP, or SSMS, or the vendor's portal. " value="" />
+    <text name="TheRequestWasTakenButNo" source="The request was taken but no result came back. The runner is running but the script did not finish — check its window for an error." value="" />
+    <text name="TheRunnerAnsweredInSBut" source="The runner answered in {p0}s but the script failed, exit " value="" />
+    <text name="TheRunnerAnsweredInSIt" source="The runner answered in {p0}s. &lt;b&gt;It works.&lt;/b&gt;" value="" />
+    <text name="TheRunnerIsWatchingNotThis" source="The runner is watching {p0}, not this one." value="" />
+    <text name="TheRunnerIsWatchingWhichIs" source="The runner is watching &lt;b&gt;{p0}&lt;/b&gt;, which is not this folder. Your scripts will never run from here — start it from the copy you actually use." value="" />
+    <text name="TheSignOff" source="the sign-off" value="" />
+    <text name="TheSubjectLine" source="the subject line" value="" />
+    <text name="TheTeamsOutsideYourPermissionWhen" source="The teams outside your permission. When the agency is not found and the data team has to sync first, " value="" />
+    <text name="TheWaitClockIsEvidenceAnd" source="The wait clock is evidence, and evidence on its own does not move work — so Dossier writes the " value="" />
+    <text name="TheWholeMessageIsKeptAs" source="The whole message is kept as the notes, so the evidence stays with the record. " value="" />
+    <text name="TheWholePathAndSaysWhich" source="the whole path and says which step stopped.&lt;/p&gt;" value="" />
+    <text name="ThenYouPasteItDossierCannot" source="Then you paste it. Dossier cannot execute anything — no page in a browser can, and a file that " value="" />
+    <text name="ThereIsAlsoPasteAMessage" source="There is also &lt;b&gt;Paste a message&lt;/b&gt; beside the compose bar, and Ctrl+V anywhere on the page.&lt;/p&gt;" value="" />
+    <text name="TheseAreNotMovingBecauseSomeone" source="These are not moving because someone else has to act first." value="" />
+    <text name="TheyAreAllThereAlready" source="They are all there already" value="" />
+    <text name="TheyStand" source="they stand" value="" />
+    <text name="ThisBrowserCannotOpenFoldersSo" source="This browser cannot open folders, so nothing can be saved to disk. &lt;b&gt;Open this file in Microsoft Edge or Chrome&lt;/b&gt; to link a workspace folder. Everything below is demo data." value="" />
+    <text name="ThisBrowserCannotOpenFoldersUse" source="This browser cannot open folders — use Edge or Chrome" value="" />
+    <text name="ThisIsNotTheSameAs" source="This is not the same as a routine. Work that repeats on a schedule should be planned, and Day " value="" />
+    <text name="ThisIsWhoTheClockRuns" source="this is who the clock runs against.&lt;/p&gt;" value="" />
+    <text name="ThisPageCarriesAContentSecurity" source="This page carries a content security policy of &lt;code&gt;connect-src 'none'&lt;/code&gt;. That is not a promise, it is an " value="" />
+    <text name="ThisRecordWaitsForIt" source=" · this record waits for it" value="" />
+    <text name="ThisScript" source="this script" value="" />
+    <text name="ThreeItemsNotThreeNotesThe" source="three items, not three notes. The message carries the reference, how long it has been sitting, how " value="" />
+    <text name="Ticket" source="Ticket" value="" />
+    <text name="Ticket2" source="Ticket    : " value="" />
+    <text name="Tickets" source="Tickets" value="" />
+    <text name="Time" source="Time      : " value="" />
+    <text name="Time2" source="Time" value="" />
+    <text name="TimeBookedAgainst" source="Time booked against " value="" />
+    <text name="TimeBySystem" source="Time by system" value="" />
+    <text name="TimeLogged" source="| Time logged | " value="" />
+    <text name="TimeTheseRecordsSatWithSomeone" source="Time these records sat with someone outside your permission" value="" />
+    <text name="TimeTracked" source="Time tracked" value="" />
+    <text name="TimerStarted" source="Timer started" value="" />
+    <text name="TimerStopped" source="Timer stopped, +" value="" />
+    <text name="TimesRoughlyEveryDaySWorth" source=" times, roughly every {p0} day(s). Worth making it a routine." value="" />
+    <text name="Title" source="Title" value="" />
+    <text name="ToLeaveOpen" source="to leave open.&lt;/p&gt;" value="" />
+    <text name="ToTouchItNameThemAnd" source="to touch it. Name them and the clock starts. Every chase is logged, and Insight totals the days lost " value="" />
+    <text name="Today" source="Today" value="" />
+    <text name="TodayIfABlankIsStill" source="today&lt;/b&gt;. If a blank is still unfilled it says which one rather than handing you a broken line.&lt;/p&gt;" value="" />
+    <text name="Tomorrow" source="Tomorrow" value="" />
+    <text name="TurnATeamsMessageOrA" source="Turn a Teams message or a mail into a record" value="" />
+    <text name="Turnaround" source="Turnaround" value="" />
+    <text name="Type" source="Type" value="" />
+    <text name="TypeItOnceHereAndEvery" source="Type it once here and every command Dossier copies becomes a full path you can paste straight into a " value="" />
+    <text name="TypedInRoutinesRaisesTodaysAgain" source="typed. In Routines, &lt;b&gt;↻&lt;/b&gt; raises today's again for the round you have to do twice, and each " value="" />
+    <text name="Unassigned" source="Unassigned" value="" />
+    <text name="Unblocked" source="Unblocked · " value="" />
+    <text name="Uncategorised" source="Uncategorised" value="" />
+    <text name="Undo" source="Undo" value="" />
+    <text name="Unlinked" source="Unlinked " value="" />
+    <text name="UnreadableResult" source="unreadable result" value="" />
+    <text name="UpAndFilesItInThe" source="up and files it in the record's work log, with the exit code if it failed.&lt;/p&gt;" value="" />
+    <text name="Update" source="Update" value="" />
+    <text name="Views" source="Views" value="" />
+    <text name="VisakBocheaTheRoyalPloughingCeremony" source="Visak Bochea, the Royal Ploughing Ceremony, Pchum Ben and the Water Festival are lunar and move " value="" />
+    <text name="Waiting" source="Waiting   : " value="" />
+    <text name="WaitingFor" source="waiting for " value="" />
+    <text name="WaitingForTheRunnerItShould" source="Waiting for the runner — it should answer in about a second…" value="" />
+    <text name="WaitingInTheRecordsWorkLog" source="waiting in the record's work log as &lt;b&gt;Ran on schedule&lt;/b&gt; next time you look, with the exit " value="" />
+    <text name="WaitingOn" source="Waiting on" value="" />
+    <text name="WaitingOn2" source="Waiting on " value="" />
+    <text name="WaitingOn3" source="waiting on " value="" />
+    <text name="WaitingOn4" source="&quot;&gt;Waiting on: " value="" />
+    <text name="WaitingOn5" source=" (waiting on " value="" />
+    <text name="WaitingOnSomeoneElse" source="Waiting on someone else" value="" />
+    <text name="WaitingSinceDaySThisTime" source="Waiting since {p0} — {p1} day(s). {p2} This time is counted separately in Insight, so you can show where it actually went.&lt;/div&gt;" value="" />
+    <text name="WaitsFor" source="Waits for " value="" />
+    <text name="WaitsFor2" source="waits for " value="" />
+    <text name="WaitsFor3" source="Waits for : " value="" />
+    <text name="WaitsFor4" source="Waits for" value="" />
+    <text name="WarnBefore" source="Warn before" value="" />
+    <text name="WatchesScriptsQueueRunsTheScript" source="watches &lt;b&gt;scripts/queue/&lt;/b&gt;, runs the script, and writes the output back. Dossier picks that " value="" />
+    <text name="WatchingPidRoutineSSetTo" source="Watching {p0} (pid {p1}), {p2} routine(s) set to run themselves." value="" />
+    <text name="WaterFestivalAreSetAgainstThe" source="Water Festival are set against the Khmer calendar and move every year — there is no formula to " value="" />
+    <text name="WayRunDoesInTaskScheduler" source="way Run does in Task Scheduler. If nothing happens, &lt;b&gt;Setup → Test it end to end&lt;/b&gt; walks " value="" />
+    <text name="WebFontsWouldMeanDownloadingFrom" source="A web font would mean fetching from someone else's server, which this app will never do. The Latin faces below are the ones Dossier found already installed on this machine — " value="" />
+    <text name="Weekdays" source="Weekdays" value="" />
+    <text name="Weekly" source="Weekly" value="" />
+    <text name="WhatKeepsComingBackAndWhat" source="What keeps coming back, and what it cost" value="" />
+    <text name="WhatWasDoneEachTime" source="What was done each time:" value="" />
+    <text name="WhatYourDaysAreMadeOf" source="What your days are made of" value="" />
+    <text name="WhateverIsFilteredRightNow" source="Whatever is filtered right now" value="" />
+    <text name="WhenTheTabIsClosedNothing" source="When the tab is &lt;b&gt;closed&lt;/b&gt;, nothing in it runs; no web page can wake itself up, and the ones that " value="" />
+    <text name="WhereEverythingIsStored" source="Where everything is stored" value="" />
+    <text name="WhereTheHoursActuallyGo" source="Where the hours actually go" value="" />
+    <text name="WhileDossierIsOpenEvenHidden" source="While Dossier is open — even hidden behind Outlook — it raises real Windows notifications. " value="" />
+    <text name="Who" source="Who" value="" />
+    <text name="WhoAsksTheMost" source="Who asks the most" value="" />
+    <text name="WhoRaisedIt" source="Who raised it" value="" />
+    <text name="WhoUsuallyRaisesThese" source="who usually raises these" value="" />
+    <text name="WillSeeNothingLeaveThereAre" source="will see nothing leave. There are no fonts, scripts or images loaded from anywhere. The suggestions come " value="" />
+    <text name="WindowsKeepsAboveEverythingAndThat" source="Windows keeps &lt;b&gt;above everything&lt;/b&gt;, and that you drag and size like any other. Change status in " value="" />
+    <text name="WindowsTaskSchedulersJobGiveThe" source="Windows Task Scheduler's job; give the script a stamp file so it does its work once a day and " value="" />
+    <text name="WindowsToastRemindersWhileDossierIs" source="Windows toast reminders while Dossier is closed" value="" />
+    <text name="WithThatScriptAlreadyAttachedAnd" source="with that script already attached and its command ready to copy — so the round is a click, not a " value="" />
+    <text name="WithYouSince" source="With you since " value="" />
+    <text name="WorkByType" source="Work by type" value="" />
+    <text name="WorkConsole" source="Work console" value="" />
+    <text name="WorkLog" source="Work log:" value="" />
+    <text name="WorkLogSoAfterwardsThereIs" source="work log — so afterwards there is a trail saying it happened, and the script shows &lt;b&gt;ran " value="" />
+    <text name="WorkRarelyArrivesAsATidy" source="Work rarely arrives as a tidy sentence. Paste a Teams message, a forwarded mail or a ticket body " value="" />
+    <text name="WorkTypes" source="Work types" value="" />
+    <text name="WorkedOutByCountingWordsIn" source="Worked out by counting words in records you already logged. " value="" />
+    <text name="WorkloadBySystem" source="Workload by system" value="" />
+    <text name="WouldRatherNotKeepAProcess" source="Would rather not keep a process running? &lt;b&gt;Make a double-click file&lt;/b&gt; in the record's " value="" />
+    <text name="WriteDossierJson" source="Write dossier.json" value="" />
+    <text name="WriteTheFileThenEitherRun" source="Write the file, then either run that line once so it starts at every logon, or just double-click &lt;b&gt;dossier-runner.ps1&lt;/b&gt; to try it now. Close its window to stop it." value="" />
+    <text name="WriteToEveryTeamThatHas" source="Write to every team that has gone quiet" value="" />
+    <text name="WrittenSummariesForAPddA" source="Written summaries for a PDD, a KPI submission, standup, or shift handover&lt;/div&gt;" value="" />
+    <text name="WrittenTo" source="Written to " value="" />
+    <text name="WrittenToReports" source="Written to reports/" value="" />
+    <text name="WrittenToScriptsDossierRunnerPs" source="Written to scripts/dossier-runner.ps1 — start it once, then Run works from any record" value="" />
+    <text name="WrittenToScriptsDossierWatchPs" source="Written to scripts/dossier-watch.ps1" value="" />
+    <text name="WrittenToTasks" source="Written to tasks/" value="" />
+    <text name="WrittenToTheRecordFolderBlank" source="Written to the record folder — {p0} blank(s) still unfilled" value="" />
+    <text name="WroteScriptsQueue" source="Wrote &lt;b&gt;scripts/queue/" value="" />
+    <text name="YearAddYourOwnOfficeClosures" source="year. Add your own office closures and the festivals you mark but still work.&lt;/p&gt;" value="" />
+    <text name="YesComeBackToTheSame" source="&gt;Yes — come back to the same view&lt;/option&gt;&lt;option value=&quot;0&quot;" value="" />
+    <text name="YesFromThePriorityOptionValue" source="&gt;Yes — from the priority&lt;/option&gt;&lt;option value=&quot;0&quot;" value="" />
+    <text name="Yesterday" source="Yesterday" value="" />
+    <text name="YouCanRestoreTheCambodiaList" source="you can restore the Cambodia list afterwards" value="" />
+    <text name="YourName" source="Your name" value="" />
+    <text name="YourScriptTwiceAScriptThat" source="your script twice. A script that never finishes is stopped after five minutes rather than " value="" />
+    <text name="YourWorkspace" source="your workspace" value="" />
+    <text name="Label_Sun" source="Sun" value="" />
+    <text name="Label_Mon" source="Mon" value="" />
+    <text name="Label_Tue" source="Tue" value="" />
+    <text name="Label_Wed" source="Wed" value="" />
+    <text name="Label_Thu" source="Thu" value="" />
+    <text name="Label_Fri" source="Fri" value="" />
+    <text name="Label_Sat" source="Sat" value="" />
+    <text name="Label_January" source="January" value="" />
+    <text name="Label_February" source="February" value="" />
+    <text name="Label_March" source="March" value="" />
+    <text name="Label_April" source="April" value="" />
+    <text name="Label_May" source="May" value="" />
+    <text name="Label_June" source="June" value="" />
+    <text name="Label_July" source="July" value="" />
+    <text name="Label_August" source="August" value="" />
+    <text name="Label_September" source="September" value="" />
+    <text name="Label_October" source="October" value="" />
+    <text name="Label_November" source="November" value="" />
+    <text name="Label_December" source="December" value="" />
+    <text name="Label_Archive" source="Archive" value="" />
+    <text name="Label_Vault" source="Vault" value="" />
+    <text name="Label_PowerShell" source="PowerShell" value="" />
+    <text name="Label_Batch" source="Batch" value="" />
+    <text name="Label_Python" source="Python" value="" />
+    <text name="Label_Shell" source="Shell" value="" />
+    <text name="Label_Node" source="Node" value="" />
+    <text name="Label_VBScript" source="VBScript" value="" />
+    <text name="Label_SQL" source="SQL" value="" />
+    <text name="Label_Notes" source="Notes" value="" />
+    <text name="Label_Ref" source="Ref" value="" />
+    <text name="Label_Status" source="Status" value="" />
+    <text name="Label_Record" source="Record" value="" />
+    <text name="Label_System" source="System" value="" />
+    <text name="Label_Ticket" source="Ticket" value="" />
+    <text name="Label_Docs" source="Docs" value="" />
+    <text name="Label_Due" source="Due" value="" />
+    <text name="Label_Spent" source="Spent" value="" />
+    <text name="Dark" source="dark" value="" />
+    <text name="Light" source="light" value="" />
+    <text name="NoFolder" source="No folder" value="" />
+    <text name="StartOneFrom" source="Start one from" value="" />
+    <text name="Light2" source="Light" value="" />
+    <text name="Dark2" source="Dark" value="" />
+    <text name="CopyThisOne" source="Copy this one" value="" />
+    <text name="Delete" source="Delete" value="" />
+    <text name="Scheduled" source="↻ scheduled" value="" />
+    <text name="HowToStartIt" source="How to start it" value="" />
+    <text name="HasBeenInProgressFor" source="has been in progress for" value="" />
+    <text name="HasComeUp" source="has come up" value="" />
+    <text name="HasHad" source="has had" value="" />
+    <text name="WriteTheChase" source="Write the chase" value="" />
+    <text name="DropHere" source="Drop here" value="" />
+    <text name="NoHolidaysMarkedFor" source="No holidays marked for" value="" />
+    <text name="ThenAdd" source="Then add" value="" />
+    <text name="Month" source="Month" value="" />
+    <text name="Scheduled2" source="scheduled" value="" />
+    <text name="Closed4" source="closed" value="" />
+    <text name="Logged3" source="logged" value="" />
+    <text name="UndatedDragOntoADayTo" source="Undated — drag onto a day to plan it" value="" />
+    <text name="EverythingHasADate" source="Everything has a date." value="" />
+    <text name="More" source="more" value="" />
+    <text name="TasksLtRecordGt" source="tasks/&amp;lt;record&amp;gt;/" value="" />
+    <text name="InsideYourWorkspaceFolderSoIt" source="inside your workspace folder, so it lives beside the notes about it." value="" />
+    <text name="Reading" source="Reading" value="" />
+    <text name="Filtered" source="filtered" value="" />
+    <text name="ClearFilters" source="Clear filters" value="" />
+    <text name="DailyThroughput" source="Daily throughput" value="" />
+    <text name="ClosedAgainstRaisedLastDaysClick" source="Closed against raised, last 21 days — click a day to read it" value="" />
+    <text name="Raised2" source="Raised" value="" />
+    <text name="WhatKeepsComingBack" source="What keeps coming back" value="" />
+    <text name="StatusMix" source="Status mix" value="" />
+    <text name="All" source="All" value="" />
+    <text name="WaitingOnAnotherRecordOrOn" source="Waiting on another record, or on someone else to act" value="" />
+    <text name="ChaseThe" source="Chase the" value="" />
+    <text name="NothingIsHeldUpEverythingOpen" source="Nothing is held up. Everything open is yours to move." value="" />
+    <text name="OpenRecordsPastTheirDueDate" source="Open records past their due date — the ones to explain or reschedule" value="" />
+    <text name="NothingOverdue" source="Nothing overdue." value="" />
+    <text name="EvidencePack" source="Evidence pack" value="" />
+    <text name="Handover" source="Handover" value="" />
+    <text name="Csv" source="CSV" value="" />
+    <text name="NothingRecordedYet" source="Nothing recorded yet." value="" />
+    <text name="TheseRecordsAreNoLongerOn" source="These records are no longer on file." value="" />
+    <text name="None" source="— none —" value="" />
+    <text name="TheMessageKeptAsTheNotes" source="The message, kept as the notes" value="" />
+    <text name="AlreadyOpen" source="Already open:" value="" />
+    <text name="WhatItFound" source="What it found" value="" />
+    <text name="NothingRecognisedFillItInYourself" source="Nothing recognised — fill it in yourself." value="" />
+    <text name="InTheMessage" source="in the message" value="" />
+    <text name="FromYourRecords" source="from your records" value="" />
+    <text name="FromThePriority" source="from the priority" value="" />
+    <text name="WhatThisCovers" source="What this covers" value="" />
+    <text name="Tone" source="Tone" value="" />
+    <text name="Occurrences" source="Occurrences" value="" />
+    <text name="NothingOpenToWorkOn" source="Nothing open to work on." value="" />
+    <text name="LogSomethingInTheMainWindow" source="Log something in the main window." value="" />
+    <text name="FileS" source="file(s)" value="" />
+    <text name="NoStepsLoggedYet" source="No steps logged yet." value="" />
+    <text name="Log" source="Log" value="" />
+    <text name="System3" source="System:" value="" />
+    <text name="Type2" source="Type:" value="" />
+    <text name="Estimate2" source="Estimate:" value="" />
+    <text name="SuggestedFromYourHistory" source="Suggested from your history" value="" />
+    <text name="YouHaveHandledThisBefore" source="You have handled this before" value="" />
+    <text name="HasToLandFirst" source="has to land first" value="" />
+    <text name="HasToAct" source="has to act —" value="" />
+    <text name="NotYoursToFinishYet" source="Not yours to finish yet:" value="" />
+    <text name="Unlink" source="Unlink" value="" />
+    <text name="ThisOneWaitsFor" source="This one waits for" value="" />
+    <text name="Link" source="Link" value="" />
+    <text name="HeldUpByThisOne" source="Held up by this one" value="" />
+    <text name="ChaseThem" source="Chase them…" value="" />
+    <text name="TheyCameBack" source="They came back" value="" />
+    <text name="RanToday" source="ran today" value="" />
+    <text name="Scripts2" source="scripts\" value="" />
+    <text name="RunNow" source="Run now" value="" />
+    <text name="MakeADoubleClickFile" source="Make a double-click file" value="" />
+    <text name="CopyCommand" source="Copy command" value="" />
+    <text name="BuildAFilledCopy" source="Build a filled copy" value="" />
+    <text name="Attach" source="Attach" value="" />
+    <text name="Remove2" source="Remove" value="" />
+    <text name="DropFilesHereOrClickTo" source="Drop files here, or click to choose" value="" />
+    <text name="Details" source="Details" value="" />
+    <text name="Checklist" source="Checklist" value="" />
+    <text name="NoStepsYet" source="No steps yet." value="" />
+    <text name="Add" source="Add" value="" />
+    <text name="WorkLog2" source="Work log" value="" />
+    <text name="NothingLogged" source="Nothing logged." value="" />
+    <text name="WorkOnThis" source="Work on this ▣" value="" />
+    <text name="Duplicate" source="Duplicate" value="" />
+    <text name="MakeRoutine" source="Make routine" value="" />
+    <text name="CopySummary" source="Copy summary" value="" />
+    <text name="PrintThisRecord" source="Print this record" value="" />
+    <text name="ShowLayout" source="Show layout" value="" />
+    <text name="ImportAJsonExport" source="Import a JSON export…" value="" />
+    <text name="Folder" source="Folder" value="" />
+    <text name="NoneRecordsAreOnlyInMemory" source="none — records are only in memory" value="" />
+    <text name="LastSaved" source="Last saved" value="" />
+    <text name="FolderAccess" source="Folder access" value="" />
+    <text name="NotSupportedUseEdgeOrChrome" source="not supported — use Edge or Chrome" value="" />
+    <text name="RecentFolders" source="Recent folders" value="" />
+    <text name="LastOpened" source="last opened" value="" />
+    <text name="PickAPeriodTheOutputIs" source="Pick a period. The output is markdown — it pastes cleanly into ServiceNow, Teams, Word or a PDD form." value="" />
+    <text name="Copy" source="Copy" value="" />
+    <text name="SaveToReports" source="Save to reports/" value="" />
+    <text name="NoRoutinesYet2" source="No routines yet." value="" />
+    <text name="EveryWeekday" source="Every weekday" value="" />
+    <text name="CertainWeekdays" source="Certain weekdays" value="" />
+    <text name="Monthly" source="Monthly" value="" />
+    <text name="NoIWillPressRun" source="No — I will press Run" value="" />
+    <text name="YesTheRunnerFiresItAt" source="Yes — the runner fires it at the time above" value="" />
+    <text name="ScriptsDossierRunnerPs" source="scripts/dossier-runner.ps1" value="" />
+    <text name="FiresItAtThatTimeWhether" source="fires it at that time whether Dossier is open or not —" value="" />
+    <text name="AddRoutine" source="Add routine" value="" />
+    <text name="CreateTodaysNow" source="Create today's now" value="" />
+    <text name="DossierDoesNotRunThem" source="Dossier does not run them." value="" />
+    <text name="APageInABrowserIs" source="A page in a browser is not allowed to start a program on your" value="" />
+    <text name="AddScriptFiles" source="Add script files…" value="" />
+    <text name="PickUpNewFilesInScripts" source="Pick up new files in scripts/" value="" />
+    <text name="WriteTheReminderWatcher" source="Write the reminder watcher" value="" />
+    <text name="WhatItDoes" source="What it does" value="" />
+    <text name="Blanks" source="Blanks" value="" />
+    <text name="NothingInTheLibraryYet" source="Nothing in the library yet." value="" />
+    <text name="WhereTheCommandsPoint" source="Where the commands point" value="" />
+    <text name="BestAvailable" source="Best available (" value="" />
+    <text name="Detected" source="detected" value="" />
+    <text name="DossierSupportOperationsRecord" source="Dossier — Support Operations Record" value="" />
+    <text name="ImagingNightlySyncFailedSqlTimeout" source="Imaging nightly sync failed; SQL timeout on GetPendingAsync. Escalated to the DBA team at 02:40." value="" />
+    <text name="DIncMs" source="D-0042  INC0012345  02:14:07  →  30,021 ms" value="" />
+    <text name="NoExtraFacesWereDetected" source="No extra faces were detected." value="" />
+    <text name="Palette" source="Palette" value="" />
+    <text name="Off" source="Off" value="" />
+    <text name="OnceADay" source="Once a day" value="" />
+    <text name="Never" source="Never" value="" />
+    <text name="WhenThisTabIsClosed" source="When this tab is closed" value="" />
+    <text name="SoDossierWritesASmallPowershell" source="So Dossier writes a small PowerShell watcher into your scripts folder instead. Task Scheduler" value="" />
+    <text name="WriteScriptsDossierWatchPs" source="Write scripts/dossier-watch.ps1" value="" />
+    <text name="CopyTheSchtasksLine" source="Copy the schtasks line" value="" />
+    <text name="RunningAScript" source="Running a script" value="" />
+    <text name="StartTheScriptStraightAwayAnd" source="start the script straight away, and a routine fires on its minute. A pass is" value="" />
+    <text name="AtAGlanceAndIfA" source="at a glance — and if a routine says it runs itself while nothing is" value="" />
+    <text name="WriteScriptsDossierRunnerPs" source="Write scripts/dossier-runner.ps1" value="" />
+    <text name="TestItEndToEnd" source="Test it end to end" value="" />
+    <text name="TargetDates" source="Target dates" value="" />
+    <text name="InHoursUnderSetsATime" source="In hours. Under 24 sets a time of day too." value="" />
+    <text name="HolidaysAndFestivals" source="Holidays and festivals" value="" />
+    <text name="RestoreTheCambodiaList" source="Restore the Cambodia 2026 list" value="" />
+    <text name="AddThatYearsFixedDates" source="Add that year's fixed dates" value="" />
+    <text name="NothingMarked" source="Nothing marked." value="" />
+    <text name="DayOff2" source="Day off" value="" />
+    <text name="MarkedOnly" source="Marked only" value="" />
+    <text name="Behaviour" source="Behaviour" value="" />
+    <text name="QuickAdd" source="Quick add" value="" />
+    <text name="Priority2" source="priority" value="" />
+    <text name="Imaging" source="@Imaging" value="" />
+    <text name="SystemQuoteItIfItHas" source="system, quote it if it has a space" value="" />
+    <text name="Inc" source="#INC0012345" value="" />
+    <text name="TicketReference" source="ticket reference" value="" />
+    <text name="Incident" source=":incident" value="" />
+    <text name="WorkType" source="work type" value="" />
+    <text name="SokhaDara" source="~Sokha, Dara" value="" />
+    <text name="WhoRaisedItCommasSeparateSeveral" source="who raised it — commas separate several people" value="" />
+    <text name="DataTeam" source="%Data team" value="" />
+    <text name="WhoYouAreWaitingOnStarts" source="who you are waiting on, starts the clock" value="" />
+    <text name="GtD" source="&amp;gt;D-0004" value="" />
+    <text name="ThisCannotFinishUntilThatOne" source="this cannot finish until that one does" value="" />
+    <text name="NewProject" source="$new-project" value="" />
+    <text name="AttachAScriptFromScripts" source="attach a script from scripts/" value="" />
+    <text name="Urgent" source="+urgent" value="" />
+    <text name="Tag2" source="tag" value="" />
+    <text name="Estimate3" source="estimate" value="" />
+    <text name="TodayTmrFri" source="today · tmr · fri" value="" />
+    <text name="DueDate" source="due date" value="" />
+    <text name="InDays" source="in 3 days" value="" />
+    <text name="RelativeDate" source="relative date" value="" />
+    <text name="ExplicitDate" source="explicit date" value="" />
+    <text name="DueTimeDrivesTheReminder" source="due time, drives the reminder" value="" />
+    <text name="PastingAMessage" source="Pasting a message" value="" />
+    <text name="EditAsACommandLine" source="Edit as a command line" value="" />
+    <text name="HandsTheReadBackToThe" source="hands the read back to the compose bar as ordinary tokens." value="" />
+    <text name="RoutinesThatCarryAScript" source="Routines that carry a script" value="" />
+    <text name="WritesTheFinishedScriptIntoThat" source="writes the finished script into that record's own folder, ready to" value="" />
+    <text name="MakingAScriptActuallyRun" source="Making a script actually run" value="" />
+    <text name="WeekMonthAndTheDaysOff" source="Week, month and the days off" value="" />
+    <text name="Anniversaries" source="anniversaries" value="" />
+    <text name="NewYearVictoryDayKhmerNew" source="— New Year, Victory Day, Khmer New Year, Labour Day, the King's and Queen" value="" />
+    <text name="TheWorkConsole" source="The work console" value="" />
+    <text name="WorkOnThis2" source="Work on this" value="" />
+    <text name="OnARecordOr" source="on a record — or" value="" />
+    <text name="OrTheCommandPaletteOpensA" source=", or the command palette — opens a small window that" value="" />
+    <text name="WinShiftS" source="Win+Shift+S" value="" />
+    <text name="Then" source="then" value="" />
+    <text name="CtrlV" source="Ctrl+V" value="" />
+    <text name="IntoTheConsoleFilesAScreenshot" source="into the console files a screenshot against the record, into" value="" />
+    <text name="Chasing2" source="Chasing" value="" />
+    <text name="TwoWaysARecordGetsStuck" source="Two ways a record gets stuck" value="" />
+    <text name="AnotherRecord" source="Another record" value="" />
+    <text name="TheDiagramHasToBeDrawn" source="The diagram has to be drawn before the Notification config can close." value="" />
+    <text name="AnotherPerson" source="Another person" value="" />
+    <text name="TheAgencyWasNotFoundSo" source="The agency was not found, so the data team has to sync before you are allowed" value="" />
+    <text name="YourOwnLogo" source="Your own logo" value="" />
+    <text name="Keyboard" source="Keyboard" value="" />
+    <text name="Ctrl" source="Ctrl" value="" />
+    <text name="CommandPalette" source="command palette" value="" />
+    <text name="Search" source="search" value="" />
+    <text name="SwitchView" source="switch view" value="" />
+    <text name="MoveDownUp" source="move down / up" value="" />
+    <text name="Space" source="Space" value="" />
+    <text name="CycleStatus" source="cycle status" value="" />
+    <text name="DoneDueTodayTimerSelect" source="done · due today · timer · select" value="" />
+    <text name="OpenTheHighlightedRecord" source="open the highlighted record" value="" />
+    <text name="PasteAScreenshotOntoTheOpen" source="paste a screenshot onto the open record" value="" />
+    <text name="SaveNow2" source="save now" value="" />
+    <text name="Undo2" source="undo" value="" />
+    <text name="HowYourFolderIsLaidOut" source="How your folder is laid out" value="" />
+    <text name="DeckVPptx" source="deck-v3.pptx" value="" />
+    <text name="Privacy" source="Privacy" value="" />
+    <text name="ChooseOrTabInserts" source="↑↓ choose · ⏎ or Tab inserts" value="" />
+    <text name="NoMatch" source="No match" value="" />
+    <text name="Workspace" source="Workspace:" value="" />
+    <text name="RunJson" source=".run.json" value="" />
+    <text name="AskingFor" source="asking for" value="" />
+    <text name="Output" source="Output:" value="" />
+    <text name="OnThisSheet" source="On this sheet" value="" />
+    <text name="Held" source="Held" value="" />
+    <text name="TimeLogged2" source="Time logged" value="" />
+    <text name="NothingMatchesTheCurrentFilters" source="Nothing matches the current filters." value="" />
+    <text name="DossierOfflineSupportOperationsRecord" source="Dossier · offline support operations record ·" value="" />
+    <text name="OpenedOn" source="opened {p0}" value="" />
+    <text name="HidingX" source="hiding {p0}" value="" />
+    <text name="NRecords" source="{p0} records" value="" />
+    <text name="OneRecord" source="1 record" value="" />
+    <text name="SinceX" source="since {p0}" value="" />
+    <text name="LastSeenX" source="last {p0}" value="" />
+    <text name="EstimatedAt" source="estimated {p0}" value="" />
+    <text name="KhmerText" source="Khmer text" value="" />
+    <text name="BundledWithDossier" source="bundled with Dossier" value="" />
+    <text name="KhmerFontNote" source="Khmer is the one exception. Windows ships only Khmer UI and DaunPenh, and a machine without them draws Khmer as empty boxes — so &lt;b&gt;Noto Sans Khmer&lt;/b&gt; is carried inside this file. It is still not a download: nothing is fetched. Pick another below if you have a Khmer face you prefer." value="" />
+    <text name="OnACronSchedule" source="On a cron schedule" value="" />
+    <text name="CronExpression" source="Cron expression" value="" />
+    <text name="CronNotValid" source="That cron expression will not do: {p0}" value="" />
+    <text name="CronNextRuns" source="Next runs: {p0}" value="" />
+    <text name="CronManyPerDay" source="{p0} times a day — the record is raised once, at the first; the runner fires the script at every one." value="" />
+    <text name="CronTimeIgnored" source="The Time box above is ignored for a cron routine — the expression carries the time." value="" />
+    <text name="CronHelp" source="minute hour day-of-month month day-of-week. &lt;b&gt;0 8 * * 1-5&lt;/b&gt; is 08:00 on weekdays; &lt;b&gt;*/30 9-17 * * *&lt;/b&gt; is every half hour through the working day; &lt;b&gt;@hourly&lt;/b&gt; and &lt;b&gt;@daily&lt;/b&gt; work too." value="" />
+    <text name="RemindMe" source="Remind me" value="" />
+    <text name="NoJustRaiseTheRecord" source="No — just raise the record" value="" />
+    <text name="YesNotifyAtEveryFiring" source="Yes — a notification at every firing" value="" />
+    <text name="RemindsYou" source="reminds you" value="" />
+    <text name="RoutineReminderBody" source="It is {p0}." value="" />
+    <text name="AddManyAtOnce" source="Add many at once" value="" />
+    <text name="ADateRange" source="A date range" value="" />
+    <text name="OrPasteAList" source="Or paste a list" value="" />
+    <text name="To" source="To" value="" />
+    <text name="SkipWeekends" source="skip weekends" value="" />
+    <text name="AnnualLeaveOfficeClosed" source="Annual leave, office closed…" value="" />
+    <text name="AddThesePastedDays" source="Add these days" value="" />
+    <text name="CopyWhatIsMarkedNow" source="Copy what is marked now" value="" />
+    <text name="PasteHolidaysHelp" source="JSON with &lt;b&gt;date&lt;/b&gt;, &lt;b&gt;name&lt;/b&gt; and &lt;b&gt;kind&lt;/b&gt;, or one a line as &lt;b&gt;date, name, kind&lt;/b&gt;. Dates may be &lt;b&gt;2027-01-01&lt;/b&gt; or &lt;b&gt;01/01/2027&lt;/b&gt;. &lt;b&gt;kind&lt;/b&gt; is either &lt;b&gt;public&lt;/b&gt; — a day off, tinted on the calendar and kept clear of target dates — or &lt;b&gt;observance&lt;/b&gt;, marked on the day but still a working day. Leave it off and it counts as a day off. The short &lt;b&gt;d&lt;/b&gt;/&lt;b&gt;n&lt;/b&gt;/&lt;b&gt;k&lt;/b&gt; spelling Dossier used to write is still read. Anything unreadable is listed rather than swallowed." value="" />
+    <text name="HolidaysAdded" source="{added} added, {replaced} replaced" value="" />
+    <text name="HolidaysNothingRead" source="Nothing could be read from that" value="" />
+    <text name="HolidaysSomeBad" source="{n} line(s) could not be read: {p0}" value="" />
+    <text name="HolidaysCopied" source="{n} marked day(s) copied as JSON" value="" />
+    <text name="PickBothDates" source="Pick both dates first" value="" />
+    <text name="RangeBackwards" source="The second date is before the first" value="" />
+    <text name="ANewSchedule" source="A new schedule" value="" />
+    <text name="EditingX" source="Editing “{p0}”" value="" />
+    <text name="SaveChanges" source="Save changes" value="" />
+    <text name="AddSchedule" source="Add schedule" value="" />
+    <text name="ScheduleSaved" source="“{p0}” saved" value="" />
+    <text name="Edit" source="Edit" value="" />
+    <text name="Message" source="Message" value="" />
+    <text name="RunsItselfButNothingIs" source="runs itself — but nothing is running it" value="" />
+    <text name="AtTime" source=" at {p0}" value="" />
+    <text name="MessagePlaceholder" source="Time to drink water. Two glasses before the next call." value="" />
+    <text name="MessageHint" source="Shown in the reminder, and copied onto the record it raises. Leave it empty and the reminder just says the name." value="" />
+  </texts>
+</localizationDictionary>
