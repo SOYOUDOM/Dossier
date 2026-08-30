@@ -133,6 +133,9 @@ marker first so the scheduled run still happens.
 ```
 dossier.html                  the whole application
 dossier.json                  every record, routine, script and setting
+lang/
+  en.xml                      the English master, generated from the code
+  km.xml                      Khmer — every phrase listed, ready to translate
 logo.png, favicon.ico         yours — the app picks them up automatically
 scripts/
   dossier-runner.ps1          runs queued scripts, fires routines on time
@@ -162,6 +165,61 @@ double-click transcripts start over once they pass 256 KB.
 
 Attachments and screenshots are copied into `tasks/<record>/` as ordinary
 unencrypted files. Worth a thought before that folder lives on shared storage.
+
+---
+
+## Another language
+
+Phrases live in `lang/`, one XML file per language, in the ABP shape:
+
+```xml
+<localizationDictionary culture="km" name="ភាសាខ្មែរ">
+  <texts>
+    <text name="Day" source="Day" value="ថ្ងៃ" />
+    <text name="Reset" source="Reset" value="" />
+  </texts>
+</localizationDictionary>
+```
+
+The code calls `L("Day")` and never contains a translation, so nobody has to
+edit `dossier.html` to add a language, and nobody has to read code to write
+one. `source` carries the English next to the blank, which means a file can be
+translated on its own — handed to a person, or to a translation tool — with
+nothing else open.
+
+**An empty `value` is not an error.** That phrase stays English until someone
+fills it in, so translating in passes works and a half-finished file is
+perfectly usable.
+
+To add one:
+
+1. **Menu → Appearance → Language**, type a code (`km`, `th`, `pt-br`) and press
+   **Write a new language file**. It writes `lang/<code>.xml` with every phrase
+   listed and every value blank. It will not overwrite a file that exists.
+2. Open it and fill in each `value=""`.
+3. Press **Reload the language files**, then pick it from the dropdown.
+
+The dropdown shows progress per language — *ភាសាខ្មែរ — 41 of 93 phrases
+translated* — and the panel lists exactly which names are still blank.
+
+`{shown}`, `{n}` and the like are values Dossier drops in. Keep them exactly as
+written, but move them wherever the sentence needs them — `"{shown} of {total}"`
+becoming `"{shown} ក្នុងចំណោម {total}"` is the point of them.
+
+**Khmer typography is handled in CSS, not in the translation.** Khmer stacks
+subscript consonants below the baseline and vowel signs above, and it has no
+spaces between words. Under `lang="km"` Dossier adds a Khmer font to each stack
+rather than replacing it (so ticket numbers and system names keep their face),
+raises line-height, drops the letter-spacing that mangles Khmer clusters, and
+steps the small chrome up from 11px to 13px — measured in the browser, because
+Khmer at Latin's small sizes turns to mud whoever writes the words.
+
+**What is covered so far:** the 93 phrases in the persistent chrome — the view
+tabs, the compose bar, every filter, the Day sheet's headings and figures, the
+footer and the menu tabs. The record drawer, Insight, Reports and Help are
+still English in the code; they follow the same pattern when their turn comes,
+and any phrase added to `STRINGS` appears in every language file as a new blank
+the next time one is written.
 
 ---
 

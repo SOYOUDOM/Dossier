@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Dossier language file.
+  Fill in each value="" using the source="" beside it as the English.
+  Leave a value empty and that phrase stays English — translating in
+  passes is fine. {name} in a phrase is a number or word Dossier drops
+  in; keep it exactly as it is, but move it wherever the sentence needs.
+  Save the file, then press Reload in Menu → Appearance.
+-->
+<localizationDictionary culture="en" name="English">
+  <texts>
+    <text name="Day" source="Day" value="Day" />
+    <text name="Board" source="Board" value="Board" />
+    <text name="Register" source="Register" value="Register" />
+    <text name="Week" source="Week" value="Week" />
+    <text name="Library" source="Library" value="Library" />
+    <text name="Insight" source="Insight" value="Insight" />
+    <text name="AppName" source="Dossier" value="Dossier" />
+    <text name="AppTagline" source="Support operations record" value="Support operations record" />
+    <text name="SearchEverything" source="Search everything…" value="Search everything…" />
+    <text name="TodaysCompletion" source="Today's completion" value="Today's completion" />
+    <text name="Reminders" source="Reminders" value="Reminders" />
+    <text name="Theme" source="Theme" value="Theme" />
+    <text name="Menu" source="Menu" value="Menu" />
+    <text name="New" source="New" value="New" />
+    <text name="LogIt" source="Log it" value="Log it" />
+    <text name="PasteAMessage" source="Paste a message" value="Paste a message" />
+    <text name="PasteHint" source="Paste a Teams message or an email (Ctrl+Shift+V)" value="Paste a Teams message or an email (Ctrl+Shift+V)" />
+    <text name="ComposePlaceholder" source="What are you working on?   restart Imaging app pool p1 @Imaging #INC0012345 ~Sokha, Dara 2h today" value="What are you working on?   restart Imaging app pool p1 @Imaging #INC0012345 ~Sokha, Dara 2h today" />
+    <text name="Status_Open" source="Open" value="Open" />
+    <text name="Status_Processing" source="Processing" value="Processing" />
+    <text name="Status_Blocked" source="Blocked" value="Blocked" />
+    <text name="Status_Done" source="Done" value="Done" />
+    <text name="Status_Cancelled" source="Cancelled" value="Cancelled" />
+    <text name="HideRoutines" source="Hide routines" value="Hide routines" />
+    <text name="HideRoutinesHint" source="Hide the records your routines created" value="Hide the records your routines created" />
+    <text name="AllSystems" source="All systems" value="All systems" />
+    <text name="AnyPriority" source="Any priority" value="Any priority" />
+    <text name="AnyType" source="Any type" value="Any type" />
+    <text name="Anyone" source="Anyone" value="Anyone" />
+    <text name="AnyDate" source="Any date" value="Any date" />
+    <text name="Reset" source="Reset" value="Reset" />
+    <text name="Filter_DueToday" source="Due today" value="Due today" />
+    <text name="Filter_Overdue" source="Overdue" value="Overdue" />
+    <text name="Filter_ThisWeek" source="This week" value="This week" />
+    <text name="Filter_ThisMonth" source="This month" value="This month" />
+    <text name="Filter_NoDueDate" source="No due date" value="No due date" />
+    <text name="Filter_HasAttachments" source="Has attachments" value="Has attachments" />
+    <text name="Filter_WaitingOnSomeone" source="Waiting on someone" value="Waiting on someone" />
+    <text name="Filter_HeldByAnother" source="Held by another record" value="Held by another record" />
+    <text name="Filter_ReadyToStart" source="Ready to start" value="Ready to start" />
+    <text name="Filter_HasAScript" source="Has a script" value="Has a script" />
+    <text name="ShowingXofY" source="{shown} of {total}" value="{shown} of {total}" />
+    <text name="Kpi_ClosedToday" source="Closed today" value="Closed today" />
+    <text name="Kpi_ClosedTodayHint" source="{n} on the sheet" value="{n} on the sheet" />
+    <text name="Kpi_Open" source="Open" value="Open" />
+    <text name="Kpi_OpenHint" source="{n} past due" value="{n} past due" />
+    <text name="Kpi_InProgress" source="In progress" value="In progress" />
+    <text name="Kpi_InProgressHint" source="being worked now" value="being worked now" />
+    <text name="Kpi_LoggedToday" source="Logged today" value="Logged today" />
+    <text name="Kpi_LoggedTodayHint" source="time against today" value="time against today" />
+    <text name="Kpi_Documents" source="Documents" value="Documents" />
+    <text name="Kpi_DocumentsHint" source="filed in this workspace" value="filed in this workspace" />
+    <text name="Group_Noticed" source="Noticed" value="Noticed" />
+    <text name="Group_Overdue" source="Overdue" value="Overdue" />
+    <text name="Group_DueToday" source="Due today" value="Due today" />
+    <text name="Group_InProgress" source="In progress" value="In progress" />
+    <text name="Group_Blocked" source="Blocked" value="Blocked" />
+    <text name="Group_Undated" source="Undated" value="Undated" />
+    <text name="Group_ComingUp" source="Coming up" value="Coming up" />
+    <text name="Group_ClosedToday" source="Closed today" value="Closed today" />
+    <text name="NothingOnTheSheet" source="Nothing on the sheet" value="Nothing on the sheet" />
+    <text name="NothingOnTheSheetHint" source="Type what you're working on in the bar above. Try &lt;b&gt;check nightly job failures p2 @Imaging 30m today&lt;/b&gt; — the pieces get pulled out automatically, and Dossier starts learning your patterns from the first record." value="Type what you're working on in the bar above. Try &lt;b&gt;check nightly job failures p2 @Imaging 30m today&lt;/b&gt; — the pieces get pulled out automatically, and Dossier starts learning your patterns from the first record." />
+    <text name="Foot_Records" source="records" value="records" />
+    <text name="Foot_ClosedToday" source="closed today" value="closed today" />
+    <text name="Foot_Documents" source="documents" value="documents" />
+    <text name="Foot_Tracked" source="tracked" value="tracked" />
+    <text name="Foot_Commands" source="commands" value="commands" />
+    <text name="Foot_New" source="new" value="new" />
+    <text name="Foot_PasteAScreenshot" source="paste a screenshot" value="paste a screenshot" />
+    <text name="Foot_RunnerOn" source="runner on" value="runner on" />
+    <text name="Foot_RunnerOff" source="runner off" value="runner off" />
+    <text name="Foot_RunnerElsewhere" source="runner on another folder" value="runner on another folder" />
+    <text name="Tab_Workspace" source="Workspace" value="Workspace" />
+    <text name="Tab_Reports" source="Reports" value="Reports" />
+    <text name="Tab_Routines" source="Routines" value="Routines" />
+    <text name="Tab_Scripts" source="Scripts" value="Scripts" />
+    <text name="Tab_Appearance" source="Appearance" value="Appearance" />
+    <text name="Tab_Setup" source="Setup" value="Setup" />
+    <text name="Tab_Help" source="Help" value="Help" />
+    <text name="Language" source="Language" value="Language" />
+    <text name="LanguageHeading" source="Language" value="Language" />
+    <text name="LanguageIntro" source="Phrases live in &lt;b&gt;lang/&lt;/b&gt; in your workspace, one XML file per language. Dossier reads every file it finds there when it opens." value="Phrases live in &lt;b&gt;lang/&lt;/b&gt; in your workspace, one XML file per language. Dossier reads every file it finds there when it opens." />
+    <text name="LanguageAddHint" source="To add a language: press &lt;b&gt;Write a new language file&lt;/b&gt;, then open it and fill in each &lt;b&gt;value=&quot;&quot;&lt;/b&gt; from the &lt;b&gt;source&lt;/b&gt; beside it. Anything left blank stays English, so you can translate in passes." value="To add a language: press &lt;b&gt;Write a new language file&lt;/b&gt;, then open it and fill in each &lt;b&gt;value=&quot;&quot;&lt;/b&gt; from the &lt;b&gt;source&lt;/b&gt; beside it. Anything left blank stays English, so you can translate in passes." />
+    <text name="WriteLanguageFile" source="Write a new language file" value="Write a new language file" />
+    <text name="RefreshLanguages" source="Reload the language files" value="Reload the language files" />
+    <text name="LanguageCode" source="Code, e.g. km or th" value="Code, e.g. km or th" />
+    <text name="TranslatedCount" source="{done} of {total} phrases translated" value="{done} of {total} phrases translated" />
+    <text name="LanguageWrote" source="Wrote lang/{file} — fill in the blanks and press Reload" value="Wrote lang/{file} — fill in the blanks and press Reload" />
+    <text name="LanguageReloaded" source="{n} language(s) loaded" value="{n} language(s) loaded" />
+    <text name="LanguageNeedsWorkspace" source="Pick a workspace folder first" value="Pick a workspace folder first" />
+    <text name="LanguageBadCode" source="Use two or three letters, like km or th" value="Use two or three letters, like km or th" />
+    <text name="LanguageExists" source="lang/{file} already exists — reload instead, or delete it first" value="lang/{file} already exists — reload instead, or delete it first" />
+    <text name="LanguageMissingList" source="Not yet translated ({n})" value="Not yet translated ({n})" />
+  </texts>
+</localizationDictionary>

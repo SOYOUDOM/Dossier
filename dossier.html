@@ -26,6 +26,11 @@
   /* replaced at boot by the font resolver */
   --f-display:"Bahnschrift","Aptos Display","Franklin Gothic Medium","Segoe UI",system-ui,sans-serif;
   --f-ui:"Aptos","Segoe UI Variable Text","Corbel","Calibri","Segoe UI",system-ui,sans-serif;
+  /* Khmer is appended to every stack rather than replacing it, so Latin text
+     inside a Khmer interface — ticket numbers, system names, P1 — keeps the
+     face it was designed in and the browser only reaches for these on
+     Khmer codepoints. */
+  --f-khmer:"Khmer OS Battambang","Noto Sans Khmer","Khmer OS","Khmer UI","DaunPenh";
   --f-mono:"Cascadia Mono","Consolas","Lucida Console",ui-monospace,monospace;
 
   --st-open:#6B7A90;
@@ -1019,6 +1024,44 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
     margin:0;line-height:1.55}
 }
 @media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+
+/* ── Khmer ────────────────────────────────────────────────────────────────
+   Khmer stacks subscript consonants below the baseline and vowel signs
+   above, so lines set for Latin collide. It also has no spaces between
+   words, which means the browser can only break at syllable boundaries -
+   without line-break:loose a long phrase overflows its chip instead of
+   wrapping. None of this is translation; it is the part that has to be
+   right whoever writes the words. */
+:root[lang="km"]{ --f-ui:"Aptos","Segoe UI Variable Text","Corbel","Calibri",
+  "Khmer OS Battambang","Noto Sans Khmer","Khmer OS","Khmer UI","DaunPenh",system-ui,sans-serif; }
+:root[lang="km"] body{ line-height:1.85; }
+:root[lang="km"] .tabs button,
+:root[lang="km"] .pill,
+:root[lang="km"] .tag,
+:root[lang="km"] .kpi .k,
+:root[lang="km"] .hd .t{ line-height:1.9; }
+:root[lang="km"] .pill,
+:root[lang="km"] .tabs button{ padding-top:5px;padding-bottom:5px; }
+:root[lang="km"] .hd .t,
+:root[lang="km"] .eyebrow{ letter-spacing:0; }   /* tracking mangles Khmer clusters */
+:root[lang="km"] .tt,
+:root[lang="km"] .pill,
+:root[lang="km"] .kpi .d{ line-break:loose;word-break:normal;overflow-wrap:anywhere; }
+
+/* Khmer carries two or three marks per consonant, so the chrome sizes that
+   are comfortable for Latin - 11px on a filter chip - turn to mud. Measured
+   in the browser at 11px and again at 13px: everything small gets a step up.
+   Latin inside these elements grows too, which is the right trade; a slightly
+   larger ticket number is better than an unreadable filter. */
+:root[lang="km"] .pill,
+:root[lang="km"] .hd .t,
+:root[lang="km"] .kpi .k,
+:root[lang="km"] .ct,
+:root[lang="km"] .status,
+:root[lang="km"] .btn.sm{ font-size:13px; }
+:root[lang="km"] .tabs button{ font-size:13.5px; }
+:root[lang="km"] .eyebrow{ font-size:12px; }
+:root[lang="km"] .btn.sm{ padding-top:4px;padding-bottom:4px;line-height:1.75; }
 </style>
 </head>
 <body>
@@ -1038,30 +1081,30 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
     </button>
 
     <nav class="tabs" id="tabs">
-      <button data-v="day" class="on"><span class="lb">Day</span><span class="kb">1</span></button>
-      <button data-v="board"><span class="lb">Board</span><span class="kb">2</span></button>
-      <button data-v="register"><span class="lb">Register</span><span class="kb">3</span></button>
-      <button data-v="week"><span class="lb">Week</span><span class="kb">4</span></button>
-      <button data-v="library"><span class="lb">Library</span><span class="kb">5</span></button>
-      <button data-v="insight"><span class="lb">Insight</span><span class="kb">6</span></button>
+      <button data-v="day" class="on"><span class="lb" data-i18n="Day">Day</span><span class="kb">1</span></button>
+      <button data-v="board"><span class="lb" data-i18n="Board">Board</span><span class="kb">2</span></button>
+      <button data-v="register"><span class="lb" data-i18n="Register">Register</span><span class="kb">3</span></button>
+      <button data-v="week"><span class="lb" data-i18n="Week">Week</span><span class="kb">4</span></button>
+      <button data-v="library"><span class="lb" data-i18n="Library">Library</span><span class="kb">5</span></button>
+      <button data-v="insight"><span class="lb" data-i18n="Insight">Insight</span><span class="kb">6</span></button>
     </nav>
 
     <div class="find">
       <span class="ic">⌕</span>
-      <input id="q" type="text" placeholder="Search everything…" spellcheck="false">
+      <input id="q" type="text" data-i18n-ph="SearchEverything" placeholder="Search everything…" spellcheck="false">
       <span class="k">/</span>
     </div>
 
     <div class="mastsp">
-      <div class="dial" title="Today's completion">
+      <div class="dial" data-i18n-title="TodaysCompletion" title="Today's completion">
         <svg width="36" height="36"><circle class="trk" cx="18" cy="18" r="14.5" fill="none" stroke-width="3.4"></circle>
         <circle class="arc" id="dialArc" cx="18" cy="18" r="14.5" fill="none" stroke-width="3.4"
                 stroke-linecap="round" stroke-dasharray="0 91.1"></circle></svg>
         <b id="dialTxt">0%</b>
       </div>
-      <button class="ib" id="bellBtn" title="Reminders">◴</button>
-      <button class="ib" id="themeBtn" title="Theme">◐</button>
-      <button class="ib" id="menuBtn" title="Menu">⋯</button>
+      <button class="ib" id="bellBtn" data-i18n-title="Reminders" title="Reminders">◴</button>
+      <button class="ib" id="themeBtn" data-i18n-title="Theme" title="Theme">◐</button>
+      <button class="ib" id="menuBtn" data-i18n-title="Menu" title="Menu">⋯</button>
     </div>
   </header>
 
@@ -1072,40 +1115,43 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
 
   <div class="compose">
     <div class="cbar">
-      <span class="n">New</span>
+      <span class="n" data-i18n="New">New</span>
       <input id="qa" type="text" spellcheck="false" autocomplete="off"
+             data-i18n-ph="ComposePlaceholder"
              placeholder="What are you working on?   restart Imaging app pool p1 @Imaging #INC0012345 ~Sokha, Dara 2h today">
-      <button class="paste" id="qaPaste" title="Paste a Teams message or an email (Ctrl+Shift+V)">Paste a message</button>
-      <button class="go" id="qaGo">Log it <kbd>⏎</kbd></button>
+      <button class="paste" id="qaPaste" data-i18n-title="PasteHint"
+              title="Paste a Teams message or an email (Ctrl+Shift+V)"><span data-i18n="PasteAMessage">Paste a message</span></button>
+      <button class="go" id="qaGo"><span data-i18n="LogIt">Log it</span> <kbd>⏎</kbd></button>
     </div>
     <div class="readout" id="readout"></div>
     <div class="sugg" id="sugg"></div>
   </div>
 
   <div class="rail" id="rail">
-    <span class="pill on" data-st="open"><span class="sw" style="background:var(--st-open)"></span>Open<span class="n" id="cOpen">0</span></span>
-    <span class="pill on" data-st="processing"><span class="sw" style="background:var(--st-proc)"></span>Processing<span class="n" id="cProc">0</span></span>
-    <span class="pill on" data-st="blocked"><span class="sw" style="background:var(--st-block)"></span>Blocked<span class="n" id="cBlock">0</span></span>
-    <span class="pill on" data-st="done"><span class="sw" style="background:var(--st-done)"></span>Done<span class="n" id="cDone">0</span></span>
-    <span class="pill" data-st="cancelled"><span class="sw" style="background:var(--st-cancel)"></span>Cancelled<span class="n" id="cCancel">0</span></span>
-    <span class="pill flag" data-fl="hideRoutine" title="Hide the records your routines created">Hide routines</span>
-    <select id="fSys"><option value="">All systems</option></select>
-    <select id="fPri"><option value="">Any priority</option><option>P1</option><option>P2</option><option>P3</option><option>P4</option></select>
-    <select id="fType"><option value="">Any type</option></select>
-    <select id="fWho"><option value="">Anyone</option></select>
+    <span class="pill on" data-st="open"><span class="sw" style="background:var(--st-open)"></span><span data-i18n="Status_Open">Open</span><span class="n" id="cOpen">0</span></span>
+    <span class="pill on" data-st="processing"><span class="sw" style="background:var(--st-proc)"></span><span data-i18n="Status_Processing">Processing</span><span class="n" id="cProc">0</span></span>
+    <span class="pill on" data-st="blocked"><span class="sw" style="background:var(--st-block)"></span><span data-i18n="Status_Blocked">Blocked</span><span class="n" id="cBlock">0</span></span>
+    <span class="pill on" data-st="done"><span class="sw" style="background:var(--st-done)"></span><span data-i18n="Status_Done">Done</span><span class="n" id="cDone">0</span></span>
+    <span class="pill" data-st="cancelled"><span class="sw" style="background:var(--st-cancel)"></span><span data-i18n="Status_Cancelled">Cancelled</span><span class="n" id="cCancel">0</span></span>
+    <span class="pill flag" data-fl="hideRoutine" data-i18n-title="HideRoutinesHint"
+          title="Hide the records your routines created"><span data-i18n="HideRoutines">Hide routines</span></span>
+    <select id="fSys"><option value="" data-i18n="AllSystems">All systems</option></select>
+    <select id="fPri"><option value="" data-i18n="AnyPriority">Any priority</option><option>P1</option><option>P2</option><option>P3</option><option>P4</option></select>
+    <select id="fType"><option value="" data-i18n="AnyType">Any type</option></select>
+    <select id="fWho"><option value="" data-i18n="Anyone">Anyone</option></select>
     <select id="fRange">
-      <option value="">Any date</option><option value="today">Due today</option>
-      <option value="overdue">Overdue</option><option value="week">This week</option>
-      <option value="month">This month</option><option value="nodate">No due date</option>
-      <option value="hasfiles">Has attachments</option>
-      <option value="waiting">Waiting on someone</option>
-      <option value="blocked">Held by another record</option>
-      <option value="ready">Ready to start</option>
-      <option value="hasscript">Has a script</option>
+      <option value="" data-i18n="AnyDate">Any date</option><option value="today" data-i18n="Filter_DueToday">Due today</option>
+      <option value="overdue" data-i18n="Filter_Overdue">Overdue</option><option value="week" data-i18n="Filter_ThisWeek">This week</option>
+      <option value="month" data-i18n="Filter_ThisMonth">This month</option><option value="nodate" data-i18n="Filter_NoDueDate">No due date</option>
+      <option value="hasfiles" data-i18n="Filter_HasAttachments">Has attachments</option>
+      <option value="waiting" data-i18n="Filter_WaitingOnSomeone">Waiting on someone</option>
+      <option value="blocked" data-i18n="Filter_HeldByAnother">Held by another record</option>
+      <option value="ready" data-i18n="Filter_ReadyToStart">Ready to start</option>
+      <option value="hasscript" data-i18n="Filter_HasAScript">Has a script</option>
     </select>
     <span class="sp"></span>
     <span class="ct" id="railCt">—</span>
-    <button class="btn sm" id="clearF">Reset</button>
+    <button class="btn sm" id="clearF" data-i18n="Reset">Reset</button>
   </div>
 
   <main id="main">
@@ -1118,16 +1164,16 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
   </main>
 
   <footer class="status">
-    <span><b id="sbT">0</b> records</span>
-    <span><b id="sbD">0</b> closed today</span>
-    <span><b id="sbF">0</b> documents</span>
-    <span><b id="sbH">0h</b> tracked</span>
+    <span><b id="sbT">0</b> <span data-i18n="Foot_Records">records</span></span>
+    <span><b id="sbD">0</b> <span data-i18n="Foot_ClosedToday">closed today</span></span>
+    <span><b id="sbF">0</b> <span data-i18n="Foot_Documents">documents</span></span>
+    <span><b id="sbH">0h</b> <span data-i18n="Foot_Tracked">tracked</span></span>
     <span id="sbSave">—</span>
     <span id="sbRun" hidden></span>
     <span class="sp"></span>
-    <span><kbd>Ctrl</kbd><kbd>K</kbd> commands</span>
-    <span><kbd>N</kbd> new</span>
-    <span><kbd>Ctrl</kbd><kbd>V</kbd> paste a screenshot</span>
+    <span><kbd>Ctrl</kbd><kbd>K</kbd> <span data-i18n="Foot_Commands">commands</span></span>
+    <span><kbd>N</kbd> <span data-i18n="Foot_New">new</span></span>
+    <span><kbd>Ctrl</kbd><kbd>V</kbd> <span data-i18n="Foot_PasteAScreenshot">paste a screenshot</span></span>
   </footer>
 </div>
 
@@ -1162,13 +1208,13 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
 <div class="modal" id="modal">
   <div class="mh"><h3 id="mTitle">Menu</h3><button class="ib" id="mClose">✕</button></div>
   <div class="mt" id="mt">
-    <button class="on" data-m="ws">Workspace</button>
-    <button data-m="report">Reports</button>
-    <button data-m="routine">Routines</button>
-    <button data-m="scripts">Scripts</button>
-    <button data-m="look">Appearance</button>
-    <button data-m="setup">Setup</button>
-    <button data-m="help">Help</button>
+    <button class="on" data-m="ws" data-i18n="Tab_Workspace">Workspace</button>
+    <button data-m="report" data-i18n="Tab_Reports">Reports</button>
+    <button data-m="routine" data-i18n="Tab_Routines">Routines</button>
+    <button data-m="scripts" data-i18n="Tab_Scripts">Scripts</button>
+    <button data-m="look" data-i18n="Tab_Appearance">Appearance</button>
+    <button data-m="setup" data-i18n="Tab_Setup">Setup</button>
+    <button data-m="help" data-i18n="Tab_Help">Help</button>
   </div>
   <div class="mb2">
     <div class="mp on" data-m="ws" id="pWs"></div>
@@ -1278,6 +1324,212 @@ const esc = s => String(s == null ? "" : s).replace(/&/g,"&amp;").replace(/</g,"
   .replace(/>/g,"&gt;").replace(/"/g,"&quot;");
 const pad2 = n => String(n).padStart(2,"0");
 const clone = o => JSON.parse(JSON.stringify(o));
+
+/* ═══ LANGUAGE ════════════════════════════════════════════════════════════
+   Every phrase the interface shows has a name, and the text for that name
+   lives in an XML file per language under lang/ in your workspace. Call it
+   with L("SignIn") and the right words come out.
+
+   Why not isKhmer ? "..." : "..." inline: because the ternary puts the
+   translation in the hands of whoever writes the code, and a wrong word in
+   a language you cannot read is invisible until a user hits it. Pulled out
+   into a file, whoever actually speaks the language owns it, adding a third
+   language is copying a file rather than touching a thousand lines, and a
+   phrase left untranslated falls back to English instead of breaking.
+
+   The fallback chain is: this language's text -> the built-in English ->
+   the name itself. So a half-finished file is perfectly usable, which is
+   what makes translating in passes possible.
+
+   STRINGS below is the English master. Everything else is generated from
+   it, so a phrase added here shows up in every language file as a blank to
+   fill in — the translator never has to hunt for what is new.
+   ════════════════════════════════════════════════════════════════════════ */
+const STRINGS = {
+  /* ---- the views along the top ---- */
+  Day:"Day", Board:"Board", Register:"Register", Week:"Week",
+  Library:"Library", Insight:"Insight",
+
+  /* ---- the masthead ---- */
+  AppName:"Dossier", AppTagline:"Support operations record",
+  SearchEverything:"Search everything…", TodaysCompletion:"Today's completion",
+  Reminders:"Reminders", Theme:"Theme", Menu:"Menu",
+
+  /* ---- the compose bar ---- */
+  New:"New", LogIt:"Log it", PasteAMessage:"Paste a message",
+  PasteHint:"Paste a Teams message or an email (Ctrl+Shift+V)",
+  ComposePlaceholder:"What are you working on?   restart Imaging app pool p1 @Imaging #INC0012345 ~Sokha, Dara 2h today",
+
+  /* ---- statuses, used as filters and as labels ---- */
+  Status_Open:"Open", Status_Processing:"Processing", Status_Blocked:"Blocked",
+  Status_Done:"Done", Status_Cancelled:"Cancelled",
+
+  /* ---- the filter rail ---- */
+  HideRoutines:"Hide routines", HideRoutinesHint:"Hide the records your routines created",
+  AllSystems:"All systems", AnyPriority:"Any priority", AnyType:"Any type",
+  Anyone:"Anyone", AnyDate:"Any date", Reset:"Reset",
+  Filter_DueToday:"Due today", Filter_Overdue:"Overdue", Filter_ThisWeek:"This week",
+  Filter_ThisMonth:"This month", Filter_NoDueDate:"No due date",
+  Filter_HasAttachments:"Has attachments", Filter_WaitingOnSomeone:"Waiting on someone",
+  Filter_HeldByAnother:"Held by another record", Filter_ReadyToStart:"Ready to start",
+  Filter_HasAScript:"Has a script",
+  ShowingXofY:"{shown} of {total}",
+
+  /* ---- the numbers across the top of Day ---- */
+  Kpi_ClosedToday:"Closed today", Kpi_ClosedTodayHint:"{n} on the sheet",
+  Kpi_Open:"Open", Kpi_OpenHint:"{n} past due",
+  Kpi_InProgress:"In progress", Kpi_InProgressHint:"being worked now",
+  Kpi_LoggedToday:"Logged today", Kpi_LoggedTodayHint:"time against today",
+  Kpi_Documents:"Documents", Kpi_DocumentsHint:"filed in this workspace",
+
+  /* ---- the bands down the Day sheet ---- */
+  Group_Noticed:"Noticed", Group_Overdue:"Overdue", Group_DueToday:"Due today",
+  Group_InProgress:"In progress", Group_Blocked:"Blocked", Group_Undated:"Undated",
+  Group_ComingUp:"Coming up", Group_ClosedToday:"Closed today",
+  NothingOnTheSheet:"Nothing on the sheet",
+  NothingOnTheSheetHint:"Type what you're working on in the bar above. Try <b>check nightly job failures p2 @Imaging 30m today</b> — the pieces get pulled out automatically, and Dossier starts learning your patterns from the first record.",
+
+  /* ---- the strip along the bottom ---- */
+  Foot_Records:"records", Foot_ClosedToday:"closed today", Foot_Documents:"documents",
+  Foot_Tracked:"tracked", Foot_Commands:"commands", Foot_New:"new",
+  Foot_PasteAScreenshot:"paste a screenshot",
+  Foot_RunnerOn:"runner on", Foot_RunnerOff:"runner off",
+  Foot_RunnerElsewhere:"runner on another folder",
+
+  /* ---- the menu ---- */
+  Tab_Workspace:"Workspace", Tab_Reports:"Reports", Tab_Routines:"Routines",
+  Tab_Scripts:"Scripts", Tab_Appearance:"Appearance", Tab_Setup:"Setup", Tab_Help:"Help",
+
+  /* ---- choosing a language ---- */
+  Language:"Language", LanguageHeading:"Language",
+  LanguageIntro:"Phrases live in <b>lang/</b> in your workspace, one XML file per language. Dossier reads every file it finds there when it opens.",
+  LanguageAddHint:"To add a language: press <b>Write a new language file</b>, then open it and fill in each <b>value=\"\"</b> from the <b>source</b> beside it. Anything left blank stays English, so you can translate in passes.",
+  WriteLanguageFile:"Write a new language file", RefreshLanguages:"Reload the language files",
+  LanguageCode:"Code, e.g. km or th", TranslatedCount:"{done} of {total} phrases translated",
+  LanguageWrote:"Wrote lang/{file} — fill in the blanks and press Reload",
+  LanguageReloaded:"{n} language(s) loaded", LanguageNeedsWorkspace:"Pick a workspace folder first",
+  LanguageBadCode:"Use two or three letters, like km or th",
+  LanguageExists:"lang/{file} already exists — reload instead, or delete it first",
+  LanguageMissingList:"Not yet translated ({n})"
+};
+
+/* Loaded files, keyed by culture code. "en" is always present, from STRINGS. */
+const I18N = { code:"en", packs:{ en:{ name:"English", texts:{} } } };
+
+/* The one call the rest of the app makes.
+   L("Day")                       -> "Day"
+   L("ShowingXofY", {shown:5, total:9}) -> "5 of 9"
+   A phrase with no text in this language falls back to English, and one with
+   no English either comes back as its own name — visible, never blank. */
+function L(name, vars){
+  const pack = I18N.packs[I18N.code];
+  let s = (pack && pack.texts[name]) || STRINGS[name] || name;
+  if (vars) for (const k in vars) s = s.split("{" + k + "}").join(String(vars[k]));
+  return s;
+}
+
+/* Same, escaped — for the many places that build HTML by concatenation. */
+function LE(name, vars){ return esc(L(name, vars)); }
+
+/* ── the file format ──────────────────────────────────────────────────────
+   The ABP shape, because it is a good one: a name, and the text for it.
+   The extra bit is source="", which carries the English next to the blank
+   so the file can be translated on its own — handed to someone, or to a
+   translation tool — without the app open beside it.
+
+     <localizationDictionary culture="km" name="ភាសាខ្មែរ">
+       <texts>
+         <text name="Day" source="Day" value="ថ្ងៃ" />
+       </texts>
+     </localizationDictionary>
+
+   An empty value is not a mistake; it means "not translated yet", and that
+   phrase shows in English until someone fills it in. */
+function parseLangXml(text){
+  const doc = new DOMParser().parseFromString(text, "application/xml");
+  if (doc.querySelector("parsererror")) throw new Error("this file is not valid XML");
+  const root = doc.documentElement;
+  if (!root || root.nodeName !== "localizationDictionary")
+    throw new Error("the outer tag should be <localizationDictionary>");
+  const code = (root.getAttribute("culture") || "").trim().toLowerCase();
+  if (!/^[a-z]{2,3}(-[a-z]{2,4})?$/.test(code))
+    throw new Error('culture="" should be a code like km or pt-br');
+  const texts = {};
+  Array.prototype.forEach.call(doc.getElementsByTagName("text"), el => {
+    const n = (el.getAttribute("name") || "").trim();
+    const v = el.getAttribute("value");
+    if (n && v != null && String(v).trim() !== "") texts[n] = String(v);
+  });
+  return { code, name: (root.getAttribute("name") || code).trim(), texts };
+}
+
+function buildLangXml(code, name, texts){
+  const at = s => String(s == null ? "" : s)
+    .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+  const rows = Object.keys(STRINGS).map(k =>
+    '    <text name="' + at(k) + '" source="' + at(STRINGS[k]) +
+    '" value="' + at(texts[k] || "") + '" />');
+  return '<?xml version="1.0" encoding="utf-8"?>\n' +
+    "<!--\n" +
+    "  Dossier language file.\n" +
+    "  Fill in each value=\"\" using the source=\"\" beside it as the English.\n" +
+    "  Leave a value empty and that phrase stays English — translating in\n" +
+    "  passes is fine. {name} in a phrase is a number or word Dossier drops\n" +
+    "  in; keep it exactly as it is, but move it wherever the sentence needs.\n" +
+    "  Save the file, then press Reload in Menu → Appearance.\n" +
+    "-->\n" +
+    '<localizationDictionary culture="' + at(code) + '" name="' + at(name) + '">\n' +
+    "  <texts>\n" + rows.join("\n") + "\n  </texts>\n</localizationDictionary>\n";
+}
+
+/* Read every lang/*.xml in the workspace. A file that will not parse is
+   reported and skipped rather than taking the app down with it. */
+async function loadLanguages(){
+  I18N.packs = { en: { name:"English", texts:{} } };
+  if (!FS.ok) return [];
+  const bad = [];
+  try {
+    const dir = await FS.dir(["lang"], false);
+    const names = [];
+    for await (const entry of dir.values())
+      if (entry.kind === "file" && /\.xml$/i.test(entry.name)) names.push(entry.name);
+    for (const n of names){
+      try {
+        const p = parseLangXml(await FS.readText(dir, n));
+        I18N.packs[p.code] = { name:p.name, texts:p.texts, file:n };
+      } catch(e){ bad.push(n + " — " + e.message); }
+    }
+  } catch(e){ /* no lang folder yet, which is fine */ }
+  if (!I18N.packs[I18N.code]) I18N.code = "en";
+  return bad;
+}
+
+/* How much of a language is done — the number the translator works against. */
+function langCoverage(code){
+  const keys = Object.keys(STRINGS);
+  const t = (I18N.packs[code] || {}).texts || {};
+  const missing = code === "en" ? [] : keys.filter(k => !t[k]);
+  return { total: keys.length, done: keys.length - missing.length, missing };
+}
+
+function setLang(code){
+  if (!I18N.packs[code]) code = "en";
+  I18N.code = code;
+  S.settings.lang = code;
+  document.documentElement.setAttribute("lang", code);
+  applyI18n();
+  renderAll();
+  if (S.open) renderDrawer();
+  if ($("modal").classList.contains("on")) renderModal();
+}
+
+/* The markup carries its own phrase names, so the fixed parts of the page —
+   the tabs, the rail, the footer — translate without being rebuilt. */
+function applyI18n(){
+  $$("[data-i18n]").forEach(el => { el.textContent = L(el.getAttribute("data-i18n")); });
+  $$("[data-i18n-ph]").forEach(el => { el.placeholder = L(el.getAttribute("data-i18n-ph")); });
+  $$("[data-i18n-title]").forEach(el => { el.title = L(el.getAttribute("data-i18n-title")); });
+}
 
 /* ═══ FONTS ══════════════════════════════════════════════════════════════
    No web fonts (that would mean a network call). Instead: probe which
@@ -1441,7 +1693,7 @@ const S = {
   settings: {
     owner:"", systems: DEF_SYS.slice(), types: DEF_TYPE.slice(), parties: DEF_PARTY.slice(),
     theme:"archive", palettes: [], remind:false, lead:15, remindOverdue:true, remindWait:3,
-    autoBlock:true, rememberFilters:true, savedFilters:null, rootPath:"",
+    autoBlock:true, rememberFilters:true, savedFilters:null, rootPath:"", lang:"en",
     /* hours from raising to due, by priority — an undated record is invisible
        to the Day view and to Slipping, which is where work goes to die */
     sla:{ on:true, P1:4, P2:24, P3:48, P4:120 },
@@ -2626,6 +2878,12 @@ async function openWorkspace(handle, quiet){
   makeRoutines(); rollOver(); syncHolds();
   sweepAutoRuns();
   checkRunner().then(paintRunner);
+  /* before the first paint, so the interface never flashes English first */
+  const langErrs = await loadLanguages();
+  I18N.code = I18N.packs[S.settings.lang] ? S.settings.lang : "en";
+  document.documentElement.setAttribute("lang", I18N.code);
+  applyI18n();
+  if (langErrs.length) toast("Language file skipped — " + langErrs[0], { bad:true });
   S.hush = true;
   restoreFilters();
   applyFonts(); applyTheme(S.settings.theme || "archive");
@@ -3199,17 +3457,17 @@ function renderDay(){
   }, 0);
 
   let h = '<div class="cards">';
-  h += kpi("Closed today", closed, planned + " on the sheet", pct, closed ? "good" : "");
-  h += kpi("Open", S.tasks.filter(isLive).length, overdue.length + " past due", 0, overdue.length ? "bad" : "");
-  h += kpi("In progress", S.tasks.filter(t => t.status === "processing").length, "being worked now", 0, "warn");
-  h += kpi("Logged today", mins(spent), "time against today", 0, "");
-  h += kpi("Documents", S.tasks.reduce((s,t) => s + (t.files||[]).length, 0), "filed in this workspace", 0, "");
+  h += kpi(L("Kpi_ClosedToday"), closed, L("Kpi_ClosedTodayHint", {n:planned}), pct, closed ? "good" : "");
+  h += kpi(L("Kpi_Open"), S.tasks.filter(isLive).length, L("Kpi_OpenHint", {n:overdue.length}), 0, overdue.length ? "bad" : "");
+  h += kpi(L("Kpi_InProgress"), S.tasks.filter(t => t.status === "processing").length, L("Kpi_InProgressHint"), 0, "warn");
+  h += kpi(L("Kpi_LoggedToday"), mins(spent), L("Kpi_LoggedTodayHint"), 0, "");
+  h += kpi(L("Kpi_Documents"), S.tasks.reduce((s,t) => s + (t.files||[]).length, 0), L("Kpi_DocumentsHint"), 0, "");
   h += "</div>";
 
   // things worth telling you, learned from your own history
   const hints = dayHints();
   if (hints.length){
-    h += '<div class="hd"><span class="t">Noticed</span><span class="ln"></span></div>' +
+    h += '<div class="hd"><span class="t">' + LE("Group_Noticed") + '</span><span class="ln"></span></div>' +
       '<div class="rows">' + hints.map(x =>
         '<div class="row" ' + (x.id ? 'data-id="' + x.id + '"' : "") + ' style="cursor:' + (x.id ? "pointer" : "default") + '">' +
         '<span style="width:24px;text-align:center;color:var(--teal);font-size:14px">' + x.icon + "</span>" +
@@ -3217,18 +3475,16 @@ function renderDay(){
       "</div>";
   }
 
-  h += group("Overdue", overdue, "alarm");
-  h += group("Due today", due);
-  h += group("In progress", going);
-  h += group("Blocked", stuck);
-  h += group("Undated", undated);
-  h += group("Coming up", soon);
-  h += group("Closed today", shut);
+  h += group(L("Group_Overdue"), overdue, "alarm");
+  h += group(L("Group_DueToday"), due);
+  h += group(L("Group_InProgress"), going);
+  h += group(L("Group_Blocked"), stuck);
+  h += group(L("Group_Undated"), undated);
+  h += group(L("Group_ComingUp"), soon);
+  h += group(L("Group_ClosedToday"), shut);
 
   if (!vis.length){
-    h += blank("✎", "Nothing on the sheet",
-      "Type what you're working on in the bar above. Try <b>check nightly job failures p2 @Imaging 30m today</b> — " +
-      "the pieces get pulled out automatically, and Dossier starts learning your patterns from the first record.");
+    h += blank("✎", L("NothingOnTheSheet"), L("NothingOnTheSheetHint"));
   }
   $("vDay").innerHTML = h;
   const c = 2 * Math.PI * 14.5;
@@ -4920,7 +5176,7 @@ function renderAll(){
   $("cBlock").textContent = c.blocked; $("cDone").textContent = c.done; $("cCancel").textContent = c.cancelled;
 
   const vis = visible();
-  $("railCt").textContent = vis.length + " of " + S.tasks.length +
+  $("railCt").textContent = L("ShowingXofY", { shown:vis.length, total:S.tasks.length }) +
     (S.filters.day ? " · due " + niceDate(S.filters.day) : "") +
     (S.filters.ids ? " · pinned from Insight" : "");
   $("sbT").textContent = S.tasks.length;
@@ -5600,7 +5856,31 @@ async function renderModal(){
       '<p style="font-size:11.5px;color:var(--p1);margin-top:12px">No extra faces were detected. ' +
       "Dossier is falling back to the system font.</p>") +
     '<h5 class="eyebrow" style="margin:20px 0 9px">Palette</h5>' +
-    '<div id="palWrap">' + paletteCards() + paletteEditor() + "</div>";
+    '<div id="palWrap">' + paletteCards() + paletteEditor() + "</div>" +
+
+    '<h5 class="eyebrow" style="margin:22px 0 9px">' + LE("LanguageHeading") + "</h5>" +
+    '<p style="font-size:12px;color:var(--ink-2);margin:0 0 12px;line-height:1.7">' +
+      L("LanguageIntro") + "</p>" +
+    fr(L("Language"), '<select class="in" id="fLang">' +
+      Object.keys(I18N.packs).map(c => '<option value="' + esc(c) + '"' +
+        (c === I18N.code ? " selected" : "") + ">" + esc(I18N.packs[c].name) +
+        (c === "en" ? "" : " — " + LE("TranslatedCount", langCoverage(c))) + "</option>").join("") +
+      "</select>") +
+    '<div class="brow" style="margin-top:9px">' +
+      '<input class="in" id="langNew" style="max-width:190px" placeholder="' +
+        LE("LanguageCode") + '">' +
+      '<button class="btn" id="langWrite">' + LE("WriteLanguageFile") + "</button>" +
+      '<button class="btn" id="langReload">' + LE("RefreshLanguages") + "</button></div>" +
+    '<p style="font-size:11.5px;color:var(--ink-2);margin:10px 0 0;line-height:1.7">' +
+      L("LanguageAddHint") + "</p>" +
+    (() => {
+      const cov = langCoverage(I18N.code);
+      if (I18N.code === "en" || !cov.missing.length) return "";
+      return '<details style="margin-top:10px"><summary style="font-size:11.5px;color:var(--p2);' +
+        'cursor:pointer">' + LE("LanguageMissingList", { n:cov.missing.length }) + "</summary>" +
+        '<div style="font-size:11px;color:var(--ink-3);margin-top:7px;line-height:1.8;' +
+        'max-height:150px;overflow:auto">' + cov.missing.map(esc).join(", ") + "</div></details>";
+    })();
 
   const sla = S.settings.sla || {};
   $("pSetup").innerHTML =
@@ -6063,6 +6343,37 @@ function wireModal(){
   });
   wirePalette();
 
+  /* ── language ────────────────────────────────────────────────────────── */
+  if ($("fLang")) $("fLang").onchange = () => { setLang($("fLang").value); touch(); };
+
+  on("langReload", async () => {
+    if (!FS.ok) return toast(L("LanguageNeedsWorkspace"), { bad:true });
+    const bad = await loadLanguages();
+    setLang(I18N.packs[S.settings.lang] ? S.settings.lang : "en");
+    renderModal();
+    if (bad.length) return toast(bad[0], { bad:true });
+    toast(L("LanguageReloaded", { n:Object.keys(I18N.packs).length }));
+  });
+
+  on("langWrite", async () => {
+    if (!FS.ok) return toast(L("LanguageNeedsWorkspace"), { bad:true });
+    const code = String(($("langNew") || {}).value || "").trim().toLowerCase();
+    if (!/^[a-z]{2,3}(-[a-z]{2,4})?$/.test(code)) return toast(L("LanguageBadCode"), { bad:true });
+    const file = code + ".xml";
+    const dir = await FS.dir(["lang"], true);
+    /* never write over a translation someone has already done */
+    let exists = false;
+    try { await FS.readText(dir, file); exists = true; } catch(e){}
+    if (exists) return toast(L("LanguageExists", { file }), { bad:true });
+    /* carry over anything already translated for this code, so writing a file
+       for a language you have loaded is a top-up rather than a wipe */
+    await FS.writeText(dir, file,
+      buildLangXml(code, (I18N.packs[code] || {}).name || code, (I18N.packs[code] || {}).texts || {}));
+    await loadLanguages();
+    renderModal();
+    toast(L("LanguageWrote", { file }));
+  });
+
   /* ── scripts ─────────────────────────────────────────────────────────── */
   on("scPick", () => {
     if (!FS.ok) return toast("Pick a workspace folder before adding scripts", { bad:true });
@@ -6216,13 +6527,13 @@ function runReport(kind){
   }, 60);
 }
 function refreshSelects(){
-  $("fSys").innerHTML = '<option value="">All systems</option>' +
+  $("fSys").innerHTML = '<option value="">' + LE("AllSystems") + "</option>" +
     S.settings.systems.map(s => "<option>" + esc(s.name) + "</option>").join("");
-  $("fType").innerHTML = '<option value="">Any type</option>' +
+  $("fType").innerHTML = '<option value="">' + LE("AnyType") + "</option>" +
     S.settings.types.map(t => "<option>" + esc(t) + "</option>").join("");
   const who = PEOPLE.list.slice(0, 60);
   if (S.filters.who && !who.some(p => p.name === S.filters.who)) who.unshift({ name:S.filters.who, n:0 });
-  $("fWho").innerHTML = '<option value="">Anyone</option>' +
+  $("fWho").innerHTML = '<option value="">' + LE("Anyone") + "</option>" +
     who.map(p => '<option value="' + esc(p.name) + '">' + esc(p.name) + (p.n ? " (" + p.n + ")" : "") + "</option>").join("");
   $("fSys").value = S.filters.sys; $("fType").value = S.filters.type;
   $("fPri").value = S.filters.pri; $("fRange").value = S.filters.range; $("fWho").value = S.filters.who;
@@ -7170,14 +7481,14 @@ function paintRunner(){
   if (!S.settings.runner){ el.hidden = true; return; }
   el.hidden = false;
   if (runnerElsewhere()){
-    el.innerHTML = '<b style="color:var(--p2)">runner on another folder</b>';
+    el.innerHTML = '<b style="color:var(--p2)">' + LE("Foot_RunnerElsewhere") + "</b>";
     el.title = "The runner is watching " + RUNNER.root + ", not this one.";
   } else if (runnerLive()){
-    el.innerHTML = '<b style="color:var(--ok,#5bbf8a)">runner on</b>';
+    el.innerHTML = '<b style="color:var(--ok,#5bbf8a)">' + LE("Foot_RunnerOn") + "</b>";
     el.title = "Watching " + RUNNER.root + " (pid " + RUNNER.pid + "), " +
                RUNNER.auto + " routine(s) set to run themselves.";
   } else {
-    el.innerHTML = '<b style="color:var(--p2)">runner off</b>';
+    el.innerHTML = '<b style="color:var(--p2)">' + LE("Foot_RunnerOff") + "</b>";
     el.title = "Nothing is running your scripts. Menu → Setup → Running a script.";
   }
 }
