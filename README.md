@@ -99,6 +99,39 @@ To start the runner at every logon: put this folder's full path into
 
 ---
 
+## Cron, when the dropdowns are not enough
+
+A routine can repeat every day, on weekdays, on chosen weekdays or on a day of
+the month. Anything else — the 1st and the 15th, every two hours, twice a
+morning — set **Repeats** to *On a cron schedule* and write it out:
+
+```
+0 8 * * 1-5        08:00 on weekdays
+*/30 9-17 * * *    every half hour through the working day
+0 9 1,15 * *       09:00 on the 1st and the 15th
+@hourly            on the hour, all day
+```
+
+Five fields — minute, hour, day of month, month, day of week — with `*`,
+ranges, lists and `/step`, plus the `@hourly` `@daily` `@weekly` `@monthly`
+shorthands. Weekday names work (`mon-fri`). Cron's own rule is kept: when both
+day-of-month and day-of-week are set, a day matches if **either** does.
+
+The editor shows the **next three runs as you type**, so you find out what the
+expression means before you rely on it, and a mistake is explained (*field 1
+must be between 0 and 59*) rather than silently never firing.
+
+**Dossier still raises one record per day**, timed at the day's first firing —
+the sheet would be unreadable otherwise. The runner fires the **script** at
+every occurrence, and each run is its own line in that record's work log. The
+Time box is ignored for a cron routine; the expression carries the time.
+
+Both halves were checked against each other: the browser's cron and the
+runner's PowerShell cron agree on all 770 day-and-time decisions across eleven
+expressions and seventy days.
+
+---
+
 ## Watch a routine fire itself
 
 *Morning tour* is already set to run `open-morning-tabs.bat` on its own, every

@@ -802,7 +802,7 @@ Nothing is holding this any more." value="" />
     <text name="WatchingPidRoutineSSetTo" source="Watching {p0} (pid {p1}), {p2} routine(s) set to run themselves." value="" />
     <text name="WaterFestivalAreSetAgainstThe" source="Water Festival are set against the Khmer calendar and move every year — there is no formula to " value="" />
     <text name="WayRunDoesInTaskScheduler" source="way Run does in Task Scheduler. If nothing happens, &lt;b&gt;Setup → Test it end to end&lt;/b&gt; walks " value="" />
-    <text name="WebFontsWouldMeanDownloadingFrom" source="Web fonts would mean downloading from someone else's server, which this app will never do. These are the professional faces Dossier found already installed on this machine — " value="" />
+    <text name="WebFontsWouldMeanDownloadingFrom" source="A web font would mean fetching from someone else's server, which this app will never do. The Latin faces below are the ones Dossier found already installed on this machine — " value="" />
     <text name="Weekdays" source="Weekdays" value="" />
     <text name="Weekly" source="Weekly" value="" />
     <text name="WhatKeepsComingBackAndWhat" source="What keeps coming back, and what it cost" value="" />
@@ -1125,5 +1125,15 @@ Nothing is holding this any more." value="" />
     <text name="SinceX" source="since {p0}" value="" />
     <text name="LastSeenX" source="last {p0}" value="" />
     <text name="EstimatedAt" source="estimated {p0}" value="" />
+    <text name="KhmerText" source="Khmer text" value="" />
+    <text name="BundledWithDossier" source="bundled with Dossier" value="" />
+    <text name="KhmerFontNote" source="Khmer is the one exception. Windows ships only Khmer UI and DaunPenh, and a machine without them draws Khmer as empty boxes — so &lt;b&gt;Noto Sans Khmer&lt;/b&gt; is carried inside this file. It is still not a download: nothing is fetched. Pick another below if you have a Khmer face you prefer." value="" />
+    <text name="OnACronSchedule" source="On a cron schedule" value="" />
+    <text name="CronExpression" source="Cron expression" value="" />
+    <text name="CronNotValid" source="That cron expression will not do: {p0}" value="" />
+    <text name="CronNextRuns" source="Next runs: {p0}" value="" />
+    <text name="CronManyPerDay" source="{p0} times a day — the record is raised once, at the first; the runner fires the script at every one." value="" />
+    <text name="CronTimeIgnored" source="The Time box above is ignored for a cron routine — the expression carries the time." value="" />
+    <text name="CronHelp" source="minute hour day-of-month month day-of-week. &lt;b&gt;0 8 * * 1-5&lt;/b&gt; is 08:00 on weekdays; &lt;b&gt;*/30 9-17 * * *&lt;/b&gt; is every half hour through the working day; &lt;b&gt;@hourly&lt;/b&gt; and &lt;b&gt;@daily&lt;/b&gt; work too." value="" />
   </texts>
 </localizationDictionary>

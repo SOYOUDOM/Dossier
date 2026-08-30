@@ -133,6 +133,71 @@ function Invoke-DossierScript([string]$name, $argValues, [string]$tmpId) {
   return [pscustomobject]@{ exit = $proc.ExitCode; output = $out }
 }
 
+# One field of a cron expression -> the set of numbers it allows.
+# Accepts *, n, a-b, a-b/step, a bare star with /step, and comma lists.
+function Cron-Field([string]$spec, [int]$lo, [int]$hi) {
+  $out = New-Object 'System.Collections.Generic.HashSet[int]'
+  foreach ($part in $spec.Split(',')) {
+    $p = $part.Trim()
+    if (-not $p) { throw "empty field" }
+    $step = 1
+    if ($p -match '^(.+)/(\d+)$') { $p = $Matches[1]; $step = [int]$Matches[2] }
+    if ($step -lt 1) { throw "step must be 1 or more" }
+    if ($p -eq '*') { $a = $lo; $b = $hi }
+    elseif ($p -match '^(\d+)-(\d+)$') { $a = [int]$Matches[1]; $b = [int]$Matches[2] }
+    elseif ($p -match '^\d+$') { $a = [int]$p; $b = $a }
+    else { throw "cannot read '$p'" }
+    if ($a -lt $lo -or $b -gt $hi -or $a -gt $b) { throw "'$p' is out of range $lo-$hi" }
+    for ($v = $a; $v -le $b; $v += $step) { [void]$out.Add($(if ($hi -eq 7 -and $v -eq 7) { 0 } else { $v })) }
+  }
+  return $out
+}
+
+# The five fields, plus whether day-of-month and weekday were left as stars -
+# cron matches a day if EITHER is set when both are restricted.
+function Cron-Parse([string]$expr) {
+  $e = ($expr -replace '\s+', ' ').Trim().ToLower()
+  switch ($e) {
+    '@yearly'  { $e = '0 0 1 1 *' }
+    '@monthly' { $e = '0 0 1 * *' }
+    '@weekly'  { $e = '0 0 * * 0' }
+    '@daily'   { $e = '0 0 * * *' }
+    '@hourly'  { $e = '0 * * * *' }
+  }
+  $f = $e.Split(' ')
+  if ($f.Count -ne 5) { throw "needs five fields" }
+  return [pscustomobject]@{
+    Min = Cron-Field $f[0] 0 59; Hour = Cron-Field $f[1] 0 23
+    Dom = Cron-Field $f[2] 1 31; Mon  = Cron-Field $f[3] 1 12
+    Dow = Cron-Field $f[4] 0 7
+    DomStar = ($f[2] -eq '*'); DowStar = ($f[4] -eq '*'); Expr = $e }
+}
+
+function Cron-Day($c, $now) {
+  if (-not $c.Mon.Contains($now.Month)) { return $false }
+  $md = $c.Dom.Contains($now.Day)
+  $wd = $c.Dow.Contains([int]$now.DayOfWeek)
+  if ($c.DomStar -and $c.DowStar) { return $true }
+  if ($c.DomStar) { return $wd }
+  if ($c.DowStar) { return $md }
+  return ($md -or $wd)
+}
+
+# The most recent firing at or before $now, today only. Returning the latest
+# rather than the exact minute means a machine that was asleep still catches
+# the run when it wakes, which is what the dropdown routines already do.
+function Cron-LastDue($c, $now) {
+  if (-not (Cron-Day $c $now)) { return $null }
+  $best = $null
+  foreach ($h in $c.Hour) {
+    foreach ($m in $c.Min) {
+      $t = Get-Date -Year $now.Year -Month $now.Month -Day $now.Day -Hour $h -Minute $m -Second 0 -Millisecond 0
+      if ($t -le $now -and ($null -eq $best -or $t -gt $best)) { $best = $t }
+    }
+  }
+  return $best
+}
+
 # The same rule Dossier uses to decide whether a routine is due today.
 function Routine-Due($r, $now) {
   if ($r.paused) { return $false }
@@ -142,6 +207,7 @@ function Routine-Due($r, $now) {
     'weekdays' { return ($d -ge 1 -and $d -le 5) }
     'weekly'   { return (@($r.days) -contains $d) }
     'monthly'  { return ($now.Day -eq [int]$r.dom) }
+    'cron'     { try { return (Cron-Day (Cron-Parse ([string]$r.cron)) $now) } catch { return $false } }
   }
   return $false
 }
@@ -215,7 +281,8 @@ while ($true) {
       # A new day, or an edit you just made in Dossier - say what is watched
       # now. Seeing your own change echoed here is the proof the runner is
       # reading the copy of the workspace you think it is.
-      $now_sig = (($auto | ForEach-Object { $_.title + ' @' + $_.time }) -join ', ')
+      $now_sig = (($auto | ForEach-Object {
+        $_.title + ' @' + $(if ([string]$_.freq -eq 'cron') { 'cron ' + $_.cron } else { $_.time }) }) -join ', ')
       if ($stamp -ne $today) { $today = $stamp; $seen = @{}; $sig = '' }
       if ($now_sig -ne $sig) { $sig = $now_sig; $seen = @{}
         if (@($auto).Count -eq 0) {
@@ -227,19 +294,32 @@ while ($true) {
         if (-not $rt.scripts -or @($rt.scripts).Count -eq 0) { continue }
         if (-not (Routine-Due $rt $now)) { continue }
 
-        # once a day, whatever else happens - the marker is the guarantee
-        $mark = Join-Path $queue ('.auto-' + $rt.id + '-' + $stamp + '.txt')
+        # When is it next owed, and what marks that it has been paid? A cron
+        # routine can be owed several times a day, so the marker carries the
+        # occurrence; the others are once a day and carry the date.
+        $at = $null
+        $slot = $stamp
+        if ([string]$rt.freq -eq 'cron') {
+          try { $at = Cron-LastDue (Cron-Parse ([string]$rt.cron)) $now } catch { $at = $null }
+          if (-not $at) {
+            if (-not $seen[$rt.id]) { $seen[$rt.id] = $true
+              Write-Host ("  '{0}' has nothing due yet today ({1})" -f $rt.title, $rt.cron) }
+            continue }
+          $slot = $at.ToString('yyyy-MM-dd-HHmm')
+        } else {
+          [void][datetime]::TryParse(($stamp + ' ' + [string]$rt.time), [ref]$at)
+        }
+
+        $mark = Join-Path $queue ('.auto-' + $rt.id + '-' + $slot + '.txt')
         if (Test-Path -LiteralPath $mark) {
-          if (-not $seen[$rt.id]) { $seen[$rt.id] = $true
-            Write-Host ("  '{0}' already ran today - delete {1} to run it again" -f $rt.title, $mark) }
+          if (-not $seen[$rt.id + $slot]) { $seen[$rt.id + $slot] = $true
+            Write-Host ("  '{0}' already ran for {1} - delete {2} to run it again" -f $rt.title, $slot, $mark) }
           continue }
 
         # not before its time; if the machine was off, it catches up
-        $at = $null
-        [void][datetime]::TryParse(($stamp + ' ' + [string]$rt.time), [ref]$at)
         if ($at -and $now -lt $at) {
           if (-not $seen[$rt.id]) { $seen[$rt.id] = $true
-            Write-Host ("  '{0}' waits until {1}" -f $rt.title, $rt.time) }
+            Write-Host ("  '{0}' waits until {1}" -f $rt.title, $at.ToString('HH:mm')) }
           continue }
 
         $sid  = [string]@($rt.scripts)[0]
@@ -249,7 +329,7 @@ while ($true) {
         # marked before it is run: a script that crashes the runner must not
         # be retried in a loop for the rest of the day
         Set-Content -LiteralPath $mark -Value $now.ToString('o') -Encoding UTF8
-        $id   = 'auto-' + $rt.id + '-' + $stamp
+        $id   = 'auto-' + $rt.id + '-' + $slot
         $done = Join-Path $queue ($id + '.done.json')
         Write-Host ("[{0}] running {1} for routine '{2}'" -f $now.ToString('HH:mm:ss'), $sc.file, $rt.title)
         try {
