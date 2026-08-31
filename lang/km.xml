@@ -1193,7 +1193,7 @@ Nothing is holding this any more." value="" />
     <text name="RemindersOffHint" source="Nothing will remind you. Turn this on, or press the bell in the top right." value="" />
     <text name="RemindersGrantedHint" source="Reminders appear in Dossier and as Windows notifications, even when the tab is behind Outlook." value="" />
     <text name="RemindersNoneHint" source="This browser cannot raise Windows notifications, so reminders appear inside Dossier only." value="" />
-    <text name="RemindersBlockedHint" source="Windows notifications are blocked for this page, so reminders only appear inside Dossier. Click the padlock beside the address and set Notifications to Allow. Opening dossier.html straight from the folder blocks them too — serve it from &lt;b&gt;127.0.0.1&lt;/b&gt; instead." value="" />
+    <text name="RemindersBlockedHint" source="Windows notifications are blocked for this page, so reminders only appear inside Dossier. Click the padlock beside the address and set Notifications to Allow. Opening dossier.html straight from the folder blocks them too — run &lt;b&gt;dossier-serve.bat&lt;/b&gt; to open it from 127.0.0.1 instead." value="" />
     <text name="ScheduleDoesNothingElse" source="It will raise a record on the sheet and nothing more — no notification, no script. Set &lt;b&gt;Remind me&lt;/b&gt; to be told each time, or attach a script under &lt;b&gt;What it does&lt;/b&gt;." value="" />
   </texts>
 </localizationDictionary>
