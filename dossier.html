@@ -1218,6 +1218,8 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
   transition-delay:0s,0s,.28s }
 .drawer.on,.cmd.on,.modal.on,.problem.on,.chase.on,.intake.on,.drill.on,.ask.on{
   visibility:visible;transition-delay:0s }
+
+.schsum .warn2{ display:block;margin-top:5px;color:var(--p2);font-size:11px;line-height:1.55 }
 </style>
 </head>
 <body>
@@ -2704,7 +2706,8 @@ const STRINGS = {
   RemindersOffHint: "Nothing will remind you. Turn this on, or press the bell in the top right.",
   RemindersGrantedHint: "Reminders appear in Dossier and as Windows notifications, even when the tab is behind Outlook.",
   RemindersNoneHint: "This browser cannot raise Windows notifications, so reminders appear inside Dossier only.",
-  RemindersBlockedHint: "Windows notifications are blocked for this page, so reminders only appear inside Dossier. Click the padlock beside the address and set Notifications to Allow. Opening dossier.html straight from the folder blocks them too \u2014 serve it from <b>127.0.0.1</b> instead."
+  RemindersBlockedHint: "Windows notifications are blocked for this page, so reminders only appear inside Dossier. Click the padlock beside the address and set Notifications to Allow. Opening dossier.html straight from the folder blocks them too \u2014 serve it from <b>127.0.0.1</b> instead.",
+  ScheduleDoesNothingElse: "It will raise a record on the sheet and nothing more \u2014 no notification, no script. Set <b>Remind me</b> to be told each time, or attach a script under <b>What it does</b>."
 };
 
 /* Loaded files, keyed by culture code. "en" is always present, from STRINGS. */
@@ -8250,10 +8253,17 @@ function wireModal(){
       let txt = "";
       try { txt = plainSchedule(r); } catch(e){ txt = ""; }
       const bits = [];
-      if ($("rRem") && $("rRem").value === "1") bits.push(L("RemindsYou"));
-      if ($("rAuto") && $("rAuto").value === "1" && $("rSc") && $("rSc").value)
-        bits.push(String(L("RunsItself")).replace(/^[\s·]+/, ""));
-      sum.textContent = txt ? txt + (bits.length ? " · " + bits.join(" · ") : "") : "";
+      const willRemind = $("rRem") && $("rRem").value === "1";
+      const willRun = $("rAuto") && $("rAuto").value === "1" && $("rSc") && $("rSc").value;
+      if (willRemind) bits.push(L("RemindsYou"));
+      if (willRun) bits.push(String(L("RunsItself")).replace(/^[\s·]+/, ""));
+      /* Someone who sets a schedule for every minute wants to be told
+         something every minute. Left as it comes, it raises one record a day
+         and is otherwise silent — say so here rather than let them find out
+         by waiting. */
+      sum.innerHTML = esc(txt ? txt + (bits.length ? " · " + bits.join(" · ") : "") : "") +
+        (!willRemind && !willRun
+          ? '<span class="warn2">' + L("ScheduleDoesNothingElse") + "</span>" : "");
     }
   };
   if ($("rF")) $("rF").addEventListener("change", syncRoutineForm);
