@@ -34,6 +34,18 @@ That is the whole setup. You should see:
 
 ## Make the scripts actually run
 
+> **No PowerShell required.** The runner is `scripts\dossier-runner.bat`.
+> Everything between Dossier and it is plain text, one value a line — a batch
+> file reads that with `set /p` and writes it with `echo`, and never has to
+> parse or escape JSON.
+>
+> Because a `.bat` cannot read your routines out of `dossier.json`, **Dossier
+> queues its own scheduled runs** and the runner just runs what it is handed.
+> The cost is honest: with the tab closed nothing is queued. For something
+> that must fire regardless, point Windows Task Scheduler straight at your
+> `.bat` — it needs nothing from Dossier.
+
+
 A page in a browser cannot start a program. So Dossier writes a request to a
 file, and a small PowerShell process of yours picks it up, runs the script, and
 writes the output back — which lands in the record's work log.

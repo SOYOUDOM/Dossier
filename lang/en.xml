@@ -132,11 +132,10 @@
     <text name="AlreadyExistRoutinesAreRaisedOnce" source=" already exist — routines are raised once a day" value=" already exist — routines are raised once a day" />
     <text name="AlreadyOpenPressAgainToLog" source="Already open: {p0} — press again to log it anyway" value="Already open: {p0} — press again to log it anyway" />
     <text name="AlreadyWaitsOnThisOneThat" source=" already waits on this one — that would be a loop" value=" already waits on this one — that would be a loop" />
-    <text name="AndASmallPowershellProcessOf" source="and a small PowerShell process of your own — &lt;b&gt;Setup → Running a script&lt;/b&gt; writes it for you — " value="and a small PowerShell process of your own — &lt;b&gt;Setup → Running a script&lt;/b&gt; writes it for you — " />
+    <text name="AndASmallPowershellProcessOf" source="and a small batch file of your own — &lt;b&gt;Setup → Running a script&lt;/b&gt; writes it for you — " value="and a small batch file of your own — &lt;b&gt;Setup → Running a script&lt;/b&gt; writes it for you — " />
     <text name="AndHandYouTheCommandOr" source="and hand you the command or a ready copy in the record's own folder.&lt;/p&gt;" value="and hand you the command or a ready copy in the record's own folder.&lt;/p&gt;" />
     <text name="AndIHaveChased" source=", and I have chased " value=", and I have chased " />
     <text name="AndIHaveHadNoReply" source=", and I have had no reply." value=", and I have had no reply." />
-    <text name="AndNoNetworkInvolved" source="and no network involved.&lt;/p&gt;" value="and no network involved.&lt;/p&gt;" />
     <text name="AndTheEvidencePackPickIt" source="and the evidence pack pick it up without knowing the difference. Needs Edge or Chrome.&lt;/p&gt;" value="and the evidence pack pick it up without knowing the difference. Needs Edge or Chrome.&lt;/p&gt;" />
     <text name="AnniversariesThatNeverMove" source=" anniversaries that never move. " value=" anniversaries that never move. " />
     <text name="AnyRecordCarryingAScriptShows" source="Any record carrying a script shows a &lt;b&gt;$&lt;/b&gt; button on its row. One press puts the command on " value="Any record carrying a script shows a &lt;b&gt;$&lt;/b&gt; button on its row. One press puts the command on " />
@@ -272,7 +271,6 @@
 " value="  dossier.json              every record, note and work log
 " />
     <text name="DossierRemembersYourFolderBrowsersRequire" source="Dossier remembers your folder &lt;b&gt;{p0}&lt;/b&gt;. Browsers require one click before handing access back." value="Dossier remembers your folder &lt;b&gt;{p0}&lt;/b&gt;. Browsers require one click before handing access back." />
-    <text name="DossierReminderWatch" source="Dossier reminder watch" value="Dossier reminder watch" />
     <text name="DossierStillNeverExecutesAnythingA" source="Dossier still never executes anything — a browser cannot, and this one does not try. It hands you " value="Dossier still never executes anything — a browser cannot, and this one does not try. It hands you " />
     <text name="DotBad" source="dot bad" value="dot bad" />
     <text name="DotWarn" source="dot warn" value="dot warn" />
@@ -549,7 +547,7 @@ Nothing is holding this any more." />
     <text name="PublicHolidaysAreTintedAndNamed" source="Public holidays are tinted and named on the day. The list is seeded with &lt;b&gt;Cambodia 2026&lt;/b&gt; " value="Public holidays are tinted and named on the day. The list is seeded with &lt;b&gt;Cambodia 2026&lt;/b&gt; " />
     <text name="PutLogoPngAndFaviconIco" source="Put &lt;code&gt;logo.png&lt;/code&gt; and &lt;code&gt;favicon.ico&lt;/code&gt; in the same folder as this HTML file. " value="Put &lt;code&gt;logo.png&lt;/code&gt; and &lt;code&gt;favicon.ico&lt;/code&gt; in the same folder as this HTML file. " />
     <text name="PutYourNameInSetupAnd" source="Put your name in Setup and it signs itself." value="Put your name in Setup and it signs itself." />
-    <text name="PutYourWorkspacesFullPathIn" source="Put your workspace's full path in &lt;b&gt;Menu → Scripts → Folder path&lt;/b&gt; first, or that line will point nowhere. Until then, double-click &lt;b&gt;scripts\dossier-runner.ps1&lt;/b&gt; to start it by hand." value="Put your workspace's full path in &lt;b&gt;Menu → Scripts → Folder path&lt;/b&gt; first, or that line will point nowhere. Until then, double-click &lt;b&gt;scripts\dossier-runner.ps1&lt;/b&gt; to start it by hand." />
+    <text name="PutYourWorkspacesFullPathIn" source="Put your workspace's full path in &lt;b&gt;Menu → Scripts → Folder path&lt;/b&gt; first, or that line will point nowhere. Until then, double-click &lt;b&gt;scripts\dossier-runner.bat&lt;/b&gt; to start it by hand." value="Put your workspace's full path in &lt;b&gt;Menu → Scripts → Folder path&lt;/b&gt; first, or that line will point nowhere. Until then, double-click &lt;b&gt;scripts\dossier-runner.bat&lt;/b&gt; to start it by hand." />
     <text name="PxPxRgbaPxPxRgba" source="0 1px 2px rgba(0,0,0,.5),0 14px 38px rgba(0,0,0,.45)" value="0 1px 2px rgba(0,0,0,.5),0 14px 38px rgba(0,0,0,.45)" />
     <text name="PxPxRgbaPxPxRgba2" source="0 1px 2px rgba(0,0,0,.06),0 12px 30px rgba(0,0,0,.08)" value="0 1px 2px rgba(0,0,0,.06),0 12px 30px rgba(0,0,0,.08)" />
     <text name="QuoteAnythingAwkwardOpsTeamDba" source="Quote anything awkward: &lt;code&gt;~&quot;ops team, dba&quot;&lt;/code&gt;.&lt;/p&gt;" value="Quote anything awkward: &lt;code&gt;~&quot;ops team, dba&quot;&lt;/code&gt;.&lt;/p&gt;" />
@@ -631,14 +629,12 @@ Nothing is holding this any more." />
     <text name="RunFromExplorerAndFiledAs" source="run from Explorer and filed as evidence beside the incident.&lt;/p&gt;" value="run from Explorer and filed as evidence beside the incident.&lt;/p&gt;" />
     <text name="RunItNow" source="Run it now" value="Run it now" />
     <text name="RunSendsTheScriptToThe" source="Run sends the script to the runner" value="Run sends the script to the runner" />
-    <text name="RunsItEveryMinutesItReads" source="runs it every 15 minutes, it reads dossier.json off the disk and raises the same toasts with no browser " value="runs it every 15 minutes, it reads dossier.json off the disk and raises the same toasts with no browser " />
     <text name="RunsItself" source=" · runs itself" value=" · runs itself" />
     <text name="SaveNow" source="Save now" value="Save now" />
     <text name="SavedTo" source="Saved to " value="Saved to " />
     <text name="SavesItAs" source="saves it as " value="saves it as " />
     <text name="Saving" source="saving…" value="saving…" />
     <text name="ScheduledRunSFiledIntoTodays" source=" scheduled run(s) filed into today's records" value=" scheduled run(s) filed into today's records" />
-    <text name="SchtasksCreateTnDossierRemindersSc" source="schtasks /Create /TN &quot;Dossier reminders&quot; /SC MINUTE /MO 15 /F /TR " value="schtasks /Create /TN &quot;Dossier reminders&quot; /SC MINUTE /MO 15 /F /TR " />
     <text name="ScreenshotFiledUnder" source="Screenshot filed under " value="Screenshot filed under " />
     <text name="Script" source="Script" value="Script" />
     <text name="ScriptAttached" source="Script attached: " value="Script attached: " />
@@ -653,7 +649,6 @@ Nothing is holding this any more." />
     <text name="SeeAtAGlanceWhetherThe" source="see at a glance whether the morning round is done.&lt;/p&gt;" value="see at a glance whether the morning round is done.&lt;/p&gt;" />
     <text name="SeeTheLog" source="See the log" value="See the log" />
     <text name="SeededWithCambodiaSubDecreeNo" source="Seeded with Cambodia 2026 (Sub-Decree No. 167, 18 Sep 2025) — &lt;b&gt;check it against the " value="Seeded with Cambodia 2026 (Sub-Decree No. 167, 18 Sep 2025) — &lt;b&gt;check it against the " />
-    <text name="SeemToAreCallingAServer" source="seem to are calling a server, which this file will never do." value="seem to are calling a server, which this file will never do." />
     <text name="Seen" source="Seen " value="Seen " />
     <text name="SendItToTheRunnerOption" source="&gt;Send it to the runner&lt;/option&gt;&lt;option value=&quot;0&quot;" value="&gt;Send it to the runner&lt;/option&gt;&lt;option value=&quot;0&quot;" />
     <text name="SentToTheRunner" source="Sent to the runner — " value="Sent to the runner — " />
@@ -661,7 +656,7 @@ Nothing is holding this any more." />
     <text name="SetATargetDate" source="Set a target date" value="Set a target date" />
     <text name="SetTo" source=" set to " value=" set to " />
     <text name="Settings" source="Settings" value="Settings" />
-    <text name="ShouldNotInstallSoDossierWrites" source="should not install. So Dossier writes the request to a file instead, and a small PowerShell " value="should not install. So Dossier writes the request to a file instead, and a small PowerShell " />
+    <text name="ShouldNotInstallSoDossierWrites" source="should not install. So Dossier writes the request to a file instead, and a small batch file " value="should not install. So Dossier writes the request to a file instead, and a small batch file " />
     <text name="ShowAll" source="Show all " value="Show all " />
     <text name="ShowTheLastOnly" source="Show the last 6 only" value="Show the last 6 only" />
     <text name="Signed" source="Signed " value="Signed " />
@@ -679,7 +674,7 @@ Nothing is holding this any more." />
     <text name="Standup" source="Standup" value="Standup" />
     <text name="StandupNote" source="Standup note" value="Standup note" />
     <text name="Start" source="Start" value="Start" />
-    <text name="StartItDoubleClickScriptsDossier" source="Start it: double-click &lt;b&gt;scripts\dossier-runner.ps1&lt;/b&gt;. Its window must say it is watching &lt;b&gt;this&lt;/b&gt; folder — if it names a different path, you have two copies of the workspace and Dossier is pointed at the other one." value="Start it: double-click &lt;b&gt;scripts\dossier-runner.ps1&lt;/b&gt;. Its window must say it is watching &lt;b&gt;this&lt;/b&gt; folder — if it names a different path, you have two copies of the workspace and Dossier is pointed at the other one." />
+    <text name="StartItDoubleClickScriptsDossier" source="Start it: double-click &lt;b&gt;scripts\dossier-runner.bat&lt;/b&gt;. Its window must say it is watching &lt;b&gt;this&lt;/b&gt; folder — if it names a different path, you have two copies of the workspace and Dossier is pointed at the other one." value="Start it: double-click &lt;b&gt;scripts\dossier-runner.bat&lt;/b&gt;. Its window must say it is watching &lt;b&gt;this&lt;/b&gt; folder — if it names a different path, you have two copies of the workspace and Dossier is pointed at the other one." />
     <text name="StartTheClock" source="Start the clock" value="Start the clock" />
     <text name="Status" source="Status    : " value="Status    : " />
     <text name="Status2" source="Status" value="Status" />
@@ -693,7 +688,6 @@ Nothing is holding this any more." />
     <text name="SummaryCopied" source="Summary copied" value="Summary copied" />
     <text name="SupportedByThisBrowser" source="supported by this browser" value="supported by this browser" />
     <text name="SupposedToBeHappeningRecordsYour" source="supposed to be happening. Records your routines created are left out of it.&lt;/p&gt;" value="supposed to be happening. Records your routines created are left out of it.&lt;/p&gt;" />
-    <text name="Swatch" source="Swatch" value="Swatch" />
     <text name="SwitchFolder" source="Switch folder…" value="Switch folder…" />
     <text name="System" source="System" value="System" />
     <text name="System2" source="System    : " value="System    : " />
@@ -838,13 +832,12 @@ Nothing is holding this any more." />
     <text name="WorkloadBySystem" source="Workload by system" value="Workload by system" />
     <text name="WouldRatherNotKeepAProcess" source="Would rather not keep a process running? &lt;b&gt;Make a double-click file&lt;/b&gt; in the record's " value="Would rather not keep a process running? &lt;b&gt;Make a double-click file&lt;/b&gt; in the record's " />
     <text name="WriteDossierJson" source="Write dossier.json" value="Write dossier.json" />
-    <text name="WriteTheFileThenEitherRun" source="Write the file, then either run that line once so it starts at every logon, or just double-click &lt;b&gt;dossier-runner.ps1&lt;/b&gt; to try it now. Close its window to stop it." value="Write the file, then either run that line once so it starts at every logon, or just double-click &lt;b&gt;dossier-runner.ps1&lt;/b&gt; to try it now. Close its window to stop it." />
+    <text name="WriteTheFileThenEitherRun" source="Write the file, then either run that line once so it starts at every logon, or just double-click &lt;b&gt;dossier-runner.bat&lt;/b&gt; to try it now. Close its window to stop it." value="Write the file, then either run that line once so it starts at every logon, or just double-click &lt;b&gt;dossier-runner.bat&lt;/b&gt; to try it now. Close its window to stop it." />
     <text name="WriteToEveryTeamThatHas" source="Write to every team that has gone quiet" value="Write to every team that has gone quiet" />
     <text name="WrittenSummariesForAPddA" source="Written summaries for a PDD, a KPI submission, standup, or shift handover&lt;/div&gt;" value="Written summaries for a PDD, a KPI submission, standup, or shift handover&lt;/div&gt;" />
     <text name="WrittenTo" source="Written to " value="Written to " />
     <text name="WrittenToReports" source="Written to reports/" value="Written to reports/" />
-    <text name="WrittenToScriptsDossierRunnerPs" source="Written to scripts/dossier-runner.ps1 — start it once, then Run works from any record" value="Written to scripts/dossier-runner.ps1 — start it once, then Run works from any record" />
-    <text name="WrittenToScriptsDossierWatchPs" source="Written to scripts/dossier-watch.ps1" value="Written to scripts/dossier-watch.ps1" />
+    <text name="WrittenToScriptsDossierRunnerPs" source="Written to scripts/dossier-runner.bat — start it once, then Run works from any record" value="Written to scripts/dossier-runner.bat — start it once, then Run works from any record" />
     <text name="WrittenToTasks" source="Written to tasks/" value="Written to tasks/" />
     <text name="WrittenToTheRecordFolderBlank" source="Written to the record folder — {p0} blank(s) still unfilled" value="Written to the record folder — {p0} blank(s) still unfilled" />
     <text name="WroteScriptsQueue" source="Wrote &lt;b&gt;scripts/queue/" value="Wrote &lt;b&gt;scripts/queue/" />
@@ -1006,7 +999,7 @@ Nothing is holding this any more." />
     <text name="Monthly" source="Monthly" value="Monthly" />
     <text name="NoIWillPressRun" source="No — I will press Run" value="No — I will press Run" />
     <text name="YesTheRunnerFiresItAt" source="Yes — the runner fires it at the time above" value="Yes — the runner fires it at the time above" />
-    <text name="ScriptsDossierRunnerPs" source="scripts/dossier-runner.ps1" value="scripts/dossier-runner.ps1" />
+    <text name="ScriptsDossierRunnerPs" source="scripts/dossier-runner.bat" value="scripts/dossier-runner.bat" />
     <text name="FiresItAtThatTimeWhether" source="fires it at that time whether Dossier is open or not —" value="fires it at that time whether Dossier is open or not —" />
     <text name="AddRoutine" source="Add routine" value="Add routine" />
     <text name="CreateTodaysNow" source="Create today's now" value="Create today's now" />
@@ -1014,7 +1007,6 @@ Nothing is holding this any more." />
     <text name="APageInABrowserIs" source="A page in a browser is not allowed to start a program on your" value="A page in a browser is not allowed to start a program on your" />
     <text name="AddScriptFiles" source="Add script files…" value="Add script files…" />
     <text name="PickUpNewFilesInScripts" source="Pick up new files in scripts/" value="Pick up new files in scripts/" />
-    <text name="WriteTheReminderWatcher" source="Write the reminder watcher" value="Write the reminder watcher" />
     <text name="WhatItDoes" source="What it does" value="What it does" />
     <text name="Blanks" source="Blanks" value="Blanks" />
     <text name="NothingInTheLibraryYet" source="Nothing in the library yet." value="Nothing in the library yet." />
@@ -1030,13 +1022,11 @@ Nothing is holding this any more." />
     <text name="OnceADay" source="Once a day" value="Once a day" />
     <text name="Never" source="Never" value="Never" />
     <text name="WhenThisTabIsClosed" source="When this tab is closed" value="When this tab is closed" />
-    <text name="SoDossierWritesASmallPowershell" source="So Dossier writes a small PowerShell watcher into your scripts folder instead. Task Scheduler" value="So Dossier writes a small PowerShell watcher into your scripts folder instead. Task Scheduler" />
-    <text name="WriteScriptsDossierWatchPs" source="Write scripts/dossier-watch.ps1" value="Write scripts/dossier-watch.ps1" />
     <text name="CopyTheSchtasksLine" source="Copy the schtasks line" value="Copy the schtasks line" />
     <text name="RunningAScript" source="Running a script" value="Running a script" />
     <text name="StartTheScriptStraightAwayAnd" source="start the script straight away, and a routine fires on its minute. A pass is" value="start the script straight away, and a routine fires on its minute. A pass is" />
     <text name="AtAGlanceAndIfA" source="at a glance — and if a routine says it runs itself while nothing is" value="at a glance — and if a routine says it runs itself while nothing is" />
-    <text name="WriteScriptsDossierRunnerPs" source="Write scripts/dossier-runner.ps1" value="Write scripts/dossier-runner.ps1" />
+    <text name="WriteScriptsDossierRunnerPs" source="Write scripts/dossier-runner.bat" value="Write scripts/dossier-runner.bat" />
     <text name="TestItEndToEnd" source="Test it end to end" value="Test it end to end" />
     <text name="TargetDates" source="Target dates" value="Target dates" />
     <text name="InHoursUnderSetsATime" source="In hours. Under 24 sets a time of day too." value="In hours. Under 24 sets a time of day too." />
@@ -1115,7 +1105,6 @@ Nothing is holding this any more." />
     <text name="ChooseOrTabInserts" source="↑↓ choose · ⏎ or Tab inserts" value="↑↓ choose · ⏎ or Tab inserts" />
     <text name="NoMatch" source="No match" value="No match" />
     <text name="Workspace" source="Workspace:" value="Workspace:" />
-    <text name="RunJson" source=".run.json" value=".run.json" />
     <text name="AskingFor" source="asking for" value="asking for" />
     <text name="Output" source="Output:" value="Output:" />
     <text name="OnThisSheet" source="On this sheet" value="On this sheet" />
@@ -1204,5 +1193,6 @@ Nothing is holding this any more." />
     <text name="KeySearch" source="Search everything" value="Search everything" />
     <text name="KeyNewRecord" source="New record" value="New record" />
     <text name="KeyCommandPalette" source="Command palette" value="Command palette" />
+    <text name="ClosedTabBatAdvice" source="There is no way round that from a web page, and this machine has no PowerShell to fall back on. If something genuinely must happen while Dossier is shut, point &lt;b&gt;Windows Task Scheduler&lt;/b&gt; straight at your &lt;b&gt;.bat&lt;/b&gt; file — that is exactly what it is for, and it needs nothing from Dossier. Keep the tab open, even behind Outlook, and reminders work on their own." value="There is no way round that from a web page, and this machine has no PowerShell to fall back on. If something genuinely must happen while Dossier is shut, point &lt;b&gt;Windows Task Scheduler&lt;/b&gt; straight at your &lt;b&gt;.bat&lt;/b&gt; file — that is exactly what it is for, and it needs nothing from Dossier. Keep the tab open, even behind Outlook, and reminders work on their own." />
   </texts>
 </localizationDictionary>
