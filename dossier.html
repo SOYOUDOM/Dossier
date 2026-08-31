@@ -551,7 +551,7 @@ table.reg td.ttd span{display:block;overflow:hidden;text-overflow:ellipsis;white
 
 /* ── drill-down sheet ────────────────────────────────────────────────── */
 .drill{position:fixed;top:50%;left:50%;transform:translate(-50%,-46%) scale(.98);width:min(760px,95vw);
-  max-height:82vh;z-index:60;background:var(--paper);border:1px solid var(--rule-hi);border-radius:var(--r);
+  max-height:calc(82vh / var(--z, 1));z-index:60;background:var(--paper);border:1px solid var(--rule-hi);border-radius:var(--r);
   box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:.2s var(--ease);
   display:flex;flex-direction:column;overflow:hidden}
 .drill.on{opacity:1;pointer-events:auto;transform:translate(-50%,-50%) scale(1)}
@@ -572,7 +572,7 @@ table.reg td.ttd span{display:block;overflow:hidden;text-overflow:ellipsis;white
    on the right every guess with the words it came from. A wrong guess you can
    see beats a right one you cannot. */
 .intake{position:fixed;top:50%;left:50%;transform:translate(-50%,-46%) scale(.98);
-  width:min(900px,96vw);max-height:88vh;z-index:60;background:var(--paper);
+  width:min(900px,96vw);max-height:calc(88vh / var(--z, 1));z-index:60;background:var(--paper);
   border:1px solid var(--rule-hi);border-radius:var(--r);box-shadow:var(--shadow);
   opacity:0;pointer-events:none;transition:.2s var(--ease);display:flex;flex-direction:column;overflow:hidden}
 .intake.on{opacity:1;pointer-events:auto;transform:translate(-50%,-50%) scale(1)}
@@ -615,7 +615,7 @@ table.reg td.ttd span{display:block;overflow:hidden;text-overflow:ellipsis;white
    Same shape as intake: the thing you will send on the left, the facts it was
    built from on the right, and nothing written until you act. */
 .problem{position:fixed;top:50%;left:50%;transform:translate(-50%,-46%) scale(.98);
-  width:min(940px,96vw);max-height:88vh;z-index:60;background:var(--paper);
+  width:min(940px,96vw);max-height:calc(88vh / var(--z, 1));z-index:60;background:var(--paper);
   border:1px solid var(--rule-hi);border-radius:var(--r);box-shadow:var(--shadow);
   opacity:0;pointer-events:none;transition:.2s var(--ease);display:flex;flex-direction:column;overflow:hidden}
 .problem.on{opacity:1;pointer-events:auto;transform:translate(-50%,-50%) scale(1)}
@@ -640,7 +640,7 @@ table.reg td.ttd span{display:block;overflow:hidden;text-overflow:ellipsis;white
   border:1px solid var(--accent);border-radius:999px;padding:0 6px;margin-right:7px}
 
 .chase{position:fixed;top:50%;left:50%;transform:translate(-50%,-46%) scale(.98);
-  width:min(900px,96vw);max-height:88vh;z-index:60;background:var(--paper);
+  width:min(900px,96vw);max-height:calc(88vh / var(--z, 1));z-index:60;background:var(--paper);
   border:1px solid var(--rule-hi);border-radius:var(--r);box-shadow:var(--shadow);
   opacity:0;pointer-events:none;transition:.2s var(--ease);display:flex;flex-direction:column;overflow:hidden}
 .chase.on{opacity:1;pointer-events:auto;transform:translate(-50%,-50%) scale(1)}
@@ -809,13 +809,13 @@ textarea.in{resize:vertical;line-height:1.6;min-height:80px}
 .brow{display:flex;gap:7px;flex-wrap:wrap}
 
 /* ═══ PALETTE / MODAL / DIALOG ═══════════════════════════════════════════ */
-.cmd{position:fixed;top:11vh;left:50%;transform:translate(-50%,-14px) scale(.985);width:min(620px,95vw);
+.cmd{position:fixed;top:calc(11vh / var(--z, 1));left:50%;transform:translate(-50%,-14px) scale(.985);width:min(620px,95vw);
   z-index:60;background:var(--paper);border:1px solid var(--rule-hi);border-radius:var(--r);
   box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:.18s var(--ease);overflow:hidden}
 .cmd.on{opacity:1;pointer-events:auto;transform:translate(-50%,0) scale(1)}
 .cmd input{width:100%;border:0;border-bottom:1px solid var(--rule);background:transparent;color:var(--ink);
   padding:15px 17px;font-size:15px;outline:none}
-.cmdl{max-height:min(430px,60vh);overflow-y:auto;padding:6px}
+.cmdl{max-height:min(430px,calc(60vh / var(--z, 1)));overflow-y:auto;padding:6px}
 .ci{display:flex;align-items:center;gap:11px;padding:9px 11px;border-radius:var(--r-xs);cursor:pointer;font-size:13px}
 .ci .ic{width:22px;height:22px;border-radius:var(--r-xs);background:var(--paper-3);display:grid;
   place-items:center;font-size:11px;color:var(--ink-3);flex:0 0 auto}
@@ -828,7 +828,7 @@ textarea.in{resize:vertical;line-height:1.6;min-height:80px}
   color:var(--ink-3);padding:9px 11px 5px}
 
 .modal{position:fixed;top:50%;left:50%;transform:translate(-50%,-46%) scale(.98);width:min(700px,95vw);
-  max-height:88vh;z-index:60;background:var(--paper);border:1px solid var(--rule-hi);border-radius:var(--r);
+  max-height:calc(88vh / var(--z, 1));z-index:60;background:var(--paper);border:1px solid var(--rule-hi);border-radius:var(--r);
   box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:.2s var(--ease);
   display:flex;flex-direction:column;overflow:hidden}
 .modal.on{opacity:1;pointer-events:auto;transform:translate(-50%,-50%) scale(1)}
@@ -2693,7 +2693,18 @@ const STRINGS = {
   KeySearch: "Search everything",
   KeyNewRecord: "New record",
   KeyCommandPalette: "Command palette",
-  ClosedTabBatAdvice: "There is no way round that from a web page, and this machine has no PowerShell to fall back on. If something genuinely must happen while Dossier is shut, point <b>Windows Task Scheduler</b> straight at your <b>.bat</b> file \u2014 that is exactly what it is for, and it needs nothing from Dossier. Keep the tab open, even behind Outlook, and reminders work on their own."
+  ClosedTabBatAdvice: "There is no way round that from a web page, and this machine has no PowerShell to fall back on. If something genuinely must happen while Dossier is shut, point <b>Windows Task Scheduler</b> straight at your <b>.bat</b> file \u2014 that is exactly what it is for, and it needs nothing from Dossier. Keep the tab open, even behind Outlook, and reminders work on their own.",
+
+  /* why a reminder did or did not appear */
+  RemindersAreOff: "Reminders are off",
+  RemindersOnWindowsToo: "Reminders on \u2014 Windows will show them too",
+  RemindersOnInAppOnly: "Reminders on \u2014 this browser has no Windows notifications, so they appear in Dossier",
+  RemindersOnButBlocked: "Reminders on, but Windows notifications are blocked for this page",
+  AllowThem: "Allow them",
+  RemindersOffHint: "Nothing will remind you. Turn this on, or press the bell in the top right.",
+  RemindersGrantedHint: "Reminders appear in Dossier and as Windows notifications, even when the tab is behind Outlook.",
+  RemindersNoneHint: "This browser cannot raise Windows notifications, so reminders appear inside Dossier only.",
+  RemindersBlockedHint: "Windows notifications are blocked for this page, so reminders only appear inside Dossier. Click the padlock beside the address and set Notifications to Allow. Opening dossier.html straight from the folder blocks them too \u2014 serve it from <b>127.0.0.1</b> instead."
 };
 
 /* Loaded files, keyed by culture code. "en" is always present, from STRINGS. */
@@ -7695,6 +7706,18 @@ async function renderModal(){
     fr(L("YourName"), '<input class="in" id="sOwner" value="' + esc(st.owner) + '" placeholder="Shown on reports">') +
     fr(L("Reminders"), '<select class="in" id="sRem"><option value="0"' + (!st.remind ? " selected" : "") +
       ">" + L("Off") + "</option><option value=\"1\"" + (st.remind ? " selected" : "") + ">On</option></select>") +
+    (() => {
+      /* Nothing appearing is the commonest complaint about this feature, and
+         the reason is always one of these. Say which, here, rather than
+         nowhere at all. */
+      const n = notifyState();
+      if (!st.remind)      return '<p class="hint2">' + L("RemindersOffHint") + "</p>";
+      if (n === "granted") return '<p class="hint2">' + L("RemindersGrantedHint") + "</p>";
+      if (n === "none")    return '<p class="hint2">' + L("RemindersNoneHint") + "</p>";
+      return '<p class="hint2" style="color:var(--p2)">' + L("RemindersBlockedHint") +
+        (n === "default" ? ' <button class="btn sm" id="sAskNotify">' + LE("AllowThem") + "</button>" : "") +
+        "</p>";
+    })() +
     fr(L("WarnBefore"), '<input class="in" id="sLead" type="number" min="1" max="180" value="' + (st.lead||15) + '">') +
     fr(L("NagAboutLate"), '<select class="in" id="sLate"><option value="1"' + (st.remindOverdue ? " selected" : "") +
       ">" + L("OnceADay") + "</option><option value=\"0\"" + (!st.remindOverdue ? " selected" : "") + ">" + L("Never") + "</option></select>") +
@@ -8374,7 +8397,19 @@ function wireModal(){
 
   /* ── setup ───────────────────────────────────────────────────────────── */
   const o = $("sOwner"); if (o) o.onchange = e => { S.settings.owner = e.target.value; touch(); };
-  const rm = $("sRem"); if (rm) rm.onchange = e => { S.settings.remind = e.target.value === "1"; touch(); $("bellBtn").classList.toggle("hot", S.settings.remind); };
+  const rm = $("sRem"); if (rm) rm.onchange = e => {
+    S.settings.remind = e.target.value === "1"; touch();
+    $("bellBtn").classList.toggle("hot", S.settings.remind);
+    renderModal();                      /* so the line underneath tells the truth */
+  };
+  on("sAskNotify", () => {
+    if (typeof Notification === "undefined") return;
+    Notification.requestPermission().then(p => {
+      toast(p === "granted" ? L("RemindersOnWindowsToo") : L("RemindersOnButBlocked"),
+            { bad: p !== "granted" });
+      renderModal();
+    });
+  });
   const ld = $("sLead"); if (ld) ld.onchange = e => { S.settings.lead = +e.target.value || 15; touch(); };
   const lt = $("sLate"); if (lt) lt.onchange = e => { S.settings.remindOverdue = e.target.value === "1"; touch(); };
   const ch = $("sChase"); if (ch) ch.onchange = e => { S.settings.remindWait = Math.max(1, +e.target.value || 3); touch(); };
@@ -8953,24 +8988,32 @@ function checkReminders(){
     }
   });
 }
+/* Where a reminder can appear right now: granted · denied · default · none */
+function notifyState(){
+  if (typeof Notification === "undefined") return "none";
+  return Notification.permission;
+}
+
 function askNotify(){
-  if (typeof Notification === "undefined"){
-    S.settings.remind = !S.settings.remind; touch();
-    $("bellBtn").classList.toggle("hot", S.settings.remind);
-    return toast(L("DesktopAlertsUnavailableHereInApp") + (S.settings.remind ? "on" : "off"));
-  }
-  if (Notification.permission === "granted"){
-    S.settings.remind = !S.settings.remind; touch();
-    toast(L("Reminders2") + (S.settings.remind ? "on" : "off"));
-    $("bellBtn").classList.toggle("hot", S.settings.remind);
-  } else {
-    Notification.requestPermission().then(p => {
-      S.settings.remind = (p === "granted"); touch();
-      toast(p === "granted" ? L("RemindersOnTheyArriveEvenWhen")
-                            : L("PermissionDeniedInAppToastsOnly"));
-      $("bellBtn").classList.toggle("hot", S.settings.remind);
-    });
-  }
+  /* Reminders are Dossier's own feature; whether Windows will ALSO raise a
+     notification is a separate question. Tying the two together meant that a
+     browser once told "block" set remind back to false on every click, so the
+     bell could never turn reminders on again and nothing ever appeared —
+     not even the in-app toast that needs no permission at all. */
+  S.settings.remind = !S.settings.remind;
+  touch();
+  $("bellBtn").classList.toggle("hot", S.settings.remind);
+  if (!S.settings.remind) return toast(L("RemindersAreOff"));
+
+  const st = notifyState();
+  if (st === "granted") return toast(L("RemindersOnWindowsToo"));
+  if (st === "none")    return toast(L("RemindersOnInAppOnly"));
+  if (st === "denied")  return toast(L("RemindersOnButBlocked"), { bad:true });
+  /* never asked — and we are inside the click that lets us ask */
+  Notification.requestPermission().then(p => {
+    toast(p === "granted" ? L("RemindersOnWindowsToo") : L("RemindersOnButBlocked"),
+          { bad: p !== "granted" });
+  });
 }
 
 

@@ -1185,5 +1185,14 @@ Nothing is holding this any more." value="" />
     <text name="KeyNewRecord" source="New record" value="" />
     <text name="KeyCommandPalette" source="Command palette" value="" />
     <text name="ClosedTabBatAdvice" source="There is no way round that from a web page, and this machine has no PowerShell to fall back on. If something genuinely must happen while Dossier is shut, point &lt;b&gt;Windows Task Scheduler&lt;/b&gt; straight at your &lt;b&gt;.bat&lt;/b&gt; file — that is exactly what it is for, and it needs nothing from Dossier. Keep the tab open, even behind Outlook, and reminders work on their own." value="" />
+    <text name="RemindersAreOff" source="Reminders are off" value="" />
+    <text name="RemindersOnWindowsToo" source="Reminders on — Windows will show them too" value="" />
+    <text name="RemindersOnInAppOnly" source="Reminders on — this browser has no Windows notifications, so they appear in Dossier" value="" />
+    <text name="RemindersOnButBlocked" source="Reminders on, but Windows notifications are blocked for this page" value="" />
+    <text name="AllowThem" source="Allow them" value="" />
+    <text name="RemindersOffHint" source="Nothing will remind you. Turn this on, or press the bell in the top right." value="" />
+    <text name="RemindersGrantedHint" source="Reminders appear in Dossier and as Windows notifications, even when the tab is behind Outlook." value="" />
+    <text name="RemindersNoneHint" source="This browser cannot raise Windows notifications, so reminders appear inside Dossier only." value="" />
+    <text name="RemindersBlockedHint" source="Windows notifications are blocked for this page, so reminders only appear inside Dossier. Click the padlock beside the address and set Notifications to Allow. Opening dossier.html straight from the folder blocks them too — serve it from &lt;b&gt;127.0.0.1&lt;/b&gt; instead." value="" />
   </texts>
 </localizationDictionary>
