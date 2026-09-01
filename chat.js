@@ -63,6 +63,79 @@ const NOISE = new Set(("a an the of for to in on at is are am was were be been d
 const ASKING = new Set(("what which who whose whom when where why how is are was were " +
   "do does did can could should would will any anything something").split(" "));
 
+/* ═══ HOW PEOPLE ACTUALLY TYPE ═══════════════════════════════════════════
+   "who are u" is the same question as "who are you", and it was coming back
+   "I did not follow that". Nobody types carefully into a chat box at half
+   past five, and an assistant that only understands full spelling understands
+   about half of what it is sent.
+
+   Expanded before anything else looks at the sentence, so every phrase and
+   cue downstream sees ordinary words. */
+
+const SHORTHAND = {
+  /* texting */
+  /* No bare digits and no single letters beyond u/r/y. "2" was mapped to
+     "to" for b4-style shorthand, which turned "every 2 hours" into "every to
+     hours"; "m" to "am" would have eaten "30 m"; and "min" was in here twice,
+     the second one winning and making it "minimum". Numbers and units are
+     data in this application, not abbreviations. */
+  "u":"you", "ur":"your", "urs":"yours", "r":"are", "y":"why",
+  "kk":"ok", "im":"i am", "iam":"i am", "ive":"i have",
+  "id":"i would", "ill":"i will", "dont":"do not", "cant":"can not", "wont":"will not",
+  "isnt":"is not", "arent":"are not", "wasnt":"was not", "werent":"were not",
+  "hasnt":"has not", "havent":"have not", "didnt":"did not", "doesnt":"does not",
+  "couldnt":"could not", "shouldnt":"should not", "wouldnt":"would not",
+  "aint":"is not", "gonna":"going to", "wanna":"want to", "gotta":"got to",
+  "lemme":"let me", "gimme":"give me", "kinda":"kind of", "sorta":"sort of",
+  "cuz":"because", "coz":"because", "bcoz":"because", "bcz":"because", "becoz":"because",
+  "b4":"before",
+  /* abbreviations people use at work */
+  "pls":"please", "plz":"please", "plse":"please", "thx":"thanks", "ty":"thanks",
+  "tks":"thanks", "tnx":"thanks", "np":"no problem", "yw":"you are welcome",
+  "asap":"urgently", "fyi":"for information", "imo":"in my opinion",
+  "idk":"i do not know", "btw":"by the way", "rn":"right now", "atm":"at the moment",
+  "afaik":"as far as i know", "eod":"end of day", "eow":"end of week",
+  "cob":"end of day", "tba":"to be announced", "tbd":"to be decided",
+  "wip":"in progress", "eta":"expected time", "poc":"point of contact",
+  "ppl":"people", "msg":"message", "msgs":"messages", "req":"request",
+  "reqs":"requests", "info":"information", "docs":"documents", "doc":"document",
+  "acct":"account", "acc":"account", "admin":"administrator", "config":"configuration",
+  "cfg":"configuration", "env":"environment", "prod":"production", "uat":"testing",
+  "dev":"development", "sys":"system", "sysm":"system", "db":"database",
+  "srv":"server", "svr":"server", "svc":"service", "app":"application",
+  "apps":"applications", "prob":"problem", "probs":"problems", "temp":"temporary",
+  "avg":"average", "qty":"quantity",
+  "amt":"amount", "pymt":"payment", "pmt":"payment", "txn":"transaction",
+  "txns":"transactions", "ref":"reference", "cust":"customer", "custs":"customers",
+  "vend":"vendor", "mgr":"manager", "mgmt":"management", "dept":"department",
+  "wk":"week",
+  "yday":"yesterday", "tdy":"today", "tmrw":"tomorrow", "tmr":"tomorrow",
+  "tmw":"tomorrow", "2day":"today", "2moro":"tomorrow", "2morrow":"tomorrow",
+  /* the ones that get mistyped constantly */
+  "teh":"the", "adn":"and", "nad":"and", "waht":"what", "wat":"what", "whta":"what",
+  "wht":"what", "wht's":"what is", "hwo":"how", "hwat":"what", "hte":"the",
+  "taht":"that", "thier":"their", "recieve":"receive", "recieved":"received",
+  "seperate":"separate", "occured":"occurred", "occuring":"occurring",
+  "definately":"definitely", "compeleted":"completed", "compelte":"complete",
+  "completd":"completed", "finsihed":"finished", "finshed":"finished",
+  "overdu":"overdue", "overdeu":"overdue", "ovedue":"overdue", "overude":"overdue",
+  "pendign":"pending", "pendin":"pending", "waitin":"waiting", "watiing":"waiting",
+  "waitng":"waiting", "recrod":"record", "recrods":"records", "reocrd":"record",
+  "taks":"task", "tsak":"task", "taksk":"task", "shedule":"schedule",
+  "schedual":"schedule", "sceduled":"scheduled", "reminde":"remind",
+  "notifcation":"notification", "notificaiton":"notification", "notif":"notification",
+  "notifs":"notifications", "sytem":"system", "sytems":"systems", "systm":"system",
+  "sysetm":"system", "imaigng":"imaging", "imagin":"imaging", "imgaing":"imaging",
+  "shoudl":"should", "shuold":"should", "woudl":"would", "coudl":"could",
+  "frequntly":"frequently", "freqently":"frequently", "frequenlty":"frequently",
+  "usualy":"usually", "usualyl":"usually", "comon":"common", "commmon":"common",
+  "priorty":"priority", "prioirty":"priority", "prioroty":"priority",
+  "assigend":"assigned", "asigned":"assigned", "attachd":"attached",
+  "documnet":"document", "documetn":"document", "scritp":"script", "scrpit":"script",
+  "sript":"script", "runing":"running", "runnig":"running", "faild":"failed",
+  "faled":"failed", "erro":"error", "errror":"error", "problm":"problem"
+};
+
 function normalise(raw){
   let s = " " + String(raw == null ? "" : raw).toLowerCase() + " ";
   s = s.replace(/[‘’]/g, "'").replace(/[“”]/g, '"');
@@ -70,7 +143,17 @@ function normalise(raw){
      matching on them turns "<script>…</script>" into a question about the
      scripts folder */
   s = s.replace(/<[^>]{0,200}>/g, " ");
-  for (const k in CONTRACTION) s = s.split(" " + k + " ").join(" " + CONTRACTION[k] + " ");
+  /* shorthand out of the way before contractions, so "u" is "you" by the
+     time anything tries to read the sentence */
+  s = s.replace(/[^a-z0-9'\s./:@#$%+-]+/g, " ").replace(/\s+/g, " ").trim();
+  /* Word by word, so a boundary is never in question. The contractions used
+     to be done with a padded split, and adding the shorthand pass in front of
+     it trimmed away the padding — after which "whats" at the start of a
+     sentence stopped expanding, and "whats my priority" was read as a
+     greeting because "whats" looks like the front of "whatsup". */
+  s = s.split(" ").map(function(w){
+    return SHORTHAND[w] || CONTRACTION[w] || w;
+  }).join(" ");
   return s.replace(/\s+/g, " ").trim();
 }
 function words(norm){
@@ -194,6 +277,117 @@ function findTerms(ws, lex, kinds){
     }
   });
   return { hits: hits.sort((a, b) => b.score - a.score), used };
+}
+
+/* ═══ WHAT THE QUESTION IS ABOUT ═════════════════════════════════════════
+   "What is the most frequently raised system" came back with a colleague's
+   name, because "raised" is a strong word for who-raised-what and "system"
+   was only a mild one. That is the wrong way round: the verb says what kind
+   of question it is, but the NOUN says what the answer must be about, and
+   the noun has to win.
+
+   Two things are read out of the sentence here — the dimension being asked
+   about, and whether it is a ranking question — and between them they decide
+   far more reliably than any keyword can. "Most" plus "system" is one
+   question; "most" plus "who" is a different one; and neither can be
+   mistaken for the other once both halves are read. */
+
+const DIMS = {
+  system:  "system systems application applications app apps platform platforms " +
+           "service services module modules product products estate component",
+  person:  "person people who whom requester requesters reporter reporters caller " +
+           "callers user users colleague colleagues staff name names someone " +
+           "everyone anybody somebody individual",
+  type:    "type types category categories kind kinds classification classifications " +
+           "sort sorts nature",
+  tag:     "tag tags label labels keyword keywords marker markers",
+  status:  "status statuses state states stage stages",
+  priority:"priority priorities severity urgency criticality",
+  script:  "script scripts automation automations batch batches macro macros tool tools",
+  routine: "routine routines schedule schedules cron crons timer timers",
+  party:   "party parties vendor vendors supplier suppliers counterparty externals",
+  day:     "day days weekday weekdays date dates monday tuesday wednesday thursday " +
+           "friday saturday sunday",
+  hour:    "hour hours time",
+  month:   "month months",
+  record:  "record records task tasks ticket tickets job jobs item items issue issues " +
+           "case cases request requests work"
+};
+const DIMWORD = (function(){
+  const m = {};
+  for (const d in DIMS) DIMS[d].split(" ").forEach(w => { if (!m[w]) m[w] = d; });
+  return m;
+})();
+
+const AGG_MOST = ("most commonest frequent frequently often oftenest top highest biggest " +
+  "largest worst main majority mostly greatest maximum max leading dominant chief " +
+  "primary principal").split(" ");
+const AGG_LEAST = ("least fewest lowest smallest rarest seldom minimum min rarely " +
+  "quietest").split(" ");
+
+function readDimension(ws, norm){
+  const out = { dim:"", dims:[], agg:"" };
+  /* every dimension named, in the order they appear */
+  ws.forEach(w => {
+    variants(w).forEach(v => {
+      const d = DIMWORD[v];
+      if (d && out.dims.indexOf(d) < 0) out.dims.push(d);
+    });
+  });
+  /* "record" is what everything is made of, so it only counts as the subject
+     when nothing more specific was named */
+  const specific = out.dims.filter(d => d !== "record");
+  out.dim = specific.length ? specific[0] : (out.dims[0] || "");
+
+  ws.forEach(w => {
+    variants(w).forEach(v => {
+      if (!out.agg && AGG_MOST.indexOf(v) >= 0) out.agg = "most";
+      if (!out.agg && AGG_LEAST.indexOf(v) >= 0) out.agg = "least";
+    });
+  });
+  if (!out.agg && /\bthe most\b|\bmost of\b/.test(norm)) out.agg = "most";
+  if (!out.agg && /\bthe least\b/.test(norm)) out.agg = "least";
+  return out;
+}
+
+/* ═══ WHAT THE QUESTION IS NOT ABOUT ═════════════════════════════════════
+   "The ones that are not done" was answered with what WAS done — the exact
+   opposite. Negation was simply not read. */
+
+const NEG_MAP = {
+  done:"done", finished:"done", complete:"done", completed:"done", closed:"done",
+  resolved:"done", started:"processing", begun:"processing", processing:"processing",
+  blocked:"blocked", cancelled:"cancelled", canceled:"cancelled", open:"open",
+  dated:"due", due:"due", scheduled:"due",
+  assigned:"system", tagged:"tag", chased:"chase", estimated:"estimate",
+  attached:"file", documented:"file", noted:"notes",
+  /* the noun forms, as in "no estimate", "without a system", "no notes" */
+  estimate:"estimate", system:"system", tag:"tag", tags:"tag", date:"due",
+  deadline:"due", notes:"notes", note:"notes", script:"script", scripts:"script",
+  owner:"system", attachment:"file", attachments:"file", documents:"file",
+  document:"file", chase:"chase", chases:"chase", steps:"checklist",
+  checklist:"checklist", comment:"notes", comments:"notes"
+};
+function readNegation(norm){
+  const out = {};
+  let m;
+  /* "without a system" put an article between the negation and the noun, and
+     the noun was never captured — so the whole sentence read as a question
+     about systems, which is the opposite of what was asked. */
+  const re = /\b(?:not|never|without|no|lacking|missing)\s+(?:a|an|the|any|its|their)?\s*([a-z]{3,14})\b/g;
+  while ((m = re.exec(norm))){
+    const k = NEG_MAP[m[1]];
+    if (k) out[k] = true;
+  }
+  /* "unfinished", "undated", "unassigned", "untagged" as single words */
+  const re2 = /\bun(finished|done|dated|assigned|tagged|started|chased|estimated)\b/g;
+  while ((m = re2.exec(norm))){
+    const k = NEG_MAP[m[1]] || NEG_MAP[{ finished:"finished", dated:"dated",
+      assigned:"assigned", tagged:"tagged", started:"started", chased:"chased",
+      estimated:"estimated", done:"done" }[m[1]]];
+    if (k) out[k] = true;
+  }
+  return Object.keys(out).length ? out : null;
 }
 
 /* ═══ SLOTS ══════════════════════════════════════════════════════════════
@@ -343,6 +537,13 @@ function readSlots(norm, ws, api, raw0){
   const quoted = String(raw0 || "").match(/["“]([^"”]{2,80})["”]/);
   if (quoted) s.quoted = quoted[1].trim();
 
+  const d = readDimension(ws, norm);
+  s.dim = d.dim; s.dims = d.dims; s.agg = d.agg;
+  s.neg = readNegation(norm);
+
+  /* a yes-or-no question deserves a yes or a no before the detail */
+  s.yesno = /^(is|are|was|were|do|does|did|have|has|had|can|could|will|would|should|any|anything|am)\b/.test(norm);
+
   s.range = readRange(norm, h);
   s.date = readDate(norm, h);
 
@@ -467,8 +668,10 @@ function minutesWord(m){
    this list is left exactly as it was — the contracted forms have to be here
    too, or "You've" comes back capitalised mid-sentence. */
 const OPENERS = ["You", "You've", "You're", "That", "That's", "There", "There's",
-                 "Nothing", "It", "It's", "I'd", "I've", "Everything", "All", "Most",
-                 "None", "Just", "Only", "Quite", "No", "Two", "Three", "One", "The"];
+                 "Nothing", "It", "It's", "I'd", "I've", "Everything", "Every", "All",
+                 "Most", "None", "Just", "Only", "Quite", "No", "Two", "Three", "One",
+                 "The", "Mostly", "Least", "Well", "Not", "Both", "Some", "Half",
+                 "Nobody", "Everyone", "Your", "Its", "This", "These", "Those"];
 function lower(s){
   const first = String(s).split(" ")[0].replace(/[^A-Za-z']/g, "");
   if (OPENERS.indexOf(first) < 0 && !/^\d/.test(String(s))) return s;
@@ -995,7 +1198,7 @@ intent("closed", {
     const list = applySlots(api.tasks, s, api)
       .filter(t => t.status === "done" && inRange(h.dayOf(t.completed), r));
     const tracked = list.reduce((n, t) => n + h.live(t), 0);
-    if (!list.length) return { say: say(["Nothing closed {when}{w}.",
+    if (!list.length) return { count:0, say: say(["Nothing closed {when}{w}.",
                                         "You did not close anything {when}{w}.",
                                         "Nothing went out {when}{w}."],
                                        { when:r.label, w:slotWords(s) }, A.norm) };
@@ -1025,7 +1228,7 @@ intent("opened", {
     const api = A.api, h = api.h, s = A.slots;
     const r = s.range || { from:h.today(), to:h.today(), label:"today" };
     const list = applySlots(api.tasks, s, api).filter(t => inRange(h.dayOf(t.created), r));
-    if (!list.length) return { say: say(["Nothing came in {when}{w}.",
+    if (!list.length) return { count:0, say: say(["Nothing came in {when}{w}.",
                                         "A quiet one — nothing arrived {when}{w}.",
                                         "No new work {when}{w}."],
                                        { when:r.label, w:slotWords(s) }, A.norm) };
@@ -1045,7 +1248,7 @@ intent("opened", {
   }
 });
 intent("worstSystem", {
-  kind:"read", label:"Worst system",
+  kind:"read", dim:"system", label:"Worst system",
   cues:{ system:5, systems:6, worst:8, trouble:7, breaks:7, breaking:7, failing:7,
          problem:5, painful:6, noisiest:8, misbehaving:8 },
   phrases:[["which system",10],["most trouble",10],["gives me the most",9],["biggest problem",8],
@@ -1077,8 +1280,8 @@ intent("worstSystem", {
   }
 });
 intent("topPerson", {
-  kind:"read", label:"Who asks the most",
-  cues:{ raises:7, asks:6, requester:7, people:5, person:5, most:4, asking:6, sends:5 },
+  kind:"read", dim:"person", label:"Who asks the most",
+  cues:{ raises:7, asks:6, requester:7, people:5, person:5, asking:6, sends:5 },
   phrases:[["who raises",10],["who asks",10],["who sends me",10],["comes from who",8],
            ["which person",9],["who gives me",9],["raises the most",13],["asks the most",13],
            ["sends me the most",13],["top requester",13],["most requests",12]],
@@ -1211,7 +1414,7 @@ intent("workload", {
   run(A){
     const api = A.api, h = api.h, k = h.today();
     const due = live(api).filter(t => t.due && t.due <= k && !t.waitOn);
-    if (!due.length) return { say: say(["Nothing dated today. The day is yours.",
+    if (!due.length) return { count:0, yes:true, say: say(["Nothing dated today. The day is yours.",
                                        "Today is empty — nothing promised.",
                                        "No commitments today."], {}, A.norm) };
     let known = 0;
@@ -1224,6 +1427,8 @@ intent("workload", {
     const left = Math.max(0, (17 * 60 + 30) - (d.getHours() * 60 + d.getMinutes()));
     return {
       count: due.length,
+      /* the question "can I finish today" is about the hours, not the count */
+      yes: need <= left,
       say: compose(
         say(["{n} dated today, about {need} of work, and {left} before 17:30",
              "{need} of work against {left} of day — {n} on the list",
@@ -1293,15 +1498,35 @@ intent("count", {
   }
 });
 intent("scripts", {
-  kind:"read", label:"My scripts",
+  kind:"read", dim:"script", label:"My scripts",
   cues:{ script:11, scripts:12, automation:9, automations:11, bat:6, batch:10, batches:11,
          tools:5, tooling:10, runnable:7, macros:10, executables:11 },
   phrases:[["what scripts",10],["which scripts",10],["can i run",7],["what can i automate",9]],
   run(A){
     const api = A.api;
     if (!api.scripts.length) return { say:"No scripts in the workspace yet — they live in the scripts folder." };
-    const sorted = api.scripts.slice().sort((a, b) => (b.uses || 0) - (a.uses || 0));
+    const least = A.slots.agg === "least";
+    const sorted = api.scripts.slice().sort((a, b) =>
+      least ? (a.uses || 0) - (b.uses || 0) : (b.uses || 0) - (a.uses || 0));
+    /* asked which one, answer which one — not how many there are */
+    if (A.slots.agg && sorted.length > 1){
+      const first = sorted[0];
+      return {
+        say: say(least
+          ? ["{f} — you have barely touched it, {n}.",
+             "Least used is {f}: {n}.",
+             "{f}, run {n}."]
+          : ["{f} — {n}, more than any other.",
+             "{f} is the one you reach for: {n}.",
+             "Most used by far: {f}, {n}."],
+          { f:first.file, n:(first.uses || 0) + " run" + ((first.uses || 0) === 1 ? "" : "s") },
+          A.norm),
+        note: sorted.slice(0, 8).map(x => x.file + " " + (x.uses || 0)).join(" · "),
+        chips:[{ label:"Open the Scripts panel", act:{ kind:"panel", panel:"scripts" } }]
+      };
+    }
     return {
+      count: api.scripts.length,
       say: say(["{n} in the workspace.",
                 "You have {n} to hand.",
                 "{n}, most-used first."],
@@ -1313,7 +1538,7 @@ intent("scripts", {
   }
 });
 intent("routines", {
-  kind:"read", label:"My schedules",
+  kind:"read", dim:"routine", label:"My schedules",
   cues:{ routine:11, routines:12, schedule:9, schedules:11, scheduled:9, recurring:11,
          cron:10, cronjob:11, cronjobs:11, timers:10, repeat:6, automatic:6 },
   phrases:[["what routines",10],["what is scheduled",10],["what runs automatically",10],
@@ -1324,6 +1549,7 @@ intent("routines", {
                                                 "Nothing runs on a schedule so far.",
                                                 "You have not set any up."], {}, A.norm) };
     return {
+      count: api.routines.length,
       say: say(["{n} set up.",
                 "{n} running.",
                 "You have {n}."],
@@ -2714,9 +2940,10 @@ intent("greet", {
   /* only when it is the whole message, not a preamble to one */
   only(mw){ return mw.length <= 3; }, label:"Hello",
   cues:{ hi:12, hello:12, hey:11, morning:8, afternoon:8, evening:8, yo:9, hiya:12,
-         howdy:12, greetings:11, sup:9, wassup:12, whatsup:10, heya:12, hii:11, helo:11,
+         howdy:12, greetings:11, sup:9, wassup:12, heya:12, hii:11, helo:11,
          hallo:11, aloha:11, salut:10, oi:8, knock:7 },
-  phrases:[["good morning",14],["good afternoon",14],["good evening",14],["good day",13],
+  phrases:[["whats up",13],["what is up",12],
+           ["good morning",14],["good afternoon",14],["good evening",14],["good day",13],
            ["hi there",14],["hello there",14],["hey there",14],["morning all",13],
            ["are you there",13],["you there",12],["you awake",12],["anyone there",13],
            ["hey you",12],["long time",10],["im back",11],["i am back",11],["back again",11]],
@@ -3170,20 +3397,31 @@ const GUIDE = [
     tip:"" }
 ];
 
-function guideFor(mw, norm){
+function guideBest(mw, norm){
   let best = null, bestScore = 0;
   GUIDE.forEach(g => {
     const words = g.words.split(" ");
     let s = 0;
     mw.forEach(w => variants(w).forEach(v => { if (words.indexOf(v) >= 0) s += 2; }));
-    if (norm.indexOf(g.id) >= 0) s += 2;
+    if (norm.indexOf(g.id) >= 0) s += 3;
     if (s > bestScore){ bestScore = s; best = g; }
   });
-  return bestScore >= 2 ? best : null;
+  /* One shared word is not a topic. "How do I resolve a payroll export
+     failure" hit the backups page because the word "export" appears in it,
+     and answered a question about the job with a menu path. */
+  return { entry: bestScore >= 4 ? best : null, score: bestScore };
 }
+function guideFor(mw, norm){ return guideBest(mw, norm).entry; }
 
 intent("howTo", {
   kind:"read", label:"How to do something",
+  /* "how do I create a routine" names a routine, which would otherwise hand
+     the question to the intent that lists your routines */
+  probe(mw, norm){
+    if (!/\bhow (do|to|can|would)\b|\bwhere (do|is)\b/.test(norm)) return 0;
+    const g = guideBest(mw, norm);
+    return g.score >= 6 ? 12 : g.score >= 4 ? 6 : 0;
+  },
   cues:{ how:5, where:4, add:3, create:3, make:3, set:3, setup:5, configure:6, enable:6,
          turn:3, use:4, work:2, do:2, change:3, find:2, attach:4, install:6, start:2 },
   phrases:[["how do i",12],["how to",12],["how can i",12],["where do i find",12],
@@ -3222,6 +3460,13 @@ intent("howTo", {
 
 intent("about", {
   kind:"read", label:"About Dossier",
+  /* "this application" is this application; "which application gets raised
+     most" is one of the systems you look after. The determiner tells them
+     apart, and nothing else does. */
+  probe(mw, norm){
+    return /\b(?:this|the) (?:app|application|thing|tool|program|software|system)\b/.test(norm)
+        || /\bdossier\b/.test(norm) ? 14 : 0;
+  },
   /* nothing in a workspace is called "dossier" except the application */
   /* "this application" is Dossier; "applications" are the systems you look
      after. The singular lives in the phrases below so the plural cannot reach
@@ -3436,7 +3681,7 @@ intent("blocked", {
   run(A){
     const api = A.api, h = api.h;
     const list = applySlots(api.tasks.filter(t => t.status === "blocked"), A.slots, api);
-    if (!list.length) return { say: say(["Nothing is blocked.",
+    if (!list.length) return { count:0, say: say(["Nothing is blocked.",
                                         "Nothing held up.",
                                         "All clear — nothing blocked."], {}, A.norm) };
     return { count: list.length,
@@ -3519,7 +3764,7 @@ intent("undated", {
 });
 
 intent("aboutPerson", {
-  kind:"read", label:"About a person",
+  kind:"read", dim:"person", label:"About a person",
   needs:["person"],
   cues:{ usually:6, tend:7, typical:6, about:2, from:2, brings:7, sends:6, ask:4, raise:5 },
   phrases:[["what does",6],["usually ask",10],["tend to",8],["what do they",8],
@@ -3600,7 +3845,7 @@ intent("compare", {
 });
 
 intent("tags", {
-  kind:"read", label:"Tags in use",
+  kind:"read", dim:"tag", label:"Tags in use",
   cues:{ tag:11, tags:12, tagged:11, label:8, labels:10, keywords:11, categories:10 },
   phrases:[["what tags",10],["which tags",10],["tags do i use",10]],
   run(A){
@@ -3617,7 +3862,7 @@ intent("tags", {
 });
 
 intent("systems", {
-  kind:"read", label:"Systems in use",
+  kind:"read", dim:"system", label:"Systems in use",
   cues:{ system:5, systems:12, applications:13, apps:11, platforms:11, estate:10,
          cover:6, support:6, list:3 },
   phrases:[["what systems",10],["which systems",10],["systems do i",10],["what do i support",10]],
@@ -3636,6 +3881,157 @@ intent("systems", {
                       { n:qty(rank.length, "system") }, A.norm),
              note: rank.map(k => k + " (" + c[k] + ")").join(" · "),
              chips:[{ label:"Show " + rank[0], act:{ kind:"filterSys", system:rank[0] } }] };
+  }
+});
+
+/* ── ranking any dimension ───────────────────────────────────────────────
+   Systems and people had their own answers; types, statuses, priorities,
+   parties, days of the week and hours of the day had none, so "which type is
+   most common" fell through to whichever intent happened to like one of its
+   words. One question shape — most or least of some dimension — answered in
+   one place, for every dimension that has no answer of its own. */
+
+const DEDICATED_DIMS = ["system", "person", "tag", "script", "routine"];
+const DOWFULL = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+const MONFULL = ["January","February","March","April","May","June","July","August",
+                 "September","October","November","December"];
+
+function tallyBy(list, dim, api){
+  const h = api.h, c = {};
+  const bump = k => { if (k) c[k] = (c[k] || 0) + 1; };
+  list.forEach(t => {
+    switch (dim){
+      case "type":     bump(t.type); break;
+      case "status":   bump(h.stMeta(t.status).label); break;
+      case "priority": bump(t.priority); break;
+      case "party":    bump(t.waitOn);
+                       (t.waitLog || []).forEach(w => bump(w && w.party)); break;
+      case "day":      if (t.created) bump(DOWFULL[new Date(t.created).getDay()]); break;
+      case "hour":     if (t.created) bump(pad2(new Date(t.created).getHours()) + ":00"); break;
+      case "month":    if (t.created) bump(MONFULL[new Date(t.created).getMonth()] + " " +
+                                           new Date(t.created).getFullYear()); break;
+      default:         bump(t.system || t.type || "(unclassified)");
+    }
+  });
+  return c;
+}
+const DIMNOUN = { type:"work type", status:"status", priority:"priority", party:"party",
+                  day:"day of the week", hour:"hour of the day", month:"month",
+                  record:"kind of work" };
+
+intent("rank", {
+  kind:"read", label:"Most and least",
+  cues:{},
+  probe(mw, norm, slots){
+    /* "records" is what everything is made of, not a dimension you can rank
+       by — "the most tasks" is not a question, and treating it as one had
+       this stealing every ranking question that mentioned the word */
+    if (!slots.agg || !slots.dim || slots.dim === "record") return 0;
+    return DEDICATED_DIMS.indexOf(slots.dim) < 0 ? 16 : 0;
+  },
+  run(A){
+    const api = A.api, h = api.h, s = A.slots;
+    const dim = s.dim, least = s.agg === "least";
+    let list = applySlots(api.tasks, s, api);
+    if (s.range) list = list.filter(x => inRange(h.dayOf(x.created), s.range));
+    if (!list.length)
+      return { say: say(["Nothing to rank{w}.", "No records{w} to count.",
+                         "Nothing there{w}."], { w:slotWords(s) }, A.norm) };
+
+    const c = tallyBy(list, dim, api);
+    const keys = Object.keys(c);
+    if (!keys.length)
+      return { say:"None of them carry a " + (DIMNOUN[dim] || dim) + "." };
+    keys.sort((a, b) => least ? c[a] - c[b] : c[b] - c[a]);
+    const top = keys[0], tot = keys.reduce((n, k) => n + c[k], 0);
+
+    /* a ranking of one is not a ranking */
+    if (keys.length === 1)
+      return { say: say(["Only one {noun} in play: {top}, all {n} of them.",
+                         "{top} is the only {noun} — {n} records.",
+                         "They are all the same {noun}: {top}."],
+                        { noun:DIMNOUN[dim] || dim, top:top, n:c[top] }, A.norm) };
+
+    const ids = list.filter(x => {
+      const k = tallyBy([x], dim, api);
+      return Object.keys(k)[0] === top;
+    }).map(x => x.id);
+
+    return {
+      count: c[top],
+      say: compose(
+        say(least
+          ? ["{top} — the fewest, {n} of {tot}.",
+             "Least of all is {top}, with {n}.",
+             "{top} is the quiet one: {n} out of {tot}."]
+          : ["{top} — {n} of {tot}, {pct}% of the lot.",
+             "{top}, easily: {n} out of {tot}.",
+             "Mostly {top} — {n} of {tot}."],
+          { top:top, n:c[top], tot:tot, pct:Math.round(c[top] / tot * 100) }, A.norm),
+        keys.length > 2 && !least && c[keys[0]] > c[keys[1]] * 2
+          ? "well ahead of " + keys[1] + " on " + c[keys[1]] : "",
+        "", "", A.norm),
+      note: keys.slice(0, 8).map(k => k + " " + c[k]).join(" · ") +
+            (keys.length > 8 ? " · and " + (keys.length - 8) + " more" : ""),
+      chips: ids.length ? [{ label:"Show the " + top + " ones",
+                             act:{ kind:"filter", ids:ids, label:top } }] : []
+    };
+  }
+});
+
+/* ── what is NOT the case ─────────────────────────────────────────────────
+   "The ones that are not done" was answered with what WAS done. */
+
+intent("negFind", {
+  kind:"read", label:"The ones that are not",
+  cues:{},
+  /* "anything without a system" names a system and is not a question about
+     systems. A negation is the strongest thing in a sentence that has one. */
+  probe(mw, norm, slots){
+    if (!slots.neg) return 0;
+    /* undated work and unchased waits have their own answers, which say more
+       than a generic filtered list does — leave those to them */
+    const k = Object.keys(slots.neg);
+    if (k.length === 1 && (k[0] === "due" || k[0] === "chase")) return 0;
+    return 20;
+  },
+  run(A){
+    const api = A.api, h = api.h, s = A.slots, n = s.neg || {};
+    let list = applySlots(api.tasks, s, api);
+    const said = [];
+    if (n.done){ list = list.filter(x => x.status !== "done"); said.push("not closed"); }
+    if (n.processing){ list = list.filter(x => x.status !== "processing"); said.push("not started"); }
+    if (n.blocked){ list = list.filter(x => x.status !== "blocked"); said.push("not blocked"); }
+    if (n.cancelled){ list = list.filter(x => x.status !== "cancelled"); said.push("not cancelled"); }
+    if (n.open){ list = list.filter(x => x.status !== "open"); said.push("not open"); }
+    if (n.due){ list = list.filter(x => !x.due); said.push("with no date"); }
+    if (n.system){ list = list.filter(x => !x.system); said.push("with no system"); }
+    if (n.tag){ list = list.filter(x => !(x.tags || []).length); said.push("untagged"); }
+    if (n.chase){ list = list.filter(x => x.waitOn && !(x.chases || []).length); said.push("never chased"); }
+    if (n.estimate){ list = list.filter(x => !+x.estimate); said.push("with no estimate"); }
+    if (n.file){ list = list.filter(x => !(x.files || []).length); said.push("with nothing attached"); }
+    if (n.notes){ list = list.filter(x => !String(x.notes || "").trim()); said.push("with no notes"); }
+    if (n.script){ list = list.filter(x => !(x.scripts || []).length); said.push("with no script"); }
+    if (n.checklist){ list = list.filter(x => !(x.checklist || []).length); said.push("with no steps"); }
+    if (s.range) list = list.filter(x => inRange(h.dayOf(x.created), s.range));
+
+    if (!list.length)
+      return { count:0, say: say(["Nothing {what}{w}.",
+                                  "None{w} — everything is accounted for.",
+                                  "There are none {what}{w}."],
+                                 { what:andList(said, 3), w:slotWords(s) }, A.norm) };
+    return {
+      count: list.length,
+      say: compose(
+        say(["{n} {what}{w}.", "{n} {what}{w} — here they are.",
+             "That is {n} {what}{w}."],
+            { n:qty(list.length, "record"), what:andList(said, 3), w:slotWords(s) }, A.norm),
+        observe(list, api, A.norm), "", "", A.norm),
+      rows: list.slice(0, 12).map(x => row(x, api, h.stMeta(x.status).label +
+            (x.due ? " · due " + h.niceDate(x.due) : " · no date"))),
+      chips:[{ label:"Show them all", act:{ kind:"filter", ids:list.map(x => x.id),
+                                           label:andList(said, 2) } }]
+    };
   }
 });
 
@@ -4145,6 +4541,17 @@ function scoreOne(intent, norm, ws, mw, slots, asking, firstVerb){
      stops "mark it done" firing when no record was named */
   for (const n of (intent.needs || [])) if (!slots[n]) return 0;
 
+  /* The dimension named in the sentence decides what the answer must be
+     about. An intent that answers about systems cannot serve a question about
+     types, however well its verbs match — that is how "which type is most
+     common" came back with a person's name. */
+  /* Only a SPECIFIC dimension gates. "Which system raises the most tasks"
+     names both a system and tasks; tasks is what everything is made of, and
+     letting it disqualify the systems answer left the question unanswered
+     altogether. readDimension already prefers the specific one, so a dim of
+     "record" means nothing more precise was named. */
+  if (slots.dim && slots.dim !== "record" && intent.dim && intent.dim !== slots.dim) return 0;
+
   /* "ok" and "right" and "hi" are answers when they are the whole message and
      throat-clearing when they are not. "ok what is overdue right now" was
      coming back as a bare acknowledgement because "ok" and "right" both
@@ -4159,6 +4566,7 @@ function scoreOne(intent, norm, ws, mw, slots, asking, firstVerb){
 
   for (const b in (intent.boost || {})) if (slots[b]) s += intent.boost[b];
   (intent.needs || []).forEach(() => s += 6);
+  if (slots.dim && slots.dim !== "record" && intent.dim === slots.dim) s += 9;
 
   /* "who is the prime minister" once reached "who raises the most" on the
      strength of the single word "who", and answered it with a colleague's
@@ -4443,7 +4851,9 @@ function finish(it, A, confidence, altIntents, learned, followed){
   out.slots = {
     system:A.slots.system || "", person:A.slots.person || "", type:A.slots.type || "",
     party:A.slots.party || "", tag:A.slots.tag || "", priority:A.slots.priority || "",
-    range:A.slots.range ? A.slots.range.label : "", record:A.slots.record ? A.slots.record.code : ""
+    range:A.slots.range ? A.slots.range.label : "", record:A.slots.record ? A.slots.record.code : "",
+    dim:A.slots.dim || "", agg:A.slots.agg || "", yesno:!!A.slots.yesno,
+    neg:A.slots.neg ? Object.keys(A.slots.neg).join(",") : ""
   };
   /* what the next turn in this thread should still know */
   out.context = {
@@ -4466,6 +4876,24 @@ function finish(it, A, confidence, altIntents, learned, followed){
   }
   out.context.seen = Object.assign({}, (A.convo && A.convo.seen) || {});
   if (typeof out.count === "number") out.context.seen[it.name] = out.count;
+  /* "Is anything overdue?" was answered "3 records are overdue" — true, and
+     not what was asked. Anything that reports a count can answer the question
+     that was actually put, and then go on. */
+  /* "Can I finish today?" has a count of three records and the answer is no —
+     the count is not always what the yes-or-no is about, so an intent can say
+     which it is. */
+  if (A.slots.yesno && out.say && !out.steps &&
+      (typeof out.yes === "boolean" || typeof out.count === "number")){
+    if (typeof out.yes !== "boolean") out.yes = out.count > 0;
+    /* only dash and comma joins, so the clause after it keeps flowing as one
+       sentence — "Yes. one record waiting" needed a capital it was not going
+       to get, and "There is, yes" contracts into nonsense */
+    const lead = out.yes
+      ? one(["Yes — ", "Yes, ", "Yes: "], A.norm + out.count)
+      : one(["No — ", "No, ", "Not quite — "], A.norm + out.count);
+    out.say = lead + lower(out.say);
+  }
+
   /* Contractions go on the sentence, never on the note. The note carries
      checklists and quoted system messages — "the service did not respond to
      the start request in a timely fashion" is Windows' wording, and rewriting
