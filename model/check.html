@@ -1,0 +1,262 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Dossier — can this PC run a model?</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+:root{ color-scheme:light dark;
+  --ink:#1a1a1a; --ink2:#555; --ink3:#888; --bg:#faf8f4; --card:#fff; --rule:#e2ded4;
+  --ok:#1f7a5c; --warn:#c8791a; --bad:#a31d3a; }
+@media (prefers-color-scheme:dark){ :root{
+  --ink:#e8e6e1; --ink2:#a9a49c; --ink3:#7b766e; --bg:#151519; --card:#1d1d22; --rule:#31313a;
+  --ok:#3fbf92; --warn:#e0a34a; --bad:#e8556f; } }
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font:14px/1.6 -apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;padding:28px 20px 60px}
+.wrap{max-width:760px;margin:0 auto}
+h1{font-size:20px;margin:0 0 4px;letter-spacing:.01em}
+.sub{color:var(--ink3);font-size:12.5px;margin:0 0 22px}
+.verdict{border-radius:10px;padding:16px 18px;margin:0 0 22px;border:1px solid var(--rule);background:var(--card)}
+.verdict h2{margin:0 0 6px;font-size:16px}
+.verdict p{margin:0;font-size:13px;color:var(--ink2)}
+.verdict.ok{border-left:4px solid var(--ok)} .verdict.ok h2{color:var(--ok)}
+.verdict.warn{border-left:4px solid var(--warn)} .verdict.warn h2{color:var(--warn)}
+.verdict.bad{border-left:4px solid var(--bad)} .verdict.bad h2{color:var(--bad)}
+section{background:var(--card);border:1px solid var(--rule);border-radius:10px;margin:0 0 14px;overflow:hidden}
+section h3{margin:0;padding:11px 16px;font-size:12px;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--ink3);border-bottom:1px solid var(--rule)}
+.row{display:grid;grid-template-columns:190px 1fr;gap:12px;padding:9px 16px;border-bottom:1px solid var(--rule);
+  align-items:baseline;font-size:13px}
+.row:last-child{border-bottom:0}
+.k{color:var(--ink2)}
+.v{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:12.5px;word-break:break-word}
+.v.ok{color:var(--ok)} .v.warn{color:var(--warn)} .v.bad{color:var(--bad)}
+.note{padding:11px 16px;font-size:12px;color:var(--ink3);line-height:1.65}
+button{font:inherit;padding:9px 16px;border-radius:7px;border:1px solid var(--rule);
+  background:var(--card);color:var(--ink);cursor:pointer}
+button:hover{border-color:var(--ink3)}
+#copy{margin-top:8px}
+pre{white-space:pre-wrap;background:var(--card);border:1px solid var(--rule);border-radius:8px;
+  padding:12px 14px;font-size:11.5px;color:var(--ink2);overflow-x:auto}
+</style>
+<div class="wrap">
+<h1>Can this PC run a model in the browser?</h1>
+<p class="sub">Nothing is downloaded and nothing is sent anywhere. This page only asks the browser what it can do,
+runs one very small calculation on the graphics card to prove it works, and tells you the answer.</p>
+
+<div class="verdict" id="verdict"><h2>Checking…</h2><p>A few seconds.</p></div>
+
+<section><h3>The one that decides it</h3><div id="gpu"></div></section>
+<section><h3>Room for the model</h3><div id="mem"></div></section>
+<section><h3>How it is being served</h3><div id="ctx"></div></section>
+<section><h3>If there is no graphics card to use</h3><div id="wasm"></div></section>
+<section><h3>Everything, to send back</h3>
+  <div class="note">Copy this and paste it to me — it is all I need to tell you which model to use.</div>
+  <div style="padding:0 16px 16px"><pre id="dump">…</pre><button id="copy">Copy to clipboard</button></div>
+</section>
+</div>
+<script>
+const R = {};
+function row(host, k, v, cls){
+  const d = document.createElement("div"); d.className = "row";
+  d.innerHTML = '<span class="k"></span><span class="v ' + (cls||"") + '"></span>';
+  d.children[0].textContent = k; d.children[1].textContent = v;
+  document.getElementById(host).appendChild(d);
+}
+function mb(n){ return n == null ? "unknown" : (n/1048576).toFixed(0) + " MB"; }
+function gb(n){ return n == null ? "unknown" : (n/1073741824).toFixed(2) + " GB"; }
+
+(async function(){
+  /* ── the graphics card ─────────────────────────────────────────────── */
+  R.webgpuApi = typeof navigator !== "undefined" && !!navigator.gpu;
+  row("gpu", "WebGPU in this browser", R.webgpuApi ? "yes" : "no — this is the blocker",
+      R.webgpuApi ? "ok" : "bad");
+
+  let adapter = null, device = null;
+  if (R.webgpuApi){
+    try { adapter = await navigator.gpu.requestAdapter({ powerPreference:"high-performance" }); }
+    catch(e){ R.adapterError = String(e && e.message || e); }
+    if (!adapter){
+      try { adapter = await navigator.gpu.requestAdapter(); } catch(e){}
+    }
+    row("gpu", "Graphics adapter", adapter ? "found" : "none offered",
+        adapter ? "ok" : "bad");
+    if (adapter){
+      let info = {};
+      try { info = adapter.info || (adapter.requestAdapterInfo ? await adapter.requestAdapterInfo() : {}); }
+      catch(e){}
+      R.gpuVendor = info.vendor || ""; R.gpuArch = info.architecture || "";
+      R.gpuDevice = info.device || ""; R.gpuDesc = info.description || "";
+      const name = [info.vendor, info.architecture, info.device, info.description]
+        .filter(Boolean).join(" · ") || "(the browser will not say)";
+      row("gpu", "Which card", name);
+      R.maxBuffer = adapter.limits && adapter.limits.maxBufferSize;
+      R.maxBinding = adapter.limits && adapter.limits.maxStorageBufferBindingSize;
+      row("gpu", "Largest single buffer", mb(R.maxBuffer),
+          R.maxBuffer >= 1073741824 ? "ok" : R.maxBuffer >= 268435456 ? "warn" : "bad");
+      row("gpu", "Largest storage binding", mb(R.maxBinding),
+          R.maxBinding >= 268435456 ? "ok" : "warn");
+      try {
+        device = await adapter.requestDevice();
+        row("gpu", "Device opened", "yes", "ok");
+      } catch(e){
+        R.deviceError = String(e && e.message || e);
+        row("gpu", "Device opened", "no — " + R.deviceError, "bad");
+      }
+    }
+  }
+
+  /* ── prove it actually computes, not just that the API exists ──────── */
+  if (device){
+    try {
+      const N = 1 << 20;                     /* a million numbers */
+      const src = new Float32Array(N);
+      for (let i = 0; i < N; i++) src[i] = (i % 97) * 0.5;
+      const shader = device.createShaderModule({ code: `
+        @group(0) @binding(0) var<storage, read> inp : array<f32>;
+        @group(0) @binding(1) var<storage, read_write> outp : array<f32>;
+        @compute @workgroup_size(64)
+        fn main(@builtin(global_invocation_id) gid : vec3<u32>) {
+          let i = gid.x;
+          if (i < arrayLength(&inp)) {
+            var v = inp[i];
+            for (var k = 0u; k < 64u; k = k + 1u) { v = v * 1.000001 + 0.000001; }
+            outp[i] = v;
+          }
+        }` });
+      const inBuf = device.createBuffer({ size:src.byteLength,
+        usage:GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST });
+      device.queue.writeBuffer(inBuf, 0, src);
+      const outBuf = device.createBuffer({ size:src.byteLength,
+        usage:GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC });
+      const readBuf = device.createBuffer({ size:src.byteLength,
+        usage:GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ });
+      const pipe = device.createComputePipeline({ layout:"auto",
+        compute:{ module:shader, entryPoint:"main" } });
+      const bind = device.createBindGroup({ layout:pipe.getBindGroupLayout(0),
+        entries:[{ binding:0, resource:{ buffer:inBuf } },
+                 { binding:1, resource:{ buffer:outBuf } }] });
+      const t0 = performance.now();
+      const PASSES = 12;
+      for (let p = 0; p < PASSES; p++){
+        const enc = device.createCommandEncoder();
+        const pass = enc.beginComputePass();
+        pass.setPipeline(pipe); pass.setBindGroup(0, bind);
+        pass.dispatchWorkgroups(Math.ceil(N / 64));
+        pass.end();
+        device.queue.submit([enc.finish()]);
+      }
+      await device.queue.onSubmittedWorkDone();
+      const t1 = performance.now();
+      const enc2 = device.createCommandEncoder();
+      enc2.copyBufferToBuffer(outBuf, 0, readBuf, 0, src.byteLength);
+      device.queue.submit([enc2.finish()]);
+      await readBuf.mapAsync(GPUMapMode.READ);
+      const got = new Float32Array(readBuf.getMappedRange())[3];
+      readBuf.unmap();
+      const want = (function(){ let v = 3 * 0.5;
+        for (let k = 0; k < 64; k++) v = v * 1.000001 + 0.000001; return v; })();
+      R.computeOk = Math.abs(got - want) < 1e-3;
+      R.computeMs = Math.round(t1 - t0);
+      R.mflops = Math.round((N * 64 * 2 * PASSES) / (t1 - t0) / 1000);
+      row("gpu", "Ran a real calculation", R.computeOk ? "yes, and the answer is right"
+          : "ran, but the answer is wrong", R.computeOk ? "ok" : "bad");
+      row("gpu", "Rough speed", R.mflops.toLocaleString() + " million ops/sec  (" + R.computeMs + " ms)",
+          R.mflops > 40000 ? "ok" : R.mflops > 8000 ? "warn" : "bad");
+    } catch(e){
+      R.computeError = String(e && e.message || e);
+      row("gpu", "Ran a real calculation", "no — " + R.computeError, "bad");
+    }
+  }
+
+  /* ── room ──────────────────────────────────────────────────────────── */
+  R.deviceMemory = navigator.deviceMemory || null;
+  R.cores = navigator.hardwareConcurrency || null;
+  row("mem", "System memory (approx)", R.deviceMemory ? R.deviceMemory + " GB or more" : "not reported",
+      !R.deviceMemory ? "" : R.deviceMemory >= 8 ? "ok" : R.deviceMemory >= 4 ? "warn" : "bad");
+  row("mem", "CPU cores", R.cores || "not reported", (R.cores||0) >= 4 ? "ok" : "warn");
+  try {
+    const est = await navigator.storage.estimate();
+    R.quota = est.quota; R.usage = est.usage;
+    row("mem", "Browser storage allowed", gb(est.quota),
+        est.quota > 3221225472 ? "ok" : est.quota > 1610612736 ? "warn" : "bad");
+    row("mem", "Already used", gb(est.usage));
+  } catch(e){ row("mem", "Browser storage allowed", "could not ask", "warn"); }
+  try {
+    R.persisted = await navigator.storage.persisted();
+    row("mem", "Storage marked permanent", R.persisted ? "yes" : "no — the cache can be evicted",
+        R.persisted ? "ok" : "warn");
+  } catch(e){}
+
+  /* ── how it is served ──────────────────────────────────────────────── */
+  R.origin = location.origin; R.protocol = location.protocol;
+  R.secure = window.isSecureContext; R.isolated = !!window.crossOriginIsolated;
+  R.sab = typeof SharedArrayBuffer !== "undefined";
+  R.ua = navigator.userAgent;
+  row("ctx", "Address", R.origin || "(none — opened as a file)",
+      R.protocol === "file:" ? "bad" : "ok");
+  row("ctx", "Secure context", R.secure ? "yes" : "no", R.secure ? "ok" : "bad");
+  row("ctx", "Cross-origin isolated", R.isolated ? "yes" : "no — only matters for the fallback",
+      R.isolated ? "ok" : "warn");
+  row("ctx", "SharedArrayBuffer", R.sab ? "available" : "not available", R.sab ? "ok" : "warn");
+  const m = R.ua.match(/(Edg|Chrome|Firefox|Safari)\/([\d.]+)/);
+  row("ctx", "Browser", m ? m[1] + " " + m[2] : R.ua.slice(0, 60));
+
+  /* ── the no-GPU path ───────────────────────────────────────────────── */
+  R.wasm = typeof WebAssembly === "object";
+  row("wasm", "WebAssembly", R.wasm ? "yes" : "no", R.wasm ? "ok" : "bad");
+  try {
+    R.simd = WebAssembly.validate(new Uint8Array([0,97,115,109,1,0,0,0,1,5,1,96,0,1,123,3,2,1,0,
+      10,10,1,8,0,65,0,253,15,253,98,11]));
+  } catch(e){ R.simd = false; }
+  row("wasm", "SIMD instructions", R.simd ? "yes" : "no — the fallback would crawl",
+      R.simd ? "ok" : "warn");
+  row("wasm", "Threads", R.sab ? "yes" : "no", R.sab ? "ok" : "warn");
+  document.getElementById("wasm").insertAdjacentHTML("beforeend",
+    '<div class="note">Without a usable graphics card a model still runs, on the processor, ' +
+    'roughly ten to thirty times slower. For a question you type and wait on, that is the ' +
+    'difference between two seconds and a minute.</div>');
+
+  /* ── the verdict ───────────────────────────────────────────────────── */
+  const v = document.getElementById("verdict");
+  let cls, head, body;
+  if (!R.webgpuApi){
+    cls = "bad"; head = "No — not with the graphics card";
+    body = "This browser has no WebGPU, so a model would have to run on the processor and would be " +
+           "too slow to type at. Check you are on Chrome or Edge 113 or newer. If you are, it is " +
+           "likely disabled by policy or by an old graphics driver, and that is a question for whoever " +
+           "manages the machine.";
+  } else if (!device || !R.computeOk){
+    cls = "bad"; head = "No — WebGPU is there but will not run";
+    body = "The browser offers WebGPU but could not actually use it" +
+           (R.deviceError ? " (" + R.deviceError + ")" : "") +
+           ". Usually an out-of-date graphics driver. Worth updating it and running this again.";
+  } else if (R.mflops < 8000 || (R.maxBuffer || 0) < 268435456){
+    cls = "warn"; head = "Only just — a very small model";
+    body = "It works, but this card is slow or limited. A 0.5-billion model would run; anything " +
+           "larger would be painful. Expect several seconds per answer.";
+  } else if (R.mflops < 40000 || (R.quota || 0) < 3221225472){
+    cls = "warn"; head = "Yes, with a small model";
+    body = "Good enough for a 0.5 to 1.5 billion parameter model, which is all we need — it only has " +
+           "to turn your sentence into a query, not answer it. Expect a second or two per question.";
+  } else {
+    cls = "ok"; head = "Yes";
+    body = "This machine will run a small model comfortably. A 1.5 to 3 billion parameter model is " +
+           "within reach, and we only need the small end of that.";
+  }
+  /* the model itself cannot load from file:// even where this page can */
+  if (R.protocol === "file:")
+    body += "  Separately: you opened this straight from the folder. A model cannot load that way — " +
+            "run dossier-serve.bat and open it from 127.0.0.1 before the real thing.";
+  v.className = "verdict " + cls;
+  v.innerHTML = "<h2></h2><p></p>";
+  v.children[0].textContent = head; v.children[1].textContent = body;
+  R.verdict = head;
+
+  document.getElementById("dump").textContent = JSON.stringify(R, null, 1);
+  document.getElementById("copy").onclick = function(){
+    navigator.clipboard.writeText(JSON.stringify(R, null, 1))
+      .then(() => { this.textContent = "Copied"; setTimeout(() => this.textContent = "Copy to clipboard", 1600); })
+      .catch(() => { this.textContent = "Select the text above and copy it by hand"; });
+  };
+})();
+</script>
