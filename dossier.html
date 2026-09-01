@@ -1231,6 +1231,21 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
 .chh .t{font-family:var(--f-display);font-size:13px;font-weight:600;letter-spacing:.03em}
 .chh .sub{font-size:10.5px;color:var(--ink-3);flex:1;min-width:0;overflow:hidden;
   text-overflow:ellipsis;white-space:nowrap}
+.chbody{flex:1;min-height:0;display:flex}
+.chside{flex:0 0 0;width:0;overflow:hidden;border-right:1px solid var(--rule);background:var(--paper-2);
+  transition:width .18s var(--ease),flex-basis .18s var(--ease)}
+.chat.rail .chside{flex:0 0 196px;width:196px;overflow-y:auto;padding:9px 8px}
+.chmain{flex:1;min-width:0;display:flex;flex-direction:column}
+.chsi{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:5px;align-items:center;
+  padding:7px 9px;border-radius:var(--r-xs);cursor:pointer;margin-bottom:3px}
+.chsi:hover{background:var(--paper-3)}
+.chsi.on{background:var(--paper-3);box-shadow:inset 2px 0 0 var(--accent)}
+.chsi .n{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11.5px;color:var(--ink)}
+.chsi .d{font-size:9.5px;color:var(--ink-3);font-family:var(--f-mono)}
+.chsi .x{opacity:0;border:0;background:none;color:var(--ink-3);cursor:pointer;font-size:12px;padding:0 3px}
+.chsi:hover .x{opacity:1}
+.chsh{font-size:9.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-3);
+  padding:5px 9px 7px}
 .chl{flex:1;min-height:0;overflow-y:auto;padding:14px 15px;display:flex;flex-direction:column;gap:13px}
 .chb{max-width:88%;font-size:12.5px;line-height:1.62}
 .chb.you{align-self:flex-end;background:var(--paper-3);border:1px solid var(--rule);
@@ -1239,6 +1254,8 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
 .chb.bot .say{color:var(--ink);font-size:13px;line-height:1.6}
 .chb.bot .note{margin-top:6px;font-size:11.5px;color:var(--ink-2);line-height:1.65;white-space:pre-wrap}
 .chb.bot .meta{margin-top:7px;font-size:10px;color:var(--ink-3);font-family:var(--f-mono)}
+.chb.bot .hedge{font-size:10.5px;color:var(--p2);margin-bottom:4px}
+.chb.bot .carry{font-size:10px;color:var(--ink-3);margin-bottom:4px;font-style:italic}
 .chrow{display:grid;grid-template-columns:auto minmax(0,1fr);gap:9px;align-items:baseline;
   padding:6px 9px;margin-top:5px;border:1px solid var(--rule);border-radius:var(--r-xs);cursor:pointer}
 .chrow:hover{background:var(--paper-2)}
@@ -1436,15 +1453,22 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
      chat.js; this is the surface it talks through. -->
 <div class="chat" id="chat">
   <div class="chh">
+    <button class="ib" id="chatMenu" data-i18n-title="ChatConversations" title="Conversations">☰</button>
     <span class="t" data-i18n="ChatTitle">Assistant</span>
     <span class="sub" data-i18n="ChatSub">reads your records · nothing leaves this folder</span>
+    <button class="ib" id="chatNew" data-i18n-title="ChatNew" title="New conversation">＋</button>
     <button class="ib" id="chatX">✕</button>
   </div>
-  <div class="chl" id="chatLog"></div>
-  <div class="chf">
-    <input id="chatq" type="text" data-i18n-ph="ChatPlaceholder"
-           placeholder="Ask about your records…" spellcheck="false" autocomplete="off">
-    <button class="btn pri" id="chatGo" data-i18n="ChatAsk">Ask</button>
+  <div class="chbody">
+    <aside class="chside" id="chatSide"></aside>
+    <div class="chmain">
+      <div class="chl" id="chatLog"></div>
+      <div class="chf">
+        <input id="chatq" type="text" data-i18n-ph="ChatPlaceholder"
+               placeholder="Ask about your records…" spellcheck="false" autocomplete="off">
+        <button class="btn pri" id="chatGo" data-i18n="ChatAsk">Ask</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -2887,6 +2911,13 @@ const STRINGS = {
   ChatWaiting: "{code} is with {who} from now.",
   ChatScheduled: "Scheduled “{title}”. It will remind you each time.",
   ChatLeftAlone: "Left alone — nothing was changed.",
+  ChatConversations: "Conversations",
+  ChatNew: "New conversation",
+  ChatUntitled: "New conversation",
+  ChatKeptCount: "{n} kept in this workspace",
+  ChatReadThatAs: "I read that as: {what}. Correct me below if not.",
+  ChatAboutStill: "still about {what}",
+  ChatSameQuestion: "same question, new detail",
   AiOpenRoutines: "Open Routines"
 };
 
@@ -3269,7 +3300,8 @@ const S = {
             ids:null, idsLabel:"" },
   sel:new Set(), open:null, drill:null, intake:null, chase:null, problem:null, folds:{}, editRoutine:null, sort:{ by:"due", dir:1 },
   weekStart:null, undo:[], dirty:false, saving:false, lastSaved:null,
-  rows:[], cursor:-1, reminded:{}, blobCache:{}
+  rows:[], cursor:-1, reminded:{}, blobCache:{},
+  chats:[], chatId:""
 };
 
 /* ═══ UTIL ═══════════════════════════════════════════════════════════════ */
@@ -4469,7 +4501,10 @@ function rollOver(){
 /* ═══ PERSISTENCE ════════════════════════════════════════════════════════ */
 function payload(){
   return { app:"dossier", version:3, savedAt:new Date().toISOString(),
-           seq:S.seq, settings:S.settings, routines:S.routines, scripts:S.scripts, tasks:S.tasks };
+           seq:S.seq, settings:S.settings, routines:S.routines, scripts:S.scripts, tasks:S.tasks,
+           /* the assistant's conversations live with the records, so they
+              survive a reload and follow the folder to another machine */
+           chats:S.chats, chatId:S.chatId };
 }
 function hydrate(d){
   if (!d) return;
@@ -4483,6 +4518,13 @@ function hydrate(d){
     system:x.system || "", params:Array.isArray(x.params) ? x.params : [],
     uses:+x.uses || 0, lastUsed:x.lastUsed || ""
   })).filter(x => x.file) : [];
+  S.chats = Array.isArray(d.chats) ? d.chats.filter(c => c && c.id).map(c => ({
+    id:c.id, title:String(c.title || "").slice(0, 80),
+    created:c.created || "", updated:c.updated || "",
+    msgs:Array.isArray(c.msgs) ? c.msgs.slice(-80) : [],
+    convo:(c.convo && typeof c.convo === "object") ? c.convo : {}
+  })).slice(0, 30) : [];
+  S.chatId = typeof d.chatId === "string" ? d.chatId : "";
   if (d.settings) Object.assign(S.settings, d.settings);
   if (!S.settings.systems || !S.settings.systems.length) S.settings.systems = DEF_SYS.slice();
   if (!S.settings.types || !S.settings.types.length) S.settings.types = DEF_TYPE.slice();
@@ -5680,19 +5722,25 @@ function dr(label, sub, list){
    The surface chat.js talks through. It renders what the engine returns and
    runs what the engine proposes — and it never runs a proposal without a
    click, because the engine is guessing and a wrong guess on "mark it done"
-   edits a real record. */
-const CHAT = { acts:{}, n:0, last:"", greeted:false };
+   edits a real record.
 
-function chatApi(){
+   Conversations are kept, one per subject, in the workspace beside the
+   records. Each carries its own running context, so "what is left on it" in
+   one thread cannot pick up the record you were discussing in another. */
+const CHAT = { acts:{}, n:0, last:"" };
+const CHAT_MAX_THREADS = 30, CHAT_MAX_MSGS = 80;
+
+function chatApi(convo){
   const st = S.settings;
-  if (!st.chatLearn || typeof st.chatLearn !== "object") st.chatLearn = {};
+  /* asking a question must write nothing at all — not even an empty object
+     into settings, which would mark the workspace dirty for a save */
   return {
     tasks:S.tasks, routines:S.routines, scripts:S.scripts, settings:st,
     now: Date.now(),
-    /* the lexicon is rebuilt only when the workspace actually moved */
     cacheKey: S.tasks.length + ":" + (MODEL.built || 0) + ":" + S.scripts.length +
               ":" + (st.systems || []).length + ":" + (st.parties || []).length,
-    memory: st.chatLearn,
+    memory: (st.chatLearn && typeof st.chatLearn === "object") ? st.chatLearn : {},
+    convo: convo || (chatThread() || {}).convo || {},
     phrase: p => (p ? L(p.k, p.v || {}) : ""),
     ai: window.DossierAI || null,
     ctx: aiCtx,
@@ -5703,18 +5751,84 @@ function chatApi(){
   };
 }
 
-function openChat(){
-  if (!window.DossierChat){
-    return toast(L("ChatNoEngine"), { bad:true });
+/* ── conversations ─────────────────────────────────────────────────────── */
+function chatThread(){
+  if (!Array.isArray(S.chats)) S.chats = [];
+  return S.chats.find(c => c.id === S.chatId) || null;
+}
+function chatNew(quiet){
+  if (!Array.isArray(S.chats)) S.chats = [];
+  /* an untouched blank thread is reused rather than piling up */
+  const empty = S.chats.find(c => !c.msgs.length);
+  const c = empty || { id:"K" + Date.now().toString(36) + Math.random().toString(36).slice(2,5),
+                       title:"", created:new Date().toISOString(),
+                       updated:new Date().toISOString(), msgs:[], convo:{} };
+  if (!empty) S.chats.unshift(c);
+  while (S.chats.length > CHAT_MAX_THREADS) S.chats.pop();
+  S.chatId = c.id;
+  if (!quiet){ chatPaint(); touch(); }
+  return c;
+}
+function chatPush(m){
+  const c = chatThread() || chatNew(true);
+  c.msgs.push(m);
+  while (c.msgs.length > CHAT_MAX_MSGS) c.msgs.shift();
+  if (!c.title && m.who === "you") c.title = m.text.slice(0, 60);
+  c.updated = new Date().toISOString();
+  /* most recently spoken to, first in the list */
+  S.chats = [c].concat(S.chats.filter(x => x.id !== c.id));
+  touch();
+}
+function chatDeleteThread(id){
+  S.chats = (S.chats || []).filter(c => c.id !== id);
+  if (S.chatId === id) S.chatId = (S.chats[0] || {}).id || "";
+  if (!S.chatId) chatNew(true);
+  chatPaint(); touch();
+}
+
+function chatPaint(){ chatSide(); chatReplay(); }
+
+function chatSide(){
+  const el = $("chatSide");
+  if (!el) return;
+  const list = (S.chats || []).filter(c => c.msgs.length || c.id === S.chatId);
+  el.innerHTML = '<div class="chsh">' + esc(L("ChatConversations")) + "</div>" +
+    list.map(c =>
+      '<div class="chsi' + (c.id === S.chatId ? " on" : "") + '" data-chat="' + esc(c.id) + '">' +
+        '<span class="n">' + esc(c.title || L("ChatUntitled")) + "</span>" +
+        '<button class="x" data-delchat="' + esc(c.id) + '" title="' + esc(L("Delete")) + '">✕</button>' +
+      "</div>").join("") +
+    (list.length > 1 ? '<div class="chsh">' + esc(L("ChatKeptCount", { n:list.length })) + "</div>" : "");
+}
+
+/* replay a whole thread from what was stored — the transcript is data, so a
+   conversation survives a reload and a different machine */
+function chatReplay(){
+  const log = $("chatLog");
+  if (!log) return;
+  log.innerHTML = "";
+  CHAT.acts = {};
+  const c = chatThread();
+  if (!c || !c.msgs.length){
+    chatRenderBot({ say:L("ChatGreeting"), seeds:[
+      L("ChatSeedNext"), L("ChatSeedOverdue"), L("ChatSeedBrief"), L("ChatSeedHelp") ] });
+    return;
   }
+  c.msgs.forEach(m => {
+    if (m.who === "you") chatRenderYou(m.text);
+    else chatRenderBot(m.reply, m.src, true);
+  });
+  chatScroll();
+}
+
+function openChat(){
+  if (!window.DossierChat) return toast(L("ChatNoEngine"), { bad:true });
+  if (!Array.isArray(S.chats)) S.chats = [];
+  if (!chatThread()) chatNew(true);
   $("chat").classList.add("on");
   $("scrim").classList.add("on");
   trapIn("chat");
-  if (!CHAT.greeted){
-    CHAT.greeted = true;
-    chatBot({ say:L("ChatGreeting"), seeds:[
-      L("ChatSeedNext"), L("ChatSeedOverdue"), L("ChatSeedBrief"), L("ChatSeedHelp") ] });
-  }
+  chatPaint();
   setTimeout(() => $("chatq").focus(), 60);
 }
 function closeChat(){
@@ -5725,7 +5839,7 @@ function closeChat(){
 }
 
 function chatScroll(){ const l = $("chatLog"); l.scrollTop = l.scrollHeight; }
-function chatYou(text){
+function chatRenderYou(text){
   const d = document.createElement("div");
   d.className = "chb you";
   d.textContent = text;
@@ -5735,15 +5849,26 @@ function chatYou(text){
 
 /* render one answer. Everything clickable is registered in CHAT.acts and
    addressed by id, so nothing has to survive a round trip through HTML. */
-function chatBot(r, sourceText){
+function chatRenderBot(r, sourceText, replaying){
+  r = r || {};
   const id = "c" + (++CHAT.n);
   const d = document.createElement("div");
   d.className = "chb bot";
-  let h = '<div class="say">' + esc(r.say || "") + "</div>";
+  let h = "";
+
+  /* below about six in ten, the reading is a guess and should read as one */
+  if (r.unsure && r.label)
+    h += '<div class="hedge">' + esc(L("ChatReadThatAs", { what:r.label })) + "</div>";
+  if (r.borrowed === "record" && r.slots && r.slots.record)
+    h += '<div class="carry">' + esc(L("ChatAboutStill", { what:r.slots.record })) + "</div>";
+  else if (r.followUp)
+    h += '<div class="carry">' + esc(L("ChatSameQuestion")) + "</div>";
+
+  h += '<div class="say">' + esc(r.say || "") + "</div>";
   if (r.note) h += '<div class="note">' + esc(r.note) + "</div>";
 
   (r.rows || []).forEach((row, i) => {
-    CHAT.acts[id + "r" + i] = { kind:"open", id:row.id };
+    if (row.id) CHAT.acts[id + "r" + i] = { kind:"open", id:row.id };
     h += '<div class="chrow"' + (row.id ? ' data-act="' + id + "r" + i + '"' : "") + ">" +
            '<span class="c">' + esc(row.code || "") + "</span>" +
            '<span class="x"><b>' + esc(row.text || "") + "</b>" +
@@ -5757,9 +5882,8 @@ function chatBot(r, sourceText){
            '<button class="btn pri sm" data-act="' + id + 'yes">' + esc(L("ChatYes")) + "</button>" +
            '<button class="btn sm" data-dismiss="1">' + esc(L("ChatNo")) + "</button>" +
          "</div></div>";
-  } else if (r.act){
-    /* navigation needs no permission — nothing is written */
-    chatDo(r.act);
+  } else if (r.act && !replaying){
+    chatDo(r.act);           /* navigation writes nothing, so it needs no permission */
   }
 
   if ((r.chips || []).length){
@@ -5771,7 +5895,6 @@ function chatBot(r, sourceText){
     h += "</div>";
   }
 
-  /* two readings too close to call — let the answer stand, offer the other */
   if ((r.alternatives || []).length && sourceText){
     h += '<div class="chalt">' + esc(L("ChatDidYouMean")) + '</div><div class="chacts">';
     r.alternatives.forEach((a, i) => {
@@ -5800,16 +5923,27 @@ function chatBot(r, sourceText){
   chatScroll();
 }
 
+/* say something and keep it */
+function chatBot(r, sourceText){
+  chatPush({ who:"bot", reply:r, src:sourceText || "" });
+  chatRenderBot(r, sourceText);
+}
+
 function chatAsk(text){
   const q = String(text || "").trim();
   if (!q) return;
   CHAT.last = q;
-  chatYou(q);
+  const c = chatThread() || chatNew(true);
+  chatPush({ who:"you", text:q });
+  chatRenderYou(q);
   $("chatq").value = "";
   let r;
-  try { r = DossierChat.ask(q, chatApi()); }
+  try { r = DossierChat.ask(q, chatApi(c.convo)); }
   catch(e){ r = { say:L("ChatBroke", { msg:String(e && e.message || e) }) }; }
+  /* the thread remembers what it was talking about */
+  if (r && r.context) c.convo = r.context;
   chatBot(r, q);
+  chatSide();
 }
 
 function chatDo(act){
@@ -5828,12 +5962,15 @@ function chatDo(act){
     case "reread": {
       /* you told me which one you meant — remember this phrasing */
       const key = DossierChat._util.normalise(act.text);
+      if (!S.settings.chatLearn || typeof S.settings.chatLearn !== "object") S.settings.chatLearn = {};
       S.settings.chatLearn[key] = act.intent;
       touch();
       let r;
       try { r = DossierChat.run(act.intent, act.text, chatApi()); }
       catch(e){ r = { say:L("ChatBroke", { msg:String(e && e.message || e) }) }; }
       r.learned = true;
+      const c = chatThread();
+      if (c && r.context) c.convo = r.context;
       return chatBot(r, null);
     }
     case "log": {
@@ -10162,6 +10299,21 @@ $("tabs").addEventListener("click", e => { const b = e.target.closest("button");
 /* Ask: the input, the buttons inside answers, and the ways out. */
 $("chatBtn").addEventListener("click", openChat);
 $("chatX").addEventListener("click", closeChat);
+$("chatMenu").addEventListener("click", () => {
+  $("chat").classList.toggle("rail");
+  if ($("chat").classList.contains("rail")) chatSide();
+});
+$("chatNew").addEventListener("click", () => {
+  chatNew();
+  $("chat").classList.remove("rail");
+  $("chatq").focus();
+});
+$("chatSide").addEventListener("click", e => {
+  const del = e.target.closest("[data-delchat]");
+  if (del){ e.stopPropagation(); return chatDeleteThread(del.dataset.delchat); }
+  const row = e.target.closest("[data-chat]");
+  if (row){ S.chatId = row.dataset.chat; chatPaint(); touch(); $("chatq").focus(); }
+});
 $("chatGo").addEventListener("click", () => chatAsk($("chatq").value));
 $("chatq").addEventListener("keydown", e => {
   if (e.key === "Enter"){ e.preventDefault(); return chatAsk($("chatq").value); }

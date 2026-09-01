@@ -1279,5 +1279,12 @@ Nothing is holding this any more." value="" />
     <text name="ChatScheduled" source="Scheduled “{title}”. It will remind you each time." value="" />
     <text name="AiOpenRoutines" source="Open Routines" value="" />
     <text name="ChatLeftAlone" source="Left alone — nothing was changed." value="" />
+    <text name="ChatConversations" source="Conversations" value="" />
+    <text name="ChatNew" source="New conversation" value="" />
+    <text name="ChatUntitled" source="New conversation" value="" />
+    <text name="ChatKeptCount" source="{n} kept in this workspace" value="" />
+    <text name="ChatReadThatAs" source="I read that as: {what}. Correct me below if not." value="" />
+    <text name="ChatAboutStill" source="still about {what}" value="" />
+    <text name="ChatSameQuestion" source="same question, new detail" value="" />
   </texts>
 </localizationDictionary>

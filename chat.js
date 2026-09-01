@@ -62,6 +62,10 @@ const ASKING = new Set(("what which who whose whom when where why how is are was
 function normalise(raw){
   let s = " " + String(raw == null ? "" : raw).toLowerCase() + " ";
   s = s.replace(/[‘’]/g, "'").replace(/[“”]/g, '"');
+  /* a pasted log line or error can carry markup; the tags are not words and
+     matching on them turns "<script>…</script>" into a question about the
+     scripts folder */
+  s = s.replace(/<[^>]{0,200}>/g, " ");
   for (const k in CONTRACTION) s = s.split(" " + k + " ").join(" " + CONTRACTION[k] + " ");
   return s.replace(/\s+/g, " ").trim();
 }
@@ -259,14 +263,20 @@ function readSlots(norm, ws, api){
   const h = api.h, lex = api.lex, s = {};
   let m;
 
-  /* D-14, d14, #INC0012345 — nearly always the subject of the sentence */
-  const codes = [];
-  const codeRe = /\b(d-?\s?\d{1,6}|[a-z]{2,6}\d{4,12})\b/g;
+  /* D-14, d14, #INC0012345 — nearly always the subject of the sentence.
+     A code that resolves to nothing is the important case: saying "I have no
+     D-000267" is right, and quietly dropping it and answering some other
+     question is the worst thing this file could do. */
+  const codes = [], missing = [];
+  const codeRe = /\b(d-?\s?\d{1,7}|[a-z]{2,6}\d{4,12})\b/g;
   while ((m = codeRe.exec(norm))){
-    const t = h.findByRef(m[1].replace(/\s+/g, ""));
-    if (t && codes.indexOf(t) < 0) codes.push(t);
+    const raw = m[1].replace(/\s+/g, "");
+    const rec = h.findByRef(raw);
+    if (rec){ if (codes.indexOf(rec) < 0) codes.push(rec); }
+    else if (/^d-?\d/i.test(raw) && missing.indexOf(raw) < 0) missing.push(raw);
   }
   if (codes.length){ s.record = codes[0]; s.records = codes; }
+  if (missing.length && !codes.length) s.unknownCode = missing[0].toUpperCase();
 
   if ((m = norm.match(/\bp\s?([1-4])\b/)) || (m = norm.match(/\bpriority ([1-4])\b/))) s.priority = "P" + m[1];
   if (/\bcritical|urgent\b/.test(norm) && !s.priority) s.priority = "P1";
@@ -495,6 +505,7 @@ intent("record", {
 intent("waiting", {
   kind:"read", label:"What I am waiting on",
   cues:{ waiting:8, wait:6, holding:6, others:3, outside:4, pending:5, blocked:4, stuck:2, them:2 },
+  /* not "who" — on its own it is a question about anything at all */
   phrases:[["waiting on",10],["waiting for",10],["who owes me",9],["with someone else",6],
            ["not with me",6],["in someone else's court",8]],
   run(A){
@@ -518,7 +529,7 @@ intent("waiting", {
 });
 intent("quietest", {
   kind:"read", label:"Longest wait",
-  cues:{ longest:8, quiet:7, silent:7, slowest:7, oldest:5, ignoring:6, forgotten:4 },
+  cues:{ longest:5, quiet:7, silent:7, slowest:7, ignoring:6, forgotten:4 },
   phrases:[["gone quiet",10],["longest wait",10],["waiting longest",10],["heard nothing",8],
            ["not replied",8],["no reply",8]],
   run(A){
@@ -643,7 +654,7 @@ intent("worstSystem", {
 });
 intent("topPerson", {
   kind:"read", label:"Who asks the most",
-  cues:{ who:4, raises:7, asks:6, requester:7, people:5, person:5, most:4, asking:6, sends:5 },
+  cues:{ raises:7, asks:6, requester:7, people:5, person:5, most:4, asking:6, sends:5 },
   phrases:[["who raises",10],["who asks",10],["who sends me",10],["comes from who",8],
            ["which person",9],["who gives me",9]],
   run(A){
@@ -853,6 +864,336 @@ intent("routines", {
   }
 });
 
+/* ═══ ABOUT ONE RECORD, IN DETAIL ════════════════════════════════════════
+   The questions you ask once you are already looking at something. Each of
+   these needs a record, and will take one from earlier in the conversation
+   if the sentence only says "it". */
+
+intent("steps", {
+  kind:"read", label:"What is left to do",
+  cues:{ step:9, steps:9, left:8, remaining:9, checklist:10, todo:8, outstanding:9,
+         incomplete:9, unfinished:9, pending:5, next:3, still:5, complete:3, completed:4 },
+  phrases:[["what is left",10],["whats left",10],["left to do",10],["steps left",10],
+           ["still to do",10],["have not done",9],["havent done",9],["not completed",10],
+           ["not finished",9],["what remains",10],["where was i",8],["how far",7]],
+  boost:{ record:6 },
+  run(A){
+    const api = A.api, t = A.slots.record;
+    if (!t) return { say:"Which record? Name it — \"what is left on D-0004\".",
+                     awaiting:{ intent:"steps", slot:"record" } };
+    const cl = t.checklist || [];
+    if (!cl.length){
+      const bits = [];
+      if (t.waitOn) bits.push("It is waiting on " + t.waitOn + ".");
+      if ((t.blockedBy || []).length) bits.push("It is held by " + t.blockedBy.length + " other record(s).");
+      return { say: t.code + " has no steps written down.",
+               note:(bits.join(" ") || "Open it and add a checklist if it needs one.") +
+                    "\nStatus: " + api.h.stMeta(t.status).label + ".",
+               chips:[{ label:"Open it", act:{ kind:"open", id:t.id } }] };
+    }
+    const left = cl.filter(c => !c.done), done = cl.length - left.length;
+    if (!left.length)
+      return { say:"All " + cl.length + " steps on " + t.code + " are ticked off.",
+               note:"“" + t.title + "” is " + api.h.stMeta(t.status).label.toLowerCase() +
+                    (api.h.LIVE.indexOf(t.status) >= 0 ? " — it may be ready to close." : "."),
+               chips: api.h.LIVE.indexOf(t.status) >= 0
+                 ? [{ label:"Mark it done", act:{ kind:"status", id:t.id, status:"done",
+                                                  confirm:"Mark " + t.code + " done?" } }] : [] };
+    return {
+      say: left.length + " of " + cl.length + " steps still to do on " + t.code + ".",
+      note: "“" + t.title + "” · " + done + " done" +
+            (t.waitOn ? " · waiting on " + t.waitOn : ""),
+      rows: left.map((c, i) => ({ id:t.id, code:"☐", text:c.text,
+                                  sub:i === 0 ? "next" : "" })),
+      chips:[{ label:"Open it", act:{ kind:"open", id:t.id } }]
+    };
+  }
+});
+
+intent("why", {
+  kind:"read", label:"Why it is stuck",
+  cues:{ why:9, blocked:7, holding:7, held:7, reason:8, because:7, cause:7, stopping:8 },
+  phrases:[["why is",9],["what is holding",10],["what is blocking",10],["why can i not",10],
+           ["why has not",9],["what is stopping",10]],
+  boost:{ record:6 },
+  run(A){
+    const api = A.api, h = api.h, t = A.slots.record;
+    if (!t) return { say:"Which one? Name it — \"why is D-0004 blocked\".",
+                     awaiting:{ intent:"why", slot:"record" } };
+    const held = (t.blockedBy || []).map(id => api.tasks.find(x => x.id === id)).filter(Boolean);
+    const bits = [];
+    if (t.waitOn) bits.push(t.waitOn + " has had it for " + h.waitDays(t) + " days" +
+      ((t.chases || []).length ? ", chased " + t.chases.length + "×" : ", never chased") + ".");
+    held.forEach(b => bits.push("Held by " + b.code + " (" + h.stMeta(b.status).label.toLowerCase() + ") — " + b.title + "."));
+    if (!bits.length && t.status === "blocked") bits.push("Marked blocked, but nothing is recorded as holding it.");
+    if (!bits.length) bits.push("Nothing is holding it — it is " + h.stMeta(t.status).label.toLowerCase() + ".");
+    return {
+      say: t.code + " — " + t.title,
+      note: bits.join("\n"),
+      rows: held.map(b => row(b, api, h.stMeta(b.status).label)),
+      chips: t.waitOn ? [{ label:"Chase " + t.waitOn, act:{ kind:"chase", id:t.id,
+                             confirm:"Log a chase to " + t.waitOn + " on " + t.code + "?" } }]
+                      : [{ label:"Open it", act:{ kind:"open", id:t.id } }]
+    };
+  }
+});
+
+intent("history", {
+  kind:"read", label:"What happened on it",
+  cues:{ happened:9, history:9, log:6, timeline:9, progress:6, activity:8, done:2, far:4 },
+  phrases:[["what happened",10],["what has happened",10],["the history",9],["what did i do on",10],
+           ["how did it go",8],["so far on",8],["what changed",8]],
+  boost:{ record:6 },
+  run(A){
+    const api = A.api, h = api.h, t = A.slots.record;
+    if (!t) return { say:"On which record? Name it — \"what happened on D-0004\".",
+                     awaiting:{ intent:"history", slot:"record" } };
+    const log = (t.log || []).slice(-10);
+    if (!log.length) return { say:"Nothing is logged against " + t.code + " yet." };
+    return {
+      say: t.code + " — " + log.length + " of " + (t.log || []).length + " entries.",
+      note: log.map(e => h.stamp(e.at) + "  " + e.text).join("\n"),
+      chips:[{ label:"Open it", act:{ kind:"open", id:t.id } }]
+    };
+  }
+});
+
+intent("notes", {
+  kind:"read", label:"Its notes",
+  needs:["record"],
+  cues:{ note:8, notes:9, wrote:8, written:8, said:5, detail:6, description:8 },
+  phrases:[["the notes on",10],["what did i write",10],["any notes",10]],
+  run(A){
+    const t = A.slots.record, n = String(t.notes || "").trim();
+    if (!n) return { say:"No notes on " + t.code + ".",
+                     chips:[{ label:"Open it", act:{ kind:"open", id:t.id } }] };
+    return { say: t.code + " — " + t.title, note:n,
+             chips:[{ label:"Open it", act:{ kind:"open", id:t.id } }] };
+  }
+});
+
+intent("files", {
+  kind:"read", label:"Its documents",
+  needs:["record"],
+  cues:{ file:8, files:9, document:9, documents:9, attachment:9, attached:8, screenshot:7, email:5 },
+  phrases:[["any documents",10],["what files",10],["anything attached",10]],
+  run(A){
+    const t = A.slots.record, f = t.files || [];
+    if (!f.length) return { say:"No documents filed against " + t.code + "." };
+    return { say: f.length + " document" + (f.length === 1 ? "" : "s") + " on " + t.code + ".",
+             rows: f.slice(0, 10).map(x => ({ id:t.id, code:"", text:x.name || "(unnamed)",
+               sub:(x.size ? Math.round(x.size / 1024) + " KB" : "") + (x.added ? " · " + A.api.h.stamp(x.added) : "") })),
+             chips:[{ label:"Open it", act:{ kind:"open", id:t.id } }] };
+  }
+});
+
+intent("when", {
+  kind:"read", label:"When it is due",
+  needs:["record"],
+  cues:{ when:8, due:7, deadline:9, date:6, expected:6 },
+  phrases:[["when is",9],["when does",9],["what is the deadline",10],["due date",9]],
+  run(A){
+    const api = A.api, h = api.h, t = A.slots.record, k = h.today();
+    if (!t.due) return { say: t.code + " has no date on it.",
+                         note:"Undated records do not appear in the Day view — that is where work goes quiet.",
+                         chips:[{ label:"Open it", act:{ kind:"open", id:t.id } }] };
+    const d = Math.round((Date.parse(t.due) - Date.parse(k)) / DAY);
+    return { say: t.code + " is due " + h.niceDate(t.due) + (t.dueTime ? " at " + t.dueTime : "") +
+                  (d < 0 ? " — " + (-d) + " days ago." : d === 0 ? " — today." : " — in " + d + " days."),
+             note:"“" + t.title + "” · " + h.stMeta(t.status).label,
+             chips:[{ label:"Open it", act:{ kind:"open", id:t.id } }] };
+  }
+});
+
+intent("similarTo", {
+  kind:"read", label:"Anything like it",
+  needs:["record"],
+  cues:{ similar:9, like:7, related:8, same:5, others:6, resemble:9 },
+  phrases:[["anything like",10],["similar to",10],["others like",10],["same kind",8]],
+  run(A){
+    const api = A.api, t = A.slots.record;
+    const near = api.h.similar(t.title, t.id, 8, 0.3);
+    if (!near.length) return { say:"Nothing else looks like " + t.code + "." };
+    return { say: near.length + " record" + (near.length === 1 ? "" : "s") + " look like " + t.code + ".",
+             rows: near.map(x => row(x.task, api, Math.round(x.score * 100) + "% match · " +
+                   api.h.stMeta(x.task.status).label)),
+             chips:[{ label:"Show them", act:{ kind:"filter",
+               ids:near.map(x => x.task.id).concat([t.id]), label:"Like " + t.code } }] };
+  }
+});
+
+/* ═══ ACROSS EVERYTHING ══════════════════════════════════════════════════ */
+
+intent("blocked", {
+  kind:"read", label:"What is blocked",
+  cues:{ blocked:9, held:7, holding:6, stuck:4, dependencies:8, depends:8, waiting:2 },
+  phrases:[["what is blocked",10],["anything blocked",10],["what is held up",10]],
+  run(A){
+    const api = A.api, h = api.h;
+    const list = applySlots(api.tasks.filter(t => t.status === "blocked"), A.slots, api);
+    if (!list.length) return { say:"Nothing is blocked." };
+    return { say: plural(list.length, "record") + " blocked.",
+             rows: list.slice(0, 12).map(t => row(t, api,
+               t.waitOn ? "waiting on " + t.waitOn + " · " + h.waitDays(t) + "d"
+                        : (t.blockedBy || []).length + " holding it")),
+             chips:[{ label:"Show them", act:{ kind:"filter", ids:list.map(t => t.id), label:"Blocked" } }] };
+  }
+});
+
+intent("oldest", {
+  kind:"read", label:"Oldest open work",
+  cues:{ oldest:9, longest:6, ancient:8, age:7, old:7, earliest:8, open:4 },
+  phrases:[["oldest open",10],["open the longest",12],["open longest",12],
+           ["been open",8],["what is my oldest",10],["longest open",12],
+           ["around the longest",9],["sitting the longest",10]],
+  run(A){
+    const api = A.api, h = api.h, k = h.today();
+    const list = applySlots(live(api), A.slots, api)
+      .filter(t => t.created).sort((a, b) => a.created < b.created ? -1 : 1);
+    if (!list.length) return { say:"Nothing is open." };
+    const age = t => Math.round((Date.now() - Date.parse(t.created)) / DAY);
+    return { say: list[0].code + " — open " + age(list[0]) + " days. “" + list[0].title + "”",
+             rows: list.slice(1, 8).map(t => row(t, api, age(t) + "d old · " + h.stMeta(t.status).label)),
+             chips:[{ label:"Open it", act:{ kind:"open", id:list[0].id } }] };
+  }
+});
+
+intent("neverChased", {
+  kind:"read", label:"Never chased",
+  cues:{ chased:8, chase:5, never:8, silent:5, forgotten:6, nudged:8 },
+  phrases:[["never chased",10],["not chased",10],["have not chased",10],["no chase",8]],
+  run(A){
+    const api = A.api, h = api.h;
+    const list = live(api).filter(t => t.waitOn && !(t.chases || []).length)
+      .sort((a, b) => h.waitDays(b) - h.waitDays(a));
+    if (!list.length) return { say:"Everything you are waiting on has been chased at least once." };
+    return { say: plural(list.length, "record") + " waiting and never chased.",
+             rows: list.slice(0, 10).map(t => row(t, api, t.waitOn + " · " + h.waitDays(t) + "d")),
+             chips:[{ label:"Chase " + list[0].waitOn, act:{ kind:"chase", id:list[0].id,
+               confirm:"Log a chase to " + list[0].waitOn + " on " + list[0].code + "?" } }] };
+  }
+});
+
+intent("undated", {
+  kind:"read", label:"Work with no date",
+  cues:{ undated:10, date:5, dateless:10, unscheduled:9, missing:6, without:5, no:2 },
+  phrases:[["no date",10],["without a date",10],["not dated",10],["no due date",10],
+           ["missing a date",10]],
+  run(A){
+    const api = A.api;
+    const list = applySlots(live(api), A.slots, api).filter(t => !t.due);
+    if (!list.length) return { say:"Everything live has a date on it." };
+    return { say: plural(list.length, "record") + " with no date.",
+             note:"Undated work never shows in the Day view, which is where it goes quiet.",
+             rows: list.slice(0, 12).map(t => row(t, api, api.h.stMeta(t.status).label + " · " + t.priority)),
+             chips:[{ label:"Show them", act:{ kind:"filter", ids:list.map(t => t.id), label:"No date" } }] };
+  }
+});
+
+intent("aboutPerson", {
+  kind:"read", label:"About a person",
+  needs:["person"],
+  cues:{ usually:6, tend:7, typical:6, about:2, from:2, brings:7, sends:6, ask:4, raise:5 },
+  phrases:[["what does",6],["usually ask",10],["tend to",8],["what do they",8],
+           ["their records",9],["tell me about",10],["what about",4],["anything from",9]],
+  run(A){
+    const api = A.api, h = api.h, who = A.slots.person;
+    const mine = api.tasks.filter(t => (h.peopleOf(t) || []).indexOf(who) >= 0);
+    if (!mine.length) return { say:"Nothing from " + who + "." };
+    const sys = {}, typ = {};
+    mine.forEach(t => { if (t.system) sys[t.system] = (sys[t.system] || 0) + 1;
+                        if (t.type) typ[t.type] = (typ[t.type] || 0) + 1; });
+    const topS = Object.keys(sys).sort((a, b) => sys[b] - sys[a])[0];
+    const topT = Object.keys(typ).sort((a, b) => typ[b] - typ[a])[0];
+    const openN = mine.filter(t => h.LIVE.indexOf(t.status) >= 0).length;
+    return {
+      say: who + " — " + plural(mine.length, "record") + ", " + openN + " still live.",
+      note: (topS ? "Mostly " + topS + (topT ? ", mostly " + topT.toLowerCase() : "") + ". " : "") +
+            "First seen " + h.niceDate(h.dayOf(mine[mine.length - 1].created)) + ".",
+      rows: mine.filter(t => h.LIVE.indexOf(t.status) >= 0).slice(0, 8)
+              .map(t => row(t, api, h.stMeta(t.status).label + (t.due ? " · due " + h.niceDate(t.due) : ""))),
+      chips:[{ label:"Show all of " + who + "'s", act:{ kind:"filterWho", who:who } }]
+    };
+  }
+});
+
+intent("standup", {
+  kind:"read", label:"Stand-up summary",
+  cues:{ standup:10, summary:6, report:6, yesterday:4, meeting:6, recap:9, rundown:9 },
+  phrases:[["stand up",10],["standup",10],["what do i say",9],["for the meeting",9],
+           ["give me a rundown",10],["sum up",8]],
+  run(A){
+    const api = A.api, h = api.h, k = h.today(), y = h.addDays(k, -1);
+    const closedY = api.tasks.filter(t => t.status === "done" && h.dayOf(t.completed) === y);
+    const closedT = api.tasks.filter(t => t.status === "done" && h.dayOf(t.completed) === k);
+    const dueT = live(api).filter(t => t.due && t.due <= k);
+    const blocked = live(api).filter(t => t.waitOn || t.status === "blocked");
+    const L = [];
+    L.push("Closed yesterday: " + (closedY.length ? closedY.map(t => t.code).join(", ") : "nothing"));
+    if (closedT.length) L.push("Closed today: " + closedT.map(t => t.code).join(", "));
+    L.push("On today: " + (dueT.length ? plural(dueT.length, "record") + " — " +
+           dueT.slice(0, 4).map(t => t.code).join(", ") : "nothing dated"));
+    L.push("Blocked: " + (blocked.length ? blocked.map(t => t.code + " (" +
+           (t.waitOn || "held") + ")").join(", ") : "nothing"));
+    return { say:"Stand-up, " + h.niceDate(k) + ":", note:L.join("\n"),
+             rows: dueT.slice(0, 6).map(t => row(t, api, t.priority +
+               (t.waitOn ? " · waiting on " + t.waitOn : ""))) };
+  }
+});
+
+intent("compare", {
+  kind:"read", label:"Busier or quieter",
+  cues:{ busier:14, quieter:14, compare:14, comparison:14, than:5, versus:12, vs:10,
+         worse:6, better:6, more:3, less:4 },
+  phrases:[["busier than",10],["quieter than",10],["compared to",10],["more than last",10],
+           ["worse than last",10],["this week compare",10],["week against",9]],
+  run(A){
+    const api = A.api, h = api.h, k = h.today();
+    const thisW = h.mondayOf(k), lastW = h.addDays(thisW, -7);
+    const inW = (t, from) => { const d = h.dayOf(t.created);
+      return d >= from && d <= h.addDays(from, 6); };
+    const a = api.tasks.filter(t => inW(t, thisW)).length;
+    const b = api.tasks.filter(t => inW(t, lastW)).length;
+    const dc = api.tasks.filter(t => t.status === "done" && h.dayOf(t.completed) >= thisW).length;
+    const db = api.tasks.filter(t => t.status === "done" && h.dayOf(t.completed) >= lastW &&
+                                     h.dayOf(t.completed) < thisW).length;
+    const word = a > b ? "busier" : a < b ? "quieter" : "about the same";
+    return { say:"This week is " + word + " — " + a + " in, against " + b + " last week.",
+             note:"Closed: " + dc + " this week, " + db + " last week." +
+                  (a > b && dc < db ? "\nMore coming in and less going out — that gap is where a backlog starts." : "") };
+  }
+});
+
+intent("tags", {
+  kind:"read", label:"Tags in use",
+  cues:{ tag:9, tags:10, tagged:9, label:6, labels:6 },
+  phrases:[["what tags",10],["which tags",10],["tags do i use",10]],
+  run(A){
+    const api = A.api, c = {};
+    api.tasks.forEach(t => (t.tags || []).forEach(g => c[g] = (c[g] || 0) + 1));
+    const rank = Object.keys(c).sort((a, b) => c[b] - c[a]);
+    if (!rank.length) return { say:"No tags in use yet. Add them with +tag when you log something." };
+    return { say: plural(rank.length, "tag") + " in use.",
+             note: rank.slice(0, 20).map(k => k + " " + c[k]).join(" · ") };
+  }
+});
+
+intent("systems", {
+  kind:"read", label:"Systems in use",
+  cues:{ system:5, systems:9, applications:8, apps:7, cover:6, support:6, list:3 },
+  phrases:[["what systems",10],["which systems",10],["systems do i",10],["what do i support",10]],
+  run(A){
+    const api = A.api, c = {};
+    api.tasks.forEach(t => { if (t.system) c[t.system] = (c[t.system] || 0) + 1; });
+    (api.settings.systems || []).forEach(s => { const n = s.name || s; if (!c[n]) c[n] = 0; });
+    const rank = Object.keys(c).sort((a, b) => c[b] - c[a]);
+    if (!rank.length) return { say:"No systems set up yet." };
+    return { say: plural(rank.length, "system") + " on the list.",
+             note: rank.map(k => k + " (" + c[k] + ")").join(" · "),
+             chips:[{ label:"Show " + rank[0], act:{ kind:"filterSys", system:rank[0] } }] };
+  }
+});
+
 /* ═══ THINGS THAT CHANGE SOMETHING ═══════════════════════════════════════
    Every one of these comes back as a proposal, never as a done deed. The app
    shows it and waits for a click. Misreading a question costs two seconds;
@@ -988,9 +1329,9 @@ intent("run", {
 });
 intent("remind", {
   kind:"write", label:"Set a reminder",
-  cues:{ remind:9, reminder:9, alert:7, notify:7, nudge:5, tell:4, every:4, ping:3 },
-  phrases:[["remind me",10],["nudge me",10],["tell me every",10],["set a reminder",10],
-           ["let me know every",9],["alert me",9]],
+  cues:{ remind:9, reminder:9, alert:7, notify:7, nudge:5, every:4, ping:3 },
+  phrases:[["remind me",10],["nudge me",10],["tell me every",10],["tell me each",10],
+           ["set a reminder",10],["let me know every",9],["alert me",9]],
   run(A){
     const api = A.api, s = A.slots;
     let title = A.raw.replace(/^.*?\bremind me\b\s*/i, "")
@@ -1097,8 +1438,9 @@ function variants(w){
 }
 
 function cueScore(intent, mw, norm){
-  let s = 0, hit = 0;
+  let s = 0, hit = 0, best = 0, phrase = false;
   const seen = {};
+  let top = 0;
   mw.forEach(w0 => {
     if (seen[w0]) return;
     let best = 0;
@@ -1111,10 +1453,12 @@ function cueScore(intent, mw, norm){
         if (close(w, c) >= 0.86) best = Math.max(best, intent.cues[c] * 0.8);
       }
     }
-    if (best){ s += best; hit++; seen[w0] = 1; }
+    if (best){ s += best; hit++; seen[w0] = 1; if (best > top) top = best; }
   });
-  (intent.phrases || []).forEach(p => { if (norm.indexOf(p[0]) >= 0) s += p[1]; });
-  return { s, hit };
+  (intent.phrases || []).forEach(p => {
+    if (norm.indexOf(p[0]) >= 0){ s += p[1]; phrase = true; }
+  });
+  return { s, hit, best:top, phrase };
 }
 
 function scoreOne(intent, norm, ws, mw, slots, asking, firstVerb){
@@ -1128,6 +1472,16 @@ function scoreOne(intent, norm, ws, mw, slots, asking, firstVerb){
 
   for (const b in (intent.boost || {})) if (slots[b]) s += intent.boost[b];
   (intent.needs || []).forEach(() => s += 6);
+
+  /* "who is the prime minister" once reached "who raises the most" on the
+     strength of the single word "who", and answered it with a colleague's
+     name. One weak generic word is not evidence: something has to be
+     distinctive — a heavy cue, a whole phrase, two separate words, or a
+     concrete thing named in the sentence — or the score is capped below the
+     floor and the bot says it did not follow. */
+  const named = (intent.needs || []).some(n => slots[n]) ||
+                Object.keys(intent.boost || {}).some(k => slots[k]);
+  if (!(c.best >= 4 || c.phrase || c.hit >= 2 || named)) s = Math.min(s, 4);
 
   /* the shape of the sentence */
   if (intent.kind === "read"){
@@ -1149,9 +1503,68 @@ function puzzled(slots, api){
   return null;
 }
 
+/* ═══ SHAPES AND SMALL HELP ══════════════════════════════════════════════ */
+
+/* every reply leaves here with the same fields, so nothing downstream has to
+   test whether the bot understood before reading what it said */
+function blank(say, note, chips){
+  return { intent:null, kind:"none", label:"", confidence:0, learned:false,
+           say:say || "", note:note || "", rows:[], chips:chips || [],
+           alternatives:[], slots:{ system:"", person:"", type:"", party:"", tag:"",
+           priority:"", range:"", record:"" }, context:{} };
+}
+
+/* a code that names nothing — what might it have been? */
+function nearCodes(api, raw){
+  const want = String(raw).toUpperCase().replace(/^D-?/, "").replace(/^0+/, "");
+  if (!want) return [];
+  const out = [];
+  api.tasks.forEach(t => {
+    const n = String(t.code).toUpperCase().replace(/^D-?/, "").replace(/^0+/, "");
+    if (!n) return;
+    const d = editDistance(want, n, 3);
+    if (d <= 2) out.push({ code:t.code, title:t.title, id:t.id, d });
+  });
+  return out.sort((a, b) => a.d - b.d || a.code.localeCompare(b.code)).slice(0, 3);
+}
+function firstCode(api){
+  const c = api.tasks.map(t => t.code).filter(Boolean).sort();
+  return c[0] || "D-0001";
+}
+function lastCode(api){
+  const c = api.tasks.map(t => t.code).filter(Boolean).sort();
+  return c[c.length - 1] || "D-0001";
+}
+
+/* when it has no idea, offer the questions closest to what was typed rather
+   than the same four every time */
+function pickSuggestions(mw, slots){
+  const scored = INTENTS.filter(x => x.kind === "read")
+    .map(it => ({ it, s: cueScore(it, mw, mw.join(" ")).s }))
+    .sort((a, b) => b.s - a.s);
+  const top = scored.filter(x => x.s > 0).slice(0, 3).map(x => x.it);
+  const filler = INTENTS.filter(x => ["next", "brief", "overdue", "help"].indexOf(x.name) >= 0);
+  filler.forEach(f => { if (top.length < 4 && top.indexOf(f) < 0) top.push(f); });
+  return top.slice(0, 4);
+}
+
+/* ═══ THE THREAD OF THE CONVERSATION ═════════════════════════════════════
+   What separates a chat from a search box: "it", "that one", "and last
+   week?" only mean anything if the last few turns are still around. The app
+   hands the running context in as api.convo and stores back what comes out,
+   so each thread of conversation carries its own.
+
+   Nothing here guesses across a change of subject: a pronoun reaches back for
+   a record, a bare follow-up reaches back for an intent, and an explicit
+   mention of anything always wins over both. */
+
+const PRONOUN = /\b(it|its|it's|that|this|them|those|these|the same|that one|the one|there|they)\b/;
+const FOLLOWUP = /^(and|also|then|what about|how about|ok what about|okay what about|but)\b/;
+const BARE_YES = /^(yes|yeah|yep|ok|okay|sure|go on|do it|please do)\b/;
+
 function ask(raw, api){
   const text = String(raw == null ? "" : raw).trim();
-  if (!text) return { say:"Ask me something. Type \"help\" for examples.", intent:"help", confidence:1 };
+  if (!text) return blank("Ask me something. Type \"help\" for examples.", "help");
 
   const norm = normalise(text);
   const ws = words(norm);
@@ -1162,9 +1575,54 @@ function ask(raw, api){
 
   api.lex = lexiconFor(api);
   const slots = readSlots(norm, ws, api);
+  const convo = api.convo || {};
 
-  const A = { api, slots, ws, mw, norm, raw:text, asking,
+  /* a code that names nothing — say so, and offer what it might have been,
+     rather than answering a question that was never asked */
+  if (slots.unknownCode){
+    const near = nearCodes(api, slots.unknownCode);
+    return blank("I have no " + slots.unknownCode + " in this workspace.",
+      near.length ? "Closest codes I do have: " + near.map(x => x.code).join(", ") + "."
+                  : "Codes here run from " + firstCode(api) + " to " + lastCode(api) + ".",
+      near.map(x => ({ label:x.code + " — " + x.title.slice(0, 34),
+                       act:{ kind:"open", id:x.id } })));
+  }
+
+  /* "what is left on it" — a pronoun with no record of its own borrows the
+     one this thread was already talking about */
+  if (!slots.record && convo.record && PRONOUN.test(norm)){
+    const rec = api.tasks.find(x => x.id === convo.record);
+    if (rec){ slots.record = rec; slots.borrowed = "record"; }
+  }
+  ["system", "person", "party", "type"].forEach(k => {
+    if (!slots[k] && convo[k] && (PRONOUN.test(norm) || FOLLOWUP.test(norm))){
+      slots[k] = convo[k]; slots.borrowed = slots.borrowed || k;
+    }
+  });
+
+  const A = { api, slots, ws, mw, norm, raw:text, asking, convo,
               phrase: api.phrase || (p => (p && p.k) || "") };
+
+  /* answering a question this thread asked you: "which record?" → "D-0004" */
+  if (convo.awaiting && convo.awaiting.intent){
+    const want = convo.awaiting.slot;
+    if (!want || slots[want]){
+      const it = INTENTS.find(x => x.name === convo.awaiting.intent);
+      if (it) return finish(it, A, 0.95, []);
+    }
+  }
+
+  /* "and last week?" — same question, new detail */
+  if (FOLLOWUP.test(norm) && convo.lastIntent){
+    const carriesSomething = slots.range || slots.system || slots.person ||
+                             slots.type || slots.party || slots.priority || slots.record;
+    if (carriesSomething){
+      const it = INTENTS.find(x => x.name === convo.lastIntent);
+      /* only if the fragment adds nothing that looks like a question of its own */
+      if (it && mw.filter(w => !NOISE.has(w)).length <= 4)
+        return finish(it, A, 0.9, [], false, true);
+    }
+  }
 
   /* a phrasing you have already corrected once wins outright */
   const mem = api.memory || {};
@@ -1185,14 +1643,12 @@ function ask(raw, api){
       const it = INTENTS.find(x => x.name === f.intent);
       if (it) return finish(it, A, 0.55, ranked.slice(0, 2).map(x => x.it));
     }
-    return {
-      intent:null, confidence:0,
-      say:"I did not follow that.",
-      note:"Try \"help\" to see what I understand. If I keep missing something you " +
-           "ask often, tell me which of these you meant and I will remember it.",
-      alternatives: INTENTS.filter(x => x.kind === "read").slice(0, 4)
-        .map(x => ({ label:x.label, intent:x.name }))
-    };
+    const out = blank("I did not follow that.",
+      "Tell me which of these you meant and I will remember the phrasing. " +
+      "Or type \"help\" for the full list.");
+    out.alternatives = pickSuggestions(mw, slots)
+      .map(x => ({ label:x.label, intent:x.name }));
+    return out;
   }
 
   const top = ranked[0], second = ranked[1];
@@ -1208,7 +1664,7 @@ function ask(raw, api){
   return finish(top.it, A, confidence, alts.map(a => INTENTS.find(x => x.name === a.intent)));
 }
 
-function finish(it, A, confidence, altIntents, learned){
+function finish(it, A, confidence, altIntents, learned, followed){
   let out;
   try { out = it.run(A) || {}; }
   catch(e){ out = { say:"That one broke on me: " + (e && e.message || e) }; }
@@ -1216,11 +1672,29 @@ function finish(it, A, confidence, altIntents, learned){
   out.label = it.label;
   out.confidence = confidence;
   out.learned = !!learned;
+  out.followUp = !!followed;
   out.kind = it.kind;
+  /* below this the reading is a guess, and the answer should be read as one */
+  out.unsure = confidence < 0.62 && !learned;
+  out.borrowed = A.slots.borrowed || "";
+  out.rows = out.rows || [];
+  out.chips = out.chips || [];
   out.slots = {
     system:A.slots.system || "", person:A.slots.person || "", type:A.slots.type || "",
     party:A.slots.party || "", tag:A.slots.tag || "", priority:A.slots.priority || "",
     range:A.slots.range ? A.slots.range.label : "", record:A.slots.record ? A.slots.record.code : ""
+  };
+  /* what the next turn in this thread should still know */
+  out.context = {
+    lastIntent: it.name,
+    record: A.slots.record ? A.slots.record.id
+          : (out.rows.length === 1 && out.rows[0].id) ? out.rows[0].id
+          : (A.convo && A.convo.record) || "",
+    system: A.slots.system || (A.convo && A.convo.system) || "",
+    person: A.slots.person || (A.convo && A.convo.person) || "",
+    party:  A.slots.party  || (A.convo && A.convo.party)  || "",
+    type:   A.slots.type   || (A.convo && A.convo.type)   || "",
+    awaiting: out.awaiting || null
   };
   out.alternatives = (altIntents || []).filter(Boolean)
     .map(x => ({ label:x.label, intent:x.name }));
