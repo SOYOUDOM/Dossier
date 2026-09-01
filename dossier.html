@@ -2926,6 +2926,9 @@ const STRINGS = {
   ChatNotifyOff: "Reminders are off — nothing will nudge you.",
   ChatNotifyAlready: "They are already on.",
   ChatNotifyAlreadyOff: "They are already off.",
+  ChatStepsFrom: "Added {n} step(s) from how this was done before",
+  ChatStepsAdded: "Put {n} steps on {code}.",
+  ChatScriptAttached: "Attached {file} to {code}.",
   AiOpenRoutines: "Open Routines"
 };
 
@@ -5890,7 +5893,7 @@ function chatRenderBot(r, sourceText, replaying){
          '<div class="say">' + esc(st.say || "") + "</div>" +
          (st.note ? '<div class="note">' + esc(st.note) + "</div>" : "");
     if (st.act && st.act.confirm){
-      CHAT.acts[id + "p" + i] = st.act;
+      CHAT.acts[id + "p" + i] = Object.assign({}, st.act, { __ok:true });
       h += '<div class="chask"><div class="q">' + esc(st.act.confirm) + "</div>" +
            '<div class="chacts">' +
              '<button class="btn pri sm" data-act="' + id + "p" + i + '">' + esc(L("ChatYes")) + "</button>" +
@@ -5901,7 +5904,7 @@ function chatRenderBot(r, sourceText, replaying){
   });
 
   if (r.act && r.act.confirm){
-    CHAT.acts[id + "yes"] = r.act;
+    CHAT.acts[id + "yes"] = Object.assign({}, r.act, { __ok:true });
     h += '<div class="chask"><div class="q">' + esc(r.act.confirm) + "</div>" +
          '<div class="chacts">' +
            '<button class="btn pri sm" data-act="' + id + 'yes">' + esc(L("ChatYes")) + "</button>" +
@@ -5973,6 +5976,12 @@ function chatAsk(text){
 
 function chatDo(act){
   if (!act) return;
+  /* An action carrying a confirmation was only ever honoured when it arrived
+     as the reply's own proposal. The same action offered as a chip — "Mark it
+     done", "Chase Vendor", "Put these steps on D-0006" — ran the moment it was
+     clicked. One button, two behaviours, and the dangerous one was silent.
+     Now the confirmation holds wherever the action came from. */
+  if (act.confirm && !act.__ok) return chatBot({ say:"", act:act });
   switch (act.kind){
     case "say":      return chatAsk(act.text);
     case "open":     return act.id && openDrawer(act.id);
@@ -6018,6 +6027,33 @@ function chatDo(act){
     }
     case "chase":    chaseWait(act.id); return;
     case "keys":     closeChat(); return openKeys();
+    case "applySteps": {
+      const t = getTask(act.id);
+      if (!t) return;
+      pushUndo("steps from a guide");
+      const had = (t.checklist || []).map(c => String(c.text || "").toLowerCase().trim());
+      const add = (act.steps || []).filter(s => had.indexOf(String(s).toLowerCase().trim()) < 0);
+      t.checklist = (t.checklist || []).concat(add.map(s => ({ text:s, done:false })));
+      t.log.push({ at:new Date().toISOString(),
+                   text:L("ChatStepsFrom", { n:add.length }) });
+      touch(); renderAll();
+      if (S.open === t.id) renderDrawer();
+      return chatBot({ say:L("ChatStepsAdded", { n:add.length, code:t.code }),
+                       chips:[{ label:L("AiOpenRecord"), act:{ kind:"open", id:t.id } }] });
+    }
+    case "attachScript": {
+      const t = getTask(act.id);
+      if (!t) return;
+      if ((t.scripts || []).indexOf(act.scriptId) < 0){
+        pushUndo("attach script");
+        t.scripts = (t.scripts || []).concat([act.scriptId]);
+        touch(); renderAll();
+        if (S.open === t.id) renderDrawer();
+      }
+      const sc = scriptById(act.scriptId) || {};
+      return chatBot({ say:L("ChatScriptAttached", { file:sc.file || "", code:t.code }),
+                       chips:[{ label:L("AiOpenRecord"), act:{ kind:"open", id:t.id } }] });
+    }
     case "notify": {
       /* the bell is the single switch for this, so use it rather than
          reaching past it and leaving the button out of step */

@@ -435,6 +435,164 @@ function minutesWord(m){
   return h === 1 ? "an hour" : h + " hours";
 }
 
+/* ═══ TALKING LIKE A PERSON ══════════════════════════════════════════════
+   Picking between three fixed sentences is still a lookup table with extra
+   rows — you can hear it. What actually makes writing sound human is not
+   vocabulary but shape:
+
+     a person leads with the surprising part when there is one;
+     they add a detail only if it is worth adding;
+     they have a view about what they are telling you;
+     they refer back to what was already said;
+     and they get terser when the answer is boring.
+
+   So a reply is assembled from up to four pieces — the fact, an observation
+   drawn from the same data, a stance, and a link to the conversation — and
+   the sentence structure joining them is chosen too, not just the words. When
+   there is nothing to observe and no view worth having, it says the fact and
+   stops, which is also what a person does. */
+
+/* lower-case an opening word, but never a name, a code or a system */
+/* Words safe to lower-case when a clause moves into the middle of a sentence.
+   A name, a system or a record code must keep its capital, so anything not on
+   this list is left exactly as it was — the contracted forms have to be here
+   too, or "You've" comes back capitalised mid-sentence. */
+const OPENERS = ["You", "You've", "You're", "That", "That's", "There", "There's",
+                 "Nothing", "It", "It's", "I'd", "I've", "Everything", "All", "Most",
+                 "None", "Just", "Only", "Quite", "No", "Two", "Three", "One", "The"];
+function lower(s){
+  const first = String(s).split(" ")[0].replace(/[^A-Za-z']/g, "");
+  if (OPENERS.indexOf(first) < 0 && !/^\d/.test(String(s))) return s;
+  return String(s).charAt(0).toLowerCase() + String(s).slice(1);
+}
+function upper(s){ return String(s).charAt(0).toUpperCase() + String(s).slice(1); }
+function trimStop(s){ return String(s || "").replace(/\s*[.]\s*$/, ""); }
+
+/* the fact, plus whatever else is worth saying, in a shape that varies */
+function compose(core, obs, stance, link, key){
+  const c = trimStop(core);
+  /* a core that already carries a dash cannot take a second one — two in a
+     sentence reads like a fault rather than a flourish */
+  const dashed = c.indexOf("—") >= 0;
+  let out;
+  if (obs && stance) out = one(dashed
+    ? [ c + ". " + upper(trimStop(obs)) + ". " + stance,
+        upper(trimStop(obs)) + ". " + c + ". " + stance ]
+    : [ c + " — " + lower(trimStop(obs)) + ". " + stance,
+        c + ". " + upper(trimStop(obs)) + ". " + stance,
+        upper(trimStop(obs)) + ", and " + lower(c) + ". " + stance ], key);
+  else if (obs) out = one(dashed
+    ? [ c + ". " + upper(trimStop(obs)) + ".",
+        upper(trimStop(obs)) + ". " + c + "." ]
+    : [ c + " — " + lower(trimStop(obs)) + ".",
+        c + ". " + upper(trimStop(obs)) + ".",
+        upper(trimStop(obs)) + ", and " + lower(c) + "." ], key);
+  else if (stance) out = one([
+      c + ". " + stance,
+      c + " — " + lower(trimStop(stance)) + "."
+    ], key);
+  else out = c + ".";
+  return out + (link ? " " + link : "");
+}
+
+/* Something true about this particular set that the count alone does not say.
+   Returns "" when the data is unremarkable, which is most of the time — an
+   assistant that finds something profound in every answer is exhausting. */
+function observe(list, api, key){
+  if (!list || list.length < 2) return "";
+  const h = api.h, notes = [];
+
+  const sys = {}, who = {};
+  let p1 = 0, oldest = 0, undated = 0, waiting = 0;
+  list.forEach(t => {
+    if (t.system) sys[t.system] = (sys[t.system] || 0) + 1;
+    (h.peopleOf(t) || []).forEach(n => who[n] = (who[n] || 0) + 1);
+    if (t.priority === "P1") p1++;
+    if (!t.due) undated++;
+    if (t.waitOn) waiting++;
+    const age = t.created ? (Date.now() - Date.parse(t.created)) / DAY : 0;
+    if (age > oldest) oldest = age;
+  });
+
+  const topSys = Object.keys(sys).sort((a, b) => sys[b] - sys[a])[0];
+  if (topSys && sys[topSys] === list.length && list.length > 2)
+    notes.push("every one of them is " + topSys);
+  else if (topSys && sys[topSys] / list.length >= 0.6)
+    notes.push("most of them are " + topSys);
+
+  const topWho = Object.keys(who).sort((a, b) => who[b] - who[a])[0];
+  if (topWho && who[topWho] === list.length && list.length > 2)
+    notes.push("all of them came from " + topWho);
+
+  if (p1 === 1) notes.push("one of them is a P1");
+  else if (p1 > 1) notes.push(p1 + " of them are P1");
+
+  if (oldest > 9) notes.push("the oldest goes back " + span(oldest));
+  if (undated && undated === list.length && list.length > 2) notes.push("none of them carry a date");
+  else if (undated > 1) notes.push(undated + " of them have no date");
+  if (waiting > 1 && waiting === list.length) notes.push("all of them are sitting with someone else");
+
+  return notes.length ? one(notes, key) : "";
+}
+
+/* A view, where there is one worth having. Silence is the default. */
+function stanceFor(n, kind, key){
+  if (kind === "overdue"){
+    if (n >= 8) return one(["That needs a morning to itself.",
+                            "That is a backlog, not a to-do list.",
+                            "Worth blocking out time rather than picking at it."], key);
+    if (n >= 4) return one(["Worth clearing before anything new comes in.",
+                            "I would start there."], key);
+    return "";
+  }
+  if (kind === "load"){
+    if (n > 0) return one(["Something wants moving.",
+                           "One of those will have to give.",
+                           "Worth telling someone now rather than at five."], key);
+    return "";
+  }
+  if (kind === "clear"){
+    return one(["Nothing to chase.", "Nothing needs you.", "Enjoy it."], key);
+  }
+  if (kind === "quiet"){
+    return one(["Worth a nudge.", "I would chase that one.", "It will not move on its own."], key);
+  }
+  return "";
+}
+
+/* Where this answer sits against the last time you asked the same thing.
+   "Still three" is the kind of thing only someone who was listening says. */
+function linkClause(A, n){
+  const prev = A.before;
+  if (prev == null || typeof n !== "number" || typeof prev !== "number") return "";
+  const d = n - prev;
+  if (d === 0) return one(["Same as when you last asked.",
+                           "No change since you asked.",
+                           "Unchanged."], A.norm + n);
+  if (d > 0) return one([(d === 1 ? "One more" : d + " more") + " than last time.",
+                         "Up " + d + " since you asked."], A.norm + n);
+  return one([(-d === 1 ? "One fewer" : (-d) + " fewer") + " than last time.",
+              "Down " + (-d) + " since you asked."], A.norm + n);
+}
+
+/* people write "you've", not "you have" */
+/* "you have" only contracts before a participle — "you've closed" is right,
+   "you've 9 records" is not — so it is written out where it belongs instead */
+const SHORTEN = [[/\byou are\b/g, "you're"], [/\bYou are\b/g, "You're"],
+                 [/\bthat is\b/g, "that's"], [/\bThat is\b/g, "That's"],
+                 [/\bthere is\b/g, "there's"], [/\bThere is\b/g, "There's"],
+                 [/\bit is\b/g, "it's"], [/\bIt is\b/g, "It's"],
+                 [/\bis not\b/g, "isn't"], [/\bare not\b/g, "aren't"],
+                 [/\bhas not\b/g, "hasn't"], [/\bhave not\b/g, "haven't"],
+                 [/\bdo not\b/g, "don't"], [/\bdoes not\b/g, "doesn't"],
+                 [/\bwill not\b/g, "won't"], [/\bcannot\b/g, "can't"],
+                 [/\bI would\b/g, "I'd"], [/\bI have\b/g, "I've"]];
+function contract(s){
+  let out = String(s || "");
+  SHORTEN.forEach(r => { out = out.replace(r[0], r[1]); });
+  return out;
+}
+
 /* ═══ ANSWERING ══════════════════════════════════════════════════════════ */
 
 function row(t, api, sub){
@@ -519,25 +677,26 @@ intent("overdue", {
     const list = applySlots(live(api), A.slots, api)
       .filter(t => t.due && t.due < k)
       .sort((a, b) => a.due < b.due ? -1 : 1);
-    if (!list.length) return { say: say(["Nothing is overdue{w}.",
-                                        "You are on top of it{w} — nothing late.",
-                                        "No overdue work{w}."],
-                                       { w:slotWords(A.slots) }, A.norm) };
+    if (!list.length) return { count:0, say: compose(
+      say(["Nothing is overdue{w}", "You are on top of it{w}", "No overdue work{w}"],
+          { w:slotWords(A.slots) }, A.norm),
+      "", stanceFor(0, "clear", A.norm), linkClause(A, 0), A.norm) };
     const worst = Math.round((Date.parse(k) - Date.parse(list[0].due)) / DAY);
     return {
-      say: say(list.length === 1
-             ? ["One record is overdue{w} — {code}.",
-                "Just the one{w}: {code} is past its date.",
-                "{code} is the only thing overdue{w}."]
-             : ["{n} records are overdue{w}.",
-                "You have {n} past their date{w}.",
-                "{n} overdue{w} — the oldest by {worst}."],
-             { n:list.length, w:slotWords(A.slots), code:list[0].code, worst:span(worst) }, A.norm),
-      note: list.length > 1 && worst > 5
-        ? say(["The oldest has been late {worst} now.",
-               "{code} has been sitting {worst} past its date.",
-               "{worst} on the worst of them."],
-              { worst:span(worst), code:list[0].code }, A.norm) : "",
+      count: list.length,
+      say: compose(
+        say(list.length === 1
+          ? ["One record is overdue{w} — {code}",
+             "Just the one{w}: {code} is past its date",
+             "{code} is the only thing overdue{w}"]
+          : ["{n} records are overdue{w}",
+             "You've got {n} past their date{w}",
+             "{n} are overdue{w}"],
+          { n:list.length, w:slotWords(A.slots), code:list[0].code }, A.norm),
+        worst > 5 ? "the oldest by " + span(worst) : observe(list, api, A.norm),
+        stanceFor(list.length, "overdue", A.norm),
+        linkClause(A, list.length), A.norm),
+      note: "",
       rows: list.slice(0, 12).map(t => row(t, api,
         Math.round((Date.parse(k) - Date.parse(t.due)) / DAY) + "d late · " + t.priority)),
       chips: list.length > 1 ? [{ label:"Show them all", act:{ kind:"filter", ids:list.map(t => t.id), label:"Overdue" } }] : []
@@ -553,19 +712,21 @@ intent("dueToday", {
     const api = A.api, k = api.h.today();
     const list = applySlots(live(api), A.slots, api).filter(t => t.due && t.due <= k);
     const late = list.filter(t => t.due < k).length;
-    if (!list.length) return { say: say(["Nothing is due today{w}.",
-                                        "Your day is clear{w}.",
-                                        "Nothing dated for today{w}."],
-                                       { w:slotWords(A.slots) }, A.norm) };
+    if (!list.length) return { count:0, say: compose(
+      say(["Nothing is due today{w}", "Your day is clear{w}", "Nothing dated for today{w}"],
+          { w:slotWords(A.slots) }, A.norm),
+      "", "", linkClause(A, 0), A.norm) };
     return {
-      say: say(["{n} due today or earlier{w}.",
-                "You have {n} on today{w}.",
-                "{n} want doing today{w}."],
-               { n:qty(list.length, "record"), w:slotWords(A.slots) }, A.norm),
-      note: late ? say(["{n} of those {be} already overdue.",
-                        "{n} {be} late rather than due.",
-                        "Careful: {n} {be} already past the date."],
-                       { n:late, be:be(late) }, A.norm) : "",
+      count: list.length,
+      say: compose(
+        say(["{n} due today or earlier{w}", "You've got {n} on today{w}", "{n} {v} doing today{w}"],
+            { n:qty(list.length, "record"), w:slotWords(A.slots),
+              v:(list.length === 1 ? "wants" : "want") }, A.norm),
+        late ? (late === list.length ? "all of them are already overdue"
+                                     : late + " of those " + be(late) + " already late")
+             : observe(list, api, A.norm),
+        "", linkClause(A, list.length), A.norm),
+      note: "",
       rows: list.slice(0, 12).map(t => row(t, api, t.priority + (t.dueTime ? " · " + t.dueTime : ""))),
       chips: [{ label:"Open the Day view", act:{ kind:"view", view:"day" } }]
     };
@@ -664,18 +825,28 @@ intent("waiting", {
     const api = A.api, h = api.h;
     const list = applySlots(live(api), A.slots, api).filter(t => t.waitOn)
       .sort((a, b) => h.waitDays(b) - h.waitDays(a));
-    if (!list.length) return { say: say(["Nothing is sitting with anyone else right now.",
-                                        "Nobody owes you anything at the moment.",
-                                        "No open waits — it is all with you."], {}, A.norm) };
+    if (!list.length) return { count:0, say: compose(
+      say(["Nothing is sitting with anyone else right now",
+           "Nobody owes you anything at the moment",
+           "No open waits — it is all with you"], {}, A.norm),
+      "", "", linkClause(A, 0), A.norm) };
     const by = {};
     list.forEach(t => (by[t.waitOn] = by[t.waitOn] || []).push(t));
     const parties = Object.keys(by).sort((a, b) => by[b].length - by[a].length);
     return {
-      say: say(["{n} {be} waiting on {who}.",
-                "{who} {hav} {n} of yours.",
-                "You are waiting on {who} — {n} in all."],
-               { n:qty(list.length, "record"), be:be(list.length),
-                 hav:hav(parties.length), who:andList(parties, 4) }, A.norm),
+      count: list.length,
+      say: compose(
+        say(["{n} {be} waiting on {who}", "{who} {hav} {n} of yours",
+             "You are waiting on {who} — {n} in all"],
+            { n:qty(list.length, "record"), be:be(list.length),
+              hav:hav(parties.length), who:andList(parties, 4) }, A.norm),
+        parties.length === 1 && list.length > 2 ? "all of it with the one party"
+          : Math.max.apply(null, list.map(h.waitDays)) > 5
+            ? "the longest has been " + span(Math.max.apply(null, list.map(h.waitDays)))
+            : "",
+        list.some(x => !(x.chases || []).length && h.waitDays(x) > 3)
+          ? stanceFor(1, "quiet", A.norm) : "",
+        linkClause(A, list.length), A.norm),
       note: parties.map(p => p + ": " + by[p].length + " (longest " +
             Math.max.apply(null, by[p].map(h.waitDays)) + "d)").join(" · "),
       rows: list.slice(0, 12).map(t => row(t, api, t.waitOn + " · " + h.waitDays(t) + "d" +
@@ -767,11 +938,14 @@ intent("closed", {
                                         "Nothing went out {when}{w}."],
                                        { when:r.label, w:slotWords(s) }, A.norm) };
     return {
-      say: say(["You closed {n} {when}{w}.",
-                "{n} went out {when}{w}.",
-                "{when}: {n} closed{w}.",
-                "{n} finished {when}{w}."],
-               { n:qty(list.length, "record"), when:r.label, w:slotWords(s) }, A.norm),
+      count: list.length,
+      say: compose(
+        say(["You closed {n} {when}{w}", "{n} went out {when}{w}",
+             "{when}: {n} closed{w}", "{n} finished {when}{w}"],
+            { n:qty(list.length, "record"), when:r.label, w:slotWords(s) }, A.norm),
+        observe(list, api, A.norm),
+        tracked > 240 ? "That is " + h.mins(Math.round(tracked)) + " of tracked work." : "",
+        linkClause(A, list.length), A.norm),
       note: tracked ? h.mins(Math.round(tracked)) + " of tracked time against them." : "",
       rows: list.slice(0, 12).map(t => row(t, api, h.niceDate(h.dayOf(t.completed)) +
             (h.live(t) ? " · " + h.mins(h.live(t)) : ""))),
@@ -794,10 +968,11 @@ intent("opened", {
                                        { when:r.label, w:slotWords(s) }, A.norm) };
     const stillOpen = list.filter(t => h.LIVE.indexOf(t.status) >= 0).length;
     return {
-      say: say(["{n} came in {when}{w}.",
-                "{when} brought {n}{w}.",
-                "{n} landed on you {when}{w}."],
-               { n:qty(list.length, "record"), when:r.label, w:slotWords(s) }, A.norm),
+      count: list.length,
+      say: compose(
+        say(["{n} came in {when}{w}", "{when} brought {n}{w}", "{n} landed on you {when}{w}"],
+            { n:qty(list.length, "record"), when:r.label, w:slotWords(s) }, A.norm),
+        observe(list, api, A.norm), "", linkClause(A, list.length), A.norm),
       note: stillOpen + " of them " + (stillOpen === 1 ? "is" : "are") + " still live.",
       rows: list.slice(0, 12).map(t => row(t, api, h.stMeta(t.status).label +
             (t.system ? " · " + t.system : ""))),
@@ -982,10 +1157,13 @@ intent("workload", {
     const d = new Date();
     const left = Math.max(0, (17 * 60 + 30) - (d.getHours() * 60 + d.getMinutes()));
     return {
-      say: say(["{n} dated today, about {need} of work, and {left} before 17:30.",
-                "{need} of work against {left} of day — {n} on the list.",
-                "You have {left} left and about {need} promised, over {n}."],
-               { n:qty(due.length, "record"), need:h.mins(Math.round(need)), left:h.mins(left) }, A.norm),
+      count: due.length,
+      say: compose(
+        say(["{n} dated today, about {need} of work, and {left} before 17:30",
+             "{need} of work against {left} of day — {n} on the list",
+             "You've got {left} left and about {need} promised, over {n}"],
+            { n:qty(due.length, "record"), need:h.mins(Math.round(need)), left:h.mins(left) }, A.norm),
+        "", need > left ? stanceFor(1, "load", A.norm) : "", "", A.norm),
       note: need > left ? "That is " + h.mins(Math.round(need - left)) + " more than the day holds — " +
                           "something wants moving." + (known < due.length
                             ? " (" + (due.length - known) + " of those are guessed from past jobs.)" : "")
@@ -1080,6 +1258,186 @@ intent("routines", {
         text:r.title, sub:(r.freq === "cron" ? "cron " + r.cron : r.freq) +
              (r.remind ? " · reminds" : "") + ((r.scripts || []).length ? " · runs a script" : "") })),
       chips: [{ label:"Open Routines", act:{ kind:"panel", panel:"routine" } }]
+    };
+  }
+});
+
+/* ═══ LEARNING HOW YOU RESOLVE THINGS ════════════════════════════════════
+   The runbook detector in assist.js points at the one closest record you
+   already closed. This goes further: it reads every closed record that looks
+   like the one in front of you and works out what you actually do — which
+   steps come up every time, which script you reach for, who you end up
+   waiting on, how long it takes, and where it tends to go wrong.
+
+   None of that is written down anywhere as a procedure. It is only visible
+   because you have done the job five times and each time left a checklist, a
+   note and a log behind. This reads those back to you as one set of steps. */
+
+/* two step texts that mean the same thing, written slightly differently */
+function stepKey(s){
+  return String(s || "").toLowerCase().replace(/[^a-z0-9 ]+/g, " ")
+    .split(/\s+/).filter(w => w.length > 2 && !STOP_STEP.has(w)).sort().join(" ");
+}
+const STOP_STEP = new Set("the a an and or of for to in on at is are be with from by as it this that".split(" "));
+
+function mergeSteps(recs){
+  const seen = {};
+  recs.forEach(t => {
+    const cl = t.checklist || [];
+    cl.forEach((c, i) => {
+      const key = stepKey(c.text);
+      if (!key) return;
+      /* fold near-duplicates into whichever spelling came first */
+      let hit = null;
+      for (const k in seen){
+        const a = k.split(" "), bwords = key.split(" ");
+        const share = a.filter(w => bwords.indexOf(w) >= 0).length;
+        if (share && share / Math.max(a.length, bwords.length) >= 0.7){ hit = k; break; }
+      }
+      const k = hit || key;
+      const e = seen[k] || (seen[k] = { text:c.text, n:0, pos:0, done:0 });
+      e.n++;
+      e.pos += cl.length > 1 ? i / (cl.length - 1) : 0;
+      if (c.done) e.done++;
+    });
+  });
+  return Object.keys(seen)
+    .map(k => ({ text:seen[k].text, n:seen[k].n, done:seen[k].done, pos:seen[k].pos / seen[k].n }))
+    .sort((a, b) => b.n - a.n || a.pos - b.pos);
+}
+
+/* the free-text lines someone wrote while working, minus the bookkeeping */
+function workNotes(recs){
+  const out = [];
+  recs.forEach(t => {
+    (t.log || []).forEach(e => {
+      const s = String(e.text || "").trim();
+      if (!s || e.kind === "status") return;
+      if (/^(timer|opened|attached|waiting on|chased|ran |no longer|waits for)/i.test(s)) return;
+      if (s.length < 12) return;
+      out.push({ text:s, code:t.code });
+    });
+  });
+  return out;
+}
+
+function buildGuide(subject, exclude, api){
+  const h = api.h;
+  let near = [];
+  try { near = h.similar(subject, exclude, 14, 0.26) || []; } catch(e){ near = []; }
+  const done = near.map(x => x.task).filter(t => t.status === "done");
+  if (!done.length) return null;
+
+  const steps = mergeSteps(done);
+  const notes = done.map(t => ({ code:t.code, text:String(t.notes || "").trim() }))
+                    .filter(x => x.text.length > 20);
+  const scripts = {};
+  done.forEach(t => (t.scripts || []).forEach(id => scripts[id] = (scripts[id] || 0) + 1));
+  const scriptList = Object.keys(scripts)
+    .map(id => ({ id, n:scripts[id], file:((api.scripts || []).find(s => s.id === id) || {}).file || id }))
+    .sort((a, b) => b.n - a.n);
+
+  const parties = {};
+  done.forEach(t => (t.waitLog || []).forEach(w => { if (w && w.party) parties[w.party] = (parties[w.party] || 0) + 1; }));
+  const partyList = Object.keys(parties).sort((a, b) => parties[b] - parties[a]);
+
+  const hours = done.filter(t => t.created && t.completed)
+    .map(t => (Date.parse(t.completed) - Date.parse(t.created)) / 3600000)
+    .filter(x => x >= 0).sort((a, b) => a - b);
+  const worked = done.map(h.live).filter(x => x > 0).sort((a, b) => a - b);
+  const blocked = done.filter(t => (t.waitLog || []).length).length;
+
+  return {
+    from: done, n: done.length,
+    steps: steps.filter(s => done.length < 3 || s.n >= 2).slice(0, 9),
+    loose: steps.filter(s => done.length >= 3 && s.n === 1).slice(0, 4),
+    notes, scriptList, partyList,
+    hours: hours.length ? hours[hours.length >> 1] : 0,
+    worked: worked.length ? worked[worked.length >> 1] : 0,
+    blocked, work: workNotes(done).slice(0, 4),
+    best: done[0]
+  };
+}
+
+intent("guide", {
+  kind:"read", label:"How you usually do this",
+  cues:{ guide:9, walk:7, resolve:8, resolving:8, approach:8, procedure:9, process:7,
+         steps:5, runbook:10, playbook:10, method:8, handle:6, tackle:5, fix:5,
+         normally:6, usually:6, habit:7, routine:2 },
+  phrases:[["how do i resolve",14],["how do i fix",13],["how do i handle",14],
+           ["walk me through",14],["guide me",14],["how do i usually",14],
+           ["what do i normally do",14],["how do i approach",14],["what did i do last time",18],["what did i do the last",18],
+           ["give me the steps",13],["what are the steps",13],["how is this done",12],
+           ["talk me through",14],["show me how i",13],["what is my process",14]],
+  boost:{ record:6 },
+  run(A){
+    const api = A.api, h = api.h, s = A.slots;
+    const t = s.record;
+    const subject = t ? t.title : A.raw
+      .replace(/^.*?\b(how do i|walk me through|guide me|talk me through|show me how i|what are the steps (for|to)?|give me the steps (for|to)?|what do i normally do (about|with|for)?)\b\s*/i, "")
+      .replace(/\b(usually|normally|again|this one|this)\b/gi, " ")
+      .replace(/\s+/g, " ").trim();
+
+    if (!subject || subject.length < 4)
+      return { say:"Which one? Give me a code, or say what it is — \"how do I resolve an imaging pool crash\".",
+               awaiting:{ intent:"guide", slot:"record" } };
+
+    const g = buildGuide(subject, t ? t.id : null, api);
+    if (!g)
+      return { say: say(["I have nothing to go on — you have not closed anything like this yet.",
+                         "First time for this one. Nothing closed looks similar.",
+                         "No history for this. You are working it out fresh."], {}, A.norm),
+               note:"Once you close it with a note and a checklist, I will have something to hand back next time." };
+
+    /* the procedure, as a numbered thing you can follow */
+    const lines = [];
+    if (g.steps.length){
+      g.steps.forEach((st, i) => {
+        const every = st.n === g.n && g.n > 1;
+        lines.push((i + 1) + ". " + st.text +
+          (g.n > 1 ? "   (" + (every ? "every time" : st.n + " of " + g.n) + ")" : ""));
+      });
+    }
+    if (g.loose.length)
+      lines.push("", "Came up once, may not apply: " + g.loose.map(x => x.text).join("; ") + ".");
+
+    const detail = [];
+    if (g.scriptList.length)
+      detail.push("You ran " + g.scriptList.map(x => x.file + (x.n > 1 ? " (" + x.n + "×)" : "")).join(" and ") + ".");
+    if (g.partyList.length)
+      detail.push("It went through " + andList(g.partyList, 3) + " " +
+        (g.blocked === g.n ? "every time" : g.blocked + " of " + g.n + " times") + " — worth warning them early.");
+    if (g.hours)
+      detail.push("Usually about " + (g.hours < 24 ? Math.round(g.hours) + "h" : Math.round(g.hours / 24) + "d") +
+        " end to end" + (g.worked ? ", of which " + h.mins(Math.round(g.worked)) + " was hands-on" : "") + ".");
+    if (g.notes.length)
+      detail.push("", "What you wrote last time (" + g.notes[0].code + "):", g.notes[0].text);
+    if (g.work.length)
+      detail.push("", "From the work log:", g.work.map(w => "· " + w.text + "  [" + w.code + "]").join("\n"));
+
+    return {
+      say: say(g.n === 1
+             ? ["You have done this once — {code}. Here is how it went.",
+                "Only one to go on, {code}, but here it is.",
+                "One previous, {code}. What you did:"]
+             : ["You have done this {n} times. Here is what it usually takes.",
+                "{n} of these behind you — this is the shape of it.",
+                "Going by the {n} you have closed, here is how it goes."],
+             { n:g.n, code:g.best.code }, A.norm),
+      note: lines.join("\n") + (lines.length && detail.length ? "\n\n" : "") + detail.join("\n"),
+      rows: g.from.slice(0, 5).map(x => row(x, api,
+        (x.completed ? "closed " + h.niceDate(h.dayOf(x.completed)) : "") +
+        ((x.checklist || []).length ? " · " + x.checklist.length + " steps" : "") +
+        ((x.scripts || []).length ? " · script" : ""))),
+      chips: (t && g.steps.length)
+        ? [{ label:"Put these steps on " + t.code,
+             act:{ kind:"applySteps", id:t.id, steps:g.steps.map(x => x.text),
+                   confirm:"Add " + g.steps.length + " steps to " + t.code + "?" } }]
+        : (g.scriptList.length && t)
+          ? [{ label:"Attach " + g.scriptList[0].file,
+               act:{ kind:"attachScript", id:t.id, scriptId:g.scriptList[0].id,
+                     confirm:"Attach " + g.scriptList[0].file + " to " + t.code + "?" } }]
+          : [{ label:"Open " + g.best.code, act:{ kind:"open", id:g.best.id } }]
     };
   }
 });
@@ -2252,6 +2610,10 @@ function rank(A, norm, ws, mw, slots, asking, firstVerb, convo){
 
 function finish(it, A, confidence, altIntents, learned, followed){
   let out;
+  /* what this same question came back with last time in this thread, so the
+     answer can say "same as when you asked" instead of repeating itself flat */
+  A.self = it.name;
+  A.before = (A.convo && A.convo.seen) ? A.convo.seen[it.name] : null;
   try { out = it.run(A) || {}; }
   catch(e){ out = { say:"That one broke on me: " + (e && e.message || e) }; }
   out.intent = it.name;
@@ -2282,6 +2644,12 @@ function finish(it, A, confidence, altIntents, learned, followed){
     type:   A.slots.type   || (A.convo && A.convo.type)   || "",
     awaiting: out.awaiting || null
   };
+  out.context.seen = Object.assign({}, (A.convo && A.convo.seen) || {});
+  if (typeof out.count === "number") out.context.seen[it.name] = out.count;
+  /* contractions last, over the finished sentence, so nothing has to be
+     written twice */
+  out.say = contract(out.say);
+  out.note = contract(out.note);
   out.alternatives = (altIntents || []).filter(Boolean)
     .map(x => ({ label:x.label, intent:x.name }));
   return out;

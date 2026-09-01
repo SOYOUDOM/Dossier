@@ -1290,5 +1290,8 @@ Nothing is holding this any more." value="" />
     <text name="ChatNotifyOff" source="Reminders are off — nothing will nudge you." value="" />
     <text name="ChatNotifyAlready" source="They are already on." value="" />
     <text name="ChatNotifyAlreadyOff" source="They are already off." value="" />
+    <text name="ChatStepsFrom" source="Added {n} step(s) from how this was done before" value="" />
+    <text name="ChatStepsAdded" source="Put {n} steps on {code}." value="" />
+    <text name="ChatScriptAttached" source="Attached {file} to {code}." value="" />
   </texts>
 </localizationDictionary>
