@@ -104,7 +104,12 @@ function close(a, b){
   if (a === b) return 1;
   if (!a || !b) return 0;
   if (b.indexOf(a) === 0 && a.length >= 4) return 0.92;     // a prefix you stopped typing
-  if (a.indexOf(b) === 0 && b.length >= 4) return 0.9;
+  /* The other direction is not symmetrical. "chased" starting with "chase" is
+     the same word inflected; "priority" starting with "prior" is a different
+     word entirely — and that one quietly sent every question about priority
+     to "have I seen this before". Only an inflection counts. */
+  if (a.indexOf(b) === 0 && b.length >= 4)
+    return /^(s|es|ed|d|ing|ings|er|ers)$/.test(a.slice(b.length)) ? 0.9 : 0;
   const cap = slack(Math.max(a.length, b.length));
   if (!cap) return 0;
   const d = editDistance(a, b, cap);
@@ -487,10 +492,9 @@ function compose(core, obs, stance, link, key){
     : [ c + " — " + lower(trimStop(obs)) + ".",
         c + ". " + upper(trimStop(obs)) + ".",
         upper(trimStop(obs)) + ", and " + lower(c) + "." ], key);
-  else if (stance) out = one([
-      c + ". " + stance,
-      c + " — " + lower(trimStop(stance)) + "."
-    ], key);
+  else if (stance) out = one(dashed
+    ? [ c + ". " + stance ]
+    : [ c + ". " + stance, c + " — " + lower(trimStop(stance)) + "." ], key);
   else out = c + ".";
   return out + (link ? " " + link : "");
 }
@@ -514,6 +518,19 @@ function observe(list, api, key){
     if (age > oldest) oldest = age;
   });
 
+  /* the shape of the set, beyond the count */
+  let est = 0, noEst = 0, started = 0, chased = 0, tagged = 0, withFiles = 0, sameDay = 0;
+  const days = {};
+  list.forEach(t => {
+    if (+t.estimate) est += +t.estimate; else noEst++;
+    if (t.status === "processing") started++;
+    if ((t.chases || []).length) chased++;
+    if ((t.tags || []).length) tagged++;
+    if ((t.files || []).length) withFiles++;
+    const d = h.dayOf(t.created);
+    if (d){ days[d] = (days[d] || 0) + 1; if (days[d] > sameDay) sameDay = days[d]; }
+  });
+
   const topSys = Object.keys(sys).sort((a, b) => sys[b] - sys[a])[0];
   if (topSys && sys[topSys] === list.length && list.length > 2)
     notes.push("every one of them is " + topSys);
@@ -531,6 +548,20 @@ function observe(list, api, key){
   if (undated && undated === list.length && list.length > 2) notes.push("none of them carry a date");
   else if (undated > 1) notes.push(undated + " of them have no date");
   if (waiting > 1 && waiting === list.length) notes.push("all of them are sitting with someone else");
+  else if (waiting > 1) notes.push(waiting + " of them are with someone else");
+
+  if (started === 1 && list.length > 2) notes.push("one of them is already started");
+  else if (started > 1) notes.push(started + " of them are already underway");
+  if (est && noEst === 0 && list.length > 2)
+    notes.push("they add up to about " + h.mins(Math.round(est)));
+  else if (noEst === list.length && list.length > 3)
+    notes.push("not one of them carries an estimate");
+  if (chased && chased === waiting && waiting > 1) notes.push("all of them have been chased at least once");
+  if (withFiles > 1 && withFiles === list.length) notes.push("every one has a document on it");
+  if (sameDay > 2 && sameDay >= list.length * 0.6)
+    notes.push(sameDay + " of them landed on the same day");
+  if (Object.keys(sys).length === 1 && list.length > 3 && !topSys)
+    notes.push("none of them name a system");
 
   return notes.length ? one(notes, key) : "";
 }
@@ -555,7 +586,22 @@ function stanceFor(n, kind, key){
     return one(["Nothing to chase.", "Nothing needs you.", "Enjoy it."], key);
   }
   if (kind === "quiet"){
-    return one(["Worth a nudge.", "I would chase that one.", "It will not move on its own."], key);
+    return one(["Worth a nudge.", "I would chase that one.", "It will not move on its own.",
+                "That one needs poking.", "A short email would move it."], key);
+  }
+  if (kind === "busy"){
+    if (n >= 12) return one(["That is a heavy week.",
+                             "Busier than it looks from the count alone.",
+                             "Worth flagging if it keeps up."], key);
+    return "";
+  }
+  if (kind === "good"){
+    return one(["Good going.", "That is a solid day's work.", "Not bad at all."], key);
+  }
+  if (kind === "stale"){
+    return one(["Worth a decision either way — close it or move it.",
+                "Either it matters or it does not; leaving it open helps nobody.",
+                "I would pick these up or drop them."], key);
   }
   return "";
 }
@@ -637,11 +683,13 @@ function intent(name, def){ def.name = name; INTENTS.push(def); }
 /* ── what should I be doing ───────────────────────────────────────────── */
 intent("next", {
   kind:"read", label:"What to do next",
-  cues:{ next:5, now:2, should:3, first:3, focus:3, priority:2, start:2, working:2,
+  cues:{ next:7, now:2, should:3, first:4, focus:4, priority:7, start:2, working:2,
          important:3, urgent:2, matters:3, tackle:3, doing:2 },
-  phrases:[["what next",8],["do next",8],["work on",5],["should i do",8],["get on with",6],
+  phrases:[["what next",8],["do next",8],["work on",11],["should i work",13],
+           ["should i do",8],["get on with",6],
            ["most important",6],["where do i start",18],["where to start",18],
-           ["what now",6],["what first",10]],
+           ["what now",6],["what first",10],["top priority",13],["highest priority",13],
+           ["biggest priority",13],["most urgent",13]],
   run(A){
     const api = A.api;
     if (!api.ai) return { say:"I need assist.js for that — it holds the ranking." };
@@ -670,7 +718,7 @@ intent("next", {
 /* ── overdue, today, this week ────────────────────────────────────────── */
 intent("overdue", {
   kind:"read", label:"What is overdue",
-  cues:{ overdue:8, late:6, behind:5, missed:4, slipping:6, slipped:6, past:3, due:2, breached:5 },
+  cues:{ overdue:11, late:7, behind:6, missed:5, slipping:8, slipped:8, past:3, due:2, breached:7 },
   phrases:[["past due",8],["running late",6],["over the date",5],["out of time",4]],
   run(A){
     const api = A.api, k = api.h.today();
@@ -705,8 +753,8 @@ intent("overdue", {
 });
 intent("dueToday", {
   kind:"read", label:"Due today",
-  cues:{ today:6, due:4, plate:3, agenda:4, schedule:2 },
-  phrases:[["due today",10],["on today",5],["for today",7],["my day",6],["on my plate",8],
+  cues:{ today:7, due:4, plate:4, agenda:5, schedule:2 },
+  phrases:[["due today",12],["on today",11],["for today",10],["my day",7],["on my plate",10],
            ["today's work",8],["what have i got",5]],
   run(A){
     const api = A.api, k = api.h.today();
@@ -734,8 +782,13 @@ intent("dueToday", {
 });
 intent("dueWeek", {
   kind:"read", label:"Coming up",
-  cues:{ week:5, upcoming:7, coming:6, ahead:5, soon:5, rest:3, remainder:4 },
-  phrases:[["this week",7],["coming up",9],["rest of the week",9],["next few days",8],["week ahead",9]],
+  /* "this week" says when, not what — readRange already takes it as a date
+     range, and an intent that scores on it steals every question that happens
+     to mention the week: what closed this week, time spent this week, busier
+     than this week. */
+  cues:{ week:3, upcoming:7, coming:6, ahead:5, soon:5, rest:3, remainder:4 },
+  phrases:[["coming up",9],["rest of the week",9],["next few days",8],["week ahead",9],
+           ["due this week",13],["due next week",13],["what is coming",10]],
   run(A){
     const api = A.api, k = api.h.today(), end = api.h.addDays(k, 7);
     const list = applySlots(live(api), A.slots, api)
@@ -762,9 +815,14 @@ intent("dueWeek", {
 /* ── searching ────────────────────────────────────────────────────────── */
 intent("find", {
   kind:"read", label:"Find records",
-  cues:{ find:6, show:5, list:6, search:7, records:4, all:3, everything:4, get:3,
-         anything:3, related:4, matching:5, about:2, pull:3 },
-  phrases:[["show me",6],["look for",7],["pull up",6],["what do i have",6],["give me",5]],
+  /* show / list / give me are how you want it presented, not what you are
+     asking about — they turned up in nearly every question and let the
+     catch-all outvote the intent that actually knew the answer */
+  cues:{ find:5, show:2, list:2, search:7, records:4, all:3, get:2,
+         related:4, matching:5, containing:6, regarding:5, pull:2, display:2 },
+  phrases:[["look for",7],["search for",9],["what do i have",6],["anything about",8],
+           ["anything on",10],["anything for",9],["anything with",9],["anything from",8],
+           ["records for",7],["records on",7],["stuff on",9]],
   boost:{ system:5, person:5, type:4, tag:5, range:3, party:4, priority:3 },
   run(A){
     const api = A.api, s = A.slots;
@@ -944,7 +1002,8 @@ intent("closed", {
              "{when}: {n} closed{w}", "{n} finished {when}{w}"],
             { n:qty(list.length, "record"), when:r.label, w:slotWords(s) }, A.norm),
         observe(list, api, A.norm),
-        tracked > 240 ? "That is " + h.mins(Math.round(tracked)) + " of tracked work." : "",
+        tracked > 240 ? "That is " + h.mins(Math.round(tracked)) + " of tracked work."
+                      : list.length >= 8 ? stanceFor(list.length, "good", A.norm) : "",
         linkClause(A, list.length), A.norm),
       note: tracked ? h.mins(Math.round(tracked)) + " of tracked time against them." : "",
       rows: list.slice(0, 12).map(t => row(t, api, h.niceDate(h.dayOf(t.completed)) +
@@ -972,7 +1031,8 @@ intent("opened", {
       say: compose(
         say(["{n} came in {when}{w}", "{when} brought {n}{w}", "{n} landed on you {when}{w}"],
             { n:qty(list.length, "record"), when:r.label, w:slotWords(s) }, A.norm),
-        observe(list, api, A.norm), "", linkClause(A, list.length), A.norm),
+        observe(list, api, A.norm), stanceFor(list.length, "busy", A.norm),
+        linkClause(A, list.length), A.norm),
       note: stillOpen + " of them " + (stillOpen === 1 ? "is" : "are") + " still live.",
       rows: list.slice(0, 12).map(t => row(t, api, h.stMeta(t.status).label +
             (t.system ? " · " + t.system : ""))),
@@ -1016,7 +1076,8 @@ intent("topPerson", {
   kind:"read", label:"Who asks the most",
   cues:{ raises:7, asks:6, requester:7, people:5, person:5, most:4, asking:6, sends:5 },
   phrases:[["who raises",10],["who asks",10],["who sends me",10],["comes from who",8],
-           ["which person",9],["who gives me",9]],
+           ["which person",9],["who gives me",9],["raises the most",13],["asks the most",13],
+           ["sends me the most",13],["top requester",13],["most requests",12]],
   run(A){
     const api = A.api, h = api.h, r = A.slots.range;
     const c = {};
@@ -1040,7 +1101,7 @@ intent("topPerson", {
 });
 intent("solvedBefore", {
   kind:"read", label:"Have I seen this before",
-  cues:{ before:8, previously:8, again:5, similar:8, same:4, handled:7, solved:7,
+  cues:{ before:10, previously:9, again:5, similar:8, same:4, handled:7, solved:7,
          fixed:6, seen:6, encountered:7, familiar:7 },
   phrases:[["seen this before",10],["done this before",10],["fixed this before",10],
            ["how did i fix",10],["last time",8],["have i had this",9],["what did i do",7]],
@@ -1114,7 +1175,7 @@ intent("stalled", {
 intent("brief", {
   kind:"read", label:"Anything I should know",
   cues:{ know:5, wrong:6, attention:7, worth:5, happening:6, going:3, summary:7,
-         update:5, brief:8, situation:7, overview:7, anything:4 },
+         update:5, brief:8, situation:11, overview:9, anything:4, roundup:11, digest:10 },
   phrases:[["what is going on",10],["anything i should know",10],["how are things",9],
            ["anything wrong",10],["catch me up",10],["give me a summary",10],["state of play",9]],
   run(A){
@@ -1176,7 +1237,9 @@ intent("workload", {
 intent("timeSpent", {
   kind:"read", label:"Time tracked",
   cues:{ spent:8, tracked:8, hours:6, logged:4, clocked:8, effort:7, timesheet:8 },
-  phrases:[["how much time",9],["time spent",10],["hours on",9],["how long have i spent",10]],
+  phrases:[["how much time",9],["time spent",12],["hours on",9],["how long have i spent",12],
+           ["hours logged",12],["time logged",12],["time tracked",12],["effort on",10],
+           ["hours this",10],["time this",10]],
   run(A){
     const api = A.api, h = api.h, s = A.slots;
     if (s.record)
@@ -1198,8 +1261,12 @@ intent("timeSpent", {
 });
 intent("count", {
   kind:"read", label:"How many",
-  cues:{ many:6, count:8, number:5, total:6, how:2 },
-  phrases:[["how many",10],["what is the count",8],["number of",7]],
+  /* "how many overdue" is a question about overdue work, and every one of
+     those answers opens with its own count — so counting is only the question
+     when nothing else in the sentence is */
+  cues:{ many:4, count:9, number:5, total:7, how:2 },
+  phrases:[["how many",4],["what is the count",9],["number of",7],["in total",12],
+           ["altogether",12],["the tally",12],["all in",9],["grand total",13]],
   run(A){
     const api = A.api, h = api.h, s = A.slots;
     let list = applySlots(api.tasks, s, api);
@@ -1222,7 +1289,8 @@ intent("count", {
 });
 intent("scripts", {
   kind:"read", label:"My scripts",
-  cues:{ script:8, scripts:9, automation:7, bat:6, tools:5, runnable:7 },
+  cues:{ script:11, scripts:12, automation:9, automations:11, bat:6, batch:10, batches:11,
+         tools:5, tooling:10, runnable:7, macros:10, executables:11 },
   phrases:[["what scripts",10],["which scripts",10],["can i run",7],["what can i automate",9]],
   run(A){
     const api = A.api;
@@ -1241,7 +1309,8 @@ intent("scripts", {
 });
 intent("routines", {
   kind:"read", label:"My schedules",
-  cues:{ routine:8, routines:9, schedule:7, scheduled:7, recurring:8, cron:8, repeat:6, automatic:6 },
+  cues:{ routine:11, routines:12, schedule:9, schedules:11, scheduled:9, recurring:11,
+         cron:10, cronjob:11, cronjobs:11, timers:10, repeat:6, automatic:6 },
   phrases:[["what routines",10],["what is scheduled",10],["what runs automatically",10],
            ["my schedules",10],["what repeats",9]],
   run(A){
@@ -1368,8 +1437,13 @@ intent("guide", {
            ["walk me through",14],["guide me",14],["how do i usually",14],
            ["what do i normally do",14],["how do i approach",14],["what did i do last time",18],["what did i do the last",18],
            ["give me the steps",13],["what are the steps",13],["how is this done",12],
-           ["talk me through",14],["show me how i",13],["what is my process",14]],
-  boost:{ record:6 },
+           ["talk me through",14],["show me how i",13],["what is my process",14],
+           ["how to resolve",15],["how to fix",15],["how to handle",15],["how to deal with",15],
+           ["the procedure for",15],["the runbook for",15],["the usual way to",14],
+           ["standard approach",14],["how it is done",13]],
+  /* naming a system, a work type or a record means you are asking about the
+     job. Naming a part of the app means you are asking about the app. */
+  boost:{ record:6, system:5, type:4 },
   run(A){
     const api = A.api, h = api.h, s = A.slots;
     const t = s.record;
@@ -1607,9 +1681,15 @@ intent("howTo", {
 
 intent("about", {
   kind:"read", label:"About Dossier",
-  cues:{ dossier:9, application:7, app:6, program:7, software:7, tool:6, purpose:8,
+  /* nothing in a workspace is called "dossier" except the application */
+  /* "this application" is Dossier; "applications" are the systems you look
+     after. The singular lives in the phrases below so the plural cannot reach
+     it through a suffix strip. */
+  cues:{ dossier:14, program:9, software:9, tool:6, purpose:8,
          for:1, about:2, point:6, does:2, is:1 },
   phrases:[["what is this",12],["what is dossier",14],["what does this do",13],
+           ["this application",13],["this app",13],["the application",11],
+           ["what all this is",13],["all this is",11],["all this for",12],
            ["what is this app",14],["used for",12],["what is it for",13],
            ["the point of this",12],["why would i use",12],["what does it do",12],
            ["who made this",9],["what are you",10]],
@@ -1809,7 +1889,8 @@ intent("similarTo", {
 
 intent("blocked", {
   kind:"read", label:"What is blocked",
-  cues:{ blocked:9, held:7, holding:6, stuck:4, dependencies:8, depends:8, waiting:2 },
+  cues:{ blocked:12, held:8, holding:6, stuck:4, dependencies:9, depends:9, waiting:2,
+         impeded:11, obstructed:11, halted:10, gated:10, stopped:7 },
   phrases:[["what is blocked",10],["anything blocked",10],["what is held up",10]],
   run(A){
     const api = A.api, h = api.h;
@@ -1817,8 +1898,11 @@ intent("blocked", {
     if (!list.length) return { say: say(["Nothing is blocked.",
                                         "Nothing held up.",
                                         "All clear — nothing blocked."], {}, A.norm) };
-    return { say: say(["{n} blocked.", "{n} held up.", "{n} cannot move."],
-                      { n:qty(list.length, "record") }, A.norm),
+    return { count: list.length,
+             say: compose(
+               say(["{n} blocked", "{n} held up", "{n} cannot move", "{n} waiting on something"],
+                   { n:qty(list.length, "record") }, A.norm),
+               observe(list, api, A.norm), "", linkClause(A, list.length), A.norm),
              rows: list.slice(0, 12).map(t => row(t, api,
                t.waitOn ? "waiting on " + t.waitOn + " · " + h.waitDays(t) + "d"
                         : (t.blockedBy || []).length + " holding it")),
@@ -1850,7 +1934,8 @@ intent("oldest", {
 intent("neverChased", {
   kind:"read", label:"Never chased",
   cues:{ chased:8, chase:5, never:8, silent:5, forgotten:6, nudged:8 },
-  phrases:[["never chased",10],["not chased",10],["have not chased",10],["no chase",8]],
+  phrases:[["never chased",12],["not chased",12],["have not chased",12],["no chase",9],
+           ["not been chased",13],["never nudged",12],["unchased",12]],
   run(A){
     const api = A.api, h = api.h;
     const list = live(api).filter(t => t.waitOn && !(t.chases || []).length)
@@ -1870,7 +1955,7 @@ intent("neverChased", {
 
 intent("undated", {
   kind:"read", label:"Work with no date",
-  cues:{ undated:10, date:5, dateless:10, unscheduled:9, missing:6, without:5, no:2 },
+  cues:{ undated:13, date:5, dateless:12, unscheduled:11, missing:6, without:5, no:2 },
   phrases:[["no date",10],["without a date",10],["not dated",10],["no due date",10],
            ["missing a date",10]],
   run(A){
@@ -1879,9 +1964,13 @@ intent("undated", {
     if (!list.length) return { say: say(["Everything live has a date on it.",
                                         "All dated — nothing adrift.",
                                         "Nothing undated."], {}, A.norm) };
-    return { say: say(["{n} with no date.", "{n} adrift without a date.",
-                       "{n} carry no date at all."],
-                      { n:qty(list.length, "record") }, A.norm),
+    return { count: list.length,
+             say: compose(
+               say(["{n} with no date", "{n} adrift without a date", "{n} carry no date at all",
+                    "{n} have nothing in the date field"],
+                   { n:qty(list.length, "record") }, A.norm),
+               observe(list, api, A.norm), stanceFor(list.length, "stale", A.norm),
+               linkClause(A, list.length), A.norm),
              note:"Undated work never shows in the Day view, which is where it goes quiet.",
              rows: list.slice(0, 12).map(t => row(t, api, api.h.stMeta(t.status).label + " · " + t.priority)),
              chips:[{ label:"Show them", act:{ kind:"filter", ids:list.map(t => t.id), label:"No date" } }] };
@@ -1971,7 +2060,7 @@ intent("compare", {
 
 intent("tags", {
   kind:"read", label:"Tags in use",
-  cues:{ tag:9, tags:10, tagged:9, label:6, labels:6 },
+  cues:{ tag:11, tags:12, tagged:11, label:8, labels:10, keywords:11, categories:10 },
   phrases:[["what tags",10],["which tags",10],["tags do i use",10]],
   run(A){
     const api = A.api, c = {};
@@ -1988,7 +2077,8 @@ intent("tags", {
 
 intent("systems", {
   kind:"read", label:"Systems in use",
-  cues:{ system:5, systems:9, applications:8, apps:7, cover:6, support:6, list:3 },
+  cues:{ system:5, systems:12, applications:13, apps:11, platforms:11, estate:10,
+         cover:6, support:6, list:3 },
   phrases:[["what systems",10],["which systems",10],["systems do i",10],["what do i support",10]],
   run(A){
     const api = A.api, c = {};
@@ -2298,6 +2388,160 @@ intent("help", {
     };
   }
 });
+
+/* ═══ THE PHRASE BANK ════════════════════════════════════════════════════
+   Everything above declares the few words that most obviously mean an intent.
+   This is the rest of the language: the other ways the same thing gets said
+   at a desk on a Tuesday. Kept apart from the intents so the intents stay
+   readable, and folded in at load.
+
+   Weights here are deliberately below the hand-picked cues above — a synonym
+   should be enough to be understood, never enough to outvote a word that was
+   chosen on purpose. */
+
+const SYN = {
+  overdue:     "late tardy delayed lapsed expired breached overrun overrunning overshot " +
+               "pastdue unmet blown burning",
+  dueToday:    "today todays plate agenda diary docket lineup slate",
+  dueWeek:     "upcoming forthcoming horizon incoming approaching imminent shortly",
+  /* not "recommend" or "suggest" — they are about anything at all, and
+     "recommend a restaurant" reached "what should I do next" through them */
+  next:        "prioritise prioritize triage urgent pressing foremost immediate attention",
+  find:        "locate retrieve fetch surface dig lookup filter concerning",
+  waiting:     "awaiting pending parked handed owed external supplier counterparty",
+  quietest:    "unresponsive unanswered ignored stale silence lagging",
+  neverChased: "unchased unnudged unreminded untouched forgotten neglected",
+  closed:      "resolved delivered dispatched wrapped concluded settled banked " +
+               "productivity output throughput accomplished",
+  opened:      "inbound arrived intake influx received logged submitted reported " +
+               "volume workload demand",
+  worstSystem: "unstable unreliable flaky fragile brittle offender culprit repeat " +
+               "worst noisy nuisance",
+  topPerson:   "requester requesters reporter reporters caller callers stakeholder " +
+               "colleague colleagues frequent",
+  howLong:     "duration elapsed lead cycle turnaround throughput median average " +
+               "typical estimate estimation forecast",
+  solvedBefore:"precedent prior historic known previously encountered",
+  guide:       "runbook playbook procedure protocol method methodology recipe " +
+               "instructions checklist workflow standard sop",
+  stalled:     "stagnant dormant rotting languishing lingering idle frozen abandoned drifting",
+  blocked:     "impeded obstructed halted stopped gated dependent dependency prerequisite",
+  brief:       "briefing digest roundup overview situation posture " +
+               "noteworthy notable alarming",
+  standup:     "scrum huddle sync catchup checkin handover shift report",
+  workload:    "capacity bandwidth utilisation utilization saturated stretched " +
+               "committed commitment realistic achievable",
+  timeSpent:   "effort logged billable expended consumed invested duration",
+  count:       "tally quantity volume aggregate sum figure numbers headcount",
+  scripts:     "automations executables commands macros batches tooling utilities",
+  routines:    "schedules cronjobs crons timers recurrences recurrence",
+  steps:       "remaining outstanding unfinished incomplete todo",
+  why:         "reason rationale cause blocker obstacle impediment holdup bottleneck",
+  history:     "timeline chronology audit trail journal diary record activity events",
+  notes:       "commentary remarks writeup summary description findings",
+  files:       "attachments docs paperwork evidence artefacts artifacts uploads",
+  when:        "deadline duedate target eta expected timing",
+  similarTo:   "comparable analogous alike resembling kindred equivalent related",
+  oldest:      "eldest longest ancient earliest stalest veteran",
+  undated:     "dateless unscheduled unplanned floating orphan orphaned adrift",
+  aboutPerson: "profile background pattern habits history dealings",
+  compare:     "trend trending direction movement delta change versus against",
+  tags:        "labels keywords categories markers",
+  systems:     "applications apps platforms services estate portfolio landscape",
+  about:       "purpose rationale overview introduction explain describe",
+  howTo:       "instructions setup configure enable activate install steps tutorial",
+  log:         "capture jot register enter raise",
+  markDone:    "close finish complete resolve settle finalise finalize tick clear",
+  markStart:   "begin commence undertake progress",
+  markWait:    "delegate escalate transfer handoff assign park",
+  chase:       "pursue prompt hasten expedite escalate",
+  run:         "invoke execute trigger launch fire",
+  remind:      "alarm prompt buzz beep",
+  notify:      "notifications alerting popups toasts desktop bell",
+  undo:        "revert rollback reverse unwind",
+  help:        "capabilities commands abilities usage manual",
+  record:      "detail details status state summary"
+};
+
+/* Whole phrases, which carry more weight than single words because they are
+   unambiguous. Same idea: the ordinary ways of saying it. */
+const BANK_PHRASES = {
+  overdue:     [["past the date",11],["out of time",10],["over the line",9],["missed the date",12],
+                ["blown the date",11],["run out of time",11],["gone past",9],["should have been done",12]],
+  dueToday:    [["for today",10],["today's list",12],["on the list today",12],["needs doing today",12],
+                ["landing today",10],["today's jobs",12]],
+  dueWeek:     [["over the week",10],["before friday",11],["by the end of the week",12],
+                ["next few days",10],["days ahead",9]],
+  next:        [["what first",11],["start with",10],["top of the list",12],["highest priority",12],
+                ["most urgent",12],["deal with first",12],["biggest priority",12],["what matters",10]],
+  waiting:     [["sitting with",11],["in their court",12],["on their side",11],["out for review",10],
+                ["with the vendor",10],["with someone else",12],["not with me",11],["blocked on",10]],
+  quietest:    [["heard nothing",12],["no reply",11],["gone silent",12],["not come back",12],
+                ["still waiting",10],["dragging on",10]],
+  closed:      [["got through",10],["shipped",8],["put to bed",12],["signed off",10],
+                ["cleared today",11],["off the list",11]],
+  opened:      [["came through",10],["landed",8],["turned up",10],["hit the queue",11],
+                ["new work",9],["fresh in",10]],
+  worstSystem: [["always breaking",13],["keeps failing",13],["most trouble",12],["biggest headache",13],
+                ["giving me grief",13],["worst offender",13],["never works",12]],
+  howLong:     [["how long does",13],["how much time does",13],["typical time",12],["usually take",12],
+                ["turnaround on",12],["time to close",12]],
+  guide:       [["how do i deal with",14],["what is the procedure",14],["standard approach",13],
+                ["the usual way",13],["how it is normally done",14],["best way to",12],
+                ["what worked before",13],["how did i sort",13],["how do i sort",13]],
+  solvedBefore:[["come up before",12],["happened before",12],["seen it before",13],["ring a bell",12]],
+  stalled:     [["going nowhere",13],["no movement",13],["stopped dead",13],["gathering dust",13],
+                ["been sitting",11]],
+  blocked:     [["held up",12],["can not move",12],["cannot move",12],["waiting on something",11]],
+  brief:       [["how are we",10],["where do things stand",13],["state of things",13],
+                ["anything urgent",12],["anything on fire",13],["all good",9]],
+  workload:    [["too much on",12],["can i fit",12],["do i have time",13],["enough hours",12],
+                ["over committed",13],["realistic",8]],
+  steps:       [["still to do",13],["what is missing",12],["anything left",12],["how much left",12],
+                ["where did i get to",13],["where was i up to",13]],
+  why:         [["what is the hold up",14],["why has it not",13],["what is in the way",13],
+                ["why is it stuck",14]],
+  standup:     [["for the standup",14],["morning meeting",12],["what do i report",13],
+                ["update for the team",13]],
+  compare:     [["up or down",12],["better or worse",13],["how does it compare",14],
+                ["more than usual",12],["less than usual",12]],
+  oldest:      [["been here longest",13],["around longest",13],["gathering dust longest",12]],
+  undated:     [["without dates",12],["no deadline",12],["nothing set",10]],
+  aboutPerson: [["what do they send",13],["what do they usually",13],["their usual",11]],
+  notify:      [["turn on alerts",13],["switch on alerts",13],["enable popups",13],
+                ["want notifications",12],["get notified",12]],
+  remind:      [["poke me",12],["buzz me",12],["ping me every",13],["prompt me",11]],
+  markDone:    [["all finished",11],["that is done",12],["sorted",8],["job done",12],["wrap it up",12]],
+  markWait:    [["hand it to",13],["pass it to",13],["park it with",13],["escalate to",12]],
+  log:         [["make a note",12],["write this down",12],["book it in",11],["put it on the list",12]],
+  about:       [["what is all this",13],["what does dossier",14],["explain this app",14]],
+  howTo:       [["how do you",10],["what is the way to",12],["remind me how",12]]
+};
+
+(function fold(){
+  Object.keys(SYN).forEach(name => {
+    const it = INTENTS.find(x => x.name === name);
+    if (!it) return;
+    SYN[name].split(/\s+/).filter(Boolean).forEach(w => {
+      /* never overwrite a weight chosen by hand, and never steal a word that
+         already means something stronger somewhere else */
+      if (it.cues[w] == null) it.cues[w] = 6;
+    });
+  });
+  Object.keys(BANK_PHRASES).forEach(name => {
+    const it = INTENTS.find(x => x.name === name);
+    if (!it) return;
+    /* A phrase the intent already declared must not be added twice — it would
+       score double and outvote everything else. But skipping it outright was
+       worse: "out of time" existed at 4 and the bank had it at 10, so the
+       upgrade was dropped and the phrase stayed below the floor. Keep one
+       copy, at whichever weight is higher. */
+    const best = {};
+    (it.phrases || []).forEach(p => { best[p[0]] = Math.max(best[p[0]] || 0, p[1]); });
+    BANK_PHRASES[name].forEach(p => { best[p[0]] = Math.max(best[p[0]] || 0, p[1]); });
+    it.phrases = Object.keys(best).map(k => [k, best[k]]);
+  });
+})();
 
 /* ═══ WORKING OUT WHICH ONE YOU MEANT ════════════════════════════════════
    Evidence, weighed — not patterns, matched. Every intent scores itself
