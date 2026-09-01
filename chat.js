@@ -1331,6 +1331,1006 @@ intent("routines", {
   }
 });
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   WHAT THE JOB IS MADE OF
+
+   Everything else in this file reads your records. This part is the only
+   thing here that is not about you: it is what an application-support
+   engineer runs into, and what is worth checking first.
+
+   Three rules kept it honest while writing it:
+
+     it says what to CHECK, never what the answer is — your estate is not
+     mine to guess at, and a confident wrong cause costs more than no cause;
+     where you have solved the same thing before, your own history leads and
+     this is only the fallback;
+     nothing here touches a system. It is a checklist, not a runbook that
+     runs.
+
+   Each entry is symptoms, first checks, the usual causes, and what to
+   capture while the evidence is still there — that last one matters most,
+   because the log you did not take is the one the vendor asks for.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+const KB = {};
+/* Only distinctive words are worth matching on. "by one cent … do not match"
+   in an entry's word list meant the word "not" selected it, and a question
+   about premiums came back about rounding. Filler is stripped at load rather
+   than left to be noticed one entry at a time. */
+function kb(id, words, o){
+  o.id = id;
+  o.words = String(words).split(/\s+/)
+    .filter(w => w.length > 2 && !NOISE.has(w) && !ASKING.has(w))
+    .join(" ");
+  KB[id] = o;
+}
+
+/* ── platform and Windows ────────────────────────────────────────────── */
+
+kb("apppool", "app pool application pool iis pool worker process w3wp recycle recycling 503 502 site down",
+{ name:"An application pool that has stopped or keeps recycling",
+  signs:["The site returns 503 Service Unavailable, or 502 from a proxy in front of it",
+         "w3wp.exe is missing from Task Manager, or pinned at 100% CPU",
+         "Requests hang and then time out rather than failing quickly"],
+  check:["Is the pool actually started? IIS Manager → Application Pools — a crashed pool shows Stopped",
+         "Event Viewer → Windows Logs → Application, filtered to the minute it went down. Look for the faulting module name",
+         "Event Viewer → System for WAS events 5009 / 5011 — those name the pool and say it terminated",
+         "The pool's Rapid-Fail Protection: five crashes in five minutes stops it and it stays stopped",
+         "Recycling settings — a memory limit or a fixed schedule will look like a crash to a user"],
+  causes:["An unhandled exception introduced by the last deployment",
+          "A private-memory or virtual-memory limit reached, so WAS recycled it",
+          "The identity's password rotated and the pool can no longer start",
+          "A dependency it calls at startup — a database, a share, a certificate — is unavailable"],
+  capture:["The Event ID, the faulting module and the exception type from the application log",
+           "The exact minute it stopped, so it can be lined up against a deployment or a batch",
+           "Whether it recovered by itself or needed starting"],
+  note:"Starting the pool clears the symptom in seconds and destroys nothing — but the event log is the only thing that says why, and it rolls. Take that first." });
+
+kb("service", "windows service will not start service stopped stuck starting sc net start",
+{ name:"A Windows service that will not start",
+  signs:["Error 1053: the service did not respond to the start request in a timely fashion",
+         "It starts and stops immediately",
+         "Error 1069: the service did not start due to a logon failure"],
+  check:["Event Viewer → Application and System at the moment of the attempt",
+         "The service's Log On account — 1069 is almost always a rotated or expired password",
+         "Whether the executable path still exists and the account can read it",
+         "Dependencies tab — a service it needs may itself be stopped",
+         "Try starting it from an elevated command prompt to see the error directly"],
+  causes:["Service account password changed or expired",
+          "A config file it reads at startup is missing, malformed, or newly locked down",
+          "A .NET or runtime version it needs was removed by patching",
+          "It is genuinely slow to start and is hitting the 30-second timeout"],
+  capture:["The exact error number and the event",
+           "Which account it runs as",
+           "Whether it ever started since the last reboot or patch window"],
+  note:"1053 with a service that works fine when run interactively usually means it is waiting on something the service account cannot reach." });
+
+kb("disk", "disk full no space left drive full c drive storage space cleanup",
+{ name:"A disk that has filled up",
+  signs:["Writes fail, logs stop, the database goes read-only or refuses connections",
+         "Backups fail without an obvious error",
+         "The application behaves oddly rather than failing cleanly"],
+  check:["Which drive, and how much is actually free right now",
+         "The usual offenders: SQL transaction logs, IIS logs under inetpub\\logs, Windows temp, application temp folders, old deployment folders",
+         "Whether something is writing fast — a runaway log level, a loop dumping to disk",
+         "Shadow copies and Windows Update leftovers on an older server"],
+  causes:["A log left at Debug after troubleshooting",
+          "A transaction log that cannot truncate because a backup chain broke",
+          "Someone copied a large file to the server and left it",
+          "Growth over months that nobody was watching"],
+  capture:["Free space before and after anything you delete",
+           "What you deleted and where it was — this matters for the change record",
+           "The growth rate if you can see it, so the fix can be permanent"],
+  note:"Deleting to get out of trouble is fine and usually necessary. Deleting without writing down what you removed is how the next person loses a day." });
+
+kb("cpu", "high cpu server slow 100 percent cpu spike load performance sluggish",
+{ name:"A server sitting at high CPU",
+  signs:["Everything on the box is slow, not just one application",
+         "Requests queue and time out under load that used to be fine"],
+  check:["Which process — Task Manager sorted by CPU, or Resource Monitor for more detail",
+         "Whether it is one thread or all of them",
+         "If it is w3wp, which application pool: the PID maps to a pool in IIS Manager",
+         "If it is sqlservr, look at the query side rather than the box",
+         "Whether it started at a particular minute — that usually points at a deployment or a job"],
+  causes:["A query without an index doing a scan under load",
+          "An infinite or near-infinite loop in a recent change",
+          "Antivirus scanning a folder it should be excluding",
+          "Genuine load — more users than the box was sized for"],
+  capture:["Process name, PID and sustained percentage",
+           "A memory dump if it is reproducible and you have somewhere to send it",
+           "The start time"],
+  note:"High CPU with a clear start time is a change. High CPU that crept up over weeks is capacity." });
+
+kb("memory", "memory leak out of memory oom high ram outofmemoryexception paging",
+{ name:"Memory climbing until something breaks",
+  signs:["OutOfMemoryException in the log",
+         "The process grows steadily and only a restart brings it back",
+         "The server starts paging and everything slows together"],
+  check:["Is it one process or the whole box",
+         "Private bytes over time, not just current — a leak has a slope",
+         "Whether recycling on a memory limit is already masking it",
+         "Anything that loads a whole file or result set into memory"],
+  causes:["A result set that grew with the data — fine at 1,000 rows, fatal at 500,000",
+          "Objects held in a static cache that is never evicted",
+          "A file processed in one read rather than streamed"],
+  capture:["Private bytes at intervals so the slope is visible",
+           "The exception and the stack if there is one",
+           "What size of input triggers it"],
+  note:"A leak that only shows after a data volume grew is not really a leak — it is a design that assumed small input." });
+
+kb("cert", "certificate expired ssl tls cert https not secure chain untrusted handshake",
+{ name:"A certificate problem",
+  signs:["Browsers show Not Secure or a warning page",
+         "Clients fail with a TLS handshake error while browsers seem fine",
+         "It stopped working overnight with no deployment"],
+  check:["The expiry date on the certificate actually bound in IIS — not the one in the folder",
+         "Whether the whole chain is installed: an intermediate missing breaks non-browser clients while browsers repair it silently",
+         "The binding: hostname, port, and SNI",
+         "The private key is present and the account can read it",
+         "The server's clock — a skewed clock invalidates a valid certificate"],
+  causes:["Simple expiry that nobody was tracking",
+          "A renewal installed but never bound, so the old one is still serving",
+          "An intermediate certificate missing after a rebuild",
+          "A client pinned to a protocol version the server has since disabled"],
+  capture:["Thumbprint, subject, issuer and expiry of what is actually bound",
+           "The exact client error text — handshake errors are specific",
+           "Whether browsers and API clients behave differently"],
+  note:"Browsers fetch missing intermediates by themselves. Java, .NET and curl do not. If it works in Chrome and fails from an application, suspect the chain first." });
+
+kb("port", "port blocked firewall connection refused cannot connect timeout telnet nc",
+{ name:"A connection that will not open",
+  signs:["Connection refused, or a hang that ends in a timeout",
+         "It works from one machine and not another"],
+  check:["Refused or timed out — refused means something answered and said no, timed out means nothing answered. They point in opposite directions",
+         "Is the service listening at all: netstat -an on the server for that port",
+         "Test from the client with Test-NetConnection or telnet, not from the server itself",
+         "The Windows firewall on the server, then anything between: network firewall, security group, proxy",
+         "Whether the client is resolving the name to the address you think"],
+  causes:["A firewall rule changed or a new segment introduced",
+          "The service is bound to localhost only rather than all interfaces",
+          "The service is simply not running",
+          "DNS pointing at an old address"],
+  capture:["Refused versus timeout, exactly",
+           "Source and destination addresses and the port",
+           "Whether it works from the server locally"],
+  note:"Test from where the failure is, not from somewhere convenient. Half of these turn out to be a path you never actually tested." });
+
+kb("dns", "dns not resolving name resolution host file nslookup wrong ip stale",
+{ name:"A name resolving to the wrong place, or not at all",
+  signs:["Works by IP address, fails by name",
+         "Works on one machine, fails on another",
+         "Started after a migration or a failover"],
+  check:["nslookup from the failing machine, and compare with a working one",
+         "The hosts file — old entries left behind after a cutover outlive everyone's memory",
+         "The DNS cache: ipconfig /flushdns, then test again",
+         "TTL on the record if it was changed recently"],
+  causes:["A cutover where the record changed but the cache or hosts file did not",
+          "A hosts-file entry added during an old incident and never removed",
+          "Split DNS resolving differently inside and outside"],
+  capture:["What it resolves to, from which machine",
+           "The contents of any hosts entry you find",
+           "What it should resolve to"],
+  note:"A hosts file entry is the commonest cause of \"it works everywhere except this one server\"." });
+
+kb("task", "scheduled task did not run task scheduler 0x1 last run result job",
+{ name:"A scheduled task that did not run, or ran and did nothing",
+  signs:["Last Run Result is 0x1 or 0x41301, or the task shows as never run",
+         "The task says it succeeded but nothing happened"],
+  check:["History tab — it is off by default on some servers; turn it on before the next occurrence",
+         "The account it runs as, and whether Run whether user is logged on is set",
+         "Start in — a task with a relative path and no working directory fails silently",
+         "Whether the last run overlapped the next and the task is set not to run in parallel",
+         "Run it by hand from Task Scheduler and watch"],
+  causes:["Password rotated on the run-as account",
+          "Working directory not set, so relative paths resolve somewhere unexpected",
+          "The previous run never finished",
+          "The server was rebooting at the scheduled minute"],
+  capture:["Last Run Time and Last Run Result",
+           "The account and the exact command line",
+           "Whether it works run by hand as the same account"],
+  note:"0x1 means the program ran and returned 1 — the task worked, the script failed. That is a different investigation." });
+
+kb("permission", "access denied permission denied acl share unauthorized 401 file access",
+{ name:"Access denied to a file, folder or share",
+  signs:["Access is denied, or UnauthorizedAccessException",
+         "It works for you interactively but not for the service"],
+  check:["Which account is actually being used — yours is rarely the one that matters",
+         "NTFS permissions and share permissions both — the more restrictive wins",
+         "Whether the path is a UNC and the account is a local account that cannot reach it",
+         "Effective access from the folder's Advanced Security dialog",
+         "Whether a recent group change removed something"],
+  causes:["A service account not in the group it needs",
+          "A folder recreated without inheriting permissions",
+          "A local account being used for a network path",
+          "Double-hop: the credential does not survive one machine to the next"],
+  capture:["The full path, the account and the exact error",
+           "Effective access output",
+           "Whether interactive access works with the same account"],
+  note:"Test as the account that fails. Testing as yourself proves nothing except that your own access works." });
+
+/* ── databases ───────────────────────────────────────────────────────── */
+
+kb("sqltimeout", "sql timeout query timeout command timeout slow query database slow execution timeout expired",
+{ name:"A query timing out",
+  signs:["Timeout expired. The timeout period elapsed prior to completion of the operation",
+         "The same screen works in the morning and times out in the afternoon",
+         "It works in SSMS but times out from the application"],
+  check:["Is it slow, or is it blocked? sp_whoisactive, or sys.dm_exec_requests for blocking_session_id — those are different problems with different fixes",
+         "The actual execution plan, looking for scans where a seek belongs",
+         "Whether statistics are stale on the tables involved",
+         "The command timeout in the application — often 30 seconds while SSMS has none, which is why one works and the other does not",
+         "Whether the row count grew: a plan that was fine at 10,000 rows may be hopeless at 10 million"],
+  causes:["A missing or unused index after a data volume change",
+          "Blocking by another session holding a lock",
+          "Parameter sniffing — a plan cached for one parameter and terrible for another",
+          "Statistics out of date after a bulk load"],
+  capture:["The exact statement and its parameters",
+           "The execution plan if you can get it",
+           "Whether it is reproducible and at what time of day",
+           "blocking_session_id if there was one"],
+  note:"\"Works in SSMS, times out in the app\" is nearly always either the application's command timeout or a different execution plan from different connection settings — not a network problem." });
+
+kb("deadlock", "deadlock victim transaction deadlocked lock blocking blocked process 1205",
+{ name:"A deadlock",
+  signs:["Error 1205: transaction was deadlocked on lock resources and has been chosen as the deadlock victim",
+         "It happens under load and not when you test it"],
+  check:["The deadlock graph — the system_health extended event session has it by default",
+         "Which two statements, and in which order they took their locks",
+         "Whether a transaction is doing more than it needs to inside its scope",
+         "Whether an index would let one of them take fewer locks"],
+  causes:["Two processes taking the same locks in opposite order",
+          "A transaction held open across a user interaction or a slow call",
+          "A missing index forcing a scan that locks far more than it needs"],
+  capture:["The deadlock graph XML — it names both statements",
+           "How often, and under what load",
+           "Whether the application retries automatically"],
+  note:"A deadlock victim is retryable by design. If the application does not retry, that is worth raising alongside the database fix." });
+
+kb("logfull", "transaction log full ldf growing log file cannot shrink 9002",
+{ name:"A transaction log that will not stop growing",
+  signs:["Error 9002: the transaction log for database X is full",
+         "The .ldf is many times the size of the .mdf"],
+  check:["log_reuse_wait_desc in sys.databases — it names the reason in one word",
+         "Recovery model: FULL without log backups grows forever, and someone usually set it without setting up the backups",
+         "Whether a long-running or abandoned transaction is holding it",
+         "Whether replication or an availability group is behind"],
+  causes:["FULL recovery with no log backup chain",
+          "A transaction opened and never committed",
+          "A large one-off operation done in a single transaction"],
+  capture:["log_reuse_wait_desc",
+           "The recovery model and when the last log backup ran",
+           "The file sizes before and after"],
+  note:"log_reuse_wait_desc answers this question on its own about nine times in ten. Read it before doing anything else." });
+
+kb("connpool", "connection pool exhausted timeout obtaining connection max pool size",
+{ name:"The connection pool running out",
+  signs:["Timeout expired. The timeout period elapsed prior to obtaining a connection from the pool",
+         "It fails under load and recovers when load drops"],
+  check:["Whether connections are being closed — a missing using block leaks one per call",
+         "The pool size in the connection string against the number of concurrent requests",
+         "Long-running queries holding connections longer than expected",
+         "Whether several connection strings differ slightly, so you have several pools without meaning to"],
+  causes:["Connections not disposed on an error path",
+          "Queries slow enough that the pool cannot turn over",
+          "Pool size left at the default for a workload that outgrew it"],
+  capture:["The error text, which distinguishes this from a query timeout",
+           "Concurrent request count at the time",
+           "Whether it clears on its own"],
+  note:"This error and a query timeout read almost the same but mean opposite things: one is too many connections, the other is one slow query." });
+
+kb("login", "login failed for user 18456 cannot open database orphaned user sql login",
+{ name:"A database login failing",
+  signs:["Login failed for user X (Error 18456)",
+         "Cannot open database requested by the login"],
+  check:["The state number in the SQL error log — the message to the client is deliberately vague, the log is not. State 5 is no such login, 8 is wrong password, 18 is password must change, 38 is no access to that database",
+         "Whether the login exists but the database user is orphaned after a restore",
+         "Whether the account is locked or expired in AD",
+         "Whether it is a service account whose password rotated"],
+  causes:["Password rotation on a service account",
+          "A database restored from another server leaving orphaned users",
+          "Permissions removed by a cleanup",
+          "Wrong database name in the connection string after an environment copy"],
+  capture:["The error state from the SQL log, not the client message",
+           "Which account, from which host",
+           "When it last worked"],
+  note:"The client message is deliberately unhelpful so it does not tell an attacker which half was wrong. The server log has the state number and that names the cause." });
+
+kb("backup", "backup failed job failed maintenance plan backup chain restore verify",
+{ name:"A backup that failed",
+  signs:["The Agent job reports failure, or reports success while writing nothing",
+         "It failed quietly some nights ago and nobody noticed"],
+  check:["The job history step by step — the failing step names the reason",
+         "Free space on the backup target",
+         "Whether the account can write to the target, especially if it is a UNC path",
+         "backupset in msdb for when a good backup was last actually taken",
+         "Whether the chain is broken — a missing full makes subsequent differentials useless"],
+  causes:["Target full or unreachable",
+          "Permissions on a share changed",
+          "A database added and never included in the plan",
+          "Someone took an ad-hoc full backup and broke the differential chain"],
+  capture:["The last successful backup of each database, from msdb",
+           "The failing step and its message",
+           "Whether the chain is intact"],
+  note:"A backup nobody has restored is a hope, not a backup. If this is the second failure in a row, the restore test matters more than the fix." });
+
+kb("blocking", "blocking chain head blocker sessions waiting lock waits sp_who",
+{ name:"Sessions piling up behind one another",
+  signs:["Many sessions waiting, all ultimately on one",
+         "The application appears frozen rather than slow"],
+  check:["The head of the chain — the session blocking everything that is itself blocked by nothing",
+         "What it is running, and how long it has been running",
+         "Whether it is a genuine long transaction or an open one nobody committed",
+         "Whether it is an application session or someone in SSMS"],
+  causes:["An open transaction in a query window somebody left running",
+          "A long report against live tables",
+          "A batch running in the working day that belongs overnight"],
+  capture:["The head blocker's session id, login, host and statement",
+           "How long the chain has been building",
+           "Who owns it, before you kill anything"],
+  note:"Killing the head blocker clears it instantly and rolls that transaction back — which may be exactly what you must not do if it is mid-batch. Find out what it is first." });
+
+/* ── files, transfers and integrations ──────────────────────────────── */
+
+kb("sftp", "sftp ftp connection refused host key changed transfer failed cannot connect winscp",
+{ name:"An SFTP transfer that will not connect or complete",
+  signs:["Connection refused, or a hang that ends in timeout",
+         "Host key verification failed, or a warning that the key changed",
+         "Authentication fails for an account that worked yesterday"],
+  check:["Refused or timed out — refused means it answered, timed out means the path is blocked",
+         "Whether the host key changed: that happens legitimately after a server rebuild, and is also what an interception looks like. Confirm it with the other side before accepting it",
+         "Whether it is password or key authentication, and whether the key's permissions are still right",
+         "The account on the far side — expiry and lock-out apply there too",
+         "Whether your source address is still allowlisted; those lists get cleaned"],
+  causes:["Far-side server rebuilt or rotated its key",
+          "Password expired on the transfer account",
+          "Firewall or allowlist changed at either end",
+          "The far side moved to a new host and told somebody who is on leave"],
+  capture:["The exact client log, which names the stage it failed at",
+           "The new host key fingerprint if it changed",
+           "When the last successful transfer was"],
+  note:"Never accept a changed host key just to get the file through. Confirm the fingerprint with the other side first — that warning is the only thing standing between you and a redirected transfer." });
+
+kb("filenotpicked", "file not picked up file stuck in folder not processed landing folder watcher",
+{ name:"A file that arrived but was never processed",
+  signs:["The file is sitting in the folder, unprocessed",
+         "The job reports success having found nothing"],
+  check:["The exact filename against the pattern the job matches — a changed prefix, date format or extension case is the commonest cause",
+         "Whether the file is still locked by the process that wrote it",
+         "Whether the job looks at a different folder than you are looking at, especially after an environment copy",
+         "Whether it already ran, found the file, and moved it to an error folder you have not checked",
+         "File size — a zero-byte file often means an interrupted transfer"],
+  causes:["Filename pattern changed at the source",
+          "The file was still being written when the job looked",
+          "Processed already and moved somewhere you have not looked",
+          "Permissions on the folder changed"],
+  capture:["The exact filename, its size and timestamp",
+           "The pattern the job expects",
+           "Anything in the error or archive folders"],
+  note:"Check the archive and error folders before concluding it was never processed. Half of these were processed and rejected, which is a different problem entirely." });
+
+kb("encoding", "encoding utf8 bom garbled characters khmer unicode question marks mojibake",
+{ name:"Text arriving garbled",
+  signs:["Khmer or accented characters show as boxes, question marks or Ã-style pairs",
+         "The first field of the first row has invisible junk in front of it",
+         "It looks right in Notepad and wrong in the application"],
+  check:["The file's actual encoding, not what it is supposed to be",
+         "Whether there is a byte-order mark — a BOM on a UTF-8 CSV breaks the first column name in a lot of parsers",
+         "What encoding the reader assumes when none is declared",
+         "The database column type: varchar cannot hold Khmer, nvarchar can",
+         "Whether the collation matters for comparison as well as storage"],
+  causes:["A file saved as ANSI or Windows-1252 where UTF-8 was expected",
+          "A BOM added by whatever wrote it",
+          "varchar where nvarchar is needed",
+          "Double encoding — text already encoded once, encoded again"],
+  capture:["A hex dump of the first bytes, which settles the BOM question",
+           "One example of the wrong output alongside what it should be",
+           "Where in the chain it is still correct — that locates the step that breaks it"],
+  note:"Find the last point in the chain where the text is still right. The step immediately after that is the one to fix, and it is rarely the one being blamed." });
+
+kb("csv", "csv malformed column count mismatch delimiter quotes import failed row rejected",
+{ name:"A CSV that will not import",
+  signs:["Column count mismatch on a particular row",
+         "Everything shifts one column right from a point in the file",
+         "Only some rows fail"],
+  check:["The failing row — a comma inside an unquoted field shifts everything after it",
+         "Embedded line breaks inside a quoted field, which split one record into two",
+         "Whether quoting is consistent, and how escaped quotes are written",
+         "The delimiter: a file produced in a locale that uses semicolons will look wrong everywhere",
+         "The trailing newline, and whether a final empty line is being read as a row"],
+  causes:["A free-text field containing the delimiter and not quoted",
+          "A newline inside a description field",
+          "The producer changed its export settings",
+          "Excel opened it, reformatted it and saved it back"],
+  capture:["The exact failing row, raw",
+           "The row number and total rows",
+           "Whether the same file imported before"],
+  note:"If a person opened the file in Excel between production and import, assume it changed: dates, leading zeros and long numbers all get quietly rewritten." });
+
+kb("api401", "api 401 unauthorized token expired oauth bearer authentication failed",
+{ name:"An API rejecting authentication",
+  signs:["401 Unauthorized, or 403 Forbidden",
+         "It worked until a certain time and then stopped for everything"],
+  check:["401 or 403 — 401 is who are you, 403 is I know who you are and no. Completely different investigations",
+         "Whether the token has expired, and whether the refresh flow actually ran",
+         "The clock on the calling machine: token validation is time-sensitive and a few minutes of skew fails everything",
+         "Whether a secret or key rotated on the far side",
+         "Whether the scope or role changed rather than the credential"],
+  causes:["Client secret rotated and not updated everywhere it lives",
+          "Token cached past its expiry",
+          "Clock skew",
+          "Permission removed during an access review"],
+  capture:["The status code and the response body — most APIs say more in the body than the code",
+           "The token's expiry claim if you can decode it",
+           "When it last worked and what changed near then"],
+  note:"403 with a valid token is a permissions change, not an authentication problem. Chasing the credential there wastes the afternoon." });
+
+kb("api5xx", "api 500 502 503 504 gateway timeout bad gateway upstream error internal server error",
+{ name:"An API returning a server error",
+  signs:["500 Internal Server Error, or 502 / 503 / 504 from something in front of it",
+         "Intermittent, or only for certain payloads"],
+  check:["Which component is answering — a 502 or 504 usually comes from a proxy or load balancer, not the application",
+         "Whether it is all requests or only some: if only some, compare the payloads",
+         "The far side's own logs, with a correlation id if there is one",
+         "Whether it correlates with size — large payloads hitting a limit",
+         "Whether a retry succeeds, which points at load or a timeout rather than the request"],
+  causes:["An unhandled error on the far side for a particular input",
+          "A timeout between proxy and application on a slow call",
+          "A payload over a size limit",
+          "The far side deploying"],
+  capture:["Status code, response body, and any correlation or request id",
+           "One request that fails and one that succeeds, for comparison",
+           "The exact time, for the other team's logs"],
+  note:"A correlation id in the response is worth more to the other team than any description you can write. Always take it." });
+
+kb("api429", "429 too many requests rate limit throttled quota exceeded backoff",
+{ name:"Being rate limited",
+  signs:["429 Too Many Requests",
+         "It works when tested by hand and fails during the batch"],
+  check:["The limit and the window — the Retry-After header usually says",
+         "Whether the caller retries immediately, which makes it worse",
+         "Whether several of your processes share the same quota without knowing",
+         "Whether a retry storm from an earlier failure is the actual cause"],
+  causes:["A batch calling in a tight loop",
+          "Retries with no backoff turning one failure into a hundred",
+          "A quota reduced on the far side",
+          "Another team sharing your key"],
+  capture:["The Retry-After value and the headers",
+           "Calls per minute you are actually making",
+           "Whether the volume changed"],
+  note:"Retrying immediately on a 429 is the one thing guaranteed to make it worse. If there is no backoff in the caller, that is the finding." });
+
+kb("webhook", "webhook not received callback missing notification not delivered listener",
+{ name:"A callback that never arrived",
+  signs:["The far side says it sent; nothing was received",
+         "Some arrive and some do not"],
+  check:["Whether it reached you at all — the web server log answers this before anyone argues about it",
+         "The endpoint the far side has configured, against the one you are watching",
+         "Whether your endpoint answered non-2xx, in which case many senders drop it after retries",
+         "Whether a firewall or allowlist sits in front",
+         "Whether it arrived and failed processing after acceptance — that looks identical from outside"],
+  causes:["Endpoint URL out of date on their side",
+          "Your endpoint returning an error, so their retries eventually stopped",
+          "Certificate problem on your endpoint that their client will not accept",
+          "It arrived and the handler failed silently"],
+  capture:["Your access log for the window, filtered to that path",
+           "Their delivery log with their attempt ids",
+           "The exact URL they are configured to call"],
+  note:"Prove receipt or non-receipt from your own web server log first. Every one of these conversations goes in circles until someone does." });
+
+/* ── identity and access ─────────────────────────────────────────────── */
+
+kb("password", "password expired account locked cannot login user locked out reset password",
+{ name:"An account locked out or expired",
+  signs:["The user cannot sign in and the message is vague",
+         "It started at a policy boundary — 90 days, or the first Monday of a month"],
+  check:["Locked or expired — they need different fixes and the message rarely distinguishes them",
+         "Where the lockout came from: a phone or a mapped drive holding an old password will re-lock the account within minutes of every reset",
+         "Whether it is one user or many, which separates an account problem from a policy change",
+         "Whether a service account is involved, in which case something automated is failing too"],
+  causes:["Ordinary expiry nobody was warned about",
+          "A cached credential on a phone or a mapped drive retrying",
+          "A service account rotated without updating every place it is used",
+          "A policy change applied to a group"],
+  capture:["The exact account and the exact message",
+           "The lockout source if the domain logs it",
+           "Whether it re-locks after a reset — that is the tell for a cached credential"],
+  note:"An account that locks again within minutes of a reset is not a password problem. Something is retrying with the old one, and until you find it you will reset forever." });
+
+kb("sso", "sso saml okta federation single sign on assertion redirect loop idp",
+{ name:"Single sign-on failing",
+  signs:["A redirect loop between application and identity provider",
+         "Signed in everywhere else, refused here",
+         "Works for some users, not others"],
+  check:["Whether it fails before or after the identity provider — the browser's network trace shows which side stopped",
+         "The clock on both ends: assertions are time-limited and skew invalidates them",
+         "Whether the user is in the group the application requires",
+         "Whether the signing certificate on either side was rotated",
+         "The reply URL and entity id, which break silently after an environment copy"],
+  causes:["Signing certificate rotated at the identity provider",
+          "Group membership changed",
+          "Reply URL wrong after a URL change",
+          "Clock skew"],
+  capture:["A network trace of the redirects, or at least the last URL before failure",
+           "Whether it is one user or all",
+           "The exact error the provider shows, which is usually more specific than the application's"],
+  note:"One user failing is membership or profile. Everyone failing at once is certificate or configuration. That split saves an hour." });
+
+kb("serviceacct", "service account password rotation expired credential automation stopped",
+{ name:"A service account whose password changed",
+  signs:["Several unrelated things break at once",
+         "Everything worked until a rotation date"],
+  check:["Everywhere that account is used: services, application pools, scheduled tasks, connection strings, linked servers, saved credentials in transfer tools",
+         "Whether the account is now locked from repeated failures",
+         "Whether it is set to expire at all — service accounts often should not"],
+  causes:["A rotation that updated some places and not others",
+          "An expiry policy applied to an account that should have been exempt"],
+  capture:["The full list of places the account is used — this is the artefact worth keeping",
+           "Which ones were updated and which were missed",
+           "The rotation date"],
+  note:"The list of places a service account is used is the single most valuable thing to write down while you are hunting. Next rotation, it turns a day into ten minutes." });
+
+/* ── batches and jobs ────────────────────────────────────────────────── */
+
+kb("batch", "batch failed job failed halfway partial run rerun overnight job did not complete",
+{ name:"A batch that failed part way through",
+  signs:["It reports failure after processing some records",
+         "Some downstream data is updated and some is not"],
+  check:["Where exactly it stopped — the record or file it was on",
+         "Whether it is safe to rerun: does it skip what it already did, or would it double-process",
+         "Whether it runs in one transaction or commits as it goes, which decides what state you are in",
+         "What triggered the stop — an error, a timeout, or the window closing",
+         "Whether anything downstream already consumed the partial output"],
+  causes:["One bad record it did not expect",
+          "A dependency unavailable part way",
+          "Running past its window and being stopped",
+          "Volume grown beyond what the window allows"],
+  capture:["The last successfully processed record or key",
+           "The error and the record that caused it",
+           "Whether the run is idempotent — write it down, because this question comes back every time"],
+  note:"Before rerunning, be certain whether it is idempotent. A rerun that double-posts is far worse than an hour spent finding out, and this is where a partial run does real damage." });
+
+kb("idempotent", "duplicate processed twice double posted reran duplicate transaction",
+{ name:"Something processed twice",
+  signs:["Duplicate records, doubled amounts, two notifications for one event"],
+  check:["Whether it was a rerun after a partial failure",
+         "Whether the source sent twice — many senders retry when they do not get a clean acknowledgement",
+         "Whether there is a natural key that should have prevented it",
+         "How far the duplicate travelled — if it reached a ledger or a customer, that changes the response"],
+  causes:["A rerun of a job that is not idempotent",
+          "A retry after a timeout where the first call actually succeeded",
+          "No unique constraint where there should be one"],
+  capture:["Both records, with their timestamps and any source ids",
+           "What triggered the second one",
+           "Everything downstream that already saw it"],
+  note:"A timeout is not a failure — the far side may well have succeeded and only the answer was lost. That is where most double-processing comes from." });
+
+kb("window", "job overran batch window still running morning slow overnight not finished",
+{ name:"A job that no longer fits its window",
+  signs:["It used to finish by 04:00 and now runs into the working day",
+         "The day starts slow because last night is still going"],
+  check:["Runtime over the last weeks — the trend matters more than last night",
+         "Whether volume grew, or something got slower at the same volume",
+         "Whether it now overlaps something else",
+         "Whether it can be split, or restarted from a checkpoint"],
+  causes:["Data volume growth",
+          "A query that degraded as a table grew",
+          "Another job moved into the same window",
+          "The window shortened by a change elsewhere"],
+  capture:["Runtime for the last several runs, so the slope is visible",
+           "Row counts for the same runs",
+           "When it started missing"],
+  note:"Runtime alongside row count over a few weeks tells you immediately whether this is growth or a regression. They need opposite fixes." });
+
+/* ── the application itself ──────────────────────────────────────────── */
+
+kb("slow", "slow application users complaining performance degraded takes forever laggy",
+{ name:"Users saying it is slow",
+  signs:["Vague reports, no error, everything technically works"],
+  check:["Slow for everyone or for some — that halves the problem immediately",
+         "Slow always, or at particular times, which points at load or a job",
+         "One screen or all of them: one screen is a query, all of them is infrastructure",
+         "Whether it is slow to first byte or slow to render — server or client",
+         "What changed: a deployment, a data load, a patch, more users"],
+  causes:["A query degrading as data grew",
+          "A batch running in working hours",
+          "Network path changed",
+          "Genuine growth in users"],
+  capture:["Who, which screen, what time, how long",
+           "One concrete example with a timestamp — vague reports cannot be investigated",
+           "Whether it is reproducible"],
+  note:"\"Slow\" is not a symptom you can work with. One user, one screen, one timestamp, one duration turns it into something you can find." });
+
+kb("intermittent", "intermittent sometimes fails random cannot reproduce works sometimes flaky",
+{ name:"Something that fails only sometimes",
+  signs:["It works when you watch it",
+         "No pattern anybody has noticed yet"],
+  check:["Whether there is a pattern nobody spotted: time of day, one user, one branch, one server behind a load balancer, one data shape",
+         "If there are several servers, whether it is always the same one — that is the commonest hidden pattern",
+         "Whether it correlates with a job, a backup, or a peak",
+         "What the failures have in common, rather than what the successes do"],
+  causes:["One node out of several with different configuration",
+          "A race that only shows under concurrency",
+          "A particular data shape that is rare",
+          "A dependency that is intermittently slow"],
+  capture:["Every occurrence with its exact time — the pattern only appears once there are several",
+           "Which server, which user, which record",
+           "What was running at the same moment"],
+  note:"With several servers behind a balancer, check whether failures all land on one node before anything else. That single question resolves a large share of these." });
+
+kb("worksforme", "works on my machine works for me not for them user specific browser cache",
+{ name:"Works for you, not for them",
+  signs:["You cannot reproduce what the user is certain they see"],
+  check:["Their browser and version, and whether it is the supported one",
+         "Their cached copy — a hard refresh or a private window separates cache from code",
+         "Their permissions, which are rarely yours",
+         "Their data: the record they are on may be the one that breaks it",
+         "Their network path — VPN, proxy or office versus home"],
+  causes:["Cached old version",
+          "Different permissions",
+          "A specific record with unusual data",
+          "A different browser"],
+  capture:["A screenshot including the URL and the time",
+           "The exact record or reference they were on",
+           "Browser, version, and where they were working from"],
+  note:"Ask for the record reference before anything else. Most of these are one row of data, not the application." });
+
+kb("timezone", "timezone wrong time offset utc dates shifted date wrong by hours dst",
+{ name:"Times showing wrong",
+  signs:["Dates off by a fixed number of hours",
+         "A record created late in the evening shows the next day",
+         "It changed when the clocks did somewhere"],
+  check:["Where the conversion happens — database, application, or browser. Two of them converting is the classic fault",
+         "What the database column stores: a plain datetime has no offset and is only meaningful with a convention",
+         "The server's own time zone, and whether it matches assumptions",
+         "Whether the offset is exactly your own — Phnom Penh is UTC+7 and a seven-hour shift is the giveaway"],
+  causes:["A value converted twice",
+          "UTC stored but displayed as local without conversion, or the reverse",
+          "A server in a different zone from the users",
+          "Daylight saving somewhere in the chain"],
+  capture:["One record with what is stored, what is displayed, and what it should be",
+           "The size of the offset — it names the cause",
+           "Whether every record is wrong or only some"],
+  note:"A consistent offset is a conversion bug. An inconsistent one is usually daylight saving, which means it is time-of-year dependent and will come back." });
+
+kb("rounding", "rounding round rounded cent cents decimal precision float totals penny " +
+   "fraction discrepancy mismatch centavo",
+{ name:"Amounts out by a small difference",
+  signs:["Totals differ by a cent or two",
+         "The difference grows with the number of rows"],
+  check:["Where rounding happens — per line or on the total. Rounding each line and summing gives a different answer from summing and rounding once",
+         "The data type: float cannot represent money exactly and will drift; decimal can",
+         "The number of decimal places at each step",
+         "Whether two systems round differently and are being compared"],
+  causes:["float used for money somewhere in the chain",
+          "Rounding applied at a different point than the other system",
+          "Different precision between database and application"],
+  capture:["One example with every intermediate value",
+           "The two totals being compared and their difference",
+           "Whether the difference scales with row count"],
+  note:"A difference that grows with the number of rows is accumulation — per-line rounding, or float. A constant difference is one step in the chain." });
+
+kb("report", "report blank empty report no data wrong figures report slow export",
+{ name:"A report empty, slow or wrong",
+  signs:["Blank output, or figures that do not match another source"],
+  check:["Whether the parameters actually select anything — dates and a default that excludes everything are the commonest cause of blank",
+         "Whether the user's permissions filter the data underneath them",
+         "For wrong figures: which source is right, and what each one includes. They usually count different things rather than one being broken",
+         "Whether it reads live tables or a copy, and how stale the copy is",
+         "For slow: the same investigation as any slow query"],
+  causes:["Parameters excluding everything",
+          "Row-level security filtering silently",
+          "Two reports defining the same word differently",
+          "A stale data copy"],
+  capture:["The exact parameters used",
+           "The two figures being compared and what each claims to count",
+           "Whether anyone changed the definition"],
+  note:"Most \"wrong figures\" turn out to be two correct answers to two slightly different questions. Establish what each one counts before assuming a fault." });
+
+kb("deploy", "deployment failed rollback release went wrong after deployment broke version",
+{ name:"Something broken after a release",
+  signs:["It worked before the deployment and not after",
+         "Errors started at a time that matches the release"],
+  check:["What actually shipped, against what was meant to",
+         "Whether configuration went with it — most \"code\" failures after a release are configuration that did not travel",
+         "Whether a database change is needed and did not run, or ran and the code is behind",
+         "Whether all nodes got it, or only some",
+         "Whether rollback is genuinely possible, which a database change may prevent"],
+  causes:["Configuration not deployed with the code",
+          "A migration missed or half-applied",
+          "One node out of several missed",
+          "A dependency version changed"],
+  capture:["The version before and after",
+           "The exact deployment time against the first error",
+           "Whether all nodes are on the same version"],
+  note:"Check whether every node got it before anything else. \"Intermittent after a release\" and \"one node missed\" are the same sentence." });
+
+kb("config", "config drift environment difference works in uat not production settings different",
+{ name:"Works in one environment, not another",
+  signs:["Fine in test, fails in production, same version"],
+  check:["A line-by-line comparison of configuration, not a glance",
+         "Connection strings, endpoints, timeouts, feature flags, certificate names",
+         "Whether the environments genuinely have the same data shape and volume",
+         "Whether permissions differ — production is usually tighter",
+         "Whether something is present in one and absent in the other: a file, a certificate, a folder"],
+  causes:["A setting changed in one environment during an earlier incident",
+          "A firewall rule that exists in test and not in production",
+          "Data volume differences exposing a query that was never fast",
+          "Permissions tighter in production"],
+  capture:["A diff of the two configurations",
+           "What is present in one and missing in the other",
+           "Whether the failing thing is reachable from that environment at all"],
+  note:"Diff the configuration properly. Every one of these hides in a line somebody was sure was the same." });
+
+kb("cache", "stale cache old data showing not refreshing cached value clear cache",
+{ name:"Old data still showing",
+  signs:["A change was made and the screen still shows the old value",
+         "It corrects itself after a while, or after a restart"],
+  check:["Which cache — browser, application memory, a distributed cache, a proxy, or a materialised copy. There are usually several",
+         "How long each is meant to hold, and whether that matches what you see",
+         "Whether it corrects on hard refresh, which points at the browser rather than the server",
+         "Whether one node is stale and another is not"],
+  causes:["A cache with a longer lifetime than anyone remembers",
+          "Invalidation that does not fire on that path",
+          "One node not receiving the invalidation",
+          "A proxy caching something it should not"],
+  capture:["How long it takes to correct itself — that names the layer",
+           "Whether a hard refresh fixes it",
+           "Whether every user sees it or only some"],
+  note:"How long it takes to correct itself identifies the layer more reliably than anything else. Time it before you start clearing things." });
+
+kb("upload", "upload failed file too large 413 attachment size limit maxrequestlength",
+{ name:"An upload that fails on larger files",
+  signs:["Small files work, large ones fail",
+         "413 Request Entity Too Large, or a generic failure with no message"],
+  check:["The limit at each layer: browser, web server, application framework, and anything in front. The smallest wins and it is rarely the one you changed",
+         "In IIS both maxAllowedContentLength and maxRequestLength exist and are in different units",
+         "Whether it fails at a consistent size, which confirms a limit rather than a timeout",
+         "Whether it is size or duration — a slow connection can time out before the limit"],
+  causes:["A limit at a layer nobody remembered",
+          "A proxy limit in front of the application",
+          "Timeout on a slow connection rather than size"],
+  capture:["The size that works and the size that fails",
+           "The exact error and which component produced it",
+           "Whether it is reproducible at that size"],
+  note:"Find the exact size where it starts failing. A sharp cut-off is a limit; a vague one is a timeout, and they are fixed in different places." });
+
+/* ── insurance and payments ──────────────────────────────────────────── */
+
+kb("policynotfound", "policy not found missing policy cannot find policy number does not exist",
+{ name:"A policy that cannot be found",
+  signs:["The number the customer quotes returns nothing",
+         "It exists in one system and not another"],
+  check:["The number exactly as given — leading zeros, prefixes and separators are dropped by spreadsheets and by people",
+         "Whether it exists but in a status the search filters out: cancelled, lapsed, pending, archived",
+         "Whether the search is scoped to a branch, product or date range that excludes it",
+         "Whether it is in one system and not yet replicated to the one being searched",
+         "Whether it was migrated and renumbered"],
+  causes:["Leading zeros lost, usually via Excel",
+          "A status filter excluding it",
+          "Replication lag between systems",
+          "Renumbered at migration"],
+  capture:["The number exactly as the customer gave it, character for character",
+           "Where it was found and where it was not",
+           "The status if you find it"],
+  note:"Search on a partial number before concluding it does not exist. Excel silently strips leading zeros, and that one habit accounts for a great many of these." });
+
+kb("premium", "premium premiums mismatch calculation incorrect rate rating ratetable " +
+   "prorata proration levy quote quotation sumassured cover coverage",
+{ name:"A premium that does not match expectation",
+  signs:["The system's figure differs from a quote, a spreadsheet, or the customer's expectation"],
+  check:["Which rate table and version applied, and its effective date — a rate change mid-term explains most of these",
+         "Whether an endorsement or adjustment is included in one figure and not the other",
+         "Whether taxes, levies and fees are inside the number being compared",
+         "Pro-rata against full-term: a mid-term change is charged proportionally",
+         "Rounding, per line versus on the total"],
+  causes:["A rate version effective from a different date",
+          "An endorsement included on one side only",
+          "Tax treated differently in the two figures",
+          "Pro-rata not accounted for"],
+  capture:["Both figures with their full breakdowns",
+           "The effective dates in play",
+           "Which rate version the system used"],
+  note:"Get both figures broken down before comparing totals. These are nearly always two different scopes rather than a calculation fault." });
+
+kb("endorsement", "endorsement not applied amendment change not reflected mid term adjustment",
+{ name:"An endorsement that has not taken effect",
+  signs:["The change was made but the policy still shows the old terms",
+         "Documents still print the previous version"],
+  check:["Its status — raised, approved, applied are different states and only the last one changes anything",
+         "The effective date against today: a future-dated endorsement is correct to show as not yet applied",
+         "Whether an approval step is waiting on somebody",
+         "Whether it applied to the record but the document was generated before"],
+  causes:["Awaiting an approval nobody knows about",
+          "Future effective date, working as designed",
+          "Applied but documents cached or generated earlier",
+          "Failed part way and left in an intermediate state"],
+  capture:["The endorsement reference and its current status",
+           "Its effective date",
+           "What the customer was told to expect and when"],
+  note:"Check the effective date before treating it as a fault. A good share of these are future-dated and behaving exactly as designed." });
+
+kb("renewal", "renewal not generated renewal notice missing lapse renewal batch",
+{ name:"A renewal that was not produced",
+  signs:["A policy due for renewal has no renewal record or notice",
+         "Some renewed in the batch and some did not"],
+  check:["Whether the policy meets the criteria the batch selects on: status, product, expiry window, block flags",
+         "Whether it was excluded deliberately — a hold, a claim in progress, a cancellation request",
+         "Whether the batch ran at all, and whether it completed",
+         "The batch's own exception list, which usually explains each exclusion",
+         "Whether it renewed but the notice failed separately"],
+  causes:["Excluded by a flag on the policy",
+          "Outside the selection window by a day",
+          "The batch failed part way",
+          "Renewed correctly but the document or email failed"],
+  capture:["The policy number and the expected renewal date",
+           "The batch run and its exception list",
+           "Whether other policies in the same batch worked"],
+  note:"Whether it renewed and whether the customer was told are two separate steps. Find out which one failed before promising anything." });
+
+kb("claimstuck", "claim stuck claim status not moving claim workflow pending approval",
+{ name:"A claim not moving through its workflow",
+  signs:["It has sat in one status longer than it should",
+         "The next step is not available to anybody"],
+  check:["Which status, and who owns that status — most of these are waiting on a person, not a system",
+         "Whether a required document or field is missing and blocking the transition",
+         "Whether an approval limit routes it to someone unavailable",
+         "Whether an integration step failed silently",
+         "The workflow history, which shows where it stopped"],
+  causes:["Waiting on an approver who is away",
+          "A mandatory field or document missing",
+          "An automated step failed and did not raise anything",
+          "Routing rule sending it to an empty queue"],
+  capture:["The claim reference, current status, and how long in it",
+           "The last successful transition and its timestamp",
+           "Who the queue belongs to"],
+  note:"An empty approval queue — someone left, and the rule still routes to them — is the version of this that can sit for weeks unnoticed." });
+
+kb("payment", "payment not reconciled payment missing settlement mismatch bank file unmatched",
+{ name:"A payment that has not matched",
+  signs:["The customer has paid; the policy still shows unpaid",
+         "The bank file and the system do not agree"],
+  check:["Whether the payment arrived at all, in the bank file",
+         "The matching key — reference, policy number, or amount. A customer typing their own reference is the usual break",
+         "Whether the amount differs, even slightly, from what was expected",
+         "Timing: paid after the file cut-off appears in tomorrow's",
+         "Whether it matched to a different policy — over-matching is worse than not matching"],
+  causes:["Wrong or missing payment reference",
+          "Amount differs, so exact matching fails",
+          "Timing across the cut-off",
+          "Matched to the wrong account"],
+  capture:["The bank reference, the amount and the value date",
+           "What the system expected to match on",
+           "Proof of payment from the customer if there is one"],
+  note:"Check whether it matched somewhere it should not have before concluding it is missing. A wrong match is a harder problem discovered later." });
+
+kb("khqr", "khqr qr payment e-payment callback gateway not credited payment gateway",
+{ name:"An electronic payment that did not credit",
+  signs:["The customer has a successful payment on their side; the system shows nothing",
+         "Some succeed and some do not"],
+  check:["Whether the gateway's callback reached you at all — your web server log settles it before any discussion",
+         "The transaction reference on both sides",
+         "Whether the callback arrived and processing failed after acceptance",
+         "Whether the amount or currency differs",
+         "Whether it is one channel or all of them"],
+  causes:["Callback never delivered, or delivered to an old endpoint",
+          "Callback received and the handler failed quietly",
+          "Reference mismatch so it could not be matched",
+          "A duplicate suppressed as already seen"],
+  capture:["The gateway transaction id and the customer's receipt",
+           "Your access log for the callback path in that window",
+           "The exact timestamp on both sides"],
+  note:"Whether the callback arrived is the first fork and everything else depends on it. Prove it from your own log, not from what the gateway says it sent." });
+
+kb("refund", "refund file rejected refund failed disbursement returned payment rejected",
+{ name:"A refund or disbursement rejected",
+  signs:["The bank returns the file or the individual item",
+         "Money has not reached the customer"],
+  check:["The rejection code — banks are specific and the code names the reason",
+         "Account details: number, name and branch, and whether the name matches exactly",
+         "Whether the account is closed or dormant",
+         "File format and any header or control totals",
+         "Whether it was one item or the whole file"],
+  causes:["Account details wrong or out of date",
+          "Name mismatch against the account",
+          "Closed account",
+          "File format or control total wrong"],
+  capture:["The rejection code and its text",
+           "The item as sent, field by field",
+           "Whether other items in the same file went through"],
+  note:"One item rejected is data. The whole file rejected is format. That split decides who you talk to next." });
+
+kb("commission", "commission calculation agent commission wrong intermediary payout",
+{ name:"Commission that does not look right",
+  signs:["An agent disputes their statement",
+         "Two systems disagree on the same period"],
+  check:["The rate and which version applied at the transaction date",
+         "Whether the basis is gross or net, and of what",
+         "Whether cancellations and refunds claw back, and whether both sides include them",
+         "The period boundary — a transaction on the last day is a common disagreement",
+         "Whether an override or special arrangement exists for that agent"],
+  causes:["Rate version by date",
+          "Different basis on the two sides",
+          "Clawbacks included in one and not the other",
+          "Period boundary"],
+  capture:["The statement and the underlying transactions",
+           "The rate applied and its effective date",
+           "The period definition each side used"],
+  note:"Ask what period each side used and whether clawbacks are in. Nearly every commission dispute is one of those two." });
+
+kb("regreport", "regulatory report deadline submission returned filing central bank",
+{ name:"A regulatory submission",
+  signs:["A deadline approaching, or a submission returned"],
+  check:["The exact deadline and what is actually required this period — templates change",
+         "Whether the figures reconcile to the source before submitting, not after",
+         "Whether the template version is current",
+         "What was returned and why, if it came back",
+         "Who signs it off and whether they are available"],
+  causes:["Template changed since last period",
+          "Figures not reconciled to source",
+          "Late sign-off"],
+  capture:["The submission reference and the exact deadline",
+           "The reconciliation between report and source",
+           "Any correspondence about what was wrong"],
+  note:"Reconcile before submitting, every time. A returned submission costs far more than the hour it takes, and the deadline does not move." });
+
+/* ── how the work is done ────────────────────────────────────────────── */
+
+kb("evidence", "evidence audit proof what to capture screenshot log for audit trail",
+{ name:"What to keep while you are working",
+  signs:["It will be asked for later, and by then it is gone"],
+  check:["The error exactly as shown, with the timestamp visible",
+         "The record or reference it happened on",
+         "Who reported it and when",
+         "What you changed, and what it was before",
+         "Logs from the window — they roll, so take them now"],
+  causes:[],
+  capture:["A screenshot with the URL and clock visible",
+           "The log extract, saved rather than read",
+           "The before and after of anything you changed"],
+  note:"Take the log before you fix it. The fix destroys the evidence, and the question about what happened always comes later." });
+
+kb("afterhours", "after hours change emergency fix out of hours weekend urgent change",
+{ name:"Changing something outside the working day",
+  signs:["It is urgent and nobody senior is awake"],
+  check:["Whether it can genuinely wait until morning — most things can, and the ones that cannot are usually obvious",
+         "Who needs to know now rather than tomorrow",
+         "Whether it is reversible, and how, before doing it",
+         "Whether anyone else is working on the same thing",
+         "What you will write down so tomorrow makes sense"],
+  causes:[],
+  capture:["What you did, in order, with times",
+           "What you observed before and after",
+           "Who you told and when"],
+  note:"Write it down as you go, not afterwards. At two in the morning you are certain you will remember, and by nine you will not." });
+
+kb("handover", "handover shift change passing on leaving for the day someone else picks up",
+{ name:"Handing work to someone else",
+  signs:["The next person needs to continue without you"],
+  check:["What is done and what is not, plainly",
+         "What you tried that did not work — that saves them repeating it",
+         "Who has been told what, so the customer hears one story",
+         "What is waiting on someone else and since when",
+         "What you would do next if you were staying"],
+  causes:[],
+  capture:["The current state in a sentence or two",
+           "The dead ends",
+           "Every promise made to anyone"],
+  note:"What you tried and ruled out is the most valuable part, and the part most often left out. It is the difference between continuing and starting again." });
+
+kb("rootcause", "root cause why did it happen prevent recurrence permanent fix underlying",
+{ name:"Finding why, once it is working again",
+  signs:["Service is restored and the cause is still unknown"],
+  check:["What changed shortly before — deployment, configuration, data volume, patching, a new integration",
+         "Whether it has happened before, and how often",
+         "Whether the fix addressed the cause or the symptom, and be honest about which",
+         "What would have caught it earlier",
+         "Whether anything else shares the same weakness"],
+  causes:[],
+  capture:["A timeline of what happened and when",
+           "What was changed to restore service",
+           "What is still unexplained"],
+  note:"Restarting it fixed the symptom. Writing down that a restart was the fix, and nothing more, is how the same incident happens monthly for a year." });
+
 /* ═══ LEARNING HOW YOU RESOLVE THINGS ════════════════════════════════════
    The runbook detector in assist.js points at the one closest record you
    already closed. This goes further: it reads every closed record that looks
@@ -1457,11 +2457,19 @@ intent("guide", {
                awaiting:{ intent:"guide", slot:"record" } };
 
     const g = buildGuide(subject, t ? t.id : null, api);
-    if (!g)
-      return { say: say(["I have nothing to go on — you have not closed anything like this yet.",
-                         "First time for this one. Nothing closed looks similar.",
-                         "No history for this. You are working it out fresh."], {}, A.norm),
-               note:"Once you close it with a note and a checklist, I will have something to hand back next time." };
+    if (!g){
+      /* no history — fall back to the general checklist rather than nothing */
+      const e = kbFind(meaningful(words(normalise(subject))), normalise(subject));
+      return { say: e
+                 ? say(["Nothing of yours to go on, so here is the general version.",
+                        "You have not closed one like this — the general checklist instead.",
+                        "First time for this. Here is where most people start."], {}, A.norm)
+                 : say(["I have nothing on that — not from your records and not generally.",
+                        "First time for this one, and it is outside what I know generally too.",
+                        "Nothing of yours looks similar, and I have no general checklist for it."], {}, A.norm),
+               note:(e ? kbLines(e) + "\n\n" : "") +
+                    "Once you close it with a note and a checklist, I will hand your own version back next time." };
+    }
 
     /* the procedure, as a numbered thing you can follow */
     const lines = [];
@@ -1512,6 +2520,126 @@ intent("guide", {
                act:{ kind:"attachScript", id:t.id, scriptId:g.scriptList[0].id,
                      confirm:"Attach " + g.scriptList[0].file + " to " + t.code + "?" } }]
           : [{ label:"Open " + g.best.code, act:{ kind:"open", id:g.best.id } }]
+    };
+  }
+});
+
+/* ── finding the right entry, and knowing when yours beats it ────────── */
+
+function kbBest(mw, norm){
+  let best = null, bestScore = 0;
+  for (const id in KB){
+    const e = KB[id], words = e.words.split(" ");
+    let s = 0;
+    /* "deadlock" or "certificate" on its own is enough to know which entry is
+       meant — one exact word was scoring 2 against a threshold of 4, so the
+       single most obvious question about each entry missed it */
+    mw.forEach(w => variants(w).forEach(v => { if (words.indexOf(v) >= 0) s += 3; }));
+    words.forEach(w => { if (w.length > 6 && norm.indexOf(w) >= 0) s += 1; });
+    if (s > bestScore){ bestScore = s; best = e; }
+  }
+  return { entry: bestScore >= 4 ? best : null, score: bestScore };
+}
+function kbFind(mw, norm){ return kbBest(mw, norm).entry; }
+
+function kbLines(e){
+  const out = [];
+  if ((e.signs || []).length){ out.push("What it looks like:"); e.signs.forEach(s => out.push("  · " + s)); }
+  if ((e.check || []).length){
+    out.push("", "First things to check:");
+    e.check.forEach((s, i) => out.push("  " + (i + 1) + ". " + s));
+  }
+  if ((e.causes || []).length){ out.push("", "Usually it turns out to be:"); e.causes.forEach(s => out.push("  · " + s)); }
+  if ((e.capture || []).length){
+    out.push("", "Worth capturing now, before it is gone:");
+    e.capture.forEach(s => out.push("  · " + s));
+  }
+  if (e.note) out.push("", e.note);
+  return out.join("\n");
+}
+
+intent("troubleshoot", {
+  kind:"read", label:"What to check",
+  cues:{ check:7, diagnose:9, troubleshoot:10, debug:8, investigate:8, cause:6, causes:7,
+         wrong:4, failing:5, broken:6, error:5, failure:5, symptom:8, why:3, first:2 },
+  phrases:[["what should i check",14],["what do i check",14],["where do i start with",13],
+           ["how do i diagnose",14],["what causes",13],["what would cause",14],
+           ["troubleshoot",13],["what is wrong with",12],["help me with",11],
+           ["what do i look at",13],["first things to check",15],["where to look",12],
+           ["what should i capture",15],["what to capture",15],["what do i keep",13],
+           ["what evidence",14],["for the audit",13],["what should i grab",13]],
+  boost:{ record:4, system:3 },
+  /* A probe should say how sure it is, not simply that it matched. A flat
+     bonus let one generic word — "pending" appearing in the claims entry —
+     outvote the intent that actually knew the answer, and "whats pending with
+     others" came back about claim workflow. */
+  probe(mw, norm){
+    const m = kbBest(mw, norm);
+    return m.score >= 9 ? 9 : m.score >= 6 ? 4 : 0;
+  },
+  run(A){
+    const api = A.api, s = A.slots;
+    /* strip the question frame before searching your own records: "what
+       should I check for an imaging pool crash" searched literally dilutes
+       the words that matter with words that do not */
+    const bare = String(A.raw)
+      .replace(/^.*?\b(what should i check(?: for| on| with)?|what do i check(?: for| on| when)?|first things to check(?: for| on)?|how do i (?:diagnose|troubleshoot|debug|fix)|what causes?|what would cause|troubleshoot|help me with|what is wrong with|where do i start with)\b\s*/i, "")
+      .replace(/\b(an?|the|my|our)\b\s*/gi, " ")
+      .replace(/\s+/g, " ").trim();
+    const subject = s.record ? s.record.title : (bare.length > 3 ? bare : A.raw);
+    const mw = s.record ? meaningful(words(normalise(s.record.title))).concat(A.mw) : A.mw;
+    const e = kbFind(mw, normalise(subject) + " " + A.norm);
+
+    /* your own history beats anything general, every time */
+    const g = buildGuide(subject, s.record ? s.record.id : null, api);
+
+    if (!e && !g)
+      return { say: say(["I do not have anything on that.",
+                         "That one is outside what I know.",
+                         "Nothing here covers that."], {}, A.norm),
+               note:"I know about " + andList(Object.keys(KB).map(k => KB[k].name.toLowerCase()), 6) +
+                    " and around " + (Object.keys(KB).length - 6) + " others — and about anything " +
+                    "you have closed before, which is better." };
+
+    if (g && g.n >= 2){
+      /* you have done this before: lead with that, and offer the general
+         checklist underneath rather than instead */
+      const steps = g.steps.slice(0, 6).map((st, i) => (i + 1) + ". " + st.text +
+        (g.n > 1 ? "   (" + (st.n === g.n ? "every time" : st.n + " of " + g.n) + ")" : ""));
+      return {
+        say: say(["You have handled this {n} times — your own way first.",
+                  "Before anything general: you have done this {n} times.",
+                  "{n} of these behind you, so start with what worked."],
+                 { n:g.n }, A.norm),
+        note: steps.join("\n") +
+              (g.scriptList.length ? "\n\nYou ran " + g.scriptList[0].file + " each time." : "") +
+              (e ? "\n\n— If that does not cover it —\n\n" + kbLines(e) : ""),
+        rows: g.from.slice(0, 4).map(x => row(x, api, "closed " + api.h.niceDate(api.h.dayOf(x.completed)))),
+        chips: (s.record && g.steps.length)
+          ? [{ label:"Put these steps on " + s.record.code,
+               act:{ kind:"applySteps", id:s.record.id, steps:g.steps.map(x => x.text),
+                     confirm:"Add " + g.steps.length + " steps to " + s.record.code + "?" } }] : []
+      };
+    }
+
+    if (!e)
+      return { say:"Nothing general on that, but you have closed one like it: " + g.best.code + ".",
+               note:g.notes.length ? g.notes[0].text : "",
+               rows:g.from.slice(0, 4).map(x => row(x, api, "closed")) };
+
+    return {
+      say: say(["{name}. Here is where I would start.",
+                "That sounds like {lower}. Start here.",
+                "{name} — the usual first moves."],
+               { name:e.name, lower:e.name.charAt(0).toLowerCase() + e.name.slice(1) }, A.norm),
+      note: kbLines(e) +
+            (g ? "\n\n— You have one like this on file —\n" + g.best.code + ": " +
+                 (g.notes.length ? g.notes[0].text : g.best.title) : ""),
+      rows: g ? g.from.slice(0, 3).map(x => row(x, api, "closed")) : [],
+      chips: s.record
+        ? [{ label:"Open " + s.record.code, act:{ kind:"open", id:s.record.id } }]
+        : [{ label:"Have I had this before?",
+             act:{ kind:"say", text:"have i had " + String(subject).slice(0, 50) + " before" } }]
     };
   }
 });
@@ -2589,6 +3717,11 @@ function cueScore(intent, mw, norm){
   return { s, hit, best:top, phrase };
 }
 
+/* Some intents know something no cue list can express: whether they actually
+   have an answer for this. "The transaction log is full, what do I do"
+   contains no word meaning troubleshooting, and the word it does contain —
+   log — means something else entirely. A probe lets an intent say "I have a
+   page on exactly this", which is better evidence than any keyword. */
 function scoreOne(intent, norm, ws, mw, slots, asking, firstVerb){
   /* a required slot that is not there disqualifies it outright, which is what
      stops "mark it done" firing when no record was named */
@@ -2596,7 +3729,9 @@ function scoreOne(intent, norm, ws, mw, slots, asking, firstVerb){
 
   const c = cueScore(intent, mw, norm);
   let s = c.s;
-  if (!s && !(intent.needs || []).length) return 0;
+  /* an intent with a probe must be allowed to speak even when not one of its
+     cue words appears — that is the whole point of having one */
+  if (!s && !(intent.needs || []).length && !intent.probe) return 0;
 
   for (const b in (intent.boost || {})) if (slots[b]) s += intent.boost[b];
   (intent.needs || []).forEach(() => s += 6);
@@ -2609,7 +3744,12 @@ function scoreOne(intent, norm, ws, mw, slots, asking, firstVerb){
      floor and the bot says it did not follow. */
   const named = (intent.needs || []).some(n => slots[n]) ||
                 Object.keys(intent.boost || {}).some(k => slots[k]);
-  if (!(c.best >= 4 || c.phrase || c.hit >= 2 || named)) s = Math.min(s, 4);
+  let probed = 0;
+  if (intent.probe){
+    try { probed = intent.probe(mw, norm, slots) || 0; } catch(e){ probed = 0; }
+  }
+  if (!(c.best >= 4 || c.phrase || c.hit >= 2 || named || probed)) s = Math.min(s, 4);
+  s += probed;
 
   /* the shape of the sentence */
   if (intent.kind === "read"){
@@ -2714,8 +3854,13 @@ function ask(raw, api){
   const ws = words(norm);
   const mw = meaningful(ws);
   const firstVerb = mw[0] || "";
+  /* "the transaction log is full, what do i do" is a question, but the
+     question word is at the end — testing only the first couple of words read
+     it as an instruction to log a record called "transaction log is full" */
   const asking = /\?\s*$/.test(text) || (ws.length && ASKING.has(ws[0])) ||
-                 mw.some(w => ASKING.has(w) && mw.indexOf(w) < 2);
+                 mw.some(w => ASKING.has(w) && mw.indexOf(w) < 2) ||
+                 (/\b(what|which|who|when|where|why|how)\b/.test(norm) &&
+                  !/^\s*(log|add|create|run|mark|close|chase|remind|undo|open|go|start|put|set)\b/.test(norm));
 
   api.lex = lexiconFor(api);
   const slots = readSlots(norm, ws, api, text);
@@ -2890,10 +4035,11 @@ function finish(it, A, confidence, altIntents, learned, followed){
   };
   out.context.seen = Object.assign({}, (A.convo && A.convo.seen) || {});
   if (typeof out.count === "number") out.context.seen[it.name] = out.count;
-  /* contractions last, over the finished sentence, so nothing has to be
-     written twice */
+  /* Contractions go on the sentence, never on the note. The note carries
+     checklists and quoted system messages — "the service did not respond to
+     the start request in a timely fashion" is Windows' wording, and rewriting
+     it to "didn't" makes it unsearchable and slightly wrong. */
   out.say = contract(out.say);
-  out.note = contract(out.note);
   out.alternatives = (altIntents || []).filter(Boolean)
     .map(x => ({ label:x.label, intent:x.name }));
   return out;
