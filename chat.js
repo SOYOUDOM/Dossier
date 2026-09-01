@@ -162,6 +162,12 @@ function findTerms(ws, lex, kinds){
                   .sort((a, b) => b.ws.length - a.ws.length || b.weight - a.weight);
   cand.forEach(t => {
     const n = t.ws.length;
+    /* A workspace with a system called "Other" turned "whats pending with
+       others" into a question about that one system, and the answer flipped
+       from "one waiting on Vendor" to "no open waits" — the same question,
+       two different facts. Short names and ordinary words have to be typed
+       exactly; only a distinctive name is worth guessing at. */
+    const strict = n === 1 && (NOISE.has(t.low) || ASKING.has(t.low) || t.low.length <= 5);
     for (let i = 0; i + n <= ws.length; i++){
       let free = true;
       for (let j = 0; j < n; j++) if (used[i + j]) { free = false; break; }
@@ -170,6 +176,7 @@ function findTerms(ws, lex, kinds){
       for (let j = 0; j < n && sc; j++) sc = Math.min(sc, close(ws[i + j], t.ws[j]));
       /* a one-word term also matches its squashed form: "infra/iis" */
       if (!sc && n === 1 && t.flat) sc = close(ws[i], t.flat) * 0.95;
+      if (strict && sc < 1) continue;
       if (sc >= 0.78){
         for (let j = 0; j < n; j++) used[i + j] = true;
         hits.push({ term:t, at:i, len:n, score:sc * t.weight });
@@ -259,7 +266,7 @@ function readDate(norm, h){
   return "";
 }
 
-function readSlots(norm, ws, api){
+function readSlots(norm, ws, api, raw0){
   const h = api.h, lex = api.lex, s = {};
   let m;
 
@@ -284,15 +291,48 @@ function readSlots(norm, ws, api){
   if ((m = norm.match(/\b(\d{1,3}(?:\.\d+)?)\s*(h|hr|hrs|hour|hours)\b/))) s.minutes = Math.round(parseFloat(m[1]) * 60);
   else if ((m = norm.match(/\b(\d{1,4})\s*(m|min|mins|minute|minutes)\b/))) s.minutes = +m[1];
 
-  if ((m = norm.match(/\bevery (\d{1,3}) (minute|minutes|min|mins|hour|hours|h|day|days)\b/))){
-    const n = +m[1];
-    s.every = /^(h|hour)/.test(m[2]) ? { unit:"hour", n } : /^d/.test(m[2]) ? { unit:"day", n } : { unit:"minute", n };
-  } else if ((m = norm.match(/\bevery (hour|day|morning|minute)\b/))){
-    s.every = { unit:m[1] === "morning" ? "day" : m[1], n:1 };
+  /* "every 30mn" is how it gets typed in a hurry, and mn is not a unit any
+     dictionary knows — but it is unmistakably minutes */
+  if ((m = norm.match(/\bevery\s*(\d{1,3})\s*(minute|minutes|min|mins|mn|m|hour|hours|hr|hrs|h|day|days|d)\b/))){
+    const n = +m[1], u = m[2];
+    s.every = /^(h|hr|hour)/.test(u) ? { unit:"hour", n }
+            : /^d/.test(u) ? { unit:"day", n } : { unit:"minute", n };
+  } else if ((m = norm.match(/\bevery (half an hour|half hour)\b/))){
+    s.every = { unit:"minute", n:30 };
+  } else if ((m = norm.match(/\bevery (hour|day|morning|minute|weekday|week)\b/))){
+    s.every = { unit:m[1] === "morning" ? "day" : m[1] === "weekday" ? "weekday" : m[1], n:1 };
+  } else if (/\bhourly\b/.test(norm)) s.every = { unit:"hour", n:1 };
+  else if (/\bdaily\b/.test(norm)) s.every = { unit:"day", n:1 };
+
+  /* "from 8 am to 5pm", "between 8 and 17", "8am-5pm" — the hours it should
+     actually fire in, which is the difference between a nudge at your desk
+     and a nudge at three in the morning */
+  const winRe = [
+    /\b(?:from|between)\s*(\d{1,2})\s*(am|pm)?\s*(?:to|until|till|-|and|through)\s*(\d{1,2})\s*(am|pm)?\b/,
+    /\b(\d{1,2})\s*(am|pm)\s*(?:to|until|till|-)\s*(\d{1,2})\s*(am|pm)\b/
+  ];
+  for (const re of winRe){
+    const w = norm.match(re);
+    if (!w) continue;
+    const h24 = (v, mer) => {
+      let x = +v;
+      if (mer === "pm" && x < 12) x += 12;
+      if (mer === "am" && x === 12) x = 0;
+      /* no meridiem on the closing hour: "8 to 5" means the working day */
+      if (!mer && x < 7) x += 12;
+      return x;
+    };
+    const a = h24(w[1], w[2]), b = h24(w[3], w[4]);
+    if (a >= 0 && a <= 23 && b >= 0 && b <= 23 && a !== b){ s.window = { from:a, to:b }; break; }
   }
 
   if ((m = norm.match(/\bat (\d{1,2}):(\d{2})\b/)) && +m[1] < 24 && +m[2] < 60)
     s.time = (m[1].length < 2 ? "0" : "") + m[1] + ":" + m[2];
+
+  /* create me a task named "Drinking water" — whatever is in quotes is the
+     name, and nothing else in the sentence is */
+  const quoted = String(raw0 || "").match(/["“]([^"”]{2,80})["”]/);
+  if (quoted) s.quoted = quoted[1].trim();
 
   s.range = readRange(norm, h);
   s.date = readDate(norm, h);
@@ -319,6 +359,80 @@ function readSlots(norm, ws, api){
   ws.forEach((w, i) => { if (!found.used[i]) rest.push(w); });
   s.rest = rest;
   return s;
+}
+
+/* ═══ SAYING IT IN WORDS ═════════════════════════════════════════════════
+   A fact said the same way every time reads like a form letter, and three
+   different questions answered with one identical sentence reads like a
+   lookup table — which is what this was.
+
+   So the wording is composed rather than stored. Each situation carries
+   several ways of putting it, and which one comes out is decided by a hash
+   of what you actually asked plus the numbers involved. The phrasing varies
+   naturally between questions and between days, but the same question about
+   the same data answers the same way twice — a bot that rewords itself at
+   random is unsettling rather than lively.
+
+   Wording varies. Facts never do: every number in every variant comes from
+   the same place. */
+
+function hash(s){
+  let h = 2166136261;
+  s = String(s);
+  for (let i = 0; i < s.length; i++){ h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
+  /* FNV on its own leaves the low bits leaning on the last few characters, and
+     every key here ends with the same JSON tail — four different questions all
+     landed on variant 0, so nothing varied at all. Avalanche the high bits down
+     before anything takes a modulo of it. */
+  h ^= h >>> 15; h = Math.imul(h, 2246822519);
+  h ^= h >>> 13; h = Math.imul(h, 3266489917);
+  h ^= h >>> 16;
+  return h >>> 0;
+}
+/* one of several ways of putting it, chosen by what was asked */
+function one(list, key){ return list[hash(key) % list.length]; }
+function fill(tpl, v){
+  return String(tpl).replace(/\{(\w+)\}/g, function(m, k){
+    return (v && v[k] != null) ? String(v[k]) : m;
+  });
+}
+function say(list, v, key){ return fill(one(list, String(key) + "|" + JSON.stringify(v || {})), v); }
+
+function qty(n, noun, plur){
+  if (!n) return "no " + (plur || noun + "s");
+  if (n === 1) return "one " + noun;
+  return n + " " + (plur || noun + "s");
+}
+function be(n){ return n === 1 ? "is" : "are"; }
+function hav(n){ return n === 1 ? "has" : "have"; }
+function itThem(n){ return n === 1 ? "it" : "them"; }
+
+/* a human sense of scale, so twelve overdue does not read like two */
+function heft(n, small, medium, large){
+  return n <= 2 ? small : n <= 6 ? (medium || small) : (large || medium || small);
+}
+function andList(a, max){
+  const l = a.slice(0, max || 3);
+  const more = a.length - l.length;
+  let s = l.length > 1 ? l.slice(0, -1).join(", ") + " and " + l[l.length - 1] : (l[0] || "");
+  if (more > 0) s += ", plus " + more + " more";
+  return s;
+}
+/* durations people actually say out loud */
+function span(days){
+  const d = Math.round(days);
+  if (d <= 0) return "today";
+  if (d === 1) return "a day";
+  if (d < 14) return d + " days";
+  if (d < 60) return Math.round(d / 7) + " weeks";
+  return Math.round(d / 30) + " months";
+}
+function pad2(n){ return String(n).length < 2 ? "0" + n : String(n); }
+function minutesWord(m){
+  const n = Math.round(m);
+  if (n < 60) return n + " minutes";
+  const h = Math.round(n / 30) / 2;
+  return h === 1 ? "an hour" : h + " hours";
 }
 
 /* ═══ ANSWERING ══════════════════════════════════════════════════════════ */
@@ -368,17 +482,25 @@ intent("next", {
   cues:{ next:5, now:2, should:3, first:3, focus:3, priority:2, start:2, working:2,
          important:3, urgent:2, matters:3, tackle:3, doing:2 },
   phrases:[["what next",8],["do next",8],["work on",5],["should i do",8],["get on with",6],
-           ["most important",6],["where do i start",8],["what now",6]],
+           ["most important",6],["where do i start",18],["where to start",18],
+           ["what now",6],["what first",10]],
   run(A){
     const api = A.api;
     if (!api.ai) return { say:"I need assist.js for that — it holds the ranking." };
     let q = api.ai.queue(api.ctx());
     if (Object.keys(A.slots).some(k => ["system","person","type","priority","party","tag"].indexOf(k) >= 0))
       q = q.filter(x => applySlots([x.task], A.slots, api).length);
-    if (!q.length) return { say:"Nothing live" + slotWords(A.slots) + ". Enjoy it." };
+    if (!q.length) return { say: say(["Nothing live{w}. Enjoy it.",
+                                      "You are clear{w} — nothing open.",
+                                      "Nothing open{w} at all."],
+                                     { w:slotWords(A.slots) }, A.norm) };
     const top = q[0];
     return {
-      say: "Start with " + top.task.code + " — " + top.task.title + ".",
+      say: say(["Start with {code} — {title}.",
+                "{code} first: {title}.",
+                "I would take {code} — {title}.",
+                "Top of the pile is {code}, {title}."],
+               { code:top.task.code, title:top.task.title }, A.norm),
       note: top.why.map(w => A.phrase(w)).join(" · "),
       rows: q.slice(1, 6).map(x => row(x.task, api, x.why.map(A.phrase).join(" · "))),
       chips: [{ label:"Open it", act:{ kind:"open", id:top.task.id } },
@@ -397,10 +519,25 @@ intent("overdue", {
     const list = applySlots(live(api), A.slots, api)
       .filter(t => t.due && t.due < k)
       .sort((a, b) => a.due < b.due ? -1 : 1);
-    if (!list.length) return { say:"Nothing is overdue" + slotWords(A.slots) + "." };
+    if (!list.length) return { say: say(["Nothing is overdue{w}.",
+                                        "You are on top of it{w} — nothing late.",
+                                        "No overdue work{w}."],
+                                       { w:slotWords(A.slots) }, A.norm) };
+    const worst = Math.round((Date.parse(k) - Date.parse(list[0].due)) / DAY);
     return {
-      say: plural(list.length, "record") + slotWords(A.slots) + " " +
-           (list.length === 1 ? "is" : "are") + " overdue.",
+      say: say(list.length === 1
+             ? ["One record is overdue{w} — {code}.",
+                "Just the one{w}: {code} is past its date.",
+                "{code} is the only thing overdue{w}."]
+             : ["{n} records are overdue{w}.",
+                "You have {n} past their date{w}.",
+                "{n} overdue{w} — the oldest by {worst}."],
+             { n:list.length, w:slotWords(A.slots), code:list[0].code, worst:span(worst) }, A.norm),
+      note: list.length > 1 && worst > 5
+        ? say(["The oldest has been late {worst} now.",
+               "{code} has been sitting {worst} past its date.",
+               "{worst} on the worst of them."],
+              { worst:span(worst), code:list[0].code }, A.norm) : "",
       rows: list.slice(0, 12).map(t => row(t, api,
         Math.round((Date.parse(k) - Date.parse(t.due)) / DAY) + "d late · " + t.priority)),
       chips: list.length > 1 ? [{ label:"Show them all", act:{ kind:"filter", ids:list.map(t => t.id), label:"Overdue" } }] : []
@@ -416,10 +553,19 @@ intent("dueToday", {
     const api = A.api, k = api.h.today();
     const list = applySlots(live(api), A.slots, api).filter(t => t.due && t.due <= k);
     const late = list.filter(t => t.due < k).length;
-    if (!list.length) return { say:"Nothing is due today" + slotWords(A.slots) + "." };
+    if (!list.length) return { say: say(["Nothing is due today{w}.",
+                                        "Your day is clear{w}.",
+                                        "Nothing dated for today{w}."],
+                                       { w:slotWords(A.slots) }, A.norm) };
     return {
-      say: plural(list.length, "record") + " due today or earlier" + slotWords(A.slots) + ".",
-      note: late ? late + " of those " + (late === 1 ? "is" : "are") + " already overdue." : "",
+      say: say(["{n} due today or earlier{w}.",
+                "You have {n} on today{w}.",
+                "{n} want doing today{w}."],
+               { n:qty(list.length, "record"), w:slotWords(A.slots) }, A.norm),
+      note: late ? say(["{n} of those {be} already overdue.",
+                        "{n} {be} late rather than due.",
+                        "Careful: {n} {be} already past the date."],
+                       { n:late, be:be(late) }, A.norm) : "",
       rows: list.slice(0, 12).map(t => row(t, api, t.priority + (t.dueTime ? " · " + t.dueTime : ""))),
       chips: [{ label:"Open the Day view", act:{ kind:"view", view:"day" } }]
     };
@@ -434,11 +580,17 @@ intent("dueWeek", {
     const list = applySlots(live(api), A.slots, api)
       .filter(t => t.due && t.due >= k && t.due <= end)
       .sort((a, b) => a.due < b.due ? -1 : 1);
-    if (!list.length) return { say:"Nothing is dated in the next seven days" + slotWords(A.slots) + "." };
+    if (!list.length) return { say: say(["Nothing is dated in the next seven days{w}.",
+                                        "The week ahead is empty{w}.",
+                                        "Nothing scheduled this week{w}."],
+                                       { w:slotWords(A.slots) }, A.norm) };
     const byDay = {};
     list.forEach(t => byDay[t.due] = (byDay[t.due] || 0) + 1);
     return {
-      say: plural(list.length, "record") + " due in the next seven days" + slotWords(A.slots) + ".",
+      say: say(["{n} due in the next seven days{w}.",
+                "{n} coming up this week{w}.",
+                "The week holds {n}{w}."],
+               { n:qty(list.length, "record"), w:slotWords(A.slots) }, A.norm),
       note: Object.keys(byDay).sort().map(d => api.h.niceDate(d) + ": " + byDay[d]).join(" · "),
       rows: list.slice(0, 12).map(t => row(t, api, api.h.niceDate(t.due) + " · " + t.priority)),
       chips: [{ label:"Open the Week view", act:{ kind:"view", view:"week" } }]
@@ -512,13 +664,18 @@ intent("waiting", {
     const api = A.api, h = api.h;
     const list = applySlots(live(api), A.slots, api).filter(t => t.waitOn)
       .sort((a, b) => h.waitDays(b) - h.waitDays(a));
-    if (!list.length) return { say:"Nothing is sitting with anyone else right now." };
+    if (!list.length) return { say: say(["Nothing is sitting with anyone else right now.",
+                                        "Nobody owes you anything at the moment.",
+                                        "No open waits — it is all with you."], {}, A.norm) };
     const by = {};
     list.forEach(t => (by[t.waitOn] = by[t.waitOn] || []).push(t));
     const parties = Object.keys(by).sort((a, b) => by[b].length - by[a].length);
     return {
-      say: plural(list.length, "record") + " " + (list.length === 1 ? "is" : "are") +
-           " waiting on " + listOf(parties, 4) + ".",
+      say: say(["{n} {be} waiting on {who}.",
+                "{who} {hav} {n} of yours.",
+                "You are waiting on {who} — {n} in all."],
+               { n:qty(list.length, "record"), be:be(list.length),
+                 hav:hav(parties.length), who:andList(parties, 4) }, A.norm),
       note: parties.map(p => p + ": " + by[p].length + " (longest " +
             Math.max.apply(null, by[p].map(h.waitDays)) + "d)").join(" · "),
       rows: list.slice(0, 12).map(t => row(t, api, t.waitOn + " · " + h.waitDays(t) + "d" +
@@ -538,7 +695,10 @@ intent("quietest", {
     if (!list.length) return { say:"Nothing is waiting on anyone." };
     const t = list[0];
     return {
-      say: t.waitOn + " has had " + t.code + " for " + h.waitDays(t) + " days — the longest of any.",
+      say: say(["{who} has had {code} for {days} — the longest of any.",
+                "{who} is the quiet one: {days} on {code}.",
+                "Longest wait is {code}, {days} with {who}."],
+               { who:t.waitOn, code:t.code, days:span(h.waitDays(t)) }, A.norm),
       note: (t.chases || []).length ? "Chased " + t.chases.length + " times, last " + h.chaseDays(t) + "d ago."
                                     : "Never chased.",
       rows: list.slice(1, 8).map(x => row(x, api, x.waitOn + " · " + h.waitDays(x) + "d")),
@@ -561,7 +721,10 @@ intent("howLong", {
     const subject = s.record ? s.record.title : s.rest.join(" ");
     if (subject && subject.length > 3){
       const g = h.estimateFor(subject);
-      if (g) return { say: "About " + h.mins(g.minutes) + ", going by " + plural(g.n, "similar record") + " you closed." };
+      if (g) return { say: say(["About {t}, going by {n} you have closed.",
+                                "{t} or so — that is the median of {n}.",
+                                "Past ones took about {t}, across {n}."],
+                               { t:h.mins(g.minutes), n:plural(g.n, "similar record") }, A.norm) };
     }
     const pool = applySlots(api.tasks, s, api)
       .filter(t => t.status === "done" && t.created && t.completed);
@@ -572,8 +735,11 @@ intent("howLong", {
     const med = hrs[hrs.length >> 1];
     const worked = pool.map(h.live).filter(x => x > 0);
     return {
-      say: "Typically " + (med < 24 ? Math.round(med) + "h" : Math.round(med / 24) + "d") +
-           " from opening to closing" + slotWords(s) + ", across " + plural(pool.length, "record") + ".",
+      say: say(["Typically {t} from opening to closing{w}, across {n}.",
+                "About {t} start to finish{w} — that is the middle of {n}.",
+                "{t} is the usual{w}, measured over {n}."],
+               { t:(med < 24 ? Math.round(med) + "h" : Math.round(med / 24) + "d"),
+                 w:slotWords(s), n:plural(pool.length, "record") }, A.norm),
       note: worked.length >= 3
         ? "Hands-on time is a different number: about " +
           h.mins(Math.round(worked.slice().sort((a,b)=>a-b)[worked.length >> 1])) + " of tracked work."
@@ -584,9 +750,11 @@ intent("howLong", {
 });
 intent("closed", {
   kind:"read", label:"What I closed",
-  cues:{ closed:7, finished:6, completed:6, cleared:6, shipped:4, resolved:6, achieved:4, got:2 },
-  phrases:[["did i close",10],["have i closed",10],["did i finish",10],["got done",8],
-           ["how many did i",7],["how much did i get",8],["was i productive",8]],
+  cues:{ closed:7, finished:6, completed:6, cleared:6, shipped:4, resolved:6, achieved:4,
+         got:2, done:6 },
+  phrases:[["did i close",10],["have i closed",10],["did i finish",10],["got done",13],
+           ["get done",13],["did i get done",14],["how many did i",7],
+           ["how much did i get",13],["was i productive",8],["did i achieve",10]],
   boost:{ range:4 },
   run(A){
     const api = A.api, h = api.h, s = A.slots;
@@ -594,9 +762,16 @@ intent("closed", {
     const list = applySlots(api.tasks, s, api)
       .filter(t => t.status === "done" && inRange(h.dayOf(t.completed), r));
     const tracked = list.reduce((n, t) => n + h.live(t), 0);
-    if (!list.length) return { say:"Nothing closed " + r.label + slotWords(s) + "." };
+    if (!list.length) return { say: say(["Nothing closed {when}{w}.",
+                                        "You did not close anything {when}{w}.",
+                                        "Nothing went out {when}{w}."],
+                                       { when:r.label, w:slotWords(s) }, A.norm) };
     return {
-      say: "You closed " + plural(list.length, "record") + " " + r.label + slotWords(s) + ".",
+      say: say(["You closed {n} {when}{w}.",
+                "{n} went out {when}{w}.",
+                "{when}: {n} closed{w}.",
+                "{n} finished {when}{w}."],
+               { n:qty(list.length, "record"), when:r.label, w:slotWords(s) }, A.norm),
       note: tracked ? h.mins(Math.round(tracked)) + " of tracked time against them." : "",
       rows: list.slice(0, 12).map(t => row(t, api, h.niceDate(h.dayOf(t.completed)) +
             (h.live(t) ? " · " + h.mins(h.live(t)) : ""))),
@@ -613,10 +788,16 @@ intent("opened", {
     const api = A.api, h = api.h, s = A.slots;
     const r = s.range || { from:h.today(), to:h.today(), label:"today" };
     const list = applySlots(api.tasks, s, api).filter(t => inRange(h.dayOf(t.created), r));
-    if (!list.length) return { say:"Nothing came in " + r.label + slotWords(s) + "." };
+    if (!list.length) return { say: say(["Nothing came in {when}{w}.",
+                                        "A quiet one — nothing arrived {when}{w}.",
+                                        "No new work {when}{w}."],
+                                       { when:r.label, w:slotWords(s) }, A.norm) };
     const stillOpen = list.filter(t => h.LIVE.indexOf(t.status) >= 0).length;
     return {
-      say: plural(list.length, "record") + " came in " + r.label + slotWords(s) + ".",
+      say: say(["{n} came in {when}{w}.",
+                "{when} brought {n}{w}.",
+                "{n} landed on you {when}{w}."],
+               { n:qty(list.length, "record"), when:r.label, w:slotWords(s) }, A.norm),
       note: stillOpen + " of them " + (stillOpen === 1 ? "is" : "are") + " still live.",
       rows: list.slice(0, 12).map(t => row(t, api, h.stMeta(t.status).label +
             (t.system ? " · " + t.system : ""))),
@@ -643,8 +824,12 @@ intent("worstSystem", {
     if (!rank.length) return { say:"No record carries a system yet." };
     const tot = rank.reduce((n, k) => n + c[k], 0);
     return {
-      say: rank[0] + " — " + plural(c[rank[0]], "record") + (r ? " in " + r.label : "") +
-           ", " + Math.round(c[rank[0]] / tot * 100) + "% of everything with a system on it.",
+      say: say(["{sys} — {n}{when}, {pct}% of everything with a system on it.",
+                "{sys}, easily: {n}{when}. That is {pct}% of the lot.",
+                "{sys} gives you the most trouble — {n}{when}, {pct}% of the total."],
+               { sys:rank[0], n:qty(c[rank[0]], "record"),
+                 when:(r ? " in " + r.label : ""),
+                 pct:Math.round(c[rank[0]] / tot * 100) }, A.norm),
       note: rank.slice(1, 6).map(k => k + " " + c[k]).join(" · "),
       rows: [],
       chips: [{ label:"Show " + rank[0], act:{ kind:"filterSys", system:rank[0] } },
@@ -667,7 +852,11 @@ intent("topPerson", {
     const rank = Object.keys(c).sort((a, b) => c[b] - c[a]);
     if (!rank.length) return { say:"No record has a name on it yet." };
     return {
-      say: rank[0] + " — " + plural(c[rank[0]], "record") + (r ? " in " + r.label : "") + ".",
+      say: say(["{who} — {n}{when}.",
+                "{who}, with {n}{when}.",
+                "Most of it comes from {who}: {n}{when}."],
+               { who:rank[0], n:qty(c[rank[0]], "record"),
+                 when:(r ? " in " + r.label : "") }, A.norm),
       note: rank.slice(1, 6).map(k => k + " " + c[k]).join(" · "),
       rows: [],
       chips: [{ label:"Show " + rank[0] + "'s records", act:{ kind:"filterWho", who:rank[0] } }]
@@ -695,12 +884,17 @@ intent("solvedBefore", {
       return { say:"Tell me what it is and I will look — \"have I fixed an imaging pool crash before?\"" };
     const near = h.similar(subject, s.record ? s.record.id : null, 8, 0.3)
       .filter(x => x.task.status === "done");
-    if (!near.length) return { say:"Nothing closed looks like that. It would be a first." };
+    if (!near.length) return { say: say(["Nothing closed looks like that — it would be a first.",
+                                        "No, this one is new to you.",
+                                        "Nothing in your history matches it."], {}, A.norm) };
     const best = near[0].task;
     const sc = (best.scripts || []).map(id => (api.scripts.find(x => x.id === id) || {}).file)
       .filter(Boolean);
     return {
-      say: "Yes — " + best.code + ", " + best.title + ".",
+      say: say(["Yes — {code}, {title}.",
+                "You have: {code}, {title}.",
+                "Once before — {code}, {title}."],
+               { code:best.code, title:best.title }, A.norm),
       note: (sc.length ? "Fixed by running " + sc.join(", ") + ". " : "") +
             (String(best.notes || "").trim() ? "It carries notes." : "") +
             (best.completed ? " Closed " + h.niceDate(h.dayOf(best.completed)) + "." : ""),
@@ -720,7 +914,10 @@ intent("stalled", {
     if (api.ai){
       const cards = api.ai.brief(api.ctx()).cards.filter(c => c.kind === "stalled");
       if (cards.length) return {
-        say: plural(cards.length, "record") + " " + (cards.length === 1 ? "has" : "have") + " stopped moving.",
+        say: say(["{n} {hav} stopped moving.",
+                  "{n} {be} going nowhere.",
+                  "{n} {hav} gone quiet on you."],
+                 { n:qty(cards.length, "record"), hav:hav(cards.length), be:be(cards.length) }, A.norm),
         rows: cards.map(c => {
           const t = api.tasks.find(x => x.id === c.ids[0]);
           return t ? row(t, api, A.phrase(c.why[0])) : null;
@@ -731,7 +928,9 @@ intent("stalled", {
     const k = h.today();
     const old = live(api).filter(t => !t.waitOn &&
       (Date.parse(k) - Date.parse(t.created)) / DAY > 7).sort((a, b) => a.created < b.created ? -1 : 1);
-    if (!old.length) return { say:"Nothing has been sitting untouched." };
+    if (!old.length) return { say: say(["Nothing has been sitting untouched.",
+                                       "Everything open is recent.",
+                                       "No stale work."], {}, A.norm) };
     return { say: plural(old.length, "record") + " open more than a week.",
              rows: old.slice(0, 10).map(t => row(t, api,
                Math.round((Date.parse(k) - Date.parse(t.created)) / DAY) + "d old")) };
@@ -748,9 +947,15 @@ intent("brief", {
     if (!api.ai) return { say:"I need assist.js for that — it holds the detectors." };
     const b = api.ai.brief(api.ctx());
     if (!b.cards.length)
-      return { say:"Nothing worth interrupting you for.", note:"Working from " + b.records + " records." };
+      return { say: say(["Nothing worth interrupting you for.",
+                         "All quiet.",
+                         "Nothing that needs you right now."], {}, A.norm),
+               note:"Working from " + qty(b.records, "record") + "." };
     return {
-      say: b.cards.length === 1 ? "One thing." : b.cards.length + " things.",
+      say: say(b.cards.length === 1
+             ? ["One thing.", "Just the one thing.", "One thing worth knowing."]
+             : ["{n} things.", "{n} worth knowing.", "{n} things caught my eye."],
+             { n:b.cards.length }, A.norm),
       note: b.cards.slice(0, 5).map(c => "· " + A.phrase(c.title) + " — " + A.phrase(c.body)).join("\n"),
       chips: [{ label:"Open the Assist tab", act:{ kind:"view", view:"assist" } }]
     };
@@ -765,7 +970,9 @@ intent("workload", {
   run(A){
     const api = A.api, h = api.h, k = h.today();
     const due = live(api).filter(t => t.due && t.due <= k && !t.waitOn);
-    if (!due.length) return { say:"Nothing dated today. The day is yours." };
+    if (!due.length) return { say: say(["Nothing dated today. The day is yours.",
+                                       "Today is empty — nothing promised.",
+                                       "No commitments today."], {}, A.norm) };
     let known = 0;
     const need = due.reduce((n, t) => {
       if (+t.estimate){ known++; return n + Math.max(0, +t.estimate - h.live(t)); }
@@ -775,8 +982,10 @@ intent("workload", {
     const d = new Date();
     const left = Math.max(0, (17 * 60 + 30) - (d.getHours() * 60 + d.getMinutes()));
     return {
-      say: plural(due.length, "record") + " dated today, about " + h.mins(Math.round(need)) +
-           " of work, and " + h.mins(left) + " left before 17:30.",
+      say: say(["{n} dated today, about {need} of work, and {left} before 17:30.",
+                "{need} of work against {left} of day — {n} on the list.",
+                "You have {left} left and about {need} promised, over {n}."],
+               { n:qty(due.length, "record"), need:h.mins(Math.round(need)), left:h.mins(left) }, A.norm),
       note: need > left ? "That is " + h.mins(Math.round(need - left)) + " more than the day holds — " +
                           "something wants moving." + (known < due.length
                             ? " (" + (due.length - known) + " of those are guessed from past jobs.)" : "")
@@ -821,9 +1030,12 @@ intent("count", {
     const c = {};
     list.forEach(t => c[t.status] = (c[t.status] || 0) + 1);
     return {
-      say: plural(list.length, "record") + slotWords(s) +
-           (s.status ? " with status " + h.stMeta(s.status).label : "") +
-           (s.range ? " in " + s.range.label : "") + ".",
+      say: say(["{n}{w}{st}{when}.",
+                "That comes to {n}{w}{st}{when}.",
+                "I count {n}{w}{st}{when}."],
+               { n:qty(list.length, "record"), w:slotWords(s),
+                 st:(s.status ? " with status " + h.stMeta(s.status).label : ""),
+                 when:(s.range ? " in " + s.range.label : "") }, A.norm),
       note: Object.keys(c).map(k => h.stMeta(k).label + " " + c[k]).join(" · "),
       chips: list.length ? [{ label:"Show them", act:{ kind:"filter", ids:list.map(t => t.id),
                                                        label:("Count" + slotWords(s)).trim() } }] : []
@@ -839,7 +1051,10 @@ intent("scripts", {
     if (!api.scripts.length) return { say:"No scripts in the workspace yet — they live in the scripts folder." };
     const sorted = api.scripts.slice().sort((a, b) => (b.uses || 0) - (a.uses || 0));
     return {
-      say: plural(api.scripts.length, "script") + " in the workspace.",
+      say: say(["{n} in the workspace.",
+                "You have {n} to hand.",
+                "{n}, most-used first."],
+               { n:qty(api.scripts.length, "script") }, A.norm),
       rows: sorted.slice(0, 12).map(s => ({ id:null, code:s.file,
         text:s.name || s.file, sub:(s.uses || 0) + " runs" + (s.desc ? " · " + s.desc : "") })),
       chips: [{ label:"Open the Scripts panel", act:{ kind:"panel", panel:"scripts" } }]
@@ -853,13 +1068,217 @@ intent("routines", {
            ["my schedules",10],["what repeats",9]],
   run(A){
     const api = A.api;
-    if (!api.routines.length) return { say:"No schedules yet." };
+    if (!api.routines.length) return { say: say(["No schedules yet.",
+                                                "Nothing runs on a schedule so far.",
+                                                "You have not set any up."], {}, A.norm) };
     return {
-      say: plural(api.routines.length, "schedule") + " set up.",
+      say: say(["{n} set up.",
+                "{n} running.",
+                "You have {n}."],
+               { n:qty(api.routines.length, "schedule") }, A.norm),
       rows: api.routines.map(r => ({ id:null, code:r.paused ? "paused" : "on",
         text:r.title, sub:(r.freq === "cron" ? "cron " + r.cron : r.freq) +
              (r.remind ? " · reminds" : "") + ((r.scripts || []).length ? " · runs a script" : "") })),
       chips: [{ label:"Open Routines", act:{ kind:"panel", panel:"routine" } }]
+    };
+  }
+});
+
+/* ═══ ABOUT DOSSIER ITSELF ═══════════════════════════════════════════════
+   "What is this application used for" once answered "11 systems on the
+   list", and "how do I create a routine" answered "5 records came in
+   today". Both were questions about the app, and the app had nothing to
+   say about itself.
+
+   The knowledge below is the only content in this file that is not read out
+   of your workspace, because it is about the software rather than the work.
+   It is kept as facts — where a thing lives, what it is for, what to press —
+   and turned into sentences at the point of asking, like everything else. */
+
+const GUIDE = [
+  { id:"routine", name:"a routine or schedule",
+    words:"routine routines schedule scheduled scheduling recurring repeat repeating cron daily weekly automatic automate",
+    where:"Menu (⋯) → Routines",
+    how:["Open Menu → Routines and fill in the form at the top.",
+         "Give it a name, then pick how often: weekdays, daily, weekly, monthly, or cron for anything else.",
+         "Set Remind me to Yes if you want a notification each time — it starts at No, and a schedule with it off just raises a record and stays silent.",
+         "Under What it does you can attach a script, which the runner will execute when it fires."],
+    tip:"Or just tell me: \"remind me every 30 minutes to drink water\" and I will set it up for you." },
+
+  { id:"script", name:"a script",
+    words:"script scripts bat batch automation automate runner execute run powershell",
+    where:"the scripts folder in your workspace",
+    how:["Drop the .bat file into the scripts folder inside your workspace folder.",
+         "Open Menu → Scripts and press Rescan; Dossier picks up anything new.",
+         "Attach it to a record from that record's Scripts section, then press Run.",
+         "For it to actually execute rather than just hand you the command line, dossier-runner.bat has to be running."],
+    tip:"Ask me \"what scripts do I have\" to see the ones it already knows about." },
+
+  { id:"record", name:"a record",
+    words:"record records task tasks ticket log logging capture raise create add new entry",
+    where:"the compose bar at the top",
+    how:["Type into the bar at the top and press Enter.",
+         "Shorthand saves typing: p1 for priority, @System, :Type, ~Name for who raised it, 2h for an estimate, and today or friday for a date.",
+         "So: restart imaging pool p1 @Imaging ~Sokha 30m today.",
+         "Ctrl+V pastes a screenshot straight onto whichever record is open."],
+    tip:"Or say \"log imaging pool crash p1 @Imaging today\" here and I will offer it for you to confirm." },
+
+  { id:"notification", name:"Windows notifications",
+    words:"notification notifications notify alert alerts popup pop toast windows desktop bell remind reminders",
+    where:"the bell in the top right, and Menu → Setup → Reminders",
+    how:["Press the bell in the top right to switch reminders on.",
+         "The browser then asks for permission — allow it, and reminders appear as Windows notifications even when the tab is behind Outlook.",
+         "Opening dossier.html straight from the folder blocks them: Chrome and Edge refuse notification permission on file:// with no way to allow it.",
+         "Run dossier-serve.bat instead, which serves the same file from 127.0.0.1 where permission can be granted."],
+    tip:"I can turn them on for you — just say \"turn on notifications\"." },
+
+  { id:"workspace", name:"the workspace folder",
+    words:"workspace folder save saving saved backup backups file files where storage store data lost",
+    where:"Menu → Workspace",
+    how:["Press Choose workspace folder and pick a folder on your PC.",
+         "Everything lives there as ordinary files: dossier.json for the records, tasks/ for attachments, scripts/, lang/ and backups/.",
+         "It saves as you work, and keeps 30 daily backups in backups/.",
+         "Nothing is uploaded anywhere — Dossier makes no network calls at all."],
+    tip:"Until you pick a folder, records only exist in the browser tab." },
+
+  { id:"chase", name:"chasing someone",
+    words:"chase chasing chased waiting wait vendor party follow followup nudge remind them",
+    where:"a record's Waiting on someone else section",
+    how:["On the record, open Waiting on someone else and set who has it and why.",
+         "Dossier then counts the days and tells you when they have gone quiet for longer than that person usually takes.",
+         "Press Chase them to log a chase; press They came back to clear it."],
+    tip:"Ask me \"who has gone quiet\" and I will tell you who to chase first." },
+
+  { id:"attach", name:"attaching a document",
+    words:"attach attachment document documents file upload screenshot email msg drop evidence",
+    where:"a record's Documents section",
+    how:["Open the record and drop files onto the Documents box.",
+         "They are copied into tasks/<record>/ inside your workspace folder.",
+         "Ctrl+V pastes a screenshot straight in without saving it first."],
+    tip:"Those files are ordinary unencrypted files — worth remembering if the folder ever sits on shared storage." },
+
+  { id:"holiday", name:"holidays and leave",
+    words:"holiday holidays leave festival public calendar off nonworking",
+    where:"Menu → Setup → Holidays and festivals",
+    how:["Open Menu → Setup → Holidays and festivals.",
+         "Paste a whole year as JSON, or add a date range in one go rather than one day at a time.",
+         "Dossier then skips them when it works out target dates."],
+    tip:"" },
+
+  { id:"language", name:"the language",
+    words:"language languages khmer english translate translation locale xml",
+    where:"Menu → Setup → Language",
+    how:["Language files live in the lang folder as XML, one per language.",
+         "Each phrase is a <text name= source= value= /> line; fill in value to translate it.",
+         "Pick the language in Menu → Setup. Anything left untranslated falls back to English rather than going blank."],
+    tip:"" },
+
+  { id:"assist", name:"the Assist tab",
+    words:"assist tab detector detectors surge stalled runbook suggestion suggestions insight",
+    where:"the Assist tab, or press 7",
+    how:["Press 7 or click Assist.",
+         "The left column ranks what to do next and says why each one is there.",
+         "The right column is what noticed itself: a system failing more than usual, a wait gone quiet, work that stopped moving, or something you have already solved once."],
+    tip:"" },
+
+  { id:"backup", name:"backups and safety",
+    words:"backup backups restore export import csv json safe copy",
+    where:"Menu → Workspace",
+    how:["A dated backup is written to backups/ each day, and 30 are kept.",
+         "Export a JSON copy or a CSV from Menu → Workspace at any time.",
+         "Import a JSON export from the same place."],
+    tip:"" },
+
+  { id:"shortcut", name:"keyboard shortcuts",
+    words:"shortcut shortcuts keyboard key keys hotkey press",
+    where:"press ?",
+    how:["Press ? for the full sheet.",
+         "1 to 7 switch views, N starts a new record, / searches, A opens me, W is the work console.",
+         "J and K move the cursor, Enter opens, Space cycles status, D marks done."],
+    tip:"" }
+];
+
+function guideFor(mw, norm){
+  let best = null, bestScore = 0;
+  GUIDE.forEach(g => {
+    const words = g.words.split(" ");
+    let s = 0;
+    mw.forEach(w => variants(w).forEach(v => { if (words.indexOf(v) >= 0) s += 2; }));
+    if (norm.indexOf(g.id) >= 0) s += 2;
+    if (s > bestScore){ bestScore = s; best = g; }
+  });
+  return bestScore >= 2 ? best : null;
+}
+
+intent("howTo", {
+  kind:"read", label:"How to do something",
+  cues:{ how:5, where:4, add:3, create:3, make:3, set:3, setup:5, configure:6, enable:6,
+         turn:3, use:4, work:2, do:2, change:3, find:2, attach:4, install:6, start:2 },
+  phrases:[["how do i",12],["how to",12],["how can i",12],["where do i find",12],
+           ["where do i put",12],["where do i go",10],["where is",6],
+           ["how does",8],["show me how",12],["walk me through",12],["what do i press",10],
+           ["is it possible to",9],["can i",5],["teach me",11],["explain how",12]],
+  run(A){
+    const g = guideFor(A.mw, A.norm);
+    if (!g) return {
+      say: say(["I am not sure which part you mean.",
+                "I do not know that one.",
+                "That one I cannot help with."], {}, A.norm),
+      note:"I can explain: " + andList(GUIDE.map(x => x.name), 12) + ".",
+      chips: GUIDE.slice(0, 4).map(x => ({ label:x.name, act:{ kind:"say", text:"how do i set up " + x.id } }))
+    };
+    return {
+      say: say(["Setting up {name} — it lives in {where}.",
+                "{Name}: you will find it under {where}.",
+                "That is {where}.",
+                "For {name}, go to {where}."],
+               { name:g.name, Name:g.name.charAt(0).toUpperCase() + g.name.slice(1), where:g.where },
+               A.norm),
+      note: g.how.join("\n") + (g.tip ? "\n\n" + g.tip : ""),
+      chips: g.id === "routine" ? [{ label:"Open Routines", act:{ kind:"panel", panel:"routine" } }]
+           : g.id === "script"  ? [{ label:"Open Scripts", act:{ kind:"panel", panel:"scripts" } }]
+           : g.id === "workspace" ? [{ label:"Open Workspace", act:{ kind:"panel", panel:"ws" } }]
+           : g.id === "assist"  ? [{ label:"Open Assist", act:{ kind:"view", view:"assist" } }]
+           : g.id === "notification" ? [{ label:"Turn them on",
+               act:{ kind:"notify", on:true, confirm:"Switch reminders on?" } }]
+           : g.id === "shortcut" ? [{ label:"Show the shortcuts", act:{ kind:"keys" } }]
+           : [{ label:"Open Setup", act:{ kind:"panel", panel:"setup" } }]
+    };
+  }
+});
+
+intent("about", {
+  kind:"read", label:"About Dossier",
+  cues:{ dossier:9, application:7, app:6, program:7, software:7, tool:6, purpose:8,
+         for:1, about:2, point:6, does:2, is:1 },
+  phrases:[["what is this",12],["what is dossier",14],["what does this do",13],
+           ["what is this app",14],["used for",12],["what is it for",13],
+           ["the point of this",12],["why would i use",12],["what does it do",12],
+           ["who made this",9],["what are you",10]],
+  run(A){
+    const api = A.api, h = api.h;
+    const n = api.tasks.length;
+    const live = api.tasks.filter(x => h.LIVE.indexOf(x.status) >= 0).length;
+    const sys = {};
+    api.tasks.forEach(x => { if (x.system) sys[x.system] = (sys[x.system] || 0) + 1; });
+    const top = Object.keys(sys).sort((a, b) => sys[b] - sys[a]).slice(0, 3);
+    return {
+      say: say(["Dossier is a record of your support work — everything you are asked to do, what you did about it, and what is still owed.",
+                "It is where your support work is written down: what came in, what you did, and what is still outstanding.",
+                "Dossier keeps track of application-support work — the jobs, who asked, what you ran, and what is still open."],
+               {}, A.norm),
+      note: (n
+        ? "Right now it holds " + qty(n, "record") + ", " + live + " of them still live" +
+          (top.length ? ", mostly across " + andList(top, 3) : "") + ".\n\n"
+        : "It is empty so far — log something and it starts learning from it.\n\n") +
+        "Everything lives in one folder on this PC as ordinary files. Nothing is uploaded, " +
+        "and there is no model anywhere in it: the Assist tab and I both work by counting " +
+        "what is already in your own records.\n\n" +
+        "The parts: the Day, Board, Register, Week and Library views for looking at work; " +
+        "Insight for the numbers; Assist for what it noticed by itself; routines for anything " +
+        "that repeats; scripts for the commands you keep re-running; and me for asking about it in words.",
+      chips:[{ label:"What can you do", act:{ kind:"say", text:"what can you do" } },
+             { label:"Open Assist", act:{ kind:"view", view:"assist" } }]
     };
   }
 });
@@ -1013,8 +1432,14 @@ intent("similarTo", {
   run(A){
     const api = A.api, t = A.slots.record;
     const near = api.h.similar(t.title, t.id, 8, 0.3);
-    if (!near.length) return { say:"Nothing else looks like " + t.code + "." };
-    return { say: near.length + " record" + (near.length === 1 ? "" : "s") + " look like " + t.code + ".",
+    if (!near.length) return { say: say(["Nothing else looks like {code}.",
+                                        "{code} stands alone.",
+                                        "No near matches for {code}."],
+                                       { code:t.code }, A.norm) };
+    return { say: say(["{n} look like {code}.",
+                       "{n} in the same family as {code}.",
+                       "{code} has {n} close to it."],
+                      { n:qty(near.length, "record"), code:t.code }, A.norm),
              rows: near.map(x => row(x.task, api, Math.round(x.score * 100) + "% match · " +
                    api.h.stMeta(x.task.status).label)),
              chips:[{ label:"Show them", act:{ kind:"filter",
@@ -1031,8 +1456,11 @@ intent("blocked", {
   run(A){
     const api = A.api, h = api.h;
     const list = applySlots(api.tasks.filter(t => t.status === "blocked"), A.slots, api);
-    if (!list.length) return { say:"Nothing is blocked." };
-    return { say: plural(list.length, "record") + " blocked.",
+    if (!list.length) return { say: say(["Nothing is blocked.",
+                                        "Nothing held up.",
+                                        "All clear — nothing blocked."], {}, A.norm) };
+    return { say: say(["{n} blocked.", "{n} held up.", "{n} cannot move."],
+                      { n:qty(list.length, "record") }, A.norm),
              rows: list.slice(0, 12).map(t => row(t, api,
                t.waitOn ? "waiting on " + t.waitOn + " · " + h.waitDays(t) + "d"
                         : (t.blockedBy || []).length + " holding it")),
@@ -1052,7 +1480,10 @@ intent("oldest", {
       .filter(t => t.created).sort((a, b) => a.created < b.created ? -1 : 1);
     if (!list.length) return { say:"Nothing is open." };
     const age = t => Math.round((Date.now() - Date.parse(t.created)) / DAY);
-    return { say: list[0].code + " — open " + age(list[0]) + " days. “" + list[0].title + "”",
+    return { say: say(["{code} — open {age}. “{title}”",
+                       "{code} has been around {age}: “{title}”",
+                       "The oldest is {code}, open {age} — “{title}”"],
+                      { code:list[0].code, age:span(age(list[0])), title:list[0].title }, A.norm),
              rows: list.slice(1, 8).map(t => row(t, api, age(t) + "d old · " + h.stMeta(t.status).label)),
              chips:[{ label:"Open it", act:{ kind:"open", id:list[0].id } }] };
   }
@@ -1066,8 +1497,13 @@ intent("neverChased", {
     const api = A.api, h = api.h;
     const list = live(api).filter(t => t.waitOn && !(t.chases || []).length)
       .sort((a, b) => h.waitDays(b) - h.waitDays(a));
-    if (!list.length) return { say:"Everything you are waiting on has been chased at least once." };
-    return { say: plural(list.length, "record") + " waiting and never chased.",
+    if (!list.length) return { say: say(["Everything you are waiting on has been chased at least once.",
+                                        "No forgotten waits — all of them have been chased.",
+                                        "You have chased them all."], {}, A.norm) };
+    return { say: say(["{n} waiting and never chased.",
+                       "{n} nobody has been reminded about.",
+                       "{n} sitting with someone, unchased."],
+                      { n:qty(list.length, "record") }, A.norm),
              rows: list.slice(0, 10).map(t => row(t, api, t.waitOn + " · " + h.waitDays(t) + "d")),
              chips:[{ label:"Chase " + list[0].waitOn, act:{ kind:"chase", id:list[0].id,
                confirm:"Log a chase to " + list[0].waitOn + " on " + list[0].code + "?" } }] };
@@ -1082,8 +1518,12 @@ intent("undated", {
   run(A){
     const api = A.api;
     const list = applySlots(live(api), A.slots, api).filter(t => !t.due);
-    if (!list.length) return { say:"Everything live has a date on it." };
-    return { say: plural(list.length, "record") + " with no date.",
+    if (!list.length) return { say: say(["Everything live has a date on it.",
+                                        "All dated — nothing adrift.",
+                                        "Nothing undated."], {}, A.norm) };
+    return { say: say(["{n} with no date.", "{n} adrift without a date.",
+                       "{n} carry no date at all."],
+                      { n:qty(list.length, "record") }, A.norm),
              note:"Undated work never shows in the Day view, which is where it goes quiet.",
              rows: list.slice(0, 12).map(t => row(t, api, api.h.stMeta(t.status).label + " · " + t.priority)),
              chips:[{ label:"Show them", act:{ kind:"filter", ids:list.map(t => t.id), label:"No date" } }] };
@@ -1107,7 +1547,10 @@ intent("aboutPerson", {
     const topT = Object.keys(typ).sort((a, b) => typ[b] - typ[a])[0];
     const openN = mine.filter(t => h.LIVE.indexOf(t.status) >= 0).length;
     return {
-      say: who + " — " + plural(mine.length, "record") + ", " + openN + " still live.",
+      say: say(["{who} — {n}, {live} still live.",
+                "{who} has brought you {n}; {live} still open.",
+                "{n} from {who}, {live} of them live."],
+               { who:who, n:qty(mine.length, "record"), live:openN }, A.norm),
       note: (topS ? "Mostly " + topS + (topT ? ", mostly " + topT.toLowerCase() : "") + ". " : "") +
             "First seen " + h.niceDate(h.dayOf(mine[mine.length - 1].created)) + ".",
       rows: mine.filter(t => h.LIVE.indexOf(t.status) >= 0).slice(0, 8)
@@ -1158,7 +1601,11 @@ intent("compare", {
     const db = api.tasks.filter(t => t.status === "done" && h.dayOf(t.completed) >= lastW &&
                                      h.dayOf(t.completed) < thisW).length;
     const word = a > b ? "busier" : a < b ? "quieter" : "about the same";
-    return { say:"This week is " + word + " — " + a + " in, against " + b + " last week.",
+    return { say: say(["This week is {word} — {a} in, against {b} last week.",
+                       "{word.}: {a} this week, {b} last.",
+                       "{a} came in this week against {b} last — {word}."],
+                      { word:word, "word.":word.charAt(0).toUpperCase() + word.slice(1),
+                        a:a, b:b }, A.norm),
              note:"Closed: " + dc + " this week, " + db + " last week." +
                   (a > b && dc < db ? "\nMore coming in and less going out — that gap is where a backlog starts." : "") };
   }
@@ -1172,8 +1619,11 @@ intent("tags", {
     const api = A.api, c = {};
     api.tasks.forEach(t => (t.tags || []).forEach(g => c[g] = (c[g] || 0) + 1));
     const rank = Object.keys(c).sort((a, b) => c[b] - c[a]);
-    if (!rank.length) return { say:"No tags in use yet. Add them with +tag when you log something." };
-    return { say: plural(rank.length, "tag") + " in use.",
+    if (!rank.length) return { say: say(["No tags in use yet — add them with +tag when you log something.",
+                                        "You have not tagged anything yet.",
+                                        "No tags so far."], {}, A.norm) };
+    return { say: say(["{n} in use.", "You use {n}.", "{n}, commonest first."],
+                      { n:qty(rank.length, "tag") }, A.norm),
              note: rank.slice(0, 20).map(k => k + " " + c[k]).join(" · ") };
   }
 });
@@ -1187,8 +1637,14 @@ intent("systems", {
     api.tasks.forEach(t => { if (t.system) c[t.system] = (c[t.system] || 0) + 1; });
     (api.settings.systems || []).forEach(s => { const n = s.name || s; if (!c[n]) c[n] = 0; });
     const rank = Object.keys(c).sort((a, b) => c[b] - c[a]);
-    if (!rank.length) return { say:"No systems set up yet." };
-    return { say: plural(rank.length, "system") + " on the list.",
+    if (!rank.length) return { say: say(["No systems set up yet.",
+                                        "You have not named any systems.",
+                                        "Nothing is set up under systems."], {}, A.norm) };
+    return { say: say(["{n} on the list.",
+                       "You cover {n}.",
+                       "{n}, busiest first.",
+                       "There are {n} in play."],
+                      { n:qty(rank.length, "system") }, A.norm),
              note: rank.map(k => k + " (" + c[k] + ")").join(" · "),
              chips:[{ label:"Show " + rank[0], act:{ kind:"filterSys", system:rank[0] } }] };
   }
@@ -1329,35 +1785,105 @@ intent("run", {
 });
 intent("remind", {
   kind:"write", label:"Set a reminder",
-  cues:{ remind:9, reminder:9, alert:7, notify:7, nudge:5, every:4, ping:3 },
-  phrases:[["remind me",10],["nudge me",10],["tell me every",10],["tell me each",10],
-           ["set a reminder",10],["let me know every",9],["alert me",9]],
+  cues:{ remind:9, reminder:9, alert:5, notify:6, nudge:5, every:5, ping:3,
+         trigger:7, recurring:7, hourly:8, schedule:4, routine:5 },
+  phrases:[["remind me",12],["nudge me",12],["tell me every",12],["tell me each",12],
+           ["set a reminder",12],["let me know every",10],["alert me",9],
+           ["trigger every",12],["fire every",11],["every day at",10],["keep telling me",11]],
+  boost:{ every:6, window:4 },
   run(A){
     const api = A.api, s = A.slots;
-    let title = A.raw.replace(/^.*?\bremind me\b\s*/i, "")
-                     .replace(/^.*?\bnudge me\b\s*/i, "")
-                     .replace(/\bevery\s+\d*\s*\w+\b/i, "")
-                     .replace(/^\s*(to|about|that)\s+/i, "")
-                     .replace(/\bat \d{1,2}:\d{2}\b/, "").trim();
+
+    /* the name: whatever was quoted, else the sentence with the instruction
+       stripped off the front and the timing stripped out of the middle */
+    let title = s.quoted || A.raw
+      .replace(/^.*?\b(remind|nudge|alert|tell|notify)\s+me\b\s*/i, "")
+      .replace(/^.*?\b(create|make|add|set)\s+(me\s+)?(a\s+|an\s+|the\s+)?(new\s+)?(task|record|routine|reminder|schedule|job)?\s*(name[d]?\s+as\s+|called\s+|named\s+|for\s+|to\s+)?/i, "")
+      .replace(/\band also\b.*$/i, "")
+      .replace(/\b(every|each)\s*\d*\s*(minute|minutes|min|mins|mn|m|hour|hours|hr|hrs|h|day|days|d|half an hour)\b/gi, " ")
+      .replace(/\b(?:from|between)\s*\d{1,2}\s*(?:am|pm)?\s*(?:to|until|till|-|and|through)\s*\d{1,2}\s*(?:am|pm)?\b/gi, " ")
+      .replace(/\bat \d{1,2}:\d{2}\b/gi, " ")
+      .replace(/\b(hourly|daily|weekdays?|and|also|as well|please|trigger|turn on the window notification)\b/gi, " ")
+      .replace(/^\s*(to|about|that|for|and)\s+/i, "")
+      .replace(/[\s.,;]+$/, "")
+      .replace(/\s+/g, " ").trim();
     if (!title) title = "Reminder";
     title = title.charAt(0).toUpperCase() + title.slice(1);
+
     if (!s.every && !s.time && !s.date)
-      return { say:"How often? Try \"remind me every 30 minutes to drink water\"." };
-    let freq = "daily", cron = "";
-    if (s.every){
-      if (s.every.unit === "minute"){ freq = "cron"; cron = "*/" + s.every.n + " * * * *"; }
-      else if (s.every.unit === "hour"){ freq = "cron"; cron = "0 " + (s.every.n > 1 ? "*/" + s.every.n : "*") + " * * *"; }
-      else { freq = "daily"; }
+      return { say: say(["How often should I nudge you?",
+                         "How often?",
+                         "At what interval?"], {}, A.norm),
+               note:"Say it like \"every 30 minutes from 8am to 5pm\", or \"every day at 08:30\".",
+               awaiting:{ intent:"remind", slot:"every" } };
+
+    /* every N minutes/hours becomes cron; anything daily stays a plain
+       daily schedule, which is cheaper for the app to reason about */
+    let freq = "daily", cron = "", every = s.every;
+    const w = s.window;
+    const hourField = w ? (w.from === w.to ? String(w.from)
+                        : w.from < w.to ? w.from + "-" + w.to
+                        : w.from + "-23,0-" + w.to) : "*";
+    if (every && every.unit === "minute"){
+      freq = "cron"; cron = "*/" + Math.max(1, Math.min(59, every.n)) + " " + hourField + " * * *";
+    } else if (every && every.unit === "hour"){
+      freq = "cron";
+      cron = "0 " + (w ? (every.n > 1 ? hourField + "/" + every.n : hourField)
+                       : (every.n > 1 ? "*/" + every.n : "*")) + " * * *";
+    } else if (every && every.unit === "weekday"){
+      freq = "weekdays";
+    } else if (w && !every){
+      freq = "cron"; cron = "0 " + hourField + " * * *";
     }
-    const when = freq === "cron" ? "cron " + cron : "daily" + (s.time ? " at " + s.time : "");
+
+    const when = freq === "cron"
+      ? (every && every.unit === "minute" ? "every " + minutesWord(every.n)
+         : every && every.unit === "hour" ? (every.n > 1 ? "every " + every.n + " hours" : "every hour")
+         : "every hour") +
+        (w ? " between " + pad2(w.from) + ":00 and " + pad2(w.to) + ":00" : ", around the clock")
+      : freq === "weekdays" ? "every weekday" + (s.time ? " at " + s.time : " at 09:00")
+      : "once a day" + (s.time ? " at " + s.time : " at 09:00");
+
+    const perDay = freq === "cron" && every && every.unit === "minute"
+      ? Math.floor(60 / Math.max(1, every.n)) * (w ? (w.to - w.from + 1) : 24) : 0;
+
     return {
-      say:"Set a reminder?",
-      note:"“" + title + "” — " + when + ", with a notification each time.",
+      say: say(["I can set that up.",
+                "That is a schedule — here it is.",
+                "Right, a repeating nudge."], {}, A.norm),
+      note: "“" + title + "” — " + when + ", with a notification each time." +
+            (perDay ? "\nThat is about " + perDay + " nudges a day." : "") +
+            (!w && every && every.unit === "minute"
+              ? "\nNo hours given, so it will fire overnight too. Say \"from 8am to 5pm\" to keep it to the working day."
+              : ""),
       act:{ kind:"routine", title:title, freq:freq, cron:cron, time:s.time || "09:00",
             remind:true, confirm:"Create the schedule “" + title + "”?" }
     };
   }
 });
+
+intent("notify", {
+  kind:"write", label:"Windows notifications",
+  cues:{ notification:9, notifications:9, notify:7, alerts:6, popup:8, popups:8,
+         bell:7, windows:5, desktop:6, toast:6, reminders:5, on:2, off:3, enable:5, disable:5 },
+  phrases:[["turn on notification",14],["turn on the notification",14],["turn on windows",13],
+           ["enable notification",14],["switch on notification",14],["turn off notification",14],
+           ["disable notification",14],["turn notifications on",14],["window notification",13],
+           ["turn on reminders",13],["switch reminders on",13]],
+  run(A){
+    const off = /\b(off|disable|stop|silence|mute|no more)\b/.test(A.norm);
+    return {
+      say: off ? "Switch reminders off?" : "Switch reminders on?",
+      note: off ? "Nothing will nudge you until you turn them back on."
+                : "The browser will ask for permission the first time. If it refuses, you are " +
+                  "opening dossier.html straight from the folder — run dossier-serve.bat and " +
+                  "use 127.0.0.1 instead, where permission can be granted.",
+      act:{ kind:"notify", on:!off,
+            confirm: off ? "Turn reminders off?" : "Turn reminders on?" }
+    };
+  }
+});
+
 intent("openRecord", {
   kind:"nav", label:"Open a record",
   needs:["record"],
@@ -1558,9 +2084,25 @@ function pickSuggestions(mw, slots){
    a record, a bare follow-up reaches back for an intent, and an explicit
    mention of anything always wins over both. */
 
-const PRONOUN = /\b(it|its|it's|that|this|them|those|these|the same|that one|the one|there|they)\b/;
+/* "it" alone points back at whatever we were discussing. "this application"
+   does not — the noun after it says what is meant, and borrowing a record
+   there produced "still about D-0004" on a question about the software.
+   So: only a pronoun standing on its own, or one followed by a word that is
+   plainly not a noun. */
+const PRONOUN = /\b(?:it|its|it's|them|they|that one|this one|the one|the same)\b(?!\s+[a-z]{3,})|\b(?:it|them)\b\s*[?.!]?\s*$|\bon it\b|\babout it\b|\bwith it\b|\bfor it\b|\bis it\b/;
 const FOLLOWUP = /^(and|also|then|what about|how about|ok what about|okay what about|but)\b/;
 const BARE_YES = /^(yes|yeah|yep|ok|okay|sure|go on|do it|please do)\b/;
+
+/* Where one sentence stops being one request. Only splits on connectives
+   that genuinely join two instructions — "log X and Y" is one record with a
+   long name, but "log X and also turn on notifications" is two jobs. */
+const JOIN = /\s+(?:and\s+also|and\s+then|,\s*and\s+also|;\s*|\.\s+also\s+|\s+then\s+also\s+)\s*/i;
+function splitRequests(text){
+  const raw = String(text || "").trim();
+  if (raw.length < 24) return [raw];
+  const parts = raw.split(JOIN).map(x => x.replace(/^[\s,;.]+|[\s,;.]+$/g, "")).filter(x => x.length > 3);
+  return parts.length > 1 ? parts.slice(0, 3) : [raw];
+}
 
 function ask(raw, api){
   const text = String(raw == null ? "" : raw).trim();
@@ -1574,7 +2116,7 @@ function ask(raw, api){
                  mw.some(w => ASKING.has(w) && mw.indexOf(w) < 2);
 
   api.lex = lexiconFor(api);
-  const slots = readSlots(norm, ws, api);
+  const slots = readSlots(norm, ws, api, text);
   const convo = api.convo || {};
 
   /* a code that names nothing — say so, and offer what it might have been,
@@ -1602,6 +2144,34 @@ function ask(raw, api){
 
   const A = { api, slots, ws, mw, norm, raw:text, asking, convo,
               phrase: api.phrase || (p => (p && p.k) || "") };
+
+  /* "create a reminder … and also turn on the notifications" is two requests
+     in one breath, and answering only the first half is how an assistant
+     loses your trust. Split it, and offer both. */
+  const parts = splitRequests(text);
+  if (parts.length > 1){
+    const done = [], seen = {};
+    parts.forEach(part => {
+      const r = askOne(part, api, convo);
+      if (!r || !r.intent || seen[r.intent]) return;
+      if (!r.act && r.kind !== "read") return;
+      seen[r.intent] = 1;
+      done.push(r);
+    });
+    if (done.length > 1 && done.some(r => r.act)){
+      const out = blank(
+        say(["Two things there — here is each of them.",
+             "That is two requests. Both below.",
+             "I read that as two things."], {}, norm),
+        "Confirm them one at a time.");
+      out.intent = "plan";
+      out.label = "Two things";
+      out.confidence = Math.min.apply(null, done.map(r => r.confidence || 0.7));
+      out.steps = done.map(r => ({ say:r.say, note:r.note, act:r.act, label:r.label }));
+      out.context = done[done.length - 1].context || {};
+      return out;
+    }
+  }
 
   /* answering a question this thread asked you: "which record?" → "D-0004" */
   if (convo.awaiting && convo.awaiting.intent){
@@ -1632,6 +2202,22 @@ function ask(raw, api){
     if (it) return finish(it, A, 1, [], true);
   }
 
+  return rank(A, norm, ws, mw, slots, asking, firstVerb, convo);
+}
+
+/* score one request and answer it — the ordinary path, and what each half of
+   a compound request goes through on its own */
+function askOne(text, api, convo){
+  const norm = normalise(text), ws = words(norm), mw = meaningful(ws);
+  const slots = readSlots(norm, ws, api, text);
+  const asking = /\?\s*$/.test(text) || (ws.length && ASKING.has(ws[0]));
+  const A = { api, slots, ws, mw, norm, raw:text, asking, convo:convo || {},
+              phrase: api.phrase || (p => (p && p.k) || "") };
+  return rank(A, norm, ws, mw, slots, asking, mw[0] || "", convo || {});
+}
+
+function rank(A, norm, ws, mw, slots, asking, firstVerb, convo){
+  const api = A.api;
   const ranked = INTENTS
     .map(it => ({ it, s: scoreOne(it, norm, ws, mw, slots, asking, firstVerb) }))
     .filter(x => x.s > 0)
@@ -1707,7 +2293,7 @@ function run(name, raw, api){
   if (!it) return { say:"I do not have that one." };
   const norm = normalise(raw), ws = words(norm);
   api.lex = lexiconFor(api);
-  const slots = readSlots(norm, ws, api);
+  const slots = readSlots(norm, ws, api, raw);
   const A = { api, slots, ws, mw:meaningful(ws), norm, raw:String(raw || ""), asking:true,
               phrase: api.phrase || (p => (p && p.k) || "") };
   return finish(it, A, 1, []);

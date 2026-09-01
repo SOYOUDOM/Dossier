@@ -1267,6 +1267,10 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
 .chacts{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
 .chask{margin-top:10px;padding:10px 12px;border:1px solid var(--p2);border-radius:var(--r-xs);
   background:var(--paper-2)}
+.chstep{display:grid;grid-template-columns:20px minmax(0,1fr);gap:9px;margin-top:11px;
+  padding-top:11px;border-top:1px solid var(--rule)}
+.chstep .sn{font-family:var(--f-mono);font-size:10px;color:var(--ink-3);text-align:right;padding-top:2px}
+.chstep .sb{min-width:0}
 .chask .q{font-size:12px;color:var(--ink);margin-bottom:8px}
 .chalt{margin-top:9px;font-size:10.5px;color:var(--ink-3)}
 .chf{flex:0 0 auto;display:flex;gap:8px;padding:11px 13px;border-top:1px solid var(--rule);
@@ -2918,6 +2922,10 @@ const STRINGS = {
   ChatReadThatAs: "I read that as: {what}. Correct me below if not.",
   ChatAboutStill: "still about {what}",
   ChatSameQuestion: "same question, new detail",
+  ChatNotifyOn: "Reminders are on.",
+  ChatNotifyOff: "Reminders are off — nothing will nudge you.",
+  ChatNotifyAlready: "They are already on.",
+  ChatNotifyAlreadyOff: "They are already off.",
   AiOpenRoutines: "Open Routines"
 };
 
@@ -5875,6 +5883,23 @@ function chatRenderBot(r, sourceText, replaying){
              (row.sub ? "<small>" + esc(row.sub) + "</small>" : "") + "</span></div>";
   });
 
+  /* a compound request comes back as a short plan: each step gets its own
+     confirmation, because agreeing to one is not agreeing to the other */
+  (r.steps || []).forEach((st, i) => {
+    h += '<div class="chstep"><div class="sn">' + (i + 1) + "</div><div class=\"sb\">" +
+         '<div class="say">' + esc(st.say || "") + "</div>" +
+         (st.note ? '<div class="note">' + esc(st.note) + "</div>" : "");
+    if (st.act && st.act.confirm){
+      CHAT.acts[id + "p" + i] = st.act;
+      h += '<div class="chask"><div class="q">' + esc(st.act.confirm) + "</div>" +
+           '<div class="chacts">' +
+             '<button class="btn pri sm" data-act="' + id + "p" + i + '">' + esc(L("ChatYes")) + "</button>" +
+             '<button class="btn sm" data-dismiss="1">' + esc(L("ChatNo")) + "</button>" +
+           "</div></div>";
+    }
+    h += "</div></div>";
+  });
+
   if (r.act && r.act.confirm){
     CHAT.acts[id + "yes"] = r.act;
     h += '<div class="chask"><div class="q">' + esc(r.act.confirm) + "</div>" +
@@ -5992,6 +6017,16 @@ function chatDo(act){
       return chatBot({ say:L("ChatWaiting", { code:t ? t.code : "", who:act.party }) });
     }
     case "chase":    chaseWait(act.id); return;
+    case "keys":     closeChat(); return openKeys();
+    case "notify": {
+      /* the bell is the single switch for this, so use it rather than
+         reaching past it and leaving the button out of step */
+      if (S.settings.remind !== act.on) askNotify();
+      else return chatBot({ say:L(act.on ? "ChatNotifyAlready" : "ChatNotifyAlreadyOff") });
+      const st = (typeof Notification === "undefined") ? "none" : Notification.permission;
+      return chatBot({ say:L(act.on ? "ChatNotifyOn" : "ChatNotifyOff"),
+                       note: act.on && st !== "granted" ? L("RemindersBlockedHint").replace(/<[^>]+>/g, "") : "" });
+    }
     case "run":      closeChat(); return runScriptFor(act.id, act.scriptId);
     case "undo":     closeChat(); return doUndo();
     case "routine": {

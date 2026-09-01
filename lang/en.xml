@@ -1295,5 +1295,9 @@ Nothing is holding this any more." />
     <text name="ChatReadThatAs" source="I read that as: {what}. Correct me below if not." value="I read that as: {what}. Correct me below if not." />
     <text name="ChatAboutStill" source="still about {what}" value="still about {what}" />
     <text name="ChatSameQuestion" source="same question, new detail" value="same question, new detail" />
+    <text name="ChatNotifyOn" source="Reminders are on." value="Reminders are on." />
+    <text name="ChatNotifyOff" source="Reminders are off — nothing will nudge you." value="Reminders are off — nothing will nudge you." />
+    <text name="ChatNotifyAlready" source="They are already on." value="They are already on." />
+    <text name="ChatNotifyAlreadyOff" source="They are already off." value="They are already off." />
   </texts>
 </localizationDictionary>
