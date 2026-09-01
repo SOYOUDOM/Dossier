@@ -5984,6 +5984,14 @@ function chatDo(act){
   if (act.confirm && !act.__ok) return chatBot({ say:"", act:act });
   switch (act.kind){
     case "say":      return chatAsk(act.text);
+    case "rerun": {
+      const c = chatThread();
+      let r;
+      try { r = DossierChat.run(act.intent, CHAT.last || "", chatApi(c ? c.convo : {})); }
+      catch(e){ r = { say:L("ChatBroke", { msg:String(e && e.message || e) }) }; }
+      if (c && r.context) c.convo = r.context;
+      return chatBot(r, null);
+    }
     case "open":     return act.id && openDrawer(act.id);
     case "view":     closeChat(); return setView(act.view);
     case "panel":    closeChat(); return openModal(act.panel);

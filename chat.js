@@ -53,7 +53,11 @@ const CONTRACTION = {
 const NOISE = new Set(("a an the of for to in on at is are am was were be been do does did " +
   "my me i we you your our it its this that these those please can could would should " +
   "will just any some there here about with from by as and or but if then so " +
-  "hey hi hello ok okay thanks thank pls plz").split(" "));
+  "pls plz").split(" "));
+/* hi, hello, hey, thanks and ok used to live in that list, because nothing
+   could do anything with them. Stripping them meant a bare "hi" reached the
+   matcher as an empty sentence and came back "I did not follow that", which
+   is a poor first impression from something calling itself an assistant. */
 
 /* a question is being asked, rather than an instruction given */
 const ASKING = new Set(("what which who whose whom when where why how is are was were " +
@@ -1174,9 +1178,10 @@ intent("stalled", {
 });
 intent("brief", {
   kind:"read", label:"Anything I should know",
-  cues:{ know:5, wrong:6, attention:7, worth:5, happening:6, going:3, summary:7,
+  cues:{ know:5, wrong:6, attention:7, happening:6, going:3, summary:7,
          update:5, brief:8, situation:11, overview:9, anything:4, roundup:11, digest:10 },
-  phrases:[["what is going on",10],["anything i should know",10],["how are things",9],
+  phrases:[["worth knowing",12],["worth a look",11],
+           ["what is going on",10],["anything i should know",10],["how are things",9],
            ["anything wrong",10],["catch me up",10],["give me a summary",10],["state of play",9]],
   run(A){
     const api = A.api;
@@ -2644,6 +2649,413 @@ intent("troubleshoot", {
   }
 });
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   BEING SPOKEN TO
+
+   It could tell you what was overdue and could not answer "hi". That is not
+   an assistant, it is a query box with a chat window around it — and the
+   first thing anyone types is a greeting.
+
+   None of this is padding. A greeting is where you find out whether the thing
+   is listening; being asked what it is deserves a straight answer rather than
+   silence; and "sorry, that came out wrong" needs somewhere to land. What it
+   must never do is pretend: it is not a person, it did not have a weekend,
+   and it does not have opinions about the weather.
+
+   The rule throughout: acknowledge, be brief, and get back to something
+   useful. Nobody opened a work tool to chat.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+function partOfDay(h){
+  const hr = h.getHours ? h.getHours() : new Date().getHours();
+  return hr < 5 ? "night" : hr < 12 ? "morning" : hr < 17 ? "afternoon" : hr < 22 ? "evening" : "night";
+}
+
+/* a greeting that has actually looked at the day is worth more than "hello" */
+function openingLine(A){
+  const api = A.api, h = api.h, k = h.today();
+  const liveOnes = api.tasks.filter(x => h.LIVE.indexOf(x.status) >= 0);
+  const over = liveOnes.filter(x => x.due && x.due < k);
+  const today = liveOnes.filter(x => x.due && x.due === k);
+  const waits = liveOnes.filter(x => x.waitOn);
+  if (!api.tasks.length) return { line:"", chips:[] };
+  if (over.length)
+    return { line: today.length
+               ? say(["{n} overdue and {t} due today.",
+                      "You have {n} past their date and {t} more due today.",
+                      "{n} overdue — {t} due today on top."],
+                     { n:over.length, t:today.length }, A.norm)
+               : say(["{n} overdue, nothing else due today.",
+                      "You have {n} past their date and nothing new due.",
+                      "{n} overdue — that is the whole of it."],
+                     { n:over.length }, A.norm),
+             chips:[{ label:"Show me the overdue", act:{ kind:"say", text:"what is overdue" } },
+                    { label:"What should I do first", act:{ kind:"say", text:"what should i do next" } }] };
+  if (today.length)
+    return { line: say(["{t} due today, nothing overdue.",
+                        "Nothing late — {t} on today.",
+                        "{t} on today and nothing behind."],
+                       { t:today.length }, A.norm),
+             chips:[{ label:"What's on today", act:{ kind:"say", text:"what is due today" } }] };
+  if (waits.length)
+    return { line: say(["Nothing due, though {w} are sitting with other people.",
+                        "Your side is clear — {w} waiting on someone else.",
+                        "Nothing on you today. {w} out with others."],
+                       { w:waits.length }, A.norm),
+             chips:[{ label:"Who has them", act:{ kind:"say", text:"who am i waiting on" } }] };
+  return { line: say(["Nothing overdue, nothing due today.",
+                      "Board's clear.",
+                      "Nothing pressing."], {}, A.norm),
+           chips:[{ label:"Anything I should know", act:{ kind:"say", text:"anything i should know" } }] };
+}
+
+intent("greet", {
+  kind:"social",
+  /* only when it is the whole message, not a preamble to one */
+  only(mw){ return mw.length <= 3; }, label:"Hello",
+  cues:{ hi:12, hello:12, hey:11, morning:8, afternoon:8, evening:8, yo:9, hiya:12,
+         howdy:12, greetings:11, sup:9, wassup:12, whatsup:10, heya:12, hii:11, helo:11,
+         hallo:11, aloha:11, salut:10, oi:8, knock:7 },
+  phrases:[["good morning",14],["good afternoon",14],["good evening",14],["good day",13],
+           ["hi there",14],["hello there",14],["hey there",14],["morning all",13],
+           ["are you there",13],["you there",12],["you awake",12],["anyone there",13],
+           ["hey you",12],["long time",10],["im back",11],["i am back",11],["back again",11]],
+  run(A){
+    const when = partOfDay(new Date());
+    const o = openingLine(A);
+    /* said hello already this conversation — do not start over */
+    if (A.convo && A.convo.greeted)
+      return { say: say(["Still here.", "Hello again.", "Yes?", "Go on."], {}, A.norm),
+               greeted:true };
+    const hello = when === "morning" ? one(["Morning.", "Good morning.", "Morning —"], A.norm)
+                : when === "afternoon" ? one(["Afternoon.", "Good afternoon.", "Hello —"], A.norm)
+                : when === "evening" ? one(["Evening.", "Good evening.", "Hello —"], A.norm)
+                : one(["Hello.", "Still at it?", "Evening —"], A.norm);
+    return {
+      say: hello + (o.line ? " " + o.line : " What do you need?"),
+      note: api0(A) ? "" : "",
+      chips: o.chips.length ? o.chips : [{ label:"What can you do", act:{ kind:"say", text:"what can you do" } }],
+      greeted: true
+    };
+  }
+});
+function api0(A){ return false; }
+
+intent("identity", {
+  kind:"social", label:"What I am",
+  cues:{ robot:9, bot:8, machine:7, human:8, real:5, person:5, sentient:10, conscious:10,
+         chatgpt:12, gpt:11, gemini:11, llm:12, model:5, trained:8, learn:3 },
+  phrases:[["who are you",16],["what are you",16],["who am i talking to",16],
+           ["what is your name",16],["whats your name",16],["do you have a name",15],
+           ["are you an ai",16],["are you a bot",16],["are you a robot",16],
+           ["are you human",16],["are you real",15],["are you chatgpt",16],
+           ["who made you",15],["who built you",15],["who created you",15],
+           ["are you alive",15],["do you think",13],["are you conscious",15],
+           ["how do you work",18],["how do you do that",17],["how were you made",15],
+           ["what model are you",16],
+           ["are you connected to the internet",16],["do you send my data",16],
+           ["where does my data go",15],["is this private",14]],
+  run(A){
+    const api = A.api;
+    const n = api.tasks.length;
+    return {
+      say: say(["I'm the assistant built into Dossier. Not a person, and not a language model either.",
+                "I'm part of Dossier — no model behind me, and no connection to anything.",
+                "I'm Dossier's assistant. Nothing clever: arithmetic over your own records."],
+               {}, A.norm),
+      note: "Everything I say comes from counting what's in this workspace" +
+            (n ? " — " + qty(n, "record") + " at the moment" : "") + ", plus a set of " +
+            "checklists for the kind of problems this job throws up.\n\n" +
+            "I run entirely on this PC. Nothing is downloaded, nothing is sent anywhere, and " +
+            "there is no model to call — which is why I work with the network off and why I " +
+            "cannot hold a conversation about anything outside your work.\n\n" +
+            "That also means I can't invent an answer. If I don't know, I say so.",
+      chips:[{ label:"What can you do", act:{ kind:"say", text:"what can you do" } },
+             { label:"What is Dossier", act:{ kind:"say", text:"what is dossier" } }]
+    };
+  }
+});
+
+intent("howareyou", {
+  kind:"social",
+  /* only when it is the whole message, not a preamble to one */
+  only(mw){ return mw.length <= 3; }, label:"How I am",
+  cues:{},
+  phrases:[["how are you",16],["how are things with you",16],["how you doing",16],
+           ["how do you do",15],["you ok",14],["you alright",14],["are you well",14],
+           ["hows it going with you",15],["you good",13],["everything ok with you",15],
+           ["how was your weekend",15],["how is your day",15],["you busy",13],["you tired",13]],
+  run(A){
+    const api = A.api;
+    const live = api.tasks.filter(x => api.h.LIVE.indexOf(x.status) >= 0).length;
+    return {
+      say: say(["Nothing to report — I don't have days. You've {n} open, though.",
+                "I'm a counter, so: fine. You've {n} open.",
+                "Same as always. Your side: {n} open."],
+               { n:live }, A.norm),
+      chips:[{ label:"What should I do next", act:{ kind:"say", text:"what should i do next" } }]
+    };
+  }
+});
+
+intent("thanks", {
+  kind:"social",
+  /* only when it is the whole message, not a preamble to one */
+  only(mw){ return mw.length <= 3; }, label:"Thanks",
+  cues:{ thanks:13, thank:12, thx:13, ty:11, cheers:11, appreciated:12, appreciate:11,
+         grateful:12, nice:4, lovely:8, brilliant:8, perfect:7, great:5 },
+  phrases:[["thank you",16],["thanks a lot",16],["thanks very much",16],["many thanks",16],
+           ["much appreciated",16],["that helps",14],["that helped",14],["you are a star",14],
+           ["nice one",13],["good job",13],["well done",13],["that is great",12],
+           ["exactly what i needed",15],["spot on",13],["perfect thanks",16]],
+  run(A){
+    return { say: say(["Any time.", "Glad it helped.", "No trouble.",
+                       "That's what I'm here for.", "Pleased it was useful."], {}, A.norm) };
+  }
+});
+
+intent("bye", {
+  kind:"social", label:"Goodbye",
+  cues:{ bye:13, goodbye:14, farewell:12, cya:12, ciao:11, adios:11 },
+  phrases:[["see you",14],["see ya",14],["talk later",14],["catch you later",15],
+           ["good night",15],["goodnight",15],["night night",15],["im off",14],
+           ["i am off",14],["logging off",15],["signing off",15],["done for today",20],
+           ["that is me done",18],["finished for the day",20],["going home",14],
+           ["heading home",14],["end of shift",14],["clocking off",15],["until tomorrow",14]],
+  run(A){
+    const api = A.api, h = api.h, k = h.today();
+    const liveOnes = api.tasks.filter(x => h.LIVE.indexOf(x.status) >= 0);
+    const over = liveOnes.filter(x => x.due && x.due <= k);
+    const unchased = liveOnes.filter(x => x.waitOn && !(x.chases || []).length && h.waitDays(x) > 2);
+    const bits = [];
+    if (over.length) bits.push(qty(over.length, "record") + " still dated today or earlier");
+    if (unchased.length) bits.push(qty(unchased.length, "wait") + " nobody has chased");
+    return {
+      say: say(["Right — see you.", "Goodbye.", "See you tomorrow.", "Off you go."], {}, A.norm),
+      note: bits.length ? "Before you go: " + andList(bits, 2) + "." : "",
+      chips: over.length ? [{ label:"Show me those", act:{ kind:"say", text:"what is due today" } }] : []
+    };
+  }
+});
+
+intent("sorry", {
+  kind:"social",
+  /* only when it is the whole message, not a preamble to one */
+  only(mw){ return mw.length <= 3; }, label:"No need",
+  cues:{ sorry:13, apologies:13, apologise:13, apologize:13, oops:11, whoops:11 },
+  phrases:[["my bad",14],["my mistake",14],["i was wrong",13],["ignore that",13],
+           ["that came out wrong",14],["i meant",8],["let me rephrase",14],["scratch that",14]],
+  run(A){
+    return { say: say(["No need — ask again.",
+                       "Nothing to apologise for. Try me again.",
+                       "That's fine. What did you mean?",
+                       "No harm done. Go on."], {}, A.norm) };
+  }
+});
+
+intent("praise", {
+  kind:"social",
+  /* only when it is the whole message, not a preamble to one */
+  only(mw){ return mw.length <= 3; }, label:"Glad it worked",
+  cues:{ clever:11, smart:10, impressive:12, amazing:11, awesome:10, excellent:10,
+         useful:9, helpful:10, brilliant:8 },
+  phrases:[["that is clever",14],["you are good",13],["i like that",13],["that is useful",14],
+           ["very helpful",14],["works well",12],["love it",13],["that is exactly",13]],
+  run(A){
+    return { say: say(["Good — it's your own records doing the work.",
+                       "Glad it landed.",
+                       "It's only counting what you've written down, but I'll take it."], {}, A.norm) };
+  }
+});
+
+intent("complain", {
+  kind:"social", label:"That missed",
+  cues:{ useless:12, rubbish:12, stupid:11, dumb:11, terrible:11, awful:11, hopeless:12,
+         nonsense:11, garbage:11 },
+  phrases:[["that is wrong",14],["you are wrong",14],["not what i asked",16],
+           ["that is not what i meant",16],["you do not understand",15],
+           ["that makes no sense",15],["you did not answer",15],["that is not right",14],
+           ["wrong answer",14],["you missed",13],["not helpful",14],["that is useless",14]],
+  run(A){
+    return {
+      say: say(["Fair enough — I read it wrong.",
+                "Sorry, that missed. Let me try again.",
+                "I got that wrong."], {}, A.norm),
+      note:"Say it another way and I'll have another go. If I keep missing something you ask " +
+           "often, pick the right one from the buttons I offer and I'll remember that phrasing " +
+           "for next time.",
+      chips:[{ label:"What can you do", act:{ kind:"say", text:"what can you do" } }]
+    };
+  }
+});
+
+intent("feeling", {
+  kind:"social", label:"Long day",
+  cues:{ tired:11, exhausted:12, knackered:12, stressed:12, overwhelmed:12, swamped:9,
+         drowning:11, fed:6, frustrated:12, annoyed:11, bored:10, sick:7 },
+  phrases:[["long day",14],["rough day",14],["bad day",14],["hard day",14],
+           ["i am tired",14],["im tired",14],["i am done",12],["too much",10],
+           ["fed up",14],["cannot cope",14],["losing my mind",14],["so busy",12],
+           ["need a break",14],["need coffee",13],["hate this",12]],
+  run(A){
+    const api = A.api, h = api.h, k = h.today();
+    const closed = api.tasks.filter(x => x.status === "done" && h.dayOf(x.completed) === k);
+    const liveOnes = api.tasks.filter(x => h.LIVE.indexOf(x.status) >= 0);
+    const quick = liveOnes.filter(x => +x.estimate && +x.estimate <= 15 && x.due && x.due <= k);
+    return {
+      say: say(["Sounds like it.", "Understood.", "Right."], {}, A.norm),
+      note: (closed.length
+              ? "For what it's worth you've closed " + qty(closed.length, "record") + " today.\n"
+              : "") +
+            (quick.length
+              ? "If you want something easy: " + qty(quick.length, "record") +
+                " due today under a quarter of an hour each."
+              : liveOnes.length
+                ? "There are " + qty(liveOnes.length, "record") + " open. I can pick one if that helps."
+                : "Nothing's open. That's something."),
+      chips: quick.length
+        ? [{ label:"Show me the quick ones", act:{ kind:"filter", ids:quick.map(x => x.id), label:"Quick wins" } }]
+        : [{ label:"What should I do next", act:{ kind:"say", text:"what should i do next" } }]
+    };
+  }
+});
+
+intent("joke", {
+  kind:"social", label:"Not my department",
+  cues:{ joke:13, funny:11, laugh:11, poem:12, song:11, story:8, riddle:12, game:9 },
+  phrases:[["tell me a joke",16],["make me laugh",16],["cheer me up",15],
+           ["say something funny",16],["sing me",14],["entertain me",15]],
+  run(A){
+    return { say: say(["Not my department, I'm afraid.",
+                       "You'd be disappointed — I only know your records.",
+                       "I'd be terrible at it."], {}, A.norm),
+             note:"I can tell you what's overdue, which is rarely funnier." };
+  }
+});
+
+intent("affirm", {
+  kind:"social",
+  /* only when it is the whole message, not a preamble to one */
+  only(mw){ return mw.length <= 3; }, label:"Go on",
+  cues:{},
+  phrases:[["yes",14],["yep",14],["yeah",14],["yup",14],["sure",13],["ok",12],["okay",12],
+           ["please do",15],["go on",14],["go ahead",15],["do it",14],["sounds good",14],
+           ["that one",12],["correct",12],["right",10]],
+  run(A){
+    /* a bare yes with nothing pending is just politeness */
+    return { say: say(["What would you like?",
+                       "Go on then — ask me.",
+                       "Ready when you are."], {}, A.norm),
+             chips:[{ label:"What should I do next", act:{ kind:"say", text:"what should i do next" } },
+                    { label:"Anything I should know", act:{ kind:"say", text:"anything i should know" } }] };
+  }
+});
+
+intent("nevermind", {
+  kind:"social",
+  /* only when it is the whole message, not a preamble to one */
+  only(mw){ return mw.length <= 3; }, label:"Dropped",
+  cues:{ forget:11, cancel:6, nevermind:14, whatever:10 },
+  phrases:[["never mind",16],["forget it",15],["forget that",15],["dont worry",14],
+           ["do not worry",14],["leave it",14],["it does not matter",14],["skip it",14],
+           ["not important",13],["ignore me",14]],
+  run(A){
+    return { say: say(["Dropped.", "Fine.", "Forgotten.", "As you like."], {}, A.norm),
+             clearContext:true };
+  }
+});
+
+intent("repeat", {
+  kind:"social", label:"Again",
+  cues:{ repeat:12, again:5, pardon:12, sorry:2 },
+  phrases:[["say that again",16],["what did you say",16],["come again",15],
+           ["i missed that",15],["one more time",14],["what was that",15],
+           ["what did i just ask",16],["what did i ask",15],["what was my last question",16],
+           ["what have i asked",14]],
+  run(A){
+    const c = A.convo || {};
+    if (!c.lastIntent)
+      return { say: say(["Nothing yet — this is where we started.",
+                         "You haven't asked me anything in this conversation yet."], {}, A.norm) };
+    const it = INTENTS.find(x => x.name === c.lastIntent);
+    return { say: say(["You asked about {what}. Here it is again.",
+                       "Last thing was {what}.",
+                       "{what} — again:"],
+                      { what:(it ? it.label.toLowerCase() : c.lastIntent) }, A.norm),
+             chips:[{ label:"Ask it again", act:{ kind:"rerun", intent:c.lastIntent } }] };
+  }
+});
+
+/* ── things it genuinely knows the answer to ─────────────────────────── */
+
+intent("clock", {
+  kind:"read", label:"The time",
+  cues:{ time:5, clock:11, oclock:13 },
+  phrases:[["the time",12],["what time is it",16],["whats the time",16],["what is the time",16],
+           ["do you have the time",15],["time now",13],["current time",14],
+           ["how long until",12],["how long till",12],["time left",11],["how much of the day",14]],
+  run(A){
+    const now = new Date();
+    const hh = pad2(now.getHours()), mm = pad2(now.getMinutes());
+    const endMin = 17 * 60 + 30;
+    const left = endMin - (now.getHours() * 60 + now.getMinutes());
+    return {
+      say: say(["{t}.", "It's {t}.", "{t} — {part}."],
+               { t:hh + ":" + mm, part:partOfDay(now) }, A.norm),
+      note: left > 0
+        ? A.api.h.mins(left) + " until 17:30."
+        : left > -180 ? "Past 17:30 — " + A.api.h.mins(-left) + " over."
+        : ""
+    };
+  }
+});
+
+intent("dateToday", {
+  kind:"read", label:"The date",
+  cues:{ date:6, today:2, day:4, month:5, year:4, weekend:6 },
+  phrases:[["what is the date",16],["whats the date",16],["what date is it",16],
+           ["what day is it",16],["what day is today",16],["is it friday",15],
+           ["is it monday",15],["what is today",14],["todays date",15],
+           ["what month is it",15],["what year is it",15],["how many days left in the month",16],
+           ["how long until friday",15],["is it the weekend",15]],
+  run(A){
+    const api = A.api, h = api.h, k = h.today();
+    const now = new Date();
+    const dowName = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"][now.getDay()];
+    const eom = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+    const leftInMonth = eom - now.getDate();
+    let toFri = (5 - now.getDay() + 7) % 7;
+    return {
+      /* niceDate says "Today" here, which is true and useless — a question
+         about the date wants the date */
+      say: say(["{d}, {full}.", "It's {d}, {full}.", "{full} — a {d}."],
+               { d:dowName, full:now.getDate() + " " +
+                 ["January","February","March","April","May","June","July","August",
+                  "September","October","November","December"][now.getMonth()] +
+                 " " + now.getFullYear() }, A.norm),
+      note: (now.getDay() === 0 || now.getDay() === 6 ? "Weekend."
+             : toFri === 0 ? "Friday — end of the week."
+             : toFri + " working " + (toFri === 1 ? "day" : "days") + " to Friday.") +
+            "  " + leftInMonth + " " + (leftInMonth === 1 ? "day" : "days") + " left in the month."
+    };
+  }
+});
+
+intent("smalltalk", {
+  kind:"social", label:"Outside what I know",
+  cues:{ weather:12, rain:9, hot:7, cold:7, football:11, news:9, politics:11, sport:10,
+         food:8, lunch:7, coffee:5, holiday:4, weekend:4 },
+  phrases:[["what is the weather",16],["is it raining",15],["whats the news",15],
+           ["did you see",12],["what do you think about",13],["your opinion",13],
+           ["do you like",13],["favourite",12],["favorite",12]],
+  run(A){
+    return { say: say(["I've no idea — I only see this workspace.",
+                       "Outside what I know, I'm afraid.",
+                       "Can't help there. Nothing outside your records reaches me."], {}, A.norm),
+             note:"No network, no model, nothing but what's in your folder." };
+  }
+});
+
 /* ═══ ABOUT DOSSIER ITSELF ═══════════════════════════════════════════════
    "What is this application used for" once answered "11 systems on the
    list", and "how do I create a routine" answered "5 records came in
@@ -2775,6 +3187,7 @@ intent("howTo", {
   cues:{ how:5, where:4, add:3, create:3, make:3, set:3, setup:5, configure:6, enable:6,
          turn:3, use:4, work:2, do:2, change:3, find:2, attach:4, install:6, start:2 },
   phrases:[["how do i",12],["how to",12],["how can i",12],["where do i find",12],
+           ["how do you",6],
            ["where do i put",12],["where do i go",10],["where is",6],
            ["how does",8],["show me how",12],["walk me through",12],["what do i press",10],
            ["is it possible to",9],["can i",5],["teach me",11],["explain how",12]],
@@ -3711,8 +4124,13 @@ function cueScore(intent, mw, norm){
     }
     if (best){ s += best; hit++; seen[w0] = 1; if (best > top) top = best; }
   });
+  /* Phrase matching was a plain substring search, which was survivable while
+     every phrase was several words long. It is not survivable now: "yes"
+     would match inside "yesterday", "ok" inside "broken", "hi" inside
+     "this". Pad both sides and the boundaries come for free. */
+  const padded = " " + norm + " ";
   (intent.phrases || []).forEach(p => {
-    if (norm.indexOf(p[0]) >= 0){ s += p[1]; phrase = true; }
+    if (padded.indexOf(" " + p[0] + " ") >= 0){ s += p[1]; phrase = true; }
   });
   return { s, hit, best:top, phrase };
 }
@@ -3726,6 +4144,12 @@ function scoreOne(intent, norm, ws, mw, slots, asking, firstVerb){
   /* a required slot that is not there disqualifies it outright, which is what
      stops "mark it done" firing when no record was named */
   for (const n of (intent.needs || [])) if (!slots[n]) return 0;
+
+  /* "ok" and "right" and "hi" are answers when they are the whole message and
+     throat-clearing when they are not. "ok what is overdue right now" was
+     coming back as a bare acknowledgement because "ok" and "right" both
+     scored. An intent may say it only counts on its own. */
+  if (intent.only && !intent.only(mw, norm, slots)) return 0;
 
   const c = cueScore(intent, mw, norm);
   let s = c.s;
@@ -3752,7 +4176,7 @@ function scoreOne(intent, norm, ws, mw, slots, asking, firstVerb){
   s += probed;
 
   /* the shape of the sentence */
-  if (intent.kind === "read"){
+  if (intent.kind === "read" || intent.kind === "social"){
     if (asking) s += 4;
   } else if (intent.kind === "write"){
     if (asking) s -= 7;
@@ -4031,8 +4455,15 @@ function finish(it, A, confidence, altIntents, learned, followed){
     person: A.slots.person || (A.convo && A.convo.person) || "",
     party:  A.slots.party  || (A.convo && A.convo.party)  || "",
     type:   A.slots.type   || (A.convo && A.convo.type)   || "",
-    awaiting: out.awaiting || null
+    awaiting: out.awaiting || null,
+    greeted: !!(out.greeted || (A.convo && A.convo.greeted))
   };
+  /* "never mind" wipes the thread's subject rather than leaving it to be
+     picked up by the next pronoun */
+  if (out.clearContext){
+    out.context.record = ""; out.context.system = ""; out.context.person = "";
+    out.context.party = ""; out.context.type = ""; out.context.awaiting = null;
+  }
   out.context.seen = Object.assign({}, (A.convo && A.convo.seen) || {});
   if (typeof out.count === "number") out.context.seen[it.name] = out.count;
   /* Contractions go on the sentence, never on the note. The note carries
