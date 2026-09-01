@@ -246,9 +246,9 @@ function buildLexicon(api){
 
 /* find the best lexicon entry inside a run of words, so that "release
    management" and "infra / iis" match as the phrases they are */
-function findTerms(ws, lex, kinds){
+function findTerms(ws, lex, kinds, mask){
   const hits = [];
-  const used = new Array(ws.length).fill(false);
+  const used = (mask || new Array(ws.length).fill(false)).slice();
   /* longest phrases first — "data team" must beat "data" */
   const cand = lex.filter(t => !kinds || kinds.indexOf(t.kind) >= 0)
                   .sort((a, b) => b.ws.length - a.ws.length || b.weight - a.weight);
@@ -321,9 +321,10 @@ const DIMWORD = (function(){
 
 const AGG_MOST = ("most commonest frequent frequently often oftenest top highest biggest " +
   "largest worst main majority mostly greatest maximum max leading dominant chief " +
-  "primary principal").split(" ");
+  "primary principal busiest heaviest peak busy popular predominant prevalent " +
+  "usual typical recurring worst-offending").split(" ");
 const AGG_LEAST = ("least fewest lowest smallest rarest seldom minimum min rarely " +
-  "quietest").split(" ");
+  "quietest lightest uncommon unusual scarcest emptiest").split(" ");
 
 function readDimension(ws, norm){
   const out = { dim:"", dims:[], agg:"" };
@@ -388,6 +389,237 @@ function readNegation(norm){
     if (k) out[k] = true;
   }
   return Object.keys(out).length ? out : null;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   MODIFIERS — the part that composes
+
+   "Worst system except others" was answered as if the exclusion had not been
+   typed, because the matcher is a classifier: it picks one question out of a
+   fixed list, and a list has no room for "…but not that one".
+
+   That is the wrong shape for language. What people actually do is take a
+   question and hang conditions off it — except this, only that, more than
+   three, longer than a week — and any condition can hang off any question.
+   Written as seventy separate intents it is impossible; written once, as
+   modifiers that attach to whatever was asked, it is a few hundred lines and
+   it works on questions nobody has written yet.
+
+   Three kinds are read here:
+
+     exclude   except / excluding / apart from / other than / not counting …
+     only      only / just / limited to / nothing but …
+     compare   more than 3 / older than a week / under an hour / at least 5 …
+
+   They are applied in one place, so every answer in the file inherits them.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+const EXCL_1 = {};
+("except excepting excluding exclude excl ignoring ignore omitting omit " +
+ "minus bar less").split(" ").forEach(w => EXCL_1[w] = 1);
+const EXCL_2 = {};
+("except for|apart from|other than|aside from|not counting|but not|leaving out|" +
+ "save for|besides that|barring the|other then").split("|").forEach(w => EXCL_2[w] = 1);
+
+const ONLY_1 = {};
+("only just solely purely exclusively".split(" ")).forEach(w => ONLY_1[w] = 1);
+const ONLY_2 = {};
+("limited to|restricted to|nothing but|confined to|and only|but only".split("|")).forEach(w => ONLY_2[w] = 1);
+
+/* words that end a list of values — a preposition or a time expression means
+   the exclusion has finished and the rest of the sentence has resumed */
+const VALUE_STOP = {};
+("in on at for from by with during over under before after since until till " +
+ "last this next past week weeks month months day days year years today " +
+ "yesterday tomorrow please show list give tell me my our").split(" ")
+  .forEach(w => VALUE_STOP[w] = 1);
+
+const STATUS_WORD = { open:"open", opened:"open", processing:"processing",
+  started:"processing", progress:"processing", blocked:"blocked", held:"blocked",
+  done:"done", closed:"done", finished:"done", complete:"done", completed:"done",
+  cancelled:"cancelled", canceled:"cancelled", dropped:"cancelled" };
+
+/* Resolve one value sitting after "except" or "only": a system, a person, a
+   party, a type, a tag, a priority or a status. Plurals are stripped because
+   "except others" means the system called Other. */
+function resolveValue(ws, i, lex){
+  const tries = [3, 2, 1];
+  for (const n of tries){
+    if (i + n > ws.length) continue;
+    const phrase = ws.slice(i, i + n);
+    const bare = phrase.map(w => (w.length > 3 && /s$/.test(w) && !/ss$/.test(w))
+      ? w.slice(0, -1) : w);
+    for (const t of lex){
+      if (t.ws.length !== n) continue;
+      let hit = true;
+      for (let j = 0; j < n; j++)
+        if (t.ws[j] !== phrase[j] && t.ws[j] !== bare[j]) { hit = false; break; }
+      if (hit) return { kind:t.kind, value:t.value, len:n };
+    }
+  }
+  const w = ws[i], b = (w.length > 3 && /s$/.test(w)) ? w.slice(0, -1) : w;
+  if (/^p[1-4]$/.test(w)) return { kind:"priority", value:w.toUpperCase(), len:1 };
+  if (STATUS_WORD[w]) return { kind:"status", value:STATUS_WORD[w], len:1 };
+  if (STATUS_WORD[b]) return { kind:"status", value:STATUS_WORD[b], len:1 };
+  return null;
+}
+
+const CMP_FIELD = {
+  day:"age", days:"age", week:"age", weeks:"age", month:"age", months:"age",
+  hour:"time", hours:"time", minute:"time", minutes:"time", min:"time", mins:"time",
+  time:"time", chase:"chase", chases:"chase", step:"step", steps:"step",
+  document:"file", documents:"file", file:"file", files:"file",
+  record:"count", records:"count"
+};
+const CMP_MUL = { day:1, days:1, week:7, weeks:7, month:30, months:30,
+                  hour:60, hours:60, minute:1, minutes:1, min:1, mins:1 };
+const WORDNUM = { one:1, two:2, three:3, four:4, five:5, six:6, seven:7, eight:8,
+                  nine:9, ten:10, a:1, an:1, couple:2, few:3, several:4, dozen:12 };
+
+function readComparison(ws, norm){
+  const OPS = [
+    [/\b(?:more|greater|bigger|higher|longer|older|larger)\s+than\b/, ">"],
+    [/\b(?:less|fewer|lower|shorter|newer|younger|smaller)\s+than\b/, "<"],
+    [/\bat\s+least\b/, ">="], [/\bat\s+most\b/, "<="],
+    [/\bover\b/, ">"], [/\bunder\b/, "<"], [/\babove\b/, ">"], [/\bbelow\b/, "<"],
+    [/\bbeyond\b/, ">"], [/\bpast\b/, ">"]
+  ];
+  let op = "", at = -1;
+  for (const [re, sign] of OPS){
+    const m = norm.match(re);
+    if (m && (at < 0 || m.index < at)){ op = sign; at = m.index; }
+  }
+  if (!op) return null;
+  /* the number and unit that follow */
+  const tail = norm.slice(at).split(/\s+/).slice(1, 6);
+  let n = null, unit = "";
+  for (const w of tail){
+    if (n == null){
+      if (/^\d+(\.\d+)?$/.test(w)) { n = parseFloat(w); continue; }
+      if (WORDNUM[w] != null) { n = WORDNUM[w]; continue; }
+    } else if (!unit && CMP_FIELD[w]) { unit = w; break; }
+  }
+  if (n == null) return null;
+  const field = unit ? CMP_FIELD[unit] : (/\b(old|open|wait|waiting|late|overdue)\b/.test(norm) ? "age" : "count");
+  if (field === "count") return null;          /* "more than 3 records" is not a filter */
+  return { op, n: n * (CMP_MUL[unit] || 1), field, unit: unit || "days" };
+}
+
+function readModifiers(ws, norm, lex){
+  const mods = { exclude:{}, only:{}, cmp:null, used:{}, mask:new Array(ws.length).fill(false),
+                 sawTrigger:"", resolvedAny:false };
+  const put = (bag, kind, value) => {
+    (bag[kind] = bag[kind] || []);
+    if (bag[kind].indexOf(value) < 0) bag[kind].push(value);
+  };
+
+  for (let i = 0; i < ws.length; i++){
+    const one = ws[i], two = one + " " + (ws[i + 1] || "");
+    let bag = null, skip = 0;
+    if (EXCL_2[two]) { bag = mods.exclude; skip = 2; }
+    else if (EXCL_1[one]) { bag = mods.exclude; skip = 1; }
+    else if (ONLY_2[two]) { bag = mods.only; skip = 2; }
+    else if (ONLY_1[one]) { bag = mods.only; skip = 1; }
+    /* "without Imaging" excludes a system; "without a system" is a negation
+       and belongs to the other reader, so it only counts here if a real
+       value follows it */
+    else if (one === "without" || one === "excluding") { bag = mods.exclude; skip = 1; }
+    if (!bag) continue;
+
+    mods.sawTrigger = mods.sawTrigger || ws.slice(i, i + skip).join(" ");
+    let j = i + skip, took = 0;
+    while (j < ws.length && took < 4){
+      const w = ws[j];
+      if (w === "and" || w === "or" || w === "the" || w === "a" || w === "an"){ j++; continue; }
+      if (VALUE_STOP[w]) break;
+      const v = resolveValue(ws, j, lex);
+      if (!v) break;
+      put(bag, v.kind, v.value);
+      mods.resolvedAny = true;
+      for (let k = 0; k < v.len; k++){ mods.used[ws[j + k]] = 1; mods.mask[j + k] = true; }
+      j += v.len; took++;
+    }
+    if (took) for (let k = 0; k < skip; k++){ mods.used[ws[i + k]] = 1; mods.mask[i + k] = true; }
+  }
+
+  mods.cmp = readComparison(ws, norm);
+  if (mods.cmp){
+    mods.resolvedAny = true;
+    /* "more than a week" has been read; leaving those words in play let them
+       score for unrelated intents — "records open more than a week" was
+       offering to log a record */
+    const spent = ("more less greater fewer bigger lower higher shorter longer older newer " +
+      "larger smaller than at least most over under above below beyond past " +
+      "day days week weeks month months hour hours minute minutes min mins " +
+      "one two three four five six seven eight nine ten couple few several dozen").split(" ");
+    ws.forEach((w, i) => { if (spent.indexOf(w) >= 0 || /^\d+(\.\d+)?$/.test(w)) mods.mask[i] = true; });
+  }
+  const any = Object.keys(mods.exclude).length || Object.keys(mods.only).length || mods.cmp;
+  return any || mods.sawTrigger ? mods : null;
+}
+
+/* ── applying them, in one place, to every answer ────────────────────── */
+
+function fieldValues(t, kind, h){
+  switch (kind){
+    case "system":   return t.system ? [t.system] : [];
+    case "type":     return t.type ? [t.type] : [];
+    case "tag":      return t.tags || [];
+    case "party":    return t.waitOn ? [t.waitOn] : [];
+    case "person":   return h.peopleOf(t) || [];
+    case "priority": return t.priority ? [t.priority] : [];
+    case "status":   return t.status ? [t.status] : [];
+    case "script":   return t.scripts || [];
+    default:         return [];
+  }
+}
+function cmpValue(t, field, h){
+  switch (field){
+    case "age":   return t.created ? (Date.now() - Date.parse(t.created)) / DAY : 0;
+    case "time":  return h.live(t) || +t.estimate || 0;
+    case "chase": return (t.chases || []).length;
+    case "step":  return (t.checklist || []).length;
+    case "file":  return (t.files || []).length;
+    default:      return 0;
+  }
+}
+function applyMods(list, mods, api){
+  if (!mods) return list;
+  const h = api.h;
+  return list.filter(t => {
+    for (const k in mods.exclude){
+      const have = fieldValues(t, k, h);
+      if (mods.exclude[k].some(v => have.indexOf(v) >= 0)) return false;
+    }
+    for (const k in mods.only){
+      const have = fieldValues(t, k, h);
+      if (!mods.only[k].some(v => have.indexOf(v) >= 0)) return false;
+    }
+    if (mods.cmp){
+      const v = cmpValue(t, mods.cmp.field, h), n = mods.cmp.n;
+      if (mods.cmp.op === ">"  && !(v >  n)) return false;
+      if (mods.cmp.op === ">=" && !(v >= n)) return false;
+      if (mods.cmp.op === "<"  && !(v <  n)) return false;
+      if (mods.cmp.op === "<=" && !(v <= n)) return false;
+    }
+    return true;
+  });
+}
+/* said back to you, so a misread condition is visible rather than silent */
+function modWords(mods){
+  if (!mods) return "";
+  const bits = [];
+  for (const k in mods.exclude) bits.push("not " + mods.exclude[k].join(" or "));
+  for (const k in mods.only) bits.push("only " + mods.only[k].join(" or "));
+  if (mods.cmp){
+    const c = mods.cmp;
+    const amount = c.field === "age" ? Math.round(c.n) + " days"
+                 : c.field === "time" ? Math.round(c.n) + " minutes"
+                 : c.n + " " + c.field + (c.n === 1 ? "" : "s");
+    bits.push((c.op === ">" ? "more than " : c.op === ">=" ? "at least "
+             : c.op === "<" ? "under " : "at most ") + amount);
+  }
+  return bits.join(", ");
 }
 
 /* ═══ SLOTS ══════════════════════════════════════════════════════════════
@@ -537,6 +769,7 @@ function readSlots(norm, ws, api, raw0){
   const quoted = String(raw0 || "").match(/["“]([^"”]{2,80})["”]/);
   if (quoted) s.quoted = quoted[1].trim();
 
+  s.mods = readModifiers(ws, norm, lex);
   const d = readDimension(ws, norm);
   s.dim = d.dim; s.dims = d.dims; s.agg = d.agg;
   s.neg = readNegation(norm);
@@ -547,14 +780,17 @@ function readSlots(norm, ws, api, raw0){
   s.range = readRange(norm, h);
   s.date = readDate(norm, h);
 
-  /* what the lexicon recognises, best hit per kind */
-  const found = findTerms(ws, lex);
+  /* What the lexicon recognises — but never a word an exclusion already
+     spent. "Excluding Other" was setting the system filter to Other AND
+     excluding it, which selects nothing at all. */
+  const found = findTerms(ws, lex, null, s.mods ? s.mods.mask : null);
   found.hits.forEach(x => {
     const k = x.term.kind;
     if (!s[k]) s[k] = x.term.value;
     if (k === "person" && !s.personTerm) s.personTerm = x.term.text;
   });
   s._used = found.used;
+  s._usedWords = ws.filter((w, i) => found.used[i]);
 
   /* an explicit status word */
   if (/\bopen\b/.test(norm) && !/\bopen (it|d-|the record)\b/.test(norm)) s.status = "open";
@@ -861,6 +1097,9 @@ function inRange(key, r){ return !r || (key && key >= r.from && key <= r.to); }
 
 function applySlots(list, s, api){
   const h = api.h;
+  /* every condition hung off the question, applied once, so an intent written
+     years ago inherits a modifier written today */
+  list = applyMods(list, s.mods, api);
   return list.filter(t => {
     if (s.system && t.system !== s.system) return false;
     if (s.type && t.type !== s.type) return false;
@@ -1025,6 +1264,14 @@ intent("find", {
   /* show / list / give me are how you want it presented, not what you are
      asking about — they turned up in nearly every question and let the
      catch-all outvote the intent that actually knew the answer */
+  /* "records except Other" is a search with a condition on it. Once the
+     condition is read and its words are spent, what is left is thin — thin
+     enough that "record" scored for the work log and for logging a new one. */
+  probe(mw, norm, slots){
+    if (!slots.mods) return 0;
+    return (slots.mods.cmp || Object.keys(slots.mods.exclude).length ||
+            Object.keys(slots.mods.only).length) ? 9 : 0;
+  },
   cues:{ find:5, show:2, list:2, search:7, records:4, all:3, get:2,
          related:4, matching:5, containing:6, regarding:5, pull:2, display:2 },
   phrases:[["look for",7],["search for",9],["what do i have",6],["anything about",8],
@@ -1257,7 +1504,7 @@ intent("worstSystem", {
     const api = A.api, h = api.h, s = A.slots;
     const r = s.range;
     const c = {};
-    api.tasks.forEach(t => {
+    applySlots(api.tasks, s, api).forEach(t => {
       if (!t.system) return;
       if (r && !inRange(h.dayOf(t.created), r)) return;
       c[t.system] = (c[t.system] || 0) + 1;
@@ -1286,9 +1533,9 @@ intent("topPerson", {
            ["which person",9],["who gives me",9],["raises the most",13],["asks the most",13],
            ["sends me the most",13],["top requester",13],["most requests",12]],
   run(A){
-    const api = A.api, h = api.h, r = A.slots.range;
+    const api = A.api, h = api.h, s = A.slots, r = s.range;
     const c = {};
-    api.tasks.forEach(t => {
+    applySlots(api.tasks, s, api).forEach(t => {
       if (r && !inRange(h.dayOf(t.created), r)) return;
       (h.peopleOf(t) || []).forEach(n => c[n] = (c[n] || 0) + 1);
     });
@@ -1473,7 +1720,19 @@ intent("count", {
   kind:"read", label:"How many",
   /* "how many overdue" is a question about overdue work, and every one of
      those answers opens with its own count — so counting is only the question
-     when nothing else in the sentence is */
+     when nothing else in the sentence is. That is exactly testable: if the
+     rest of the sentence is only filters, counting IS the question. */
+  probe(mw, norm, slots){
+    if (!/^how many\b|^what is the (?:count|total|number)\b/.test(norm)) return 0;
+    const spent = {};
+    (slots._usedWords || []).forEach(w => spent[w] = 1);
+    if (slots.mods) for (const w in slots.mods.used) spent[w] = 1;
+    const rest = mw.filter(w => !spent[w] && !ALWAYS_READ[w] && !NOISE.has(w) &&
+                                !ASKING.has(w) && !/^p[1-4]$/.test(w) &&
+                                !STATUS_WORD[w] && !DIMWORD[w] &&
+                                ["many", "count", "total", "number", "altogether"].indexOf(w) < 0);
+    return rest.length ? 0 : 10;
+  },
   cues:{ many:4, count:9, number:5, total:7, how:2 },
   phrases:[["how many",4],["what is the count",9],["number of",7],["in total",12],
            ["altogether",12],["the tally",12],["all in",9],["grand total",13]],
@@ -1485,6 +1744,7 @@ intent("count", {
     const c = {};
     list.forEach(t => c[t.status] = (c[t.status] || 0) + 1);
     return {
+      count: list.length,
       say: say(["{n}{w}{st}{when}.",
                 "That comes to {n}{w}{st}{when}.",
                 "I count {n}{w}{st}{when}."],
@@ -3850,7 +4110,7 @@ intent("tags", {
   phrases:[["what tags",10],["which tags",10],["tags do i use",10]],
   run(A){
     const api = A.api, c = {};
-    api.tasks.forEach(t => (t.tags || []).forEach(g => c[g] = (c[g] || 0) + 1));
+    applySlots(api.tasks, A.slots, api).forEach(t => (t.tags || []).forEach(g => c[g] = (c[g] || 0) + 1));
     const rank = Object.keys(c).sort((a, b) => c[b] - c[a]);
     if (!rank.length) return { say: say(["No tags in use yet — add them with +tag when you log something.",
                                         "You have not tagged anything yet.",
@@ -3868,7 +4128,7 @@ intent("systems", {
   phrases:[["what systems",10],["which systems",10],["systems do i",10],["what do i support",10]],
   run(A){
     const api = A.api, c = {};
-    api.tasks.forEach(t => { if (t.system) c[t.system] = (c[t.system] || 0) + 1; });
+    applySlots(api.tasks, A.slots, api).forEach(t => { if (t.system) c[t.system] = (c[t.system] || 0) + 1; });
     (api.settings.systems || []).forEach(s => { const n = s.name || s; if (!c[n]) c[n] = 0; });
     const rank = Object.keys(c).sort((a, b) => c[b] - c[a]);
     if (!rank.length) return { say: say(["No systems set up yet.",
@@ -4374,7 +4634,7 @@ const SYN = {
   routines:    "schedules cronjobs crons timers recurrences recurrence",
   steps:       "remaining outstanding unfinished incomplete todo",
   why:         "reason rationale cause blocker obstacle impediment holdup bottleneck",
-  history:     "timeline chronology audit trail journal diary record activity events",
+  history:     "timeline chronology audit trail journal diary activity events",
   notes:       "commentary remarks writeup summary description findings",
   files:       "attachments docs paperwork evidence artefacts artifacts uploads",
   when:        "deadline duedate target eta expected timing",
@@ -4603,6 +4863,67 @@ function puzzled(slots, api){
   return null;
 }
 
+/* ═══ SAYING WHAT IT DID NOT USE ═════════════════════════════════════════
+   The worst thing this file did was not misunderstanding — it was
+   misunderstanding silently. "Worst system except others" was answered
+   exactly as "worst system" would have been, with the same confidence and no
+   sign that two words had been thrown away.
+
+   So after an answer is chosen, the words that went into it are subtracted
+   from the words that were typed, and whatever is left over is said out loud.
+   A wrong answer you can see is wrong is worth several right ones. */
+
+/* words that are always understood, whichever intent wins */
+const ALWAYS_READ = {};
+("today yesterday tomorrow week weeks month months year years day days hour hours " +
+ "minute minutes morning afternoon evening night now last next this past since until " +
+ "recent recently ago mon monday tue tuesday wed wednesday thu thursday fri friday " +
+ "sat saturday sun sunday jan feb mar apr may jun jul aug sep sept oct nov dec " +
+ "record records task tasks job jobs item items ticket tickets thing things stuff " +
+ "one two three four five six seven eight nine ten " +
+ "show list give tell find get pull display see look want need know " +
+ "ones one thing anything everything something nothing please kindly quickly " +
+ "right currently still actually really maybe perhaps also too again already " +
+ "much many more less any some all every each other others").split(" ")
+  .forEach(w => ALWAYS_READ[w] = 1);
+
+/* which of the typed words this intent actually scored on */
+function cueWords(intent, mw, norm){
+  const hit = {};
+  mw.forEach(w => {
+    variants(w).forEach(v => { if (intent.cues && intent.cues[v] != null) hit[w] = 1; });
+    if (!hit[w] && w.length >= 5 && intent.cues){
+      for (const c in intent.cues){
+        if (c.length >= 5 && close(w, c) >= 0.86) { hit[w] = 1; break; }
+      }
+    }
+  });
+  const padded = " " + norm + " ";
+  (intent.phrases || []).forEach(p => {
+    if (padded.indexOf(" " + p[0] + " ") >= 0)
+      p[0].split(" ").forEach(w => hit[w] = 1);
+  });
+  return hit;
+}
+
+function leftoverWords(it, A){
+  const s = A.slots, mw = A.mw || [];
+  const used = cueWords(it, mw, A.norm);
+  /* everything the readers already consumed */
+  if (s.mods) for (const w in s.mods.used) used[w] = 1;
+  if (s._usedWords) s._usedWords.forEach(w => used[w] = 1);
+  [s.dim, s.agg].forEach(() => {});
+  const out = [];
+  mw.forEach(w => {
+    if (used[w] || ALWAYS_READ[w] || NOISE.has(w) || ASKING.has(w)) return;
+    if (w.length < 3 || /^\d/.test(w)) return;
+    if (DIMWORD[w] || AGG_MOST.indexOf(w) >= 0 || AGG_LEAST.indexOf(w) >= 0) return;
+    if (STATUS_WORD[w] || NEG_MAP[w]) return;
+    if (out.indexOf(w) < 0) out.push(w);
+  });
+  return out.slice(0, 4);
+}
+
 /* ═══ SHAPES AND SMALL HELP ══════════════════════════════════════════════ */
 
 /* every reply leaves here with the same fields, so nothing downstream has to
@@ -4684,7 +5005,7 @@ function ask(raw, api){
 
   const norm = normalise(text);
   const ws = words(norm);
-  const mw = meaningful(ws);
+  let mw = meaningful(ws);
   const firstVerb = mw[0] || "";
   /* "the transaction log is full, what do i do" is a question, but the
      question word is at the end — testing only the first couple of words read
@@ -4696,6 +5017,12 @@ function ask(raw, api){
 
   api.lex = lexiconFor(api);
   const slots = readSlots(norm, ws, api, text);
+  /* words a modifier consumed have been understood; leaving them in the bag
+     lets them vote for intents that have nothing to do with the question */
+  if (slots.mods && slots.mods.mask){
+    const keep = ws.filter((w, i) => !slots.mods.mask[i]);
+    mw = meaningful(keep);
+  }
   const convo = api.convo || {};
 
   /* a code that names nothing — say so, and offer what it might have been,
@@ -4846,6 +5173,15 @@ function finish(it, A, confidence, altIntents, learned, followed){
   /* below this the reading is a guess, and the answer should be read as one */
   out.unsure = confidence < 0.62 && !learned;
   out.borrowed = A.slots.borrowed || "";
+  out.applied = modWords(A.slots.mods);
+  /* what it did not use — said out loud rather than dropped */
+  const mods = A.slots.mods;
+  if (mods && mods.sawTrigger && !mods.resolvedAny)
+    out.ignored = { kind:"condition", words:[mods.sawTrigger] };
+  else if (it.kind !== "social" && it.name !== "help" && it.name !== "about"){
+    const left = leftoverWords(it, A);
+    if (left.length) out.ignored = { kind:"words", words:left };
+  }
   out.rows = out.rows || [];
   out.chips = out.chips || [];
   out.slots = {

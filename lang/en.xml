@@ -1302,5 +1302,9 @@ Nothing is holding this any more." />
     <text name="ChatStepsFrom" source="Added {n} step(s) from how this was done before" value="Added {n} step(s) from how this was done before" />
     <text name="ChatStepsAdded" source="Put {n} steps on {code}." value="Put {n} steps on {code}." />
     <text name="ChatScriptAttached" source="Attached {file} to {code}." value="Attached {file} to {code}." />
+    <text name="ChatApplied" source="reading that as: {what}" value="reading that as: {what}" />
+    <text name="ChatIgnoredWords" source="I could not use: {what}. The answer above ignores those words." value="I could not use: {what}. The answer above ignores those words." />
+    <text name="ChatSawCondition" source="You said “{what}” but I could not tell what it applied to, so I left it out." value="You said “{what}” but I could not tell what it applied to, so I left it out." />
+    <text name="ChatSearchThose" source="Search for those words" value="Search for those words" />
   </texts>
 </localizationDictionary>

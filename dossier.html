@@ -1256,6 +1256,8 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
 .chb.bot .meta{margin-top:7px;font-size:10px;color:var(--ink-3);font-family:var(--f-mono)}
 .chb.bot .hedge{font-size:10.5px;color:var(--p2);margin-bottom:4px}
 .chb.bot .carry{font-size:10px;color:var(--ink-3);margin-bottom:4px;font-style:italic}
+.chb.bot .unused{margin-top:7px;font-size:10.5px;color:var(--p2);line-height:1.5;
+  border-left:2px solid var(--p2);padding-left:8px}
 .chrow{display:grid;grid-template-columns:auto minmax(0,1fr);gap:9px;align-items:baseline;
   padding:6px 9px;margin-top:5px;border:1px solid var(--rule);border-radius:var(--r-xs);cursor:pointer}
 .chrow:hover{background:var(--paper-2)}
@@ -2929,6 +2931,10 @@ const STRINGS = {
   ChatStepsFrom: "Added {n} step(s) from how this was done before",
   ChatStepsAdded: "Put {n} steps on {code}.",
   ChatScriptAttached: "Attached {file} to {code}.",
+  ChatApplied: "reading that as: {what}",
+  ChatIgnoredWords: "I could not use: {what}. The answer above ignores those words.",
+  ChatSawCondition: "You said “{what}” but I could not tell what it applied to, so I left it out.",
+  ChatSearchThose: "Search for those words",
   AiOpenRoutines: "Open Routines"
 };
 
@@ -5877,6 +5883,25 @@ function chatRenderBot(r, sourceText, replaying){
 
   h += '<div class="say">' + esc(r.say || "") + "</div>";
   if (r.note) h += '<div class="note">' + esc(r.note) + "</div>";
+
+  /* the conditions it read out of the question, said back so a misread one is
+     visible rather than silently changing the answer */
+  if (r.applied) h += '<div class="carry">' + esc(L("ChatApplied", { what:r.applied })) + "</div>";
+
+  /* and the words it could not use. Answering as though they were never typed
+     is the one failure nobody can catch. */
+  if (r.ignored){
+    const w = (r.ignored.words || []).join(", ");
+    h += '<div class="unused">' +
+         esc(r.ignored.kind === "condition"
+             ? L("ChatSawCondition", { what:w })
+             : L("ChatIgnoredWords", { what:w })) + "</div>";
+    if (r.ignored.kind === "words"){
+      CHAT.acts[id + "srch"] = { kind:"say", text:"find " + w.split(", ").join(" ") };
+      h += '<div class="chacts"><button class="btn sm" data-act="' + id + 'srch">' +
+           esc(L("ChatSearchThose")) + "</button></div>";
+    }
+  }
 
   (r.rows || []).forEach((row, i) => {
     if (row.id) CHAT.acts[id + "r" + i] = { kind:"open", id:row.id };
