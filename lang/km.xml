@@ -1195,5 +1195,66 @@ Nothing is holding this any more." value="" />
     <text name="RemindersNoneHint" source="This browser cannot raise Windows notifications, so reminders appear inside Dossier only." value="" />
     <text name="RemindersBlockedHint" source="Windows notifications are blocked for this page, so reminders only appear inside Dossier. Click the padlock beside the address and set Notifications to Allow. Opening dossier.html straight from the folder blocks them too — run &lt;b&gt;dossier-serve.bat&lt;/b&gt; to open it from 127.0.0.1 instead." value="" />
     <text name="ScheduleDoesNothingElse" source="It will raise a record on the sheet and nothing more — no notification, no script. Set &lt;b&gt;Remind me&lt;/b&gt; to be told each time, or attach a script under &lt;b&gt;What it does&lt;/b&gt;." value="" />
+    <text name="Assist" source="Assist" value="" />
+    <text name="AiNoEngine" source="assist.js is not in this folder. Put it next to dossier.html and reload — everything else works without it." value="" />
+    <text name="AiBroke" source="The assistant hit an error and stopped: {msg}. Nothing else is affected." value="" />
+    <text name="AiHeadQueue" source="What to do next" value="" />
+    <text name="AiQueueCount" source="{n} live" value="" />
+    <text name="AiEmptyQueue" source="Nothing live. Log something and this fills itself in." value="" />
+    <text name="AiHeadBrief" source="Worth knowing" value="" />
+    <text name="AiEvidence_thin" source="from {n} records — still thin" value="" />
+    <text name="AiEvidence_fair" source="from {n} records" value="" />
+    <text name="AiEvidence_good" source="from {n} records" value="" />
+    <text name="AiEmptyBrief" source="Nothing worth interrupting you for." value="" />
+    <text name="AiNeedsMore" source="Not looking yet, for want of records: {list}" value="" />
+    <text name="AiLocalNote" source="Counted here, on this PC, from your own records. There is no model, nothing is downloaded and nothing leaves this folder — so it knows only what you have logged, and it sharpens as you log more." value="" />
+    <text name="AiOpenRecord" source="Open it" value="" />
+    <text name="AiChaseNow" source="Chase" value="" />
+    <text name="AiShowThese" source="Show these" value="" />
+    <text name="AiMakeRoutine" source="Make it a routine" value="" />
+    <text name="AiDet_surge" source="System surges" value="" />
+    <text name="AiDet_chase" source="Quiet waits" value="" />
+    <text name="AiDet_stalled" source="Stalled work" value="" />
+    <text name="AiDet_runbook" source="Solved before" value="" />
+    <text name="AiDet_duplicate" source="Duplicates" value="" />
+    <text name="AiDet_load" source="Day overload" value="" />
+    <text name="AiDet_routineable" source="Repeat work" value="" />
+    <text name="AiWhyOverdue" source="{days}d overdue" value="" />
+    <text name="AiWhyDueToday" source="due today" value="" />
+    <text name="AiWhyDueTomorrow" source="due tomorrow" value="" />
+    <text name="AiWhyDueSoon" source="due in {days}d" value="" />
+    <text name="AiWhyPriority" source="{pri}" value="" />
+    <text name="AiWhyStarted" source="already started" value="" />
+    <text name="AiWhyWaiting" source="waiting on {who}" value="" />
+    <text name="AiWhyBlocked" source="blocked" value="" />
+    <text name="AiWhyOld" source="open {days}d" value="" />
+    <text name="AiWhyQuick" source="{mins}m job" value="" />
+    <text name="AiSurgeTitle" source="{system} is failing more than it usually does" value="" />
+    <text name="AiSurgeBody" source="{n} records against it this week, where {usual} a week is normal. That is more likely one fault with {n} symptoms than {n} separate jobs." value="" />
+    <text name="AiSurgeWhy" source="{n} in the last 7 days · usually {usual} a week" value="" />
+    <text name="AiChaseTitle" source="{who} has gone quiet" value="" />
+    <text name="AiChaseBody" source="“{title}” has been waiting {days} days." value="" />
+    <text name="AiChaseWhyUsual" source="{who} normally comes back in {days} days, across {n} waits" value="" />
+    <text name="AiChaseWhyDefault" source="past the {days}-day mark in your settings" value="" />
+    <text name="AiChaseWhyChased" source="chased {n}×, last time {days}d ago" value="" />
+    <text name="AiChaseNever" source="never chased" value="" />
+    <text name="AiStalledTitle" source="Open {days} days and nothing is happening" value="" />
+    <text name="AiStalledBody" source="“{title}” — nothing logged against it for {quiet} days." value="" />
+    <text name="AiStalledWhyCohort" source="{kind} normally closes in {days} days, across {n} of them" value="" />
+    <text name="AiStalledWhyAll" source="your work normally closes in {days} days, across {n} records" value="" />
+    <text name="AiRunbookTitle" source="You have solved this one before" value="" />
+    <text name="AiRunbookBodyScript" source="{code} is the closest thing you have closed, and it was fixed by running {script}." value="" />
+    <text name="AiRunbookBodyNotes" source="{code} is the closest thing you have closed, and it carries notes on how it went." value="" />
+    <text name="AiRunbookWhy" source="{pct}% of the words match · {n} closed records like it" value="" />
+    <text name="AiDupTitle" source="Two records, one job" value="" />
+    <text name="AiDupBody" source="{a} and {b} both look like “{title}”." value="" />
+    <text name="AiDupWhy" source="both still open" value="" />
+    <text name="AiLoadTitle" source="More due today than the day has room for" value="" />
+    <text name="AiLoadBody" source="About {need} minutes of work against {left} minutes left before the day ends." value="" />
+    <text name="AiLoadWhyAll" source="all {total} carry a real estimate" value="" />
+    <text name="AiLoadWhyMixed" source="{known} of {total} carry a real estimate; the rest are guessed from how long the same work took before" value="" />
+    <text name="AiRoutineTitle" source="You keep doing this by hand" value="" />
+    <text name="AiRoutineBody" source="“{title}” — {n} times so far, about every {days} days." value="" />
+    <text name="AiRoutineWhy" source="{n} times, and regular enough to schedule" value="" />
   </texts>
 </localizationDictionary>

@@ -1219,6 +1219,36 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
 .drawer.on,.cmd.on,.modal.on,.problem.on,.chase.on,.intake.on,.drill.on,.ask.on{
   visibility:visible;transition-delay:0s }
 
+/* ── Assist ─────────────────────────────────────────────────────────────── */
+.aiwrap{display:grid;grid-template-columns:minmax(0,1.02fr) minmax(0,1fr);gap:18px;align-items:start}
+@media (max-width:1040px){ .aiwrap{grid-template-columns:1fr} }
+.aihd{display:flex;align-items:baseline;gap:9px;margin:0 0 10px;flex-wrap:wrap}
+.aihd .t{font-family:var(--f-display);font-size:12.5px;font-weight:600;letter-spacing:.03em}
+.aihd .n{font-family:var(--f-mono);font-size:10.5px;color:var(--ink-3)}
+.aiq{border:1px solid var(--rule);border-radius:var(--r);background:var(--paper);overflow:hidden}
+.airow{display:grid;grid-template-columns:22px minmax(0,1fr) auto;gap:11px;align-items:baseline;
+  padding:9px 13px;border-bottom:1px solid var(--rule);cursor:pointer}
+.airow:last-child{border-bottom:0}
+.airow:hover{background:var(--paper-2)}
+.airow .rk{font-family:var(--f-mono);font-size:10.5px;color:var(--ink-3);text-align:right}
+.airow .tx{min-width:0}
+.airow .tt{font-size:12px;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.airow .tt b{font-family:var(--f-mono);font-size:10.5px;font-weight:500;color:var(--ink-3);margin-right:6px}
+.airow .sc{font-family:var(--f-mono);font-size:10.5px;color:var(--ink-3)}
+.aiwhy{display:flex;gap:5px;flex-wrap:wrap;margin-top:4px}
+.aiwhy span{font-size:10px;color:var(--ink-3);border:1px solid var(--rule);border-radius:var(--r-xs);
+  padding:1px 5px;white-space:nowrap}
+.aic{border:1px solid var(--rule);border-left:2px solid var(--p4);border-radius:var(--r);
+  background:var(--paper);padding:12px 14px;margin-bottom:11px}
+.aic[data-tone="warn"]{border-left-color:var(--p2)}
+.aic[data-tone="info"]{border-left-color:var(--p3)}
+.aic[data-tone="good"]{border-left-color:var(--st-done)}
+.aic h5{margin:0 0 4px;font-size:12.5px;letter-spacing:.02em}
+.aic p{margin:0;font-size:11.5px;color:var(--ink-2);line-height:1.6}
+.aic .aiwhy2{margin-top:7px;font-size:10.5px;color:var(--ink-3);line-height:1.55}
+.aiact{display:flex;gap:7px;margin-top:10px;flex-wrap:wrap}
+.aifoot{margin-top:14px;font-size:10.5px;color:var(--ink-3);line-height:1.6}
+.aifoot b{font-weight:600;color:var(--ink-2)}
 .schsum .warn2{ display:block;margin-top:5px;color:var(--p2);font-size:11px;line-height:1.55 }
 </style>
 </head>
@@ -1245,6 +1275,7 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
       <button data-v="week"><span class="lb" data-i18n="Week">Week</span><span class="kb">4</span></button>
       <button data-v="library"><span class="lb" data-i18n="Library">Library</span><span class="kb">5</span></button>
       <button data-v="insight"><span class="lb" data-i18n="Insight">Insight</span><span class="kb">6</span></button>
+      <button data-v="assist"><span class="lb" data-i18n="Assist">Assist</span><span class="kb">7</span></button>
     </nav>
 
     <div class="find">
@@ -1319,6 +1350,7 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
     <section class="view" data-v="week"><div id="vWeek"></div></section>
     <section class="view" data-v="library"><div id="vLib"></div></section>
     <section class="view" data-v="insight"><div class="pad" id="vIns"></div></section>
+    <section class="view" data-v="assist"><div class="pad" id="vAi"></div></section>
   </main>
 
   <footer class="status">
@@ -1471,6 +1503,11 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
 <!-- Built fresh every time you print. The app's own layout is a fixed-height
      flex column with internal scrollers, which never paginates properly. -->
 <div id="printSheet"></div>
+
+<!-- The assistant's arithmetic lives in its own file, loaded as a plain script
+     so that opening dossier.html straight from the folder still works. If it is
+     missing the app runs exactly as before and the Assist tab says why. -->
+<script src="assist.js"></script>
 
 <script>
 "use strict";
@@ -2707,7 +2744,68 @@ const STRINGS = {
   RemindersGrantedHint: "Reminders appear in Dossier and as Windows notifications, even when the tab is behind Outlook.",
   RemindersNoneHint: "This browser cannot raise Windows notifications, so reminders appear inside Dossier only.",
   RemindersBlockedHint: "Windows notifications are blocked for this page, so reminders only appear inside Dossier. Click the padlock beside the address and set Notifications to Allow. Opening dossier.html straight from the folder blocks them too \u2014 run <b>dossier-serve.bat</b> to open it from 127.0.0.1 instead.",
-  ScheduleDoesNothingElse: "It will raise a record on the sheet and nothing more \u2014 no notification, no script. Set <b>Remind me</b> to be told each time, or attach a script under <b>What it does</b>."
+  ScheduleDoesNothingElse: "It will raise a record on the sheet and nothing more \u2014 no notification, no script. Set <b>Remind me</b> to be told each time, or attach a script under <b>What it does</b>.",
+  Assist: "Assist",
+  AiNoEngine: "assist.js is not in this folder. Put it next to dossier.html and reload — everything else works without it.",
+  AiBroke: "The assistant hit an error and stopped: {msg}. Nothing else is affected.",
+  AiHeadQueue: "What to do next",
+  AiQueueCount: "{n} live",
+  AiEmptyQueue: "Nothing live. Log something and this fills itself in.",
+  AiHeadBrief: "Worth knowing",
+  AiEvidence_thin: "from {n} records — still thin",
+  AiEvidence_fair: "from {n} records",
+  AiEvidence_good: "from {n} records",
+  AiEmptyBrief: "Nothing worth interrupting you for.",
+  AiNeedsMore: "Not looking yet, for want of records: {list}",
+  AiLocalNote: "Counted here, on this PC, from your own records. There is no model, nothing is downloaded and nothing leaves this folder — so it knows only what you have logged, and it sharpens as you log more.",
+  AiOpenRecord: "Open it",
+  AiChaseNow: "Chase",
+  AiShowThese: "Show these",
+  AiMakeRoutine: "Make it a routine",
+  AiDet_surge: "System surges",
+  AiDet_chase: "Quiet waits",
+  AiDet_stalled: "Stalled work",
+  AiDet_runbook: "Solved before",
+  AiDet_duplicate: "Duplicates",
+  AiDet_load: "Day overload",
+  AiDet_routineable: "Repeat work",
+  AiWhyOverdue: "{days}d overdue",
+  AiWhyDueToday: "due today",
+  AiWhyDueTomorrow: "due tomorrow",
+  AiWhyDueSoon: "due in {days}d",
+  AiWhyPriority: "{pri}",
+  AiWhyStarted: "already started",
+  AiWhyWaiting: "waiting on {who}",
+  AiWhyBlocked: "blocked",
+  AiWhyOld: "open {days}d",
+  AiWhyQuick: "{mins}m job",
+  AiSurgeTitle: "{system} is failing more than it usually does",
+  AiSurgeBody: "{n} records against it this week, where {usual} a week is normal. That is more likely one fault with {n} symptoms than {n} separate jobs.",
+  AiSurgeWhy: "{n} in the last 7 days · usually {usual} a week",
+  AiChaseTitle: "{who} has gone quiet",
+  AiChaseBody: "“{title}” has been waiting {days} days.",
+  AiChaseWhyUsual: "{who} normally comes back in {days} days, across {n} waits",
+  AiChaseWhyDefault: "past the {days}-day mark in your settings",
+  AiChaseWhyChased: "chased {n}×, last time {days}d ago",
+  AiChaseNever: "never chased",
+  AiStalledTitle: "Open {days} days and nothing is happening",
+  AiStalledBody: "“{title}” — nothing logged against it for {quiet} days.",
+  AiStalledWhyCohort: "{kind} normally closes in {days} days, across {n} of them",
+  AiStalledWhyAll: "your work normally closes in {days} days, across {n} records",
+  AiRunbookTitle: "You have solved this one before",
+  AiRunbookBodyScript: "{code} is the closest thing you have closed, and it was fixed by running {script}.",
+  AiRunbookBodyNotes: "{code} is the closest thing you have closed, and it carries notes on how it went.",
+  AiRunbookWhy: "{pct}% of the words match · {n} closed records like it",
+  AiDupTitle: "Two records, one job",
+  AiDupBody: "{a} and {b} both look like “{title}”.",
+  AiDupWhy: "both still open",
+  AiLoadTitle: "More due today than the day has room for",
+  AiLoadBody: "About {need} minutes of work against {left} minutes left before the day ends.",
+  AiLoadWhyAll: "all {total} carry a real estimate",
+  AiLoadWhyMixed: "{known} of {total} carry a real estimate; the rest are guessed from how long the same work took before",
+  AiRoutineTitle: "You keep doing this by hand",
+  AiRoutineBody: "“{title}” — {n} times so far, about every {days} days.",
+  AiRoutineWhy: "{n} times, and regular enough to schedule"
 };
 
 /* Loaded files, keyed by culture code. "en" is always present, from STRINGS. */
@@ -4841,7 +4939,7 @@ function restoreFilters(){
   f.hideRoutine = !!sf.hideRoutine;
   S.filters = f;
   if (sf.sort && sf.sort.by){ S.sort.by = sf.sort.by; S.sort.dir = sf.sort.dir === -1 ? -1 : 1; }
-  if (sf.view && ["day","board","register","week","library","insight"].indexOf(sf.view) >= 0) S.view = sf.view;
+  if (sf.view && ["day","board","register","week","library","insight","assist"].indexOf(sf.view) >= 0) S.view = sf.view;
   return true;
 }
 function filterSummary(){
@@ -5494,6 +5592,115 @@ function dr(label, sub, list){
   if (!list || !list.length) return "";
   INS.drills.push({ label, sub, ids: list.map(t => t.id) });
   return ' data-dr="' + (INS.drills.length - 1) + '"';
+}
+
+/* ═══ ASSIST ═════════════════════════════════════════════════════════════
+   This view is only a renderer. Every number and every sentence below comes
+   out of assist.js, which is a separate file and might simply not be there —
+   in which case the tab says so and the rest of Dossier is unaffected.
+
+   The engine returns phrase keys rather than English, so Khmer works here for
+   free and nothing has to be translated twice. */
+const AI = { acts:{} };
+
+function aiCtx(){
+  return {
+    now: Date.now(),
+    tasks: S.tasks, routines: S.routines, scripts: S.scripts, settings: S.settings,
+    /* the statistics the app already keeps, handed over rather than copied */
+    h: { tok, idf, similar, live, dayOf, dkey, today, peopleOf,
+         estimateFor, repeatCandidates, LIVE, PRIS }
+  };
+}
+function aiSay(ph){ return ph ? L(ph.k, ph.v || {}) : ""; }
+
+function aiPin(ids, label){
+  S.filters.ids = ids.slice();
+  S.filters.idsLabel = label;
+  ["fSys","fPri","fType","fWho","fRange","q"].forEach(id => { if ($(id)) $(id).value = ""; });
+  syncRail();
+  setView("register");
+}
+function aiDo(card){
+  const a = card.act || {};
+  if (a.kind === "open" && a.id)  return openDrawer(a.id);
+  if (a.kind === "chase" && a.id) return openChase(a.id);
+  if (a.kind === "routine"){
+    openModal("routine");
+    /* the panel renders asynchronously; fill the name once it is there */
+    setTimeout(() => { const el = $("rT"); if (el){ el.value = a.title || ""; el.focus(); } }, 280);
+    return;
+  }
+  if ((card.ids || []).length) return aiPin(card.ids, aiSay(card.title));
+}
+
+function renderAi(){
+  const el = $("vAi");
+  AI.acts = {};
+
+  if (!window.DossierAI){
+    el.innerHTML = '<div class="panel"><h4>' + esc(L("Assist")) + '</h4>' +
+                   '<p class="sub">' + esc(L("AiNoEngine")) + "</p></div>";
+    return;
+  }
+
+  let q = [], b = { cards:[], skipped:[], records:S.tasks.length, evidence:"thin" };
+  try { const ctx = aiCtx(); q = DossierAI.queue(ctx); b = DossierAI.brief(ctx); }
+  catch(e){
+    el.innerHTML = '<div class="panel"><h4>' + esc(L("Assist")) + '</h4>' +
+                   '<p class="sub">' + esc(L("AiBroke", { msg:String(e && e.message || e) })) + "</p></div>";
+    return;
+  }
+
+  /* ---- left: what to do next ---- */
+  const rows = q.slice(0, 12).map((x, i) =>
+    '<div class="airow" data-id="' + esc(x.id) + '">' +
+      '<span class="rk">' + (i + 1) + '</span>' +
+      '<span class="tx"><span class="tt"><b>' + esc(x.task.code) + "</b>" + esc(x.task.title) + "</span>" +
+        '<span class="aiwhy">' +
+          x.why.map(w => "<span>" + esc(aiSay(w)) + "</span>").join("") +
+        "</span></span>" +
+      '<span class="sc">' + x.score + "</span>" +
+    "</div>").join("");
+
+  const left =
+    '<div class="aihd"><span class="t">' + esc(L("AiHeadQueue")) + "</span>" +
+      '<span class="n">' + esc(L("AiQueueCount", { n:q.length })) + "</span></div>" +
+    (q.length ? '<div class="aiq">' + rows + "</div>"
+              : '<div class="panel"><p class="sub" style="margin:0">' + esc(L("AiEmptyQueue")) + "</p></div>");
+
+  /* ---- right: what is worth knowing ---- */
+  const cards = b.cards.slice(0, 8).map(c => {
+    AI.acts[c.id] = c;
+    const acts = [];
+    const a = c.act || {};
+    if (a.kind === "chase")        acts.push(L("AiChaseNow"));
+    else if (a.kind === "routine") acts.push(L("AiMakeRoutine"));
+    else if (a.kind === "open")    acts.push(L("AiOpenRecord"));
+    else if ((c.ids || []).length) acts.push(L("AiShowThese"));
+    return '<article class="aic" data-tone="' + esc(c.tone) + '">' +
+      "<h5>" + esc(aiSay(c.title)) + "</h5>" +
+      "<p>" + esc(aiSay(c.body)) + "</p>" +
+      ((c.why || []).length
+        ? '<p class="aiwhy2">' + esc(c.why.map(aiSay).filter(Boolean).join(" · ")) + "</p>" : "") +
+      (acts.length
+        ? '<div class="aiact"><button class="btn sm" data-ai="' + esc(c.id) + '">' +
+          esc(acts[0]) + "</button></div>" : "") +
+    "</article>";
+  }).join("");
+
+  const waiting = (b.skipped || [])
+    .map(s => L("AiDet_" + s.name) + " (" + s.need + ")").join(" · ");
+
+  const right =
+    '<div class="aihd"><span class="t">' + esc(L("AiHeadBrief")) + "</span>" +
+      '<span class="n">' + esc(L("AiEvidence_" + b.evidence, { n:b.records })) + "</span></div>" +
+    (b.cards.length ? cards
+                    : '<div class="panel"><p class="sub" style="margin:0">' + esc(L("AiEmptyBrief")) + "</p></div>") +
+    (waiting ? '<p class="aifoot">' + esc(L("AiNeedsMore", { list:waiting })) + "</p>" : "");
+
+  el.innerHTML = '<div class="aiwrap"><div>' + left + "</div><div>" + right + "</div></div>" +
+                 '<p class="aifoot">' + L("AiLocalNote") + "</p>";
 }
 
 function renderIns(){
@@ -6823,6 +7030,7 @@ function renderAll(){
   else if (S.view === "week") renderWeek();
   else if (S.view === "library") renderLib();
   else if (S.view === "insight") renderIns();
+  else if (S.view === "assist") renderAi();
 
   if (CON.win && !CON.win.closed) renderConsole();
   $("bulk").classList.toggle("on", S.sel.size > 0);
@@ -8838,7 +9046,7 @@ let cmdItems = [], cmdCur = 0;
 function buildCommands(q){
   const out = [];
   const add = (sec, icon, label, hint, run, kb) => out.push({ sec, icon, label, hint, run, kb });
-  ["day","board","register","week","library","insight"].forEach((v, i) =>
+  ["day","board","register","week","library","insight","assist"].forEach((v, i) =>
     add(L("Views"), String(i+1), v.charAt(0).toUpperCase()+v.slice(1), "", () => setView(v), String(i+1)));
   add("Do","+",L("NewRecord2"),L("FocusTheComposeBar"), () => $("qa").focus(), "N");
   add("Do","⎘",L("ReadAPastedMessage"),L("TurnATeamsMessageOrA"), async () => {
@@ -9667,10 +9875,21 @@ function setView(v){
   S.view = v;
   $$("#tabs button").forEach(b => b.classList.toggle("on", b.dataset.v === v));
   $$(".view").forEach(s => s.classList.toggle("on", s.dataset.v === v));
+  /* Assist reads every record on purpose — the baselines it compares against
+     live in the closed ones — so the filter rail would be lying if it stayed. */
+  $("rail").style.display = v === "assist" ? "none" : "";
   rememberFilters();
   renderAll();
 }
 $("tabs").addEventListener("click", e => { const b = e.target.closest("button"); if (b) setView(b.dataset.v); });
+
+/* Assist: a row is a record, a button is the card's one obvious next move. */
+$("vAi").addEventListener("click", e => {
+  const btn = e.target.closest("[data-ai]");
+  if (btn){ const c = AI.acts[btn.dataset.ai]; if (c) aiDo(c); return; }
+  const row = e.target.closest(".airow");
+  if (row && row.dataset.id) openDrawer(row.dataset.id);
+});
 $("themeBtn").addEventListener("click", () => {
   const list = allPalettes();
   const i = Math.max(0, list.findIndex(p => p.id === S.settings.theme));
@@ -10391,8 +10610,8 @@ document.addEventListener("keydown", e => {
   if (e.key.toLowerCase() === "w"){ e.preventDefault(); return openConsole(); }
   if (e.key === "j" || e.key === "ArrowDown"){ e.preventDefault(); return moveCursor(1); }
   if (e.key === "k" || e.key === "ArrowUp"){ e.preventDefault(); return moveCursor(-1); }
-  if (["1","2","3","4","5","6"].indexOf(e.key) >= 0)
-    return setView(["day","board","register","week","library","insight"][+e.key-1]);
+  if (["1","2","3","4","5","6","7"].indexOf(e.key) >= 0)
+    return setView(["day","board","register","week","library","insight","assist"][+e.key-1]);
   const ct = curTask();
   if (ct){
     if (e.key === "Enter" || e.key === "e"){ e.preventDefault(); return openDrawer(ct.id); }
