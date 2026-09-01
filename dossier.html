@@ -1220,6 +1220,47 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
   visibility:visible;transition-delay:0s }
 
 /* ── Assist ─────────────────────────────────────────────────────────────── */
+/* ── Ask ────────────────────────────────────────────────────────────────── */
+.chat{position:fixed;top:calc(8vh / var(--z, 1));left:50%;transform:translate(-50%,-14px) scale(.985);
+  width:min(680px,95vw);height:min(760px,calc(82vh / var(--z, 1)));z-index:62;display:flex;flex-direction:column;
+  background:var(--paper);border:1px solid var(--rule-hi);border-radius:var(--r);box-shadow:var(--shadow);
+  opacity:0;pointer-events:none;visibility:hidden;overflow:hidden;
+  transition:opacity .18s var(--ease),transform .18s var(--ease),visibility 0s .28s}
+.chat.on{opacity:1;pointer-events:auto;visibility:visible;transform:translate(-50%,0) scale(1);transition-delay:0s}
+.chh{display:flex;align-items:baseline;gap:9px;padding:13px 15px;border-bottom:1px solid var(--rule);flex:0 0 auto}
+.chh .t{font-family:var(--f-display);font-size:13px;font-weight:600;letter-spacing:.03em}
+.chh .sub{font-size:10.5px;color:var(--ink-3);flex:1;min-width:0;overflow:hidden;
+  text-overflow:ellipsis;white-space:nowrap}
+.chl{flex:1;min-height:0;overflow-y:auto;padding:14px 15px;display:flex;flex-direction:column;gap:13px}
+.chb{max-width:88%;font-size:12.5px;line-height:1.62}
+.chb.you{align-self:flex-end;background:var(--paper-3);border:1px solid var(--rule);
+  border-radius:var(--r) var(--r) var(--r-xs) var(--r);padding:8px 12px;color:var(--ink)}
+.chb.bot{align-self:flex-start;max-width:100%;width:100%}
+.chb.bot .say{color:var(--ink);font-size:13px;line-height:1.6}
+.chb.bot .note{margin-top:6px;font-size:11.5px;color:var(--ink-2);line-height:1.65;white-space:pre-wrap}
+.chb.bot .meta{margin-top:7px;font-size:10px;color:var(--ink-3);font-family:var(--f-mono)}
+.chrow{display:grid;grid-template-columns:auto minmax(0,1fr);gap:9px;align-items:baseline;
+  padding:6px 9px;margin-top:5px;border:1px solid var(--rule);border-radius:var(--r-xs);cursor:pointer}
+.chrow:hover{background:var(--paper-2)}
+.chrow .c{font-family:var(--f-mono);font-size:10px;color:var(--ink-3)}
+.chrow .x{min-width:0}
+.chrow .x b{display:block;font-weight:500;font-size:12px;color:var(--ink);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chrow .x small{font-size:10.5px;color:var(--ink-3)}
+.chacts{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
+.chask{margin-top:10px;padding:10px 12px;border:1px solid var(--p2);border-radius:var(--r-xs);
+  background:var(--paper-2)}
+.chask .q{font-size:12px;color:var(--ink);margin-bottom:8px}
+.chalt{margin-top:9px;font-size:10.5px;color:var(--ink-3)}
+.chf{flex:0 0 auto;display:flex;gap:8px;padding:11px 13px;border-top:1px solid var(--rule);
+  background:var(--paper-2)}
+.chf input{flex:1;min-width:0;border:1px solid var(--rule);border-radius:var(--r-sm);background:var(--paper);
+  color:var(--ink);padding:9px 12px;font-size:13px;outline:none;font-family:inherit}
+.chf input:focus{border-color:var(--rule-hi)}
+.chseed{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
+.chseed button{font-size:10.5px;padding:3px 8px;border:1px solid var(--rule);border-radius:999px;
+  background:var(--paper-2);color:var(--ink-3);cursor:pointer;font-family:inherit}
+.chseed button:hover{border-color:var(--rule-hi);color:var(--ink)}
 .aiwrap{display:grid;grid-template-columns:minmax(0,1.02fr) minmax(0,1fr);gap:18px;align-items:start}
 @media (max-width:1040px){ .aiwrap{grid-template-columns:1fr} }
 .aihd{display:flex;align-items:baseline;gap:9px;margin:0 0 10px;flex-wrap:wrap}
@@ -1293,6 +1334,7 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
       </div>
       <button class="ib" id="bellBtn" data-i18n-title="Reminders" title="Reminders">◴</button>
       <button class="ib" id="themeBtn" data-i18n-title="Theme" title="Theme">◐</button>
+      <button class="ib" id="chatBtn" data-i18n-title="Ask" title="Ask">✻</button>
       <button class="ib" id="menuBtn" data-i18n-title="Menu" title="Menu">⋯</button>
     </div>
   </header>
@@ -1389,6 +1431,22 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
   </div>
   <div class="db" id="dBody"></div>
 </aside>
+
+<!-- Ask the application about your own records. The reading is done by
+     chat.js; this is the surface it talks through. -->
+<div class="chat" id="chat">
+  <div class="chh">
+    <span class="t" data-i18n="ChatTitle">Assistant</span>
+    <span class="sub" data-i18n="ChatSub">reads your records · nothing leaves this folder</span>
+    <button class="ib" id="chatX">✕</button>
+  </div>
+  <div class="chl" id="chatLog"></div>
+  <div class="chf">
+    <input id="chatq" type="text" data-i18n-ph="ChatPlaceholder"
+           placeholder="Ask about your records…" spellcheck="false" autocomplete="off">
+    <button class="btn pri" id="chatGo" data-i18n="ChatAsk">Ask</button>
+  </div>
+</div>
 
 <div class="cmd" id="cmd">
   <input id="cmdq" type="text" placeholder="Type a command or search…" spellcheck="false">
@@ -1508,6 +1566,7 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
      so that opening dossier.html straight from the folder still works. If it is
      missing the app runs exactly as before and the Assist tab says why. -->
 <script src="assist.js"></script>
+<script src="chat.js"></script>
 
 <script>
 "use strict";
@@ -2805,7 +2864,30 @@ const STRINGS = {
   AiLoadWhyMixed: "{known} of {total} carry a real estimate; the rest are guessed from how long the same work took before",
   AiRoutineTitle: "You keep doing this by hand",
   AiRoutineBody: "“{title}” — {n} times so far, about every {days} days.",
-  AiRoutineWhy: "{n} times, and regular enough to schedule"
+  AiRoutineWhy: "{n} times, and regular enough to schedule",
+  Ask: "Ask",
+  KeyAskTheAssistant: "Ask the assistant",
+  ChatTitle: "Assistant",
+  ChatSub: "reads your records · nothing leaves this folder",
+  ChatPlaceholder: "Ask about your records…",
+  ChatAsk: "Ask",
+  ChatYes: "Yes, do it",
+  ChatNo: "No",
+  ChatDidYouMean: "Or did you mean:",
+  ChatRemembered: "you taught me this one",
+  ChatNoEngine: "chat.js is not in this folder. Put it next to dossier.html and reload.",
+  ChatBroke: "That went wrong on me: {msg}. Nothing was changed.",
+  ChatGreeting: "Ask me about your records — what is overdue, how long something usually takes, who has gone quiet. I answer from this workspace only, and I ask before changing anything.",
+  ChatSeedNext: "what should I do next",
+  ChatSeedOverdue: "what is overdue",
+  ChatSeedBrief: "anything I should know",
+  ChatSeedHelp: "help",
+  ChatLogged: "Logged as {code}.",
+  ChatMoved: "{code} is now {to}.",
+  ChatWaiting: "{code} is with {who} from now.",
+  ChatScheduled: "Scheduled “{title}”. It will remind you each time.",
+  ChatLeftAlone: "Left alone — nothing was changed.",
+  AiOpenRoutines: "Open Routines"
 };
 
 /* Loaded files, keyed by culture code. "en" is always present, from STRINGS. */
@@ -5594,6 +5676,199 @@ function dr(label, sub, list){
   return ' data-dr="' + (INS.drills.length - 1) + '"';
 }
 
+/* ═══ ASK ════════════════════════════════════════════════════════════════
+   The surface chat.js talks through. It renders what the engine returns and
+   runs what the engine proposes — and it never runs a proposal without a
+   click, because the engine is guessing and a wrong guess on "mark it done"
+   edits a real record. */
+const CHAT = { acts:{}, n:0, last:"", greeted:false };
+
+function chatApi(){
+  const st = S.settings;
+  if (!st.chatLearn || typeof st.chatLearn !== "object") st.chatLearn = {};
+  return {
+    tasks:S.tasks, routines:S.routines, scripts:S.scripts, settings:st,
+    now: Date.now(),
+    /* the lexicon is rebuilt only when the workspace actually moved */
+    cacheKey: S.tasks.length + ":" + (MODEL.built || 0) + ":" + S.scripts.length +
+              ":" + (st.systems || []).length + ":" + (st.parties || []).length,
+    memory: st.chatLearn,
+    phrase: p => (p ? L(p.k, p.v || {}) : ""),
+    ai: window.DossierAI || null,
+    ctx: aiCtx,
+    h: { tok, idf, similar, estimateFor, predict, knownValues, repeatCandidates,
+         today, addDays, dow, mondayOf, niceDate, mins, dayOf, dkey, stamp,
+         live, peopleOf, canonPerson, splitPeople, matchParty, findByRef, findScript,
+         waitDays, chaseDays, stMeta, parseQuick, LIVE, PRIS }
+  };
+}
+
+function openChat(){
+  if (!window.DossierChat){
+    return toast(L("ChatNoEngine"), { bad:true });
+  }
+  $("chat").classList.add("on");
+  $("scrim").classList.add("on");
+  trapIn("chat");
+  if (!CHAT.greeted){
+    CHAT.greeted = true;
+    chatBot({ say:L("ChatGreeting"), seeds:[
+      L("ChatSeedNext"), L("ChatSeedOverdue"), L("ChatSeedBrief"), L("ChatSeedHelp") ] });
+  }
+  setTimeout(() => $("chatq").focus(), 60);
+}
+function closeChat(){
+  $("chat").classList.remove("on");
+  untrap();
+  if (!$("modal").classList.contains("on") && !$("drawer").classList.contains("on") &&
+      !$("ask").classList.contains("on")) $("scrim").classList.remove("on");
+}
+
+function chatScroll(){ const l = $("chatLog"); l.scrollTop = l.scrollHeight; }
+function chatYou(text){
+  const d = document.createElement("div");
+  d.className = "chb you";
+  d.textContent = text;
+  $("chatLog").appendChild(d);
+  chatScroll();
+}
+
+/* render one answer. Everything clickable is registered in CHAT.acts and
+   addressed by id, so nothing has to survive a round trip through HTML. */
+function chatBot(r, sourceText){
+  const id = "c" + (++CHAT.n);
+  const d = document.createElement("div");
+  d.className = "chb bot";
+  let h = '<div class="say">' + esc(r.say || "") + "</div>";
+  if (r.note) h += '<div class="note">' + esc(r.note) + "</div>";
+
+  (r.rows || []).forEach((row, i) => {
+    CHAT.acts[id + "r" + i] = { kind:"open", id:row.id };
+    h += '<div class="chrow"' + (row.id ? ' data-act="' + id + "r" + i + '"' : "") + ">" +
+           '<span class="c">' + esc(row.code || "") + "</span>" +
+           '<span class="x"><b>' + esc(row.text || "") + "</b>" +
+             (row.sub ? "<small>" + esc(row.sub) + "</small>" : "") + "</span></div>";
+  });
+
+  if (r.act && r.act.confirm){
+    CHAT.acts[id + "yes"] = r.act;
+    h += '<div class="chask"><div class="q">' + esc(r.act.confirm) + "</div>" +
+         '<div class="chacts">' +
+           '<button class="btn pri sm" data-act="' + id + 'yes">' + esc(L("ChatYes")) + "</button>" +
+           '<button class="btn sm" data-dismiss="1">' + esc(L("ChatNo")) + "</button>" +
+         "</div></div>";
+  } else if (r.act){
+    /* navigation needs no permission — nothing is written */
+    chatDo(r.act);
+  }
+
+  if ((r.chips || []).length){
+    h += '<div class="chacts">';
+    r.chips.forEach((c, i) => {
+      CHAT.acts[id + "c" + i] = c.act;
+      h += '<button class="btn sm" data-act="' + id + "c" + i + '">' + esc(c.label) + "</button>";
+    });
+    h += "</div>";
+  }
+
+  /* two readings too close to call — let the answer stand, offer the other */
+  if ((r.alternatives || []).length && sourceText){
+    h += '<div class="chalt">' + esc(L("ChatDidYouMean")) + '</div><div class="chacts">';
+    r.alternatives.forEach((a, i) => {
+      CHAT.acts[id + "a" + i] = { kind:"reread", intent:a.intent, text:sourceText };
+      h += '<button class="btn sm" data-act="' + id + "a" + i + '">' + esc(a.label) + "</button>";
+    });
+    h += "</div>";
+  }
+
+  if ((r.seeds || []).length){
+    h += '<div class="chseed">';
+    r.seeds.forEach((s, i) => {
+      CHAT.acts[id + "s" + i] = { kind:"say", text:s };
+      h += '<button data-act="' + id + "s" + i + '">' + esc(s) + "</button>";
+    });
+    h += "</div>";
+  }
+
+  if (r.intent && !r.examples)
+    h += '<div class="meta">' + esc(r.label || r.intent) +
+         (r.learned ? " · " + L("ChatRemembered") : " · " + Math.round((r.confidence || 0) * 100) + "%") +
+         "</div>";
+
+  d.innerHTML = h;
+  $("chatLog").appendChild(d);
+  chatScroll();
+}
+
+function chatAsk(text){
+  const q = String(text || "").trim();
+  if (!q) return;
+  CHAT.last = q;
+  chatYou(q);
+  $("chatq").value = "";
+  let r;
+  try { r = DossierChat.ask(q, chatApi()); }
+  catch(e){ r = { say:L("ChatBroke", { msg:String(e && e.message || e) }) }; }
+  chatBot(r, q);
+}
+
+function chatDo(act){
+  if (!act) return;
+  switch (act.kind){
+    case "say":      return chatAsk(act.text);
+    case "open":     return act.id && openDrawer(act.id);
+    case "view":     closeChat(); return setView(act.view);
+    case "panel":    closeChat(); return openModal(act.panel);
+    case "chaseSheet": closeChat(); return openChase();
+    case "filter":   closeChat(); return aiPin(act.ids, act.label);
+    case "filterSys": closeChat();
+      return aiPin(S.tasks.filter(t => t.system === act.system).map(t => t.id), act.system);
+    case "filterWho": closeChat();
+      return aiPin(S.tasks.filter(t => (peopleOf(t) || []).indexOf(act.who) >= 0).map(t => t.id), act.who);
+    case "reread": {
+      /* you told me which one you meant — remember this phrasing */
+      const key = DossierChat._util.normalise(act.text);
+      S.settings.chatLearn[key] = act.intent;
+      touch();
+      let r;
+      try { r = DossierChat.run(act.intent, act.text, chatApi()); }
+      catch(e){ r = { say:L("ChatBroke", { msg:String(e && e.message || e) }) }; }
+      r.learned = true;
+      return chatBot(r, null);
+    }
+    case "log": {
+      const t = addTask(act.fields);
+      if (act.fields && (act.fields.deps || []).length) t.blockedBy = act.fields.deps.slice();
+      renderAll();
+      return chatBot({ say:L("ChatLogged", { code:t.code }),
+                       chips:[{ label:L("AiOpenRecord"), act:{ kind:"open", id:t.id } }] });
+    }
+    case "status": {
+      const t = getTask(act.id);
+      setStatus(act.id, act.status);
+      return chatBot({ say:L("ChatMoved", { code:t ? t.code : "", to:stMeta(act.status).label }) });
+    }
+    case "wait": {
+      setWait(act.id, act.party, "", "");
+      touch(); renderAll();
+      const t = getTask(act.id);
+      return chatBot({ say:L("ChatWaiting", { code:t ? t.code : "", who:act.party }) });
+    }
+    case "chase":    chaseWait(act.id); return;
+    case "run":      closeChat(); return runScriptFor(act.id, act.scriptId);
+    case "undo":     closeChat(); return doUndo();
+    case "routine": {
+      const r = { id:"R" + Date.now().toString(36), title:act.title, message:"",
+                  freq:act.freq, cron:act.cron || "", days:[1,2,3,4,5], dom:1,
+                  time:act.time || "09:00", remind:true, auto:false, scripts:[],
+                  estimate:0, priority:"P3", system:"", type:"", paused:false };
+      S.routines.push(r); touch(); renderAll();
+      return chatBot({ say:L("ChatScheduled", { title:act.title }),
+                       chips:[{ label:L("AiOpenRoutines"), act:{ kind:"panel", panel:"routine" } }] });
+    }
+  }
+}
+
 /* ═══ ASSIST ═════════════════════════════════════════════════════════════
    This view is only a renderer. Every number and every sentence below comes
    out of assist.js, which is a separate file and might simply not be there —
@@ -7574,14 +7849,15 @@ async function saveReportToFolder(name, text){
 /* One table, so the sheet cannot drift from what the keys actually do. */
 const KEYS = [
   ["MovingAround", [
-    ["1 – 6", "KeySwitchView"], ["/", "KeySearch"], ["N", "KeyNewRecord"],
+    ["1 – 7", "KeySwitchView"], ["/", "KeySearch"], ["N", "KeyNewRecord"],
     ["J  ↓", "NextRecord"], ["K  ↑", "PreviousRecord"], ["Esc", "CloseWhatIsOpen"]]],
   ["OnTheRecordUnderTheCursor", [
     ["Enter  E", "OpenIt"], ["Space", "CycleItsStatus"], ["D", "MarkItDone"],
     ["T", "MoveItToToday"], ["S", "StartOrStopTheClock"], ["X", "SelectIt"]]],
   ["Anywhere", [
     ["Ctrl K", "KeyCommandPalette"], ["Ctrl S", "SaveNow"], ["Ctrl Z", "UndoTheLastChange"],
-    ["Ctrl V", "PasteAScreenshotOntoTheOpenRecord"], ["W", "OpenTheWorkConsole"], ["?", "ThisSheet"]]]
+    ["Ctrl V", "PasteAScreenshotOntoTheOpenRecord"], ["W", "OpenTheWorkConsole"],
+    ["A", "KeyAskTheAssistant"], ["?", "ThisSheet"]]]
 ];
 function renderKeys(){
   $("keysBody").innerHTML = KEYS.map(g =>
@@ -9883,6 +10159,29 @@ function setView(v){
 }
 $("tabs").addEventListener("click", e => { const b = e.target.closest("button"); if (b) setView(b.dataset.v); });
 
+/* Ask: the input, the buttons inside answers, and the ways out. */
+$("chatBtn").addEventListener("click", openChat);
+$("chatX").addEventListener("click", closeChat);
+$("chatGo").addEventListener("click", () => chatAsk($("chatq").value));
+$("chatq").addEventListener("keydown", e => {
+  if (e.key === "Enter"){ e.preventDefault(); return chatAsk($("chatq").value); }
+  /* the last thing you asked, back for editing */
+  if (e.key === "ArrowUp" && !$("chatq").value && CHAT.last){
+    e.preventDefault(); $("chatq").value = CHAT.last;
+  }
+});
+$("chatLog").addEventListener("click", e => {
+  const dis = e.target.closest("[data-dismiss]");
+  if (dis){
+    /* say what happened rather than leaving the question hanging unanswered */
+    const box = dis.closest(".chask");
+    if (box){ box.innerHTML = '<div class="q">' + esc(L("ChatLeftAlone")) + "</div>"; }
+    return;
+  }
+  const el = e.target.closest("[data-act]");
+  if (el) chatDo(CHAT.acts[el.dataset.act]);
+});
+
 /* Assist: a row is a record, a button is the card's one obvious next move. */
 $("vAi").addEventListener("click", e => {
   const btn = e.target.closest("[data-ai]");
@@ -10195,6 +10494,7 @@ $("bulk").addEventListener("click", e => {
 $("dClose").addEventListener("click", closeDrawer);
 $("scrim").addEventListener("click", () => {
   if ($("keys").classList.contains("on")) return closeKeys();
+  if ($("chat").classList.contains("on")) return closeChat();
   if ($("ask").classList.contains("on")) return closeAsk(null);
   if ($("intake").classList.contains("on")) return closeIntake();
   if ($("chase").classList.contains("on")) return closeChase();
@@ -10592,6 +10892,7 @@ document.addEventListener("keydown", e => {
   }
   if (e.key === "Escape"){
     if ($("keys").classList.contains("on")) return closeKeys();
+    if ($("chat").classList.contains("on")) return closeChat();
     if ($("ask").classList.contains("on")) return closeAsk(null);
     if ($("cmd").classList.contains("on")) return closeCmd();
     if ($("intake").classList.contains("on")) return closeIntake();
@@ -10608,6 +10909,7 @@ document.addEventListener("keydown", e => {
   if (e.key === "/"){ e.preventDefault(); return $("q").focus(); }
   if (e.key.toLowerCase() === "n"){ e.preventDefault(); return $("qa").focus(); }
   if (e.key.toLowerCase() === "w"){ e.preventDefault(); return openConsole(); }
+  if (e.key.toLowerCase() === "a"){ e.preventDefault(); return openChat(); }
   if (e.key === "j" || e.key === "ArrowDown"){ e.preventDefault(); return moveCursor(1); }
   if (e.key === "k" || e.key === "ArrowUp"){ e.preventDefault(); return moveCursor(-1); }
   if (["1","2","3","4","5","6","7"].indexOf(e.key) >= 0)

@@ -1256,5 +1256,28 @@ Nothing is holding this any more." value="" />
     <text name="AiRoutineTitle" source="You keep doing this by hand" value="" />
     <text name="AiRoutineBody" source="“{title}” — {n} times so far, about every {days} days." value="" />
     <text name="AiRoutineWhy" source="{n} times, and regular enough to schedule" value="" />
+    <text name="Ask" source="Ask" value="" />
+    <text name="KeyAskTheAssistant" source="Ask the assistant" value="" />
+    <text name="ChatTitle" source="Assistant" value="" />
+    <text name="ChatSub" source="reads your records · nothing leaves this folder" value="" />
+    <text name="ChatPlaceholder" source="Ask about your records…" value="" />
+    <text name="ChatAsk" source="Ask" value="" />
+    <text name="ChatYes" source="Yes, do it" value="" />
+    <text name="ChatNo" source="No" value="" />
+    <text name="ChatDidYouMean" source="Or did you mean:" value="" />
+    <text name="ChatRemembered" source="you taught me this one" value="" />
+    <text name="ChatNoEngine" source="chat.js is not in this folder. Put it next to dossier.html and reload." value="" />
+    <text name="ChatBroke" source="That went wrong on me: {msg}. Nothing was changed." value="" />
+    <text name="ChatGreeting" source="Ask me about your records — what is overdue, how long something usually takes, who has gone quiet. I answer from this workspace only, and I ask before changing anything." value="" />
+    <text name="ChatSeedNext" source="what should I do next" value="" />
+    <text name="ChatSeedOverdue" source="what is overdue" value="" />
+    <text name="ChatSeedBrief" source="anything I should know" value="" />
+    <text name="ChatSeedHelp" source="help" value="" />
+    <text name="ChatLogged" source="Logged as {code}." value="" />
+    <text name="ChatMoved" source="{code} is now {to}." value="" />
+    <text name="ChatWaiting" source="{code} is with {who} from now." value="" />
+    <text name="ChatScheduled" source="Scheduled “{title}”. It will remind you each time." value="" />
+    <text name="AiOpenRoutines" source="Open Routines" value="" />
+    <text name="ChatLeftAlone" source="Left alone — nothing was changed." value="" />
   </texts>
 </localizationDictionary>

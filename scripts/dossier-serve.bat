@@ -18,8 +18,8 @@ rem ===========================================================================
 
 rem ---- SETTINGS -------------------------------------------------------------
 
-rem The folder holding dossier.html and assist.js. Default: this .bat's folder.
-rem Best kept as a folder holding only those two - see the note below.
+rem The folder holding dossier.html, assist.js and chat.js. Default: this
+rem .bat's folder. Best kept as a folder holding only those three.
 set "FOLDER=%~dp0"
 
 rem Port to serve on. Change it if something else already uses 5500.
@@ -56,17 +56,20 @@ if not exist "%FOLDER%\dossier.html" (
   exit /b 1
 )
 
-if not exist "%FOLDER%\assist.js" (
-  echo   Note: assist.js is not beside dossier.html, so the Assist tab will
-  echo         say so and everything else will work as normal. Copy it in and
-  echo         reload the page to get it back.
+set "MISSING="
+if not exist "%FOLDER%\assist.js" set "MISSING=%MISSING% assist.js"
+if not exist "%FOLDER%\chat.js" set "MISSING=%MISSING% chat.js"
+if defined MISSING (
+  echo   Note: not beside dossier.html:%MISSING%
+  echo         Those parts will say so and everything else works as normal.
+  echo         Copy them in and reload the page to get them back.
   echo.
 )
 
 if exist "%FOLDER%\dossier.json" (
   echo   Note: this folder also holds dossier.json - your records. While the
   echo         server runs, anything on this PC can read them at that address.
-  echo         A folder holding only dossier.html and assist.js avoids that.
+  echo         A folder holding only the three app files avoids that.
   echo         Dossier reaches your workspace through the folder picker, not
   echo         through the server, so the two need not live together.
   echo.

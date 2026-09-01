@@ -1265,5 +1265,28 @@ Nothing is holding this any more." />
     <text name="AiRoutineTitle" source="You keep doing this by hand" value="You keep doing this by hand" />
     <text name="AiRoutineBody" source="“{title}” — {n} times so far, about every {days} days." value="“{title}” — {n} times so far, about every {days} days." />
     <text name="AiRoutineWhy" source="{n} times, and regular enough to schedule" value="{n} times, and regular enough to schedule" />
+    <text name="Ask" source="Ask" value="Ask" />
+    <text name="KeyAskTheAssistant" source="Ask the assistant" value="Ask the assistant" />
+    <text name="ChatTitle" source="Assistant" value="Assistant" />
+    <text name="ChatSub" source="reads your records · nothing leaves this folder" value="reads your records · nothing leaves this folder" />
+    <text name="ChatPlaceholder" source="Ask about your records…" value="Ask about your records…" />
+    <text name="ChatAsk" source="Ask" value="Ask" />
+    <text name="ChatYes" source="Yes, do it" value="Yes, do it" />
+    <text name="ChatNo" source="No" value="No" />
+    <text name="ChatDidYouMean" source="Or did you mean:" value="Or did you mean:" />
+    <text name="ChatRemembered" source="you taught me this one" value="you taught me this one" />
+    <text name="ChatNoEngine" source="chat.js is not in this folder. Put it next to dossier.html and reload." value="chat.js is not in this folder. Put it next to dossier.html and reload." />
+    <text name="ChatBroke" source="That went wrong on me: {msg}. Nothing was changed." value="That went wrong on me: {msg}. Nothing was changed." />
+    <text name="ChatGreeting" source="Ask me about your records — what is overdue, how long something usually takes, who has gone quiet. I answer from this workspace only, and I ask before changing anything." value="Ask me about your records — what is overdue, how long something usually takes, who has gone quiet. I answer from this workspace only, and I ask before changing anything." />
+    <text name="ChatSeedNext" source="what should I do next" value="what should I do next" />
+    <text name="ChatSeedOverdue" source="what is overdue" value="what is overdue" />
+    <text name="ChatSeedBrief" source="anything I should know" value="anything I should know" />
+    <text name="ChatSeedHelp" source="help" value="help" />
+    <text name="ChatLogged" source="Logged as {code}." value="Logged as {code}." />
+    <text name="ChatMoved" source="{code} is now {to}." value="{code} is now {to}." />
+    <text name="ChatWaiting" source="{code} is with {who} from now." value="{code} is with {who} from now." />
+    <text name="ChatScheduled" source="Scheduled “{title}”. It will remind you each time." value="Scheduled “{title}”. It will remind you each time." />
+    <text name="AiOpenRoutines" source="Open Routines" value="Open Routines" />
+    <text name="ChatLeftAlone" source="Left alone — nothing was changed." value="Left alone — nothing was changed." />
   </texts>
 </localizationDictionary>
