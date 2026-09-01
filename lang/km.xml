@@ -1277,7 +1277,6 @@ Nothing is holding this any more." value="" />
     <text name="ChatMoved" source="{code} is now {to}." value="" />
     <text name="ChatWaiting" source="{code} is with {who} from now." value="" />
     <text name="ChatScheduled" source="Scheduled “{title}”. It will remind you each time." value="" />
-    <text name="AiOpenRoutines" source="Open Routines" value="" />
     <text name="ChatLeftAlone" source="Left alone — nothing was changed." value="" />
     <text name="ChatConversations" source="Conversations" value="" />
     <text name="ChatNew" source="New conversation" value="" />
@@ -1297,5 +1296,35 @@ Nothing is holding this any more." value="" />
     <text name="ChatIgnoredWords" source="I could not use: {what}. The answer above ignores those words." value="" />
     <text name="ChatSawCondition" source="You said “{what}” but I could not tell what it applied to, so I left it out." value="" />
     <text name="ChatSearchThose" source="Search for those words" value="" />
+    <text name="ChatWrong" source="Not what I meant" value="" />
+    <text name="ChatTaughtBtn" source="What I have taught you" value="" />
+    <text name="ChatTaughtShape" source="you taught me this shape" value="" />
+    <text name="ChatTaughtNear" source="closest to something you taught me" value="" />
+    <text name="ChatTaughtFrom" source="learned from: {what}" value="" />
+    <text name="TeachTitle" source="What did you mean?" value="" />
+    <text name="TeachSub" source="Pick the answer you wanted. I keep the shape of the question, not the words — so this also fixes the same question about any other record, system or person." value="" />
+    <text name="TeachQuoted" source="You asked: “{q}”" value="" />
+    <text name="TeachShape" source="I will remember the shape: {shape}" value="" />
+    <text name="TeachFilter" source="Type to narrow the list…" value="" />
+    <text name="TeachBack" source="Back to the conversation" value="" />
+    <text name="TeachNothing" source="Nothing in the list matches that." value="" />
+    <text name="TeachDone" source="Learned. “{shape}” now means {label}." value="" />
+    <text name="TeachNoQuestion" source="Ask me something first, then press “not what I meant” under the answer." value="" />
+    <text name="TeachKind_read" source="Questions it answers" value="" />
+    <text name="TeachKind_write" source="Things it can do" value="" />
+    <text name="TeachKind_social" source="Conversation" value="" />
+    <text name="TaughtTitle" source="What you have taught me" value="" />
+    <text name="TaughtSub" source="Each line is a shape rather than a sentence. Anything in angle brackets stands for a whole kind of thing — &amp;lt;code&amp;gt; is any record, &amp;lt;system&amp;gt; is any of your systems." value="" />
+    <text name="TaughtNone" source="Nothing yet. When I get something wrong, press “not what I meant” under the answer and pick the right one." value="" />
+    <text name="TaughtShapes" source="Question shapes" value="" />
+    <text name="TaughtExact" source="Exact wordings" value="" />
+    <text name="TaughtWords" source="Words you gave me" value="" />
+    <text name="TaughtForget" source="Forget all of it" value="" />
+    <text name="TaughtForgetSure" source="Forget everything you have taught me? That is {n} and it cannot be undone." value="" />
+    <text name="TaughtGone" source="Forgotten." value="" />
+    <text name="TaughtOneGone" source="Dropped that one." value="" />
+    <text name="TaughtCount" source="{n} lesson(s)" value="" />
+    <text name="ChatAliasSaved" source="Noted. “{from}” means {to} from now on." value="" />
+    <text name="AiOpenRoutines" source="Open Routines" value="" />
   </texts>
 </localizationDictionary>

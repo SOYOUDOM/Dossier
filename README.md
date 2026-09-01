@@ -215,13 +215,15 @@ marker first so the scheduled run still happens.
 
 ```
 dossier.html                  the whole application
+assist.js                     the Assist tab — what it notices on its own
+chat.js                       the assistant — what it understands and answers
 dossier.json                  every record, routine, script and setting
 fonts/
   NotoSansKhmer-Khmer-*.woff2 the bundled Khmer face, also embedded in the HTML
   OFL.txt                     its licence
 lang/
   en.xml                      the English master, generated from the code
-  km.xml                      Khmer — all 1,107 phrases, ready to translate
+  km.xml                      Khmer — all 1,308 phrases, ready to translate
 logo.png, favicon.ico         yours — the app picks them up automatically
 scripts/
   dossier-runner.ps1          runs queued scripts, fires routines on time
@@ -233,6 +235,46 @@ tasks/                        one folder per record, for its attachments
 ```
 
 `tasks/` is created the first time you attach something.
+
+---
+
+## Teaching the assistant
+
+The assistant reads your records and answers from them. It is not always
+right, and the point of this section is what happens when it is not.
+
+Under every answer there is **not what I meant**. Press it, pick the answer you
+actually wanted, and it is learned — but learned as the *shape* of the
+question rather than the sentence. Ask it
+
+> what is the ticket of task D-0032
+
+correct it once, and what it files away is
+
+```
+what is the ticket of task <code>   →   the answer you chose
+```
+
+so D-0045 and D-0117 and every record you open after that are already
+understood. The same holds for the names in a question: correct it once about
+Imaging and it has learned the question for Policy, CX Portal and everything
+else. It will not carry a lesson across *kinds* — a question about a system is
+not silently turned into a question about a person — because that is the sort
+of generalising that produces a confident wrong answer.
+
+Vocabulary is taught in a sentence, with no buttons at all:
+
+> when I say the portal I mean CX Portal
+
+The word joins the same list the system and colleague names live in, so it
+works everywhere at once — in filters, in exclusions, in comparisons — and not
+merely in the phrase you happened to be typing.
+
+Everything it has learned is listed under the **✎** in the assistant's title
+bar: every shape, every exact wording, every word you gave it, each one
+deletable on its own, and a button to forget the lot. Ask it *what have I
+taught you* and it will tell you. It is all kept in `dossier.json` with the
+rest of the workspace, so it travels with the folder and never leaves it.
 
 ---
 

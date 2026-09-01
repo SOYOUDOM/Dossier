@@ -1286,7 +1286,6 @@ Nothing is holding this any more." />
     <text name="ChatMoved" source="{code} is now {to}." value="{code} is now {to}." />
     <text name="ChatWaiting" source="{code} is with {who} from now." value="{code} is with {who} from now." />
     <text name="ChatScheduled" source="Scheduled “{title}”. It will remind you each time." value="Scheduled “{title}”. It will remind you each time." />
-    <text name="AiOpenRoutines" source="Open Routines" value="Open Routines" />
     <text name="ChatLeftAlone" source="Left alone — nothing was changed." value="Left alone — nothing was changed." />
     <text name="ChatConversations" source="Conversations" value="Conversations" />
     <text name="ChatNew" source="New conversation" value="New conversation" />
@@ -1306,5 +1305,35 @@ Nothing is holding this any more." />
     <text name="ChatIgnoredWords" source="I could not use: {what}. The answer above ignores those words." value="I could not use: {what}. The answer above ignores those words." />
     <text name="ChatSawCondition" source="You said “{what}” but I could not tell what it applied to, so I left it out." value="You said “{what}” but I could not tell what it applied to, so I left it out." />
     <text name="ChatSearchThose" source="Search for those words" value="Search for those words" />
+    <text name="ChatWrong" source="Not what I meant" value="Not what I meant" />
+    <text name="ChatTaughtBtn" source="What I have taught you" value="What I have taught you" />
+    <text name="ChatTaughtShape" source="you taught me this shape" value="you taught me this shape" />
+    <text name="ChatTaughtNear" source="closest to something you taught me" value="closest to something you taught me" />
+    <text name="ChatTaughtFrom" source="learned from: {what}" value="learned from: {what}" />
+    <text name="TeachTitle" source="What did you mean?" value="What did you mean?" />
+    <text name="TeachSub" source="Pick the answer you wanted. I keep the shape of the question, not the words — so this also fixes the same question about any other record, system or person." value="Pick the answer you wanted. I keep the shape of the question, not the words — so this also fixes the same question about any other record, system or person." />
+    <text name="TeachQuoted" source="You asked: “{q}”" value="You asked: “{q}”" />
+    <text name="TeachShape" source="I will remember the shape: {shape}" value="I will remember the shape: {shape}" />
+    <text name="TeachFilter" source="Type to narrow the list…" value="Type to narrow the list…" />
+    <text name="TeachBack" source="Back to the conversation" value="Back to the conversation" />
+    <text name="TeachNothing" source="Nothing in the list matches that." value="Nothing in the list matches that." />
+    <text name="TeachDone" source="Learned. “{shape}” now means {label}." value="Learned. “{shape}” now means {label}." />
+    <text name="TeachNoQuestion" source="Ask me something first, then press “not what I meant” under the answer." value="Ask me something first, then press “not what I meant” under the answer." />
+    <text name="TeachKind_read" source="Questions it answers" value="Questions it answers" />
+    <text name="TeachKind_write" source="Things it can do" value="Things it can do" />
+    <text name="TeachKind_social" source="Conversation" value="Conversation" />
+    <text name="TaughtTitle" source="What you have taught me" value="What you have taught me" />
+    <text name="TaughtSub" source="Each line is a shape rather than a sentence. Anything in angle brackets stands for a whole kind of thing — &amp;lt;code&amp;gt; is any record, &amp;lt;system&amp;gt; is any of your systems." value="Each line is a shape rather than a sentence. Anything in angle brackets stands for a whole kind of thing — &amp;lt;code&amp;gt; is any record, &amp;lt;system&amp;gt; is any of your systems." />
+    <text name="TaughtNone" source="Nothing yet. When I get something wrong, press “not what I meant” under the answer and pick the right one." value="Nothing yet. When I get something wrong, press “not what I meant” under the answer and pick the right one." />
+    <text name="TaughtShapes" source="Question shapes" value="Question shapes" />
+    <text name="TaughtExact" source="Exact wordings" value="Exact wordings" />
+    <text name="TaughtWords" source="Words you gave me" value="Words you gave me" />
+    <text name="TaughtForget" source="Forget all of it" value="Forget all of it" />
+    <text name="TaughtForgetSure" source="Forget everything you have taught me? That is {n} and it cannot be undone." value="Forget everything you have taught me? That is {n} and it cannot be undone." />
+    <text name="TaughtGone" source="Forgotten." value="Forgotten." />
+    <text name="TaughtOneGone" source="Dropped that one." value="Dropped that one." />
+    <text name="TaughtCount" source="{n} lesson(s)" value="{n} lesson(s)" />
+    <text name="ChatAliasSaved" source="Noted. “{from}” means {to} from now on." value="Noted. “{from}” means {to} from now on." />
+    <text name="AiOpenRoutines" source="Open Routines" value="Open Routines" />
   </texts>
 </localizationDictionary>

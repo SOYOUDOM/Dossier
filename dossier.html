@@ -1284,6 +1284,48 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
 .chseed button{font-size:10.5px;padding:3px 8px;border:1px solid var(--rule);border-radius:999px;
   background:var(--paper-2);color:var(--ink-3);cursor:pointer;font-family:inherit}
 .chseed button:hover{border-color:var(--rule-hi);color:var(--ink)}
+.chteach{position:absolute;inset:0;z-index:5;background:var(--paper);display:flex;flex-direction:column;
+  opacity:0;pointer-events:none;visibility:hidden;
+  transition:opacity .15s var(--ease),visibility 0s .15s}
+.chteach.on{opacity:1;pointer-events:auto;visibility:visible;transition-delay:0s}
+.chth{display:flex;align-items:baseline;gap:9px;padding:13px 15px;border-bottom:1px solid var(--rule);flex:0 0 auto}
+.chth .t{font-family:var(--f-display);font-size:13px;font-weight:600;letter-spacing:.03em;flex:1;min-width:0}
+.chtn{flex:0 0 auto;padding:12px 15px 0}
+.chtn .sub{font-size:11.5px;color:var(--ink-2);line-height:1.65}
+.chtn .qq{font-size:12px;color:var(--ink);background:var(--paper-2);border:1px solid var(--rule);
+  border-radius:var(--r-xs);padding:8px 11px;margin-bottom:6px;line-height:1.55}
+.chtn .shape{font-family:var(--f-mono);font-size:10.5px;color:var(--ink-3);
+  margin-bottom:8px;overflow-wrap:anywhere}
+.chtq{flex:0 0 auto;padding:11px 15px 0}
+.chtq input{width:100%;box-sizing:border-box;border:1px solid var(--rule);border-radius:var(--r-sm);
+  background:var(--paper);color:var(--ink);padding:8px 11px;font-size:12.5px;outline:none;font-family:inherit}
+.chtq input:focus{border-color:var(--rule-hi)}
+.chtb{flex:1;min-height:0;overflow-y:auto;padding:13px 15px}
+.chtb .sub{font-size:11.5px;color:var(--ink-2);line-height:1.65;margin-bottom:11px}
+.chtb .qq{font-size:12px;color:var(--ink);background:var(--paper-2);border:1px solid var(--rule);
+  border-radius:var(--r-xs);padding:8px 11px;margin-bottom:6px;line-height:1.55}
+.chtb .shape{font-family:var(--f-mono);font-size:10.5px;color:var(--ink-3);margin-bottom:6px;
+  overflow-wrap:anywhere}
+.chtg{font-size:9.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-3);margin:15px 0 7px}
+.chti{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:baseline;width:100%;
+  text-align:left;padding:8px 11px;margin-bottom:4px;border:1px solid var(--rule);border-radius:var(--r-xs);
+  background:var(--paper);color:var(--ink);cursor:pointer;font-family:inherit;font-size:12px}
+.chti:hover{background:var(--paper-2);border-color:var(--rule-hi)}
+.chti .e{font-family:var(--f-mono);font-size:10px;color:var(--ink-3);white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis;max-width:200px}
+.chtr{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:9px;align-items:center;
+  padding:7px 11px;margin-bottom:4px;border:1px solid var(--rule);border-radius:var(--r-xs)}
+.chtr .k{font-family:var(--f-mono);font-size:10.5px;color:var(--ink);overflow-wrap:anywhere}
+.chtr .v{display:block;font-size:10.5px;color:var(--ink-3);margin-top:2px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chtr .x{border:0;background:none;color:var(--ink-3);cursor:pointer;font-size:12px;padding:0 4px;line-height:1}
+.chtr .x:hover{color:var(--p1)}
+.chtf{flex:0 0 auto;padding:11px 15px;border-top:1px solid var(--rule);background:var(--paper-2);
+  display:flex;gap:8px;flex-wrap:wrap}
+.chb.bot .wrong{margin-top:8px}
+.chb.bot .wrong button{font-size:10px;border:0;background:none;color:var(--ink-3);cursor:pointer;
+  font-family:inherit;padding:0;text-decoration:underline;text-underline-offset:2px}
+.chb.bot .wrong button:hover{color:var(--ink)}
 .aiwrap{display:grid;grid-template-columns:minmax(0,1.02fr) minmax(0,1fr);gap:18px;align-items:start}
 @media (max-width:1040px){ .aiwrap{grid-template-columns:1fr} }
 .aihd{display:flex;align-items:baseline;gap:9px;margin:0 0 10px;flex-wrap:wrap}
@@ -1462,6 +1504,7 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
     <button class="ib" id="chatMenu" data-i18n-title="ChatConversations" title="Conversations">☰</button>
     <span class="t" data-i18n="ChatTitle">Assistant</span>
     <span class="sub" data-i18n="ChatSub">reads your records · nothing leaves this folder</span>
+    <button class="ib" id="chatTeachBtn" data-i18n-title="ChatTaughtBtn" title="What I have taught you">✎</button>
     <button class="ib" id="chatNew" data-i18n-title="ChatNew" title="New conversation">＋</button>
     <button class="ib" id="chatX">✕</button>
   </div>
@@ -1475,6 +1518,22 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
         <button class="btn pri" id="chatGo" data-i18n="ChatAsk">Ask</button>
       </div>
     </div>
+  </div>
+
+  <!-- Correcting it, and everything it has been taught. Whatever it learns is
+       listed here in plain sight and can be deleted one line at a time. -->
+  <div class="chteach" id="chatTeach">
+    <div class="chth">
+      <span class="t" id="teachT">What did you mean?</span>
+      <button class="ib" id="teachX">✕</button>
+    </div>
+    <div class="chtn" id="teachNote"></div>
+    <div class="chtq" id="teachQwrap">
+      <input id="teachq" type="text" spellcheck="false" autocomplete="off"
+             data-i18n-ph="TeachFilter" placeholder="Type to narrow the list…">
+    </div>
+    <div class="chtb" id="teachBody"></div>
+    <div class="chtf" id="teachFoot"></div>
   </div>
 </div>
 
@@ -2935,6 +2994,35 @@ const STRINGS = {
   ChatIgnoredWords: "I could not use: {what}. The answer above ignores those words.",
   ChatSawCondition: "You said “{what}” but I could not tell what it applied to, so I left it out.",
   ChatSearchThose: "Search for those words",
+  ChatWrong: "Not what I meant",
+  ChatTaughtBtn: "What I have taught you",
+  ChatTaughtShape: "you taught me this shape",
+  ChatTaughtNear: "closest to something you taught me",
+  ChatTaughtFrom: "learned from: {what}",
+  TeachTitle: "What did you mean?",
+  TeachSub: "Pick the answer you wanted. I keep the shape of the question, not the words \u2014 so this also fixes the same question about any other record, system or person.",
+  TeachQuoted: "You asked: \u201c{q}\u201d",
+  TeachShape: "I will remember the shape: {shape}",
+  TeachFilter: "Type to narrow the list\u2026",
+  TeachBack: "Back to the conversation",
+  TeachNothing: "Nothing in the list matches that.",
+  TeachDone: "Learned. \u201c{shape}\u201d now means {label}.",
+  TeachNoQuestion: "Ask me something first, then press \u201cnot what I meant\u201d under the answer.",
+  TeachKind_read: "Questions it answers",
+  TeachKind_write: "Things it can do",
+  TeachKind_social: "Conversation",
+  TaughtTitle: "What you have taught me",
+  TaughtSub: "Each line is a shape rather than a sentence. Anything in angle brackets stands for a whole kind of thing \u2014 &lt;code&gt; is any record, &lt;system&gt; is any of your systems.",
+  TaughtNone: "Nothing yet. When I get something wrong, press \u201cnot what I meant\u201d under the answer and pick the right one.",
+  TaughtShapes: "Question shapes",
+  TaughtExact: "Exact wordings",
+  TaughtWords: "Words you gave me",
+  TaughtForget: "Forget all of it",
+  TaughtForgetSure: "Forget everything you have taught me? That is {n} and it cannot be undone.",
+  TaughtGone: "Forgotten.",
+  TaughtOneGone: "Dropped that one.",
+  TaughtCount: "{n} lesson(s)",
+  ChatAliasSaved: "Noted. \u201c{from}\u201d means {to} from now on.",
   AiOpenRoutines: "Open Routines"
 };
 
@@ -5755,8 +5843,10 @@ function chatApi(convo){
     tasks:S.tasks, routines:S.routines, scripts:S.scripts, settings:st,
     now: Date.now(),
     cacheKey: S.tasks.length + ":" + (MODEL.built || 0) + ":" + S.scripts.length +
-              ":" + (st.systems || []).length + ":" + (st.parties || []).length,
+              ":" + (st.systems || []).length + ":" + (st.parties || []).length +
+              ":" + chatAliases().length + ":" + chatAliasStamp(),
     memory: (st.chatLearn && typeof st.chatLearn === "object") ? st.chatLearn : {},
+    aliases: chatAliases(),
     convo: convo || (chatThread() || {}).convo || {},
     phrase: p => (p ? L(p.k, p.v || {}) : ""),
     ai: window.DossierAI || null,
@@ -5766,6 +5856,215 @@ function chatApi(convo){
          live, peopleOf, canonPerson, splitPeople, matchParty, findByRef, findScript,
          waitDays, chaseDays, stMeta, parseQuick, LIVE, PRIS }
   };
+}
+
+
+/* ═══ TEACHING IT ════════════════════════════════════════════════════════
+   Two ways in, and they are different jobs.
+
+   The first is correction. Under every answer there is "not what I meant",
+   and it opens a list of everything the assistant can actually do. Pick one
+   and the lesson is kept — but kept as the SHAPE of the question rather than
+   the sentence, which is the difference between teaching it one thing and
+   teaching it a hundred. Correct it once about the ticket on D-0032 and it
+   has learned the ticket on every record you will ever open.
+
+   The second is vocabulary: "when I say the portal I mean CX Portal". That
+   goes in as a real name, alongside the systems and the people, so it works
+   in every question and with every condition, not just the one you were
+   asking when you said it.
+
+   Everything taught is listed, reviewable and deletable. A thing that learns
+   without showing you what it learned is a thing you cannot trust. */
+
+function chatAliases(){
+  const a = S.settings.chatAlias;
+  return Array.isArray(a) ? a.filter(x => x && x.from && x.kind && x.value) : [];
+}
+/* so the lexicon is rebuilt the moment a word changes, not merely when one
+   is added or removed */
+function chatAliasStamp(){
+  let h = 0;
+  chatAliases().forEach(a => {
+    const k = a.from + ">" + a.value + ":" + a.kind;
+    for (let i = 0; i < k.length; i++) h = (h * 31 + k.charCodeAt(i)) | 0;
+  });
+  return h;
+}
+function chatLearnStore(){
+  if (!S.settings.chatLearn || typeof S.settings.chatLearn !== "object") S.settings.chatLearn = {};
+  return S.settings.chatLearn;
+}
+function chatLesson(v){ return (v && typeof v === "object") ? v.intent : v; }
+function chatLessonText(v){ return (v && typeof v === "object") ? (v.text || "") : ""; }
+
+/* One correction, filed twice: the sentence exactly as you typed it, so that
+   one is certain to work, and its shape, so everything like it works too. */
+function chatTeach(text, intentName){
+  const q = String(text || "").trim();
+  if (!q || !intentName) return null;
+  let k = null;
+  try { k = DossierChat.keys ? DossierChat.keys(q, chatApi()) : null; } catch(e){ k = null; }
+  const mem = chatLearnStore(), at = new Date().toISOString();
+  const rec = { intent:intentName, text:q, at:at };
+  if (k && k.exact) mem[k.exact] = rec;
+  if (k && k.shape) mem[k.shape] = { intent:intentName, text:q, at:at };
+  if (!k) mem[q.toLowerCase()] = rec;
+  touch();
+  return k;
+}
+function teachShapeOf(text){
+  try { return (DossierChat.template && DossierChat.template(text, chatApi())) || ""; }
+  catch(e){ return ""; }
+}
+
+const TEACH = { text:"", mode:"pick", filter:"" };
+
+function openTeach(text){
+  if (!window.DossierChat) return toast(L("ChatNoEngine"), { bad:true });
+  TEACH.text = String(text || CHAT.last || "").trim();
+  TEACH.mode = "pick"; TEACH.filter = "";
+  const q = $("teachq"); if (q) q.value = "";
+  renderTeach();
+  $("chatTeach").classList.add("on");
+  setTimeout(() => { const i = $("teachq"); if (i) i.focus(); }, 60);
+}
+function openTaught(){
+  TEACH.mode = "list"; TEACH.filter = "";
+  renderTeach();
+  $("chatTeach").classList.add("on");
+}
+function closeTeach(){
+  $("chatTeach").classList.remove("on");
+  setTimeout(() => { const i = $("chatq"); if (i) i.focus(); }, 40);
+}
+
+function teachLessons(){
+  const mem = chatLearnStore(), shapes = [], exacts = [];
+  Object.keys(mem).forEach(k => {
+    const name = chatLesson(mem[k]);
+    if (!name) return;
+    const it = (DossierChat.intents || []).find(i => i.name === name);
+    const row = { key:k, intent:name, label:(it && it.label) || name,
+                  text:chatLessonText(mem[k]), at:(mem[k] && mem[k].at) || "" };
+    if (k.charAt(0) === "~"){ row.shape = k.slice(1); shapes.push(row); }
+    else { row.shape = k; exacts.push(row); }
+  });
+  const by = (a, b) => String(b.at).localeCompare(String(a.at));
+  return { shapes:shapes.sort(by), exacts:exacts.sort(by) };
+}
+
+function renderTeach(){
+  const pick = TEACH.mode === "pick";
+  $("teachT").textContent = L(pick ? "TeachTitle" : "TaughtTitle");
+  $("teachQwrap").style.display = pick ? "" : "none";
+  const inp = $("teachq"); if (inp) inp.placeholder = L("TeachFilter");
+  let h = "", f = "", top = "";
+  if (pick){
+    if (TEACH.text){
+      top += '<div class="qq">' + esc(L("TeachQuoted", { q:TEACH.text })) + "</div>";
+      const shape = teachShapeOf(TEACH.text);
+      if (shape) top += '<div class="shape">' + esc(L("TeachShape", { shape:shape })) + "</div>";
+    } else {
+      top += '<div class="qq">' + esc(L("TeachNoQuestion")) + "</div>";
+    }
+    top += '<div class="sub">' + esc(L("TeachSub")) + "</div>";
+    const q = TEACH.filter.trim().toLowerCase();
+    const all = (window.DossierChat && DossierChat.intents) || [];
+    const list = all.filter(i => !q ||
+      (i.label + " " + i.name + " " + (i.eg || "")).toLowerCase().indexOf(q) >= 0);
+    if (!list.length) h += '<div class="sub">' + esc(L("TeachNothing")) + "</div>";
+    const kinds = ["read", "write", "social"];
+    const grouped = {};
+    list.forEach(i => { const k = kinds.indexOf(i.kind) >= 0 ? i.kind : "read";
+                        (grouped[k] = grouped[k] || []).push(i); });
+    kinds.forEach(k => {
+      const part = grouped[k];
+      if (!part || !part.length) return;
+      h += '<div class="chtg">' + esc(L("TeachKind_" + k)) + "</div>";
+      part.forEach(i => {
+        h += '<button class="chti" data-pick="' + esc(i.name) + '">' +
+             "<span>" + esc(i.label) + "</span>" +
+             '<span class="e">' + esc(i.eg || "") + "</span></button>";
+      });
+    });
+    f = '<button class="btn sm" data-teachnav="back">' + esc(L("TeachBack")) + "</button>" +
+        '<button class="btn sm" data-teachnav="list">' + esc(L("ChatTaughtBtn")) + "</button>";
+  } else {
+    const L2 = teachLessons(), al = chatAliases();
+    const n = L2.shapes.length + L2.exacts.length + al.length;
+    top += '<div class="sub">' + L("TaughtSub") + "</div>";
+    if (!n) h += '<div class="qq">' + esc(L("TaughtNone")) + "</div>";
+    const rows = list => list.map(r =>
+      '<div class="chtr"><span><span class="k">' + esc(r.shape) + "</span>" +
+        '<span class="v">' + esc(r.label) + (r.text ? " \u00b7 \u201c" + esc(r.text) + "\u201d" : "") + "</span></span>" +
+      '<button class="x" data-unteach="' + esc(r.key) + '" title="' + esc(L("Delete")) + '">\u2715</button></div>').join("");
+    if (L2.shapes.length)
+      h += '<div class="chtg">' + esc(L("TaughtShapes")) + "</div>" + rows(L2.shapes);
+    if (L2.exacts.length)
+      h += '<div class="chtg">' + esc(L("TaughtExact")) + "</div>" + rows(L2.exacts);
+    if (al.length)
+      h += '<div class="chtg">' + esc(L("TaughtWords")) + "</div>" +
+           al.map(a => '<div class="chtr"><span><span class="k">\u201c' + esc(a.from) + '\u201d</span>' +
+             '<span class="v">' + esc(a.value) + " \u00b7 " + esc(a.kind) + "</span></span>" +
+             '<button class="x" data-unalias="' + esc(a.from) + '" title="' + esc(L("Delete")) + '">\u2715</button></div>').join("");
+    f = '<button class="btn sm" data-teachnav="back">' + esc(L("TeachBack")) + "</button>" +
+        (n ? '<button class="btn sm" data-teachnav="forget">' + esc(L("TaughtForget")) + "</button>" : "");
+  }
+  $("teachNote").innerHTML = top;
+  $("teachBody").innerHTML = h;
+  $("teachFoot").innerHTML = f;
+  $("teachBody").scrollTop = 0;
+}
+
+function teachPick(name){
+  const text = TEACH.text;
+  if (!text){ closeTeach(); return toast(L("TeachNoQuestion")); }
+  const k = chatTeach(text, name);
+  const it = ((window.DossierChat && DossierChat.intents) || []).find(i => i.name === name);
+  closeTeach();
+  let r;
+  try { r = DossierChat.run(name, text, chatApi()); }
+  catch(e){ r = { say:L("ChatBroke", { msg:String(e && e.message || e) }) }; }
+  r.learned = true;
+  r.taught = { how:"exact", from:(k && k.template) || text };
+  const c = chatThread();
+  if (c && r.context) c.convo = r.context;
+  chatBot(r, null);
+  toast(L("TeachDone", { shape:(k && k.template) || text, label:(it && it.label) || name }));
+}
+
+/* dropping one lesson drops both halves of it — the shape and the sentence
+   it came from — so half a correction is never left behind */
+function teachForget(key){
+  const mem = chatLearnStore(), v = mem[key];
+  const twin = chatLessonText(v);
+  delete mem[key];
+  if (twin) Object.keys(mem).forEach(k => {
+    if (chatLessonText(mem[k]) === twin && chatLesson(mem[k]) === chatLesson(v)) delete mem[k];
+  });
+  touch();
+  renderTeach();
+  toast(L("TaughtOneGone"));
+}
+function teachForgetAlias(from){
+  const f = String(from || "").toLowerCase();
+  S.settings.chatAlias = chatAliases().filter(a => String(a.from).toLowerCase() !== f);
+  touch();
+  if (window.DossierChat && DossierChat.forget) DossierChat.forget();
+  renderTeach();
+  toast(L("TaughtOneGone"));
+}
+function teachForgetAll(){
+  const l = teachLessons(), n = l.shapes.length + l.exacts.length + chatAliases().length;
+  if (!n) return;
+  if (!confirm(L("TaughtForgetSure", { n:L("TaughtCount", { n:n }) }))) return;
+  S.settings.chatLearn = {};
+  S.settings.chatAlias = [];
+  touch();
+  if (window.DossierChat && DossierChat.forget) DossierChat.forget();
+  renderTeach();
+  toast(L("TaughtGone"));
 }
 
 /* ── conversations ─────────────────────────────────────────────────────── */
@@ -5850,6 +6149,7 @@ function openChat(){
 }
 function closeChat(){
   $("chat").classList.remove("on");
+  $("chatTeach").classList.remove("on");
   untrap();
   if (!$("modal").classList.contains("on") && !$("drawer").classList.contains("on") &&
       !$("ask").classList.contains("on")) $("scrim").classList.remove("on");
@@ -5880,6 +6180,11 @@ function chatRenderBot(r, sourceText, replaying){
     h += '<div class="carry">' + esc(L("ChatAboutStill", { what:r.slots.record })) + "</div>";
   else if (r.followUp)
     h += '<div class="carry">' + esc(L("ChatSameQuestion")) + "</div>";
+
+  /* an answer that came out of a lesson says which lesson, so a correction
+     that has started firing too widely is visible rather than mysterious */
+  if (r.taught && r.taught.how && r.taught.how !== "exact")
+    h += '<div class="carry">' + esc(L("ChatTaughtFrom", { what:r.taught.from })) + "</div>";
 
   h += '<div class="say">' + esc(r.say || "") + "</div>";
   if (r.note) h += '<div class="note">' + esc(r.note) + "</div>";
@@ -5968,8 +6273,21 @@ function chatRenderBot(r, sourceText, replaying){
 
   if (r.intent && !r.examples)
     h += '<div class="meta">' + esc(r.label || r.intent) +
-         (r.learned ? " · " + L("ChatRemembered") : " · " + Math.round((r.confidence || 0) * 100) + "%") +
+         (r.learned
+            ? " · " + L(!r.taught || r.taught.how === "exact" ? "ChatRemembered"
+                        : r.taught.how === "shape" ? "ChatTaughtShape" : "ChatTaughtNear")
+            : " · " + Math.round((r.confidence || 0) * 100) + "%") +
          "</div>";
+
+  /* Under every answer, a way to say it was wrong. This is the whole of the
+     teaching loop from the outside: get it wrong, press this, pick the right
+     one, and it has learned the shape of the question for good. */
+  const src = sourceText || CHAT.last || "";
+  if (src && (r.say || r.intent) && !r.examples){
+    CHAT.acts[id + "wrong"] = { kind:"teach", text:src };
+    h += '<div class="wrong"><button data-act="' + id + 'wrong">' +
+         esc(L("ChatWrong")) + "</button></div>";
+  }
 
   d.innerHTML = h;
   $("chatLog").appendChild(d);
@@ -6027,18 +6345,32 @@ function chatDo(act){
     case "filterWho": closeChat();
       return aiPin(S.tasks.filter(t => (peopleOf(t) || []).indexOf(act.who) >= 0).map(t => t.id), act.who);
     case "reread": {
-      /* you told me which one you meant — remember this phrasing */
-      const key = DossierChat._util.normalise(act.text);
-      if (!S.settings.chatLearn || typeof S.settings.chatLearn !== "object") S.settings.chatLearn = {};
-      S.settings.chatLearn[key] = act.intent;
-      touch();
+      /* You told me which one you meant. Both the sentence and its shape are
+         kept — the shape is what makes the lesson carry to the next record. */
+      const k = chatTeach(act.text, act.intent);
       let r;
       try { r = DossierChat.run(act.intent, act.text, chatApi()); }
       catch(e){ r = { say:L("ChatBroke", { msg:String(e && e.message || e) }) }; }
       r.learned = true;
+      r.taught = { how:"exact", from:(k && k.template) || act.text };
       const c = chatThread();
       if (c && r.context) c.convo = r.context;
       return chatBot(r, null);
+    }
+    case "teach":  return openTeach(act.text);
+    case "taught": return openTaught();
+    case "alias": {
+      /* a word you gave it joins the lexicon beside the systems and the
+         people, so it works in every question rather than in one phrase */
+      const from = String(act.from || "").trim().toLowerCase();
+      if (!from || !act.value) return;
+      S.settings.chatAlias = chatAliases().filter(a => String(a.from).toLowerCase() !== from);
+      S.settings.chatAlias.push({ from:from, kind:act.ofKind, value:act.value,
+                                  at:new Date().toISOString() });
+      touch();
+      if (window.DossierChat && DossierChat.forget) DossierChat.forget();
+      return chatBot({ say:L("ChatAliasSaved", { from:act.from, to:act.shown || act.value }),
+                       chips:[{ label:L("ChatTaughtBtn"), act:{ kind:"taught" } }] });
     }
     case "log": {
       const t = addTask(act.fields);
@@ -10436,6 +10768,23 @@ $("chatLog").addEventListener("click", e => {
   }
   const el = e.target.closest("[data-act]");
   if (el) chatDo(CHAT.acts[el.dataset.act]);
+});
+
+$("chatTeachBtn").addEventListener("click", openTaught);
+$("teachX").addEventListener("click", closeTeach);
+$("teachq").addEventListener("input", () => { TEACH.filter = $("teachq").value; renderTeach(); });
+$("chatTeach").addEventListener("click", e => {
+  const pick = e.target.closest("[data-pick]");
+  if (pick) return teachPick(pick.dataset.pick);
+  const un = e.target.closest("[data-unteach]");
+  if (un) return teachForget(un.dataset.unteach);
+  const ua = e.target.closest("[data-unalias]");
+  if (ua) return teachForgetAlias(ua.dataset.unalias);
+  const nav = e.target.closest("[data-teachnav]");
+  if (!nav) return;
+  if (nav.dataset.teachnav === "back") return closeTeach();
+  if (nav.dataset.teachnav === "list") return openTaught();
+  if (nav.dataset.teachnav === "forget") return teachForgetAll();
 });
 
 /* Assist: a row is a record, a button is the card's one obvious next move. */

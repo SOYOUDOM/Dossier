@@ -241,6 +241,15 @@ function buildLexicon(api){
   Object.keys(types).forEach(s => add(s, "type", s));
 
   (api.settings.STATUS_WORDS || []).forEach(x => add(x.word, "status", x.id));
+
+  /* Words you told it yourself. "When I say the portal I mean CX Portal" is
+     the cheapest kind of teaching there is — one sentence, and every question
+     you ask from then on understands a word it had never seen. They carry a
+     little extra weight so your own name for something beats a fuzzy match on
+     somebody else's. */
+  (api.aliases || []).forEach(a => {
+    if (a && a.from && a.kind && a.value) add(a.from, a.kind, a.value, 1.7);
+  });
   return terms;
 }
 
@@ -389,6 +398,109 @@ function readNegation(norm){
     if (k) out[k] = true;
   }
   return Object.keys(out).length ? out : null;
+}
+
+/* ═══ ONE FIELD OF ONE RECORD ════════════════════════════════════════════════
+   "What is the ticket of task D-0032" had no answer anywhere in this file.
+   The record card carried status, priority, system, due date and time
+   tracked — and the ticket number, which is the one thing you actually paste
+   into an email, was not on it. Neither was the requester, the estimate, the
+   folder, or the tags.
+
+   A question that names a record AND names a field is asking for that field
+   and nothing else. So the field is read out of the sentence the same way the
+   dimension is: once, in one place, for every field a record has. */
+
+const FIELDS = [
+  { id:"ticket",    label:"ticket number", words:"ticket tickets ticketno ticketnumber reference references ref refs refno snow servicenow" },
+  { id:"system",    label:"system",        words:"system systems application applications app apps platform platforms" },
+  { id:"type",      label:"type",          words:"type types category categories" },
+  { id:"priority",  label:"priority",      words:"priority priorities severity urgency criticality" },
+  { id:"status",    label:"status",        words:"status statuses state states stage stages" },
+  { id:"title",     label:"title",         words:"title titles subject subjects headline" },
+  { id:"code",      label:"reference",     words:"code codes" },
+  { id:"requester", label:"requester",     words:"requester requesters requestor reporter reporters caller callers raiser" },
+  { id:"tags",      label:"tags",          words:"tag tags label labels" },
+  { id:"folder",    label:"folder",        words:"folder folders directory directories subfolder" },
+  { id:"estimate",  label:"estimate",      words:"estimate estimated estimates budget budgeted" },
+  { id:"spent",     label:"time spent",    words:"spent tracked elapsed" },
+  { id:"waitOn",    label:"waiting party",  words:"waiton" },
+  { id:"created",   label:"date it was logged", words:"created creation" },
+  { id:"completed", label:"date it closed", words:"completed" },
+  { id:"started",   label:"date it started", words:"started" },
+  { id:"scripts",   label:"scripts",       words:"script scripts automation automations" },
+  { id:"blockedBy", label:"records holding it", words:"blockedby" }
+];
+const FIELDWORD = (function(){
+  const m = {};
+  FIELDS.forEach(f => f.words.split(" ").forEach(w => { if (!m[w]) m[w] = f.id; }));
+  return m;
+})();
+const FIELDBY = (function(){ const m = {}; FIELDS.forEach(f => m[f.id] = f); return m; })();
+
+/* "who raised it" and "who is it waiting on" name a field without ever using
+   the field's own word */
+const FIELD_PHRASE = [
+  [/\bwho (?:raised|reported|logged|asked for|requested|sent|opened)\b/, "requester"],
+  [/\b(?:raised|reported|logged|requested|sent) by\b/, "requester"],
+  [/\bwaiting (?:on|for) (?:whom|who)\b/, "waitOn"],
+  [/\bwho is it (?:waiting on|with)\b/, "waitOn"],
+  [/\bwhat is it called\b/, "title"],
+  [/\btime (?:spent|logged|tracked)\b/, "spent"],
+  [/\b(?:how much|how many) (?:time|hours|minutes)\b/, "spent"],
+  [/\bhow long\b.{0,24}\b(?:taken|spent|been on)\b/, "spent"],
+  [/\bwho\b.{0,24}\bwaiting (?:on|for)\b/, "waitOn"],
+  [/\bwaiting (?:on|for)\s*\??\s*$/, "waitOn"],
+  [/\bholding it up\b/, "blockedBy"]
+];
+
+function readField(ws, norm){
+  for (const p of FIELD_PHRASE) if (p[0].test(norm)) return { id:p[1], word:"" };
+  for (let i = 0; i < ws.length; i++){
+    const vs = variants(ws[i]);
+    for (const v of vs){
+      const id = FIELDWORD[v];
+      if (id) return { id:id, word:ws[i] };
+    }
+  }
+  return null;
+}
+
+/* one field, read off one record, as a sentence-ready string. Empty means the
+   field is genuinely blank — which is an answer, and a useful one. */
+function fieldOf(t, id, api){
+  const h = api.h;
+  switch (id){
+    case "ticket":    return t.ticket || "";
+    case "system":    return t.system || "";
+    case "type":      return t.type || "";
+    case "priority":  return t.priority || "";
+    case "status":    return h.stMeta(t.status).label;
+    case "title":     return t.title || "";
+    case "code":      return t.code || "";
+    case "requester": return t.requester || "";
+    case "tags":      return (t.tags || []).join(", ");
+    case "folder":    return t.folder || "";
+    case "estimate":  return t.estimate ? h.mins(t.estimate) : "";
+    case "spent":     return h.live(t) ? h.mins(h.live(t)) : "";
+    case "due":       return t.due ? h.niceDate(t.due) + (t.dueTime ? " at " + t.dueTime : "") : "";
+    case "created":   return t.created ? h.stamp(t.created) : "";
+    case "completed": return t.completed ? h.stamp(t.completed) : "";
+    case "started":   return t.started ? h.stamp(t.started) : "";
+    case "waitOn":    return t.waitOn ? t.waitOn + ", " + h.waitDays(t) + " days so far" : "";
+    case "checklist": return (t.checklist || []).length
+                             ? (t.checklist.filter(c => c.done).length + " of " + t.checklist.length + " done")
+                             : "";
+    case "scripts":   return (t.scripts || []).map(sid => {
+                        const sc = (api.scripts || []).find(x => x.id === sid);
+                        return (sc && (sc.file || sc.name)) || sid;
+                      }).join(", ");
+    case "blockedBy": return (t.blockedBy || []).map(bid => {
+                        const o = (api.tasks || []).find(x => x.id === bid);
+                        return o ? o.code : "";
+                      }).filter(Boolean).join(", ");
+  }
+  return "";
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -770,6 +882,8 @@ function readSlots(norm, ws, api, raw0){
   if (quoted) s.quoted = quoted[1].trim();
 
   s.mods = readModifiers(ws, norm, lex);
+  /* which single field of a record is being asked for, if any */
+  s.field = readField(ws, norm);
   const d = readDimension(ws, norm);
   s.dim = d.dim; s.dims = d.dims; s.agg = d.agg;
   s.neg = readNegation(norm);
@@ -1322,6 +1436,56 @@ intent("record", {
         .concat(api.h.LIVE.indexOf(t.status) >= 0
           ? [{ label:"Mark it done", act:{ kind:"status", id:t.id, status:"done",
                                            confirm:"Mark " + t.code + " done?" } }] : [])
+    };
+  }
+});
+
+intent("field", {
+  kind:"read", label:"One detail",
+  eg:"what is the ticket of D-0032",
+  needs:["record", "field"],
+  cues:{},
+  /* This one is a question, never an instruction. "Run the recycle script on
+     D-0004" names a record and a field and means neither of them. */
+  only(mw, norm, slots){
+    return !/^\s*(?:run|log|add|create|mark|close|chase|remind|undo|open|go|start|put|set|attach|remove|delete|make|schedule)\b/.test(norm);
+  },
+  /* No cue list can carry this: the evidence is that a record and a field were
+     both named, which is exactly what a field question is and nothing else.
+     The extra when a dimension is named keeps it level with the intents that
+     collect the dimension's +9 — "what scripts are on D-0027" is a question
+     about D-0027, not about the scripts folder. */
+  probe(mw, norm, slots){
+    if (!slots.record || !slots.field) return 0;
+    return 14 + (slots.dim && slots.dim !== "record" ? 12 : 0);
+  },
+  run(A){
+    const api = A.api, h = api.h, t = A.slots.record, f = A.slots.field;
+    const def = FIELDBY[f.id] || { label:f.id };
+    const v = fieldOf(t, f.id, api);
+    const sub = "\u201c" + t.title + "\u201d \u00b7 " + h.stMeta(t.status).label +
+                (t.priority ? " \u00b7 " + t.priority : "") +
+                (t.system ? " \u00b7 " + t.system : "");
+    const more = [{ label:"Open it", act:{ kind:"open", id:t.id } },
+                  { label:"The whole record", act:{ kind:"say", text:"tell me about " + t.code } }];
+    if (!v) return {
+      say: say(["{code} has no {what} on it.",
+                "Nothing is filled in for the {what} on {code}.",
+                "{code} \u2014 {what}: nothing recorded."],
+               { code:t.code, what:def.label }, A.norm),
+      note: sub,
+      chips: more
+    };
+    /* a field's name may be singular or plural \u2014 "the tags is Pool" is the
+       sort of thing that makes a sentence read like a form letter, so none of
+       these variants puts a verb between the name and the value */
+    return {
+      say: say(["{code} \u2014 {what}: {v}.",
+                "The {what} on {code}: {v}.",
+                "{code} carries {v} as its {what}."],
+               { code:t.code, what:def.label, v:v }, A.norm),
+      note: sub,
+      chips: more
     };
   }
 });
@@ -4560,6 +4724,112 @@ intent("goto", {
     return { say:"Opening " + v + ".", act:{ kind:"view", view:v, silent:true } };
   }
 });
+/* ═══ TEACHING IT A WORD ═════════════════════════════════════════════════════
+   Half of what it fails to understand is not grammar, it is vocabulary. You
+   call it "the portal"; the workspace calls it "CX Portal"; nobody is wrong
+   and the question still comes back blank.
+
+   One sentence fixes that permanently, and it is the sentence a person would
+   say anyway: "when I say the portal I mean CX Portal". After that, every
+   question you ever ask understands the word — not because a phrase was added
+   to a list, but because the word joins the lexicon the readers already use,
+   so it works with exclusions, comparisons, filters and everything else at
+   the same time. */
+
+const ALIAS_RE = [
+  /\bwhen (?:i|we) say (.{2,40}?) (?:i|we) (?:mean|meant|am talking about|are talking about|refer to)\s+(.{2,40})$/,
+  /\bby (.{2,40}?) (?:i|we) mean\s+(.{2,40})$/,
+  /^(?:remember|note) (?:that )?(.{2,40}?)\s+(?:means|is short for|is another name for|is the same as)\s+(.{2,40})$/,
+  /^(.{2,40}?)\s+(?:means|is short for|is another word for|is another name for|is the same as)\s+(.{2,40})$/,
+  /^treat (.{2,40}?)\s+as\s+(.{2,40})$/,
+  /^(.{2,30}?)\s*=\s*(.{2,40})$/
+];
+const KINDNAME = { system:"system", person:"person", party:"party", type:"type",
+                   tag:"tag", script:"script", status:"status" };
+
+function readAlias(norm){
+  for (const re of ALIAS_RE){
+    const m = String(norm || "").match(re);
+    if (!m) continue;
+    const from = m[1].replace(/^(?:the|a|an)\s+/, "").replace(/[?.!,]+$/, "").trim();
+    const to = m[2].replace(/[?.!,]+$/, "").trim();
+    if (from && to && from !== to && from.split(" ").length <= 4) return { from, to, said:m[1].trim() };
+  }
+  return null;
+}
+
+intent("teachAlias", {
+  kind:"write", label:"Remember a word",
+  cues:{ mean:5, means:7, meant:5, synonym:9, alias:9, nickname:8, shorthand:7 },
+  phrases:[["when i say",12],["by that i mean",12],["is short for",12],["another name for",12]],
+  probe(mw, norm, slots){ return readAlias(norm) ? 15 : 0; },
+  run(A){
+    const api = A.api, a = readAlias(A.norm);
+    if (!a) return { say:"Say it like this: when I say the portal I mean CX Portal." };
+    const lex = api.lex || [];
+    const hits = findTerms(words(a.to), lex, ["system", "person", "party", "type", "tag", "script"], null).hits;
+    const hit = hits[0];
+    if (!hit) return {
+      say: "I have nothing called \u201c" + a.to + "\u201d in this workspace yet.",
+      note: "I can only tie a word to something that already exists here \u2014 a system, a colleague, " +
+            "a vendor, a type or a tag. Add it first and then tell me again.",
+      chips: [{ label:"Open settings", act:{ kind:"panel", panel:"ws" } }]
+    };
+    /* a word that already means something else is a bad word to reuse */
+    const clash = findTerms(words(a.from), lex, null, null).hits[0];
+    const already = clash && clash.term.value !== hit.term.value
+      ? "\u201c" + a.from + "\u201d already reads as " + clash.term.text + " here \u2014 this replaces that."
+      : "";
+    return {
+      say: "\u201c" + a.from + "\u201d will mean " + hit.term.text + " from now on.",
+      note: (already ? already + "\n" : "") +
+            "It becomes a " + (KINDNAME[hit.term.kind] || hit.term.kind) +
+            " name like any other, so it works in every question \u2014 filters, exclusions, " +
+            "comparisons and all.",
+      act: { kind:"alias", from:a.from, value:hit.term.value, ofKind:hit.term.kind,
+             shown:hit.term.text,
+             confirm:"Remember that \u201c" + a.from + "\u201d means " + hit.term.text + "?" }
+    };
+  }
+});
+
+intent("taught", {
+  kind:"read", label:"What you have taught me",
+  cues:{ taught:11, teach:8, learned:10, learnt:10, lessons:9, corrections:9,
+         remembered:8, correcting:8 },
+  phrases:[["what have i taught you",12],["what have you learned",12],["what did i teach you",12],
+           ["what do you remember",10],["what have i corrected",12],["things i taught you",12]],
+  run(A){
+    const api = A.api;
+    const mem = api.memory || {}, al = api.aliases || [];
+    const shapes = [], exacts = [];
+    for (const k in mem){
+      const name = lessonIntent(mem[k]);
+      if (!name) continue;
+      const it = INTENTS.find(x => x.name === name);
+      const label = it ? it.label : name;
+      if (k.charAt(0) === "~") shapes.push(k.slice(1) + "  \u2192  " + label);
+      else exacts.push(k + "  \u2192  " + label);
+    }
+    const n = shapes.length + exacts.length + al.length;
+    if (!n) return {
+      say: "Nothing yet \u2014 you have not had to correct me.",
+      note: "When I get something wrong, use \u201cnot what I meant\u201d under the answer and pick the right " +
+            "one. I keep the shape of the question, not the sentence, so teaching me about one record " +
+            "teaches me about all of them.",
+      chips: [{ label:"Teach me something", act:{ kind:"teach", text:"" } }]
+    };
+    return {
+      say: say(["{n} so far.", "You have taught me {n}.", "{n} on the books."],
+               { n:qty(n, "thing") }, A.norm),
+      note: (shapes.length ? "Shapes I learned from you:\n  " + shapes.slice(0, 12).join("\n  ") + "\n" : "") +
+            (exacts.length ? "Exact wordings:\n  " + exacts.slice(0, 8).join("\n  ") + "\n" : "") +
+            (al.length ? "Words you gave me:\n  " +
+              al.slice(0, 12).map(a => "\u201c" + a.from + "\u201d = " + (a.value || "")).join("\n  ") : ""),
+      chips: [{ label:"Review and delete", act:{ kind:"taught" } }]
+    };
+  }
+});
 intent("help", {
   kind:"read", label:"What can you do",
   cues:{ help:9, commands:8, capabilities:8, able:6, do:2, ask:4, understand:7, works:4 },
@@ -4567,7 +4837,10 @@ intent("help", {
            ["give me examples",10],["what can i ask",10],["who are you",8]],
   run(A){
     return {
-      say:"I read your records and answer from them. Some things to try:",
+      say:"I read your records and answer from them. When I get one wrong, press " +
+          "\u201cnot what I meant\u201d under the answer and pick the right one \u2014 I keep the " +
+          "shape of the question, so correcting me once about D-0004 corrects me about every " +
+          "record. Some things to try:",
       note:[ "what should I do next",
              "what is overdue",
              "anything I should know",
@@ -4580,7 +4853,10 @@ intent("help", {
              "D-14",
              "log imaging pool crash p1 @Imaging today",
              "chase the vendor",
-             "remind me every 30 minutes to drink water" ].join("\n"),
+             "remind me every 30 minutes to drink water",
+             "what is the ticket of D-0004",
+             "when I say the portal I mean CX Portal",
+             "what have I taught you" ].join("\n"),
       examples:true
     };
   }
@@ -4912,6 +5188,7 @@ function leftoverWords(it, A){
   /* everything the readers already consumed */
   if (s.mods) for (const w in s.mods.used) used[w] = 1;
   if (s._usedWords) s._usedWords.forEach(w => used[w] = 1);
+  if (s.field && s.field.word) used[s.field.word] = 1;
   [s.dim, s.agg].forEach(() => {});
   const out = [];
   mw.forEach(w => {
@@ -4997,6 +5274,143 @@ function splitRequests(text){
   if (raw.length < 24) return [raw];
   const parts = raw.split(JOIN).map(x => x.replace(/^[\s,;.]+|[\s,;.]+$/g, "")).filter(x => x.length > 3);
   return parts.length > 1 ? parts.slice(0, 3) : [raw];
+}
+
+/* ═══ LEARNING THE SHAPE, NOT THE SENTENCE ═══════════════════════════════════
+   Telling it what you meant used to store the sentence you typed, word for
+   word. So you would teach it "what is the ticket of task D-0032", it would
+   get that one right forever, and the next morning you would ask the same
+   thing about D-0045 and be a stranger again. That is not learning. That is a
+   lookup table with one more row in it.
+
+   What gets stored now is the sentence with its particulars taken out:
+
+        what is the ticket of task D-0032   →   what is the ticket of task <code>
+
+   and that one lesson answers D-0045, D-0117 and every code you will ever
+   type. The same is done for system names, people, parties, types, tags,
+   dates, priorities and plain numbers — anything a reader could fill in
+   again — so teaching it "how is Imaging doing" also teaches it about Policy.
+
+   Two lessons are kept from every correction: the exact sentence (so the
+   thing you actually typed is certain to work) and the shape (so everything
+   like it works too). The shape is the one that earns its keep. */
+
+const PLACE_KIND = { system:"<system>", person:"<person>", party:"<party>",
+                     type:"<type>", tag:"<tag>", script:"<script>", status:"<status>" };
+
+/* words that are a date rather than a thing */
+const WHENWORD = {};
+("today yesterday tomorrow tonight now week weeks month months year years " +
+ "monday tuesday wednesday thursday friday saturday sunday " +
+ "jan january feb february mar march apr april may jun june jul july aug august " +
+ "sep sept september oct october nov november dec december").split(" ")
+  .forEach(w => WHENWORD[w] = 1);
+
+const CODE_ONE = /^(?:d-?\d{1,7}|[a-z]{2,6}\d{4,12})$/;
+
+function templateOf(norm, api){
+  const ws = words(String(norm || ""));
+  if (!ws.length) return "";
+  const out = ws.slice();
+  const lex = api.lex || lexiconFor(api);
+
+  /* codes first — the most particular thing any sentence about work carries */
+  for (let i = 0; i < out.length; i++) if (CODE_ONE.test(out[i])) out[i] = "<code>";
+  /* "d 0032", typed with the space left in */
+  for (let i = 0; i + 1 < out.length; i++)
+    if (out[i] === "d" && /^\d{1,7}$/.test(out[i + 1])){ out[i] = "<code>"; out[i + 1] = ""; }
+
+  /* names this workspace knows — a system, a colleague, a vendor, a type */
+  const found = findTerms(ws, lex, null, null);
+  found.hits.forEach(x => {
+    const ph = PLACE_KIND[x.term.kind];
+    if (!ph) return;
+    for (let j = 0; j < x.len; j++){
+      if (out[x.at + j] === "<code>") return;
+    }
+    for (let j = 0; j < x.len; j++) out[x.at + j] = j === 0 ? ph : "";
+  });
+
+  for (let i = 0; i < out.length; i++){
+    const w = out[i];
+    if (!w || w.charAt(0) === "<") continue;
+    if (/^p[1-4]$/.test(w)){ out[i] = "<pri>"; continue; }
+    if (WHENWORD[w]){ out[i] = "<when>"; continue; }
+    if (/^\d+$/.test(w)){ out[i] = "<n>"; continue; }
+  }
+
+  /* "last week" and "next month" leave two <when>s in a row; one is enough */
+  const kept = [];
+  out.forEach(w => {
+    if (!w) return;
+    if (w === "<when>" && kept[kept.length - 1] === "<when>") return;
+    kept.push(w);
+  });
+  return kept.join(" ");
+}
+
+/* Words that carry no meaning of their own in a taught shape. "Show me the
+   ticket for D-0032" and "what is the ticket of D-0045" are the same lesson;
+   only "ticket" is doing any work in either of them. */
+const TPL_SKIP = {};
+("record records task tasks job jobs item items ticketno thing things stuff ones " +
+ "show list give tell find get pull display see want need know please kindly " +
+ "me my our your the a an is are was were do does did can could would should will " +
+ "of for to in on at with from by as and or but if then so about there here " +
+ "one two now still just also again really actually currently").split(" ")
+  .forEach(w => TPL_SKIP[w] = 1);
+
+function tplParts(tpl){
+  const ws = String(tpl || "").split(" ").filter(Boolean);
+  const slots = [], content = [];
+  ws.forEach(w => {
+    if (w.charAt(0) === "<"){ if (slots.indexOf(w) < 0) slots.push(w); return; }
+    if (TPL_SKIP[w] || NOISE.has(w) || ASKING.has(w) || w.length < 2) return;
+    if (content.indexOf(w) < 0) content.push(w);
+  });
+  return { slots, content };
+}
+
+/* the value stored against a lesson may be a bare intent name (what earlier
+   versions wrote) or a small record of when and why it was taught */
+function lessonIntent(v){ return (v && typeof v === "object") ? v.intent : v; }
+
+/* Nearest taught shape, when nothing matches outright. A lesson only carries
+   across if every placeholder it was taught with is present again — a lesson
+   about "<code>" is not a lesson about a question with no record in it — and
+   if what the two have in common is most of what either of them is. One word
+   in common is a coincidence unless it is a long and particular word. */
+function nearestTaught(tpl, mem){
+  const mine = tplParts(tpl);
+  let best = null, bestScore = 0;
+  for (const k in mem){
+    if (k.charAt(0) !== "~") continue;
+    const name = lessonIntent(mem[k]);
+    if (!name) continue;
+    const theirs = tplParts(k.slice(1));
+    if (!theirs.content.length && !theirs.slots.length) continue;
+    if (!theirs.slots.every(x => mine.slots.indexOf(x) >= 0)) continue;
+    const shared = theirs.content.filter(w => mine.content.indexOf(w) >= 0);
+    if (!shared.length) continue;
+    if (shared.length < 2 && !shared.some(w => w.length >= 5)) continue;
+    const cover = shared.length / theirs.content.length;
+    const focus = shared.length / Math.max(1, mine.content.length);
+    if (cover < 0.6 || focus < 0.5) continue;
+    const sc = cover * 0.6 + focus * 0.4;
+    if (sc > bestScore){ bestScore = sc; best = { intent:name, key:k, score:Math.round(sc * 100) / 100 }; }
+  }
+  return best;
+}
+
+/* Both keys a correction writes: the sentence, and its shape. The app calls
+   this so the two files can never disagree about how a lesson is filed. */
+function teachKeys(raw, api){
+  const norm = normalise(raw);
+  if (!norm) return null;
+  api.lex = lexiconFor(api);
+  const tpl = templateOf(norm, api);
+  return { exact:norm, shape:tpl ? "~" + tpl : "", template:tpl };
 }
 
 function ask(raw, api){
@@ -5100,12 +5514,32 @@ function ask(raw, api){
     }
   }
 
-  /* a phrasing you have already corrected once wins outright */
+  /* Something you have already corrected wins outright — and so does anything
+     built the same way, which is the whole point of keeping the shape. Three
+     chances, in order of how sure they are: the sentence itself, the shape of
+     it, then the nearest shape you have taught that this could be. */
   const mem = api.memory || {};
-  const remembered = mem[norm];
+  let remembered = lessonIntent(mem[norm]), how = "exact", from = norm, near = null;
+  if (!remembered){
+    const tpl = templateOf(norm, api);
+    if (tpl){
+      remembered = lessonIntent(mem["~" + tpl]);
+      if (remembered){ how = "shape"; from = tpl; }
+      else {
+        near = nearestTaught(tpl, mem);
+        if (near){ remembered = near.intent; how = "near"; from = near.key.slice(1); }
+      }
+    }
+  }
   if (remembered){
     const it = INTENTS.find(x => x.name === remembered);
-    if (it) return finish(it, A, 1, [], true);
+    /* a lesson cannot conjure a record out of a sentence that has none — when
+       what it needs is missing, fall through and answer honestly */
+    if (it && (it.needs || []).every(n => slots[n])){
+      const out = finish(it, A, how === "near" ? 0.9 : 1, [], true);
+      out.taught = { how:how, from:from, score:near ? near.score : 1 };
+      return out;
+    }
   }
 
   return rank(A, norm, ws, mw, slots, asking, firstVerb, convo);
@@ -5189,6 +5623,7 @@ function finish(it, A, confidence, altIntents, learned, followed){
     party:A.slots.party || "", tag:A.slots.tag || "", priority:A.slots.priority || "",
     range:A.slots.range ? A.slots.range.label : "", record:A.slots.record ? A.slots.record.code : "",
     dim:A.slots.dim || "", agg:A.slots.agg || "", yesno:!!A.slots.yesno,
+    field:A.slots.field ? A.slots.field.id : "",
     neg:A.slots.neg ? Object.keys(A.slots.neg).join(",") : ""
   };
   /* what the next turn in this thread should still know */
@@ -5264,12 +5699,20 @@ function lexiconFor(api){
 }
 
 window.DossierChat = {
-  version: "1.0",
-  intents: INTENTS.map(i => ({ name:i.name, label:i.label, kind:i.kind })),
+  version: "1.1",
+  /* the picker in the app needs something to show for each one, and the first
+     phrase an intent matches on is the plainest example there is */
+  intents: INTENTS.map(i => ({ name:i.name, label:i.label, kind:i.kind,
+    eg: i.eg || (i.phrases && i.phrases[0] && i.phrases[0][0]) ||
+        (i.cues && Object.keys(i.cues)[0]) || "" })),
   ask: ask,
   run: run,
+  /* what a correction should be filed under: the sentence and its shape */
+  keys: teachKeys,
+  template: (raw, api) => { const k = teachKeys(raw, api); return k ? k.template : ""; },
   forget: () => { LEX = null; LEXKEY = ""; },
-  _util: { normalise, words, meaningful, close, editDistance, readRange, readDate, buildLexicon }
+  _util: { normalise, words, meaningful, close, editDistance, readRange, readDate,
+           buildLexicon, templateOf, nearestTaught, tplParts }
 };
 
 })();
