@@ -70,6 +70,9 @@ let engine = null;
 let parentWin = null;
 
 const say = t => { const el = document.getElementById("s"); if (el) el.textContent = t; };
+/* say it here AND across the frame, so the panel shows the checking going on
+   rather than another stretch of silence it cannot tell from a hang */
+const step = t => { say(t); post({ evt:"progress", progress:0, text:t }); };
 
 function post(msg){
   try { (parentWin || window.parent).postMessage(Object.assign({ __dossier:1 }, msg), "*"); }
@@ -136,13 +139,55 @@ function rehost(cfg, host){
     model: String(m.model || "").replace(from, to) })) };
 }
 
+/* ── does the weights host answer at all ────────────────────────────────
+   web-llm's own fetches have no deadline. A host that accepts the connection
+   and then says nothing leaves the download sitting at 0% for ever, with no
+   error to show and nothing to distinguish it from a slow link. So one small
+   file is asked for first, with a deadline.
+
+   Any answer counts as reachable — a 404 still proves the host is there and
+   talking. Only silence fails, because silence is the thing that cannot be
+   diagnosed from the other side. */
+async function reachable(url, ms){
+  const ac = new AbortController();
+  const t = setTimeout(() => ac.abort(), ms || 12000);
+  try {
+    await fetch(url, { method:"GET", mode:"no-cors", cache:"no-store", signal:ac.signal });
+    return { ok:true };
+  } catch(e){
+    return { ok:false, aborted: e && e.name === "AbortError",
+             why: String((e && e.message) || e) };
+  } finally { clearTimeout(t); }
+}
+
+async function preflight(cfg, model){
+  const entry = ((cfg && cfg.model_list) || []).find(m => m.model_id === model);
+  if (!entry) return;
+  const checks = [];
+  if (entry.model)
+    checks.push(["the weights", String(entry.model).replace(/\/+$/, "") +
+                                "/resolve/main/mlc-chat-config.json"]);
+  if (entry.model_lib) checks.push(["the model library", entry.model_lib]);
+  for (const [what, url] of checks){
+    const host = (function(){ try { return new URL(url).host; } catch(e){ return url; } })();
+    step("checking " + host + "\u2026");
+    const r = await reachable(url, 12000);
+    if (!r.ok){
+      throw new Error(r.aborted
+        ? host + " accepted the connection and then said nothing for twelve seconds. That is " +
+          "a filter swallowing the request rather than refusing it, which is why the download " +
+          "sat at 0%. Try another Model host, or a phone hotspot."
+        : host + " could not be reached for " + what + " (" + r.why + ")." );
+    }
+  }
+}
+
 async function doLoad(libUrl, model, host){
   const local = await findLocal();
   await lib(libUrl);
   const mk = webllm.CreateMLCEngine || webllm.CreateEngine;
   if (typeof mk !== "function")
     throw new Error("this build of web-llm has no CreateMLCEngine — pin another version");
-  say((local ? "loading " : "downloading ") + model + "…");
   const opts = {
     initProgressCallback: r => {
       const pct = Math.round(((r && r.progress) || 0) * 100);
@@ -156,6 +201,9 @@ async function doLoad(libUrl, model, host){
     const pre = webllm.prebuiltAppConfig;
     if (pre && pre.model_list) opts.appConfig = rehost(pre, host);
   }
+  /* nothing to preflight when the files are on the disk already */
+  if (!local) await preflight(opts.appConfig || webllm.prebuiltAppConfig, model);
+  step((local ? "loading " : "downloading ") + model + "\u2026");
   engine = await mk(model, opts);
   /* keep the download rather than letting the browser evict it */
   try { if (navigator.storage && navigator.storage.persist) await navigator.storage.persist(); } catch(e){}
