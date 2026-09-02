@@ -35,6 +35,11 @@ button{font:inherit;padding:9px 16px;border-radius:7px;border:1px solid var(--ru
   background:var(--card);color:var(--ink);cursor:pointer}
 button:hover{border-color:var(--ink3)}
 #copy{margin-top:8px}
+#offline pre{background:var(--card);border:1px solid var(--rule);border-radius:6px;
+  padding:9px 11px;overflow-x:auto;font-size:11.5px;margin:6px 0 12px;white-space:pre-wrap;
+  word-break:break-all}
+#offline p{margin:10px 0 4px;font-size:13px}
+#offline code{font-size:11.5px;background:var(--card);padding:1px 4px;border-radius:3px}
 pre{white-space:pre-wrap;background:var(--card);border:1px solid var(--rule);border-radius:8px;
   padding:12px 14px;font-size:11.5px;color:var(--ink2);overflow-x:auto}
 </style>
@@ -49,6 +54,9 @@ runs one very small calculation on the graphics card to prove it works, and tell
 <section><h3>Room for the model</h3><div id="mem"></div></section>
 <section><h3>How it is being served</h3><div id="ctx"></div></section>
 <section><h3>If there is no graphics card to use</h3><div id="wasm"></div></section>
+<section><h3>Can it actually reach the model?</h3><div id="net"></div></section>
+<section id="offlineSec" style="display:none"><h3>Taking a copy for a machine with no internet</h3>
+  <div id="offline"></div></section>
 <section><h3>Everything, to send back</h3>
   <div class="note">Copy this and paste it to me — it is all I need to tell you which model to use.</div>
   <div style="padding:0 16px 16px"><pre id="dump">…</pre><button id="copy">Copy to clipboard</button></div>
@@ -216,6 +224,136 @@ function gb(n){ return n == null ? "unknown" : (n/1073741824).toFixed(2) + " GB"
     'roughly ten to thirty times slower. For a question you type and wait on, that is the ' +
     'difference between two seconds and a minute.</div>');
 
+
+  /* ── who is actually blocking it ────────────────────────────────────────
+     Three completely different things look identical from the chat window,
+     and knowing which one it is takes ten seconds here instead of an
+     afternoon of guessing:
+
+       the files are not there      \u2014 copied only some of them
+       the app is refusing          \u2014 Dossier's own policy, which is the
+                                      correct behaviour and means the files
+                                      are out of date
+       the network is refusing      \u2014 a firewall or proxy between this PC
+                                      and the model, and no amount of code
+                                      here will change that
+
+     This page has no policy of its own, so what it can and cannot reach is
+     the network's answer and nothing else. */
+
+  async function reach(url){
+    const t0 = performance.now();
+    try {
+      const r = await fetch(url, { cache:"no-store" });
+      return { ok:true, status:r.status, ms:Math.round(performance.now() - t0) };
+    } catch(e){
+      /* it may be reachable and merely unreadable \u2014 worth telling apart */
+      try {
+        await fetch(url, { mode:"no-cors", cache:"no-store" });
+        return { ok:false, reached:true, ms:Math.round(performance.now() - t0),
+                 err:"reached, but the browser would not let this page read the reply" };
+      } catch(e2){
+        return { ok:false, reached:false, ms:Math.round(performance.now() - t0),
+                 err:String((e && e.message) || e) };
+      }
+    }
+  }
+
+  /* the files that have to be in the folder */
+  R.files = {};
+  const need = [
+    ["run.html",   "run.html",        "the page that does the downloading"],
+    ["brain.js",   "../brain.js",     "the part of Dossier that drives it"],
+    ["chat.js",    "../chat.js",      "the assistant itself"],
+    ["dossier.html", "../dossier.html", "the application"]
+  ];
+  for (const f of need){
+    let got = null;
+    try {
+      const r = await fetch(f[1], { cache:"no-store" });
+      got = r.ok ? await r.text() : null;
+    } catch(e){}
+    R.files[f[0]] = got ? got.length : 0;
+    row("net", f[0], got ? "there (" + Math.round(got.length / 1024) + " KB)" : "MISSING \u2014 " + f[2],
+        got ? "ok" : "bad");
+    /* an old copy is the same as a missing one, and looks like neither */
+    if (got && f[0] === "brain.js"){
+      R.brainFramed = /model\/run\.html/.test(got);
+      row("net", "brain.js version",
+          R.brainFramed ? "current \u2014 runs the model in its own page"
+                        : "OLD \u2014 this copy still tries to download from inside Dossier, "
+                          + "which Dossier's own policy blocks. Replace it.",
+          R.brainFramed ? "ok" : "bad");
+    }
+    if (got && f[0] === "dossier.html"){
+      R.appCsp = (got.match(/Content-Security-Policy[^>]*content="([^"]*)"/) || [])[1] || "";
+      R.appKnowsFrame = /model\/run\.html|brainCfg/.test(got);
+      row("net", "dossier.html version",
+          R.appKnowsFrame ? "current" : "OLD \u2014 it has no local-model settings in it. Replace it.",
+          R.appKnowsFrame ? "ok" : "bad");
+    }
+  }
+
+  /* the model sitting in the folder, which needs no network whatever */
+  R.localModel = null;
+  try {
+    const r = await fetch("models/index.json", { cache:"no-store" });
+    if (r.ok){
+      const j = await r.json();
+      const list = (Array.isArray(j) ? j : j.model_list || []).filter(m => m && m.model_id);
+      if (list.length) R.localModel = list.map(m => m.model_id);
+    }
+  } catch(e){}
+  R.localLib = false;
+  try { const r = await fetch("web-llm.js", { method:"HEAD", cache:"no-store" }); R.localLib = r.ok; } catch(e){}
+  row("net", "Model in the folder",
+      R.localModel ? R.localModel.join(", ") + " \u2014 no internet needed"
+                   : "none \u2014 it would be downloaded",
+      R.localModel ? "ok" : "");
+  if (R.localModel)
+    row("net", "Runtime in the folder", R.localLib ? "web-llm.js is there" :
+        "web-llm.js is NOT there \u2014 the runtime would still be downloaded", R.localLib ? "ok" : "warn");
+
+  /* the hosts the model actually comes from */
+  R.reach = {};
+  const hosts = [
+    ["the library", "https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm@0.2.79/package.json"],
+    ["Hugging Face", "https://huggingface.co/mlc-ai/Qwen2.5-0.5B-Instruct-q4f16_1-MLC/resolve/main/mlc-chat-config.json"],
+    ["the weights", "https://huggingface.co/mlc-ai/Qwen2.5-0.5B-Instruct-q4f16_1-MLC/resolve/main/ndarray-cache.json"]
+  ];
+  for (const h of hosts){
+    const r = await reach(h[1]);
+    R.reach[h[0]] = r;
+    row("net", h[0],
+        r.ok ? "reachable (" + r.ms + " ms)"
+             : r.reached ? "reachable, but blocked by the browser \u2014 " + r.err
+             : "BLOCKED \u2014 nothing on this network answered (" + r.err + ")",
+        r.ok ? "ok" : "bad");
+  }
+  R.netOk = Object.keys(R.reach).every(k => R.reach[k].ok);
+  R.filesOk = R.files["run.html"] > 0 && R.brainFramed && R.appKnowsFrame;
+  /* a model in the folder makes the network question moot */
+  R.offlineReady = !!(R.localModel && R.localLib);
+
+  document.getElementById("net").insertAdjacentHTML("beforeend",
+    '<div class="note">' + (
+      R.offlineReady
+        ? "The model is in the folder, so none of the addresses below matter \u2014 nothing will be " +
+          "downloaded and this will work with the network unplugged."
+      : !R.filesOk
+        ? "Some of the files are missing or out of date. Copy the newest set into the folder and " +
+          "reload this page \u2014 a stale dossier.html or brain.js produces exactly the same errors " +
+          "as a blocked network, which is why they are both checked here."
+      : !R.netOk
+        ? "The files are right, so this is your network rather than Dossier. Something between this " +
+          "PC and the internet is refusing these addresses \u2014 usually a company proxy or filter, " +
+          "and Hugging Face is blocked on a great many corporate networks as a matter of policy. " +
+          "Two ways forward: ask whoever runs the network to allow cdn.jsdelivr.net and " +
+          "huggingface.co, or download the model on a machine that can reach it and put the files " +
+          "in the folder, which needs no internet at all."
+      : "Everything the model needs is reachable and every file is in place."
+    ) + "</div>");
+
   /* ── the verdict ───────────────────────────────────────────────────── */
   const v = document.getElementById("verdict");
   let cls, head, body;
@@ -243,6 +381,25 @@ function gb(n){ return n == null ? "unknown" : (n/1073741824).toFixed(2) + " GB"
     body = "This machine will run a small model comfortably. A 1.5 to 3 billion parameter model is " +
            "within reach, and we only need the small end of that.";
   }
+  /* the hardware may be fine and the thing still not work, for reasons that
+     have nothing to do with the hardware \u2014 say which */
+  if (R.offlineReady && R.filesOk){
+    /* nothing to reach, so nothing to block */
+  } else if (!R.filesOk){
+    cls = "bad"; head = "The hardware is not the problem \u2014 the files are";
+    body = (R.files["run.html"] ? "" : "model/run.html is not in the folder. ") +
+           (R.brainFramed === false ? "brain.js is an old copy that downloads from inside Dossier, which " +
+             "Dossier's own security policy blocks. " : "") +
+           (R.appKnowsFrame === false ? "dossier.html is an old copy with no model settings in it. " : "") +
+           "Copy the newest files in, then hard-refresh with Ctrl+Shift+R and run this again.";
+  } else if (!R.netOk){
+    cls = "bad"; head = "The hardware is fine \u2014 the network is blocking it";
+    body = "Every file is in place and this machine can run a model, but something between this PC " +
+           "and the internet refuses the addresses the model comes from. That is a firewall or proxy, " +
+           "not Dossier: this page has no security policy of its own, so what it cannot reach, " +
+           "nothing on this machine can. Either have cdn.jsdelivr.net and huggingface.co allowed, or " +
+           "fetch the model elsewhere and copy it into the folder \u2014 which then needs no internet.";
+  }
   /* the model itself cannot load from file:// even where this page can */
   if (R.protocol === "file:")
     body += "  Separately: you opened this straight from the folder. A model cannot load that way — " +
@@ -251,6 +408,66 @@ function gb(n){ return n == null ? "unknown" : (n/1073741824).toFixed(2) + " GB"
   v.innerHTML = "<h2></h2><p></p>";
   v.children[0].textContent = head; v.children[1].textContent = body;
   R.verdict = head;
+
+
+  /* ── the exact files to copy, read from the library rather than remembered ──
+     If this machine can reach the internet and the work machine cannot, the
+     answer is to carry the model across on a stick. Which files, and where
+     they go, is not something to take on trust from a README: it is written
+     down inside web-llm itself, so it is read from there and printed. */
+  if (R.netOk && !R.offlineReady){
+    const sec = document.getElementById("offlineSec");
+    const box = document.getElementById("offline");
+    sec.style.display = "";
+    box.innerHTML = '<div class="note">This machine can reach the model, so it can tell you exactly ' +
+      'what to copy. Loading the library to read the real addresses\u2026</div>';
+    try {
+      const lib = await import("https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm@0.2.79/+esm");
+      const all = (lib.prebuiltAppConfig && lib.prebuiltAppConfig.model_list) || [];
+      const want = ["Qwen2.5-0.5B-Instruct-q4f16_1-MLC", "Qwen2.5-1.5B-Instruct-q4f16_1-MLC",
+                    "Llama-3.2-1B-Instruct-q4f16_1-MLC"];
+      const picks = want.map(id => all.find(m => m.model_id === id)).filter(Boolean);
+      const m = picks[0] || all[0];
+      if (!m) throw new Error("the library listed no models");
+      R.offlinePlan = { model_id:m.model_id, model:m.model, model_lib:m.model_lib };
+
+      const idx = JSON.stringify([{ model_id:m.model_id,
+        model:"models/" + m.model_id,
+        model_lib:"models/lib/" + String(m.model_lib).split("/").pop() }], null, 1);
+
+      const esc = t => String(t).replace(/[&<>]/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;" }[c]));
+      box.innerHTML =
+        '<div class="note">Do this once on a machine that can reach the internet, then copy the ' +
+        'model folder onto the one that cannot. After that Dossier needs no network at all \u2014 ' +
+        'not for the model, not for anything.</div>' +
+        '<div style="padding:0 16px 14px">' +
+        "<p><b>1.</b> The weights. Needs git with git-lfs installed:</p>" +
+        '<pre>git lfs install\ngit clone ' + esc(m.model) + '</pre>' +
+        "<p>Put the folder it makes at <code>model/models/" + esc(m.model_id) + "</code>.</p>" +
+        "<p><b>2.</b> The compiled model library, one file:</p>" +
+        '<pre>' + esc(m.model_lib) + '</pre>' +
+        "<p>Save it as <code>model/models/lib/" + esc(String(m.model_lib).split("/").pop()) +
+        "</code>.</p>" +
+        "<p><b>3.</b> The runtime, so even that is not fetched:</p>" +
+        '<pre>https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm@0.2.79/+esm</pre>' +
+        "<p>Save it as <code>model/web-llm.js</code>.</p>" +
+        "<p><b>4.</b> Finally <code>model/models/index.json</code>, which is what switches " +
+        "Dossier over to the folder. Exactly this:</p>" +
+        '<pre id="idx">' + esc(idx) + '</pre>' +
+        '<button id="copyIdx">Copy that index.json</button>' +
+        "<p style=\"margin-top:14px\">Then reload this page: it will say the model is in the folder, " +
+        "and the addresses above stop mattering.</p></div>";
+      document.getElementById("copyIdx").onclick = function(){
+        navigator.clipboard.writeText(idx).then(() => {
+          this.textContent = "Copied"; setTimeout(() => this.textContent = "Copy that index.json", 1600);
+        }).catch(() => { this.textContent = "Select the text above and copy it by hand"; });
+      };
+    } catch(e){
+      box.innerHTML = '<div class="note">Could not load the library to read the real addresses (' +
+        String((e && e.message) || e) + '). Nothing is lost \u2014 it only means this page cannot ' +
+        'write the instructions out for you.</div>';
+    }
+  }
 
   document.getElementById("dump").textContent = JSON.stringify(R, null, 1);
   document.getElementById("copy").onclick = function(){

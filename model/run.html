@@ -74,30 +74,74 @@ function post(msg){
   catch(e){}
 }
 
-async function doCatalogue(lib){
-  if (!webllm) webllm = await import(lib);
+/* ── the folder, if the model is sitting in it ───────────────────────────
+   A great many company networks block huggingface.co outright, and no code
+   here can argue with a firewall. So before reaching for the internet this
+   looks for the model in the folder next to it, and if it is there, uses it
+   and never touches the network at all.
+
+   models/index.json is the whole of the arrangement — a list saying what is
+   present and where. No file, no local model, and it falls back to the CDN. */
+
+let localCfg = null, localChecked = false;
+
+async function findLocal(){
+  if (localChecked) return localCfg;
+  localChecked = true;
+  try {
+    const r = await fetch("models/index.json", { cache:"no-store" });
+    if (!r.ok) return null;
+    const list = await r.json();
+    const models = (Array.isArray(list) ? list : list.model_list || [])
+      .filter(m => m && m.model_id && m.model && m.model_lib);
+    if (!models.length) return null;
+    /* URLs are written relative to this page; web-llm wants absolute ones */
+    const abs = u => new URL(u, location.href).href;
+    localCfg = { model_list: models.map(m => Object.assign({}, m, {
+      model: abs(m.model), model_lib: abs(m.model_lib) })) };
+    return localCfg;
+  } catch(e){ return null; }
+}
+
+/* the library, local copy first */
+async function lib(url){
+  if (webllm) return webllm;
+  try { webllm = await import("./web-llm.js"); say("runtime: local copy"); return webllm; }
+  catch(e){}
+  say("fetching the runtime…");
+  webllm = await import(url);
+  return webllm;
+}
+
+async function doCatalogue(libUrl){
+  const local = await findLocal();
+  if (local) return local.model_list.map(m => ({ id:m.model_id, mb:0, local:true }));
+  await lib(libUrl);
   const list = (webllm.prebuiltAppConfig && webllm.prebuiltAppConfig.model_list) || [];
   return list.map(m => ({ id:m.model_id,
     mb: m.vram_required_MB ? Math.round(m.vram_required_MB) : 0 }));
 }
 
-async function doLoad(lib, model){
-  if (!webllm){ say("fetching the runtime…"); webllm = await import(lib); }
+async function doLoad(libUrl, model){
+  const local = await findLocal();
+  await lib(libUrl);
   const mk = webllm.CreateMLCEngine || webllm.CreateEngine;
   if (typeof mk !== "function")
     throw new Error("this build of web-llm has no CreateMLCEngine — pin another version");
-  say("loading " + model + "…");
-  engine = await mk(model, {
+  say((local ? "loading " : "downloading ") + model + "…");
+  const opts = {
     initProgressCallback: r => {
       const pct = Math.round(((r && r.progress) || 0) * 100);
       say(pct + "% · " + ((r && r.text) || ""));
       post({ evt:"progress", progress:(r && r.progress) || 0, text:(r && r.text) || "" });
     }
-  });
+  };
+  if (local) opts.appConfig = local;
+  engine = await mk(model, opts);
   /* keep the download rather than letting the browser evict it */
   try { if (navigator.storage && navigator.storage.persist) await navigator.storage.persist(); } catch(e){}
-  say("ready · " + model);
-  return { model:model };
+  say("ready · " + model + (local ? " (from the folder)" : ""));
+  return { model:model, local:!!local };
 }
 
 async function doChat(opts){

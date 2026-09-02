@@ -94,6 +94,7 @@ const S = {
   message: "",
   error: "",
   loadedAt: 0,
+  local: false,        /* loaded out of the folder rather than off the network */
   asked: 0,
   answered: 0,
   lastMs: 0
@@ -276,7 +277,8 @@ async function load(opts){
       S.message = "downloading " + id;
       note(opts.onProgress);
 
-      await send("load", { lib:lib, model:id });
+      const got = await send("load", { lib:lib, model:id });
+      S.local = !!(got && got.local);
 
       /* What the rest of this file talks to. It has the shape the runtime
          has, so nothing above here knows or cares that the model is on the

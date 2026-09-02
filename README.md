@@ -220,6 +220,7 @@ chat.js                       the assistant — what it understands and answers
 brain.js                      optional: the local model, for the questions chat.js misreads
 model/check.html              open this to see whether your PC can run one
 model/run.html                the only page allowed to touch the network
+model/models/                 optional: the model itself, for a PC with no internet
 dossier.json                  every record, routine, script and setting
 fonts/
   NotoSansKhmer-Khmer-*.woff2 the bundled Khmer face, also embedded in the HTML
@@ -377,6 +378,39 @@ The frame appears when you switch the model on and is destroyed when you switch
 it off. The download is once, about 380 MB for the recommended model, cached in
 the browser; every run after that is offline. If that one download is not
 acceptable on your machine, leave it off and nothing else changes.
+
+**If the download is blocked.** Plenty of company networks refuse
+`huggingface.co` outright, and no code here can argue with a firewall. Open
+`model/check.html` — it tells you which of three completely different things is
+actually wrong, because they look identical from the chat window:
+
+| what it says | what it means |
+|---|---|
+| *the files are* | you copied some of them, or an old copy is still there |
+| *the network is blocking it* | a proxy or filter between this PC and the model |
+| a hardware verdict | the files and the network are fine |
+
+A stale `dossier.html` or `brain.js` produces exactly the same errors as a
+blocked network, which is why the page checks both.
+
+**Carrying it across on a stick.** If it is the network, put the model in the
+folder and Dossier never asks the internet for anything. Run `model/check.html`
+on a machine that *can* reach the internet and it prints the exact addresses —
+read out of the library itself rather than remembered — plus the `index.json`
+to paste. The shape is:
+
+```
+model/
+  web-llm.js                        the runtime
+  models/
+    index.json                      what is here, and where
+    Qwen2.5-0.5B-Instruct-.../      the weights, git-lfs cloned
+    lib/…-webgpu.wasm               the compiled model library
+```
+
+`models/index.json` is the switch: if it is there, the model comes from the
+folder and nothing is fetched. If it is not, the CDN is used. Nothing else
+changes either way, and the settings panel says which one it loaded.
 
 **Which model.** The picker is filled from what the library actually offers,
 and the default is the smallest instruction-following one. That is deliberate,
