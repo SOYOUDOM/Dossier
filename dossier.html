@@ -3036,6 +3036,10 @@ const STRINGS = {
   BrainStatusOff: "Not loaded. Nothing has been downloaded.",
   BrainStatusLoading: "{what} \u2014 {pct}%  ({secs}s)",
   BrainQuiet: "Nothing has arrived from the download for {secs} seconds. It may still be working \u2014 the first minute is mostly fetching and compiling before any percentage moves. If it stays here, press F12, open Network, and see whether anything from huggingface.co is actually transferring.",
+  BrainVersions: "brain.js {app} \u00b7 runner {run}",
+  BrainStaleRunner: "The runner answering is version {run}, but this brain.js expects {want}. model/run.html was not replaced, or the browser is still serving an old copy of it \u2014 hard-refresh with Ctrl+Shift+R.",
+  BrainShowRunner: "Show the runner",
+  BrainHideRunner: "Hide the runner",
   BrainStuck: "{secs} seconds with no word from the download. That is longer than a working fetch goes quiet for. Stop it, and either try a different Model host or check Network in F12 for what is being refused.",
   BrainStatusReady: "Ready \u00b7 {model}",
   BrainStatusFailed: "Did not load: {err}",
@@ -5964,12 +5968,24 @@ function renderBrain(){
         ';line-height:1.6;margin:6px 0 0">' +
         esc(L(st.silentFor >= 90 ? "BrainStuck" : "BrainQuiet", { secs:st.silentFor })) + "</p>"
       : "") +
+    /* Which files are actually running. "I replaced it" and "the browser is
+       running what I replaced" are different claims, and an iframe hides the
+       difference completely. */
+    '<p class="hint2" style="font-family:var(--f-mono);font-size:10.5px">' +
+      esc(L("BrainVersions", { app:DossierBrain.version || "?",
+                              run:st.runner || "\u2014" })) + "</p>" +
+    (st.runner && st.runner !== "?" && st.runner !== DossierBrain.version
+      ? '<p style="font-size:11.5px;color:var(--p1);line-height:1.6;margin:6px 0 0">' +
+        esc(L("BrainStaleRunner", { run:st.runner, want:DossierBrain.version })) + "</p>"
+      : "") +
     '<div class="brow" style="margin-top:10px">' +
       (st.status === "ready" || st.status === "loading"
         ? '<button class="btn" id="brStop">' + esc(L("BrainUnload")) + "</button>"
         : '<button class="btn pri" id="brGo"' + (blocked ? " disabled" : "") + ">" +
           esc(L("BrainLoad")) + "</button>") +
       '<button class="btn" id="brCheck">' + esc(L("BrainCheck")) + "</button>" +
+      '<button class="btn" id="brShow">' +
+        esc(L(BRAIN.shown ? "BrainHideRunner" : "BrainShowRunner")) + "</button>" +
     "</div>" +
     fr(L("BrainLibrary"), '<input class="in mono" id="brLib" style="font-size:11px" value="' +
       esc(cfg.lib || DossierBrain.DEFAULT_LIB) + '" spellcheck="false">') +
@@ -5992,9 +6008,18 @@ function renderBrain(){
   const go = $("brGo"); if (go) go.onclick = () => { cfg.on = true; touch(); brainStart(); };
   const sp = $("brStop"); if (sp) sp.onclick = () => { cfg.on = false; touch(); brainStop(); };
   const ck = $("brCheck"); if (ck) ck.onclick = () => window.open("model/check.html", "_blank");
+  const sh = $("brShow"); if (sh) sh.onclick = () => {
+    BRAIN.shown = !BRAIN.shown;
+    const f = document.querySelector('iframe[title="Dossier model runner"]');
+    if (f) f.style.cssText = BRAIN.shown
+      ? "position:static;width:100%;height:76px;border:1px solid var(--rule);border-radius:6px;margin-top:8px"
+      : "position:absolute;width:1px;height:1px;left:-9999px;top:0;border:0";
+    renderBrain();
+    if (BRAIN.shown && f) f.scrollIntoView({ block:"center" });
+  };
 }
 
-const BRAIN = { catalogue:null, busy:false, probe:null };
+const BRAIN = { catalogue:null, busy:false, probe:null, shown:false };
 
 async function brainStart(restart){
   if (!brainHere()) return;

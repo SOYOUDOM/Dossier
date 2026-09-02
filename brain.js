@@ -67,6 +67,8 @@
 (function(){
 "use strict";
 
+const VERSION = "1.2";
+
 /* The library, pinned. Editable in Setup, because a version that has moved on
    should be something you can fix without opening a text editor. */
 const DEFAULT_LIB = "https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm@0.2.79/+esm";
@@ -94,6 +96,7 @@ const S = {
   message: "",
   error: "",
   loadedAt: 0,
+  runner: "",          /* which run.html actually answered, not which one is on disk */
   startedAt: 0,        /* when the download began, so "0%" can be told from "stuck" */
   lastTick: 0,         /* when the runtime last reported anything at all */
   local: false,        /* loaded out of the folder rather than off the network */
@@ -152,7 +155,10 @@ function openFrame(){
     "dossier.html, and Dossier has to be opened through dossier-serve.bat " +
     "rather than from the folder.")), 10000);
   p.then(() => clearTimeout(timer), () => clearTimeout(timer));
-  frame.src = FRAME_SRC;
+  /* A stale run.html in the iframe cache is invisible and looks exactly like
+     a change that did not work. The version rides along so a new brain.js
+     always pulls a fresh runner. */
+  frame.src = FRAME_SRC + (FRAME_SRC.indexOf("?") < 0 ? "?v=" : "&v=") + VERSION;
   document.body.appendChild(frame);
   return p;
 }
@@ -274,6 +280,10 @@ async function load(opts){
       onFrameProgress = () => note(opts.onProgress);
       await openFrame();
 
+      /* ask the runner who it is before anything else, so a stale copy is
+         reported rather than quietly behaving like the old one */
+      try { const hi = await send("ping", {}, 5000); S.runner = (hi && hi.version) || "?"; }
+      catch(e){ S.runner = "?"; }
       S.message = "fetching the runtime";
       note(opts.onProgress);
       const list = await send("catalogue", { lib:lib });
@@ -435,7 +445,7 @@ function useEngine(fake, name){
 }
 
 window.DossierBrain = {
-  version: "1.0",
+  version: VERSION,
   DEFAULT_LIB: DEFAULT_LIB,
   WANT: WANT,
   available: available,

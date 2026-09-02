@@ -59,11 +59,18 @@
 </head>
 <body>
 <p id="s">Model runner. Nothing happens here until Dossier asks it to.</p>
+<p style="opacity:.6">run.html 1.2</p>
 <script>
 "use strict";
 /* ── the conversation with dossier.html ──────────────────────────────────
    Deliberately small. Four commands in, results and progress out, and
    nothing in either direction that is not one of them. */
+
+/* Bumped whenever this file changes. It is reported to the panel, which
+   shows it, because "I replaced the file" and "the browser is running the
+   file I replaced" are different claims and only one of them is checkable
+   from the outside. A stale copy in an iframe is invisible otherwise. */
+const RUN_VERSION = "1.2";
 
 let webllm = null;
 let engine = null;
@@ -236,7 +243,7 @@ window.addEventListener("message", async e => {
   parentWin = e.source || window.parent;
   try {
     let result;
-    if (m.cmd === "ping")           result = { version:"1.0" };
+    if (m.cmd === "ping")           result = { version:RUN_VERSION };
     else if (m.cmd === "catalogue") result = await doCatalogue(m.lib);
     else if (m.cmd === "load")      result = await doLoad(m.lib, m.model, m.host);
     else if (m.cmd === "chat")      result = await doChat(m.opts);

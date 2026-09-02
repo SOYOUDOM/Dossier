@@ -1335,6 +1335,10 @@ Nothing is holding this any more." value="" />
     <text name="BrainStatusOff" source="Not loaded. Nothing has been downloaded." value="" />
     <text name="BrainStatusLoading" source="{what} — {pct}%  ({secs}s)" value="" />
     <text name="BrainQuiet" source="Nothing has arrived from the download for {secs} seconds. It may still be working — the first minute is mostly fetching and compiling before any percentage moves. If it stays here, press F12, open Network, and see whether anything from huggingface.co is actually transferring." value="" />
+    <text name="BrainVersions" source="brain.js {app} · runner {run}" value="" />
+    <text name="BrainStaleRunner" source="The runner answering is version {run}, but this brain.js expects {want}. model/run.html was not replaced, or the browser is still serving an old copy of it — hard-refresh with Ctrl+Shift+R." value="" />
+    <text name="BrainShowRunner" source="Show the runner" value="" />
+    <text name="BrainHideRunner" source="Hide the runner" value="" />
     <text name="BrainStuck" source="{secs} seconds with no word from the download. That is longer than a working fetch goes quiet for. Stop it, and either try a different Model host or check Network in F12 for what is being refused." value="" />
     <text name="BrainStatusReady" source="Ready · {model}" value="" />
     <text name="BrainStatusFailed" source="Did not load: {err}" value="" />
