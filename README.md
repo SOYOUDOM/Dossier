@@ -281,6 +281,41 @@ guessing.
 
 ---
 
+## Pointing at one of them
+
+"Open the first document of D-0034" used to be unaskable, and no amount of
+teaching could have made it askable — teaching maps a whole sentence onto one
+of a fixed list of verbs, and there is nowhere in that to put *which one*. You
+could ask for the documents and get all four. Wanting the second meant reading
+the list and clicking.
+
+That is a missing dimension of the sentence rather than a missing verb, so it
+is read once and applied to every answer:
+
+```
+open the first document of D-0034
+open the document called invoice on D-0034
+the second one
+run the last script on it
+number 3
+```
+
+The same six words work on documents, records, scripts and anything else that
+comes back as a list — including answers written long before there was a way
+to say "the second". It works in one breath or as a follow-up: ask for the
+documents, then say *open the second one*.
+
+Naming a thing and a verb together means do it. Opening changes nothing that
+cannot be closed again, so it happens; running a script still asks first, as
+it always did. Ask for the ninth of four and it says there are four.
+
+It is deliberately narrow about what counts. "The first **thing** I should do"
+is what to work on next, "the first **step**" is a checklist, and "**last**
+week" is a date — none of them are selections, and none of them are read as
+one.
+
+---
+
 ## Teaching the assistant
 
 The assistant reads your records and answers from them. It is not always

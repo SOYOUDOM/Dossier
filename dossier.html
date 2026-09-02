@@ -6548,6 +6548,13 @@ function chatDo(act){
       return chatBot(r, null);
     }
     case "open":     return act.id && openDrawer(act.id);
+    case "openFile": {
+      /* the document itself, not the record it is filed against */
+      const t = getTask(act.id);
+      if (!t) return;
+      closeChat();
+      return openAttachment(t, act.name);
+    }
     case "view":     closeChat(); return setView(act.view);
     case "panel":    closeChat(); return openModal(act.panel);
     case "chaseSheet": closeChat(); return openChase();

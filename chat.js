@@ -886,6 +886,11 @@ function readSlots(norm, ws, api, raw0){
   s.mods = readModifiers(ws, norm, lex);
   /* which single field of a record is being asked for, if any */
   s.field = readField(ws, norm);
+  /* and which one of whatever comes back */
+  s.pick = readPick(ws, norm);
+  /* whether there is a list on screen to point at, which is the difference
+     between "open the second one" and "what should I do first" */
+  s.hasRows = !!(api.convo && api.convo.rows && api.convo.rows.length);
   const d = readDimension(ws, norm);
   s.dim = d.dim; s.dims = d.dims; s.agg = d.agg;
   s.neg = readNegation(norm);
@@ -1208,7 +1213,7 @@ function contract(s){
 /* ═══ ANSWERING ══════════════════════════════════════════════════════════ */
 
 function row(t, api, sub){
-  return { id:t.id, code:t.code, text:t.title, sub:sub || "" };
+  return { id:t.id, code:t.code, text:t.title, sub:sub || "", kind:"record" };
 }
 function plural(n, one, many){ return n + " " + (n === 1 ? one : (many || one + "s")); }
 function listOf(names, max){
@@ -1472,6 +1477,23 @@ intent("field", {
     const api = A.api, h = api.h, t = A.slots.record, f = A.slots.field;
     const def = FIELDBY[f.id] || { label:f.id };
     const v = fieldOf(t, f.id, api);
+    /* Some fields are lists rather than values, and a list you cannot point
+       at is half an answer \u2014 "run the second script on it" has to have
+       something to count. */
+    let rows = [];
+    if (f.id === "scripts")
+      rows = (t.scripts || []).map((sid, i) => {
+        const sc = (api.scripts || []).find(x => x.id === sid) || {};
+        return { id:t.id, code:String(i + 1), kind:"script", scriptId:sid,
+                 text:sc.file || sc.name || sid, sub:sc.name || "" };
+      });
+    else if (f.id === "tags")
+      rows = (t.tags || []).map((tg, i) => ({ id:t.id, code:String(i + 1), kind:"tag", text:tg, sub:"" }));
+    else if (f.id === "blockedBy")
+      rows = (t.blockedBy || []).map(bid => {
+        const o = (api.tasks || []).find(x => x.id === bid);
+        return o ? row(o, api, api.h.stMeta(o.status).label) : null;
+      }).filter(Boolean);
     const sub = "\u201c" + t.title + "\u201d \u00b7 " + h.stMeta(t.status).label +
                 (t.priority ? " \u00b7 " + t.priority : "") +
                 (t.system ? " \u00b7 " + t.system : "");
@@ -1494,6 +1516,7 @@ intent("field", {
                 "{code} carries {v} as its {what}."],
                { code:t.code, what:def.label, v:v }, A.norm),
       note: sub,
+      rows: rows,
       chips: more
     };
   }
@@ -4092,9 +4115,11 @@ intent("files", {
     const t = A.slots.record, f = t.files || [];
     if (!f.length) return { say:"No documents filed against " + t.code + "." };
     return { say: f.length + " document" + (f.length === 1 ? "" : "s") + " on " + t.code + ".",
-             rows: f.slice(0, 10).map(x => ({ id:t.id, code:"", text:x.name || "(unnamed)",
+             /* kind and file are what let "open the second one" mean anything */
+             rows: f.slice(0, 20).map((x, i) => ({ id:t.id, code:String(i + 1), kind:"file",
+               file:x.name, text:x.name || "(unnamed)",
                sub:(x.size ? Math.round(x.size / 1024) + " KB" : "") + (x.added ? " · " + A.api.h.stamp(x.added) : "") })),
-             chips:[{ label:"Open it", act:{ kind:"open", id:t.id } }] };
+             chips:[{ label:"Open the record", act:{ kind:"open", id:t.id } }] };
   }
 });
 
@@ -5166,6 +5191,51 @@ intent("hold", {
   }
 });
 
+intent("pickOne", {
+  kind:"nav", label:"That one",
+  /* it does its own selecting, so the layer in finish() leaves it alone */
+  picks: true,
+  /* Only when the sentence is nothing but a pointing finger. "Open the first
+     document of D-0034" is answered by the documents intent with the
+     selection applied to it; this is for "the second one" said on its own,
+     after a list is already on screen. */
+  only(mw, norm, slots){
+    return !!slots.pick && (slots.hasRows || slots.pick.counted) &&
+           !slots.record && !slots.system &&
+           !slots.person && !slots.party && !slots.type && mw.length <= 5;
+  },
+  cues:{},
+  probe(mw, norm, slots){ return (slots.pick && (slots.hasRows || slots.pick.counted)) ? 16 : 0; },
+  run(A){
+    const rows = (A.convo && A.convo.rows) || [];
+    if (!rows.length) return {
+      say: say(["I have no list on screen to point at.",
+                "Ask me for something first, then say which one of it."], {}, A.norm),
+      note:"For example: \u201cwhat documents are on D-0004\u201d, then \u201copen the second one\u201d."
+    };
+    const got = choose(rows, A.slots.pick);
+    if (got && got.over) return {
+      say:"There " + be(got.have) + " only " + got.have + " of them in that list.",
+      rows: rows
+    };
+    if (!got || !got.row) return {
+      say:"Nothing in that list is called \u201c" + (A.slots.pick.named || "") + "\u201d.",
+      rows: rows
+    };
+    const r = got.row, act = actOn(r);
+    const which = A.slots.pick.named ? "\u201c" + A.slots.pick.named + "\u201d"
+                : A.slots.pick.n === -1 ? "The last" : "Number " + got.at;
+    if (act && (OPEN_VERB.test(A.norm) || act.kind !== "run")){
+      if (act.kind === "run")
+        return { say: which + ": " + r.text + ".", rows:[r],
+                 act: Object.assign({}, act, { confirm:"Run " + r.text + "?" }) };
+      return { say:"Opening " + r.text + ".", note:which + " of " + rows.length + ".",
+               rows:[r], act:act };
+    }
+    return { say: which + ": " + r.text + ".", note:r.sub || "", rows:[r],
+             chips: act ? [{ label:"Open it", act:act }] : [] };
+  }
+});
 intent("help", {
   kind:"read", label:"What can you do",
   cues:{ help:9, commands:8, capabilities:8, able:6, do:2, ask:4, understand:7, works:4 },
@@ -5525,6 +5595,8 @@ function leftoverWords(it, A){
   if (s.mods) for (const w in s.mods.used) used[w] = 1;
   if (s._usedWords) s._usedWords.forEach(w => used[w] = 1);
   if (s.field && s.field.word) used[s.field.word] = 1;
+  if (s.pick && s.pick.word) String(s.pick.word).split(" ").forEach(w => used[w] = 1);
+  if (s.pick && s.pick.named) String(s.pick.named).split(" ").forEach(w => used[w] = 1);
   [s.dim, s.agg].forEach(() => {});
   const out = [];
   mw.forEach(w => {
@@ -5748,6 +5820,105 @@ function teachKeys(raw, api){
   const tpl = templateOf(norm, api);
   return { exact:norm, shape:tpl ? "~" + tpl : "", template:tpl };
 }
+
+/* ═══ WHICH ONE ═════════════════════════════════════════════════════════════
+   "Open the first document of D-0034" could not be asked, and no amount of
+   teaching could make it askable, because teaching maps a whole sentence onto
+   one of a fixed list of verbs and there is nowhere in that to put *which
+   one*. You could teach it "show me the documents" and get all four. Wanting
+   the second one meant reading the list and clicking.
+
+   That is the same shape of problem as "except Other" was: not a missing
+   verb, a missing DIMENSION of the sentence. So it is solved the same way —
+   read once, applied everywhere, so it works on answers written years before
+   anybody thought of it.
+
+   Every answer that comes back as a list is now addressable:
+
+       open the first document of D-0034
+       the second one
+       run the last script on it
+       open the one called invoice
+       number 3
+
+   and the same six words work on documents, records, scripts, steps and
+   anything else that ever returns rows. Nothing has to be taught, and nothing
+   had to be written per intent. */
+
+const ORDINAL = { first:1, "1st":1, second:2, "2nd":2, third:3, "3rd":3, fourth:4, "4th":4,
+  fifth:5, "5th":5, sixth:6, "6th":6, seventh:7, "7th":7, eighth:8, "8th":8,
+  ninth:9, "9th":9, tenth:10, "10th":10 };
+const LAST_WORD = { last:1, latest:1, final:1, newest:1, bottom:1 };
+/* "top" is a superlative everywhere else in this file, but "the top one"
+   said after a list is plainly the first row of it */
+ORDINAL.top = 1;
+
+/* the nouns an ordinal can be counting. "Last week" is a date and "first
+   thing" is a figure of speech; only these make it a selection. */
+/* Deliberately narrow. "The first THING I should do" is what to work on next
+   and "the first STEP" is a checklist \u2014 both are owned by other questions and
+   neither is a selection, so those words are not on this list. */
+const PICK_NOUN = {};
+("one ones document documents doc docs file files attachment attachments " +
+ "record records item items row rows result results entry entries " +
+ "script scripts note notes").split(" ").forEach(w => PICK_NOUN[w] = 1);
+
+function readPick(ws, norm){
+  /* "the one called invoice", "the file named contract" */
+  let m = norm.match(/\b(?:one|file|document|record|script|item)\s+(?:called|named|titled)\s+(.{2,60}?)\s*$/);
+  if (m){
+    /* "the document called invoice ON D-0034" \u2014 the name ends where the
+       sentence goes back to talking about where it lives */
+    const nm = m[1].trim().replace(/\s+(?:on|in|of|for|from|at|inside|under)\s+.*$/, "").trim();
+    if (nm.length >= 2) return { named:nm, word:"called", counted:true };
+  }
+
+  /* "number 3", "no. 2", "item 4" */
+  m = norm.match(/\b(?:number|no|item|row|entry)\s+(\d{1,2})\b/);
+  if (m && +m[1] > 0) return { n:+m[1], word:m[0], counted:true };
+
+  for (let i = 0; i < ws.length; i++){
+    const w = ws[i];
+    const ord = ORDINAL[w], isLast = LAST_WORD[w];
+    if (!ord && !isLast) continue;
+    /* it has to be counting something, or standing where a noun would be */
+    const a = ws[i + 1] || "", b = ws[i + 2] || "";
+    const counting = PICK_NOUN[a] || PICK_NOUN[b];
+    const standalone = (i === ws.length - 1) && ws[i - 1] === "the";
+    if (!counting && !standalone) continue;
+    /* whether a noun was actually being counted. "Open the last ONE" is
+       pointing at a list even when there is no list yet, and saying so beats
+       offering to log a record called "open the last one". */
+    return isLast ? { n:-1, word:w, counted:!!counting }
+                  : { n:ord, word:w, counted:!!counting };
+  }
+  return null;
+}
+
+/* pick one row out of a list, given what was asked for */
+function choose(rows, pick){
+  if (!rows || !rows.length || !pick) return null;
+  if (pick.named){
+    const want = flat(pick.named);
+    const hit = rows.find(r => flat(r.text).indexOf(want) >= 0) ||
+                rows.find(r => flat(r.code || "").indexOf(want) >= 0);
+    return hit ? { row:hit, at:rows.indexOf(hit) + 1 } : null;
+  }
+  if (pick.n === -1) return { row:rows[rows.length - 1], at:rows.length };
+  if (pick.n >= 1 && pick.n <= rows.length) return { row:rows[pick.n - 1], at:pick.n };
+  return { over:true, want:pick.n, have:rows.length };
+}
+
+/* what pressing on that row would do, which depends on what kind of thing it
+   turned out to be rather than on which question produced it */
+function actOn(r){
+  if (!r) return null;
+  if (r.kind === "file" && r.file) return { kind:"openFile", id:r.id, name:r.file };
+  if (r.kind === "script" && r.scriptId) return { kind:"run", id:r.id, scriptId:r.scriptId };
+  if (r.id) return { kind:"open", id:r.id };
+  return null;
+}
+const OPEN_VERB = /\b(?:open|show|view|see|read|bring|pull|get|display|look at|run|launch|execute)\b/;
 
 /* ═══ WHAT PEOPLE PUT IN FRONT OF A QUESTION ═════════════════════════════════
    "Right, show me imaging" came back "What would you like?" — it read the
@@ -6041,6 +6212,48 @@ function finish(it, A, confidence, altIntents, learned, followed){
   }
   out.rows = out.rows || [];
   out.chips = out.chips || [];
+
+  /* ── which one of them ──────────────────────────────────────────────────
+     The answer has been worked out; this narrows it to the one that was
+     asked for. It sits here rather than in any intent so that it works on
+     every list this file can produce, including ones written long before
+     there was a way to say "the second". */
+  if (A.slots.pick && out.rows.length && !it.picks){
+    const got = choose(out.rows, A.slots.pick);
+    if (got && got.over){
+      out.say = "There " + be(got.have) + " only " + got.have + " of them \u2014 " +
+                "you asked for number " + got.want + ".";
+      out.note = "";
+    } else if (got && got.row){
+      const r = got.row, act = actOn(r);
+      const which = A.slots.pick.named ? "\u201c" + A.slots.pick.named + "\u201d"
+                  : A.slots.pick.n === -1 ? "the last" : "number " + got.at;
+      out.picked = { at:got.at, of:out.rows.length, text:r.text };
+      out.rows = [r];
+      /* Naming a thing and a verb in the same breath means do it. Opening
+         and running change nothing that cannot be closed again, so they go
+         ahead; anything that writes still asks, as it always did. */
+      if (act && OPEN_VERB.test(A.norm)){
+        if (act.kind === "run"){
+          out.act = Object.assign({}, act, { confirm:"Run " + r.text + "?" });
+          out.say = which + " of " + out.picked.of + ": " + r.text + ".";
+        } else {
+          out.act = act;
+          out.say = "Opening " + r.text + (r.kind === "file" ? "" : " \u2014 " + (r.code || "")) + ".";
+          out.note = which + " of " + out.picked.of + " on " + (A.slots.record ? A.slots.record.code : "the list") + ".";
+        }
+      } else {
+        out.say = which + " of " + out.picked.of + ": " + r.text + ".";
+        out.note = r.sub || out.note || "";
+        if (act) out.chips = [{ label: act.kind === "openFile" ? "Open it"
+                                 : act.kind === "run" ? "Run it" : "Open it", act:act }]
+                              .concat(out.chips || []);
+      }
+    } else if (got === null && A.slots.pick.named){
+      out.say = "Nothing in that list is called \u201c" + A.slots.pick.named + "\u201d.";
+      out.note = out.rows.map((x, i) => (i + 1) + ". " + x.text).join("\n");
+    }
+  }
   out.slots = {
     system:A.slots.system || "", person:A.slots.person || "", type:A.slots.type || "",
     party:A.slots.party || "", tag:A.slots.tag || "", priority:A.slots.priority || "",
@@ -6060,6 +6273,10 @@ function finish(it, A, confidence, altIntents, learned, followed){
     party:  A.slots.party  || (A.convo && A.convo.party)  || "",
     type:   A.slots.type   || (A.convo && A.convo.type)   || "",
     awaiting: out.awaiting || null,
+    /* the list just shown, so the next sentence can point at one of them
+       without naming the record again */
+    rows: (out.rows || []).slice(0, 20).map(r => ({ id:r.id, code:r.code, text:r.text,
+            sub:r.sub, kind:r.kind, file:r.file, scriptId:r.scriptId })),
     greeted: !!(out.greeted || (A.convo && A.convo.greeted))
   };
   /* "never mind" wipes the thread's subject rather than leaving it to be
