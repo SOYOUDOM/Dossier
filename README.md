@@ -393,6 +393,23 @@ actually wrong, because they look identical from the chat window:
 A stale `dossier.html` or `brain.js` produces exactly the same errors as a
 blocked network, which is why the page checks both.
 
+**The easiest way round a blocked network.** Tether the laptop to your phone
+for ten minutes, open Dossier at the *same* address as always — the port
+matters, the cache is keyed to it — switch the model on and let it download.
+It is cached in the browser against that address. Go back to the company
+network and it never downloads again, and it works with the network unplugged.
+Nothing is copied, nothing is installed, no firewall rule has to change.
+
+**Another address for the same files.** A filter usually blocks a category
+rather than a hostname, and the same public files sit behind several
+addresses. `model/check.html` tries the alternatives — jsDelivr, unpkg,
+esm.sh for the runtime; Hugging Face and its mirror for the weights — and
+tells you which, if any, are open on your network. If one is, put it in
+**Library URL** and **Model host** in the same Setup panel and press Download.
+A mirror is somebody else's server: no record of yours goes to it, it only
+serves the weights, but in a regulated industry that is still worth a
+moment's thought.
+
 **Carrying it across on a stick.** If it is the network, put the model in the
 folder and Dossier never asks the internet for anything. Run `model/check.html`
 on a machine that *can* reach the internet and it prints the exact addresses —

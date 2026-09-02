@@ -35,6 +35,7 @@ button{font:inherit;padding:9px 16px;border-radius:7px;border:1px solid var(--ru
   background:var(--card);color:var(--ink);cursor:pointer}
 button:hover{border-color:var(--ink3)}
 #copy{margin-top:8px}
+#alt .note{white-space:pre-wrap}
 #offline pre{background:var(--card);border:1px solid var(--rule);border-radius:6px;
   padding:9px 11px;overflow-x:auto;font-size:11.5px;margin:6px 0 12px;white-space:pre-wrap;
   word-break:break-all}
@@ -55,6 +56,7 @@ runs one very small calculation on the graphics card to prove it works, and tell
 <section><h3>How it is being served</h3><div id="ctx"></div></section>
 <section><h3>If there is no graphics card to use</h3><div id="wasm"></div></section>
 <section><h3>Can it actually reach the model?</h3><div id="net"></div></section>
+<section id="altSec" style="display:none"><h3>Other ways in</h3><div id="alt"></div></section>
 <section id="offlineSec" style="display:none"><h3>Taking a copy for a machine with no internet</h3>
   <div id="offline"></div></section>
 <section><h3>Everything, to send back</h3>
@@ -241,20 +243,31 @@ function gb(n){ return n == null ? "unknown" : (n/1073741824).toFixed(2) + " GB"
      This page has no policy of its own, so what it can and cannot reach is
      the network's answer and nothing else. */
 
-  async function reach(url){
+  /* A blocked address does not fail quickly \u2014 a proxy that swallows the
+     request can sit there until the browser gives up, and six of those one
+     after another is a minute of staring at nothing. So each gets six
+     seconds and they all go at once. */
+  async function reach(url, ms){
     const t0 = performance.now();
+    const go = (opts) => {
+      const ac = new AbortController();
+      const t = setTimeout(() => ac.abort(), ms || 6000);
+      return fetch(url, Object.assign({ cache:"no-store", signal:ac.signal }, opts || {}))
+        .finally(() => clearTimeout(t));
+    };
     try {
-      const r = await fetch(url, { cache:"no-store" });
+      const r = await go();
       return { ok:true, status:r.status, ms:Math.round(performance.now() - t0) };
     } catch(e){
       /* it may be reachable and merely unreadable \u2014 worth telling apart */
       try {
-        await fetch(url, { mode:"no-cors", cache:"no-store" });
+        await go({ mode:"no-cors" });
         return { ok:false, reached:true, ms:Math.round(performance.now() - t0),
                  err:"reached, but the browser would not let this page read the reply" };
       } catch(e2){
         return { ok:false, reached:false, ms:Math.round(performance.now() - t0),
-                 err:String((e && e.message) || e) };
+                 err: (e && e.name === "AbortError") ? "no answer within six seconds"
+                                                     : String((e && e.message) || e) };
       }
     }
   }
@@ -321,8 +334,9 @@ function gb(n){ return n == null ? "unknown" : (n/1073741824).toFixed(2) + " GB"
     ["Hugging Face", "https://huggingface.co/mlc-ai/Qwen2.5-0.5B-Instruct-q4f16_1-MLC/resolve/main/mlc-chat-config.json"],
     ["the weights", "https://huggingface.co/mlc-ai/Qwen2.5-0.5B-Instruct-q4f16_1-MLC/resolve/main/ndarray-cache.json"]
   ];
-  for (const h of hosts){
-    const r = await reach(h[1]);
+  const hostResults = await Promise.all(hosts.map(h => reach(h[1])));
+  for (let i = 0; i < hosts.length; i++){
+    const h = hosts[i], r = hostResults[i];
     R.reach[h[0]] = r;
     row("net", h[0],
         r.ok ? "reachable (" + r.ms + " ms)"
@@ -409,6 +423,74 @@ function gb(n){ return n == null ? "unknown" : (n/1073741824).toFixed(2) + " GB"
   v.children[0].textContent = head; v.children[1].textContent = body;
   R.verdict = head;
 
+
+
+  /* ── if the usual addresses are refused, which others are not ───────────
+     A filter that blocks huggingface.co is usually blocking a category
+     rather than a hostname, and the same files sit behind several other
+     addresses. Which of them your network happens to allow is not something
+     anyone can guess from here, so all of them are simply tried. */
+  if (!R.netOk && !R.offlineReady){
+    document.getElementById("altSec").style.display = "";
+    const alts = [
+      ["library \u00b7 jsDelivr",  "https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm@0.2.79/package.json", "lib",
+       "https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm@0.2.79/+esm"],
+      ["library \u00b7 unpkg",     "https://unpkg.com/@mlc-ai/web-llm@0.2.79/package.json", "lib",
+       "https://unpkg.com/@mlc-ai/web-llm@0.2.79/lib/index.js"],
+      ["library \u00b7 esm.sh",    "https://esm.sh/@mlc-ai/web-llm@0.2.79", "lib",
+       "https://esm.sh/@mlc-ai/web-llm@0.2.79"],
+      ["weights \u00b7 Hugging Face", "https://huggingface.co/mlc-ai/Qwen2.5-0.5B-Instruct-q4f16_1-MLC/resolve/main/mlc-chat-config.json", "w",
+       "https://huggingface.co"],
+      ["weights \u00b7 hf-mirror",    "https://hf-mirror.com/mlc-ai/Qwen2.5-0.5B-Instruct-q4f16_1-MLC/resolve/main/mlc-chat-config.json", "w",
+       "https://hf-mirror.com"],
+      ["model libraries \u00b7 GitHub", "https://raw.githubusercontent.com/mlc-ai/binary-mlc-llm-libs/main/README.md", "wasm", ""]
+    ];
+    R.alt = {};
+    const altResults = await Promise.all(alts.map(a => reach(a[1])));
+    for (let i = 0; i < alts.length; i++){
+      const a = alts[i], r = altResults[i];
+      R.alt[a[0]] = { ok:r.ok, base:a[3], kind:a[2] };
+      row("alt", a[0], r.ok ? "open (" + r.ms + " ms)"
+            : r.reached ? "reachable but unreadable" : "refused \u2014 " + r.err, r.ok ? "ok" : "bad");
+    }
+    const libOk  = alts.filter(a => a[2] === "lib" && R.alt[a[0]].ok);
+    const wOk    = alts.filter(a => a[2] === "w"   && R.alt[a[0]].ok);
+    R.altWorks = libOk.length > 0 && wOk.length > 0;
+    R.altLib = libOk.length ? libOk[0][3] : "";
+    R.altHost = wOk.length ? wOk[0][3] : "";
+
+    document.getElementById("alt").insertAdjacentHTML("beforeend",
+      '<div class="note">' + (
+        R.altWorks
+          ? "There is a way through. In Dossier, Menu \u2192 Setup \u2192 Understanding harder questions, " +
+            "put these two in and press Download:\n\n" +
+            "    Library URL   " + R.altLib + "\n" +
+            "    Model host    " + R.altHost + "\n\n" +
+            (/hf-mirror/.test(R.altHost)
+              ? "hf-mirror.com is a third-party mirror of the same public model files, run by " +
+                "somebody unconnected with Dossier or with Hugging Face. No record of yours goes to " +
+                "it \u2014 it only serves the weights \u2014 but it is somebody else's server, and in your " +
+                "line of work that is worth a moment's thought before you use it."
+              : "")
+          : libOk.length
+            ? "The library is reachable but the weights are not, so a download cannot complete. " +
+              "Either have huggingface.co allowed, or use a phone hotspot once, or copy the model " +
+              "in from another machine \u2014 all three are covered below."
+            : "Everything is refused, including the alternatives. This network is filtering the " +
+              "whole category rather than a hostname, and no address will get past it. The two " +
+              "ways left are a phone hotspot for ten minutes, or copying the model in from another " +
+              "machine \u2014 both below, and both leave Dossier fully offline afterwards."
+      ) + "</div>");
+
+    /* the way that needs no files moved at all */
+    document.getElementById("alt").insertAdjacentHTML("beforeend",
+      '<div class="note"><b>The simplest way, if you are allowed to.</b>\n\n' +
+      "Tether this laptop to your phone for ten minutes, open Dossier at " +
+      (R.origin || "127.0.0.1") + " \u2014 the same address, the port matters \u2014 switch the model on " +
+      "and let it download. It is cached in the browser against that address. Then go back to the " +
+      "company network: it never downloads again, and it works with the network unplugged. " +
+      "Nothing is copied, nothing is installed, and no firewall rule has to change.</div>");
+  }
 
   /* ── the exact files to copy, read from the library rather than remembered ──
      If this machine can reach the internet and the work machine cannot, the

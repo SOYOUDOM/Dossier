@@ -277,7 +277,7 @@ async function load(opts){
       S.message = "downloading " + id;
       note(opts.onProgress);
 
-      const got = await send("load", { lib:lib, model:id });
+      const got = await send("load", { lib:lib, model:id, host:opts.host || "" });
       S.local = !!(got && got.local);
 
       /* What the rest of this file talks to. It has the shape the runtime

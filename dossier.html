@@ -3047,6 +3047,8 @@ const STRINGS = {
   BrainAsking: "thinking\u2026",
   BrainLibrary: "Library URL",
   BrainLibraryHint: "Pinned so an update cannot change the behaviour underneath you. Change it only if the version stops loading.",
+  BrainHost: "Model host",
+  BrainHostHint: "Where the weights are fetched from. Leave it empty for the usual one. If your network refuses huggingface.co, model/check.html tries the alternatives and tells you which \u2014 if any \u2014 are open here.",
   AiOpenRoutines: "Open Routines"
 };
 
@@ -5896,7 +5898,7 @@ function chatApi(convo){
 
 function brainCfg(){
   const st = S.settings;
-  if (!st.brain || typeof st.brain !== "object") st.brain = { on:false, model:"", lib:"" };
+  if (!st.brain || typeof st.brain !== "object") st.brain = { on:false, model:"", lib:"", host:"" };
   return st.brain;
 }
 function brainHere(){ return typeof window !== "undefined" && !!window.DossierBrain; }
@@ -5961,7 +5963,10 @@ function renderBrain(){
     "</div>" +
     fr(L("BrainLibrary"), '<input class="in mono" id="brLib" style="font-size:11px" value="' +
       esc(cfg.lib || DossierBrain.DEFAULT_LIB) + '" spellcheck="false">') +
-    '<p class="hint2">' + esc(L("BrainLibraryHint")) + "</p>";
+    '<p class="hint2">' + esc(L("BrainLibraryHint")) + "</p>" +
+    fr(L("BrainHost"), '<input class="in mono" id="brHost" style="font-size:11px" value="' +
+      esc(cfg.host || "") + '" spellcheck="false" placeholder="https://huggingface.co">') +
+    '<p class="hint2">' + esc(L("BrainHostHint")) + "</p>";
 
   const on = $("brOn"); if (on) on.onchange = e => {
     cfg.on = e.target.value === "1"; touch();
@@ -5973,6 +5978,7 @@ function renderBrain(){
     else renderBrain();
   };
   const lb = $("brLib"); if (lb) lb.onchange = e => { cfg.lib = e.target.value.trim(); touch(); };
+  const hh = $("brHost"); if (hh) hh.onchange = e => { cfg.host = e.target.value.trim(); touch(); };
   const go = $("brGo"); if (go) go.onclick = () => { cfg.on = true; touch(); brainStart(); };
   const sp = $("brStop"); if (sp) sp.onclick = () => { cfg.on = false; touch(); brainStop(); };
   const ck = $("brCheck"); if (ck) ck.onclick = () => window.open("model/check.html", "_blank");
@@ -5994,6 +6000,7 @@ async function brainStart(restart){
     await DossierBrain.load({
       model: cfg.model || undefined,
       lib: cfg.lib || undefined,
+      host: cfg.host || undefined,
       onProgress: () => renderBrain()
     });
     renderBrain();

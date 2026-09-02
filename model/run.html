@@ -26,9 +26,11 @@
 
     · dossier.html still cannot make a network call. Unchanged, still
       provable, still true when the model is switched off AND when it is on.
-    · This page can reach exactly four kinds of host and nothing else: the
-      library CDN and Hugging Face, where the weights live. It cannot reach
-      your intranet, your ticketing system, or anywhere else on your network.
+    · This page can reach a named handful of hosts and nothing else: the
+      library CDNs and the places the weights live. Several are listed
+      because company filters block them unevenly and the one that is open
+      cannot be guessed from here. It cannot reach your intranet, your
+      ticketing system, or anywhere else on your network.
     · It holds no records. It is handed one sentence and a list of question
       labels, and it hands back a number. It has no access to dossier.json,
       to your workspace folder, or to anything you have typed but that one
@@ -42,8 +44,8 @@
 -->
 <meta http-equiv="Content-Security-Policy" content="
   default-src 'none';
-  script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' blob: https://cdn.jsdelivr.net;
-  connect-src 'self' blob: data: https://cdn.jsdelivr.net https://huggingface.co https://*.huggingface.co https://*.hf.co;
+  script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' blob: https://cdn.jsdelivr.net https://unpkg.com https://esm.sh;
+  connect-src 'self' blob: data: https://cdn.jsdelivr.net https://unpkg.com https://esm.sh https://huggingface.co https://*.huggingface.co https://*.hf.co https://hf-mirror.com https://*.hf-mirror.com https://raw.githubusercontent.com https://*.githubusercontent.com;
   worker-src 'self' blob:;
   style-src 'unsafe-inline';
   form-action 'none';
@@ -122,7 +124,19 @@ async function doCatalogue(libUrl){
     mb: m.vram_required_MB ? Math.round(m.vram_required_MB) : 0 }));
 }
 
-async function doLoad(libUrl, model){
+/* Point the weights at somewhere else. Company filters block huggingface.co
+   far more often than they block the file itself, and the same public weights
+   sit behind other addresses. Only the host is swapped; the paths inside the
+   model repository are the library's own. */
+function rehost(cfg, host){
+  if (!cfg || !host) return cfg;
+  const from = /^https:\/\/huggingface\.co/;
+  const to = String(host).replace(/\/+$/, "");
+  return { model_list: (cfg.model_list || []).map(m => Object.assign({}, m, {
+    model: String(m.model || "").replace(from, to) })) };
+}
+
+async function doLoad(libUrl, model, host){
   const local = await findLocal();
   await lib(libUrl);
   const mk = webllm.CreateMLCEngine || webllm.CreateEngine;
@@ -137,6 +151,11 @@ async function doLoad(libUrl, model){
     }
   };
   if (local) opts.appConfig = local;
+  else if (host){
+    /* the library's own list, with the weight host swapped */
+    const pre = webllm.prebuiltAppConfig;
+    if (pre && pre.model_list) opts.appConfig = rehost(pre, host);
+  }
   engine = await mk(model, opts);
   /* keep the download rather than letting the browser evict it */
   try { if (navigator.storage && navigator.storage.persist) await navigator.storage.persist(); } catch(e){}
@@ -171,7 +190,7 @@ window.addEventListener("message", async e => {
     let result;
     if (m.cmd === "ping")           result = { version:"1.0" };
     else if (m.cmd === "catalogue") result = await doCatalogue(m.lib);
-    else if (m.cmd === "load")      result = await doLoad(m.lib, m.model);
+    else if (m.cmd === "load")      result = await doLoad(m.lib, m.model, m.host);
     else if (m.cmd === "chat")      result = await doChat(m.opts);
     else if (m.cmd === "unload")    result = await doUnload();
     else throw new Error("unknown command " + m.cmd);

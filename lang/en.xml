@@ -1355,6 +1355,8 @@ Nothing is holding this any more." />
     <text name="BrainAsking" source="thinking…" value="thinking…" />
     <text name="BrainLibrary" source="Library URL" value="Library URL" />
     <text name="BrainLibraryHint" source="Pinned so an update cannot change the behaviour underneath you. Change it only if the version stops loading." value="Pinned so an update cannot change the behaviour underneath you. Change it only if the version stops loading." />
+    <text name="BrainHost" source="Model host" value="Model host" />
+    <text name="BrainHostHint" source="Where the weights are fetched from. Leave it empty for the usual one. If your network refuses huggingface.co, model/check.html tries the alternatives and tells you which — if any — are open here." value="Where the weights are fetched from. Leave it empty for the usual one. If your network refuses huggingface.co, model/check.html tries the alternatives and tells you which — if any — are open here." />
     <text name="AiOpenRoutines" source="Open Routines" value="Open Routines" />
   </texts>
 </localizationDictionary>
