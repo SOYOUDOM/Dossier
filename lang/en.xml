@@ -1342,7 +1342,9 @@ Nothing is holding this any more." />
     <text name="BrainOn" source="On" value="On" />
     <text name="BrainModel" source="Model" value="Model" />
     <text name="BrainStatusOff" source="Not loaded. Nothing has been downloaded." value="Not loaded. Nothing has been downloaded." />
-    <text name="BrainStatusLoading" source="{what} — {pct}%" value="{what} — {pct}%" />
+    <text name="BrainStatusLoading" source="{what} — {pct}%  ({secs}s)" value="{what} — {pct}%  ({secs}s)" />
+    <text name="BrainQuiet" source="Nothing has arrived from the download for {secs} seconds. It may still be working — the first minute is mostly fetching and compiling before any percentage moves. If it stays here, press F12, open Network, and see whether anything from huggingface.co is actually transferring." value="Nothing has arrived from the download for {secs} seconds. It may still be working — the first minute is mostly fetching and compiling before any percentage moves. If it stays here, press F12, open Network, and see whether anything from huggingface.co is actually transferring." />
+    <text name="BrainStuck" source="{secs} seconds with no word from the download. That is longer than a working fetch goes quiet for. Stop it, and either try a different Model host or check Network in F12 for what is being refused." value="{secs} seconds with no word from the download. That is longer than a working fetch goes quiet for. Stop it, and either try a different Model host or check Network in F12 for what is being refused." />
     <text name="BrainStatusReady" source="Ready · {model}" value="Ready · {model}" />
     <text name="BrainStatusFailed" source="Did not load: {err}" value="Did not load: {err}" />
     <text name="BrainUnsupported" source="This browser cannot run one: {err}" value="This browser cannot run one: {err}" />

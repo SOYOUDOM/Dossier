@@ -3034,7 +3034,9 @@ const STRINGS = {
   BrainOn: "On",
   BrainModel: "Model",
   BrainStatusOff: "Not loaded. Nothing has been downloaded.",
-  BrainStatusLoading: "{what} \u2014 {pct}%",
+  BrainStatusLoading: "{what} \u2014 {pct}%  ({secs}s)",
+  BrainQuiet: "Nothing has arrived from the download for {secs} seconds. It may still be working \u2014 the first minute is mostly fetching and compiling before any percentage moves. If it stays here, press F12, open Network, and see whether anything from huggingface.co is actually transferring.",
+  BrainStuck: "{secs} seconds with no word from the download. That is longer than a working fetch goes quiet for. Stop it, and either try a different Model host or check Network in F12 for what is being refused.",
   BrainStatusReady: "Ready \u00b7 {model}",
   BrainStatusFailed: "Did not load: {err}",
   BrainUnsupported: "This browser cannot run one: {err}",
@@ -5931,7 +5933,8 @@ function renderBrain(){
   if (blocked){ status = L("BrainUnsupported", { err:blocked }); tone = "var(--p2)"; }
   else if (st.status === "ready"){ status = L("BrainStatusReady", { model:st.model }); tone = "var(--ok, var(--ink-2))"; }
   else if (st.status === "loading") status = L("BrainStatusLoading",
-    { what:st.message || "working", pct:Math.round((st.progress || 0) * 100) });
+    { what:st.message || "working", pct:Math.round((st.progress || 0) * 100),
+      secs:st.elapsed || 0 });
   else if (st.status === "failed"){ status = L("BrainStatusFailed", { err:st.error }); tone = "var(--p1)"; }
   else status = L("BrainStatusOff");
 
@@ -5954,10 +5957,17 @@ function renderBrain(){
     (st.status === "ready" && st.asked
       ? '<p class="hint2">' + esc(L("BrainStats", { asked:st.asked, answered:st.answered, ms:st.lastMs })) + "</p>"
       : "") +
+    /* nought per cent is normal for a while and fatal after a while, and the
+       only difference is how long the runtime has been silent */
+    (st.status === "loading" && (st.silentFor || 0) >= 25
+      ? '<p style="font-size:11.5px;color:' + ((st.silentFor >= 90) ? "var(--p1)" : "var(--p2)") +
+        ';line-height:1.6;margin:6px 0 0">' +
+        esc(L(st.silentFor >= 90 ? "BrainStuck" : "BrainQuiet", { secs:st.silentFor })) + "</p>"
+      : "") +
     '<div class="brow" style="margin-top:10px">' +
-      (st.status === "ready"
+      (st.status === "ready" || st.status === "loading"
         ? '<button class="btn" id="brStop">' + esc(L("BrainUnload")) + "</button>"
-        : '<button class="btn pri" id="brGo"' + (blocked || st.status === "loading" ? " disabled" : "") + ">" +
+        : '<button class="btn pri" id="brGo"' + (blocked ? " disabled" : "") + ">" +
           esc(L("BrainLoad")) + "</button>") +
       '<button class="btn" id="brCheck">' + esc(L("BrainCheck")) + "</button>" +
     "</div>" +
@@ -5994,13 +6004,23 @@ async function brainStart(restart){
     /* the real list of models, so the picker shows what the library actually
        has rather than what this file was written against */
     if (!BRAIN.catalogue){
-      try { BRAIN.catalogue = await DossierBrain.catalogue(cfg.lib || undefined); renderBrain(); }
+      try { BRAIN.catalogue = await DossierBrain.catalogue(cfg.lib || undefined); }
       catch(e){ /* offline or blocked — the built-in preferences still work */ }
+      /* A dropdown with nothing selected shows whichever entry happens to sort
+         first, which is not the one that gets downloaded. Write the real
+         choice in so the two agree. */
+      if (!cfg.model && BRAIN.catalogue && BRAIN.catalogue.length){
+        const real = DossierBrain.preferred(BRAIN.catalogue);
+        if (real){ cfg.model = real; touch(); }
+      }
+      renderBrain();
     }
     await DossierBrain.load({
       model: cfg.model || undefined,
       lib: cfg.lib || undefined,
       host: cfg.host || undefined,
+      /* whatever it settled on, show that */
+      onModel: id => { if (cfg.model !== id){ cfg.model = id; touch(); } },
       onProgress: () => renderBrain()
     });
     renderBrain();

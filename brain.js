@@ -94,6 +94,8 @@ const S = {
   message: "",
   error: "",
   loadedAt: 0,
+  startedAt: 0,        /* when the download began, so "0%" can be told from "stuck" */
+  lastTick: 0,         /* when the runtime last reported anything at all */
   local: false,        /* loaded out of the folder rather than off the network */
   asked: 0,
   answered: 0,
@@ -121,6 +123,7 @@ function listen(){
     if (m.evt === "progress"){
       S.progress = Math.max(0, Math.min(1, m.progress || 0));
       S.message = m.text || S.message;
+      S.lastTick = Date.now();
       if (onFrameProgress) onFrameProgress();
       return;
     }
@@ -257,7 +260,11 @@ async function load(opts){
   if (blocked){ S.status = "unsupported"; S.error = blocked; note(opts.onProgress); throw new Error(blocked); }
 
   S.status = "loading"; S.progress = 0; S.error = ""; S.message = "starting";
+  S.startedAt = Date.now(); S.lastTick = 0;
   note(opts.onProgress);
+  /* a heartbeat, so the panel can show the clock ticking even while the
+     runtime is quiet — which is most of the first minute */
+  const beat = setInterval(() => note(opts.onProgress), 1000);
 
   loading = (async () => {
     try {
@@ -276,6 +283,9 @@ async function load(opts){
       S.model = id;
       S.message = "downloading " + id;
       note(opts.onProgress);
+      /* tell the caller what was actually chosen, so the picker stops
+         disagreeing with the download */
+      if (typeof opts.onModel === "function"){ try { opts.onModel(id); } catch(e){} }
 
       const got = await send("load", { lib:lib, model:id, host:opts.host || "" });
       S.local = !!(got && got.local);
@@ -297,6 +307,7 @@ async function load(opts){
       note(opts.onProgress);
       throw e;
     } finally {
+      clearInterval(beat);
       loading = null;
     }
   })();
@@ -313,7 +324,26 @@ async function unload(){
 }
 
 function note(cb){ if (typeof cb === "function") { try { cb(state()); } catch(e){} } }
-function state(){ return Object.assign({}, S, { ready: S.status === "ready" }); }
+function state(){
+  const now = Date.now();
+  return Object.assign({}, S, {
+    ready: S.status === "ready",
+    /* How long it has been going, and how long since the runtime last said
+       anything. Nought per cent for twenty seconds is a model being fetched;
+       nought per cent for two minutes with no word from the runtime is a
+       fetch that has died quietly, and those look identical without this. */
+    elapsed: S.startedAt ? Math.round((now - S.startedAt) / 1000) : 0,
+    silentFor: S.lastTick ? Math.round((now - S.lastTick) / 1000)
+             : (S.startedAt ? Math.round((now - S.startedAt) / 1000) : 0)
+  });
+}
+
+/* Which model will actually be used, so the picker can say so rather than
+   showing whatever happened to sort first. The mismatch this fixes had the
+   list showing Llama-3.2-1B while Qwen2.5-0.5B was being fetched. */
+function preferred(list){
+  return pick((list || []).map(x => ({ model_id: (x && x.id) || x })), "");
+}
 
 /* ── the one question it is ever asked ──────────────────────────────────── */
 
@@ -409,6 +439,7 @@ window.DossierBrain = {
   DEFAULT_LIB: DEFAULT_LIB,
   WANT: WANT,
   available: available,
+  preferred: preferred,
   probe: probe,
   why: why,
   state: state,
