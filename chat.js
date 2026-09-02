@@ -45,9 +45,17 @@ const CONTRACTION = {
   "aren't":"are not", "arent":"are not", "can't":"can not", "cant":"can not",
   "won't":"will not", "wont":"will not", "let's":"let us", "lets":"let us",
   "there's":"there is", "theres":"there is", "that's":"that is", "thats":"that is",
-  "it's":"it is", "its":"it is", "i'll":"i will", "ill":"i will",
-  "we're":"we are", "were":"we are", "you're":"you are", "youre":"you are"
+  "it's":"it is", "i'll":"i will", "ill":"i will",
+  "we're":"we are", "you're":"you are", "youre":"you are"
 };
+/* "its" and "were" used to be in that list, and both were wrong for the same
+   reason: the apostrophe is stripped before the lookup, so the expander could
+   not tell the contraction from the ordinary word that spells the same.
+   "What missed ITS target date" became "what missed IT IS target date", and
+   "what records WERE closed" became "what records WE ARE closed" — which is
+   why a benchmark of unfamiliar phrasings found them and years of tests on
+   familiar ones did not. Both words are noise on their own, so dropping the
+   expansion costs nothing and stops mangling the sentence around them. */
 
 /* words that carry no signal about which question is being asked */
 const NOISE = new Set(("a an the of for to in on at is are am was were be been do does did " +
@@ -6368,6 +6376,175 @@ function lexiconFor(api){
   LEX = buildLexicon(api); LEXKEY = key;
   return LEX;
 }
+
+/* ═══ THE WORDS IT HAD NEVER BEEN GIVEN ══════════════════════════════════════
+   A model trained from scratch on this file's own generated sentences scored
+   38.8% on phrasings it had not seen, against 97.1% for the cue lists. The
+   reason is worth writing down, because it decided how this file grows from
+   here: knowing that "cycle time", "turnaround" and "elapsed" are the same
+   question is knowledge from having read a great deal of English. A model
+   downloads that. This file cannot, so somebody has to write it down.
+
+   So: a benchmark of eighty phrasings deliberately using words the cue lists
+   did NOT contain, written before any of this was added. It scored 56.3%.
+   That is the honest measure of understanding language it was not given, and
+   the 97% figure elsewhere is against sentences built from the same words the
+   cues were written from — a much easier test.
+
+   What follows is the widening. It sits in one table rather than scattered
+   through seventy-eight intents so that what was added can be read, argued
+   with and reverted in one place. Phrases are preferred to single words: they
+   are matched on whole-word boundaries and they collide with far less.
+
+   Words deliberately NOT added, because they already mean something else:
+   "cold" is weather to the smalltalk intent, "time" is the clock, and "date"
+   is the calendar. Those are reached by phrase instead. */
+
+const MORE = {
+  overdue: { cues:{ arrears:10, overrun:9, breached:9, slipped:6, lapsed:9, tardy:9 },
+    phrases:[["in arrears",13],["blown its deadline",14],["blown the deadline",14],
+             ["past the wire",13],["missed its target",13],["missed the target",13],
+             ["missed its target date",14],["running behind schedule",13],
+             ["behind schedule",12],["past its date",12],["slipped the date",13],
+             ["breached its date",14],["the late ones",11],["late ones",10]] },
+
+  dueToday: { cues:{ lands:5, commitments:8 },
+    phrases:[["lands today",13],["falls due today",14],["on the plate for today",13],
+             ["plate for today",12],["todays commitments",13],["expected today",12],
+             ["before end of play",13],["end of play",11],["must go out today",13],
+             ["go out today",12]] },
+
+  dueWeek: { cues:{ approaching:9, looming:10, horizon:9, imminent:9, forthcoming:9 },
+    phrases:[["on the horizon",13],["round the corner",13],["around the corner",13],
+             ["in the next few days",13],["next few days",11],["what is approaching",13]] },
+
+  next: { cues:{ pressing:9, deserves:6, warrants:8, tackle:6, foremost:8 },
+    phrases:[["put my attention",13],["where should i put my attention",15],
+             ["deserves my time",13],["most pressing",13],["warrants attention",13],
+             ["tackle first",13],["single most important",14],["most important thing",12]] },
+
+  waiting: { cues:{ outstanding:8, suppliers:7, supplier:7, awaiting:9, parked:7,
+                    chasing:7, thirdparty:9 },
+    phrases:[["third parties",12],["third party",11],["with suppliers",12],
+             ["whose court",14],["their court",12],["what am i chasing",14],
+             ["parked with someone",14],["awaiting a response",14],["awaiting response",13],
+             ["owes me something",13],["sat with",10]] },
+
+  quietest: { cues:{ ghosted:12, unanswered:10 },
+    phrases:[["dragging their feet",14],["dragging his feet",14],["stopped replying",14],
+             ["silent longest",13],["been silent longest",14],["longest unanswered",14],
+             ["who has ghosted",14],["no answer from",11]] },
+
+  blocked: { cues:{ deadlocked:11, standstill:11, jammed:10, hostage:10, immovable:10 },
+    phrases:[["cannot proceed",14],["can not proceed",14],["at a standstill",14],
+             ["held hostage",13],["what is jammed",13],["going nowhere fast",12]] },
+
+  stalled: { cues:{ languishing:11, stagnated:11, drifted:9, dormant:10, idle:6 },
+    phrases:[["gone cold",14],["has gone cold",15],["has drifted",13],
+             ["nothing moving",13],["not moved in",12],["no movement on",13],
+             ["gathering dust",13]] },
+
+  oldest: { cues:{ ancient:9, aged:6 },
+    phrases:[["sitting the longest",14],["been sitting the longest",15],
+             ["longest running",13],["most ancient",13],["aged the most",13],
+             ["oldest still open",13]] },
+
+  undated: { cues:{ unscheduled:10 },
+    phrases:[["no deadline set",14],["missing a date",13],["no target date",14],
+             ["without a target date",14],["unscheduled work",13]] },
+
+  closed: { cues:{ delivered:6, cleared:6 },
+    phrases:[["wrap up this week",14],["wrapped up this week",14],["did i wrap up",13],
+             ["signed off this week",14],["got signed off",13],["my output this week",14],
+             ["delivered this week",14],["cleared this week",14]] },
+
+  opened: { cues:{ arrivals:9 },
+    phrases:[["landed on me today",14],["got reported today",14],["new arrivals",13],
+             ["came across today",13],["raised against me",13],["reported today",12]] },
+
+  count: { cues:{ caseload:12, pile:7, volume:7, books:5, tally:9 },
+    phrases:[["total caseload",14],["how big is the pile",15],["on my books",13],
+             ["overall volume",13],["total on my books",14]] },
+
+  workload: { cues:{ overloaded:10, achievable:10, realistically:9, capacity:8 },
+    phrases:[["am i overloaded",14],["bitten off too much",15],["is today achievable",15],
+             ["realistically finish",14],["can i realistically finish",15],
+             ["is my day realistic",15],["too much on my plate",14]] },
+
+  timeSpent: { cues:{ burn:6, burned:8, burnt:6, clocked:9, expended:10, booked:7 },
+    phrases:[["hours did i burn",15],["hours i burned",14],["clocked time",14],
+             ["where did my week go",15],["hours booked",13],["effort expended",14],
+             ["time booked this week",14]] },
+
+  howLong: { cues:{ turnaround:11, elapsed:10, duration:9 },
+    phrases:[["usual turnaround",14],["typical elapsed",14],["elapsed time for",14],
+             ["normally run",11],["average duration",14],["how quickly does",12],
+             ["usually close",11],["normally take",12]] },
+
+  worstSystem: { cues:{ offender:10, grief:9, misbehaves:11, culprit:9 },
+    phrases:[["biggest offender",14],["most grief",13],["generates the most grief",15],
+             ["worst behaved",14],["eats my time",13],["misbehaves most",14],
+             ["gives me the most grief",15]] },
+
+  topPerson: { cues:{ requester:6, files:2 },
+    phrases:[["heaviest requester",14],["files the most",13],["biggest source of work",15],
+             ["source of work",12],["most work from",12]] },
+
+  tags: { cues:{ keywords:10, keyword:9 },
+    phrases:[["what keywords",13],["my labels",12],["which labels",13],["show my labels",13]] },
+
+  systems: { cues:{ estate:9, platforms:7, cover:4 },
+    phrases:[["in the estate",13],["which platforms",12],["do i cover",11],
+             ["list the applications",13]] },
+
+  scripts: { phrases:[["what automation",13],["my batch files",14],["what can i automate",14]],
+    cues:{} },
+
+  routines: { cues:{ scheduled:6 },
+    phrases:[["fires on a schedule",15],["on a schedule",11],["recurring jobs",14],
+             ["scheduled tasks",14],["my recurring",12]] },
+
+  brief: { cues:{ headlines:10, aware:6 },
+    phrases:[["bring me up to speed",15],["up to speed",13],["needs my eyes",14],
+             ["anything on fire",14],["is anything on fire",15],["give me the headlines",15],
+             ["should be aware of",13],["i should be aware",13]] },
+
+  standup: { cues:{ huddle:11 },
+    phrases:[["in the huddle",14],["morning meeting",13],["daily call",13],
+             ["for the daily call",14],["say in the",10]] },
+
+  compare: { phrases:[["stack up",13],["how does this week stack up",15],["up or down",12],
+                      ["on last week",11],["busier or quieter",14]], cues:{} },
+
+  solvedBefore: { cues:{ tackled:8, previously:7 },
+    phrases:[["tackled an",12],["across my desk",13],["come across my desk",14],
+             ["hit an",8],["have we hit",11]] },
+
+  guide: { phrases:[["standard procedure",14],["walk me through",14],
+                    ["normally handled",13],["how is an",9]], cues:{} },
+
+  troubleshoot: { cues:{ likely:5 },
+    phrases:[["what would cause",13],["likely causes",13],["likely causes of",14],
+             ["first checks for",14],["first checks",12]] },
+
+  opinion: { cues:{ flag:6, assessment:10 },
+    phrases:[["honest read",14],["your honest read",15],["would you flag",14],
+             ["anything you would flag",15],["your assessment",14]] },
+
+  help: { cues:{ repertoire:12 },
+    phrases:[["able to do",13],["what are you able to do",15],["questions can i",13],
+             ["what can i put to you",14],["in your repertoire",14]] }
+};
+
+/* fold it in. Weights already present win, so nothing above can quietly
+   lower a cue that was tuned deliberately. */
+INTENTS.forEach(it => {
+  const m = MORE[it.name];
+  if (!m) return;
+  it.cues = it.cues || {};
+  for (const w in (m.cues || {})) if (it.cues[w] == null) it.cues[w] = m.cues[w];
+  it.phrases = (it.phrases || []).concat(m.phrases || []);
+});
 
 /* ═══ THE SHORTLIST, FOR SOMETHING ELSE TO CHOOSE FROM ═══════════════════════
    When the matcher is unsure it is rarely lost \u2014 the right reading is usually

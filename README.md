@@ -281,6 +281,33 @@ guessing.
 
 ---
 
+## How well it actually understands
+
+There are two numbers and they measure different things.
+
+**97.4%** is against sentences built from the same words the cue lists were
+written from. It is the number the test suite reports, and it is the easier
+test — it says the matcher is consistent, not that it understands English.
+
+**56.3%** was the number against eighty phrasings written deliberately using
+words the cue lists did *not* contain: *in arrears*, *ghosted*, *gone cold*,
+*bitten off too much*, *biggest offender*. That is the honest measure of
+language it was never given, and it is the one worth improving.
+
+Why the gap exists is worth writing down, because it decides how this file
+grows. A classifier trained from scratch on Dossier's own generated sentences
+scored **38.8%** on phrasings it had not seen, against **97.1%** for the cue
+lists on the same test. Knowing that *cycle time*, *turnaround* and *elapsed*
+are one question is knowledge from having read a great deal of English. A
+downloaded model brings that with it. This file cannot, so somebody writes it
+down — which is what the vocabulary table at the foot of `chat.js` is.
+
+That table is deliberately in one place rather than scattered through
+seventy-eight intents, so what was added can be read, argued with and reverted
+in one go.
+
+---
+
 ## Pointing at one of them
 
 "Open the first document of D-0034" used to be unaskable, and no amount of
