@@ -67,7 +67,7 @@
 (function(){
 "use strict";
 
-const VERSION = "1.3";
+const VERSION = "1.4";
 
 /* The library, pinned. Editable in Setup, because a version that has moved on
    should be something you can fix without opening a text editor. */
@@ -324,6 +324,15 @@ async function load(opts){
   return loading;
 }
 
+/* The shopping list for doing it by hand, straight out of the library that
+   will have to load the result. */
+async function plan(opts){
+  opts = opts || {};
+  await openFrame();
+  return await send("plan", { lib: opts.lib || DEFAULT_LIB,
+                              model: opts.model || "" }, 60000);
+}
+
 async function unload(){
   try { if (frame) await send("unload", {}, 4000); } catch(e){}
   closeFrame();
@@ -455,6 +464,7 @@ window.DossierBrain = {
   state: state,
   catalogue: catalogue,
   load: load,
+  plan: plan,
   unload: unload,
   guess: guess,
   /* for the test harness, and for anyone swapping the runtime */

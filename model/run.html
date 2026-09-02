@@ -63,7 +63,7 @@
      steps with the seconds each one took is the whole diagnosis; the last
      step alone is not. -->
 <pre id="log" style="margin:6px 0 0;white-space:pre-wrap;font:inherit;opacity:.85"></pre>
-<p style="opacity:.6">run.html 1.3</p>
+<p style="opacity:.6">run.html 1.4</p>
 <script>
 "use strict";
 /* ── the conversation with dossier.html ──────────────────────────────────
@@ -74,7 +74,7 @@
    shows it, because "I replaced the file" and "the browser is running the
    file I replaced" are different claims and only one of them is checkable
    from the outside. A stale copy in an iframe is invisible otherwise. */
-const RUN_VERSION = "1.3";
+const RUN_VERSION = "1.4";
 
 let webllm = null;
 let engine = null;
@@ -246,6 +246,19 @@ async function doChat(opts){
                   r.choices[0].message.content) || "" };
 }
 
+/* What this exact library version wants for this exact model. Read out of
+   the library rather than remembered, because the model library file is
+   pinned to a version of the runtime and a mismatched pair fails in a way
+   that looks like a corrupt download. */
+async function doPlan(libUrl, model){
+  await lib(libUrl);
+  const list = (webllm.prebuiltAppConfig && webllm.prebuiltAppConfig.model_list) || [];
+  const e = list.find(m => m.model_id === model) || list[0];
+  if (!e) throw new Error("this library lists no models");
+  return { model_id:e.model_id, model:e.model, model_lib:e.model_lib,
+           mb: e.vram_required_MB ? Math.round(e.vram_required_MB) : 0 };
+}
+
 async function doUnload(){
   try { if (engine && engine.unload) await engine.unload(); } catch(e){}
   engine = null;
@@ -266,6 +279,7 @@ window.addEventListener("message", async e => {
     else if (m.cmd === "catalogue") result = await doCatalogue(m.lib);
     else if (m.cmd === "load")      result = await doLoad(m.lib, m.model, m.host);
     else if (m.cmd === "chat")      result = await doChat(m.opts);
+    else if (m.cmd === "plan")      result = await doPlan(m.lib, m.model);
     else if (m.cmd === "unload")    result = await doUnload();
     else throw new Error("unknown command " + m.cmd);
     post({ id:m.id, ok:true, result:result });

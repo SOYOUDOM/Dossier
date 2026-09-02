@@ -3038,6 +3038,12 @@ const STRINGS = {
   BrainQuiet: "Nothing has arrived from the download for {secs} seconds. It may still be working \u2014 the first minute is mostly fetching and compiling before any percentage moves. If it stays here, press F12, open Network, and see whether anything from huggingface.co is actually transferring.",
   BrainVersions: "brain.js {app} \u00b7 runner {run}",
   BrainStaleRunner: "The runner answering is version {run}, but this brain.js expects {want}. model/run.html was not replaced, or the browser is still serving an old copy of it \u2014 hard-refresh with Ctrl+Shift+R.",
+  BrainPlan: "What do I need to download?",
+  BrainPlanHead: "Three things, and only the first one is blocked on your network. The runtime and the model library sit on hosts this machine can already reach \u2014 which is why the model list above filled in at all.",
+  BrainPlanAsking: "Asking the library what this exact version needs\u2026",
+  BrainPlanFailed: "Could not ask the library: {err}",
+  BrainPlanCopy: "Copy the index.json",
+  BrainPlanCopied: "Copied",
   BrainShowRunner: "Show the runner",
   BrainHideRunner: "Hide the runner",
   BrainStuck: "{secs} seconds with no word from the download. That is longer than a working fetch goes quiet for. Stop it, and either try a different Model host or check Network in F12 for what is being refused.",
@@ -5986,7 +5992,9 @@ function renderBrain(){
       '<button class="btn" id="brCheck">' + esc(L("BrainCheck")) + "</button>" +
       '<button class="btn" id="brShow">' +
         esc(L(BRAIN.shown ? "BrainHideRunner" : "BrainShowRunner")) + "</button>" +
+      '<button class="btn" id="brPlan">' + esc(L("BrainPlan")) + "</button>" +
     "</div>" +
+    '<div id="brainPlan"></div>' +
     fr(L("BrainLibrary"), '<input class="in mono" id="brLib" style="font-size:11px" value="' +
       esc(cfg.lib || DossierBrain.DEFAULT_LIB) + '" spellcheck="false">') +
     '<p class="hint2">' + esc(L("BrainLibraryHint")) + "</p>" +
@@ -6008,6 +6016,7 @@ function renderBrain(){
   const go = $("brGo"); if (go) go.onclick = () => { cfg.on = true; touch(); brainStart(); };
   const sp = $("brStop"); if (sp) sp.onclick = () => { cfg.on = false; touch(); brainStop(); };
   const ck = $("brCheck"); if (ck) ck.onclick = () => window.open("model/check.html", "_blank");
+  const pl = $("brPlan"); if (pl) pl.onclick = brainPlan;
   const sh = $("brShow"); if (sh) sh.onclick = () => {
     BRAIN.shown = !BRAIN.shown;
     const f = document.querySelector('iframe[title="Dossier model runner"]');
@@ -6016,6 +6025,66 @@ function renderBrain(){
       : "position:absolute;width:1px;height:1px;left:-9999px;top:0;border:0";
     renderBrain();
     if (BRAIN.shown && f) f.scrollIntoView({ block:"center" });
+  };
+}
+
+/* ── doing it by hand ────────────────────────────────────────────────────
+   When the weights host is unreachable and no mirror is open, the model can
+   still be fetched somewhere else and copied in. Which files, and where they
+   go, is not something to take on trust from a README: the model library is
+   pinned to a version of the runtime, and a mismatched pair fails in a way
+   that looks like a corrupt download.
+
+   So it is asked. The library is already loaded on this machine \u2014 that is
+   why the model list filled in \u2014 and it knows exactly what it wants. */
+async function brainPlan(){
+  const box = $("brainPlan");
+  if (!box || !brainHere()) return;
+  const cfg = brainCfg();
+  box.innerHTML = '<p class="hint2">' + esc(L("BrainPlanAsking")) + "</p>";
+  let e;
+  try { e = await DossierBrain.plan({ lib:cfg.lib || undefined, model:cfg.model || undefined }); }
+  catch(err){
+    box.innerHTML = '<p style="font-size:11.5px;color:var(--p1);line-height:1.6">' +
+      esc(L("BrainPlanFailed", { err:String((err && err.message) || err) })) + "</p>";
+    return;
+  }
+  const wasm = String(e.model_lib || "");
+  const file = wasm.split("/").pop();
+  const repo = String(e.model || "");
+  const folder = repo.split("/").pop();
+  const idx = JSON.stringify([{ model_id:e.model_id,
+    model:"models/" + folder,
+    model_lib:"models/lib/" + file }], null, 1);
+
+  box.innerHTML =
+    '<p class="hint2" style="margin-top:10px">' + esc(L("BrainPlanHead")) + "</p>" +
+    '<ol style="font-size:12px;line-height:1.75;padding-left:18px;margin:8px 0">' +
+      "<li><b>The weights</b> \u2014 this is the blocked one, about " + (e.mb || "?") + " MB.<br>" +
+        '<code class="mono">git lfs install &amp;&amp; git clone ' + esc(repo) + "</code><br>" +
+        "Put the folder it makes at <code>model/models/" + esc(folder) + "</code>.</li>" +
+      "<li><b>The model library</b>, one file, on a host you can reach:<br>" +
+        '<a href="' + esc(wasm) + '" target="_blank" rel="noopener">' + esc(file) + "</a><br>" +
+        "Save it as <code>model/models/lib/" + esc(file) + "</code>.</li>" +
+      "<li><b>The runtime</b>, so even that is local:<br>" +
+        '<a href="' + esc(cfg.lib || DossierBrain.DEFAULT_LIB) + '" target="_blank" rel="noopener">' +
+        esc(cfg.lib || DossierBrain.DEFAULT_LIB) + "</a><br>" +
+        "Save it as <code>model/web-llm.js</code>.</li>" +
+      "<li>Finally <code>model/models/index.json</code>, exactly this:</li>" +
+    "</ol>" +
+    '<pre class="mono" style="font-size:11px;white-space:pre-wrap;background:var(--paper-2);' +
+      'border:1px solid var(--rule);border-radius:6px;padding:9px 11px;overflow-x:auto">' +
+      esc(idx) + "</pre>" +
+    '<button class="btn sm" id="brCopyIdx">' + esc(L("BrainPlanCopy")) + "</button>" +
+    '<p class="hint2">Once index.json is there, Dossier uses the folder and never asks the ' +
+      "network for anything.</p>";
+
+  const cp = $("brCopyIdx");
+  if (cp) cp.onclick = function(){
+    navigator.clipboard.writeText(idx).then(() => {
+      this.textContent = L("BrainPlanCopied");
+      setTimeout(() => { this.textContent = L("BrainPlanCopy"); }, 1600);
+    }).catch(() => { this.textContent = "Select the text above and copy it"; });
   };
 }
 
