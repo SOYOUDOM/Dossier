@@ -217,6 +217,8 @@ marker first so the scheduled run still happens.
 dossier.html                  the whole application
 assist.js                     the Assist tab — what it notices on its own
 chat.js                       the assistant — what it understands and answers
+brain.js                      optional: the local model, for the questions chat.js misreads
+model/check.html              open this to see whether your PC can run one
 dossier.json                  every record, routine, script and setting
 fonts/
   NotoSansKhmer-Khmer-*.woff2 the bundled Khmer face, also embedded in the HTML
@@ -314,6 +316,52 @@ bar: every shape, every exact wording, every word you gave it, each one
 deletable on its own, and a button to forget the lot. Ask it *what have I
 taught you* and it will tell you. It is all kept in `dossier.json` with the
 rest of the workspace, so it travels with the folder and never leaves it.
+
+---
+
+## A local model, if you want one
+
+Everything above runs on arithmetic. The assistant reads a question by scoring
+it against the shapes it knows, and gets it right about 97 times in 100. This
+is about the other three, and it is **off by default**.
+
+Open `model/check.html` first — it says plainly whether this PC can run a
+model at all, and it must be opened through `dossier-serve.bat` rather than
+from the folder, because a model cannot start on a `file://` page. Then
+Menu → Setup → **Understanding harder questions**.
+
+What it does is narrow. When chat.js is unsure — or has no reading at all —
+it hands the model every question it can answer, as a numbered list, and asks
+for a number. That is the whole exchange. The model **never writes a word you
+read**: it returns one number, that number becomes one of Dossier's own
+questions, and the answer still comes from counting your records. Anything
+else it says is thrown away, so there is no path by which it can tell you a
+figure it made up.
+
+It appears under the answer as *"I was not sure, so I asked the local model.
+It thinks you meant…"* with one button. Pressing it answers the question **and
+teaches the shape** — so the model is not needed for that question again. It
+is a teacher for chat.js rather than a dependency of it, and it should be
+consulted less every week, not more.
+
+Three things it cannot do to you. It cannot slow the chat down: the ordinary
+answer has already appeared before the model is woken, and it runs behind a
+timeout — if it hangs, is loading, or the file is missing, you get exactly
+what you got before. It cannot run without being asked: nothing downloads
+until you switch it on. And it cannot see anything but the sentence you typed.
+
+**On the download.** This is the only part of Dossier that touches the
+internet. Switching it on fetches the runtime and the model once from a public
+CDN — the recommended one is about 380 MB — and caches it in the browser. Every
+run after that is offline. Your records are never sent anywhere: the model
+runs on your own graphics chip, inside the tab. If that one download is not
+acceptable on your machine, leave it off; nothing else changes.
+
+**Which model.** The picker is filled from what the library actually offers,
+and the default is the smallest instruction-following one. That is deliberate,
+not a compromise: the job is "which of these questions is this", which needs
+no knowledge of the world and about six tokens of output. A larger model is
+slower at it and no better.
 
 ---
 

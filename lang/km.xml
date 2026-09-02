@@ -1325,6 +1325,27 @@ Nothing is holding this any more." value="" />
     <text name="TaughtOneGone" source="Dropped that one." value="" />
     <text name="TaughtCount" source="{n} lesson(s)" value="" />
     <text name="ChatAliasSaved" source="Noted. “{from}” means {to} from now on." value="" />
+    <text name="BrainHead" source="Understanding harder questions" value="" />
+    <text name="BrainBlurb" source="The assistant reads your questions by matching them against the shapes it knows, and it is right about 97 times in 100. For the rest, a small language model can run on this PC’s graphics chip and pick which of its own candidates you probably meant. It never writes an answer — it only chooses from a list the assistant already knows how to answer, and its choice is offered to you rather than acted on." value="" />
+    <text name="BrainNetwork" source="This is the only part of Dossier that touches the internet. Switching it on downloads the runtime and the model once from a public CDN — the size is shown below — and caches it here. Everything after that is offline, and nothing about your records is ever sent anywhere: the model runs inside this tab on your own hardware." value="" />
+    <text name="BrainUse" source="Use a local model" value="" />
+    <text name="BrainOff" source="Off" value="" />
+    <text name="BrainOn" source="On" value="" />
+    <text name="BrainModel" source="Model" value="" />
+    <text name="BrainStatusOff" source="Not loaded. Nothing has been downloaded." value="" />
+    <text name="BrainStatusLoading" source="{what} — {pct}%" value="" />
+    <text name="BrainStatusReady" source="Ready · {model}" value="" />
+    <text name="BrainStatusFailed" source="Did not load: {err}" value="" />
+    <text name="BrainUnsupported" source="This browser cannot run one: {err}" value="" />
+    <text name="BrainLoad" source="Download and start it" value="" />
+    <text name="BrainUnload" source="Stop it" value="" />
+    <text name="BrainCheck" source="Can this PC run one?" value="" />
+    <text name="BrainAbout" source="about {mb} MB" value="" />
+    <text name="BrainStats" source="Asked {asked} times this session, answered {answered}. Last took {ms} ms." value="" />
+    <text name="BrainThought" source="I was not sure, so I asked the local model. It thinks you meant:" value="" />
+    <text name="BrainAsking" source="thinking…" value="" />
+    <text name="BrainLibrary" source="Library URL" value="" />
+    <text name="BrainLibraryHint" source="Pinned so an update cannot change the behaviour underneath you. Change it only if the version stops loading." value="" />
     <text name="AiOpenRoutines" source="Open Routines" value="" />
   </texts>
 </localizationDictionary>

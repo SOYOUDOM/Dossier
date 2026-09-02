@@ -6152,6 +6152,90 @@ function lexiconFor(api){
   return LEX;
 }
 
+/* ═══ THE SHORTLIST, FOR SOMETHING ELSE TO CHOOSE FROM ═══════════════════════
+   When the matcher is unsure it is rarely lost \u2014 the right reading is usually
+   in its top few and merely not first. That is a ranking problem, and a
+   ranking problem is exactly what a small language model is good at and this
+   file is not.
+
+   So this hands out the candidates without the confidence floor that normally
+   hides them, each with its label and an example, and something else decides.
+   What comes back can only ever be one of these names, which is the whole
+   safety of the arrangement: the model picks a question this file already
+   knows how to answer, and cannot say anything to you itself. */
+
+function shortlist(raw, api, n){
+  const text = String(raw == null ? "" : raw).trim();
+  if (!text) return [];
+  api.lex = lexiconFor(api);
+  const norm0 = normalise(text);
+  const lead = readLeadIn(norm0, api.lex);
+  const norm = lead ? lead.rest : norm0;
+  const ws = words(norm);
+  let mw = meaningful(ws);
+  const slots = readSlots(norm, ws, api, text);
+  if (slots.mods && slots.mods.mask)
+    mw = meaningful(ws.filter((w, i) => !slots.mods.mask[i]));
+  const asking = /\?\s*$/.test(text) || (ws.length && ASKING.has(ws[0])) ||
+                 mw.some(w => ASKING.has(w) && mw.indexOf(w) < 2);
+  const firstVerb = mw[0] || "";
+
+  const ranked = INTENTS
+    .map(it => ({ it, s: scoreOne(it, norm, ws, mw, slots, asking, firstVerb) }))
+    .sort((a, b) => b.s - a.s)
+    .filter(x => x.it.name !== "help");
+
+  const card = it => ({ name:it.name, label:it.label, kind:it.kind, score:0,
+    eg:(it.eg || (it.phrases && it.phrases[0] && it.phrases[0][0]) || "") });
+
+  /* n of 0 means every question there is. That is not a fallback for a bad
+     shortlist \u2014 it is the right list when the score says nothing: a sentence
+     this file has no purchase on cannot be narrowed down BY this file, and
+     handing over its arbitrary top eight is worse than handing over the menu.
+     Seventy-odd short labels is a page of text, which is nothing to a model
+     and everything to the odds of the right one being in front of it. */
+  const all = !n || n <= 0;
+  const want = all ? INTENTS.length : Math.max(3, Math.min(24, n));
+
+  const out = [];
+  ranked.forEach(x => {
+    if (out.length >= want || (!all && x.s <= 0)) return;
+    out.push(Object.assign(card(x.it), { score:x.s }));
+  });
+  /* Scores run out long before the candidates do \u2014 for a sentence with no
+     word this file knows, forty intents tie on nothing and the right one is
+     not among the eight that happened to sort first. "How much of my week
+     went on Imaging" ranked find, howTo, dueWeek, troubleshoot \u2026 and never
+     offered time spent at all, which is the answer.
+
+     So the tail is not padding: it is one from each family of question this
+     file can answer, in the order they are actually asked, so whatever the
+     chooser is looking at it has seen the whole menu rather than one corner
+     of it. */
+  if (all){
+    INTENTS.forEach(it => {
+      if (it.name === "help" || out.some(o => o.name === it.name)) return;
+      out.push(card(it));
+    });
+    return out;
+  }
+  if (out.length < want){
+    const fill = ["next", "overdue", "dueToday", "dueWeek", "find", "record", "field",
+                  "waiting", "quietest", "timeSpent", "howLong", "count", "closed",
+                  "opened", "brief", "workload", "worstSystem", "topPerson", "history",
+                  "notes", "steps", "files", "when", "blocked", "stalled", "oldest",
+                  "undated", "tags", "systems", "rank", "compare", "solvedBefore",
+                  "troubleshoot", "guide", "howTo", "opinion", "standup", "scripts",
+                  "routines", "log"];
+    fill.forEach(nm => {
+      if (out.length >= want || out.some(o => o.name === nm)) return;
+      const it = INTENTS.find(x => x.name === nm);
+      if (it) out.push(card(it));
+    });
+  }
+  return out;
+}
+
 window.DossierChat = {
   version: "1.1",
   /* the picker in the app needs something to show for each one, and the first
@@ -6163,6 +6247,8 @@ window.DossierChat = {
   run: run,
   /* what a correction should be filed under: the sentence and its shape */
   keys: teachKeys,
+  /* the readings it was weighing up, for something else to choose between */
+  shortlist: shortlist,
   template: (raw, api) => { const k = teachKeys(raw, api); return k ? k.template : ""; },
   forget: () => { LEX = null; LEXKEY = ""; },
   _util: { normalise, words, meaningful, close, editDistance, readRange, readDate,

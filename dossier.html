@@ -1656,6 +1656,9 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
      missing the app runs exactly as before and the Assist tab says why. -->
 <script src="assist.js"></script>
 <script src="chat.js"></script>
+<!-- Optional. Nothing here needs it; if the file is absent the assistant
+     works exactly as it always has, minus one fallback. -->
+<script src="brain.js"></script>
 
 <script>
 "use strict";
@@ -3023,6 +3026,27 @@ const STRINGS = {
   TaughtOneGone: "Dropped that one.",
   TaughtCount: "{n} lesson(s)",
   ChatAliasSaved: "Noted. \u201c{from}\u201d means {to} from now on.",
+  BrainHead: "Understanding harder questions",
+  BrainBlurb: "The assistant reads your questions by matching them against the shapes it knows, and it is right about 97 times in 100. For the rest, a small language model can run on this PC\u2019s graphics chip and pick which of its own candidates you probably meant. It never writes an answer \u2014 it only chooses from a list the assistant already knows how to answer, and its choice is offered to you rather than acted on.",
+  BrainNetwork: "This is the only part of Dossier that touches the internet. Switching it on downloads the runtime and the model once from a public CDN \u2014 the size is shown below \u2014 and caches it here. Everything after that is offline, and nothing about your records is ever sent anywhere: the model runs inside this tab on your own hardware.",
+  BrainUse: "Use a local model",
+  BrainOff: "Off",
+  BrainOn: "On",
+  BrainModel: "Model",
+  BrainStatusOff: "Not loaded. Nothing has been downloaded.",
+  BrainStatusLoading: "{what} \u2014 {pct}%",
+  BrainStatusReady: "Ready \u00b7 {model}",
+  BrainStatusFailed: "Did not load: {err}",
+  BrainUnsupported: "This browser cannot run one: {err}",
+  BrainLoad: "Download and start it",
+  BrainUnload: "Stop it",
+  BrainCheck: "Can this PC run one?",
+  BrainAbout: "about {mb} MB",
+  BrainStats: "Asked {asked} times this session, answered {answered}. Last took {ms} ms.",
+  BrainThought: "I was not sure, so I asked the local model. It thinks you meant:",
+  BrainAsking: "thinking\u2026",
+  BrainLibrary: "Library URL",
+  BrainLibraryHint: "Pinned so an update cannot change the behaviour underneath you. Change it only if the version stops loading.",
   AiOpenRoutines: "Open Routines"
 };
 
@@ -5859,6 +5883,159 @@ function chatApi(convo){
 }
 
 
+/* ═══ THE LOCAL MODEL ════════════════════════════════════════════════════
+   All of this is optional in the strictest sense: brain.js may not be in the
+   folder, the browser may have no WebGPU, and the user may simply never turn
+   it on. Every path below checks, and the assistant is unchanged when it is
+   not there.
+
+   It is rendered on its own rather than inside the Setup panel's one big
+   string, because a download reports progress every few hundred milliseconds
+   and rebuilding the whole panel that often would fight with anything else
+   you were typing in it. */
+
+function brainCfg(){
+  const st = S.settings;
+  if (!st.brain || typeof st.brain !== "object") st.brain = { on:false, model:"", lib:"" };
+  return st.brain;
+}
+function brainHere(){ return typeof window !== "undefined" && !!window.DossierBrain; }
+function brainReady(){ return brainHere() && DossierBrain.state().status === "ready"; }
+
+function renderBrain(){
+  const box = $("brainBox");
+  if (!box) return;
+  const cfg = brainCfg();
+
+  if (!brainHere()){
+    box.innerHTML = '<p class="hint2">' + esc(L("BrainBlurb")) + "</p>" +
+      '<p class="hint2" style="color:var(--p2);margin-top:8px">brain.js is not in this folder. ' +
+      "Put it next to dossier.html and reload.</p>";
+    return;
+  }
+
+  const st = DossierBrain.state();
+  /* why() only says whether the API exists. Whether there is a graphics chip
+     behind it takes an await, so it is asked once and remembered \u2014 and until
+     the answer comes back the panel says what it knows rather than guessing. */
+  if (BRAIN.probe === null && DossierBrain.available()){
+    BRAIN.probe = undefined;
+    DossierBrain.probe().then(r => { BRAIN.probe = r; renderBrain(); },
+                              () => { BRAIN.probe = { ok:false, reason:"" }; });
+  }
+  const blocked = DossierBrain.why() ||
+    ((BRAIN.probe && BRAIN.probe.ok === false) ? BRAIN.probe.reason : "");
+  let status, tone = "var(--ink-2)";
+  if (blocked){ status = L("BrainUnsupported", { err:blocked }); tone = "var(--p2)"; }
+  else if (st.status === "ready"){ status = L("BrainStatusReady", { model:st.model }); tone = "var(--ok, var(--ink-2))"; }
+  else if (st.status === "loading") status = L("BrainStatusLoading",
+    { what:st.message || "working", pct:Math.round((st.progress || 0) * 100) });
+  else if (st.status === "failed"){ status = L("BrainStatusFailed", { err:st.error }); tone = "var(--p1)"; }
+  else status = L("BrainStatusOff");
+
+  const opts = (BRAIN.catalogue || []).length
+    ? BRAIN.catalogue.map(m => '<option value="' + esc(m.id) + '"' +
+        (m.id === cfg.model ? " selected" : "") + ">" + esc(m.id) +
+        (m.mb ? "  \u00b7 " + L("BrainAbout", { mb:m.mb }) : "") + "</option>").join("")
+    : DossierBrain.WANT.map(m => '<option value="' + esc(m.id) + '"' +
+        (m.id === cfg.model ? " selected" : "") + ">" + esc(m.id) +
+        "  \u00b7 " + esc(L("BrainAbout", { mb:m.mb })) + "</option>").join("");
+
+  box.innerHTML =
+    '<p class="hint2">' + esc(L("BrainBlurb")) + "</p>" +
+    '<p class="hint2" style="margin-top:8px">' + esc(L("BrainNetwork")) + "</p>" +
+    fr(L("BrainUse"), '<select class="in" id="brOn"' + (blocked ? " disabled" : "") + '>' +
+      '<option value="0"' + (!cfg.on ? " selected" : "") + ">" + esc(L("BrainOff")) + "</option>" +
+      '<option value="1"' + (cfg.on ? " selected" : "") + ">" + esc(L("BrainOn")) + "</option></select>") +
+    fr(L("BrainModel"), '<select class="in" id="brModel"' + (blocked ? " disabled" : "") + ">" + opts + "</select>") +
+    '<p style="font-size:11.5px;color:' + tone + ';line-height:1.6;margin:6px 0 0">' + esc(status) + "</p>" +
+    (st.status === "ready" && st.asked
+      ? '<p class="hint2">' + esc(L("BrainStats", { asked:st.asked, answered:st.answered, ms:st.lastMs })) + "</p>"
+      : "") +
+    '<div class="brow" style="margin-top:10px">' +
+      (st.status === "ready"
+        ? '<button class="btn" id="brStop">' + esc(L("BrainUnload")) + "</button>"
+        : '<button class="btn pri" id="brGo"' + (blocked || st.status === "loading" ? " disabled" : "") + ">" +
+          esc(L("BrainLoad")) + "</button>") +
+      '<button class="btn" id="brCheck">' + esc(L("BrainCheck")) + "</button>" +
+    "</div>" +
+    fr(L("BrainLibrary"), '<input class="in mono" id="brLib" style="font-size:11px" value="' +
+      esc(cfg.lib || DossierBrain.DEFAULT_LIB) + '" spellcheck="false">') +
+    '<p class="hint2">' + esc(L("BrainLibraryHint")) + "</p>";
+
+  const on = $("brOn"); if (on) on.onchange = e => {
+    cfg.on = e.target.value === "1"; touch();
+    if (cfg.on) brainStart(); else brainStop();
+  };
+  const md = $("brModel"); if (md) md.onchange = e => {
+    cfg.model = e.target.value; touch();
+    if (DossierBrain.state().status === "ready") brainStart(true);
+    else renderBrain();
+  };
+  const lb = $("brLib"); if (lb) lb.onchange = e => { cfg.lib = e.target.value.trim(); touch(); };
+  const go = $("brGo"); if (go) go.onclick = () => { cfg.on = true; touch(); brainStart(); };
+  const sp = $("brStop"); if (sp) sp.onclick = () => { cfg.on = false; touch(); brainStop(); };
+  const ck = $("brCheck"); if (ck) ck.onclick = () => window.open("model/check.html", "_blank");
+}
+
+const BRAIN = { catalogue:null, busy:false, probe:null };
+
+async function brainStart(restart){
+  if (!brainHere()) return;
+  const cfg = brainCfg();
+  try {
+    if (restart) await DossierBrain.unload();
+    /* the real list of models, so the picker shows what the library actually
+       has rather than what this file was written against */
+    if (!BRAIN.catalogue){
+      try { BRAIN.catalogue = await DossierBrain.catalogue(cfg.lib || undefined); renderBrain(); }
+      catch(e){ /* offline or blocked — the built-in preferences still work */ }
+    }
+    await DossierBrain.load({
+      model: cfg.model || undefined,
+      lib: cfg.lib || undefined,
+      onProgress: () => renderBrain()
+    });
+    renderBrain();
+    toast(L("BrainStatusReady", { model:DossierBrain.state().model }));
+  } catch(e){
+    renderBrain();
+    toast(L("BrainStatusFailed", { err:String(e && e.message || e) }), { bad:true });
+  }
+}
+async function brainStop(){
+  if (!brainHere()) return;
+  await DossierBrain.unload();
+  BRAIN.catalogue = null;
+  renderBrain();
+}
+
+/* Ask the model which of the assistant's own candidates was meant. Returns
+   null for every reason there is — not loaded, not sure, timed out, threw —
+   because a fallback that can fail loudly is worse than no fallback. */
+async function brainGuess(text, alreadySaid, wide){
+  if (!brainReady() || !window.DossierChat || !DossierChat.shortlist) return null;
+  if (BRAIN.busy) return null;
+  BRAIN.busy = true;
+  try {
+    /* Everything it can answer, every time, in the assistant's own order of
+       preference. A shortlist was tried first and it is the wrong instinct:
+       "how much of my week went on Imaging" put twelve candidates in front of
+       the model and time tracked \u2014 the answer \u2014 was not one of them, because
+       the ranking that produced the shortlist is the very thing being
+       doubted. Seventy-odd short labels cost a fraction of a second more to
+       read and remove the whole failure mode. */
+    const list = DossierChat.shortlist(text, chatApi(), wide === false ? 12 : 0)
+      .filter(x => x.name !== alreadySaid);
+    if (!list.length) return null;
+    const g = await DossierBrain.guess(text, list);
+    if (!g || !g.intent || g.intent === alreadySaid) return null;
+    const hit = list.find(x => x.name === g.intent);
+    return hit ? { intent:hit.name, label:hit.label, ms:g.ms } : null;
+  } catch(e){ return null; }
+  finally { BRAIN.busy = false; }
+}
+
 /* ═══ TEACHING IT ════════════════════════════════════════════════════════
    Two ways in, and they are different jobs.
 
@@ -6315,6 +6492,34 @@ function chatAsk(text){
   if (r && r.context) c.convo = r.context;
   chatBot(r, q);
   chatSide();
+
+  /* The answer above has already been given. Only if it was a guess, or no
+     answer at all, is the local model worth waking \u2014 and even then it comes
+     back as a suggestion underneath rather than replacing what was said. */
+  if (brainReady() && (!r.intent || r.unsure)) brainOffer(q, r.intent || "");
+}
+
+/* the second opinion, offered rather than acted on */
+async function brainOffer(q, said){
+  const log = $("chatLog");
+  const wait = document.createElement("div");
+  wait.className = "chb bot";
+  wait.innerHTML = '<div class="carry">' + esc(L("BrainAsking")) + "</div>";
+  log.appendChild(wait);
+  chatScroll();
+  let g = null;
+  /* the full menu, always — see brainGuess for why a shortlist is the wrong
+     instinct here */
+  try { g = await brainGuess(q, said); } catch(e){ g = null; }
+  wait.remove();
+  if (!g) return;
+  /* One button, and it is the same correction the "did you mean" buttons use
+     \u2014 so accepting the model's reading answers the question AND teaches the
+     shape, and the model is not needed for that question again. Every bot
+     message already carries its own "not what I meant", so this does not
+     need a second one. */
+  chatBot({ say:L("BrainThought"),
+            chips:[{ label:g.label, act:{ kind:"reread", intent:g.intent, text:q } }] }, q);
 }
 
 function chatDo(act){
@@ -8932,7 +9137,11 @@ async function renderModal(){
       '<input class="in mono" data-tple="' + i + '" value="' + esc(t) + '" spellcheck="false" style="font-size:11px">' +
       '<button class="btn sm" data-tpld="' + i + '">✕</button></div>').join("") +
     '<div style="display:flex;gap:6px;margin-top:8px"><input class="in mono" id="tplNew" style="font-size:11px" ' +
-      "placeholder=\"Restart app pool @&quot;Infra / IIS&quot; :admin 15m today\"><button class=\"btn sm\" id=\"tplAdd\">" + L("Add") + "</button></div>";
+      "placeholder=\"Restart app pool @&quot;Infra / IIS&quot; :admin 15m today\"><button class=\"btn sm\" id=\"tplAdd\">" + L("Add") + "</button></div>" +
+
+    "<h5 class=\"eyebrow\" style=\"margin:22px 0 8px\">" + L("BrainHead") + "</h5>" +
+    '<div id="brainBox"></div>';
+  renderBrain();
 
   $("pHelp").innerHTML =
     "<h4 style=\"margin:0 0 10px\">" + L("QuickAdd") + "</h4><dl class=\"kv mono\" style=\"font-size:11.5px\">" +
@@ -11642,6 +11851,12 @@ async function boot(){
   $("bellBtn").classList.toggle("hot", !!S.settings.remind);
   setSaveState(S.dirty ? "dirty" : "saved");
   setTimeout(() => { S.hush = false; }, 1500);
+
+  /* If the local model was left switched on, start it in the background. It
+     is already cached by then, so this is quick \u2014 and if it is not, nothing
+     waits on it. */
+  if (brainHere() && brainCfg().on && DossierBrain.available())
+    setTimeout(() => { brainStart().catch(() => {}); }, 2000);
 
   // roll the day over if the tab stays open past midnight
   let lastDay = today();
