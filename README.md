@@ -238,6 +238,45 @@ tasks/                        one folder per record, for its attachments
 
 ---
 
+## Talking to it
+
+It reads records, but you do not have to type like a search box at it.
+
+**An opener does not eat the question.** Nobody starts with the question —
+they start with hello, or with right, or with sorry, and then they ask. "Hi,
+what is overdue" used to say good morning and never mention the nine records;
+now it says both. So does "right, show me imaging", "ok and Policy?" and
+"sorry, I meant overdue". If what is left behind turns out to mean nothing on
+its own, the opener was the message after all and it is answered as one.
+
+**It will show its working.** Ask it something, then ask *are you sure*, *how
+do you know that* or *what does that mean*, and it tells you which question it
+took yours for, how sure it was of that reading, what the number is a count
+of, which filters were on, and whether the reading came from a correction you
+taught it. Ask twice and it still explains the original answer, not its own
+last reply. Nothing there is a boast: everything it says is arithmetic over
+records you wrote, and something that cannot say where a number came from
+should not be trusted with the number.
+
+**It has a view.** *What do you think*, *should I worry*, *any advice* and
+*is that normal* get a judgement rather than a list. It reads the things a
+person would read at the end of a day — how late the worst thing is, who has
+gone quiet and never been chased, what has had nothing written on it in over
+a week, what is open with no date at all, whether one system is over half the
+pile — ranks them, and commits to one with the reason attached, so you can
+disagree with it. Asked what to *do*, it leads with the move instead. Asked
+whether to *worry*, it answers yes or no first.
+
+And the rest of what people actually type: *hold on*, *let me think*, *give
+me a second* (it waits), *no*, *nope*, *maybe*, *not really* (it takes the
+refusal, and knows a hedge from a no), *ugh*, *this is a mess*, *I cannot
+focus* (it acknowledges, then shows you the pile as a number rather than a
+feeling). It still refuses to invent: the weather, the football, the capital
+of anywhere are all outside what it can see, and it says so rather than
+guessing.
+
+---
+
 ## Teaching the assistant
 
 The assistant reads your records and answers from them. It is not always

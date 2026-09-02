@@ -447,6 +447,8 @@ const FIELD_PHRASE = [
   [/\bwho is it (?:waiting on|with)\b/, "waitOn"],
   [/\bwhat is it called\b/, "title"],
   [/\btime (?:spent|logged|tracked)\b/, "spent"],
+  [/^(?:is|are|was|were|has|have)\b.*\b(?:open|closed|done|blocked|finished|cancelled|canceled|in progress)\b/, "status"],
+  [/\bwhat (?:state|stage) (?:is|it)\b/, "status"],
   [/\b(?:how much|how many) (?:time|hours|minutes)\b/, "spent"],
   [/\bhow long\b.{0,24}\b(?:taken|spent|been on)\b/, "spent"],
   [/\bwho\b.{0,24}\bwaiting (?:on|for)\b/, "waitOn"],
@@ -1181,15 +1183,22 @@ function linkClause(A, n){
 /* people write "you've", not "you have" */
 /* "you have" only contracts before a participle — "you've closed" is right,
    "you've 9 records" is not — so it is written out where it belongs instead */
-const SHORTEN = [[/\byou are\b/g, "you're"], [/\bYou are\b/g, "You're"],
-                 [/\bthat is\b/g, "that's"], [/\bThat is\b/g, "That's"],
-                 [/\bthere is\b/g, "there's"], [/\bThere is\b/g, "There's"],
-                 [/\bit is\b/g, "it's"], [/\bIt is\b/g, "It's"],
-                 [/\bis not\b/g, "isn't"], [/\bare not\b/g, "aren't"],
-                 [/\bhas not\b/g, "hasn't"], [/\bhave not\b/g, "haven't"],
-                 [/\bdo not\b/g, "don't"], [/\bdoes not\b/g, "doesn't"],
-                 [/\bwill not\b/g, "won't"], [/\bcannot\b/g, "can't"],
-                 [/\bI would\b/g, "I'd"], [/\bI have\b/g, "I've"]];
+/* English will not let you contract a verb that ends its clause. "Ready when
+   you are." is right and "Ready when you're." is not English at all, and the
+   rule fired on every sentence that finished on one — which was most of the
+   friendly ones. So each pair only contracts with a word still to come after
+   it. */
+const ENDS = "(?=\\s+\\S)";
+const SHORTEN = [["you are", "you're"], ["You are", "You're"],
+                 ["that is", "that's"], ["That is", "That's"],
+                 ["there is", "there's"], ["There is", "There's"],
+                 ["it is", "it's"], ["It is", "It's"],
+                 ["is not", "isn't"], ["are not", "aren't"],
+                 ["has not", "hasn't"], ["have not", "haven't"],
+                 ["do not", "don't"], ["does not", "doesn't"],
+                 ["will not", "won't"], ["cannot", "can't"],
+                 ["I would", "I'd"], ["I have", "I've"]]
+  .map(x => [new RegExp("\\b" + x[0] + "\\b" + ENDS, "g"), x[1]]);
 function contract(s){
   let out = String(s || "");
   SHORTEN.forEach(r => { out = out.replace(r[0], r[1]); });
@@ -3405,7 +3414,13 @@ intent("identity", {
            ["how do you work",18],["how do you do that",17],["how were you made",15],
            ["what model are you",16],
            ["are you connected to the internet",16],["do you send my data",16],
-           ["where does my data go",15],["is this private",14]],
+           ["where does my data go",15],["is this private",14],
+           ["how old are you",18],["what is your age",17],["how long have you been here",16],
+           ["are you smart",16],["are you clever",16],["are you intelligent",16],
+           ["how clever are you",16],["can you think",15],["do you understand english",16],
+           ["do you learn",15],["can you learn",15],["do you remember me",15],
+           ["do you get bored",15],["do you sleep",15],["do you have feelings",16],
+           ["are you a language model",17],["do you use ai",16],["are you offline",15]],
   run(A){
     const api = A.api;
     const n = api.tasks.length;
@@ -3435,7 +3450,11 @@ intent("howareyou", {
   phrases:[["how are you",16],["how are things with you",16],["how you doing",16],
            ["how do you do",15],["you ok",14],["you alright",14],["are you well",14],
            ["hows it going with you",15],["you good",13],["everything ok with you",15],
-           ["how was your weekend",15],["how is your day",15],["you busy",13],["you tired",13]],
+           ["how was your weekend",15],["how is your day",15],["you busy",13],["you tired",13],
+           ["how is life",16],["hows life",16],["how is everything",15],["how goes it",15],
+           ["you still awake",16],["you still there",15],["still with me",15],
+           ["what are you up to",16],["having a good day",15],["you having fun",15],
+           ["hows your day going",16],["you enjoying yourself",15],["all good with you",15]],
   run(A){
     const api = A.api;
     const live = api.tasks.filter(x => api.h.LIVE.indexOf(x.status) >= 0).length;
@@ -3472,7 +3491,11 @@ intent("bye", {
            ["good night",15],["goodnight",15],["night night",15],["im off",14],
            ["i am off",14],["logging off",15],["signing off",15],["done for today",20],
            ["that is me done",18],["finished for the day",20],["going home",14],
-           ["heading home",14],["end of shift",14],["clocking off",15],["until tomorrow",14]],
+           ["heading home",14],["end of shift",14],["clocking off",15],["until tomorrow",14],
+           ["thanks bye",20],["thanks goodbye",20],["ok bye",18],["right bye",18],
+           ["cheers bye",20],["thanks see you",20],["ok goodnight",19],["thanks good night",20],
+           ["that is all for today",19],["im out",15],["i am out",15],["shutting down",15],
+           ["packing up",16],["calling it a day",19],["knocking off",16]],
   run(A){
     const api = A.api, h = api.h, k = h.today();
     const liveOnes = api.tasks.filter(x => h.LIVE.indexOf(x.status) >= 0);
@@ -3543,18 +3566,33 @@ intent("complain", {
 intent("feeling", {
   kind:"social", label:"Long day",
   cues:{ tired:11, exhausted:12, knackered:12, stressed:12, overwhelmed:12, swamped:9,
-         drowning:11, fed:6, frustrated:12, annoyed:11, bored:10, sick:7 },
+         drowning:11, fed:6, frustrated:12, annoyed:11, bored:10, sick:7,
+         ugh:14, argh:14, aargh:14, meh:6, chaos:11, mess:8, hate:9, relentless:12,
+         nonstop:11, burnout:13, burnt:7, shattered:11, wrecked:10, hopeless:6,
+         miserable:12, headache:12, brutal:10, grind:9, monday:6, mondays:8 },
   phrases:[["long day",14],["rough day",14],["bad day",14],["hard day",14],
            ["i am tired",14],["im tired",14],["i am done",12],["too much",10],
            ["fed up",14],["cannot cope",14],["losing my mind",14],["so busy",12],
-           ["need a break",14],["need coffee",13],["hate this",12]],
+           ["need a break",14],["need coffee",13],["hate this",12],
+           ["this is a mess",16],["what a mess",16],["everything is broken",16],
+           ["why is everything broken",17],["nothing is working",16],
+           ["i cannot focus",16],["cant focus",16],["i cannot think",15],
+           ["my head hurts",16],["i have a headache",16],["i hate mondays",16],
+           ["i hate this job",16],["sick of this",16],["over it",13],["had enough",15],
+           ["killing me",15],["no energy",14],["burnt out",16],["burned out",16],
+           ["im drowning",16],["i am drowning",16],["so much work",14],
+           ["never ends",15],["not going well",15],["going badly",15],
+           ["worst day",15],["everything at once",15],["pulling my hair out",17]],
   run(A){
     const api = A.api, h = api.h, k = h.today();
     const closed = api.tasks.filter(x => x.status === "done" && h.dayOf(x.completed) === k);
     const liveOnes = api.tasks.filter(x => h.LIVE.indexOf(x.status) >= 0);
     const quick = liveOnes.filter(x => +x.estimate && +x.estimate <= 15 && x.due && x.due <= k);
     return {
-      say: say(["Sounds like it.", "Understood.", "Right."], {}, A.norm),
+      say: say(["Sounds like it \u2014 here is where you actually are.",
+                "Understood. For what it is worth, this is the shape of it.",
+                "Right. It may help to see it as a number rather than a feeling.",
+                "That kind of day. Here is what is actually on the pile."], {}, A.norm),
       note: (closed.length
               ? "For what it's worth you've closed " + qty(closed.length, "record") + " today.\n"
               : "") +
@@ -3695,10 +3733,16 @@ intent("dateToday", {
 intent("smalltalk", {
   kind:"social", label:"Outside what I know",
   cues:{ weather:12, rain:9, hot:7, cold:7, football:11, news:9, politics:11, sport:10,
-         food:8, lunch:7, coffee:5, holiday:4, weekend:4 },
+         food:8, lunch:7, holiday:4, movie:11, film:11, music:9, recipe:11, restaurant:11,
+         capital:9, president:11, election:11, currency:8, translate:8, wikipedia:12,
+         google:10, celebrity:11, cricket:11, tennis:10, worldcup:12 },
   phrases:[["what is the weather",16],["is it raining",15],["whats the news",15],
-           ["did you see",12],["what do you think about",13],["your opinion",13],
-           ["do you like",13],["favourite",12],["favorite",12]],
+           ["did you see",12],["what do you think about",13],["your opinion on",14],
+           ["do you like",13],["favourite",12],["favorite",12],
+           ["who won",15],["who is winning",15],["what is the score",15],
+           ["what should i eat",16],["where should i eat",16],["what is for lunch",15],
+           ["what is the capital",16],["who is the president",16],["how do you say",14],
+           ["what does that word mean",15],["tell me about the world",15]],
   run(A){
     return { say: say(["I've no idea — I only see this workspace.",
                        "Outside what I know, I'm afraid.",
@@ -4696,6 +4740,11 @@ intent("notify", {
 intent("openRecord", {
   kind:"nav", label:"Open a record",
   needs:["record"],
+  /* "open it" is an instruction; "is D-0001 open" is a question about its
+     status, and answering it by opening the record is not an answer */
+  only(mw, norm, slots){
+    return !/^(?:is|are|was|were|has|have|does|did|can|could|will|would|should|what|which|who|when|why|how)\b/.test(norm);
+  },
   cues:{ open:7, bring:5, pull:5, show:4, see:4, view:4, look:4 },
   phrases:[["open it",9],["bring it up",10],["pull it up",10],["let me see",8],["show me the record",9]],
   run(A){
@@ -4830,6 +4879,293 @@ intent("taught", {
     };
   }
 });
+/* ═══ HAVING A VIEW, AND OWNING UP TO IT ═════════════════════════════════════
+   Two things people say to anything that has just told them a number, and
+   neither of them had an answer here.
+
+   The first is "what do you think" \u2014 asking for a judgement rather than a
+   count. Answering that with a list is a dodge. It reads the same signals a
+   person would read at the end of a day (how far past its date the worst
+   thing is, who has gone quiet and never been chased, what has not moved in
+   a fortnight, what is open with no date on it at all) and then commits to
+   one of them, with the reason, so the view can be argued with.
+
+   The second is "are you sure" \u2014 asking it to show its working. It can,
+   because everything it says is arithmetic over records you wrote: it knows
+   which question it took yours for, how sure it was, how many records went
+   into the answer and which filters were on. Something that cannot say where
+   a number came from should not be trusted with the number. */
+
+function concerns(api){
+  const h = api.h, k = h.today();
+  const liveOnes = api.tasks.filter(t => h.LIVE.indexOf(t.status) >= 0);
+  const daysAgo = iso => iso ? Math.round((Date.now() - Date.parse(iso)) / DAY) : 0;
+  const out = [];
+
+  const over = liveOnes.filter(t => t.due && t.due < k);
+  if (over.length){
+    const worst = over.slice().sort((a, b) => String(a.due).localeCompare(String(b.due)))[0];
+    const late = Math.max(1, Math.round((Date.parse(k) - Date.parse(worst.due)) / DAY));
+    const p1 = over.filter(t => t.priority === "P1").length;
+    out.push({ w: 4 + over.length * 0.4 + late * 0.35 + p1 * 2,
+      head: qty(over.length, "record") + " past its date",
+      why: "the oldest of them, " + worst.code + ", is " + span(late) + " late" +
+           (p1 ? ", and " + p1 + " of the set " + be(p1) + " P1" : ""),
+      bad: over.length > 3 || late > 7 || p1 > 0,
+      move: "Clear the oldest one first \u2014 " + worst.code + ".",
+      ask: "what is overdue", label:"Show me the overdue" });
+  }
+
+  const quiet = liveOnes.filter(t => t.waitOn && h.waitDays(t) > 3);
+  const never = quiet.filter(t => !(t.chases || []).length);
+  if (never.length){
+    const worst = never.slice().sort((a, b) => h.waitDays(b) - h.waitDays(a))[0];
+    out.push({ w: 3 + never.length * 1.1 + h.waitDays(worst) * 0.3,
+      head: qty(never.length, "record") + " waiting on somebody nobody has chased",
+      why: worst.waitOn + " has had " + worst.code + " for " + span(h.waitDays(worst)) +
+           " and has never been asked about it",
+      bad: h.waitDays(worst) > 5 || never.length > 2,
+      move: "Chase " + worst.waitOn + " on " + worst.code + ".",
+      ask: "who has gone quiet", label:"Show me the waits" });
+  }
+
+  const stalled = liveOnes.filter(t => {
+    const last = (t.log || []).slice(-1)[0];
+    return daysAgo(last ? last.at : t.created) > 10;
+  });
+  if (stalled.length){
+    const worst = stalled.slice().sort((a, b) => {
+      const la = (a.log || []).slice(-1)[0], lb = (b.log || []).slice(-1)[0];
+      return Date.parse(la ? la.at : a.created) - Date.parse(lb ? lb.at : b.created);
+    })[0];
+    const lastAt = ((worst.log || []).slice(-1)[0] || {}).at || worst.created;
+    out.push({ w: 2 + stalled.length * 0.7 + daysAgo(lastAt) * 0.15,
+      head: qty(stalled.length, "record") + " nothing has been written on in over a week",
+      why: worst.code + " has been silent for " + span(daysAgo(lastAt)),
+      bad: stalled.length > 3,
+      move: "Either write a line on " + worst.code + " or close it.",
+      ask: "what has stalled", label:"Show me the quiet ones" });
+  }
+
+  const undated = liveOnes.filter(t => !t.due);
+  if (undated.length > 2){
+    out.push({ w: 1.5 + undated.length * 0.35,
+      head: qty(undated.length, "record") + " open with no date on " + itThem(undated.length),
+      why: "undated work does not appear in the Day view, so it goes quiet without anyone deciding it should",
+      bad: undated.length > 6,
+      move: "Put a date on them, even a rough one.",
+      ask: "what has no date", label:"Show me the undated" });
+  }
+
+  const p1open = liveOnes.filter(t => t.priority === "P1");
+  if (p1open.length > 2){
+    out.push({ w: 2 + p1open.length * 0.8,
+      head: qty(p1open.length, "record") + " sitting at P1",
+      why: "when everything is urgent the priority has stopped telling you anything",
+      bad: p1open.length > 4,
+      move: "Demote the ones that are not really P1.",
+      ask: "what is p1", label:"Show me the P1s" });
+  }
+
+  const bySys = {};
+  liveOnes.forEach(t => { if (t.system) bySys[t.system] = (bySys[t.system] || 0) + 1; });
+  const sysRank = Object.keys(bySys).sort((a, b) => bySys[b] - bySys[a]);
+  const totSys = sysRank.reduce((n, x) => n + bySys[x], 0);
+  if (sysRank.length > 1 && bySys[sysRank[0]] / totSys > 0.5 && bySys[sysRank[0]] > 3){
+    out.push({ w: 2 + bySys[sysRank[0]] * 0.3,
+      head: sysRank[0] + " is over half of everything open",
+      why: bySys[sysRank[0]] + " of " + totSys + " live records are on it, which is a cause rather than a queue",
+      bad: false,
+      move: "Worth one permanent fix rather than " + bySys[sysRank[0]] + " more of the same.",
+      ask: "which system gives me the most trouble", label:"Look at " + sysRank[0] });
+  }
+
+  return out.sort((a, b) => b.w - a.w);
+}
+
+intent("opinion", {
+  kind:"read", label:"What I make of it",
+  cues:{ advice:11, advise:11, recommend:10, suggest:8, worry:11, worried:11,
+         concerned:10, opinion:11, honest:9, verdict:10, view:6, gut:9, instinct:9 },
+  phrases:[["what do you think",17],["what do you reckon",17],["any advice",16],
+           ["what would you do",17],["what should i worry about",17],["should i worry",17],
+           ["is that bad",16],["is this bad",16],["how bad is it",16],
+           ["does that seem normal",16],["is that normal",16],["is this normal",16],
+           ["am i doing ok",16],["am i doing well",16],["how am i doing",15],
+           ["your honest opinion",17],["be honest with me",16],["what is your take",17],
+           ["how does that look",15],["how does it look",15],["is that a problem",16],
+           ["anything to worry about",17],["should i be worried",17],
+           ["what would you say",15],["if you were me",16],["tell me straight",16]],
+  run(A){
+    const api = A.api, n = A.norm;
+    const list = concerns(api);
+    const asked = /\b(?:worry|worried|bad|serious|normal|problem|concern|ok|okay|well)\b/.test(n);
+    const wantsMove = /\b(?:advice|advise|recommend|suggest|do about|would you do|should i do|next)\b/.test(n);
+
+    if (!list.length) return {
+      /* the lead below is written here, so finish must not prepend another */
+      say: say(["Nothing I would lose sleep over.",
+                "Honestly \u2014 it looks fine.",
+                "No, this looks in hand."], {}, n),
+      note:"Nothing overdue, nothing waiting unchased, nothing gone silent. " +
+           "That is rarer than it sounds.",
+      chips:[{ label:"What should I do next", act:{ kind:"say", text:"what should i do next" } }]
+    };
+
+    const top = list[0], rest = list.slice(1, 3);
+    const worrying = list.some(x => x.bad);
+    /* asked whether to worry, answer that. Asked what to do, say what to do.
+       Asked what I think, say what I think. Three different questions, and
+       one answer for all three is what makes a thing feel like a form. */
+    const lead = wantsMove
+      ? one(["If it were me: ", "What I would do: ", "One thing, then. "], n)
+      : asked
+      ? (worrying
+          ? one(["Yes \u2014 one thing. ", "Yes, and it is this. ", "A bit, yes. "], n)
+          : one(["Not really. ", "No, nothing alarming. ", "Nothing serious. "], n))
+      : one(["If you want it straight: ", "My read: ", "Honestly: ", ""], n);
+
+    return {
+      say: lead + (wantsMove ? top.move : top.head + " \u2014 " + top.why + "."),
+      note: (wantsMove ? "Because " + top.head + " \u2014 " + top.why + ".\n"
+                       : worrying ? top.move + "\n" : "") +
+            (rest.length
+              ? "Also: " + rest.map(x => x.head).join("; ") + "."
+              : "That is the only thing standing out.") +
+            "\n\nThat is my reading of the records, not a fact \u2014 I am counting dates and " +
+            "silence, and I cannot see what you know about any of it.",
+      chips: [{ label:top.label, act:{ kind:"say", text:top.ask } }]
+        .concat(rest.length ? [{ label:rest[0].label, act:{ kind:"say", text:rest[0].ask } }] : [])
+    };
+  }
+});
+
+intent("justify", {
+  kind:"read", label:"Where that came from",
+  keepLast:true,
+  cues:{ sure:9, certain:10, positive:5, confident:11, accurate:10, reliable:10,
+         guessing:12, guess:6, made:4, invented:12, checked:8, verify:10, prove:11 },
+  phrases:[["are you sure",17],["you sure",16],["are you certain",17],["how sure are you",17],
+           ["how confident are you",17],["how do you know",17],["how do you know that",17],
+           ["where did you get that",17],["where does that come from",17],
+           ["why do you say that",17],["what makes you say that",17],
+           ["did you make that up",17],["are you guessing",17],["are you making this up",17],
+           ["can you be wrong",16],["could you be wrong",16],["is that right",14],
+           ["show me your working",17],["how did you work that out",17],
+           ["do you actually read my records",17],["did you actually check",16],
+           ["prove it",15],["says who",15],["based on what",16],
+           ["what does that mean",16],["what do you mean",16],["what does this mean",16],
+           ["explain that",16],["explain",10],["in plain english",16],
+           ["i do not understand",15],["i dont get it",15],["what are you saying",15],
+           ["how did you get that",17],["what is that based on",17],["says it who",14]],
+  run(A){
+    const api = A.api, c = A.convo || {}, l = c.last;
+    if (!l) return {
+      say: say(["Everything I tell you is counted out of your own records \u2014 nothing else reaches me.",
+                "I only ever count what is in this workspace, so yes, I can be checked.",
+                "Fair thing to ask. Everything I say is arithmetic over your own records."], {}, A.norm),
+      note:"There is no model here and no network, so I have nothing to invent from: every " +
+           "number I give you is a count of records you wrote, and I can list every one that " +
+           "went into it. Where I am unsure it is the question I am unsure about, not the " +
+           "arithmetic \u2014 which is why I tell you how sure I was of the reading.\n\n" +
+           "Ask me something and then ask me this again, and I will show you the working.",
+      chips:[{ label:"Anything I should know", act:{ kind:"say", text:"anything i should know" } }]
+    };
+    if (l.kind === "social") return {
+      keepLast:true,
+      say:"That one was not a fact, just conversation.",
+      note:"Ask me something about the work and I will show you where the number came from."
+    };
+    const bits = [];
+    bits.push("I read \u201c" + (l.say || "") + "\u201d as " + l.label.toLowerCase() + ".");
+    if (l.count != null) bits.push("The " + l.count + " is a count of records in this workspace, " +
+      "not an estimate \u2014 I can list every one of them.");
+    if (l.rows) bits.push(l.rows + " of them were shown above.");
+    if (l.filters) bits.push("Filtered to: " + l.filters + ".");
+    if (l.applied) bits.push("Condition applied: " + l.applied + ".");
+    if (l.learned) bits.push(l.taught === "shape"
+      ? "I took that reading from a shape you taught me, not from my own guess."
+      : "I took that reading from a correction you gave me.");
+    else bits.push("How sure I was of the reading: " + Math.round((l.confidence || 0) * 100) + "%.");
+
+    const solid = l.count != null || l.rows > 0;
+    const explaining = /\b(?:mean|means|meaning|explain|understand|saying|plain english)\b/.test(A.norm);
+    return {
+      keepLast:true,
+      say: say(explaining
+        ? ["Putting it plainly:",
+           "What I meant was this.",
+           "In other words:"]
+        : solid
+        ? ["Sure of the number, less sure I heard you right \u2014 here is both.",
+           "The arithmetic, yes. The question I answered, judge for yourself.",
+           "Yes, in this sense:"]
+        : ["Here is exactly what I did.",
+           "I can show you the working, such as it is.",
+           "Fair question. This is where it came from."], {}, A.norm),
+      note: bits.join("\n") +
+            "\n\nAll of it is counted out of dossier.json on this PC. Nothing is fetched and " +
+            "nothing is invented \u2014 when I do not know, I say I do not know.",
+      chips:[{ label:"Ask it again", act:{ kind:"rerun", intent:l.intent } },
+             { label:"That was the wrong question", act:{ kind:"teach", text:"" } }]
+    };
+  }
+});
+
+intent("decline", {
+  kind:"social", label:"No then",
+  /* only when it is the whole message \u2014 "no date on it" is not a refusal */
+  only(mw, norm, slots){
+    return mw.length <= 3 && !slots.record && !slots.system && !slots.person && !slots.party;
+  },
+  cues:{},
+  phrases:[["no",14],["nope",15],["nah",15],["no thanks",16],["no thank you",16],
+           ["not now",15],["not really",16],["not yet",15],["not quite",15],["dont",12],
+           ["do not",12],["leave it",13],["rather not",15],["id rather not",16],
+           ["maybe",13],["perhaps",12],["i guess",14],["i suppose",14],["not sure",15],
+           ["dunno",14],["no idea",14],["if you say so",15],["i doubt it",15],
+           ["hmm",12],["meh",13],["whatever",11],["kind of",13],["sort of",13],
+           ["fine",11],["alright then",13],["ok then",12],["not exactly",15]],
+  run(A){
+    const c = A.convo || {};
+    const hedging = /\b(?:maybe|perhaps|guess|suppose|not sure|dunno|no idea|kind of|sort of|hmm|meh|doubt)\b/
+      .test(A.norm);
+    /* a no to a question this thread actually asked is a real no */
+    if (c.awaiting && c.awaiting.intent && !hedging)
+      return { say: say(["Right, leaving it.", "Fine \u2014 dropped.", "Understood, not that then."], {}, A.norm),
+               clearContext:true };
+    if (hedging) return {
+      say: say(["Fair enough.", "Understood.", "Take your time."], {}, A.norm),
+      note:"If you are not sure what to ask, \u201canything I should know\u201d is usually the useful one.",
+      chips:[{ label:"Anything I should know", act:{ kind:"say", text:"anything i should know" } },
+             { label:"What should I do next", act:{ kind:"say", text:"what should i do next" } }]
+    };
+    return {
+      say: say(["Right.", "No then.", "Understood.", "Fine."], {}, A.norm),
+      chips:[{ label:"Something else", act:{ kind:"say", text:"what can you do" } }]
+    };
+  }
+});
+
+intent("hold", {
+  kind:"social", label:"Waiting",
+  /* "wait" on its own is a pause. "What am I waiting on" is work. */
+  only(mw, norm, slots){
+    return mw.length <= 4 && !slots.record && !slots.party && !slots.system && !slots.person;
+  },
+  cues:{},
+  phrases:[["wait",14],["hold on",16],["hang on",16],["hold up",15],["one moment",16],
+           ["a moment",15],["one second",16],["one sec",16],["just a sec",16],
+           ["give me a second",17],["give me a minute",17],["give me a moment",17],
+           ["let me think",17],["let me check",17],["let me look",16],["thinking",12],
+           ["stand by",15],["standby",15],["brb",15],["be right back",16],
+           ["bear with me",16],["two seconds",16],["just a minute",16],["wait a moment",17]],
+  run(A){
+    return { say: say(["Take your time.", "No rush.", "Here when you are.",
+                       "I will wait.", "Whenever you are ready."], {}, A.norm) };
+  }
+});
+
 intent("help", {
   kind:"read", label:"What can you do",
   cues:{ help:9, commands:8, capabilities:8, able:6, do:2, ask:4, understand:7, works:4 },
@@ -5413,11 +5749,82 @@ function teachKeys(raw, api){
   return { exact:norm, shape:tpl ? "~" + tpl : "", template:tpl };
 }
 
+/* ═══ WHAT PEOPLE PUT IN FRONT OF A QUESTION ═════════════════════════════════
+   "Right, show me imaging" came back "What would you like?" — it read the
+   agreement and threw the request away. So did "hi what is overdue", which
+   said good morning and never mentioned the nine overdue records.
+
+   Nobody opens their mouth with the question. They open with hello, or with
+   right, or with sorry, and then they ask. Two moves in one breath, and an
+   assistant that can only hear the first of them is one you learn to type
+   carefully at — which is the opposite of a conversation.
+
+   So the opener is peeled off and answered as an opener, and what is left is
+   answered as the question. Only when something is genuinely left: "ok" on
+   its own is still an answer, not a preamble to nothing. */
+
+const LEAD_IN = [
+  [/^(?:good morning|good afternoon|good evening|good day|hi there|hey there|hello there|hi|hey|hello|hiya|heya|yo|morning|afternoon|evening|greetings)\b[\s,.:;!?-]*/, "greet"],
+  [/^(?:ok then|okay then|alright then|right then|ok|okay|okey|alright|right|sure|yes|yeah|yep|yup|fine|cool|great|good|perfect|nice)\b[\s,.:;!?-]*/, "affirm"],
+  [/^(?:thanks a lot|thank you|thanks|thankyou|thx|cheers|ta)\b[\s,.:;!?-]*/, "thanks"],
+  [/^(?:i am sorry|im sorry|sorry|my bad|apologies|oops|whoops)\b[\s,.:;!?-]*/, "sorry"],
+  [/^(?:so|well|anyway|anyhow|now|then|hmm|hm|um|erm|er|actually|basically|listen|look)\b[\s,.:;!?-]*/, ""],
+  [/^(?:please|kindly|quickly|just)\b[\s,.:;!?-]*/, ""]
+];
+const HAS_CODE = /\b(?:d-?\s?\d{1,7}|[a-z]{2,6}\d{4,12})\b/;
+
+function readLeadIn(norm, lex){
+  let rest = String(norm || ""), kind = "", cuts = 0;
+  for (let pass = 0; pass < 3; pass++){
+    let cut = false;
+    for (const pair of LEAD_IN){
+      const m = rest.match(pair[0]);
+      if (!m || !m[0].trim()) continue;
+      const after = rest.slice(m[0].length).trim();
+      /* Something has to be left behind that could be a request on its own.
+         Two plain words will do, a record code will do, and so will a single
+         word behind a question or an instruction \u2014 "hey can you help me" is
+         only "help" once the greeting and the politeness are gone. */
+      if (meaningful(words(after)).length < 2 && !HAS_CODE.test(after) &&
+          !/^(?:can|could|would|will|shall|what|which|who|whose|when|where|why|how|is|are|am|do|does|did|have|has|show|give|tell|find|list|log|add|run|mark|open|go|any|anything|help)\b/.test(after) &&
+          !/^(?:and|also|then|but|plus|what about|how about)\b/.test(after) &&
+          !(lex && findTerms(words(after), lex, null, null).hits.length))
+        continue;
+      rest = after;
+      if (pair[1] && !kind) kind = pair[1];
+      cuts++; cut = true; break;
+    }
+    if (!cut) break;
+  }
+  return cuts ? { rest:rest, kind:kind } : null;
+}
+
+/* the acknowledgement that goes back in front of the answer, so peeling the
+   opener off does not make it curt */
+function leadWords(kind, norm, when){
+  if (kind === "greet")
+    return when === "morning" ? one(["Morning \u2014 ", "Good morning. ", "Morning. "], norm)
+         : when === "afternoon" ? one(["Afternoon \u2014 ", "Good afternoon. ", "Afternoon. "], norm)
+         : when === "evening" ? one(["Evening \u2014 ", "Good evening. ", "Evening. "], norm)
+         : one(["Hello \u2014 ", "Hello. ", "Still at it? "], norm);
+  if (kind === "thanks") return one(["Any time \u2014 ", "Glad it helped \u2014 ", "No trouble \u2014 "], norm);
+  if (kind === "sorry")  return one(["No need \u2014 ", "Nothing to apologise for \u2014 ", "That is fine \u2014 "], norm);
+  if (kind === "affirm") return one(["Right \u2014 ", "Sure \u2014 ", "Of course \u2014 ", "Yes \u2014 "], norm);
+  return "";
+}
+
 function ask(raw, api){
   const text = String(raw == null ? "" : raw).trim();
   if (!text) return blank("Ask me something. Type \"help\" for examples.", "help");
 
-  const norm = normalise(text);
+  const norm0 = normalise(text);
+  /* built here rather than below, because peeling an opener needs to know
+     whether what is left is one of your own system or people names \u2014
+     "right, policy?" is a follow-up, not an acknowledgement */
+  api.lex = lexiconFor(api);
+  /* hello-and-then-the-question: answer both halves rather than the first */
+  const lead = readLeadIn(norm0, api.lex);
+  const norm = lead ? lead.rest : norm0;
   const ws = words(norm);
   let mw = meaningful(ws);
   const firstVerb = mw[0] || "";
@@ -5429,7 +5836,6 @@ function ask(raw, api){
                  (/\b(what|which|who|when|where|why|how)\b/.test(norm) &&
                   !/^\s*(log|add|create|run|mark|close|chase|remind|undo|open|go|start|put|set)\b/.test(norm));
 
-  api.lex = lexiconFor(api);
   const slots = readSlots(norm, ws, api, text);
   /* words a modifier consumed have been understood; leaving them in the bag
      lets them vote for intents that have nothing to do with the question */
@@ -5462,7 +5868,7 @@ function ask(raw, api){
     }
   });
 
-  const A = { api, slots, ws, mw, norm, raw:text, asking, convo,
+  const A = { api, slots, ws, mw, norm, raw:text, asking, convo, lead:lead,
               phrase: api.phrase || (p => (p && p.k) || "") };
 
   /* "create a reminder … and also turn on the notifications" is two requests
@@ -5542,7 +5948,24 @@ function ask(raw, api){
     }
   }
 
-  return rank(A, norm, ws, mw, slots, asking, firstVerb, convo);
+  const answer = rank(A, norm, ws, mw, slots, asking, firstVerb, convo);
+
+  /* The opener turns out to have been the whole message. "Thanks, that is
+     what I needed" leaves "that is what I needed" behind, which means nothing
+     on its own \u2014 so peeling was the wrong call and the thanks was the point.
+     Rather than guess up front, guess late and check: if what is left does not
+     answer to anything, answer the opener instead. */
+  if (lead && lead.kind && (!answer.intent || (answer.confidence || 0) < 0.45)){
+    const it = INTENTS.find(x => x.name === lead.kind);
+    if (it){
+      const ws0 = words(norm0), mw0 = meaningful(ws0);
+      const A0 = { api, slots:readSlots(norm0, ws0, api, text), ws:ws0, mw:mw0,
+                   norm:norm0, raw:text, asking, convo,
+                   phrase: api.phrase || (p => (p && p.k) || "") };
+      return finish(it, A0, 0.9, []);
+    }
+  }
+  return answer;
 }
 
 /* score one request and answer it — the ordinary path, and what each half of
@@ -5647,6 +6070,25 @@ function finish(it, A, confidence, altIntents, learned, followed){
   }
   out.context.seen = Object.assign({}, (A.convo && A.convo.seen) || {});
   if (typeof out.count === "number") out.context.seen[it.name] = out.count;
+
+  /* Where the last answer came from, kept so the next turn can be asked
+     about it. "Are you sure?" and "how do you know?" are ordinary things to
+     say to something that has just told you a number, and until now there
+     was no way to answer them: nothing survived the turn except the name of
+     the intent. An intent that talks ABOUT the last answer keeps it rather
+     than replacing it, or the second "are you sure" would be about the
+     first one. */
+  out.context.last = (out.keepLast || it.keepLast)
+    ? ((A.convo && A.convo.last) || null)
+    : { intent:it.name, label:it.label,
+        count: (typeof out.count === "number") ? out.count : null,
+        confidence: confidence, learned: !!learned,
+        taught: (out.taught && out.taught.how) || "",
+        filters: slotWords(A.slots).trim(),
+        applied: out.applied || "",
+        rows: (out.rows || []).length,
+        kind: it.kind,
+        say: String(out.say || "").slice(0, 170) };
   /* "Is anything overdue?" was answered "3 records are overdue" — true, and
      not what was asked. Anything that reports a count can answer the question
      that was actually put, and then go on. */
@@ -5664,6 +6106,18 @@ function finish(it, A, confidence, altIntents, learned, followed){
       : one(["No — ", "No, ", "Not quite — "], A.norm + out.count);
     out.say = lead + lower(out.say);
   }
+
+  /* An opener that was peeled off at the top is answered here, in front of
+     whatever the rest of the sentence turned out to mean. "Hi what is
+     overdue" gets a good morning AND the nine records. */
+  if (A.lead && A.lead.kind && out.say && !out.steps){
+    const pre = leadWords(A.lead.kind, A.norm, partOfDay(new Date()));
+    if (pre && !(A.lead.kind === "greet" && A.convo && A.convo.greeted)){
+      out.say = pre + lower(out.say);
+      if (A.lead.kind === "greet") out.greeted = true;
+    }
+  }
+  if (out.greeted) out.context.greeted = true;
 
   /* Contractions go on the sentence, never on the note. The note carries
      checklists and quoted system messages — "the service did not respond to
