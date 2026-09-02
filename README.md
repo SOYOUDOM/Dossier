@@ -219,6 +219,7 @@ assist.js                     the Assist tab — what it notices on its own
 chat.js                       the assistant — what it understands and answers
 brain.js                      optional: the local model, for the questions chat.js misreads
 model/check.html              open this to see whether your PC can run one
+model/run.html                the only page allowed to touch the network
 dossier.json                  every record, routine, script and setting
 fonts/
   NotoSansKhmer-Khmer-*.woff2 the bundled Khmer face, also embedded in the HTML
@@ -350,12 +351,32 @@ timeout — if it hangs, is loading, or the file is missing, you get exactly
 what you got before. It cannot run without being asked: nothing downloads
 until you switch it on. And it cannot see anything but the sentence you typed.
 
-**On the download.** This is the only part of Dossier that touches the
-internet. Switching it on fetches the runtime and the model once from a public
-CDN — the recommended one is about 380 MB — and caches it in the browser. Every
-run after that is offline. Your records are never sent anywhere: the model
-runs on your own graphics chip, inside the tab. If that one download is not
-acceptable on your machine, leave it off; nothing else changes.
+**On the download, and where it is allowed to happen.** `dossier.html` has
+carried this since long before there was a model:
+
+```html
+<meta http-equiv="Content-Security-Policy"
+      content="connect-src 'none'; form-action 'none'">
+```
+
+The application cannot open a connection to anywhere. Not a leak, not a
+mistake, not a library that decided to phone home — the browser refuses before
+the request is made. That line is what makes *nothing leaves this folder*
+checkable rather than merely claimed, and it is why the first version of this
+feature was blocked by Dossier itself, which was the correct outcome.
+
+Deleting the line would have fixed it and weakened the guarantee for everyone,
+including everyone who never turns the model on. So instead the model runs
+**somewhere else**: `model/run.html`, in a hidden frame, with a policy of its
+own that permits the library CDN and Hugging Face and nothing else. It holds no
+records, has no access to `dossier.json` or your workspace folder, and is
+handed one sentence and a list of labels. `dossier.html` is untouched and
+still cannot make a network call — with the model off *and* with it on.
+
+The frame appears when you switch the model on and is destroyed when you switch
+it off. The download is once, about 380 MB for the recommended model, cached in
+the browser; every run after that is offline. If that one download is not
+acceptable on your machine, leave it off and nothing else changes.
 
 **Which model.** The picker is filled from what the library actually offers,
 and the default is the smallest instruction-following one. That is deliberate,

@@ -33,16 +33,31 @@
    the question it was needed for is answered instantly the next time. The
    model is a teacher for chat.js rather than a dependency of it.
 
-   ── on the download ────────────────────────────────────────────────────────
-   Dossier has never made a network call. This file does, once: the first time
-   you switch it on it fetches the runtime and the model weights from a public
-   CDN — a few hundred megabytes — and caches them in the browser's storage.
-   Every run after that is offline. Nothing about your records is ever sent
-   anywhere: the model runs on your own GPU, inside the tab, and the only
-   thing that leaves is the request for the weights themselves.
+   ── on the download, and where it is allowed to happen ─────────────────────
+   dossier.html has carried this since long before there was a model:
 
-   That is a real change to what Dossier is, so nothing here happens until you
-   turn it on, and the switch says the size before it starts.
+       <meta http-equiv="Content-Security-Policy"
+             content="connect-src 'none'; form-action 'none'">
+
+   The application cannot open a connection to anywhere. Not a leak, not a
+   mistake, not a library that decided to phone home — the browser refuses
+   before the request is made. That line is what makes "nothing leaves this
+   folder" checkable rather than merely claimed.
+
+   A downloaded model needs the network, and the first version of this file
+   ignored that and was blocked by Dossier's own policy, which was the correct
+   outcome. Deleting the line would have fixed it and weakened the guarantee
+   for everyone, including everyone who never turns the model on.
+
+   So nothing here fetches anything. This file drives model/run.html in a
+   hidden frame, and that page — which holds no records, and can reach the
+   library CDN and Hugging Face and nowhere else — does the downloading. The
+   policy on dossier.html is untouched and still true: with the model off AND
+   with it on, the application itself cannot make a network call.
+
+   The frame is created when you switch the model on and destroyed when you
+   switch it off. What crosses between them is a sentence and a list of
+   question labels going out, and a number coming back.
 
    ── if this file is missing ────────────────────────────────────────────────
    Everything else works exactly as before. That is the point of it being a
@@ -85,8 +100,83 @@ const S = {
 };
 
 let engine = null;      /* what actually runs the model */
-let webllm = null;      /* the library, once imported */
 let loading = null;     /* the in-flight load, so two switches do not race */
+
+/* ── the frame that is allowed to reach the network ─────────────────────── */
+
+let FRAME_SRC = "model/run.html";
+let frame = null, frameReady = null, msgId = 0;
+const waiting = {};      /* id → { resolve, reject } */
+let onFrameProgress = null;
+
+function listen(){
+  if (listen.on) return;
+  listen.on = true;
+  window.addEventListener("message", e => {
+    const m = e.data;
+    if (!m || m.__dossier !== 1) return;
+    if (!frame || e.source !== frame.contentWindow) return;
+    if (m.evt === "up"){ if (frameReady) frameReady.go(); return; }
+    if (m.evt === "progress"){
+      S.progress = Math.max(0, Math.min(1, m.progress || 0));
+      S.message = m.text || S.message;
+      if (onFrameProgress) onFrameProgress();
+      return;
+    }
+    const w = waiting[m.id];
+    if (!w) return;
+    delete waiting[m.id];
+    if (m.ok) w.resolve(m.result); else w.reject(new Error(m.error || "failed"));
+  });
+}
+
+/* Put the frame up and wait for it to say hello. A missing run.html is the
+   commonest way this goes wrong, and it is silent — the frame simply never
+   speaks — so it is given a deadline and a sentence saying where to look. */
+function openFrame(){
+  if (frameReady && frame) return frameReady.p;
+  listen();
+  frame = document.createElement("iframe");
+  frame.setAttribute("aria-hidden", "true");
+  frame.setAttribute("title", "Dossier model runner");
+  frame.style.cssText = "position:absolute;width:1px;height:1px;left:-9999px;top:0;border:0";
+  let go, fail;
+  const p = new Promise((res, rej) => { go = res; fail = rej; });
+  frameReady = { p:p, go:go };
+  const timer = setTimeout(() => fail(new Error(
+    "model/run.html did not answer. It has to sit in a model folder next to " +
+    "dossier.html, and Dossier has to be opened through dossier-serve.bat " +
+    "rather than from the folder.")), 10000);
+  p.then(() => clearTimeout(timer), () => clearTimeout(timer));
+  frame.src = FRAME_SRC;
+  document.body.appendChild(frame);
+  return p;
+}
+
+function closeFrame(){
+  Object.keys(waiting).forEach(k => {
+    try { waiting[k].reject(new Error("stopped")); } catch(e){}
+    delete waiting[k];
+  });
+  if (frame && frame.parentNode) frame.parentNode.removeChild(frame);
+  frame = null; frameReady = null;
+}
+
+function send(cmd, extra, ms){
+  return new Promise((resolve, reject) => {
+    if (!frame || !frame.contentWindow) return reject(new Error("the model runner is not up"));
+    const id = ++msgId;
+    waiting[id] = { resolve, reject };
+    const timer = setTimeout(() => {
+      if (waiting[id]){ delete waiting[id]; reject(new Error("the model runner did not answer")); }
+    }, ms || 0);
+    if (!ms) clearTimeout(timer);
+    try {
+      frame.contentWindow.postMessage(
+        Object.assign({ __dossier:1, id:id, cmd:cmd }, extra || {}), "*");
+    } catch(e){ delete waiting[id]; reject(e); }
+  });
+}
 
 /* ── can this browser do it at all ──────────────────────────────────────── */
 
@@ -145,16 +235,15 @@ function pick(list, prefer){
 /* What the library offers, so the picker shows real names rather than the
    ones this file happened to be written against. */
 async function catalogue(libUrl){
-  if (!webllm) webllm = await import(libUrl || DEFAULT_LIB);
-  const list = (webllm.prebuiltAppConfig && webllm.prebuiltAppConfig.model_list) || [];
+  await openFrame();
+  const list = await send("catalogue", { lib: libUrl || DEFAULT_LIB });
   const known = {};
   WANT.forEach(w => known[w.id] = w);
-  return list.map(m => ({
-    id: m.model_id,
-    mb: known[m.model_id] ? known[m.model_id].mb
-        : (m.vram_required_MB ? Math.round(m.vram_required_MB) : 0),
-    note: known[m.model_id] ? known[m.model_id].note : "",
-    preferred: !!known[m.model_id]
+  return (list || []).map(m => ({
+    id: m.id,
+    mb: known[m.id] ? known[m.id].mb : (m.mb || 0),
+    note: known[m.id] ? known[m.id].note : "",
+    preferred: !!known[m.id]
   }));
 }
 
@@ -171,40 +260,33 @@ async function load(opts){
 
   loading = (async () => {
     try {
-      if (!webllm){
-        S.message = "fetching the runtime";
-        note(opts.onProgress);
-        webllm = await import(opts.lib || DEFAULT_LIB);
-      }
-      const list = (webllm.prebuiltAppConfig && webllm.prebuiltAppConfig.model_list) || [];
-      const id = pick(list, opts.model);
+      const lib = opts.lib || DEFAULT_LIB;
+      S.message = "starting the runner";
+      note(opts.onProgress);
+      onFrameProgress = () => note(opts.onProgress);
+      await openFrame();
+
+      S.message = "fetching the runtime";
+      note(opts.onProgress);
+      const list = await send("catalogue", { lib:lib });
+      const id = pick((list || []).map(m => ({ model_id:m.id })), opts.model);
       if (!id) throw new Error("That library offers no model this file recognises. " +
                                "Pick one by name in Setup.");
       S.model = id;
       S.message = "downloading " + id;
       note(opts.onProgress);
 
-      const mk = webllm.CreateMLCEngine || webllm.CreateEngine;
-      if (typeof mk !== "function")
-        throw new Error("This version of web-llm has no CreateMLCEngine. " +
-                        "Pin a different version in Setup.");
+      await send("load", { lib:lib, model:id });
 
-      engine = await mk(id, {
-        initProgressCallback: r => {
-          /* r.progress is 0..1, r.text is what it is doing */
-          S.progress = Math.max(0, Math.min(1, (r && r.progress) || 0));
-          S.message = (r && r.text) || S.message;
-          note(opts.onProgress);
-        }
-      });
+      /* What the rest of this file talks to. It has the shape the runtime
+         has, so nothing above here knows or cares that the model is on the
+         other side of a frame. */
+      engine = { chat: { completions: { create: o => send("chat", { opts:o })
+        .then(r => ({ choices:[{ message:{ content:(r && r.text) || "" } }] })) } } };
 
       S.status = "ready"; S.progress = 1; S.loadedAt = Date.now();
       S.message = "ready";
       note(opts.onProgress);
-      /* ask the browser to keep the cache rather than evicting it the next
-         time the disk gets tight — a 400 MB download twice is nobody's idea
-         of local */
-      try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch(e){}
       return engine;
     } catch (e){
       S.status = "failed";
@@ -220,7 +302,9 @@ async function load(opts){
 }
 
 async function unload(){
-  try { if (engine && engine.unload) await engine.unload(); } catch(e){}
+  try { if (frame) await send("unload", {}, 4000); } catch(e){}
+  closeFrame();
+  onFrameProgress = null;
   engine = null;
   S.status = "off"; S.progress = 0; S.message = ""; S.error = "";
   return true;
@@ -332,6 +416,10 @@ window.DossierBrain = {
   guess: guess,
   /* for the test harness, and for anyone swapping the runtime */
   _useEngine: useEngine,
+  /* brings the frame up and asks it to say hello — proves the plumbing
+     without downloading anything */
+  _frameTest: async () => { await openFrame(); return await send("ping", {}, 5000); },
+  _frameSrc: v => { if (v != null) FRAME_SRC = v; return FRAME_SRC; },
   _buildPrompt: buildPrompt,
   _readNumber: readNumber
 };
