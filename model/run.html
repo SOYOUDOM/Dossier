@@ -74,7 +74,7 @@
    shows it, because "I replaced the file" and "the browser is running the
    file I replaced" are different claims and only one of them is checkable
    from the outside. A stale copy in an iframe is invisible otherwise. */
-const RUN_VERSION = "1.4";
+const RUN_VERSION = "1.5";
 
 let webllm = null;
 let engine = null;
@@ -106,24 +106,104 @@ function post(msg){
    models/index.json is the whole of the arrangement — a list saying what is
    present and where. No file, no local model, and it falls back to the CDN. */
 
-let localCfg = null, localChecked = false;
+let localCfg = null, localChecked = false, localErr = null;
+
+/* Read the first few bytes of a file. Used to prove a file is really there,
+   and to catch the one failure that looks like success: a repository cloned
+   without git-lfs leaves a 130-byte text stub in place of every large file,
+   so the wasm and the weight shards are present, named correctly, and
+   entirely useless. */
+const LFS = /^version https:\/\/git-lfs/;
+
+async function peek(url){
+  try {
+    const r = await fetch(url, { cache:"no-store", headers:{ Range:"bytes=0-255" } });
+    if (!r.ok && r.status !== 206) return null;
+    let text = "";
+    try { text = (await r.clone().text()).slice(0, 256); } catch(e){}
+    return { text:text };
+  } catch(e){ return null; }
+}
+
+function baseOf(u){ return String(u).replace(/\/+$/, "").split("/").pop(); }
+
+/* Where index.json says a file is, and where else it might reasonably be.
+   The instructions say model/models/lib/x.wasm and the obvious place to put
+   it is model/lib/x.wasm; both are right, and neither should be a dead end.
+   The written path is tried first, so a correct index.json costs one fetch. */
+async function locate(what, written, alts){
+  const tried = [];
+  for (const u of [written].concat(alts || [])){
+    if (!u || tried.indexOf(u) >= 0) continue;
+    tried.push(u);
+    const r = await peek(u);
+    if (!r) continue;
+    if (LFS.test(r.text.trim()))
+      throw new Error(what + " at " + u + " is a git-lfs pointer, not the file. The clone was " +
+        "made without git-lfs, so every large file is a 130-byte stub. Run “git lfs install” " +
+        "and clone again, or download the files from the web page rather than with git.");
+    if (u !== written) log("  ✓ " + what + ": found at " + u);
+    return u;
+  }
+  throw new Error(what + " is not where index.json says it is. Tried: " + tried.join(", ") +
+    " — all missing. Check the spelling of the path in model/models/index.json against " +
+    "the folder, and that this page is being served over http rather than opened as a file.");
+}
+
+/* One entry of index.json, checked against the disk and corrected if needed */
+async function resolveOne(m){
+  const libW  = String(m.model_lib);
+  const libAt = await locate("the model library", libW,
+    ["lib/", "models/lib/", "", String(m.model).replace(/\/+$/, "") + "/"]
+      .map(p => p + baseOf(libW)));
+
+  const dirW = String(m.model).replace(/\/+$/, "");
+  const cfg  = await locate("the weights", dirW + "/mlc-chat-config.json",
+    ["models/" + baseOf(dirW), baseOf(dirW), "models/models/" + baseOf(dirW)]
+      .map(d => d + "/mlc-chat-config.json"));
+  const dirAt = cfg.replace(/\/mlc-chat-config\.json$/, "");
+
+  /* the shards are the part git-lfs ruins; the config file is small enough
+     that it is usually stored intact even in a broken clone */
+  const shard = await peek(dirAt + "/params_shard_0.bin");
+  if (shard && LFS.test(shard.text.trim()))
+    throw new Error("the weight files in " + dirAt + " are git-lfs pointers rather than weights. " +
+      "Run “git lfs install” and clone again, or download the files from the web page.");
+
+  return Object.assign({}, m, { model:dirAt, model_lib:libAt });
+}
 
 async function findLocal(){
   if (localChecked) return localCfg;
   localChecked = true;
+  let models;
   try {
     const r = await fetch("models/index.json", { cache:"no-store" });
     if (!r.ok) return null;
     const list = await r.json();
-    const models = (Array.isArray(list) ? list : list.model_list || [])
+    models = (Array.isArray(list) ? list : list.model_list || [])
       .filter(m => m && m.model_id && m.model && m.model_lib);
-    if (!models.length) return null;
+  } catch(e){ return null; }
+  if (!models || !models.length) return null;
+
+  /* index.json exists, so the folder is meant to be used. From here a
+     problem is reported rather than quietly swapped for a download that
+     this network has already refused twice. */
+  log("models/index.json lists " + models.length + " model" + (models.length > 1 ? "s" : ""));
+  try {
+    const fixed = [];
+    for (const m of models) fixed.push(await resolveOne(m));
     /* URLs are written relative to this page; web-llm wants absolute ones */
     const abs = u => new URL(u, location.href).href;
-    localCfg = { model_list: models.map(m => Object.assign({}, m, {
+    localCfg = { model_list: fixed.map(m => Object.assign({}, m, {
       model: abs(m.model), model_lib: abs(m.model_lib) })) };
+    log("  ✓ the folder is complete — nothing will be downloaded");
     return localCfg;
-  } catch(e){ return null; }
+  } catch(e){
+    localErr = e;
+    log("  ✗ " + e.message);
+    return null;
+  }
 }
 
 /* the library, local copy first */
@@ -210,6 +290,17 @@ async function preflight(cfg, model){
 
 async function doLoad(libUrl, model, host){
   const local = await findLocal();
+  /* a folder that is present but wrong is a fault to report, not a reason to
+     start a download this network has already refused */
+  if (!local && localErr) throw localErr;
+  /* the folder wins over the dropdown. Whoever went to the trouble of putting
+     a model on the disk meant that one, and the picker still remembering some
+     other name is not a reason to refuse to start. */
+  if (local && !local.model_list.some(m => m.model_id === model)){
+    const only = local.model_list[0].model_id;
+    log("  the folder holds " + only + ", not " + model + " \u2014 using the folder");
+    model = only;
+  }
   await lib(libUrl);
   const mk = webllm.CreateMLCEngine || webllm.CreateEngine;
   if (typeof mk !== "function")

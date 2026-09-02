@@ -67,7 +67,7 @@
 (function(){
 "use strict";
 
-const VERSION = "1.4";
+const VERSION = "1.5";
 
 /* The library, pinned. Editable in Setup, because a version that has moved on
    should be something you can fix without opening a text editor. */

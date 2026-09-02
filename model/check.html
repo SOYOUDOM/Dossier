@@ -307,25 +307,80 @@ function gb(n){ return n == null ? "unknown" : (n/1073741824).toFixed(2) + " GB"
     }
   }
 
-  /* the model sitting in the folder, which needs no network whatever */
-  R.localModel = null;
+  /* the model sitting in the folder, which needs no network whatever.
+     index.json existing is not the same as the model being there, so each
+     file it names is asked for — including the two ways an install goes
+     wrong quietly: a file one folder away from where the manifest says, and
+     a clone made without git-lfs, where every large file is a text stub. */
+  R.localModel = null; R.localFiles = null;
+  const LFSPTR = /^version https:\/\/git-lfs/;
+  async function peek(u){
+    try {
+      const r = await fetch(u, { cache:"no-store", headers:{ Range:"bytes=0-255" } });
+      if (!r.ok && r.status !== 206) return null;
+      let t = ""; try { t = (await r.text()).slice(0, 256); } catch(e){}
+      return { lfs: LFSPTR.test(t.trim()) };
+    } catch(e){ return null; }
+  }
+  const baseOf = u => String(u).replace(/\/+$/, "").split("/").pop();
+  async function firstOf(list){
+    for (const u of list){ const r = await peek(u); if (r) return { at:u, lfs:r.lfs }; }
+    return null;
+  }
   try {
     const r = await fetch("models/index.json", { cache:"no-store" });
     if (r.ok){
       const j = await r.json();
       const list = (Array.isArray(j) ? j : j.model_list || []).filter(m => m && m.model_id);
-      if (list.length) R.localModel = list.map(m => m.model_id);
+      if (list.length){
+        R.localModel = list.map(m => m.model_id);
+        R.localFiles = [];
+        for (const m of list){
+          const lw = String(m.model_lib || ""), dw = String(m.model || "").replace(/\/+$/, "");
+          const lib = lw ? await firstOf([lw, "lib/" + baseOf(lw), "models/lib/" + baseOf(lw),
+                                          baseOf(lw), dw + "/" + baseOf(lw)]) : null;
+          const cfg = dw ? await firstOf([dw + "/mlc-chat-config.json",
+                                          "models/" + baseOf(dw) + "/mlc-chat-config.json",
+                                          baseOf(dw) + "/mlc-chat-config.json"]) : null;
+          const dir = cfg ? cfg.at.replace(/\/mlc-chat-config\.json$/, "") : null;
+          const shard = dir ? await peek(dir + "/params_shard_0.bin") : null;
+          R.localFiles.push({ id:m.model_id, lib:lib && lib.at, weights:dir,
+            libStub: !!(lib && lib.lfs), weightStub: !!(shard && shard.lfs),
+            libMoved: !!(lib && lib.at !== lw), weightsMoved: !!(dir && dir !== dw) });
+        }
+      }
     }
   } catch(e){}
   R.localLib = false;
   try { const r = await fetch("web-llm.js", { method:"HEAD", cache:"no-store" }); R.localLib = r.ok; } catch(e){}
   row("net", "Model in the folder",
-      R.localModel ? R.localModel.join(", ") + " \u2014 no internet needed"
-                   : "none \u2014 it would be downloaded",
+      R.localModel ? R.localModel.join(", ") + " — no internet needed"
+                   : "none — it would be downloaded",
       R.localModel ? "ok" : "");
+  (R.localFiles || []).forEach(f => {
+    const missing = [];
+    if (!f.lib) missing.push("the model library (.wasm)");
+    if (!f.weights) missing.push("the weights folder");
+    if (missing.length)
+      row("net", "Files for " + f.id,
+          missing.join(" and ") + " could not be found at any of the usual paths — " +
+          "index.json names a place that is not there", "bad");
+    else if (f.libStub || f.weightStub)
+      row("net", "Files for " + f.id,
+          "present but they are git-lfs pointers, not the files. Run “git lfs install” and " +
+          "clone again, or download them from the web page instead of with git.", "bad");
+    else if (f.libMoved || f.weightsMoved)
+      row("net", "Files for " + f.id,
+          "all there. They are not where index.json says (" +
+          [f.libMoved ? "library at " + f.lib : null,
+           f.weightsMoved ? "weights at " + f.weights : null].filter(Boolean).join(", ") +
+          "), which Dossier corrects for.", "warn");
+    else
+      row("net", "Files for " + f.id, "library and weights both present and readable", "ok");
+  });
   if (R.localModel)
     row("net", "Runtime in the folder", R.localLib ? "web-llm.js is there" :
-        "web-llm.js is NOT there \u2014 the runtime would still be downloaded", R.localLib ? "ok" : "warn");
+        "web-llm.js is NOT there — the runtime would still be downloaded", R.localLib ? "ok" : "warn");
 
   /* the hosts the model actually comes from */
   R.reach = {};
