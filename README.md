@@ -1,687 +1,1504 @@
 # Dossier
 
-A support operations record. One HTML file, no install, no server, no network.
-Everything you log lives in a folder you choose, as plain JSON and ordinary
-files you can read without this app.
+**A support-operations record that runs as one HTML file, with no install, no
+server and no network.** Everything it knows lives in a folder you choose, as
+plain JSON and ordinary files that stay readable without this app.
 
-**This repository folder is itself a ready-to-use workspace.** Clone it, open
-`dossier.html`, point it at this folder, and there is already work on the
-sheet, a routine that runs a script by itself, and the scripts to go with it.
+It was built for one job: an application-support engineer's day — incidents,
+service requests, changes, the scripts you run against them, the people you
+are waiting on, and the question *what should I be doing right now*.
+
+This README is the complete reference. It is written to be read end to end by
+a person **or by an automation agent** that has to drive Dossier's files from
+outside — every schema, every enumeration, every on-disk protocol and every
+invariant is stated in full, with no "see the code" hand-waving.
+[Automating Dossier from outside](#15-automating-dossier-from-outside) is the
+section to start from if you are wiring this into Power Automate, a scheduled
+job, or a script.
 
 ---
 
-## Run it
+## Table of contents
+
+| # | Section |
+|---|---|
+| 1 | [The rules that never bend](#1-the-rules-that-never-bend) |
+| 2 | [Quick start](#2-quick-start) |
+| 3 | [What is in this repository](#3-what-is-in-this-repository) |
+| 4 | [The workspace on disk](#4-the-workspace-on-disk) |
+| 5 | [`dossier.json` — the complete schema](#5-dossierjson--the-complete-schema) |
+| 6 | [The application surface](#6-the-application-surface) |
+| 7 | [How a record behaves](#7-how-a-record-behaves) |
+| 8 | [Routines, schedules and cron](#8-routines-schedules-and-cron) |
+| 9 | [Scripts and the runner](#9-scripts-and-the-runner) |
+| 10 | [The assistant (`chat.js`)](#10-the-assistant-chatjs) |
+| 11 | [Assist (`assist.js`)](#11-assist-assistjs) |
+| 12 | [The optional local model](#12-the-optional-local-model) |
+| 13 | [Languages](#13-languages) |
+| 14 | [Privacy and safety](#14-privacy-and-safety) |
+| 15 | [Automating Dossier from outside](#15-automating-dossier-from-outside) |
+| 16 | [Testing and measured numbers](#16-testing-and-measured-numbers) |
+| 17 | [Known limits](#17-known-limits) |
+| 18 | [Glossary](#18-glossary) |
+
+---
+
+## 1. The rules that never bend
+
+These are design invariants, not preferences. Anything built on top of Dossier
+— including an automation agent — should preserve them.
+
+| # | Rule | Enforced by |
+|---|---|---|
+| 1 | **`dossier.html` cannot reach the network.** Not fetch, not XHR, not WebSocket, not a form post. | A `Content-Security-Policy` meta tag: `connect-src 'none'; form-action 'none'`. The browser enforces it; you can verify it in F12 → Network. |
+| 2 | **Your records never leave the folder.** No telemetry, no sync, no account, no cloud. | Rule 1, plus there is no server component at all. |
+| 3 | **The data outlives the app.** `dossier.json` is human-readable JSON; attachments are the original files in ordinary folders. | The save format is plain, indented JSON. |
+| 4 | **Nothing is written while you ask a question.** Reading is read-only, down to not creating an empty object in settings. | `chatApi()` builds its view without mutating state. |
+| 5 | **Anything that writes asks first.** Log, close, hand over, chase, run, remind — each is proposed and confirmed, whether it arrived as a sentence or a button. | `chatDo()` refuses `act.confirm` unless the action carries `__ok`. |
+| 6 | **The optional local model never writes the words you read.** It only returns a *number* choosing between candidate readings that Dossier itself generated. | `brain.js` `readNumber()` — anything that is not an in-range integer becomes "I don't know". |
+| 7 | **The runner only ever runs a file already in `scripts\`.** A name containing `\`, `/`, `:` or `..` is refused. | `dossier-runner.bat`, before it executes anything. |
+| 8 | **A promise Dossier cannot keep is said out loud.** If a routine is set to run itself and no runner is listening, the Day sheet says so rather than failing silently. | The runner heartbeat, `.runner.txt`. |
+
+---
+
+## 2. Quick start
+
+**This repository folder is itself a ready-to-use workspace.** There is
+already work on the sheet, a routine that runs a script by itself, and the
+scripts to go with it.
 
 ```
 git clone https://github.com/SOYOUDOM/Dossier
 ```
 
-1. **Open `dossier.html`** in Microsoft Edge or Chrome — double-click it.
+1. **Open `dossier.html`** in Microsoft Edge or Google Chrome — double-click it.
 2. Click **Choose workspace folder…** in the banner and pick **this repository
    folder** (the one holding `dossier.html`). Allow "Edit files" when asked.
 
-That is the whole setup. You should see:
+That is the entire setup. You should immediately see:
 
 - records on the **Day** tab, including today's **Morning tour**
-- **Menu → Routines** — *Morning tour*, every day 08:30, `$open-morning-tabs`, **runs itself**
-- **Menu → Scripts** — three files, already registered
-- **Insight** — a recurring problem, with the case written for you
+- **Menu → Routines** — *Morning tour*, every weekday 08:30, running
+  `open-morning-tabs`, marked **runs itself**
+- **Menu → Scripts** — the scripts, already registered
+- **Insight** — a recurring problem, with the case already written
 
-> Firefox and Safari cannot open a folder, so Dossier can only show demo data
-> there. Use Edge or Chrome.
+> **Browser support.** Dossier needs the File System Access API
+> (`window.showDirectoryPicker`), which today means **Edge or Chrome on
+> desktop**. Firefox and Safari can open the page but cannot open a folder, so
+> they only ever show demo data.
 
----
-
-## Make the scripts actually run
-
-> **No PowerShell required.** The runner is `scripts\dossier-runner.bat`.
-> Everything between Dossier and it is plain text, one value a line — a batch
-> file reads that with `set /p` and writes it with `echo`, and never has to
-> parse or escape JSON.
->
-> Because a `.bat` cannot read your routines out of `dossier.json`, **Dossier
-> queues its own scheduled runs** and the runner just runs what it is handed.
-> The cost is honest: with the tab closed nothing is queued. For something
-> that must fire regardless, point Windows Task Scheduler straight at your
-> `.bat` — it needs nothing from Dossier.
-
-
-A page in a browser cannot start a program. So Dossier writes a request to a
-file, and a small PowerShell process of yours picks it up, runs the script, and
-writes the output back — which lands in the record's work log.
-
-**Double-click `scripts\dossier-runner.ps1`.** A window opens:
-
-```
-Dossier runner watching C:\...\Dossier\scripts\queue
-and the routines in C:\...\Dossier\dossier.json
-```
-
-**Dossier tells you whether it is actually there.** The runner writes a
-heartbeat every ten seconds, and the footer shows `runner on` or `runner off`
-at all times. If a routine is set to run itself and nothing is listening, the
-Day sheet says so outright instead of leaving you to wonder:
-
-> ⚠ Nothing is running your scripts. A routine set to **run itself** will raise
-> its record on time and then do nothing, because the runner is not started.
-
-The heartbeat also carries the folder the runner is watching, so the worst case
-— a runner alive but pointed at a *different copy* of the workspace, which no
-amount of restarting fixes — is named directly rather than looking like a dead
-runner. Put your workspace path in **Menu → Scripts → Folder path** to catch
-that even when both copies have the same folder name.
-
-Leave it open. If Windows blocks it, right-click → *Run with PowerShell*, or:
-
-```
-powershell -ExecutionPolicy Bypass -File .\scripts\dossier-runner.ps1
-```
-
-Now press the **`$`** button on any record carrying a script — **D-0004** has
-`restart-app-pool` with its parameters already filled, **D-0007** has
-`open-morning-tabs`. It runs, and the output appears in that record's work log.
-
-The runner looks **once a second** — at the queue and at your routines both —
-so `$` and **Run now** start the script straight away, and a routine fires on
-its minute. There is no interval to wait out anywhere.
-
-It can afford to look that often because a pass is only a handful of file
-stats. Parsing `dossier.json` is the one thing here that gets slower as your
-work piles up — at 20 records a day it is a few megabytes within a year — so
-the runner compares its modified-time instead and parses only when you have
-actually saved something.
-
-Three things keep it out of trouble:
-
-- **One runner per folder.** Starting a second by accident — a double-click on
-  top of the logon task — is refused, so a script cannot run twice. A different
-  workspace still gets its own runner.
-- **A stuck script is stopped after five minutes** (`-TimeoutSeconds`) instead
-  of freezing the queue and every routine behind it.
-- **A request is taken before it is run**, so killing the runner mid-script
-  cannot make it run again on restart.
-
-`-PollSeconds` (300) is only a long-stop re-read for folders whose
-modified-time cannot be trusted, such as OneDrive or a network share. On a
-normal local disk it never does anything useful.
-
-To start the runner at every logon: put this folder's full path into
-**Menu → Scripts → Folder path**, then
-**Menu → Setup → Running a script → Copy the schtasks line** and run it once.
+> **Windows notifications need `http://`.** Chrome and Edge refuse the
+> Notification API on `file://` with no way to allow it. Double-click
+> `scripts\dossier-serve.bat` to serve the same folder from
+> `http://127.0.0.1:5500` — nothing else changes. It uses whichever of Python,
+> Node or PHP it finds first.
 
 ---
 
-## Schedules
+## 3. What is in this repository
 
-**Menu → Routines** is a schedule editor, not a task form. A schedule is a
-different thing from a record: it repeats, it can carry a message, and it does
-not have a status or a due date of its own.
+| File | Size | Required? | What it is |
+|---|---|---|---|
+| `dossier.html` | ~670 KB | **yes** | The whole application: markup, styles, and all of the logic. Open it directly. |
+| `chat.js` | ~360 KB | optional | The assistant — plain-English questions about your own records. Without it, the Ask box says so and everything else works. |
+| `assist.js` | ~20 KB | optional | The ranking and briefing engine behind the **Assist** tab and the Insight cards. |
+| `brain.js` | ~21 KB | optional | Client for the optional local language model. Drives `model/run.html` in a sandboxed iframe. |
+| `model/run.html` | ~18 KB | optional | The *only* page allowed to touch the network. Loads and runs the model; holds no records. |
+| `model/check.html` | ~35 KB | optional | A diagnostic: can this PC run a model, and can it reach the files? |
+| `dossier.json` | ~15 KB | — | The demo workspace: 7 records, 2 routines, 4 scripts, settings, Cambodian holidays. |
+| `lang/en.xml` | ~175 KB | optional | Every interface phrase in English — 1,343 entries. |
+| `lang/km.xml` | ~125 KB | optional | The same 1,343 keys, **values empty**: a translation template for Khmer. |
+| `fonts/NotoSansKhmer-*.woff2` | ~33 KB | optional | Bundled Khmer typeface, so Khmer renders without fetching a webfont. `OFL.txt` is its licence. |
+| `scripts/dossier-runner.bat` | 3.4 KB | optional | The runner. Executes what Dossier queues. No PowerShell anywhere. |
+| `scripts/dossier-serve.bat` | 6.5 KB | optional | Serves the folder over `http://127.0.0.1` so notifications work. |
+| `scripts/open-morning-tabs.bat` | 1.8 KB | demo | Opens the tabs you start the day with, once a day. |
+| `scripts/restart-app-pool.bat` | 1.4 KB | demo | A **parameter template** — the `{{server}}` / `{{pool}}` marks become boxes in Dossier. |
+| `scripts/queue/` | — | required for the runner | The mailbox between Dossier and the runner. |
+| `backups/` | — | auto | One snapshot per day, 30 kept. |
+| `favicon.ico`, `logo.png` | — | optional | Your own branding; both fall back to a built-in seal if missing. |
+| `.gitattributes` | 28 B | — | `scripts/*.bat text eol=crlf` — a `.bat` with LF line endings breaks `cmd`'s label parsing. |
 
-- **Click ✎ on any schedule to edit it.** It keeps its id, so the records it
-  has already raised stay attached to it.
-- **Message** is shown in the reminder and copied onto the record it raises.
-  Leave it empty and the reminder just says the name.
-- The form shows only the fields the chosen kind uses — a weekday picker
-  appears for *Certain weekdays* and not otherwise — and says in plain words
-  what it will do: *Mon–Fri at 07:45 · reminds you*.
-- **What it does** and **Details** are folded away until you want them.
-
----
-
-## Cron, when the dropdowns are not enough
-
-A routine can repeat every day, on weekdays, on chosen weekdays or on a day of
-the month. Anything else — the 1st and the 15th, every two hours, twice a
-morning — set **Repeats** to *On a cron schedule* and write it out:
-
-```
-0 8 * * 1-5        08:00 on weekdays
-*/30 9-17 * * *    every half hour through the working day
-0 9 1,15 * *       09:00 on the 1st and the 15th
-@hourly            on the hour, all day
-```
-
-Five fields — minute, hour, day of month, month, day of week — with `*`,
-ranges, lists and `/step`, plus the `@hourly` `@daily` `@weekly` `@monthly`
-shorthands. Weekday names work (`mon-fri`). Cron's own rule is kept: when both
-day-of-month and day-of-week are set, a day matches if **either** does.
-
-The editor shows the **next three runs as you type**, so you find out what the
-expression means before you rely on it, and a mistake is explained (*field 1
-must be between 0 and 59*) rather than silently never firing.
-
-**Dossier still raises one record per day**, timed at the day's first firing —
-the sheet would be unreadable otherwise. The runner fires the **script** at
-every occurrence, and each run is its own line in that record's work log. The
-Time box is ignored for a cron routine; the expression carries the time.
-
-### Using one as a reminder
-
-Set **Remind me** to *Yes — a notification at every firing* and the routine
-nudges you on its own schedule, with no script involved:
-
-```
-Title     Drink water
-Repeats   On a cron schedule
-Cron      0 9-17 * * 1-5        on the hour through the working day
-Remind me Yes
-```
-
-While Dossier's tab is open it raises a Windows notification at each firing.
-With the runner started it does the same when the tab is closed. Either way
-you get one nudge per firing and no more, and a firing more than five minutes
-past is skipped — opening Dossier in the afternoon should not announce the
-quarter past nine.
-
-Reminders have to be switched on in **Setup → Reminders** first, and Windows
-has to have allowed notifications for the page.
-
-Both halves were checked against each other: the browser's cron and the
-runner's PowerShell cron agree on all 770 day-and-time decisions across eleven
-expressions and seventy days.
+Everything is a classic script or plain file. There is **no build step, no
+bundler, no package manager and no `node_modules`**.
 
 ---
 
-## Watch a routine fire itself
+## 4. The workspace on disk
 
-*Morning tour* is already set to run `open-morning-tabs.bat` on its own, every
-day at 08:30. With the runner started, nothing else is needed — it reads the
-routines out of `dossier.json` and fires them **whether Dossier is open or
-not**, once a day, catching up later if the machine was off at the hour.
-
-**To see it now rather than tomorrow:** Menu → Routines → delete *Morning
-tour*, then add it again with the time set two minutes from now, Script =
-`open-morning-tabs`, and **On its own** = *Yes*. Watch the runner window:
+A *workspace* is any folder you point Dossier at. It looks like this:
 
 ```
-[08:32:04] running open-morning-tabs.bat for routine 'Morning tour'
+<your folder>/
+  dossier.json              every record, note and work log
+  backups/                  one snapshot per day, 30 kept
+  reports/                  summaries you save
+  tasks/
+    D-0004 Imaging nightly sync timeout on GetPendingAsync/
+      incident-email.msg
+      screenshot.png
+    D-0005 Add policy status column to monthly renewal report/
+      deck-v2.pptx
+  scripts/
+    dossier-runner.bat
+    restart-app-pool.bat
+    queue/                  the runner's mailbox
 ```
 
-The result is filed into that day's record as **Ran on schedule**, with the
-exit code if it failed. D-0004 already has one so you can see the shape of it.
+Rules that matter if anything else writes here:
 
-Once a day is guaranteed by the runner's own marker,
-`scripts\queue\.auto-<routine>-<date>.txt` — delete today's to let it fire
-again. The `.bat` deliberately has no second guard of its own: two guards meant
-that testing it by double-click would quietly cancel the scheduled run.
-
-**To run it this second instead:** Menu → Routines → **`▶`** on *Morning tour*.
-That raises today's record and starts the script immediately, clearing the
-marker first so the scheduled run still happens.
+- **One record, one folder**, named `<code> <safe title>` — e.g.
+  `D-0004 Imaging nightly sync timeout on GetPendingAsync`. The name is stored
+  in the record's `folder` field, so renaming the folder on disk without
+  updating that field orphans the attachments.
+- Folder and file names are made Windows-safe: `\ / : * ? " < > |` become
+  spaces, control characters are stripped, runs of whitespace collapse, and the
+  reserved names (`CON`, `PRN`, `AUX`, `NUL`, `COM1`–`COM9`, `LPT1`–`LPT9`) are
+  avoided.
+- The folder handle is remembered in **IndexedDB**, never the data. If the
+  browser is wiped the worst case is re-picking the folder; the records are
+  untouched on disk.
+- Saving rewrites **the whole of `dossier.json`**. See
+  [§15](#15-automating-dossier-from-outside) for what that means for outside
+  writers.
 
 ---
 
-## What is in the folder
+## 5. `dossier.json` — the complete schema
 
-```
-dossier.html                  the whole application
-assist.js                     the Assist tab — what it notices on its own
-chat.js                       the assistant — what it understands and answers
-brain.js                      optional: the local model, for the questions chat.js misreads
-model/check.html              open this to see whether your PC can run one
-model/run.html                the only page allowed to touch the network
-model/models/                 optional: the model itself, for a PC with no internet
-dossier.json                  every record, routine, script and setting
-fonts/
-  NotoSansKhmer-Khmer-*.woff2 the bundled Khmer face, also embedded in the HTML
-  OFL.txt                     its licence
-lang/
-  en.xml                      the English master, generated from the code
-  km.xml                      Khmer — all 1,308 phrases, ready to translate
-logo.png, favicon.ico         yours — the app picks them up automatically
-scripts/
-  dossier-runner.ps1          runs queued scripts, fires routines on time
-  open-morning-tabs.bat       sample: opens your morning tabs
-  restart-app-pool.bat        sample: parameters, and a filled copy per record
-  queue/                      run requests and their results (transient)
-backups/                      one snapshot per day, 30 kept
-tasks/                        one folder per record, for its attachments
+### 5.1 Top level
+
+```jsonc
+{
+  "app": "dossier",              // constant marker
+  "version": 3,                  // schema version
+  "savedAt": "2026-08-30T04:44:30.017Z",  // ISO 8601, UTC
+  "seq": 7,                      // highest record number issued so far
+  "settings": { … },             // §5.2
+  "routines": [ … ],             // §5.4
+  "scripts":  [ … ],             // §5.5
+  "tasks":    [ … ]              // §5.3 — "tasks" on disk, "records" in the UI
+}
 ```
 
-`tasks/` is created the first time you attach something.
+`seq` is advisory. On load Dossier recomputes it as
+`max(seq, highest numeric part of any task.code)`, so an outside writer that
+adds `D-0099` without touching `seq` will not cause a collision.
+
+### 5.2 `settings`
+
+| Key | Type | Default | Meaning |
+|---|---|---|---|
+| `owner` | string | `""` | Your name. Used in reports and hand-overs. |
+| `systems` | array of `{name, colour}` | 8 seeded | The applications you support. `colour` is a hex string and drives every chip and bar for that system. |
+| `types` | array of string | `Incident, Service request, Change, Development, Meeting, Admin` | Work types. |
+| `parties` | array of string | 10 seeded | Teams you end up waiting on: *Data team, DBA, Infra, Network, Security, Vendor, Agency ops, Finance, Release management, Business user*. |
+| `theme` | `"archive"` \| `"vault"` \| custom id | `"archive"` | Archive and Vault are built in and cannot be deleted. |
+| `palettes` | array | `[]` | Your own themes: copy one, change five colours, the other twenty-odd are derived. |
+| `fonts` | object | — | `{ khmer: "auto" | <family> }` and interface font choices. |
+| `remind` | boolean | `false` | Windows notifications on/off. |
+| `lead` | number (minutes) | `15` | How long before a due time to warn. |
+| `remindOverdue` | boolean | `true` | Nag about late work once a day (`true`) or never (`false`). |
+| `remindWait` | number (days) | `3` | How long a record may sit with someone else before it is "due a chase". |
+| `autoBlock` | boolean | `true` | Setting `blockedBy` flips status to `blocked` automatically. |
+| `rememberFilters` | boolean | `true` | Restore the filter rail between sessions. |
+| `savedFilters` | object \| null | `null` | The remembered rail state. |
+| `rootPath` | string | `""` | The workspace's full Windows path, typed in by you. Used to generate the `schtasks` line and to detect a runner watching a *different copy* of the workspace. |
+| `runner` | boolean | — | "Send it to the runner" rather than "copy the command". |
+| `sla` | `{on, P1, P2, P3, P4}` | `{on:true, P1:4, P2:24, P3:48, P4:120}` | Hours from raising a record to its target date, by priority. |
+| `calMode` | `"week"` \| `"month"` | `"week"` | The Week tab's shape. |
+| `holidays` | array of `{d, n, k}` | Cambodia 2026 | `d` = `YYYY-MM-DD`, `n` = name, `k` = `"public"` \| `"office"`. |
+| `templates` | array | — | Saved record templates. |
+| `chatLearn` | object | — | Everything you have taught the assistant. See [§10.8](#108-teaching-it). |
+| `brain` | `{on, model, lib, host}` | `{on:false,…}` | The optional local model. See [§12](#12-the-optional-local-model). |
+
+### 5.3 `tasks` — a record
+
+Every field, in the order Dossier writes them:
+
+| Field | Type | Meaning |
+|---|---|---|
+| `id` | string | Internal key, e.g. `tmtfbrxz1x0ld`. Generated as `"t" + base36(now) + 4 random base36 chars`. **Never shown, never reused, never parsed.** |
+| `code` | string | The human reference: `D-0001`, `D-0002`, … Zero-padded to 4 digits, but longer numbers are accepted. |
+| `folder` | string | The attachment folder name under `tasks/`. |
+| `title` | string | One line. This is what search, similarity and the assistant read. |
+| `notes` | string | Free text. Markdown is not rendered; it is kept verbatim. |
+| `status` | enum | `open` \| `processing` \| `blocked` \| `done` \| `cancelled`. |
+| `priority` | enum | `P1` \| `P2` \| `P3` \| `P4`. |
+| `system` | string | Must match a `settings.systems[].name`. |
+| `type` | string | Must match a `settings.types[]` entry. |
+| `ticket` | string | Your ITSM reference, e.g. `INC0012390`. Free text. |
+| `requester` | string | Who asked. Free text; the assistant canonicalises spellings against everything it has seen. |
+| `tags` | array of string | Lower-case, free. |
+| `blockedBy` | array of string | Record **ids** (not codes) holding this one up. |
+| `autoBlocked` | boolean | True when the `blocked` status came from `blockedBy` rather than from you. |
+| `waitOn` | string | Who it is sitting with. Usually one of `settings.parties`, but any name works. |
+| `waitNote` | string | What you are waiting for. |
+| `waitSince` | ISO 8601 | When the wait started. |
+| `waitUntil` | `YYYY-MM-DD` | A promised date, if there is one. |
+| `chases` | array of ISO 8601 | One entry per chase sent. |
+| `waitLog` | array | The hand-over history: who, when, and back again. |
+| `scripts` | array of string | Script **ids** attached to this record. |
+| `scriptArgs` | object | `{ "<scriptId>": { "<param>": "<value>" } }` — the filled-in boxes. |
+| `created` | ISO 8601 | When it was raised. |
+| `due` | `YYYY-MM-DD` | Target date. Empty means undated. |
+| `dueTime` | `HH:MM` | Optional time on that date, 24-hour. |
+| `started` | ISO 8601 | First time work began. Set automatically by the timer and by running a script. |
+| `completed` | ISO 8601 | When it reached `done`. |
+| `estimate` | number (minutes) | What you thought it would take. |
+| `spent` | number (minutes) | Logged time, excluding a running timer. |
+| `timerStart` | epoch ms \| `0` | Non-zero while the clock is running. Live time is `spent + (now - timerStart)/60000`. |
+| `checklist` | array | Steps, each `{text, done}`. |
+| `log` | array | The work log, newest last. Each entry is `{at, text}` and optionally `kind`. `kind:"status"` marks a lifecycle event ("Opened", "Blocked → Open"); entries without a `kind` are notes, script output, chases and attachments. |
+| `files` | array | Attachments: `{name, size, type, added}`. The bytes live in `tasks/<folder>/`. |
+| `carried` | number | How many times this was rolled forward to another day. |
+| `fromRoutine` | string | The routine **id** that raised it, if any. |
+| `forDate` | `YYYY-MM-DD` | The day a routine raised it for. |
+
+### 5.4 `routines` — a schedule
+
+| Field | Type | Meaning |
+|---|---|---|
+| `id` | string | e.g. `Rmorningtour`. Stable across edits, so the records it has raised stay attributed. |
+| `title` | string | Becomes the raised record's title. |
+| `freq` | enum | `daily` \| `weekly` \| `monthly` \| `cron`. |
+| `days` | array of int | Weekdays, `0`=Sunday … `6`=Saturday. `[1,2,3,4,5]` is Mon–Fri. |
+| `dom` | int | Day of month, for `freq:"monthly"`. |
+| `cron` | string | The expression, for `freq:"cron"`. See [§8.2](#82-cron). |
+| `time` | `HH:MM` | When it fires. **Ignored for cron** — the expression carries the time. |
+| `system` | string | Copied onto the raised record. |
+| `priority` | `P1`–`P4` | Copied onto the raised record. |
+| `type` | string | Copied onto the raised record. |
+| `checklist` | array of string | Copied onto the raised record as unticked steps. |
+| `notes` | string | Copied onto the raised record. |
+| `message` | string | If set, the routine only *nudges* you at its time instead of raising a record. |
+| `scripts` | array of string | Script ids to attach — and, with `autoRun`, to execute. |
+| `autoRun` | boolean | `true` = "runs itself": Dossier queues `scripts[0]` at the scheduled minute. Requires a live runner. |
+| `paused` | boolean | Skipped entirely while true. |
+
+### 5.5 `scripts` — a registered script
+
+| Field | Type | Meaning |
+|---|---|---|
+| `id` | string | e.g. `Sopenmorning`. Referenced by records and routines. |
+| `file` | string | The file name inside `scripts/`. **Plain name only** — no path. |
+| `name` | string | What you call it, e.g. `open-morning-tabs`. |
+| `size` | number | Bytes, as read when registered. |
+| `added` | ISO 8601 | When it was registered. |
+| `desc` | string | One line, shown wherever the script is offered. |
+| `tags` | array of string | For finding it later. |
+| `system` | string | Which application it belongs to, or `""`. |
+| `params` | array of string | The `{{name}}` marks found in the file. Each becomes a box on any record the script is attached to. |
+| `uses` | number | Times run. |
+| `lastUsed` | ISO 8601 | Last run. |
+
+### 5.6 Enumerations, in one place
+
+```
+status     open · processing · blocked · done · cancelled
+live       open · processing · blocked          (everything not done/cancelled)
+priority   P1 · P2 · P3 · P4
+type       Incident · Service request · Change · Development · Meeting · Admin
+freq       daily · weekly · monthly · cron
+holiday k  public · office
+weekday    0=Sun 1=Mon 2=Tue 3=Wed 4=Thu 5=Fri 6=Sat   (7 also accepted for Sunday in cron)
+```
 
 ---
 
-## Talking to it
+## 6. The application surface
 
-It reads records, but you do not have to type like a search box at it.
+### 6.1 The seven views
 
-**An opener does not eat the question.** Nobody starts with the question —
-they start with hello, or with right, or with sorry, and then they ask. "Hi,
-what is overdue" used to say good morning and never mention the nine records;
-now it says both. So does "right, show me imaging", "ok and Policy?" and
-"sorry, I meant overdue". If what is left behind turns out to mean nothing on
-its own, the opener was the message after all and it is answered as one.
+Switch with **1**–**7**, or by clicking the tab.
 
-**It will show its working.** Ask it something, then ask *are you sure*, *how
-do you know that* or *what does that mean*, and it tells you which question it
-took yours for, how sure it was of that reading, what the number is a count
-of, which filters were on, and whether the reading came from a correction you
-taught it. Ask twice and it still explains the original answer, not its own
-last reply. Nothing there is a boast: everything it says is arithmetic over
-records you wrote, and something that cannot say where a number came from
-should not be trusted with the number.
+| Key | View | What it shows |
+|---|---|---|
+| **1** | **Day** | Today, in the order you would actually work it: **overdue** first, then **due today**, then what is **in progress**, then what is **blocked**, then the rest. The banner warnings live here too — including "nothing is running your scripts". |
+| **2** | **Board** | Five columns, one per status, drag between them. |
+| **3** | **Register** | The full table: every column, sortable, filterable, bulk-editable. |
+| **4** | **Week** | A calendar. `settings.calMode` switches between a 7-day week and a whole month. Holidays are marked. |
+| **5** | **Library** | Every attachment across every record, searchable by file name or record title — the answer to "where did I put that screenshot". |
+| **6** | **Insight** | Counted, not guessed: throughput this week and month, average turnaround, worst system, who raises the most, and the recurring-problem cases written for you. |
+| **7** | **Assist** | The ranked queue and the brief, from `assist.js`. The filter rail is hidden here on purpose — Assist reads closed records too, because that is where its baselines are. |
 
-**It has a view.** *What do you think*, *should I worry*, *any advice* and
-*is that normal* get a judgement rather than a list. It reads the things a
-person would read at the end of a day — how late the worst thing is, who has
-gone quiet and never been chased, what has had nothing written on it in over
-a week, what is open with no date at all, whether one system is over half the
-pile — ranks them, and commits to one with the reason attached, so you can
-disagree with it. Asked what to *do*, it leads with the move instead. Asked
-whether to *worry*, it answers yes or no first.
+### 6.2 The menu's seven panels
 
-And the rest of what people actually type: *hold on*, *let me think*, *give
-me a second* (it waits), *no*, *nope*, *maybe*, *not really* (it takes the
-refusal, and knows a hedge from a no), *ugh*, *this is a mess*, *I cannot
-focus* (it acknowledges, then shows you the pile as a number rather than a
-feeling). It still refuses to invent: the weather, the football, the capital
-of anywhere are all outside what it can see, and it says so rather than
-guessing.
+**Menu** (or `Ctrl`+`K` → *Menu*) opens a tabbed panel:
+
+| Panel | Contents |
+|---|---|
+| **Workspace** | Which folder is attached, record and next-reference counts, save now, write `dossier.json`, import/export, backups. |
+| **Reports** | This week / last week / this month, plus **Stand-up** and **Hand-over** formats. Copy, save into `reports/`, or print. |
+| **Routines** | The schedule editor. ✎ edits in place and keeps the id. Shows *runs itself*, *reminds you*, *paused*, *missing script*, when it last raised, and — loudly — *runs itself but nothing is listening*. |
+| **Scripts** | Register a script, read its `{{params}}`, set the workspace **Folder path**, write the runner, copy the `schtasks` line. |
+| **Appearance** | Theme (Archive, Vault, or your own), fonts including the bundled Khmer face, "feel" (density and motion), language, and **Reload** for language files. |
+| **Setup** | Your name · Reminders · Chase after · Running a script · Target dates (SLA) · Holidays and festivals · **Understanding harder questions** (the optional model). |
+| **Help** | The keyboard sheet, how your folder is laid out, and the privacy statement. |
+
+### 6.3 The other surfaces
+
+- **The record drawer** — `Enter` or `E` on a record, or click it. Everything
+  about one record: status, dates, timer, checklist, attachments, scripts with
+  their parameter boxes, the wait/chase block, and the work log.
+- **The work console** — `W`. A focused writing surface for the record you are
+  on: paste a screenshot straight in with `Ctrl`+`V`, log what you did, attach
+  evidence.
+- **The chase sheet** — opens from Day or Insight when a team has gone quiet.
+  It drafts the message for you, escalating in tone: a first ask is polite, a
+  fourth is firm. **Copy and log the chase** puts it on the record and stamps
+  `chases`.
+- **The command palette** — `Ctrl`+`K`.
+- **The filter rail** — system, person, type, tag, priority, status, date
+  range. Remembered between sessions when `settings.rememberFilters` is on.
+- **The Ask box** — `A`. See [§10](#10-the-assistant-chatjs).
+
+### 6.4 Keyboard
+
+| Group | Keys |
+|---|---|
+| **Moving around** | `1`–`7` switch view · `/` search · `N` new record · `J`/`↓` next · `K`/`↑` previous · `Esc` close what is open |
+| **On the record under the cursor** | `Enter` or `E` open · `Space` cycle status · `D` mark done · `T` move to today · `S` start/stop the clock · `X` select |
+| **Anywhere** | `Ctrl`+`K` command palette · `Ctrl`+`S` save now · `Ctrl`+`Z` undo · `Ctrl`+`V` paste a screenshot onto the open record · `W` work console · `A` ask the assistant · `?` this sheet |
+
+Panels trap focus while open and hand it back when they close, so a keyboard
+or screen-reader user is never tabbing around a page they cannot see.
+
+### 6.5 Themes
+
+Two built in — **Archive** (warm, paper) and **Vault** (dark) — and neither can
+be deleted. A custom palette is a copy of one with five colours changed; the
+other twenty-odd (rules, muted text, hover states, shadows) are derived from
+those five. Palettes are stored in `dossier.json`, so a theme travels with the
+folder.
 
 ---
 
-## How well it actually understands
+## 7. How a record behaves
 
-There are two numbers and they measure different things.
+**Status.** `open → processing → blocked → done → cancelled`. `Space` cycles;
+`D` jumps to done. Every change appends a `kind:"status"` line to the work log,
+including the reverse ("Blocked → Open — nothing is holding this any more").
 
-**97.4%** is against sentences built from the same words the cue lists were
-written from. It is the number the test suite reports, and it is the easier
-test — it says the matcher is consistent, not that it understands English.
+**Target dates.** With `settings.sla.on`, raising a record sets `due` from its
+priority: P1 +4h, P2 +24h, P3 +48h, P4 +120h from now. Under 24 hours it also
+sets `dueTime`, so a P1 carries a clock time rather than just a day; 24 hours
+or more sets the date alone. An unknown priority falls back to the P3 figure,
+and a zero or negative figure means "no target date". Turn the whole thing off
+and `due` stays empty until you set one. **A record with no date
+never appears in "overdue"** — which is why `undated` is its own question in
+the assistant.
 
-**56.3%** was the number against eighty phrasings written deliberately using
-words the cue lists did *not* contain: *in arrears*, *ghosted*, *gone cold*,
-*bitten off too much*, *biggest offender*. That is the honest measure of
-language it was never given, and it is the one worth improving.
+**The clock.** `S` starts and stops it. `timerStart` holds the epoch
+milliseconds while running; stopping folds the elapsed minutes into `spent`.
+Live time anywhere in the app is `spent + (now − timerStart)/60000`.
 
-Why the gap exists is worth writing down, because it decides how this file
-grows. A classifier trained from scratch on Dossier's own generated sentences
-scored **38.8%** on phrasings it had not seen, against **97.1%** for the cue
-lists on the same test. Knowing that *cycle time*, *turnaround* and *elapsed*
-are one question is knowledge from having read a great deal of English. A
-downloaded model brings that with it. This file cannot, so somebody writes it
-down — which is what the vocabulary table at the foot of `chat.js` is.
+**Blocking.** `blockedBy` holds record **ids**. With `settings.autoBlock`,
+adding one flips the status to `blocked` and sets `autoBlocked:true`; clearing
+the last one flips it back and says so in the log. A record blocked by hand
+keeps `autoBlocked:false` and is left alone.
 
-That table is deliberately in one place rather than scattered through
-seventy-eight intents, so what was added can be read, argued with and reverted
-in one go.
+**Waiting and chasing.** `waitOn` + `waitSince` start the clock on someone
+else. After `settings.remindWait` days it is *due a chase*. Each chase appends
+to `chases`; `waitLog` keeps the whole hand-over history. The assistant learns
+each party's *usual* response time from your own closed records and uses that
+instead of the default once it has enough to go on.
+
+**Attachments.** Drag in, or `Ctrl`+`V` a screenshot. The bytes go to
+`tasks/<folder>/`; `files[]` records `{name, size, type, added}` and the work
+log gets a line.
+
+**Carrying forward.** Rolling a record to another day increments `carried`.
+That number is evidence: a record carried five times is not a scheduling
+problem, it is a stuck one, and Assist says so.
 
 ---
 
-## Pointing at one of them
+## 8. Routines, schedules and cron
 
-"Open the first document of D-0034" used to be unaskable, and no amount of
-teaching could have made it askable — teaching maps a whole sentence onto one
-of a fixed list of verbs, and there is nowhere in that to put *which one*. You
-could ask for the documents and get all four. Wanting the second meant reading
-the list and clicking.
+### 8.1 What a routine is
 
-That is a missing dimension of the sentence rather than a missing verb, so it
-is read once and applied to every answer:
+A schedule, not a task. It repeats, it can carry a message instead of a
+record, and it has no status or due date of its own.
+
+At its scheduled minute a routine either:
+
+- **raises a record** — copying `title`, `system`, `priority`, `type`,
+  `checklist`, `notes` and `scripts` onto it, stamping `fromRoutine` and
+  `forDate`; or
+- **nudges you** — if `message` is set, no record is created.
+
+With `autoRun:true` it also **queues `scripts[0]`** for the runner. That is the
+one promise Dossier cannot keep by itself, so:
+
+> A routine marked *runs itself* while no runner is listening will raise its
+> record on time and then do nothing. Dossier detects this and says so on the
+> Day sheet rather than letting it look like a broken app.
+
+### 8.2 Cron
+
+When the dropdowns are not enough, set `freq:"cron"` and write an expression.
+Five fields: **minute hour day-of-month month day-of-week**.
+
+| Element | Supported |
+|---|---|
+| `*` | any |
+| `5` | a number |
+| `1-5` | a range |
+| `1-9/2` | a range with a step |
+| `*/15` | a bare star with a step |
+| `1,3,5-7` | comma-separated lists of any of the above |
+| names | `jan`–`dec` for months, `sun`–`sat` for weekdays |
+| shorthands | `@yearly` `@annually` `@monthly` `@weekly` `@daily` `@midnight` `@hourly` |
+
+Ranges: minute `0–59`, hour `0–23`, day-of-month `1–31`, month `1–12`,
+day-of-week `0–7` (both `0` and `7` are Sunday).
+
+**Cron's own oddity is kept on purpose:** when *both* day-of-month and
+day-of-week are restricted, a day matches if **either** does. Every cron
+behaves this way, and quietly doing something more sensible would be worse
+than surprising.
+
+Two differences from a server cron, both deliberate:
+
+- Dossier raises **one record per day**, timed at that day's first occurrence —
+  a sheet with 96 copies of the same check would be unreadable.
+- The **runner fires the script at every occurrence**, which is where the extra
+  precision is actually useful.
+
+The **Time** box is ignored for a cron routine; the expression carries the time.
+An invalid expression is rejected with the reason, before it is saved.
+
+---
+
+## 9. Scripts and the runner
+
+### 9.1 Why there is a runner at all
+
+A page in a browser cannot start a program, and nothing here should need
+installing. So Dossier writes a request into a folder, and a small process of
+yours picks it up, runs the script, and writes the result back — which lands
+in that record's work log.
+
+**No PowerShell.** The runner is `scripts\dossier-runner.bat`. Everything
+passed between Dossier and it is plain text, one value per line: a batch file
+reads that with `set /p` and writes it with `echo`, and never has to parse or
+escape JSON — which is exactly where these arrangements normally break.
+
+### 9.2 The queue protocol, in full
+
+Everything lives in `<workspace>\scripts\queue\`.
+
+| File | Written by | Contents |
+|---|---|---|
+| `<id>.run.txt` | Dossier | Line 1: the script's **file name**. Line 2: its arguments, already quoted. CRLF endings. |
+| `<id>.out.txt` | the runner | Everything the script printed, stdout and stderr merged. |
+| `<id>.done.txt` | the runner | Line 1: the exit code. Its *existence* is the completion signal. |
+| `.runner.txt` | the runner | Line 1: the `scripts` folder it is watching. Line 2: the local date and time. Rewritten about every 10 seconds. |
+| `.<id>.txt` | Dossier | A marker meaning "this scheduled slot has already been queued", so a routine cannot double-fire. |
+
+Request ids:
+
+- pressing **`$`** on a record → `r<base36 time><4 random base36>`
+- a routine firing → `auto-<routineId>-<YYYY-MM-DD>` , plus `-<HHMM>` for cron
+
+The sequence:
+
+1. Dossier writes `<id>.run.txt`.
+2. The runner sees it on its next pass — it loops about once a second.
+3. **It deletes the request before running it** — so killing the window
+   mid-script cannot make the job run again on restart.
+4. It validates the name (see below), runs it from inside `scripts\` with
+   output redirected to `<id>.out.txt`.
+5. It writes the exit code to `<id>.done.txt`.
+6. Dossier polls every 250 ms for up to 60 seconds, then appends the first
+   4,000 characters of output to the record's work log and stamps `started` if
+   it was not already set.
+
+### 9.3 What the runner refuses
+
+Before executing anything it checks the name from line 1 and refuses, with
+`-1` in `.done.txt` and a reason in `.out.txt`, if:
+
+- the request named no script at all;
+- the name contains `\`, `/`, `:` or `..`;
+- the file is not present in the `scripts\` folder.
+
+So a request cannot reach anything else on the machine, whatever wrote it.
+
+### 9.4 Running it
+
+Double-click `scripts\dossier-runner.bat`. The window says which folder it is
+watching. **Leave it open — closing it stops the runner.**
+
+To start it at every logon: put the workspace's full path into
+**Menu → Scripts → Folder path**, then **Menu → Setup → Running a script →
+Copy the schtasks line** and run that once.
+
+Dossier tells you the truth about it at all times. The footer reads `runner on`
+or `runner off`, and three states are told apart because the fix differs:
+
+| State | Meaning |
+|---|---|
+| alive | `.runner.txt` is fresh. |
+| nothing there | no heartbeat at all — the runner was never started, or its window was closed. |
+| **alive but watching a different copy of the workspace** | the heartbeat names another path. No amount of restarting fixes this, and nothing else can detect it. This is why **Folder path** is worth filling in. |
+
+### 9.5 Script parameters
+
+A registered script's `{{marks}}` become `params`, and each becomes a box on
+any record the script is attached to. `restart-app-pool.bat` is the worked
+example:
+
+```bat
+set "SERVER={{server}}"
+set "POOL={{pool}}"
+
+rem -- Refuse to run while the blanks are still blanks.
+echo %SERVER%%POOL% | findstr /c:"{{" >nul && ( … )
+```
+
+**Build a filled copy** writes a version with the blanks filled into that
+record's own folder — so the exact command you ran is filed as evidence next
+to the incident it belongs to.
+
+Without a runner, `$` copies the fully-formed command line to the clipboard
+instead, and names any parameter still blank.
+
+---
+
+## 10. The assistant (`chat.js`)
+
+### 10.1 What it is, and what it is not
+
+There is **no model here and nothing is downloaded**. The Ask box works on a
+`file://` page with the network cable pulled out.
+
+That is workable because this is not general conversation — it is a *bounded*
+one. Every system, person, work type, tag, script and record code you might
+name is already in your workspace. The half of the problem that normally needs
+a model — knowing what your words *refer to* — is answered by reading your own
+data. What is left is working out which of ~79 questions you are asking, and
+that is done by **weighing evidence rather than matching patterns**, so word
+order and filler stop mattering:
+
+```
+"imaging stuff from last week?"                    → find · system=Imaging · range=last week
+"show me records for Imaging in the past 7 days"   → the same intent, the same slots
+```
+
+Three habits keep it from being annoying:
+
+1. it **guesses freely on questions** and **asks first on anything that writes**;
+2. when the top two readings are close it **offers both** rather than picking;
+3. when you pick one, it **remembers that phrasing** — and its shape — for next time.
+
+It returns plain data and never touches the DOM. `dossier.html` renders the
+answer and runs the actions.
+
+### 10.2 The pipeline, in order
+
+| Stage | What happens |
+|---|---|
+| **normalise** | lower-case, strip punctuation and apostrophes, expand contractions (`what's` → `what is`), expand chat shorthand (`u` → `you`, `pls`, `thx`, `4` → `for`). Clause-final contractions are left alone — "ready when you're." |
+| **lead-in** | peel an opener so "hi, what's overdue" answers *both* halves rather than only the greeting. A bare "right, policy?" is checked against your own names first, so it stays a follow-up. |
+| **lexicon** | build the vocabulary of *this* workspace — systems, people, parties, types, tags, scripts, routines, codes — plus your aliases. Cached on `api.cacheKey`. |
+| **slots** | read every value the sentence carries. |
+| **modifiers** | read conditions hung off the question: *except*, *only*, *more than*. |
+| **intent** | score every intent on cues, phrases, `needs`, dimension gating, and the evidence rule. |
+| **selectors** | *which one* — first, second, last, "the one called invoice", "number 3". |
+| **finish** | apply modifiers and selectors, compose the sentence, attach rows, chips and any pending action. |
+
+Two known traps are documented in the source because they cost real time:
+`"its"` and `"were"` must **not** be expanded as contractions (the apostrophe
+is already gone by then, so "what missed **its** target date" became "what
+missed **it is** target date"), and `hi/hello/hey/thanks/ok` must **not** be
+treated as noise, or a bare "hi" reaches the matcher as an empty sentence.
+
+### 10.3 The `api` object it is handed
+
+`chatApi()` in `dossier.html` builds this. Nothing in it is mutated by a read.
+
+```js
+{
+  tasks, routines, scripts, settings,   // the live arrays
+  now,                                  // Date.now()
+  cacheKey,                             // invalidates the lexicon when the workspace changes
+  memory,                               // settings.chatLearn — what you have taught it
+  aliases,                              // settings.chatAlias — your own words
+  convo,                                // the running conversation state
+  phrase(p),                            // renders a {k, v} phrase key through the language file
+  ai,                                   // window.DossierAI, or null
+  ctx,                                  // the context Assist works from
+  h: { tok, idf, similar, estimateFor, predict, knownValues, repeatCandidates,
+       today, addDays, dow, mondayOf, niceDate, mins, dayOf, dkey, stamp,
+       live, peopleOf, canonPerson, splitPeople, matchParty, findByRef,
+       findScript, waitDays, chaseDays, stMeta, parseQuick, LIVE, PRIS }
+}
+```
+
+`h` is the app's own statistics, handed in rather than reimplemented, so the
+two can never drift apart.
+
+### 10.4 The answer object
+
+`DossierChat.ask(text, api)` always returns this shape:
+
+```js
+{
+  intent: "overdue" | null,     // which question it decided you asked
+  kind:   "read" | "write" | "nav" | "social" | "none",
+  label:  "What is overdue",    // the human name of that intent
+  confidence: 0…1,
+  learned: false,               // true when a lesson of yours produced this
+  say:    "Three are past their date.",
+  note:   "",                   // a caveat, e.g. thin evidence
+  rows:   [ … ],                // the list, if the answer is a list
+  chips:  [ … ],                // offered follow-ups, each carrying an action
+  alternatives: [ … ],          // the other readings, when it was close
+  slots:  { system, person, type, party, tag, priority, range, record, … },
+  context:{ rows: […] },        // the last list, so "the second one" works next turn
+  act:    { kind:…, confirm:… } // a pending action, when one is proposed
+}
+```
+
+Rows carry `kind` — `"record"`, `"file"`, `"script"` — which is what makes
+`"open the second one"` know whether to open a record or a document.
+
+`DossierChat.run(intentName, api, …)` executes a chosen intent directly,
+skipping the matcher; that is what the correction UI uses.
+
+### 10.5 The intent catalogue
+
+79 intents. `kind` decides the manners: `read` answers immediately, `write`
+always proposes and waits, `nav` moves the app, `social` is conversation.
+
+**`read` — 50**
+
+| intent | what it answers | example |
+|---|---|---|
+| `next` | What to do next | *what next* |
+| `overdue` | What is overdue | *past due* |
+| `dueToday` | Due today | *due today* |
+| `dueWeek` | Coming up | *coming up* |
+| `find` | Find records | *look for* |
+| `record` | One record | *what is the status* |
+| `field` | One detail | *what is the ticket of D-0032* |
+| `waiting` | What I am waiting on | *waiting on* |
+| `quietest` | Longest wait | *gone quiet* |
+| `howLong` | How long it takes | *how long* |
+| `closed` | What I closed | *did i close* |
+| `opened` | What came in | *came in* |
+| `worstSystem` | Worst system | *which system* |
+| `topPerson` | Who asks the most | *who raises* |
+| `solvedBefore` | Have I seen this before | *seen this before* |
+| `stalled` | What has stopped moving | *not moving* |
+| `brief` | Anything I should know | *worth knowing* |
+| `workload` | How loaded I am | *how busy* |
+| `timeSpent` | Time tracked | *how much time* |
+| `count` | How many | *how many* |
+| `scripts` | My scripts | *what scripts* |
+| `routines` | My schedules | *what routines* |
+| `guide` | How you usually do this | *how do i resolve* |
+| `troubleshoot` | What to check | *what should i check* |
+| `clock` | The time | *the time* |
+| `dateToday` | The date | *what is the date* |
+| `howTo` | How to do something | *how do i* |
+| `about` | About Dossier | *what is this* |
+| `steps` | What is left to do | *what is left* |
+| `why` | Why it is stuck | *why is* |
+| `history` | What happened on it | *what happened* |
+| `notes` | Its notes | *the notes on* |
+| `files` | Its documents | *any documents* |
+| `when` | When it is due | *when is* |
+| `similarTo` | Anything like it | *anything like* |
+| `blocked` | What is blocked | *what is blocked* |
+| `oldest` | Oldest open work | *oldest open* |
+| `neverChased` | Never chased | *never chased* |
+| `undated` | Work with no date | *no date* |
+| `aboutPerson` | About a person | *what does* |
+| `standup` | Stand-up summary | *stand up* |
+| `compare` | Busier or quieter | *busier than* |
+| `tags` | Tags in use | *what tags* |
+| `systems` | Systems in use | *what systems* |
+| `rank` | Most and least | — |
+| `negFind` | The ones that are not | — |
+| `taught` | What you have taught me | *what have i taught you* |
+| `opinion` | What I make of it | *what do you think* |
+| `justify` | Where that came from | *are you sure* |
+| `help` | What can you do | *what can you do* |
+
+**`write` — 10**
+
+| intent | what it answers | example |
+|---|---|---|
+| `log` | Log a record | *log a* |
+| `markDone` | Mark it done | *mark it done* |
+| `markStart` | Start work | *start on* |
+| `markWait` | Hand it to someone | *waiting on* |
+| `chase` | Chase someone | *follow up* |
+| `run` | Run a script | *run the* |
+| `remind` | Set a reminder | *remind me* |
+| `notify` | Windows notifications | *turn on notification* |
+| `undo` | Undo | *undo that* |
+| `teachAlias` | Remember a word | *when i say* |
+
+**`nav` — 3**
+
+| intent | what it answers | example |
+|---|---|---|
+| `openRecord` | Open a record | *open it* |
+| `goto` | Switch view | *go to* |
+| `pickOne` | That one | — |
+
+**`social` — 16**
+
+| intent | what it answers | example |
+|---|---|---|
+| `greet` | Hello | *whats up* |
+| `identity` | What I am | *who are you* |
+| `howareyou` | How I am | *how are you* |
+| `thanks` | Thanks | *thank you* |
+| `bye` | Goodbye | *see you* |
+| `sorry` | No need | *my bad* |
+| `praise` | Glad it worked | *that is clever* |
+| `complain` | That missed | *that is wrong* |
+| `feeling` | Long day | *long day* |
+| `joke` | Not my department | *tell me a joke* |
+| `affirm` | Go on | *yes* |
+| `nevermind` | Dropped | *never mind* |
+| `repeat` | Again | *say that again* |
+| `smalltalk` | Outside what I know | *what is the weather* |
+| `decline` | No then | *no* |
+| `hold` | Waiting | *wait* |
+
+### 10.6 Slots — the values a sentence carries
+
+Read once, available to every intent:
+
+| Slot | Read from |
+|---|---|
+| `record` / `records` | `D-14`, `d 0032`, `#INC0012345`. A code that resolves to **nothing** is kept as `unknownCode` and said out loud — quietly dropping it and answering some other question is the worst thing the file could do. |
+| `system` | any name in `settings.systems`, matched loosely and against your aliases |
+| `person` | any requester or `waitOn` value it has ever seen, canonicalised across spellings |
+| `party` | any name in `settings.parties` |
+| `type` | any name in `settings.types` |
+| `tag` | any tag in use |
+| `priority` | `p1`, `P 2`, `priority 3`; `critical`/`urgent` → `P1` |
+| `status` | any of the five |
+| `range` | `today`, `yesterday`, `this week`, `last week`, `this month`, `last 7 days`, `since Monday`, month names, … |
+| `date` | a specific day, written any of the usual ways |
+| `minutes` | `90m`, `1.5h`, `30 mins`, and `30mn` because that is how it gets typed in a hurry |
+| `script` / `routine` | by name |
+
+### 10.7 Modifiers — conditions hung off any question
+
+A condition is not a different question. *"Worst system except Other"* used to
+be answered as if the exclusion were not there. Modifiers are read once and
+applied in `finish()`, so they work on every intent — including ones written
+years before anybody thought of them.
+
+| Modifier | Triggers |
+|---|---|
+| **exclude** | `except`, `excepting`, `excluding`, `excl`, `ignoring`, `omitting`, `except for`, `apart from`, `other than`, `aside from`, `not counting`, `but not`, `leaving out` |
+| **only** | `only`, `just`, `nothing but` |
+| **compare** | `more/greater/bigger/higher/longer/older/larger than` → `>` · `less/fewer/lower/shorter/newer/younger/smaller than` → `<` · `at least` → `>=` · `at most` → `<=` · `over`/`above`/`beyond`/`past` → `>` · `under`/`below` → `<` |
+
+Comparison units map to a field: `day(s)/week(s)/month(s)` → **age**,
+`hour(s)/minute(s)` → **time**, `chase(s)` → **chase**, `step(s)` → **step**,
+`document(s)/file(s)` → **file**. `"more than 3 records"` is deliberately *not*
+a filter — it is a statement about the answer's size, not a condition on it.
+
+Words a modifier consumed are masked out before intent scoring, so they cannot
+also vote for some unrelated question.
+
+### 10.8 Selectors — *which one*
+
+`"Open the first document of D-0034"` could not be asked, and no amount of
+teaching could make it askable, because teaching maps a whole sentence onto one
+verb and there is nowhere in that to put *which one*. That is the same shape of
+problem as *except* was — a missing **dimension**, not a missing verb — so it is
+solved the same way: read once, applied everywhere.
+
+Every answer that comes back as a list is now addressable:
 
 ```
 open the first document of D-0034
-open the document called invoice on D-0034
 the second one
 run the last script on it
+open the one called invoice
 number 3
+the top one
 ```
 
-The same six words work on documents, records, scripts and anything else that
-comes back as a list — including answers written long before there was a way
-to say "the second". It works in one breath or as a follow-up: ask for the
-documents, then say *open the second one*.
-
-Naming a thing and a verb together means do it. Opening changes nothing that
-cannot be closed again, so it happens; running a script still asks first, as
-it always did. Ask for the ninth of four and it says there are four.
-
-It is deliberately narrow about what counts. "The first **thing** I should do"
-is what to work on next, "the first **step**" is a checklist, and "**last**
-week" is a date — none of them are selections, and none of them are read as
-one.
-
----
-
-## Teaching the assistant
-
-The assistant reads your records and answers from them. It is not always
-right, and the point of this section is what happens when it is not.
-
-Under every answer there is **not what I meant**. Press it, pick the answer you
-actually wanted, and it is learned — but learned as the *shape* of the
-question rather than the sentence. Ask it
-
-> what is the ticket of task D-0032
-
-correct it once, and what it files away is
-
-```
-what is the ticket of task <code>   →   the answer you chose
-```
-
-so D-0045 and D-0117 and every record you open after that are already
-understood. The same holds for the names in a question: correct it once about
-Imaging and it has learned the question for Policy, CX Portal and everything
-else. It will not carry a lesson across *kinds* — a question about a system is
-not silently turned into a question about a person — because that is the sort
-of generalising that produces a confident wrong answer.
-
-Vocabulary is taught in a sentence, with no buttons at all:
-
-> when I say the portal I mean CX Portal
-
-The word joins the same list the system and colleague names live in, so it
-works everywhere at once — in filters, in exclusions, in comparisons — and not
-merely in the phrase you happened to be typing.
-
-Everything it has learned is listed under the **✎** in the assistant's title
-bar: every shape, every exact wording, every word you gave it, each one
-deletable on its own, and a button to forget the lot. Ask it *what have I
-taught you* and it will tell you. It is all kept in `dossier.json` with the
-rest of the workspace, so it travels with the folder and never leaves it.
-
----
-
-## A local model, if you want one
-
-Everything above runs on arithmetic. The assistant reads a question by scoring
-it against the shapes it knows, and gets it right about 97 times in 100. This
-is about the other three, and it is **off by default**.
-
-Open `model/check.html` first — it says plainly whether this PC can run a
-model at all, and it must be opened through `dossier-serve.bat` rather than
-from the folder, because a model cannot start on a `file://` page. Then
-Menu → Setup → **Understanding harder questions**.
-
-What it does is narrow. When chat.js is unsure — or has no reading at all —
-it hands the model every question it can answer, as a numbered list, and asks
-for a number. That is the whole exchange. The model **never writes a word you
-read**: it returns one number, that number becomes one of Dossier's own
-questions, and the answer still comes from counting your records. Anything
-else it says is thrown away, so there is no path by which it can tell you a
-figure it made up.
-
-It appears under the answer as *"I was not sure, so I asked the local model.
-It thinks you meant…"* with one button. Pressing it answers the question **and
-teaches the shape** — so the model is not needed for that question again. It
-is a teacher for chat.js rather than a dependency of it, and it should be
-consulted less every week, not more.
-
-Three things it cannot do to you. It cannot slow the chat down: the ordinary
-answer has already appeared before the model is woken, and it runs behind a
-timeout — if it hangs, is loading, or the file is missing, you get exactly
-what you got before. It cannot run without being asked: nothing downloads
-until you switch it on. And it cannot see anything but the sentence you typed.
-
-**On the download, and where it is allowed to happen.** `dossier.html` has
-carried this since long before there was a model:
-
-```html
-<meta http-equiv="Content-Security-Policy"
-      content="connect-src 'none'; form-action 'none'">
-```
-
-The application cannot open a connection to anywhere. Not a leak, not a
-mistake, not a library that decided to phone home — the browser refuses before
-the request is made. That line is what makes *nothing leaves this folder*
-checkable rather than merely claimed, and it is why the first version of this
-feature was blocked by Dossier itself, which was the correct outcome.
-
-Deleting the line would have fixed it and weakened the guarantee for everyone,
-including everyone who never turns the model on. So instead the model runs
-**somewhere else**: `model/run.html`, in a hidden frame, with a policy of its
-own that permits the library CDN and Hugging Face and nothing else. It holds no
-records, has no access to `dossier.json` or your workspace folder, and is
-handed one sentence and a list of labels. `dossier.html` is untouched and
-still cannot make a network call — with the model off *and* with it on.
-
-The frame appears when you switch the model on and is destroyed when you switch
-it off. The download is once, about 380 MB for the recommended model, cached in
-the browser; every run after that is offline. If that one download is not
-acceptable on your machine, leave it off and nothing else changes.
-
-**If the download is blocked.** Plenty of company networks refuse
-`huggingface.co` outright, and no code here can argue with a firewall. Open
-`model/check.html` — it tells you which of three completely different things is
-actually wrong, because they look identical from the chat window:
-
-| what it says | what it means |
+| Element | Vocabulary |
 |---|---|
-| *the files are* | you copied some of them, or an old copy is still there |
-| *the network is blocking it* | a proxy or filter between this PC and the model |
-| a hardware verdict | the files and the network are fine |
+| ordinals | `first`/`1st` … `tenth`/`10th`, plus `top` = 1 |
+| last | `last`, `latest`, `final`, `newest`, `bottom` |
+| by name | `the one called …`, `the file named …` |
+| counting nouns | `one(s)`, `document(s)`, `doc(s)`, `file(s)`, `attachment(s)`, `record(s)`, `item(s)`, `row(s)`, `result(s)`, `entry`/`entries`, `script(s)`, `note(s)` |
 
-A stale `dossier.html` or `brain.js` produces exactly the same errors as a
-blocked network, which is why the page checks both.
+The noun list is deliberately narrow. `"last week"` is a date, and
+`"the first thing I should do"` and `"the first step"` are figures of speech —
+none of them is a selection. A selector also needs either a list already on
+screen (`context.rows`) or an explicit counting noun before it will fire.
 
-**The easiest way round a blocked network.** Tether the laptop to your phone
-for ten minutes, open Dossier at the *same* address as always — the port
-matters, the cache is keyed to it — switch the model on and let it download.
-It is cached in the browser against that address. Go back to the company
-network and it never downloads again, and it works with the network unplugged.
-Nothing is copied, nothing is installed, no firewall rule has to change.
+### 10.9 Teaching it
 
-**Another address for the same files.** A filter usually blocks a category
-rather than a hostname, and the same public files sit behind several
-addresses. `model/check.html` tries the alternatives — jsDelivr, unpkg,
-esm.sh for the runtime; Hugging Face and its mirror for the weights — and
-tells you which, if any, are open on your network. If one is, put it in
-**Library URL** and **Model host** in the same Setup panel and press Download.
-A mirror is somebody else's server: no record of yours goes to it, it only
-serves the weights, but in a regulated industry that is still worth a
-moment's thought.
+When it gets one wrong, correct it. **One correction is filed twice:**
 
-**Carrying it across on a stick.** If it is the network, put the model in the
-folder and Dossier never asks the internet for anything. Run `model/check.html`
-on a machine that *can* reach the internet and it prints the exact addresses —
-read out of the library itself rather than remembered — plus the `index.json`
-to paste. The shape is:
+- under **the sentence exactly as you typed it**, so that one is certain to work
+  again; and
+- under **its shape**, so everything like it works too.
+
+The shape is the sentence with the particulars replaced by placeholders:
+
+```
+"what is the ticket of D-0032"   →   ~what is the ticket of <code>
+```
+
+Placeholders: `<code>` a record reference · `<system>` · `<person>` ·
+`<when>` a date or range · `<n>` a number.
+
+Stored in `settings.chatLearn` as `key → { intent, text, at }`, where the key is
+either the normalised sentence or `"~" + template`.
+
+When nothing matches outright, the **nearest taught shape** is used, but only
+under conditions strict enough that a coincidence cannot pass:
+
+- every placeholder the lesson was taught with must be present again — a lesson
+  about `<code>` is not a lesson about a question with no record in it;
+- the overlap must be ≥ 60% of the lesson and ≥ 50% of what you just asked;
+- one word in common is a coincidence unless it is a long, particular word.
+
+**How to teach it, in the app:** ask the question → if the answer is wrong,
+press **Teach** on the reply → pick the right one from the list. The overlay
+shows the shape it is about to learn, so you can see how far the lesson will
+carry. **Menu → …** or asking *"what have I taught you"* lists every lesson,
+with the sentence that produced it, and lets you delete any of them.
+
+### 10.10 Aliases — your own words
+
+`"when I say <word> you mean <thing>"` stores an alias:
+
+```js
+settings.chatAlias = [ { from:"nps", kind:"system", value:"Notification" }, … ]
+```
+
+`kind` is `system`, `person`, `party`, `type`, `tag`, `script` or `routine`.
+Aliases join the lexicon immediately — the cache key includes a hash of every
+alias's `from>value:kind`, so editing one rebuilds the vocabulary at once
+rather than only on add or remove.
+
+### 10.11 Conversation
+
+It remembers the thread: the last record, the last list, the last answer and
+the last reasoning. That is what makes these work —
+
+```
+what's overdue                → three of them
+    the second one            → selector against the remembered list
+    why is it stuck           → the reason, from that record
+    are you sure              → where the number came from
+    open it                   → the record drawer
+```
+
+`justify` ("are you sure", "where did that come from") deliberately keeps the
+previous answer's context instead of replacing it, so you can interrogate an
+answer without losing it.
+
+---
+
+## 11. Assist (`assist.js`)
+
+Also no model, also nothing downloaded. Every number is counted from the
+records already in your workspace, so it knows only what you have logged, it
+sharpens as you log more, and on a fresh folder it says nothing rather than
+guessing.
+
+Two things come out of it:
+
+**`queue(ctx)`** — the live records in the order worth doing, each carrying the
+reasons it landed where it did. The score is transparent:
+
+| Signal | Weight |
+|---|---|
+| overdue | +40, plus 3 per day late (capped at +15) |
+| due today | +32 |
+| due tomorrow | +18 |
+| due soon | +10 |
+| priority | P1 highest, sliding down |
+| already started | +12 |
+| **waiting on someone else** | **−45** |
+| **blocked** | **−55**, and more for each record it holds up |
+| old and still open | up to +20 by age |
+| quick to finish | +6 |
+
+Every record shows its top three reasons in plain words, so the order is
+arguable rather than magic.
+
+**`brief(ctx)`** — things worth knowing that no single record would tell you.
+Seven detectors:
+
+| Detector | Fires when |
+|---|---|
+| `surge` | one system is failing more than it usually does |
+| `chase` | a wait has passed *that party's own usual* response time |
+| `stalled` | a record has stopped moving, judged against its own cohort |
+| `runbook` | this looks like something you have solved before — with the case, and the script, already written out |
+| `duplicate` | two live records are the same incident |
+| `load` | today's estimates exceed the hours left in the day |
+| `routineable` | you have raised the same thing on a regular cadence; it should be a routine |
+
+Cards absorb each other where one supersedes another, so you get the finding
+rather than five views of it. Every brief states its own **evidence level** —
+`thin` under 10 records, `fair` under 40, `good` above — because a
+confident-looking card resting on four records is worse than no card.
+
+`assist.js` touches no DOM and knows no language: every piece of text it
+produces is a phrase key and its variables, `{k, v}`, rendered by the app
+through `L()`. That is what keeps Khmer working for free and keeps the file
+testable on its own.
+
+---
+
+## 12. The optional local model
+
+**Everything above works with no model at all.** This section is about a small
+language model that runs *inside your browser, on your own graphics card*, and
+is used for exactly one thing.
+
+### 12.1 What it is allowed to do
+
+When `chat.js` is unsure which of its own questions you asked, it hands the
+model a numbered menu of its candidate readings and asks for **a number**.
+
+```
+system: You match a support engineer's message to one of a numbered list of
+        questions their record-keeping app can answer. Reply with the number
+        alone. If none of them fits, reply 0. Never explain.
+user:   Message: "…"
+        1. What is overdue  — e.g. "past due"
+        2. …
+        Which number? Reply with the number only.
+```
+
+The reply is parsed with `/-?\d+/`. Anything that is not an integer in range
+becomes `0` — "I don't know" — which is what the app would have said anyway. It
+is on a timeout it can never exceed.
+
+**So the model never writes a word you read.** Every sentence in every answer
+is still `chat.js`'s. This is the whole reason a 380 MB model is acceptable
+here: it is a tie-breaker, not an author.
+
+### 12.2 The three files and why they are separate
+
+| File | Network | Records |
+|---|---|---|
+| `dossier.html` | **none** — `connect-src 'none'` | all of them |
+| `brain.js` | none — it only talks to the frame | none |
+| `model/run.html` | **the only page allowed out** | **none, ever** |
+
+`run.html` runs in a sandboxed iframe and communicates only by `postMessage`.
+It has its own, much narrower CSP:
+
+```
+default-src 'none';
+script-src  'self' 'unsafe-inline' 'wasm-unsafe-eval' blob:
+            https://cdn.jsdelivr.net https://unpkg.com https://esm.sh;
+connect-src 'self' blob: data:
+            https://cdn.jsdelivr.net https://unpkg.com https://esm.sh
+            https://huggingface.co https://*.huggingface.co https://*.hf.co
+            https://hf-mirror.com https://*.hf-mirror.com
+            https://raw.githubusercontent.com https://*.githubusercontent.com;
+```
+
+`'wasm-unsafe-eval'` is confined to this one page. `dossier.html`'s CSP was
+**not** weakened to make any of this work, and must never be.
+
+### 12.3 The frame protocol
+
+`brain.js` → `run.html`, by `postMessage`:
+
+| Command | Payload | Returns |
+|---|---|---|
+| `ping` | — | `{version}` — proves the plumbing without downloading anything |
+| `catalogue` | `{lib}` | `[{id, mb, local?}]` — what can be loaded |
+| `plan` | `{lib, model}` | `{model_id, model, model_lib, mb}` — the exact URLs, read out of the library rather than remembered |
+| `load` | `{lib, model, host}` | `{model, local}` |
+| `chat` | `{opts}` | `{text}` |
+| `unload` | — | — |
+
+`run.html` posts `{evt:"progress", progress, text}` back throughout, and keeps a
+timestamped transcript on the page — because the last line is not the
+diagnosis.
+
+### 12.4 The models it offers
+
+| id | ≈MB | note |
+|---|---|---|
+| `Qwen2.5-0.5B-Instruct-q4f16_1-MLC` | 380 | fastest, and enough for this job |
+| `Qwen2.5-1.5B-Instruct-q4f16_1-MLC` | 1,100 | steadier on odd phrasing |
+| `Llama-3.2-1B-Instruct-q4f16_1-MLC` | 880 | a middle option |
+| `Llama-3.2-3B-Instruct-q4f16_1-MLC` | 2,300 | only worth it on a real GPU |
+| `gemma-2-2b-it-q4f16_1-MLC` | 1,500 | |
+| `Phi-3.5-mini-instruct-q4f16_1-MLC` | 2,200 | |
+
+### 12.5 `model/check.html` — the diagnostic
+
+Run this **before** anything else. It downloads nothing. It reports:
+
+- **WebGPU** and whether an adapter is actually offered (the API can exist with
+  no graphics card behind it);
+- room: system memory, cores, storage quota, whether storage is persistent;
+- how it is being served: `file://` vs `http://`, secure context, cross-origin
+  isolation, SharedArrayBuffer;
+- the CPU fallback: WebAssembly, SIMD, threads;
+- **file currency** — is `run.html` there, is `brain.js` the version that knows
+  about the frame, is the app current;
+- **the model in the folder** — and, file by file, whether the weights and the
+  `.wasm` are actually readable, in the right place, and not git-lfs pointers;
+- **reachability** — every host, in parallel, with timeouts, plus alternatives.
+
+It ends with a three-way verdict that separates the cases that need different
+fixes: *the hardware cannot*, *the hardware is fine — the network is blocking
+it*, and *yes*.
+
+### 12.6 Installing the model offline
+
+Many corporate networks block `huggingface.co` outright, and no code can argue
+with a firewall. So the model can simply be **put in the folder**, and then the
+network is never asked.
+
+**Menu → Setup → Understanding harder questions → What do I need to download?**
+prints the exact shopping list, read out of the pinned library rather than
+remembered, and generates the `index.json` for you.
+
+The layout:
 
 ```
 model/
-  web-llm.js                        the runtime
+  run.html
+  check.html
+  web-llm.js                        the runtime itself
   models/
-    index.json                      what is here, and where
-    Qwen2.5-0.5B-Instruct-.../      the weights, git-lfs cloned
-    lib/…-webgpu.wasm               the compiled model library
+    index.json                      what is present, and where
+    Qwen2.5-0.5B-Instruct-q4f16_1-MLC/
+      mlc-chat-config.json
+      ndarray-cache.json
+      params_shard_0.bin  …
+    lib/
+      Qwen2-0.5B-Instruct-q4f16_1-ctx4k_cs1k-webgpu.wasm
 ```
 
-`models/index.json` is the switch: if it is there, the model comes from the
-folder and nothing is fetched. If it is not, the CDN is used. Nothing else
-changes either way, and the settings panel says which one it loaded.
+`models/index.json`:
 
-**Which model.** The picker is filled from what the library actually offers,
-and the default is the smallest instruction-following one. That is deliberate,
-not a compromise: the job is "which of these questions is this", which needs
-no knowledge of the world and about six tokens of output. A larger model is
-slower at it and no better.
+```json
+[{ "model_id":  "Qwen2.5-0.5B-Instruct-q4f16_1-MLC",
+   "model":     "models/Qwen2.5-0.5B-Instruct-q4f16_1-MLC",
+   "model_lib": "models/lib/Qwen2-0.5B-Instruct-q4f16_1-ctx4k_cs1k-webgpu.wasm" }]
+```
+
+Paths are relative to `run.html`.
+
+**Two failure modes look exactly like success, so both are checked:**
+
+1. **A file one folder away.** The instructions say `model/models/lib/x.wasm`
+   and the obvious place to put it is `model/lib/x.wasm`. `run.html` reads the
+   first 256 bytes of every file `index.json` names before believing it, and if
+   the `.wasm` is not at the written path it tries the places it sensibly could
+   be and records in the transcript where it found it.
+2. **A clone made without `git lfs install`.** Every large file is then present,
+   correctly named, showing the right size in a listing — and is a 130-byte text
+   stub. Both `run.html` and `check.html` detect the pointer signature and say
+   so by name, with the fix.
+
+If the folder is present but broken, that is reported as a fault — it does
+**not** fall back to a download the network has already refused. And the picker
+does not have to agree with the folder: whoever put a model on the disk meant
+that one.
+
+The offline route needs the page served over `http://` (use
+`scripts\dossier-serve.bat`); browsers refuse to `fetch` local files from a
+`file://` page.
+
+**Expected transcript when it works:**
+
+```
+0.0s  runtime: local copy
+0.1s  models/index.json lists 1 model
+0.2s    ✓ the folder is complete — nothing will be downloaded
+0.3s  loading Qwen2.5-0.5B-Instruct-q4f16_1-MLC…
+      ready · Qwen2.5-0.5B-Instruct-q4f16_1-MLC (from the folder)
+```
+
+No host checks, no percentages: the preflight is skipped entirely when the
+files are on the disk.
 
 ---
 
-## Safety
+## 13. Languages
 
-The runner will only execute a file **already sitting in `scripts/`**. The
-request names a file, never a command line, and any name containing a path
-separator or `..` is refused. Parameter values are handed to `cmd.exe`, which
-re-reads its own metacharacters, so a value containing one (`& | < > ^ " \``
-or a newline) is refused rather than quoted. It runs as you, with no elevation,
-and makes no network calls — nor does `dossier.html`.
-
-Nothing in `scripts/queue/` grows without bound: a script's output is kept to
-8 KB, results Dossier never collected are deleted after a day, and the
-double-click transcripts start over once they pass 256 KB.
-
-Attachments and screenshots are copied into `tasks/<record>/` as ordinary
-unencrypted files. Worth a thought before that folder lives on shared storage.
-
----
-
-## Another language
-
-Phrases live in `lang/`, one XML file per language, in the ABP shape:
+Every phrase in the interface is a key, resolved through `lang/<culture>.xml`:
 
 ```xml
-<localizationDictionary culture="km" name="ភាសាខ្មែរ">
+<localizationDictionary culture="en" name="English">
   <texts>
-    <text name="Day" source="Day" value="ថ្ងៃ" />
-    <text name="Reset" source="Reset" value="" />
-  </texts>
-</localizationDictionary>
+    <text name="Day" source="Day" value="Day" />
+    <text name="SearchEverything" source="Search everything…" value="Search everything…" />
 ```
 
-The code calls `L("Day")` and never contains a translation, so nobody has to
-edit `dossier.html` to add a language, and nobody has to read code to write
-one. `source` carries the English next to the blank, which means a file can be
-translated on its own — handed to a person, or to a translation tool — with
-nothing else open.
+- `name` is the key, `source` is the English, `value` is the translation.
+- **Leave a `value` empty and that phrase stays English** — translating in
+  passes is fine, and a half-finished file is never a broken interface.
+- `{p0}`, `{name}` are values Dossier drops in. Keep them exactly, but move
+  them wherever the sentence needs.
+- Save the file, then **Menu → Appearance → Reload**.
 
-**An empty `value` is not an error.** That phrase stays English until someone
-fills it in, so translating in passes works and a half-finished file is
-perfectly usable.
+Current state: **`en.xml` has all 1,343 entries filled**. **`km.xml` has the
+same 1,343 keys with every `value` empty** — it is a ready-to-fill Khmer
+template, not a finished translation. The Khmer typeface is bundled in
+`fonts/` so Khmer renders without fetching a webfont, which would have broken
+the no-network promise.
 
-To add one:
-
-1. **Menu → Appearance → Language**, type a code (`km`, `th`, `pt-br`) and press
-   **Write or top up a language file**. A new file lists every phrase with a
-   blank value.
-2. Open it and fill in each `value=""`.
-3. Press **Reload the language files**, then pick it from the dropdown.
-
-The dropdown shows progress per language — *ភាសាខ្មែរ — 412 of 1107 phrases
-translated* — and the panel lists exactly which names are still blank.
-
-`lang/km.xml` already carries all 1,107 phrases with blank values, so Khmer
-needs no setup — open it and start filling in.
-
-**Pressing it again on a file that already exists tops it up rather than
-replacing it.** Every value you have filled in is read back out and written
-again unchanged, and only phrases Dossier has gained since are added as new
-blanks. So when the app grows, you top up and translate the difference — you
-never redo work.
-
-`{shown}`, `{n}` and the like are values Dossier drops in. Keep them exactly as
-written, but move them wherever the sentence needs them — `"{shown} of {total}"`
-becoming `"{shown} ក្នុងចំណោម {total}"` is the point of them.
-
-**A Khmer typeface ships with the app.** Everywhere else Dossier refuses to
-bundle a font, because a web font means fetching from someone else's server.
-Khmer is the exception: Windows ships only Khmer UI and DaunPenh, neither
-designed for dense interface text, and a machine without them draws Khmer as
-empty boxes. So **Noto Sans Khmer** (SIL OFL 1.1 — `fonts/OFL.txt`) is carried
-inside `dossier.html` as data. It is still not a download; nothing is fetched,
-and that is checked in the tests by asserting the page makes zero network
-requests.
-
-Both weights are subset to the Khmer and Khmer Symbols blocks — 32 KB for the
-pair, +8% on the file — and render pixel-identically to the full faces on coeng
-stacking and every pre-, post-, above- and below-base form. Latin is untouched:
-the browser only reaches for it on Khmer codepoints, so your chosen Latin face
-still sets everything else.
-
-It applies whatever the interface language, so a record you typed in Khmer
-reads properly with Dossier in English. **Menu → Appearance → Khmer text**
-picks a different face if you have one installed you prefer.
-
-**The rest of Khmer typography is handled in CSS, not in the translation.** Khmer stacks
-subscript consonants below the baseline and vowel signs above, and it has no
-spaces between words. Under `lang="km"` Dossier adds a Khmer font to each stack
-rather than replacing it (so ticket numbers and system names keep their face),
-raises line-height, drops the letter-spacing that mangles Khmer clusters, and
-steps the small chrome up from 11px to 13px — measured in the browser, because
-Khmer at Latin's small sizes turns to mud whoever writes the words.
-
-**What is covered:** 1,107 phrases — every view, every panel, the record
-drawer, all six menu tabs, the filters, the reports and chase text, toasts and
-error messages, weekday and month names, status names and column headings.
-
-Coverage was measured rather than assumed: a pseudo-language replaces *every*
-phrase with a marker, the app is driven through all six views, all seven menu
-panels and the drawer, and anything still showing English is a phrase that
-cannot be translated. What remains is 35 words, and they are correct as they
-are — the `schtasks` command line, file extensions like `.msg` and `.png`, the
-`tasks/` folder name, and the names languages call themselves.
-
-Three things are deliberately **not** translated, because they are your data
-rather than the interface: system names, record types and the teams you wait on
-(`DEF_SYS`, `DEF_TYPE`, `DEF_PARTY`). These are stored on every record and
-matched against, so translating them would rewrite your records and break every
-filter. Edit them in **Setup** instead, in whatever language you like.
+To add a language: copy `en.xml` to `lang/<culture>.xml`, change `culture` and
+`name`, empty every `value`, and translate.
 
 ---
 
-## Holidays, a year at a time
+## 14. Privacy and safety
 
-**Setup → Holidays and festivals → Add many at once.** Thirty dates one at a
-time is not something anyone does twice, so there are two ways to do it in one
-go.
+- **`connect-src 'none'`** on `dossier.html`. The browser enforces it. Open
+  F12 → Network and you will see nothing leave, because there is nothing that
+  *can* leave.
+- No account, no telemetry, no analytics, no sync, no update check.
+- The folder handle lives in IndexedDB; **the data never does**.
+- Attachments are copied into the record's folder as the original bytes. They
+  are never uploaded, converted or inspected.
+- **Every write is confirmed** — and the confirmation holds wherever the action
+  came from. A "Mark it done" chip used to run the moment it was clicked while
+  the same action typed as a sentence asked first: one button, two behaviours,
+  and the dangerous one was silent. Now both ask.
+- The runner runs **as you**, with no elevation, and touches no network.
+- `Ctrl`+`Z` undoes the last change.
+- Backups: one snapshot per day into `backups/`, 30 kept.
 
-**A date range** — from, to, a name, and *skip weekends*. Two weeks of annual
-leave is one click and ten working days.
+---
 
-**Or paste a list.** Three fields — `date`, `name` and `kind`:
+## 15. Automating Dossier from outside
 
-- **`kind: "public"`** — a day off. Tinted on the calendar, and target dates
-  are kept clear of it.
-- **`kind: "observance"`** — marked on the day, but still a working day.
-- Leave `kind` off and it counts as a day off.
+Dossier has **no API and no server** — on purpose. The integration surface is
+the folder: a JSON file you can read and write, and a queue directory that
+already accepts requests from anything that can write a text file.
 
-It takes that JSON, a plain `{"2027-01-01": "New Year"}` map, the short
-`d`/`n`/`k` spelling the file itself stores, or one a line:
+This section is the contract. Follow it and an outside automation — Power
+Automate, a scheduled PowerShell job, an agent — can read work, raise work, and
+run scripts without corrupting anything.
 
-```
-2027-01-01, International New Year, public
-2027-04-14, Khmer New Year, public
-14/04/2027  Khmer New Year          ← day-first dates work too
+### 15.1 The one rule that matters
+
+> **Dossier rewrites the whole of `dossier.json` when it saves.** It saves 700 ms
+> after any change, and on `Ctrl`+`S`. It reads the file **once**, when the
+> folder is attached.
+
+So there is no merge and no file locking. Two safe patterns, one unsafe one:
+
+| Pattern | Safe? |
+|---|---|
+| Write `dossier.json` **while the Dossier tab is closed** | ✅ yes — it is read fresh on next attach |
+| Write only into `scripts/queue/` and `tasks/<folder>/` | ✅ yes — Dossier never rewrites those wholesale |
+| Read `dossier.json` at any time | ✅ yes |
+| Write `dossier.json` **while the tab is open** | ❌ your write is lost at the next save |
+
+If an automation must add records while someone might have Dossier open, prefer
+a **drop folder** of your own that a person imports, or write at a time the tab
+is known to be closed (overnight, a logon task).
+
+### 15.2 Reading work out
+
+Everything is one `Get file content` + `Parse JSON` away.
+
+```powershell
+$d = Get-Content .\dossier.json -Raw -Encoding UTF8 | ConvertFrom-Json
+$today = (Get-Date).ToString('yyyy-MM-dd')
+$live  = 'open','processing','blocked'
+
+# overdue
+$d.tasks | Where-Object { $live -contains $_.status -and $_.due -and $_.due -lt $today }
+
+# waiting on someone, three days or more
+$d.tasks | Where-Object {
+  $live -contains $_.status -and $_.waitOn -and
+  ((Get-Date) - [datetime]$_.waitSince).TotalDays -ge 3 }
+
+# time logged this week, in hours
+[math]::Round((($d.tasks | Measure-Object -Property spent -Sum).Sum) / 60, 1)
 ```
 
-Leave the kind off and it counts as a day off. A date already marked is
-**replaced rather than doubled**, so pasting a corrected list twice is safe.
-Anything unreadable is listed back at you with the line that failed — thirty
-dates with two typos gives you twenty-eight marked days and two lines to fix,
-not an error.
+Notes for whoever writes the queries:
 
-**Copy what is marked now** puts the whole list on the clipboard as JSON, so
-you can edit a year in a text editor and paste it back.
+- `status` is the only truth about whether something is finished. There is no
+  separate "closed" flag.
+- **Live** means `open`, `processing` or `blocked`. Reports that forget
+  `blocked` under-count.
+- Dates are two different kinds: `due`, `waitUntil` and `forDate` are calendar
+  days (`YYYY-MM-DD`); `created`, `started`, `completed`, `waitSince`, `added`
+  and `log[].at` are full ISO 8601 instants in UTC. Do not compare them
+  directly.
+- Times are **minutes**, everywhere (`estimate`, `spent`, `minutes`).
+- `timerStart` is epoch **milliseconds** and is `0` when idle. Live time is
+  `spent + (now − timerStart)/60000`.
+- `blockedBy` and `scripts` hold **ids**, not codes or names.
+
+### 15.3 Writing work in
+
+If you add a record, produce **every** field in [§5.3](#53-tasks--a-record).
+Dossier normalises what it loads, but an automation that omits `log`, `files`
+or `tags` produces records that behave subtly differently from hand-made ones.
+
+```powershell
+$d = Get-Content .\dossier.json -Raw -Encoding UTF8 | ConvertFrom-Json
+
+# codes: never reuse, never guess. Take the highest that exists.
+$max  = ($d.tasks | ForEach-Object { [int]($_.code -replace '\D','') } |
+         Measure-Object -Maximum).Maximum
+$next = [math]::Max($max, [int]$d.seq) + 1
+$code = 'D-' + $next.ToString('0000')
+$now  = (Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ss.fffZ')
+
+$rec = [ordered]@{
+  id=('t' + [guid]::NewGuid().ToString('N').Substring(0,12)); code=$code
+  folder="$code Nightly sync failed"; title='Nightly sync failed'; notes=''
+  status='open'; priority='P2'; system='Imaging'; type='Incident'
+  ticket='INC0012345'; requester='Operations'; tags=@()
+  blockedBy=@(); autoBlocked=$false
+  waitOn=''; waitNote=''; waitSince=''; waitUntil=''; chases=@(); waitLog=@()
+  scripts=@(); scriptArgs=@{}
+  created=$now; due=(Get-Date).ToString('yyyy-MM-dd'); dueTime=''
+  started=''; completed=''; estimate=60; spent=0; timerStart=0
+  checklist=@()
+  log=@(@{ at=$now; kind='status'; text='Opened' })
+  files=@(); carried=0; fromRoutine=''; forDate=''
+}
+
+$d.tasks += $rec
+$d.seq    = $next
+$d.savedAt= $now
+$d | ConvertTo-Json -Depth 12 | Set-Content .\dossier.json -Encoding UTF8
+```
+
+Rules for a writer:
+
+1. **`code` must be unique.** Compute it from the maximum that exists, not from
+   `seq` alone — `seq` is advisory and is recomputed on load anyway.
+2. **`id` must be unique and is never parsed.** Any stable random string works.
+3. **`folder` must be a Windows-safe name.** Strip `\ / : * ? " < > |`, strip
+   control characters, collapse whitespace, and avoid `CON PRN AUX NUL COM1-9
+   LPT1-9`. If you also create `tasks/<folder>/`, the two must match exactly.
+4. **`system` and `type` must already exist** in `settings.systems[].name` and
+   `settings.types[]`, or the record shows with no colour and drops out of
+   filters.
+5. **Every status change should append a log line**, `{at, kind:"status", text}`.
+   The work log is the audit trail; a record that changed state with no log
+   entry looks like corruption to everything that reads it.
+6. **Write UTF-8 without a BOM.** A BOM makes `JSON.parse` fail and the folder
+   looks empty.
+7. **Copy the file to `backups/dossier-YYYY-MM-DD.json` before you touch it**
+   if your job is unattended.
+
+### 15.4 Running a script from outside
+
+You do not need Dossier for this at all. The runner takes requests from
+anything that can write two lines of text.
+
+```powershell
+$q  = '.\scripts\queue'
+$id = 'ext' + [DateTime]::UtcNow.ToString('yyyyMMddHHmmss')
+
+# line 1: the file name, in scripts\. line 2: its arguments. CRLF.
+Set-Content "$q\$id.run.txt" -Value @('restart-app-pool.bat','APP02 ImagingPool') -Encoding ASCII
+
+# wait for it — .done.txt appearing is the completion signal
+$deadline = (Get-Date).AddMinutes(5)
+while (-not (Test-Path "$q\$id.done.txt") -and (Get-Date) -lt $deadline) {
+  Start-Sleep -Milliseconds 250
+}
+$exit   = (Get-Content "$q\$id.done.txt" -TotalCount 1).Trim()
+$output = Get-Content "$q\$id.out.txt" -Raw
+```
+
+- Exit `0` is success. Exit `-1` is the runner refusing (see
+  [§9.3](#93-what-the-runner-refuses)) — read `.out.txt` for which of the three
+  reasons.
+- The request file is **deleted before the script runs**, so a missing
+  `.run.txt` does not mean it never started.
+- **Is the runner even alive?** `scripts/queue/.runner.txt` is rewritten about
+  every 10 seconds. Judge it by the file's own modified time, not by the text
+  inside — line 2 is `cmd`'s locale-dependent date format and is not worth
+  parsing. Line 1 *is* worth reading: it names the folder the runner is
+  watching, which catches a runner alive but pointed at a different copy.
+- Clean up `<id>.run.txt`, `<id>.out.txt` and `<id>.done.txt` when you are
+  done; nothing prunes them for you.
+
+### 15.5 Using the assistant headlessly
+
+`chat.js` is a classic script with no DOM dependency, so it runs under Node:
+
+```js
+global.window = global;
+require('./chat.js');
+
+const api = {
+  tasks: d.tasks, routines: d.routines, scripts: d.scripts, settings: d.settings,
+  now: Date.now(), cacheKey: 'x', memory: d.settings.chatLearn || {},
+  aliases: d.settings.chatAlias || [], convo: {},
+  phrase: p => '', ai: null, ctx: null,
+  h: { /* the helpers from §10.3 that your question actually needs */ }
+};
+
+const a = DossierChat.ask('what is overdue', api);
+console.log(a.intent, a.say, a.rows.length);
+```
+
+`h` is the part that takes work — it is the app's own statistics. A read-only
+integration usually needs only `findByRef`, `today`, `dayOf`, `live`, `LIVE`
+and `PRIS`. `DossierChat.shortlist(text, api, 0)` returns every candidate
+reading with its score, which is useful for routing a message without
+committing to an answer.
+
+### 15.6 A checklist for an automation agent
+
+```
+BEFORE WRITING dossier.json
+  [ ] the Dossier tab is closed
+  [ ] a dated copy exists in backups/
+  [ ] the file parses as JSON and app == "dossier"
+
+WHEN ADDING A RECORD
+  [ ] code is max(existing codes, seq) + 1, zero-padded to 4
+  [ ] id is unique
+  [ ] folder is Windows-safe and matches any folder you created
+  [ ] system exists in settings.systems, type exists in settings.types
+  [ ] status is one of open/processing/blocked/done/cancelled
+  [ ] priority is P1..P4
+  [ ] every date field is the right kind (day vs instant)
+  [ ] log has an opening entry
+  [ ] seq and savedAt updated
+
+WHEN CHANGING A RECORD
+  [ ] append a log line for anything a person would want explained
+  [ ] set completed when status becomes done
+  [ ] clear timerStart if you fold time into spent
+
+WHEN RUNNING A SCRIPT
+  [ ] the file is already in scripts\ (the runner refuses anything else)
+  [ ] .runner.txt is fresher than ~30 seconds
+  [ ] line 1 is a bare file name, line 2 the arguments
+  [ ] wait for <id>.done.txt, then read <id>.out.txt
+  [ ] delete the three files afterwards
+
+NEVER
+  [ ] weaken the CSP in dossier.html
+  [ ] write dossier.json while the tab is open
+  [ ] put a path, ".." or a drive letter in a run request
+  [ ] reuse a record code
+```
 
 ---
 
-## Panels fold
+## 16. Testing and measured numbers
 
-Setup and Help were a single long column each. Every heading in them is now a
-section you can fold, closed by default — Setup opens as a nine-line list of
-what is in there, and Help went from 4,000 pixels of essay to a contents page.
-What you open stays open.
+There is no test runner in the repository — the suites live outside it and
+drive the real files in a real browser (Playwright + Chromium), because the
+things that break here are things a unit test cannot see: a stale iframe cache,
+a CSP refusal, a file one folder away from where a manifest says.
+
+There are 47 suite files with 563 assertion sites (many inside loops, so the
+runtime count is higher). The eleven exercised for the current release —
+`teach`, `talk2`, `pick`, `brain.js.test`, `local`, `chkloc`, `ver`, `tr`,
+`plan`, `pre`, `stall` — report **216 passing assertions and no failures**,
+covering the assistant, teaching, selectors, the conversational layer, the
+model client, the frame protocol, the offline folder and the Setup panel.
+
+Measured, and stated honestly:
+
+| What | Result |
+|---|---|
+| Generated phrasings (9,542 sentences) | **97.4%** |
+| Unfamiliar vocabulary, hand-written before any tuning | **56.3%** |
+| `chat.js` on held-out phrasing *families* | **97.1%** |
+| A from-scratch averaged-perceptron classifier, same held-out families | **38.8%** |
+| A second benchmark half that scored 100% | **discarded — 93% of it leaked** |
+
+That last row is the point. A 70.4% → 100% jump was measured and then thrown
+away, because 93% of the test half contained a phrase that had been added to
+the vocabulary verbatim. A benchmark you tuned against stops being a benchmark.
+
+The from-scratch model experiment is also worth stating plainly: training a
+classifier on Dossier's own generated corpus reached **38.8%** on unseen
+phrasing families, against `chat.js`'s **97.1%** on the same split. Writing a
+model from scratch was tried, measured, and rejected on the numbers.
 
 ---
 
-## How it feels
+## 17. Known limits
 
-**Menu → Appearance → Feel.** Three settings, saved with the workspace:
-
-- **Motion** — Full, Subtle, or None. If your machine asks for reduced motion,
-  Dossier follows it; picking **Full** here on purpose overrides that, which is
-  the only way round that respects someone who set it deliberately.
-- **Density** — Comfortable or Compact. Compact takes about a third off the
-  padding, worth roughly four more records on a laptop screen.
-- **Text size** — 80% to 140%, and it scales the layout, not just the letters.
-
-**Press `?` for the keyboard shortcuts.** There were eighteen of them and no
-way to discover any: `1`–`6` for views, `J`/`K` to move, `Space` to cycle a
-status, `D` done, `T` to today, `S` for the clock, `Ctrl K` for the palette.
-
-The keyboard now behaves properly everywhere: opening a panel puts focus in
-it, Tab stays inside it, Escape closes it, and closing gives focus back to
-where you were.
+- **Edge and Chrome on desktop only.** Firefox and Safari have no File System
+  Access API, so they can show the app but not open a folder.
+- **Notifications need `http://`**, not `file://`. Use
+  `scripts\dossier-serve.bat`.
+- **With the tab closed, nothing is queued.** Dossier schedules its own
+  automatic runs, so a routine marked *runs itself* needs the tab open *and* a
+  live runner. For something that must fire regardless of whether anyone is
+  looking, point Windows Task Scheduler straight at your `.bat` — it needs
+  nothing from Dossier.
+- **The batch runner has no single-instance guard and no per-script timeout.**
+  Two runner windows open on the same folder will both claim requests, and a
+  script that hangs blocks the queue behind it until you close the window.
+  (The retired PowerShell runner enforced both; the `.bat` was chosen instead
+  because it needs nothing installed, and this is the price.) Start one window,
+  and give long-running scripts their own timeout internally.
+- **The demo `dossier.json` still registers two PowerShell scripts that no
+  longer ship** — `dossier-runner.ps1` and `dossier-watch.ps1`, left over from
+  before the batch runner replaced them. They show in **Menu → Scripts** as
+  *missing script*. Harmless, and deleting those two entries is the fix.
+- **`km.xml` is a template, not a translation.** All 1,343 keys are present with
+  empty values.
+- **The local model has never been downloaded successfully over a corporate
+  network** in testing. The offline folder route exists because of that.
+- Parsing `dossier.json` is the one thing that gets slower as work piles up —
+  at 20 records a day it is a few megabytes within a year. The runner compares
+  its modified time and parses only when something was actually saved.
 
 ---
 
-## Notes
+## 18. Glossary
 
-- **Holidays** are seeded with Cambodia 2026 (Sub-Decree No. 167, 18 Sep 2025).
-  Roughly half are lunar and move every year, and the list is reissued
-  annually — check it, and edit it under Menu → Setup. Opening a year with
-  nothing marked offers to fill in the dates that never move.
-- **Quick add** takes tokens: `p1 @Imaging #INC0012345 ~Sokha 2h today`.
-  Paste a Teams message or an email into the bar and it reads it instead.
-- **Menu → Help** explains every feature.
+| Term | Meaning |
+|---|---|
+| **Workspace** | The folder Dossier is pointed at. Holds `dossier.json` and everything else. |
+| **Record** | One piece of work. Called `tasks` in the JSON, *record* everywhere a person can see. |
+| **Code** | A record's human reference, `D-0001`. |
+| **Live** | Status `open`, `processing` or `blocked` — anything not finished. |
+| **Routine** | A schedule that raises a record, or nudges you, on a cadence. |
+| **Runs itself** | A routine that also queues its script — needs a live runner. |
+| **Script** | A `.bat` registered in `dossier.json` and living in `scripts\`. |
+| **Parameter** | A `{{mark}}` in a script, which becomes a box on any record it is attached to. |
+| **The runner** | `dossier-runner.bat`, watching `scripts\queue\`. |
+| **Queue** | `scripts\queue\` — the plain-text mailbox between Dossier and the runner. |
+| **Heartbeat** | `.runner.txt`, rewritten every ~10 seconds so Dossier knows the runner is alive. |
+| **Intent** | One of the 79 questions the assistant can answer. |
+| **Slot** | A value read out of a sentence — a system, a person, a date range. |
+| **Modifier** | A condition hung off a question — *except*, *only*, *more than*. |
+| **Selector** | *Which one* — first, second, last, "the one called invoice". |
+| **Lesson** | A correction, filed under both the sentence and its shape. |
+| **Shape / template** | A sentence with its particulars replaced: `what is the ticket of <code>`. |
+| **Alias** | Your own word for one of your own things. |
+| **Brief** | What `assist.js` finds that no single record would tell you. |
+| **Evidence level** | `thin` / `fair` / `good` — how much a finding rests on. |
+
+---
+
+*Dossier is one HTML file, some sidecar scripts, and a folder. That is the
+whole architecture, and it is the point: in ten years the folder will still
+open, whatever happened to this app.*
