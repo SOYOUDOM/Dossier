@@ -213,6 +213,7 @@ adds `D-0099` without touching `seq` will not cause a collision.
 | `templates` | array | — | Saved record templates. |
 | `chatLearn` | object | — | Everything you have taught the assistant. See [§10.8](#108-teaching-it). |
 | `flow` | `{on, url, scope, deep, cap, timeout, fallback}` | `{on:false,…}` | The Power Automate endpoint. See [§12](#12-asking-through-a-power-automate-flow). |
+| `hushed` | array of string | `[]` | Keys of the Day-sheet notices you have silenced. Cleared from **Setup → Hidden notices**. |
 
 ### 5.3 `tasks` — a record
 
@@ -316,7 +317,7 @@ Switch with **1**–**7**, or by clicking the tab.
 
 | Key | View | What it shows |
 |---|---|---|
-| **1** | **Day** | Today, in the order you would actually work it: **overdue** first, then **due today**, then what is **in progress**, then what is **blocked**, then the rest. The banner warnings live here too — including "nothing is running your scripts". |
+| **1** | **Day** | Today, in the order you would actually work it: **overdue** first, then **due today**, then what is **in progress**, then what is **blocked**, then the rest. The **Noticed** block lives here too — including "nothing is running your scripts". Each notice carries a ✕: worth saying once, wallpaper by the thirtieth morning, so any of them can be silenced for good and brought back from **Menu → Setup → Hidden notices**. |
 | **2** | **Board** | Five columns, one per status, drag between them. |
 | **3** | **Register** | The full table: every column, sortable, filterable, bulk-editable. |
 | **4** | **Week** | A calendar. `settings.calMode` switches between a 7-day week and a whole month. Holidays are marked. |
@@ -340,9 +341,10 @@ Switch with **1**–**7**, or by clicking the tab.
 
 ### 6.3 The other surfaces
 
-- **The record drawer** — `Enter` or `E` on a record, or click it. Everything
-  about one record: status, dates, timer, checklist, attachments, scripts with
-  their parameter boxes, the wait/chase block, and the work log.
+- **The record drawer** — `Enter` or `E` on a record, or click it. Slides in
+  from the **left**. Everything about one record: status, dates, timer,
+  checklist, attachments, scripts with their parameter boxes, the wait/chase
+  block, and the work log.
 - **The work console** — `W`. A focused writing surface for the record you are
   on: paste a screenshot straight in with `Ctrl`+`V`, log what you did, attach
   evidence.
@@ -353,7 +355,14 @@ Switch with **1**–**7**, or by clicking the tab.
 - **The command palette** — `Ctrl`+`K`.
 - **The filter rail** — system, person, type, tag, priority, status, date
   range. Remembered between sessions when `settings.rememberFilters` is on.
-- **The Ask box** — `A`. See [§10](#10-the-assistant-chatjs).
+- **The Ask box** — `A`. Docks to the **right** and stays there: it raises no
+  dimmer and takes no focus trap, and the app makes room for it rather than
+  being covered, so a record can be open on the left and edited while the
+  answer is still on screen. See [§10](#10-the-assistant-chatjs).
+
+Buttons inside an answer **resolve when you press them**: the ones you did not
+choose fold away and the one you did stays with a tick, so a long thread reads
+as a record of what you did rather than a wall of things you might.
 
 ### 6.4 Keyboard
 
@@ -1335,12 +1344,13 @@ drive the real files in a real browser (Playwright + Chromium), because the
 things that break here are things a unit test cannot see: a stale iframe cache,
 a CSP refusal, a file one folder away from where a manifest says.
 
-The seven exercised for the current release — `teach`, `talk2`, `pick`,
-`flowval`, `flowe2e`, `flowui`, `flowmore` — report **253 passing assertions
-and no failures**, covering the local assistant, teaching, selectors, the
-reply validator, the whole network path in a real browser against an endpoint
-that misbehaves the way real ones do, the Setup panel, and all 39 actions.
-Eight suites covering the local model were deleted with it.
+The eight exercised for the current release — `teach`, `talk2`, `pick`,
+`flowval`, `flowe2e`, `flowui`, `flowmore`, `chatui` — report **286 passing
+assertions and no failures**, covering the local assistant, teaching,
+selectors, the reply validator, the whole network path in a real browser
+against an endpoint that misbehaves the way real ones do, the Setup panel, all
+39 actions, and the docked layout down to where each masthead tab lands.
+Nine suites covering the local model were deleted with it.
 
 Measured, and stated honestly:
 
