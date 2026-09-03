@@ -34,6 +34,7 @@ job, or a script.
 | 10 | [The assistant (`chat.js`)](#10-the-assistant-chatjs) |
 | 11 | [Assist (`assist.js`)](#11-assist-assistjs) |
 | 12 | [The optional local model](#12-the-optional-local-model) |
+| 12A | [Asking through a Power Automate flow](#12a-asking-through-a-power-automate-flow) |
 | 13 | [Languages](#13-languages) |
 | 14 | [Privacy and safety](#14-privacy-and-safety) |
 | 15 | [Automating Dossier from outside](#15-automating-dossier-from-outside) |
@@ -51,7 +52,7 @@ These are design invariants, not preferences. Anything built on top of Dossier
 | # | Rule | Enforced by |
 |---|---|---|
 | 1 | **`dossier.html` cannot reach the network.** Not fetch, not XHR, not WebSocket, not a form post. | A `Content-Security-Policy` meta tag: `connect-src 'none'; form-action 'none'`. The browser enforces it; you can verify it in F12 → Network. |
-| 2 | **Your records never leave the folder.** No telemetry, no sync, no account, no cloud. | Rule 1, plus there is no server component at all. |
+| 2 | **Your records never leave the folder** unless you configure an endpoint and switch it on. No telemetry, no sync, no account, no cloud, and nothing at all by default. | Rule 1, plus there is no server component. The one exception is [§12A](#12a-asking-through-a-power-automate-flow), which is off until you paste in a URL, states what it sends, and shows you the bytes first. |
 | 3 | **The data outlives the app.** `dossier.json` is human-readable JSON; attachments are the original files in ordinary folders. | The save format is plain, indented JSON. |
 | 4 | **Nothing is written while you ask a question.** Reading is read-only, down to not creating an empty object in settings. | `chatApi()` builds its view without mutating state. |
 | 5 | **Anything that writes asks first.** Log, close, hand over, chase, run, remind — each is proposed and confirmed, whether it arrived as a sentence or a button. | `chatDo()` refuses `act.confirm` unless the action carries `__ok`. |
@@ -105,6 +106,9 @@ That is the entire setup. You should immediately see:
 | `assist.js` | ~20 KB | optional | The ranking and briefing engine behind the **Assist** tab and the Insight cards. |
 | `brain.js` | ~21 KB | optional | Client for the optional local language model. Drives `model/run.html` in a sandboxed iframe. |
 | `model/run.html` | ~18 KB | optional | The *only* page allowed to touch the network. Loads and runs the model; holds no records. |
+| `flow.js` | ~22 KB | optional | Client for a Power Automate endpoint: builds the request, validates the reply, and owns the relay frame. |
+| `flow/relay.html` | ~9 KB | optional | The only page that posts to your endpoint. Sandboxed, holds no records, pinned to one origin. |
+| `flow/CONTRACT.md` | ~16 KB | — | What your flow receives and must return, generated from `flow.js`. |
 | `model/check.html` | ~35 KB | optional | A diagnostic: can this PC run a model, and can it reach the files? |
 | `dossier.json` | ~15 KB | — | The demo workspace: 7 records, 2 routines, 4 scripts, settings, Cambodian holidays. |
 | `lang/en.xml` | ~175 KB | optional | Every interface phrase in English — 1,343 entries. |
@@ -1134,6 +1138,91 @@ The offline route needs the page served over `http://` (use
 
 No host checks, no percentages: the preflight is skipped entirely when the
 files are on the disk.
+
+---
+
+## 12A. Asking through a Power Automate flow
+
+The local assistant ([§10](#10-the-assistant-chatjs)) answers from your own
+records with no network and no model. This is the other route, and it is the
+only feature in Dossier that sends anything anywhere. It is **off until you
+paste in an endpoint URL and switch it on**, in
+**Menu → Setup → Ask through Power Automate**.
+
+### How it fits together
+
+```
+dossier.html            flow.js              flow/relay.html        your flow
+connect-src 'none'   ─> owns the frame   ─>  connect-src https:  ─>  Power Automate
+holds the records       holds no records     holds no records        does the thinking
+```
+
+`dossier.html`'s CSP is unchanged and always will be. Every request is made by
+`flow/relay.html`, which holds no records, has no access to `dossier.json`, is
+**pinned to your endpoint's origin** and refuses any other, and refuses
+redirects rather than following one to a host you did not choose.
+
+### The exchange
+
+Dossier posts one JSON object — your message, the date, the last few turns,
+your workspace's vocabulary, a slice of your records, and `can`: the full list
+of actions the flow may ask for, generated from the running code. The flow
+returns `say`, `ask`, and `actions`.
+
+Actions that only read run immediately. **Every action that writes is shown to
+you in full and waits for a yes** — the same gate the local assistant's write
+actions have always used, and it holds whether the action arrived as a
+proposal or as a button.
+
+22 actions, 8 read-only and 14 that write. The strongest is `setStatus` to
+`cancelled`; nothing deletes anything.
+
+### What it refuses
+
+Nothing coming back is trusted — which matters the moment your flow's prompt
+starts reading a mail or a ticket somebody else wrote. An action not in `can`
+is dropped and named. A missing or wrong-shaped argument is dropped and named.
+A record reference that resolves to nothing is refused at the moment of
+running. A script or party you do not have is refused, with the list of ones
+you do.
+
+### The two things that break every first attempt
+
+1. **No Response action** in the flow, so it never answers.
+2. **No `Access-Control-Allow-Origin: *`** header on that Response — the flow
+   runs perfectly, the run history says success, and the browser still refuses
+   to let Dossier read the reply.
+
+Both look identical from the outside ("Failed to fetch"), so Dossier tells
+them apart: after a failure it retries opaquely, and if the host answered
+that way it reports the missing header **by name** instead of guessing.
+
+**Test the connection** walks six rungs and names the one that broke.
+**Show me exactly what would be sent** prints the bytes before you trust it
+with anything real. **Show the relay** puts the frame on screen with a
+timestamped transcript, with the URL's signature masked so it is safe to paste.
+
+### Settings
+
+Stored in `settings.flow`:
+
+| Key | Default | Meaning |
+|---|---|---|
+| `on` | `false` | Off until you switch it on, even with a URL set. |
+| `url` | `""` | Your flow's HTTP POST URL. **This is a credential** — see below. |
+| `scope` | `"live"` | `names` (no records at all) · `live` · `all`. |
+| `deep` | `false` | Include notes and work logs. |
+| `cap` | `400` | Most records to send; live work is kept first when it has to cut. |
+| `timeout` | `30` | Seconds before giving up. |
+| `fallback` | `true` | When the flow fails, answer with the local assistant instead and say so. |
+
+> **The URL is a password.** Anyone holding a Power Automate trigger URL,
+> signature and all, can run your flow. It is stored in `dossier.json` in your
+> workspace, so do not commit that file to a public repository, and rotate the
+> trigger's signature if it gets out.
+
+The full specification — every argument of every action, the request schema,
+and how to build the flow — is in [`flow/CONTRACT.md`](flow/CONTRACT.md).
 
 ---
 

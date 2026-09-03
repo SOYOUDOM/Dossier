@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Dossier flow relay</title>
+
+<!-- ══════════════════════════════════════════════════════════════════════
+     THE ONE PAGE ALLOWED OUT
+
+     dossier.html carries connect-src 'none' and always will. That is the
+     promise the whole application is built on, and it is worth more than any
+     feature: the browser enforces it, so it is provable rather than claimed.
+
+     Asking a question of a Power Automate flow needs a network request, and
+     there is exactly one honest way to have both. Put the request somewhere
+     else — this page, in a sandboxed frame, which holds no records, has no
+     access to dossier.json, and talks to the application only through
+     postMessage.
+
+     So the blast radius of this file is: it can POST text to one https
+     address that the application told it to use, and hand the reply back.
+     It cannot read your workspace, and the application still cannot reach
+     the network.
+
+     connect-src cannot name your endpoint, because a meta CSP is static and
+     your endpoint is typed in at runtime. So it allows https: and this page
+     pins the origin itself, in code, against the one the application
+     declared — and refuses everything else, including a redirect to
+     somewhere different. Two locks, one of them enforced by the browser.
+     ══════════════════════════════════════════════════════════════════════ -->
+
+<meta http-equiv="Content-Security-Policy" content="
+  default-src 'none';
+  script-src 'self' 'unsafe-inline';
+  style-src 'unsafe-inline';
+  connect-src https:;
+  form-action 'none';
+  base-uri 'none'">
+
+<style>
+  body{margin:0;padding:14px;font:12px/1.6 ui-monospace,Consolas,monospace;
+       background:#12100e;color:#d8d2c6}
+  h1{font:600 12px/1.4 system-ui,sans-serif;color:#a89a84;margin:0 0 10px;
+     text-transform:uppercase;letter-spacing:.09em}
+  #say{color:#e8dfcd;margin-bottom:10px}
+  #log{white-space:pre-wrap;word-break:break-word;color:#9d947f;font-size:11px}
+  .ok{color:#7fb069}.bad{color:#d1656b}
+</style>
+</head>
+<body>
+<h1>Dossier flow relay</h1>
+<div id="say">idle</div>
+<div id="log"></div>
+
+<script>
+"use strict";
+
+const RELAY_VERSION = "1.0";
+const T0 = Date.now();
+
+let parentWin = null;
+let PIN = "";                 /* the only origin this page may talk to */
+
+const el = document.getElementById("log");
+const sayEl = document.getElementById("say");
+
+function secs(){ return ((Date.now() - T0) / 1000).toFixed(1).padStart(5) + "s  "; }
+function say(t){ sayEl.textContent = t; }
+function log(t){ el.textContent += secs() + t + "\n"; }
+
+/* A Power Automate URL carries its signature in the query string. That is a
+   credential — anyone holding the whole URL can run the flow — so it never
+   appears in the transcript, which is a thing people paste into chat windows
+   when they are asking for help. */
+function safeUrl(u){
+  try {
+    const x = new URL(u);
+    const q = x.searchParams;
+    if (q.has("sig")) q.set("sig", "…");
+    if (q.has("sp")) q.set("sp", "…");
+    x.search = q.toString();
+    return x.href;
+  } catch(e){ return "(unreadable url)"; }
+}
+function originOf(u){ try { return new URL(u).origin; } catch(e){ return ""; } }
+
+function post(msg){
+  try { (parentWin || window.parent).postMessage(Object.assign({ __dossier:1 }, msg), "*"); }
+  catch(e){}
+}
+
+/* ── the request ─────────────────────────────────────────────────────────
+   Content-Type is text/plain on purpose, and it is the difference between
+   this working and this not working.
+
+   A POST of application/json is not a "simple" cross-origin request, so the
+   browser sends an OPTIONS preflight first, and a Power Automate "When an
+   HTTP request is received" trigger does not answer OPTIONS — the request
+   dies before your flow ever runs, with nothing in the run history to look
+   at. text/plain with no custom headers is a simple request: it goes
+   straight through, and the flow gets the same JSON in its body either way.
+
+   Reading the REPLY still needs the flow to return
+   Access-Control-Allow-Origin, which is one header on its Response action.
+   There is no way around that one from this side, so when it is missing this
+   page says so by name rather than reporting "failed to fetch". */
+async function send(opts){
+  const url = String(opts.url || "");
+  const ms = Math.max(1000, +opts.timeout || 30000);
+
+  if (!/^https:\/\//i.test(url))
+    throw fail("badurl", "The endpoint must be an https:// address. " +
+      "A Power Automate URL always is.");
+  const origin = originOf(url);
+  if (!origin) throw fail("badurl", "That endpoint is not a readable URL.");
+  if (PIN && origin !== PIN)
+    throw fail("pin", "Refused: the application declared " + PIN + " and this " +
+      "request is for " + origin + ".");
+
+  const body = String(opts.body == null ? "" : opts.body);
+  log("POST " + safeUrl(url));
+  log("  " + body.length.toLocaleString() + " bytes, " + (ms / 1000) + "s deadline");
+
+  const ac = new AbortController();
+  const timer = setTimeout(() => ac.abort(), ms);
+  const t0 = Date.now();
+  let r;
+  try {
+    r = await fetch(url, {
+      method: "POST",
+      /* simple request: no custom headers, no application/json */
+      headers: { "Content-Type": "text/plain;charset=UTF-8" },
+      body: body,
+      mode: "cors",
+      credentials: "omit",
+      /* a redirect is refused rather than followed. Following one would post
+         the workspace to whatever host the redirect named, which is exactly
+         the thing the pin above exists to prevent, and no Power Automate
+         trigger redirects anyway. */
+      redirect: "error",
+      cache: "no-store",
+      signal: ac.signal
+    });
+  } catch(e){
+    clearTimeout(timer);
+    const took = ((Date.now() - t0) / 1000).toFixed(1) + "s";
+    if (e && e.name === "AbortError"){
+      log("  ✗ no answer within " + took);
+      throw fail("timeout", "The endpoint did not answer within " + (ms / 1000) +
+        " seconds. A flow that ends in a Response action normally answers in " +
+        "two or three; one that has no Response action never answers at all.");
+    }
+    /* "Failed to fetch" is the same message for a blocked host, a dead host,
+       and a host that answered without the CORS header. Those need three
+       different fixes, so they are told apart rather than guessed at. */
+    log("  ✗ " + String((e && e.message) || e));
+    const reachable = await probe(url, Math.min(8000, ms));
+    if (reachable){
+      log("  the host answered when the reply was not read — this is CORS");
+      throw fail("cors",
+        "The endpoint is reachable and it ran, but the browser was not allowed " +
+        "to read the reply. Add a Response action at the end of the flow with " +
+        "the header Access-Control-Allow-Origin set to *  — without it every " +
+        "call looks like a failure here even though the flow succeeded.");
+    }
+    log("  nothing answered at all");
+    throw fail("blocked",
+      "Nothing answered at " + origin + ". Either this network blocks it, or " +
+      "the URL is wrong or expired. Open the URL's host in a browser tab on " +
+      "this machine to see which.");
+  }
+  clearTimeout(timer);
+
+  const took = Date.now() - t0;
+  let text = "";
+  try { text = await r.text(); } catch(e){}
+  log("  " + (r.ok ? "✓ " : "✗ ") + r.status + " " + (r.statusText || "") +
+      " in " + (took / 1000).toFixed(1) + "s, " + text.length.toLocaleString() + " bytes");
+
+  if (!r.ok)
+    throw fail("http", "The flow answered " + r.status +
+      (r.status === 401 || r.status === 403
+        ? " — the signature in the URL is wrong or has been rotated. Copy the " +
+          "URL again from the trigger."
+        : r.status === 404
+        ? " — nothing is listening at that address. Check the URL, and that " +
+          "the flow is turned on."
+        : r.status === 502 || r.status === 500
+        ? " — the flow itself failed. Its run history will say where."
+        : ".") + (text ? "\n\n" + text.slice(0, 600) : ""), { status:r.status, text:text });
+
+  return { status:r.status, text:text, ms:took };
+}
+
+/* Did anything answer at all? An opaque no-cors request resolves for any
+   reply the server sends, and rejects only when nothing came back — which is
+   exactly the line between "CORS" and "unreachable". */
+async function probe(url, ms){
+  const ac = new AbortController();
+  const t = setTimeout(() => ac.abort(), ms || 8000);
+  try {
+    await fetch(url, { method:"POST", mode:"no-cors", body:"{}", cache:"no-store",
+                       credentials:"omit", signal:ac.signal,
+                       headers:{ "Content-Type":"text/plain;charset=UTF-8" } });
+    return true;
+  } catch(e){ return false; }
+  finally { clearTimeout(t); }
+}
+
+function fail(kind, why, extra){
+  const e = new Error(why);
+  e.kind = kind;
+  if (extra) Object.assign(e, extra);
+  return e;
+}
+
+/* ── the protocol ──────────────────────────────────────────────────────── */
+window.addEventListener("message", async function(ev){
+  const m = ev.data;
+  if (!m || m.__dossier !== 1 || !m.cmd) return;
+  parentWin = ev.source || parentWin;
+
+  let result = null, error = null, kind = "";
+  try {
+    if (m.cmd === "ping"){
+      result = { version:RELAY_VERSION };
+    } else if (m.cmd === "pin"){
+      PIN = String(m.origin || "");
+      log("pinned to " + (PIN || "(nothing)"));
+      result = { pinned:PIN };
+    } else if (m.cmd === "post"){
+      say("asking…");
+      result = await send(m);
+      say("answered " + result.status);
+    } else if (m.cmd === "reach"){
+      /* the diagnostic's own question: is the host there at all */
+      result = { reachable: await probe(String(m.url || ""), m.timeout || 8000) };
+    } else if (m.cmd === "clear"){
+      el.textContent = ""; say("idle"); result = { cleared:true };
+    } else {
+      throw fail("cmd", "unknown command: " + m.cmd);
+    }
+  } catch(e){
+    error = String((e && e.message) || e);
+    kind = (e && e.kind) || "error";
+    say("failed");
+    log("FAILED: " + error.split("\n")[0]);
+  }
+
+  post({ id:m.id, ok:!error, result:result, error:error, kind:kind,
+         transcript: el.textContent });
+});
+
+log("relay " + RELAY_VERSION + " ready");
+post({ evt:"ready", version:RELAY_VERSION });
+</script>
+</body>
+</html>

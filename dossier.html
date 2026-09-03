@@ -1659,6 +1659,11 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
 <!-- Optional. Nothing here needs it; if the file is absent the assistant
      works exactly as it always has, minus one fallback. -->
 <script src="brain.js"></script>
+<!-- Optional, and the only feature in Dossier that sends anything anywhere.
+     It still does not fetch: it drives flow/relay.html, which is sandboxed,
+     holds no records, and is the only page with a connect-src that allows
+     anything at all. Absent, the Ask box is exactly as it was. -->
+<script src="flow.js"></script>
 
 <script>
 "use strict";
@@ -3026,6 +3031,47 @@ const STRINGS = {
   TaughtOneGone: "Dropped that one.",
   TaughtCount: "{n} lesson(s)",
   ChatAliasSaved: "Noted. \u201c{from}\u201d means {to} from now on.",
+  /* ── asking through a Power Automate flow ─────────────────────────────
+     Every one of these is new, so the language files do not carry them yet.
+     They fall back to the English here until somebody adds them to
+     lang/*.xml, which is exactly what the fallback is for. */
+  FlowHead: "Ask through Power Automate",
+  FlowBlurb: "The assistant answers from your own records, with no network and no model, and it is right about 97 times in 100 on the questions it knows. This is the other route: your message and a description of your workspace go to an endpoint you own — a Power Automate flow with a “When an HTTP request is received” trigger — and whatever that flow decides comes back as a list of things to do. Dossier checks every one of them and does the ones it recognises.",
+  FlowWarn: "This is the only part of Dossier that sends anything anywhere. Your records leave this folder when you use it. Choose below how much goes, and press “Show me exactly what would be sent” before you trust it with anything real.",
+  FlowNetwork: "Dossier itself still cannot reach the network — the policy in its head forbids it and that does not change. The request is made by flow/relay.html in a hidden frame: a page that holds none of your records, is pinned to your endpoint’s address and no other, and can do nothing but post text there and hand the reply back.",
+  FlowUse: "Use a flow",
+  FlowOff: "Off",
+  FlowOn: "On",
+  FlowUrl: "Endpoint URL",
+  FlowUrlHint: "Paste the whole HTTP POST URL from your flow’s trigger, signature and all. It is stored in dossier.json in this folder — anyone holding that URL can run your flow, so treat the file as you would a password.",
+  FlowScope: "What to send",
+  FlowScopeNames: "Names only — no records at all",
+  FlowScopeLive: "Unfinished records",
+  FlowScopeAll: "Every record",
+  FlowScopeHint: "Names only is enough to raise work and run scripts. Anything that reports on what you have done needs the records.",
+  FlowDeep: "Include notes and work logs",
+  FlowDeepHint: "Off by default. This is the most detailed and most sensitive part of a record.",
+  FlowCap: "Most records to send",
+  FlowTimeout: "Give up after (seconds)",
+  FlowFallback: "If the flow fails, answer locally instead",
+  FlowTest: "Test the connection",
+  FlowPreview: "Show me exactly what would be sent",
+  FlowShow: "Show the relay",
+  FlowHide: "Hide the relay",
+  FlowContract: "Copy what the flow has to return",
+  FlowTesting: "testing…",
+  FlowAsking: "asking your flow…",
+  FlowNoFile: "flow.js is not in this folder. Put it next to dossier.html and reload.",
+  FlowNoUrl: "No endpoint yet. Paste your flow’s URL above.",
+  FlowBytes: "{n} would be sent",
+  FlowAnswered: "answered in {ms} ms",
+  FlowRefused: "Dossier would not do this:",
+  FlowNothing: "Your flow answered, but with nothing to say and nothing to do.",
+  FlowFellBack: "Your flow did not answer, so this was worked out here instead.",
+  FlowFailed: "The flow could not be asked.",
+  FlowRan: "Done.",
+  FlowVersions: "flow.js {app} · relay {relay}",
+  FlowStaleRelay: "The relay in the frame is an older copy than flow.js expects. Hard-refresh with Ctrl+Shift+R.",
   BrainHead: "Understanding harder questions",
   BrainBlurb: "The assistant reads your questions by matching them against the shapes it knows, and it is right about 97 times in 100. For the rest, a small language model can run on this PC\u2019s graphics chip and pick which of its own candidates you probably meant. It never writes an answer \u2014 it only chooses from a list the assistant already knows how to answer, and its choice is offered to you rather than acted on.",
   BrainNetwork: "Dossier itself cannot reach the network at all \u2014 it carries a policy that forbids it, and that stays true whether this is on or off. So the model does not run in here. Switching it on opens model/run.html in a hidden frame: a page of its own, allowed to reach the model CDN and nowhere else, holding none of your records. It downloads the runtime and the weights once \u2014 the size is shown below \u2014 and caches them. Everything after that is offline, and the only thing that ever crosses between the two is your sentence going out and a number coming back.",
@@ -6606,6 +6652,12 @@ function chatAsk(text){
   chatPush({ who:"you", text:q });
   chatRenderYou(q);
   $("chatq").value = "";
+
+  /* With a flow configured, it answers instead. The local assistant is still
+     here and still knows this workspace — it is what a failed call falls back
+     to, and what answers when the flow is switched off. */
+  if (flowOn()) return flowAsk(q, c);
+
   let r;
   try { r = DossierChat.ask(q, chatApi(c.convo)); }
   catch(e){ r = { say:L("ChatBroke", { msg:String(e && e.message || e) }) }; }
@@ -6641,6 +6693,567 @@ async function brainOffer(q, said){
      need a second one. */
   chatBot({ say:L("BrainThought"),
             chips:[{ label:g.label, act:{ kind:"reread", intent:g.intent, text:q } }] }, q);
+}
+
+/* ═══ ASKING THROUGH A FLOW ═══════════════════════════════════════════════
+   The other half of DossierFlow. flow.js knows how to talk to an endpoint
+   and what a well-formed reply looks like; this knows what the application
+   can actually do about one.
+
+   The division matters: flow.js is testable without a browser and has no
+   opinion about the DOM, and this file is the only place where an action
+   turns into a change. Nothing arriving from outside reaches S.tasks except
+   through the functions below, which are the same ones the buttons use — so
+   a flow closing a record and a person closing a record leave identical
+   trails, undo included. */
+
+const FLOW = { probe:null, testing:false, last:null };
+
+function flowCfg(){
+  const st = S.settings;
+  if (!st.flow || typeof st.flow !== "object")
+    st.flow = { on:false, url:"", scope:"live", deep:false, cap:400,
+                timeout:30, fallback:true };
+  return st.flow;
+}
+function flowHere(){ return typeof window !== "undefined" && !!window.DossierFlow; }
+function flowOn(){
+  const c = flowCfg();
+  return flowHere() && !!c.on && !!String(c.url || "").trim();
+}
+function flowOrigin(){
+  try { return new URL(String(flowCfg().url || "").trim()).origin; } catch(e){ return ""; }
+}
+
+/* what the endpoint is told about this workspace. Deliberately not chatApi():
+   that hands over live arrays and every helper the assistant has, which is
+   right for something running in this page and wrong for something being
+   serialised and posted to a server. */
+function flowContext(){
+  const st = S.settings;
+  const c = chatThread();
+  const msgs = ((c && c.msgs) || []).slice(-6).map(m => ({
+    who: m.who === "you" ? "person" : "dossier",
+    text: m.who === "you" ? String(m.text || "") : String((m.reply && m.reply.say) || "")
+  })).filter(m => m.text);
+  const live = S.tasks.filter(t => LIVE.indexOf(t.status) >= 0);
+  const k = today();
+  return {
+    today: k,
+    weekday: ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"][dow(k)],
+    tasks: S.tasks, routines: S.routines, scripts: S.scripts, settings: st,
+    conversation: msgs,
+    people: knownValues("requester").concat(knownValues("waitOn"))
+              .filter((v, i, a) => v && a.indexOf(v) === i),
+    tags: knownValues("tags"),
+    counts: {
+      records: S.tasks.length, live: live.length,
+      overdue: live.filter(t => t.due && t.due < k).length,
+      dueToday: live.filter(t => t.due === k).length,
+      waiting: live.filter(t => t.waitOn).length,
+      blocked: live.filter(t => t.status === "blocked").length
+    }
+  };
+}
+
+/* ── the question ─────────────────────────────────────────────────────── */
+
+async function flowAsk(q, thread){
+  const cfg = flowCfg();
+  const log = $("chatLog");
+  const wait = document.createElement("div");
+  wait.className = "chb bot";
+  wait.innerHTML = '<div class="carry">' + esc(L("FlowAsking")) + "</div>";
+  log.appendChild(wait);
+  chatScroll();
+
+  let out = null, err = null;
+  try { out = await DossierFlow.ask(q, flowContext(), cfg); }
+  catch(e){ err = e; }
+  wait.remove();
+
+  if (err){
+    /* A flow that cannot be reached is a reason to fall back, not a reason
+       to have no answer. The local assistant knew this workspace before any
+       of this existed and still does. */
+    if (cfg.fallback && window.DossierChat){
+      let r;
+      try { r = DossierChat.ask(q, chatApi(thread ? thread.convo : {})); }
+      catch(e2){ r = { say:L("ChatBroke", { msg:String(e2 && e2.message || e2) }) }; }
+      if (thread && r.context) thread.convo = r.context;
+      r.note = L("FlowFellBack") + " " + String(err.message || err);
+      return chatBot(r, q);
+    }
+    return chatBot({ say:L("FlowFailed"), note:String(err.message || err),
+                     chips:[{ label:L("FlowTest"), act:{ kind:"panel", panel:"setup" } }] }, q);
+  }
+
+  chatBot(flowReply(out), q);
+  chatSide();
+}
+
+/* One validated reply, turned into the same shape every other answer uses —
+   so a flow's answer looks like an answer rather than like a debug dump, and
+   the "not what I meant" button underneath still works. */
+function flowReply(out){
+  const r = { say:out.say || "", note:"", rows:[], steps:[], chips:[] };
+
+  if (out.ask) r.say = (r.say ? r.say + "\n\n" : "") + out.ask;
+  if (out.note) r.note = out.note;
+  if (out.refused.length)
+    r.note = (r.note ? r.note + "\n" : "") + L("FlowRefused") + " " + out.refused.join(" · ");
+
+  const reads = out.actions.filter(a => !a.write);
+  const writes = out.actions.filter(a => a.write);
+
+  /* reading changes nothing, so it happens now and its results come back
+     inside this same answer */
+  reads.forEach(a => {
+    const res = flowRun(a, true);
+    if (res && res.rows) r.rows = r.rows.concat(res.rows);
+    if (res && res.say) r.say = (r.say ? r.say + "\n" : "") + res.say;
+  });
+
+  /* writing waits. One confirmation per action, because agreeing to raise a
+     record is not agreeing to close a different one. */
+  writes.forEach(a => {
+    const d = flowDescribe(a);
+    r.steps.push({ say:d.say, note:d.note || "",
+                   act:{ kind:"flow", a:a, confirm:d.confirm } });
+  });
+
+  if (!r.say && !r.rows.length && !r.steps.length && !r.note) r.note = L("FlowNothing");
+  return r;
+}
+
+/* ── saying what an action would do, before it does it ─────────────────── */
+
+function flowRef(a){
+  const t = findByRef(a.args.record);
+  return t ? t.code + " — " + t.title : String(a.args.record || "");
+}
+function flowDescribe(a){
+  const g = a.args, ref = () => flowRef(a);
+  switch (a.do){
+    case "createRecord": {
+      const bits = [g.system, g.type, g.priority, g.due ? "due " + g.due : ""].filter(Boolean);
+      return { say:"Raise “" + g.title + "”" + (bits.length ? "  ·  " + bits.join(" · ") : ""),
+               note:(g.checklist || []).length ? (g.checklist.length + " steps") : "",
+               confirm:"Raise this record?" };
+    }
+    case "updateRecord":
+      return { say:"Change " + ref(), note:Object.keys(g).filter(k => k !== "record")
+                 .map(k => k + " → " + JSON.stringify(g[k])).join(", "),
+               confirm:"Make that change?" };
+    case "setStatus":
+      return { say:"Move " + ref() + " to " + stMeta(g.status).label,
+               confirm:"Move it?" };
+    case "setDue":
+      return { say:(g.due ? "Set the target date on " + ref() + " to " + g.due +
+                            (g.dueTime ? " " + g.dueTime : "")
+                          : "Clear the target date on " + ref()),
+               confirm:"Set the date?" };
+    case "addLog":
+      return { say:"Add to the work log on " + ref(), note:g.text, confirm:"Log that?" };
+    case "addSteps":
+      return { say:"Add " + g.steps.length + " step" + (g.steps.length > 1 ? "s" : "") +
+                   " to " + ref(), note:g.steps.join(" · "), confirm:"Add the steps?" };
+    case "tickStep":
+      return { say:(g.done === false ? "Untick" : "Tick") + " “" + g.step + "” on " + ref(),
+               confirm:"Do that?" };
+    case "setWait":
+      return { say:"Hand " + ref() + " to " + g.waitOn, note:g.waitNote || "",
+               confirm:"Mark it as waiting?" };
+    case "chase":
+      return { say:"Open the chase sheet for " + ref(), confirm:"Draft a chase?" };
+    case "attachScript":
+      return { say:"Attach " + g.script + " to " + ref(),
+               note:g.args ? JSON.stringify(g.args) : "", confirm:"Attach it?" };
+    case "runScript":
+      return { say:"Run " + g.script + " on " + ref(),
+               note:g.args ? JSON.stringify(g.args) : "", confirm:"Run it?" };
+    case "createRoutine":
+      return { say:"Create the schedule “" + g.title + "” — " + g.freq +
+                   (g.cron ? " " + g.cron : g.time ? " at " + g.time : ""),
+               note:g.autoRun ? "and it would run its script by itself" : "",
+               confirm:"Create the routine?" };
+    case "pauseRoutine":
+      return { say:(g.paused === false ? "Resume" : "Pause") + " the routine “" + g.routine + "”",
+               confirm:"Do that?" };
+    case "notify":
+      return { say:(g.on ? "Turn Windows reminders on" : "Turn them off"),
+               confirm:"Change that?" };
+    case "undo":
+      return { say:"Undo the last change", confirm:"Undo it?" };
+  }
+  return { say:a.do, confirm:"Do that?" };
+}
+
+/* ── doing it ─────────────────────────────────────────────────────────── */
+
+function flowNeed(a, what){
+  chatBot({ say:"", note:"Your flow asked for " + a.do + ", but " + what });
+  return null;
+}
+
+function flowRun(a, quiet){
+  if (!a || !a.do) return null;
+  const g = a.args || {};
+  const need = ref => {
+    const t = findByRef(ref);
+    if (!t) flowNeed(a, "there is no record " + JSON.stringify(String(ref)) + " here.");
+    return t;
+  };
+  const done = (say, chips) => {
+    if (!quiet) chatBot({ say:say, chips:chips || [] });
+    return { say:say };
+  };
+
+  switch (a.do){
+    /* ── reads ─────────────────────────────────────────────────────────── */
+    case "say": return { say:g.text };
+
+    case "find": {
+      const rows = flowFind(g);
+      if (!quiet && rows.length) aiPin(rows.map(r => r.id), g.label || "from your flow");
+      return { rows: rows.slice(0, 40).map(t => ({
+        id:t.id, code:t.code, text:t.title,
+        sub:[stMeta(t.status).label, t.system, t.due ? "due " + t.due : ""].filter(Boolean).join(" · ")
+      })), say: rows.length ? "" : "Nothing matched that." };
+    }
+    case "open": { const t = need(g.record); if (t) openDrawer(t.id); return null; }
+    case "openFile": {
+      const t = need(g.record); if (!t) return null;
+      closeChat(); openAttachment(t, g.name); return null;
+    }
+    case "view":  closeChat(); setView(g.view); return null;
+    case "panel": closeChat(); openModal(g.panel); return null;
+    case "report": closeChat(); openModal("report"); return null;
+
+    /* ── writes ────────────────────────────────────────────────────────── */
+    case "createRecord": {
+      const f = { title:g.title, system:g.system || "", type:g.type || "",
+                  priority:g.priority || "P3", due:g.due || "", dueTime:g.dueTime || "",
+                  requester:g.requester || "", ticket:g.ticket || "",
+                  tags:(g.tags || []).slice(), notes:g.notes || "",
+                  estimate:g.estimate || 0 };
+      if ((g.checklist || []).length)
+        f.checklist = g.checklist.map(x => ({ text:x, done:false }));
+      if ((g.scripts || []).length){
+        const ids = g.scripts.map(n => { const sc = findScript(n); return sc && sc.id; }).filter(Boolean);
+        if (ids.length) f.scripts = ids;
+      }
+      const t = addTask(f);
+      if (g.waitOn) setWait(t.id, g.waitOn, g.waitNote || "", "");
+      renderAll();
+      return done(L("ChatLogged", { code:t.code }),
+                  [{ label:L("AiOpenRecord"), act:{ kind:"open", id:t.id } }]);
+    }
+    case "updateRecord": {
+      const t = need(g.record); if (!t) return null;
+      const patch = {};
+      ["title","system","type","priority","due","dueTime","requester","ticket","notes"]
+        .forEach(k => { if (k in g) patch[k] = g[k]; });
+      if ("tags" in g) patch.tags = g.tags.slice();
+      if ("estimate" in g) patch.estimate = g.estimate;
+      updateTask(t.id, patch, "Changed by your flow");
+      renderAll();
+      return done("Changed " + t.code + ".",
+                  [{ label:L("AiOpenRecord"), act:{ kind:"open", id:t.id } }]);
+    }
+    case "setStatus": {
+      const t = need(g.record); if (!t) return null;
+      setStatus(t.id, g.status); renderAll();
+      return done(L("ChatMoved", { code:t.code, to:stMeta(g.status).label }));
+    }
+    case "setDue": {
+      const t = need(g.record); if (!t) return null;
+      updateTask(t.id, { due:g.due || "", dueTime:g.dueTime || "" },
+                 g.due ? "Target date " + g.due : "Target date cleared");
+      renderAll();
+      return done(g.due ? t.code + " is due " + g.due + "." : t.code + " has no date now.");
+    }
+    case "addLog": {
+      const t = need(g.record); if (!t) return null;
+      pushUndo("log line");
+      t.log.push({ at:new Date().toISOString(), text:g.text });
+      touch(); renderAll(); if (S.open === t.id) renderDrawer();
+      return done("Logged on " + t.code + ".");
+    }
+    case "addSteps": {
+      const t = need(g.record); if (!t) return null;
+      pushUndo("steps from your flow");
+      const had = (t.checklist || []).map(c => String(c.text || "").toLowerCase().trim());
+      const add = g.steps.filter(x => had.indexOf(String(x).toLowerCase().trim()) < 0);
+      t.checklist = (t.checklist || []).concat(add.map(x => ({ text:x, done:false })));
+      t.log.push({ at:new Date().toISOString(), text:L("ChatStepsFrom", { n:add.length }) });
+      touch(); renderAll(); if (S.open === t.id) renderDrawer();
+      return done(L("ChatStepsAdded", { n:add.length, code:t.code }));
+    }
+    case "tickStep": {
+      const t = need(g.record); if (!t) return null;
+      const want = String(g.step).toLowerCase().trim();
+      const step = (t.checklist || []).find(c => String(c.text || "").toLowerCase().trim() === want)
+                || (t.checklist || []).find(c => String(c.text || "").toLowerCase().indexOf(want) >= 0);
+      if (!step) return flowNeed(a, "“" + g.step + "” is not a step on " + t.code + ".");
+      pushUndo("checklist");
+      step.done = g.done === false ? false : true;
+      touch(); renderAll(); if (S.open === t.id) renderDrawer();
+      return done((step.done ? "Ticked " : "Unticked ") + "“" + step.text + "”.");
+    }
+    case "setWait": {
+      const t = need(g.record); if (!t) return null;
+      if (!matchParty(g.waitOn))
+        return flowNeed(a, "“" + g.waitOn + "” is not one of your parties. " +
+          "Add it in Menu → Setup, or use one of: " + (S.settings.parties || []).join(", "));
+      setWait(t.id, g.waitOn, g.waitNote || "", g.waitUntil || "");
+      touch(); renderAll();
+      return done(L("ChatWaiting", { code:t.code, who:matchParty(g.waitOn) }));
+    }
+    case "chase": {
+      const t = need(g.record); if (!t) return null;
+      if (!t.waitOn) return flowNeed(a, t.code + " is not sitting with anybody.");
+      closeChat(); chaseWait(t.id); return null;
+    }
+    case "attachScript": {
+      const t = need(g.record); if (!t) return null;
+      const sc = findScript(g.script);
+      if (!sc) return flowNeed(a, "there is no script called “" + g.script + "”. " +
+        "You have: " + S.scripts.map(x => x.name).join(", "));
+      pushUndo("attach script");
+      if ((t.scripts || []).indexOf(sc.id) < 0) t.scripts = (t.scripts || []).concat([sc.id]);
+      if (g.args){
+        t.scriptArgs = t.scriptArgs || {};
+        t.scriptArgs[sc.id] = Object.assign({}, t.scriptArgs[sc.id], g.args);
+      }
+      touch(); renderAll(); if (S.open === t.id) renderDrawer();
+      return done(L("ChatScriptAttached", { file:sc.file || "", code:t.code }));
+    }
+    case "runScript": {
+      const t = need(g.record); if (!t) return null;
+      const sc = findScript(g.script);
+      if (!sc) return flowNeed(a, "there is no script called “" + g.script + "”.");
+      if (g.args){
+        t.scriptArgs = t.scriptArgs || {};
+        t.scriptArgs[sc.id] = Object.assign({}, t.scriptArgs[sc.id], g.args);
+      }
+      if ((t.scripts || []).indexOf(sc.id) < 0) t.scripts = (t.scripts || []).concat([sc.id]);
+      touch();
+      closeChat(); runScriptFor(t.id, sc.id); return null;
+    }
+    case "createRoutine": {
+      const r = { id:"R" + Date.now().toString(36), title:g.title, message:g.message || "",
+                  freq:g.freq, cron:g.cron || "",
+                  days:(g.days || []).map(Number).filter(n => n >= 0 && n <= 6),
+                  dom:g.dom || 1, time:g.time || "09:00",
+                  system:g.system || "", type:g.type || "", priority:g.priority || "P3",
+                  checklist:(g.checklist || []).slice(), notes:"",
+                  scripts:(g.scripts || []).map(n => { const sc = findScript(n); return sc && sc.id; })
+                            .filter(Boolean),
+                  autoRun:!!g.autoRun, paused:false };
+      if (!r.days.length) r.days = [1,2,3,4,5];
+      if (r.freq === "cron" && cronOk(r.cron))
+        return flowNeed(a, "that cron expression will not do: " + cronOk(r.cron));
+      pushUndo("routine");
+      S.routines.push(r); touch(); renderAll();
+      return done(L("ChatScheduled", { title:r.title }),
+                  [{ label:L("AiOpenRoutines"), act:{ kind:"panel", panel:"routine" } }]);
+    }
+    case "pauseRoutine": {
+      const want = String(g.routine).toLowerCase();
+      const r = S.routines.find(x => String(x.id).toLowerCase() === want)
+             || S.routines.find(x => String(x.title || "").toLowerCase() === want)
+             || S.routines.find(x => String(x.title || "").toLowerCase().indexOf(want) >= 0);
+      if (!r) return flowNeed(a, "there is no routine called “" + g.routine + "”.");
+      pushUndo("routine");
+      r.paused = g.paused === false ? false : true;
+      touch(); renderAll();
+      return done("“" + r.title + "” is " + (r.paused ? "paused" : "running") + ".");
+    }
+    case "notify":
+      return chatDo({ kind:"notify", on:!!g.on, __ok:true });
+    case "undo":
+      closeChat(); doUndo(); return null;
+  }
+  return null;
+}
+
+/* the filter behind the find action. Deliberately the same vocabulary the
+   rail uses, so a flow cannot ask for a slice the application cannot show. */
+function flowFind(g){
+  const k = today();
+  let out = S.tasks.slice();
+  const want = String(g.status || "live").toLowerCase();
+  if (want === "live") out = out.filter(t => LIVE.indexOf(t.status) >= 0);
+  else if (want !== "any") out = out.filter(t => t.status === want);
+  if (g.system) out = out.filter(t => String(t.system).toLowerCase() === String(g.system).toLowerCase());
+  if (g.type) out = out.filter(t => String(t.type).toLowerCase() === String(g.type).toLowerCase());
+  if (g.priority) out = out.filter(t => t.priority === g.priority);
+  if (g.tag) out = out.filter(t => (t.tags || []).some(x => String(x).toLowerCase() === String(g.tag).toLowerCase()));
+  if (g.person){
+    const w = String(g.person).toLowerCase();
+    out = out.filter(t => (peopleOf(t) || []).some(p => String(p).toLowerCase().indexOf(w) >= 0));
+  }
+  if (g.party) out = out.filter(t => String(t.waitOn || "").toLowerCase() === String(g.party).toLowerCase());
+  if (g.waiting) out = out.filter(t => !!t.waitOn);
+  if (g.overdue) out = out.filter(t => t.due && t.due < k && LIVE.indexOf(t.status) >= 0);
+  if (g.undated) out = out.filter(t => !t.due);
+  if (g.dueBefore) out = out.filter(t => t.due && t.due < g.dueBefore);
+  if (g.dueAfter) out = out.filter(t => t.due && t.due > g.dueAfter);
+  if (g.createdAfter) out = out.filter(t => dayOf(t.created) >= g.createdAfter);
+  if (g.text){
+    const w = String(g.text).toLowerCase();
+    out = out.filter(t => (t.title + " " + (t.notes || "") + " " + (t.ticket || ""))
+                            .toLowerCase().indexOf(w) >= 0);
+  }
+  return sortTasks(out).slice(0, Math.max(1, Math.min(200, g.limit || 40)));
+}
+
+/* ── the panel ─────────────────────────────────────────────────────────── */
+
+function flowVersions(){
+  const app = flowHere() ? DossierFlow.version : "—";
+  const relay = (FLOW.relay || "—");
+  return L("FlowVersions", { app:app, relay:relay });
+}
+
+function renderFlow(){
+  const box = $("flowBox");
+  if (!box) return;
+
+  if (!flowHere()){
+    box.innerHTML = '<p class="hint2">' + esc(L("FlowBlurb")) + "</p>" +
+      '<p class="hint2" style="color:var(--p2);margin-top:8px">' + esc(L("FlowNoFile")) + "</p>";
+    return;
+  }
+  const c = flowCfg();
+  const origin = flowOrigin();
+
+  let h = '<p class="hint2">' + esc(L("FlowBlurb")) + "</p>" +
+    '<p class="hint2" style="color:var(--p2);margin-top:8px"><b>' + esc(L("FlowWarn")) + "</b></p>" +
+    '<p class="hint2" style="margin-top:8px">' + esc(L("FlowNetwork")) + "</p>";
+
+  h += '<div class="fr" style="margin-top:12px"><label>' + esc(L("FlowUse")) + "</label>" +
+       '<select class="in" id="flOn"><option value="0"' + (c.on ? "" : " selected") + ">" +
+       esc(L("FlowOff")) + '</option><option value="1"' + (c.on ? " selected" : "") + ">" +
+       esc(L("FlowOn")) + "</option></select></div>";
+
+  h += '<div class="fr"><label>' + esc(L("FlowUrl")) + "</label>" +
+       '<input class="in mono" id="flUrl" spellcheck="false" style="font-size:11px" ' +
+       'placeholder="https://prod-00.westus.logic.azure.com:443/workflows/…?api-version=…&sig=…" ' +
+       'value="' + esc(c.url || "") + '"></div>' +
+       '<p class="hint2">' + esc(L("FlowUrlHint")) + "</p>";
+  if (origin)
+    h += '<p class="hint2">Everything goes to <b>' + esc(origin) + "</b> and nowhere else.</p>";
+
+  h += '<div class="fr" style="margin-top:10px"><label>' + esc(L("FlowScope")) + "</label>" +
+       '<select class="in" id="flScope">' +
+       ['names', 'live', 'all'].map(v => '<option value="' + v + '"' +
+          (c.scope === v ? " selected" : "") + ">" +
+          esc(L(v === "names" ? "FlowScopeNames" : v === "live" ? "FlowScopeLive" : "FlowScopeAll")) +
+          "</option>").join("") + "</select></div>" +
+       '<p class="hint2">' + esc(L("FlowScopeHint")) + "</p>";
+
+  h += '<div class="fr"><label>' + esc(L("FlowDeep")) + "</label>" +
+       '<select class="in" id="flDeep"><option value="0"' + (c.deep ? "" : " selected") + ">" +
+       esc(L("ChatNo")) + '</option><option value="1"' + (c.deep ? " selected" : "") + ">" +
+       esc(L("ChatYes")) + "</option></select></div>" +
+       '<p class="hint2">' + esc(L("FlowDeepHint")) + "</p>";
+
+  h += '<div class="fr"><label>' + esc(L("FlowCap")) + "</label>" +
+       '<input class="in" id="flCap" type="number" min="0" max="2000" value="' +
+       (+c.cap || 400) + '"></div>';
+  h += '<div class="fr"><label>' + esc(L("FlowTimeout")) + "</label>" +
+       '<input class="in" id="flTmo" type="number" min="5" max="120" value="' +
+       (+c.timeout || 30) + '"></div>';
+  h += '<div class="fr"><label>' + esc(L("FlowFallback")) + "</label>" +
+       '<select class="in" id="flFb"><option value="1"' + (c.fallback ? " selected" : "") + ">" +
+       esc(L("ChatYes")) + '</option><option value="0"' + (c.fallback ? "" : " selected") + ">" +
+       esc(L("ChatNo")) + "</option></select></div>";
+
+  h += '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:12px">' +
+       '<button class="btn sm pri" id="flTest"' + (c.url ? "" : " disabled") + ">" +
+         esc(FLOW.testing ? L("FlowTesting") : L("FlowTest")) + "</button>" +
+       '<button class="btn sm" id="flPrev">' + esc(L("FlowPreview")) + "</button>" +
+       '<button class="btn sm" id="flShow">' +
+         esc(DossierFlow.shown() ? L("FlowHide") : L("FlowShow")) + "</button>" +
+       '<button class="btn sm" id="flCopy">' + esc(L("FlowContract")) + "</button></div>";
+
+  h += '<p class="hint2" style="margin-top:8px">' + esc(flowVersions()) + "</p>";
+  h += '<div id="flowOut"></div>';
+  box.innerHTML = h;
+
+  const on = (id, fn, ev) => { const el = $(id); if (el) el[ev || "onclick"] = fn; };
+  const save = () => { touch(); renderFlow(); };
+  on("flOn", e => { c.on = e.target.value === "1"; save(); }, "onchange");
+  on("flScope", e => { c.scope = e.target.value; save(); }, "onchange");
+  on("flDeep", e => { c.deep = e.target.value === "1"; save(); }, "onchange");
+  on("flFb", e => { c.fallback = e.target.value === "1"; save(); }, "onchange");
+  on("flCap", e => { c.cap = Math.max(0, Math.min(2000, +e.target.value || 0)); touch(); }, "onchange");
+  on("flTmo", e => { c.timeout = Math.max(5, Math.min(120, +e.target.value || 30)); touch(); }, "onchange");
+  on("flUrl", e => { c.url = String(e.target.value || "").trim(); save(); }, "onchange");
+  on("flTest", flowTest);
+  on("flPrev", flowPreview);
+  on("flCopy", flowCopyContract);
+  on("flShow", () => { DossierFlow.show(!DossierFlow.shown()); renderFlow(); });
+
+  if (FLOW.last) flowShowResult(FLOW.last);
+}
+
+/* the ladder, drawn rung by rung, because "it did not work" is not a
+   diagnosis and every rung here has a different fix */
+function flowShowResult(res){
+  const out = $("flowOut");
+  if (!out || !res) return;
+  let h = '<div class="prov" style="margin-top:12px">';
+  (res.steps || []).forEach(s => {
+    h += '<div class="p"><i style="background:' +
+         (s.ok ? "var(--st-done)" : "var(--st-block)") + '"></i><span><b>' +
+         esc(s.name) + "</b>" + (s.detail ? " — " + esc(s.detail) : "") + "</span></div>";
+  });
+  h += "</div>";
+  if (res.reply && res.reply.say)
+    h += '<p class="hint2" style="margin-top:8px">It said: “' + esc(res.reply.say) + "”</p>";
+  if (res.transcript)
+    h += '<pre class="out" style="margin-top:8px;max-height:200px;overflow:auto">' +
+         esc(res.transcript) + "</pre>";
+  out.innerHTML = h;
+}
+
+async function flowTest(){
+  if (FLOW.testing) return;
+  FLOW.testing = true; FLOW.last = null; renderFlow();
+  let res;
+  try { res = await DossierFlow.test(flowCfg(), flowContext()); }
+  catch(e){ res = { steps:[{ name:"The test itself ran", ok:false, detail:String(e.message || e) }],
+                    verdict:"broke" }; }
+  FLOW.testing = false;
+  FLOW.last = res;
+  try { const p = await DossierFlow._frameTest(); FLOW.relay = p && p.version; } catch(e){}
+  renderFlow();
+}
+
+/* Before you trust it with anything real, look at the bytes. */
+function flowPreview(){
+  const cfg = flowCfg();
+  const req = DossierFlow.buildRequest("(your question would be here)", flowContext(), cfg);
+  const txt = JSON.stringify(req, null, 1);
+  const out = $("flowOut");
+  out.innerHTML = '<p class="hint2" style="margin-top:10px">' +
+    esc(L("FlowBytes", { n: bytes(txt.length) })) + " · " +
+    esc(req.workspace.recordsSent + " of " + req.workspace.recordsTotal + " records") +
+    "</p><pre class=\"out\" style=\"margin-top:6px;max-height:320px;overflow:auto\">" +
+    esc(txt) + "</pre>";
+}
+
+function flowCopyContract(){
+  const c = { reply:{ say:"string", ask:"string", actions:[] },
+              actions: Object.keys(DossierFlow.ACTIONS).map(k => ({
+                do:k, write:DossierFlow.ACTIONS[k].write,
+                what:DossierFlow.ACTIONS[k].what,
+                needs:DossierFlow.ACTIONS[k].needs,
+                args:DossierFlow.describeArgs(DossierFlow.ACTIONS[k].args) })) };
+  copyText(JSON.stringify(c, null, 2), "Copied — paste it into your flow's prompt");
 }
 
 function chatDo(act){
@@ -6761,6 +7374,8 @@ function chatDo(act){
       return chatBot({ say:L(act.on ? "ChatNotifyOn" : "ChatNotifyOff"),
                        note: act.on && st !== "granted" ? L("RemindersBlockedHint").replace(/<[^>]+>/g, "") : "" });
     }
+    /* one action a flow proposed, now that it has been agreed to */
+    case "flow":     return flowRun(act.a);
     case "run":      closeChat(); return runScriptFor(act.id, act.scriptId);
     case "undo":     closeChat(); return doUndo();
     case "routine": {
@@ -9267,8 +9882,12 @@ async function renderModal(){
     '<div style="display:flex;gap:6px;margin-top:8px"><input class="in mono" id="tplNew" style="font-size:11px" ' +
       "placeholder=\"Restart app pool @&quot;Infra / IIS&quot; :admin 15m today\"><button class=\"btn sm\" id=\"tplAdd\">" + L("Add") + "</button></div>" +
 
+    "<h5 class=\"eyebrow\" style=\"margin:22px 0 8px\">" + L("FlowHead") + "</h5>" +
+    '<div id="flowBox"></div>' +
+
     "<h5 class=\"eyebrow\" style=\"margin:22px 0 8px\">" + L("BrainHead") + "</h5>" +
     '<div id="brainBox"></div>';
+  renderFlow();
   renderBrain();
 
   $("pHelp").innerHTML =
