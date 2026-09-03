@@ -1,7 +1,7 @@
 {
   "dossier": 1,
-  "protocol": "1.0",
-  "askedAt": "2026-09-03T08:07:35.838Z",
+  "protocol": "1.1",
+  "askedAt": "2026-09-03T15:54:39.311Z",
   "today": "2026-09-03",
   "weekday": "Thursday",
   "calendar": {
@@ -17,6 +17,7 @@
   "timezone": "UTC",
   "message": "create a P1 record to restart the imaging pool on APP02 tomorrow",
   "attachments": [],
+  "attachmentsText": "None.",
   "conversation": [],
   "owner": "",
   "workspace": {

@@ -1381,7 +1381,7 @@ a CSP refusal, a file one folder away from where a manifest says.
 
 The eleven exercised for the current release — `teach`, `talk2`, `pick`,
 `flowval`, `flowe2e`, `flowui`, `flowmore`, `chatui`, `memui`, `probe`,
-`shrink` — report **361 passing assertions and no failures**, covering the local assistant, teaching,
+`shrink` — report **364 passing assertions and no failures**, covering the local assistant, teaching,
 selectors, the reply validator, the whole network path in a real browser
 against an endpoint that misbehaves the way real ones do, the Setup panel, all
 42 actions, the docked layout down to where each masthead tab lands, the

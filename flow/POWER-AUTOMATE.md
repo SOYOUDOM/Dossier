@@ -82,6 +82,7 @@ Parse JSON does not mind the ones left out.
     "weekday":   { "type": "string" },
     "timezone":  { "type": "string" },
     "message":   { "type": "string" },
+    "attachmentsText": { "type": "string" },
     "attachments": {
       "type": "array",
       "items": {
@@ -322,25 +323,22 @@ Define **nine inputs** and wire them to the parsed body:
 | `actions` | `string(body('Parse_JSON')?['can'])` |
 | `history` | `string(body('Parse_JSON')?['conversation'])` |
 | `memory` | `string(body('Parse_JSON')?['workspace']?['memory'])` |
-| `attached` | `if(empty(body('Parse_JSON')?['attachments']), 'None.', join(body('List_the_files'), '; '))` — needs the Select below |
+| `attached` | `body('Parse_JSON')?['attachmentsText']` |
 
 `string()` turns the object or array into JSON text, which is what a prompt
 input wants.
 
-**One extra action, only if you use attachments.** The `attached` input above
-needs a list of file names in plain text — never the base64, which is huge and
-unreadable to a model. Add a **Data Operation → Select** after Parse JSON:
+**No Select action, no `item()` expression.** An earlier version of this page
+told you to build the file list yourself with a Data Operation → Select. That
+was wrong — the app already knows the file names, so it now sends them ready
+to use. `attachmentsText` is one line of plain text, like
 
-| Field | Value |
-|---|---|
-| **From** | `body('Parse_JSON')?['attachments']` |
-| **Map** (switch the box to text mode with the ⇄ icon) | `concat(item()?['name'], ' (', item()?['type'], ')')` |
+```
+error.png (image/png, 81 KB); spec.pdf (application/pdf, 400 KB)
+```
 
-Rename it **List the files** (so `body('List_the_files')` resolves). It turns
-the attachments into `["error.png (image/png)", "spec.pdf (application/pdf)"]`,
-and the `attached` input joins that into one line — or the word `None.` when
-nothing was clipped. This is what tells the model, in words, that files came
-with the question; the pictures themselves are wired separately, in §6.
+or the single word `None.` when nothing was clipped. If you already added a
+Select for this, delete it.
 
 ### The prompt
 
@@ -617,37 +615,101 @@ Answer it in one condition at the top of the flow, before anything expensive:
 
 Two lines of setup, and probes stop costing you an AI Builder call.
 
-### Using an attached file
+### Attachments: what to actually click
 
-Two things carry an attachment to the model, and you need both:
+There are **two separate levels**, and they are worth doing in this order
+because the first one takes a minute and always works.
 
-1. **The list, in words** — the `attached` prompt input from §4, so the model
-   knows a file came and what it is. That works on any model.
-2. **The file itself** — wired into the AI action's own **image or document
-   input**, so a vision-capable model can actually see it. A plain text prompt
-   cannot read a picture no matter how you wire it; you need a GPT-4o / vision
-   or document-processing action for step 2 to mean anything. This is the part
-   your earlier setup was missing, which is why attachments seemed to do
-   nothing.
+---
 
-For step 2, add an **Image** (or **File**) input to the AI action and wire it
-to the **base64 data** of the first attachment:
+#### Level 1 — the model is told a file arrived
+
+This is one prompt input. Nothing else. No Select, no loop, no condition.
+
+In your AI action's input list, add an input:
+
+| | |
+|---|---|
+| **Name** | `attached` |
+| **Type** | Text |
+| **Value** | `body('Parse_JSON')?['attachmentsText']` |
+
+That's it. The prompt in §4 already has a `WHAT THEY ATTACHED` section that
+reads `{attached}`, so the model now sees:
+
+```
+error.png (image/png, 81 KB)
+```
+
+**What you get:** the model knows a file came, and what it is. It can answer
+*"I can see you attached error.png, but tell me what the error says and I'll
+log it"* instead of ignoring the file entirely. On a text-only action this is
+as far as you can go, and it is still a real improvement over silence.
+
+**What you do not get:** the model cannot see what is *in* the picture.
+
+---
+
+#### Level 2 — the model can see inside the file
+
+This needs an AI action that accepts images or documents. **Check yours before
+building anything**, like this:
+
+> In your AI action, add another input and open the **Type** dropdown.
+> - If the only option is **Text** → your action cannot see pictures. Stop at
+>   Level 1.
+> - If you see **Image**, **File** or **Document** → carry on.
+
+I can't tell you which it will be, because it depends on the action and the
+model you picked when you created the prompt. Look at the dropdown; that is
+the authoritative answer.
+
+**Do not put the base64 into a Text input to get around this.** It does not
+work. The model receives 100,000 characters of `iVBORw0KGgo…`, cannot decode
+them, and the question itself gets crowded out. It fails in a way that looks
+like the model being stupid rather than the wiring being wrong.
+
+If you do have an image input, wire it to the first attachment's data:
 
 ```
 body('Parse_JSON')?['attachments']?[0]?['data']
 ```
 
-The data is base64 **without** the `data:image/png;base64,` prefix, which is
-what AI Builder's image and document inputs expect. If your action wants a
-data URI instead, build one:
+This is base64 **without** any `data:image/png;base64,` prefix — Dossier
+strips it, because that is the form these inputs normally want. If yours
+rejects it and asks for a data URI, build one instead:
 
 ```
 concat('data:', body('Parse_JSON')?['attachments']?[0]?['type'], ';base64,',
        body('Parse_JSON')?['attachments']?[0]?['data'])
 ```
 
-Guard it with a condition on `length(body('Parse_JSON')?['attachments'])` so
-the flow still runs when nothing was attached.
+**One caveat that will bite you.** `attachments?[0]` is null when nothing was
+attached, and some actions fail on a null image input rather than ignoring it.
+If asking a normal question breaks after you add this, that is why. Wrap the
+AI action in a **Condition**:
+
+| | |
+|---|---|
+| **Condition** | `length(body('Parse_JSON')?['attachments'])` **is greater than** `0` |
+| **If yes** | the AI action *with* the image input wired |
+| **If no** | the AI action *without* it |
+
+Two copies of the action is clumsy, and it is the honest way to do it in the
+designer. If your action ignores a null image, skip the condition.
+
+---
+
+#### Which level am I on?
+
+Ask the assistant something with a screenshot attached and read the reply.
+
+| The reply says | You are on |
+|---|---|
+| nothing about the file at all | Level 0 — the `attached` input is not wired, or you have not repasted the §4 prompt |
+| it names the file but says it cannot read it | **Level 1** — working as designed |
+| it describes what is in the picture | **Level 2** — working |
+| the flow errors only when a file is attached | the null-image caveat above, or size — see §8 |
 
 **On size, which is the thing that breaks this.** Base64 is a third larger
 than the file it encodes, so a 4 MB screenshot arrives as 5.2 MB of JSON —

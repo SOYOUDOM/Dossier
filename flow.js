@@ -474,6 +474,20 @@ function buildRequest(text, ctx, cfg){
        error dialog says is how detail gets lost. */
     attachments: (ctx.attachments || []).map(a => ({
       name: a.name, type: a.type, size: a.size, data: a.data })),
+    /* The same list as one line of plain text, ready to drop into a prompt.
+       This is here because the first version made the flow build it, with a
+       Select action and an item() expression, to turn an array of objects
+       into a sentence. That is work the app already had the answer to, and
+       asking somebody to write a data-transform in a designer to describe
+       files this file just read is the wrong place for it. One expression
+       now: body('Parse_JSON')?['attachmentsText']. */
+    attachmentsText: (function(){
+      const a = ctx.attachments || [];
+      if (!a.length) return "None.";
+      return a.map(x => x.name + " (" + x.type +
+        (x.size ? ", " + Math.max(1, Math.round(x.size / 1024)) + " KB" : "") + ")")
+        .join("; ");
+    })(),
     conversation: (ctx.conversation || []).slice(-6),
     owner: st.owner || "",
     workspace: {

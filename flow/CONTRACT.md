@@ -90,6 +90,7 @@ One JSON object, POSTed as the body.
   "message": "create a task to restart the imaging pool tomorrow, P1",
   "conversation": [ { "who": "person", "text": "…" },
                     { "who": "dossier", "text": "…" } ],
+  "attachmentsText": "error.png (image/png, 82 KB)",
   "attachments": [ { "name": "error.png", "type": "image/png",
                      "size": 84213, "data": "iVBORw0KGgoAAA…" } ],
   "owner": "",
@@ -174,9 +175,13 @@ inventing a method. And when someone explains how something is done, return
 of an error, a page of a specification, a log. `data` is base64 **without**
 the `data:` prefix, so it goes straight into an AI action's image or document
 input — which the flow must actually wire up, and which only a vision- or
-document-capable model can read. The prompt is also given `attached`, a plain
-list of the file names, so a text-only model at least knows a file arrived.
-See `POWER-AUTOMATE.md` §4 and §6.
+document-capable model can read.
+
+`attachmentsText` is the same list as one line of plain text
+(`error.png (image/png, 81 KB); spec.pdf (application/pdf, 400 KB)`, or
+`None.`), so the prompt can tell the model a file arrived in a single
+expression and without the base64. A text-only model gets that much even
+when it cannot read the file itself. See `POWER-AUTOMATE.md` §6.
 
 Images are shrunk in the browser first — 1600px on the longest edge,
 re-encoded, dropping further if still large — because base64 is a third
