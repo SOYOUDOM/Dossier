@@ -172,8 +172,11 @@ inventing a method. And when someone explains how something is done, return
 
 `attachments` carries what the person clipped to the question — a screenshot
 of an error, a page of a specification, a log. `data` is base64 **without**
-the `data:` prefix, so it can go straight into an AI action's image or
-document input.
+the `data:` prefix, so it goes straight into an AI action's image or document
+input — which the flow must actually wire up, and which only a vision- or
+document-capable model can read. The prompt is also given `attached`, a plain
+list of the file names, so a text-only model at least knows a file arrived.
+See `POWER-AUTOMATE.md` §4 and §6.
 
 Images are shrunk in the browser first — 1600px on the longest edge,
 re-encoded, dropping further if still large — because base64 is a third

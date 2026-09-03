@@ -310,7 +310,7 @@ Add your AI action — **AI Builder → Run a prompt**, *Create text with GPT
 using a prompt*, an Azure OpenAI action, whatever you have. They all take a
 prompt and give back text.
 
-Define **eight inputs** and wire them to the parsed body:
+Define **nine inputs** and wire them to the parsed body:
 
 | Input name | Value (expression) |
 |---|---|
@@ -322,9 +322,25 @@ Define **eight inputs** and wire them to the parsed body:
 | `actions` | `string(body('Parse_JSON')?['can'])` |
 | `history` | `string(body('Parse_JSON')?['conversation'])` |
 | `memory` | `string(body('Parse_JSON')?['workspace']?['memory'])` |
+| `attached` | `if(empty(body('Parse_JSON')?['attachments']), 'None.', join(body('List_the_files'), '; '))` — needs the Select below |
 
 `string()` turns the object or array into JSON text, which is what a prompt
 input wants.
+
+**One extra action, only if you use attachments.** The `attached` input above
+needs a list of file names in plain text — never the base64, which is huge and
+unreadable to a model. Add a **Data Operation → Select** after Parse JSON:
+
+| Field | Value |
+|---|---|
+| **From** | `body('Parse_JSON')?['attachments']` |
+| **Map** (switch the box to text mode with the ⇄ icon) | `concat(item()?['name'], ' (', item()?['type'], ')')` |
+
+Rename it **List the files** (so `body('List_the_files')` resolves). It turns
+the attachments into `["error.png (image/png)", "spec.pdf (application/pdf)"]`,
+and the `attached` input joins that into one line — or the word `None.` when
+nothing was clipped. This is what tells the model, in words, that files came
+with the question; the pictures themselves are wired separately, in §6.
 
 ### The prompt
 
@@ -398,6 +414,16 @@ policy.chaseAfterDays; and adding a hold moves a record to Blocked by itself.
 ═══ WHAT THEY JUST SAID ═══
 
 {message}
+
+═══ WHAT THEY ATTACHED ═══
+
+{attached}
+
+If files are listed above, the images and documents themselves are given to
+you as inputs alongside this prompt — look at them, they are usually the whole
+of what is being asked about. Answer from what you actually see in them. If you
+cannot see an attached image or document — because this model reads only text —
+say that plainly instead of guessing what it contains.
 
 ═══ HOW TO ANSWER ═══
 
@@ -484,9 +510,12 @@ RULES, in order of importance:
     file name or a setting inside a sentence. Nothing else is interpreted:
     asterisks and hashes arrive as asterisks and hashes.
 
-14. "attachments" carries files they clipped to the question — a screenshot
-    of an error, a page of a specification, a log. Read them before answering;
-    they are usually the whole of what is being asked about.
+14. Files they clipped to the question are listed under WHAT THEY ATTACHED,
+    and the images and documents themselves are wired into this action's own
+    image/document input (§6). When something is attached, read it before
+    answering — a screenshot of an error is usually the whole question. Only a
+    vision- or document-capable action can see them; if yours cannot, say so
+    rather than inventing what the picture showed.
 
 ═══ EXAMPLES ═══
 
@@ -538,6 +567,12 @@ Message: "when the imaging sync times out you recycle the pool on APP02 and re-r
 Message: "how do we fix the imaging sync again?"   (with that note in memory)
 {"say":"You wrote this down in March.\n\n1. Recycle the application pool on APP02\n2. Re-run the nightly job from the scheduler\n\n```cmd\nrestart-app-pool.bat APP02 ImagingPool\n```"}
 
+Message: "what does this error mean"   (attached: error.png — a vision model sees it)
+{"say":"That is a SQL timeout — the query ran past 30 seconds. It is the same GetPendingAsync failure as D-0004.","actions":[{"do":"find","overdue":true,"system":"Imaging"}]}
+
+Message: "log this against the payment one"   (attached: receipt.pdf, but a text-only model)
+{"ask":"I can see a file called receipt.pdf came with that, but this model cannot read documents. Tell me the amount and reference and I will log it."}
+
 Message: "the imaging one can't move until the DBA ticket is done"
 {"ask":"Which record is the DBA one? I can see D-0004 for Imaging, but nothing that looks like a DBA ticket."}
 
@@ -584,8 +619,19 @@ Two lines of setup, and probes stop costing you an AI Builder call.
 
 ### Using an attached file
 
-`attachments` arrives as an array. For a prompt action that takes an image or
-a document input, wire it to the **base64 data** of the first file:
+Two things carry an attachment to the model, and you need both:
+
+1. **The list, in words** — the `attached` prompt input from §4, so the model
+   knows a file came and what it is. That works on any model.
+2. **The file itself** — wired into the AI action's own **image or document
+   input**, so a vision-capable model can actually see it. A plain text prompt
+   cannot read a picture no matter how you wire it; you need a GPT-4o / vision
+   or document-processing action for step 2 to mean anything. This is the part
+   your earlier setup was missing, which is why attachments seemed to do
+   nothing.
+
+For step 2, add an **Image** (or **File**) input to the AI action and wire it
+to the **base64 data** of the first attachment:
 
 ```
 body('Parse_JSON')?['attachments']?[0]?['data']
