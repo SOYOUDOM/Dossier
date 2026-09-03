@@ -665,9 +665,18 @@ model you picked when you created the prompt. Look at the dropdown; that is
 the authoritative answer.
 
 **Do not put the base64 into a Text input to get around this.** It does not
-work. The model receives 100,000 characters of `iVBORw0KGgo…`, cannot decode
-them, and the question itself gets crowded out. It fails in a way that looks
-like the model being stupid rather than the wiring being wrong.
+work, and it fails in two specific ways worth recognising:
+
+- with **no** file attached, `attachments?[0]?['data']` is `null` and the
+  action refuses it — *Invalid input: Input parameters are invalid for your
+  model*;
+- with a file attached, the base64 is counted as prompt text — a 400 KB file
+  is about 136,000 tokens, against a 128,000 limit — *This model's maximum
+  context length is 128000 tokens*.
+
+For scale: the whole legitimate payload — workspace, all 42 actions, memory,
+calendar, the lot — is about **3,800 tokens**, 3% of the limit. Everything
+else in those errors is the file.
 
 If you do have an image input, wire it to the first attachment's data:
 
@@ -886,6 +895,8 @@ something it needs, change **What to send** rather than editing the prompt.
 | a run that succeeds but Dossier says nothing | the model returned prose, not JSON. Check the `Clean` step, and that the prompt ends with *JSON only*. |
 | nothing at all in the run history | the request never arrived. Almost always the URL. |
 | **two runs, the second tiny with `"probe": true`** | the first one failed. Open that one — the probe is Dossier asking *why*, not the question. See above. |
+| `Invalid input: Input parameters are invalid for your model` **with no attachment** | a required text input got **null**. Almost always `attached` wired to `attachments?[0]?['data']`, which is null when nothing is clipped. Wire it to `attachmentsText`, which is never null — it says `None.` |
+| `This model's maximum context length is 128000 tokens` **with an attachment** | the base64 went into a **text** input. A 400 KB file is ~136,000 tokens on its own. Text inputs get `attachmentsText` (~1 token); the base64 only ever goes into an **Image/File** input. |
 | **a question works until you attach something** | size. Check the request body's length in the failed run; Dossier now shrinks images, so if it is still large it will be a PDF. The reply in the chat tells you how much the question weighed. |
 
 ---
