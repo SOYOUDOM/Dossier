@@ -84,6 +84,9 @@ One JSON object, POSTed as the body.
   "today": "2026-09-03",
   "weekday": "Thursday",
   "timezone": "Asia/Phnom_Penh",
+  "calendar": { "tomorrow": "2026-09-04", "nextWorkingDay": "2026-09-04",
+                "todayIsOffDay": false, "thisMonday": "2026-08-31",
+                "weekendDays": ["Saturday", "Sunday"] },
   "message": "create a task to restart the imaging pool tomorrow, P1",
   "conversation": [ { "who": "person", "text": "…" },
                     { "who": "dossier", "text": "…" } ],
@@ -102,7 +105,21 @@ One JSON object, POSTed as the body.
                       "file":"restart-app-pool.bat",
                       "params":["server","pool"], "desc":"…" } ],
     "routines":   [ { "id":"Rmorningtour", "title":"Morning tour",
-                      "freq":"daily", "time":"08:30", "paused":false } ],
+                      "freq":"daily", "days":[1,2,3,4,5], "dom":1, "cron":"",
+                      "time":"08:30", "paused":false,
+                      "system":"Infra / IIS", "type":"Admin", "priority":"P3",
+                      "checklist":["App pools running", "Disk above 15%", …],
+                      "notes":"…", "message":"",
+                      "scripts":["open-morning-tabs"], "autoRun":true,
+                      "raisesRecord":true,
+                      "nextDue":"2026-09-03", "lastRaised":"2026-08-30" } ],
+    "holidays":   [ { "d":"2026-09-24", "n":"Constitution Day", "k":"public" },
+                    { "d":"2026-10-10", "n":"Pchum Ben", "k":"public" }, … ],
+    "holidaysTotal": 22,
+    "policy":     { "targetDates": { "on":true,
+                      "hoursFromRaising": { "P1":4, "P2":24, "P3":48, "P4":120 } },
+                    "chaseAfterDays": 3,
+                    "blockingSetsStatus": true },
     "counts":     { "records":7, "live":5, "overdue":1,
                     "dueToday":2, "waiting":1, "blocked":1 },
     "recordsSent": 5,
@@ -195,15 +212,18 @@ something and gain nothing: an ISO instant where a date was wanted becomes its
 day, `"urgent, imaging"` becomes a two-item list, `"yes"` becomes `true`, and
 `"DONE"` matches `done`.
 
-**No action deletes anything.** The strongest thing in the list is
-`setStatus` to `cancelled`, which is reversible and leaves a log line.
+**Two actions delete something** — `deleteRecord` and `deleteRoutine` — and
+both are confirmed like every other write, both are undone by `Ctrl`+`Z`, and
+`deleteRecord` leaves the record's folder and documents on disk. Everything
+else is reversible in place. `setStatus` to `cancelled` is usually the better
+answer than deleting, and keeps the history.
 
 ---
 
 ## 6. The action reference
 
 Generated from `flow.js`. `ref` means a record code (`D-0004`), a ticket
-number, or an id.
+number, or an id. **39 actions — 11 that read, 28 that write.**
 
 ### Actions that only read
 
@@ -281,6 +301,39 @@ Open the Reports panel at a period and format.
 |---|---|---|
 | `period` | week | lastWeek | month | no |
 | `format` | summary | standup | handover | no |
+
+#### `getRecord`
+
+Read one record in full — its notes, every checklist step, its work log and its documents. Use this when the summary you were sent is not enough.
+
+| argument | shape | required |
+|---|---|---|
+| `record` | ref | **yes** |
+
+#### `listRoutines`
+
+List the schedules with what each one does and when it next fires.
+
+| argument | shape | required |
+|---|---|---|
+| `includePaused` | bool | no |
+
+#### `listHolidays`
+
+List the holidays and office closures in a date range.
+
+| argument | shape | required |
+|---|---|---|
+| `from` | YYYY-MM-DD | no |
+| `to` | YYYY-MM-DD | no |
+
+#### `chaseSheet`
+
+Open the chase sheet for everything that is due a chase.
+
+| argument | shape | required |
+|---|---|---|
+| *(none)* | | |
 
 
 ### Actions that change the workspace
@@ -443,6 +496,135 @@ Pause or resume a routine, by its title or id.
 | `routine` | string | **yes** |
 | `paused` | bool | no |
 
+#### `clearWait`
+
+They came back. Stops the waiting clock and files how long it took.
+
+| argument | shape | required |
+|---|---|---|
+| `record` | ref | **yes** |
+| `note` | string | no |
+
+#### `logTime`
+
+Add minutes of work to a record. Use minutes, not hours.
+
+| argument | shape | required |
+|---|---|---|
+| `record` | ref | **yes** |
+| `minutes` | int | **yes** |
+| `note` | string | no |
+
+#### `timer`
+
+Start or stop the clock on a record. Starting one stops any other.
+
+| argument | shape | required |
+|---|---|---|
+| `record` | ref | **yes** |
+| `on` | bool | no |
+
+#### `block`
+
+Say this record cannot finish until other records do. Give their codes.
+
+| argument | shape | required |
+|---|---|---|
+| `record` | ref | **yes** |
+| `blockedBy` | list of text | **yes** |
+
+#### `unblock`
+
+Remove what was holding a record up. Give codes to remove some, or nothing to clear them all.
+
+| argument | shape | required |
+|---|---|---|
+| `record` | ref | **yes** |
+| `blockedBy` | list of text | no |
+
+#### `tags`
+
+Add or remove tags on a record.
+
+| argument | shape | required |
+|---|---|---|
+| `record` | ref | **yes** |
+| `add` | list of text | no |
+| `remove` | list of text | no |
+
+#### `updateRoutine`
+
+Change a schedule. Name it by title or id. Only the fields you send change.
+
+| argument | shape | required |
+|---|---|---|
+| `routine` | string | **yes** |
+| `title` | string | no |
+| `freq` | daily | weekly | monthly | cron | no |
+| `cron` | string | no |
+| `days` | list of text | no |
+| `dom` | int | no |
+| `time` | HH:MM | no |
+| `system` | string | no |
+| `type` | string | no |
+| `priority` | P1 | P2 | P3 | P4 | no |
+| `checklist` | list of text | no |
+| `scripts` | list of text | no |
+| `message` | string | no |
+| `autoRun` | bool | no |
+
+#### `deleteRoutine`
+
+Delete a schedule. The records it already raised are left alone.
+
+| argument | shape | required |
+|---|---|---|
+| `routine` | string | **yes** |
+
+#### `runRoutine`
+
+Raise this routine's record now, without waiting for its time.
+
+| argument | shape | required |
+|---|---|---|
+| `routine` | string | **yes** |
+
+#### `addHoliday`
+
+Mark a day as a holiday or an office closure. A public holiday is not a working day; an office closure is marked but still counts.
+
+| argument | shape | required |
+|---|---|---|
+| `date` | YYYY-MM-DD | **yes** |
+| `name` | string | **yes** |
+| `kind` | public | office | no |
+
+#### `removeHoliday`
+
+Unmark a day that is not a holiday after all.
+
+| argument | shape | required |
+|---|---|---|
+| `date` | YYYY-MM-DD | **yes** |
+
+#### `addName`
+
+Add a system, a work type, or a party you wait on, so it can be used from now on. Offer this when they name one you do not have.
+
+| argument | shape | required |
+|---|---|---|
+| `kind` | system | type | party | **yes** |
+| `name` | string | **yes** |
+| `colour` | string | no |
+
+#### `deleteRecord`
+
+Delete a record. Its folder and documents stay on disk. Prefer setStatus to cancelled, which keeps the history.
+
+| argument | shape | required |
+|---|---|---|
+| `record` | ref | **yes** |
+
 #### `notify`
 
 Turn Windows reminders on or off.
@@ -458,6 +640,7 @@ Undo the last change to the workspace.
 | argument | shape | required |
 |---|---|---|
 | *(none)* | | |
+
 
 ---
 

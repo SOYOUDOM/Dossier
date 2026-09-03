@@ -82,6 +82,16 @@ Parse JSON does not mind the ones left out.
     "weekday":   { "type": "string" },
     "timezone":  { "type": "string" },
     "message":   { "type": "string" },
+    "calendar": {
+      "type": "object",
+      "properties": {
+        "tomorrow":       { "type": "string" },
+        "nextWorkingDay": { "type": "string" },
+        "todayIsOffDay":  { "type": "boolean" },
+        "thisMonday":     { "type": "string" },
+        "weekendDays":    { "type": "array", "items": { "type": "string" } }
+      }
+    },
     "owner":     { "type": "string" },
     "conversation": {
       "type": "array",
@@ -122,12 +132,58 @@ Parse JSON does not mind the ones left out.
           "items": {
             "type": "object",
             "properties": {
-              "id":     { "type": "string" },
-              "title":  { "type": "string" },
-              "freq":   { "type": "string" },
-              "time":   { "type": "string" },
-              "paused": { "type": "boolean" }
+              "id":           { "type": "string" },
+              "title":        { "type": "string" },
+              "freq":         { "type": "string" },
+              "days":         { "type": "array", "items": { "type": "integer" } },
+              "dom":          { "type": "integer" },
+              "cron":         { "type": "string" },
+              "time":         { "type": "string" },
+              "paused":       { "type": "boolean" },
+              "system":       { "type": "string" },
+              "type":         { "type": "string" },
+              "priority":     { "type": "string" },
+              "checklist":    { "type": "array", "items": { "type": "string" } },
+              "notes":        { "type": "string" },
+              "message":      { "type": "string" },
+              "scripts":      { "type": "array", "items": { "type": "string" } },
+              "autoRun":      { "type": "boolean" },
+              "raisesRecord": { "type": "boolean" },
+              "nextDue":      { "type": "string" },
+              "lastRaised":   { "type": "string" }
             }
+          }
+        },
+        "holidays": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "d": { "type": "string" },
+              "n": { "type": "string" },
+              "k": { "type": "string" }
+            }
+          }
+        },
+        "holidaysTotal": { "type": "integer" },
+        "policy": {
+          "type": "object",
+          "properties": {
+            "targetDates": {
+              "type": "object",
+              "properties": {
+                "on": { "type": "boolean" },
+                "hoursFromRaising": {
+                  "type": "object",
+                  "properties": {
+                    "P1": { "type": "integer" }, "P2": { "type": "integer" },
+                    "P3": { "type": "integer" }, "P4": { "type": "integer" }
+                  }
+                }
+              }
+            },
+            "chaseAfterDays":     { "type": "integer" },
+            "blockingSetsStatus": { "type": "boolean" }
           }
         },
         "counts": {
@@ -228,13 +284,14 @@ Add your AI action — **AI Builder → Run a prompt**, *Create text with GPT
 using a prompt*, an Azure OpenAI action, whatever you have. They all take a
 prompt and give back text.
 
-Define **five inputs** and wire them to the parsed body:
+Define **seven inputs** and wire them to the parsed body:
 
 | Input name | Value (expression) |
 |---|---|
 | `message` | `body('Parse_JSON')?['message']` |
 | `today` | `body('Parse_JSON')?['today']` |
 | `weekday` | `body('Parse_JSON')?['weekday']` |
+| `calendar` | `string(body('Parse_JSON')?['calendar'])` |
 | `workspace` | `string(body('Parse_JSON')?['workspace'])` |
 | `actions` | `string(body('Parse_JSON')?['can'])` |
 | `history` | `string(body('Parse_JSON')?['conversation'])` |
@@ -274,6 +331,20 @@ routines, counts, and a slice of their records:
 ═══ WHEN THIS IS ═══
 
 Today is {today}, a {weekday}.
+
+{calendar}
+
+The workspace above also carries "holidays" — every public holiday and office
+closure a year ahead and a month back, each with its date, its name, and
+whether it is a public holiday (not a working day) or an office closure
+(marked, but still a working day). Never work out a holiday from memory or
+from the country: use that list. If a date you want falls on one, say so and
+offer the working day beside it.
+
+It also carries "policy" — the rules the app applies on its own. Target dates
+are set from the priority when a record is raised, so do not also propose a
+due date unless they asked for a particular one; a record is due a chase after
+policy.chaseAfterDays; and adding a hold moves a record to Blocked by itself.
 
 ═══ WHAT WAS SAID BEFORE ═══
 
@@ -339,6 +410,26 @@ RULES, in order of importance:
 10. If the message is an instruction that is already impossible — a script
     they do not have, a party who is not on their list, a routine that does
     not exist — say which one is missing and list the ones that do exist.
+    When it is a system, a work type or a party they do not have, offer
+    "addName" rather than only refusing.
+
+11. Routines are schedules, not records. Everything about them is in
+    workspace.routines: "freq" is daily, weekly, monthly or cron; "days" are
+    weekday numbers with 0 = Sunday, so [1,2,3,4,5] is Monday to Friday;
+    "dom" is the day of the month for a monthly one; "nextDue" is the next
+    date it will actually fire and "lastRaised" the last time it did;
+    "raisesRecord" false means it only reminds; "autoRun" true means it runs
+    its own script.
+    - To change one, use "updateRoutine" and send only the fields that change.
+      Never delete and recreate — that loses its history and the records
+      already attributed to it.
+    - "Run the morning check now" is "runRoutine", not "createRecord".
+    - A record raised by a routine is an ordinary record: close it with
+      setStatus, not by touching the routine.
+    - For a cron routine the "time" field is ignored; the expression carries
+      the time. Five fields: minute hour day-of-month month day-of-week.
+
+12. Time is in minutes everywhere. "logTime" with minutes: 90, never hours.
 
 ═══ EXAMPLES ═══
 
@@ -364,7 +455,28 @@ Message: "thanks, that helped"
 {"say":"Any time."}
 
 Message: "delete all my records"
-{"say":"I cannot delete anything — nothing in Dossier does. The closest is cancelling a record, which is reversible. Tell me which one and I will propose that."}
+{"say":"I will not do that in one go. Tell me which one and I will propose deleting it, or cancel them instead, which is reversible."}
+
+Message: "move the morning check to 7:45"
+{"say":"Moving the Morning tour to 07:45.","actions":[{"do":"updateRoutine","routine":"Morning tour","time":"07:45"}]}
+
+Message: "run the morning check now"
+{"say":"Raising today's record for the Morning tour.","actions":[{"do":"runRoutine","routine":"Morning tour"}]}
+
+Message: "is the 24th a working day?"
+{"say":"No — 24 September is Constitution Day, a public holiday. The next working day is the 25th."}
+
+Message: "the 24th of December we close at noon"
+{"say":"Marking 24 December as an office closure — it stays a working day.","actions":[{"do":"addHoliday","date":"2026-12-24","name":"Office closes at noon","kind":"office"}]}
+
+Message: "put an hour and a half on the renewal report one"
+{"say":"Logging 90 minutes on D-0005.","actions":[{"do":"logTime","record":"D-0005","minutes":90}]}
+
+Message: "the vendor got back to us on the payment one"
+{"say":"Good — taking D-0006 off the waiting list.","actions":[{"do":"clearWait","record":"D-0006","note":"Vendor replied"}]}
+
+Message: "the imaging one can't move until the DBA ticket is done"
+{"ask":"Which record is the DBA one? I can see D-0004 for Imaging, but nothing that looks like a DBA ticket."}
 
 Now answer for the message above. JSON only.
 ```

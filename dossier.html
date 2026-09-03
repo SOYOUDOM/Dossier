@@ -1656,9 +1656,6 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
      missing the app runs exactly as before and the Assist tab says why. -->
 <script src="assist.js"></script>
 <script src="chat.js"></script>
-<!-- Optional. Nothing here needs it; if the file is absent the assistant
-     works exactly as it always has, minus one fallback. -->
-<script src="brain.js"></script>
 <!-- Optional, and the only feature in Dossier that sends anything anywhere.
      It still does not fetch: it drives flow/relay.html, which is sandboxed,
      holds no records, and is the only page with a connect-src that allows
@@ -3072,41 +3069,6 @@ const STRINGS = {
   FlowRan: "Done.",
   FlowVersions: "flow.js {app} · relay {relay}",
   FlowStaleRelay: "The relay in the frame is an older copy than flow.js expects. Hard-refresh with Ctrl+Shift+R.",
-  BrainHead: "Understanding harder questions",
-  BrainBlurb: "The assistant reads your questions by matching them against the shapes it knows, and it is right about 97 times in 100. For the rest, a small language model can run on this PC\u2019s graphics chip and pick which of its own candidates you probably meant. It never writes an answer \u2014 it only chooses from a list the assistant already knows how to answer, and its choice is offered to you rather than acted on.",
-  BrainNetwork: "Dossier itself cannot reach the network at all \u2014 it carries a policy that forbids it, and that stays true whether this is on or off. So the model does not run in here. Switching it on opens model/run.html in a hidden frame: a page of its own, allowed to reach the model CDN and nowhere else, holding none of your records. It downloads the runtime and the weights once \u2014 the size is shown below \u2014 and caches them. Everything after that is offline, and the only thing that ever crosses between the two is your sentence going out and a number coming back.",
-  BrainUse: "Use a local model",
-  BrainOff: "Off",
-  BrainOn: "On",
-  BrainModel: "Model",
-  BrainStatusOff: "Not loaded. Nothing has been downloaded.",
-  BrainStatusLoading: "{what} \u2014 {pct}%  ({secs}s)",
-  BrainQuiet: "Nothing has arrived from the download for {secs} seconds. It may still be working \u2014 the first minute is mostly fetching and compiling before any percentage moves. If it stays here, press F12, open Network, and see whether anything from huggingface.co is actually transferring.",
-  BrainVersions: "brain.js {app} \u00b7 runner {run}",
-  BrainStaleRunner: "The runner answering is version {run}, but this brain.js expects {want}. model/run.html was not replaced, or the browser is still serving an old copy of it \u2014 hard-refresh with Ctrl+Shift+R.",
-  BrainPlan: "What do I need to download?",
-  BrainPlanHead: "Three things, and only the first one is blocked on your network. The runtime and the model library sit on hosts this machine can already reach \u2014 which is why the model list above filled in at all.",
-  BrainPlanAsking: "Asking the library what this exact version needs\u2026",
-  BrainPlanFailed: "Could not ask the library: {err}",
-  BrainPlanCopy: "Copy the index.json",
-  BrainPlanCopied: "Copied",
-  BrainShowRunner: "Show the runner",
-  BrainHideRunner: "Hide the runner",
-  BrainStuck: "{secs} seconds with no word from the download. That is longer than a working fetch goes quiet for. Stop it, and either try a different Model host or check Network in F12 for what is being refused.",
-  BrainStatusReady: "Ready \u00b7 {model}",
-  BrainStatusFailed: "Did not load: {err}",
-  BrainUnsupported: "This browser cannot run one: {err}",
-  BrainLoad: "Download and start it",
-  BrainUnload: "Stop it",
-  BrainCheck: "Can this PC run one?",
-  BrainAbout: "about {mb} MB",
-  BrainStats: "Asked {asked} times this session, answered {answered}. Last took {ms} ms.",
-  BrainThought: "I was not sure, so I asked the local model. It thinks you meant:",
-  BrainAsking: "thinking\u2026",
-  BrainLibrary: "Library URL",
-  BrainLibraryHint: "Pinned so an update cannot change the behaviour underneath you. Change it only if the version stops loading.",
-  BrainHost: "Model host",
-  BrainHostHint: "Where the weights are fetched from. Leave it empty for the usual one. If your network refuses huggingface.co, model/check.html tries the alternatives and tells you which \u2014 if any \u2014 are open here.",
   AiOpenRoutines: "Open Routines"
 };
 
@@ -5943,266 +5905,6 @@ function chatApi(convo){
 }
 
 
-/* ═══ THE LOCAL MODEL ════════════════════════════════════════════════════
-   All of this is optional in the strictest sense: brain.js may not be in the
-   folder, the browser may have no WebGPU, and the user may simply never turn
-   it on. Every path below checks, and the assistant is unchanged when it is
-   not there.
-
-   It is rendered on its own rather than inside the Setup panel's one big
-   string, because a download reports progress every few hundred milliseconds
-   and rebuilding the whole panel that often would fight with anything else
-   you were typing in it. */
-
-function brainCfg(){
-  const st = S.settings;
-  if (!st.brain || typeof st.brain !== "object") st.brain = { on:false, model:"", lib:"", host:"" };
-  return st.brain;
-}
-function brainHere(){ return typeof window !== "undefined" && !!window.DossierBrain; }
-function brainReady(){ return brainHere() && DossierBrain.state().status === "ready"; }
-
-function renderBrain(){
-  const box = $("brainBox");
-  if (!box) return;
-  const cfg = brainCfg();
-
-  if (!brainHere()){
-    box.innerHTML = '<p class="hint2">' + esc(L("BrainBlurb")) + "</p>" +
-      '<p class="hint2" style="color:var(--p2);margin-top:8px">brain.js is not in this folder. ' +
-      "Put it next to dossier.html and reload.</p>";
-    return;
-  }
-
-  const st = DossierBrain.state();
-  /* why() only says whether the API exists. Whether there is a graphics chip
-     behind it takes an await, so it is asked once and remembered \u2014 and until
-     the answer comes back the panel says what it knows rather than guessing. */
-  if (BRAIN.probe === null && DossierBrain.available()){
-    BRAIN.probe = undefined;
-    DossierBrain.probe().then(r => { BRAIN.probe = r; renderBrain(); },
-                              () => { BRAIN.probe = { ok:false, reason:"" }; });
-  }
-  const blocked = DossierBrain.why() ||
-    ((BRAIN.probe && BRAIN.probe.ok === false) ? BRAIN.probe.reason : "");
-  let status, tone = "var(--ink-2)";
-  if (blocked){ status = L("BrainUnsupported", { err:blocked }); tone = "var(--p2)"; }
-  else if (st.status === "ready"){ status = L("BrainStatusReady", { model:st.model }); tone = "var(--ok, var(--ink-2))"; }
-  else if (st.status === "loading") status = L("BrainStatusLoading",
-    { what:st.message || "working", pct:Math.round((st.progress || 0) * 100),
-      secs:st.elapsed || 0 });
-  else if (st.status === "failed"){ status = L("BrainStatusFailed", { err:st.error }); tone = "var(--p1)"; }
-  else status = L("BrainStatusOff");
-
-  const opts = (BRAIN.catalogue || []).length
-    ? BRAIN.catalogue.map(m => '<option value="' + esc(m.id) + '"' +
-        (m.id === cfg.model ? " selected" : "") + ">" + esc(m.id) +
-        (m.mb ? "  \u00b7 " + L("BrainAbout", { mb:m.mb }) : "") + "</option>").join("")
-    : DossierBrain.WANT.map(m => '<option value="' + esc(m.id) + '"' +
-        (m.id === cfg.model ? " selected" : "") + ">" + esc(m.id) +
-        "  \u00b7 " + esc(L("BrainAbout", { mb:m.mb })) + "</option>").join("");
-
-  box.innerHTML =
-    '<p class="hint2">' + esc(L("BrainBlurb")) + "</p>" +
-    '<p class="hint2" style="margin-top:8px">' + esc(L("BrainNetwork")) + "</p>" +
-    fr(L("BrainUse"), '<select class="in" id="brOn"' + (blocked ? " disabled" : "") + '>' +
-      '<option value="0"' + (!cfg.on ? " selected" : "") + ">" + esc(L("BrainOff")) + "</option>" +
-      '<option value="1"' + (cfg.on ? " selected" : "") + ">" + esc(L("BrainOn")) + "</option></select>") +
-    fr(L("BrainModel"), '<select class="in" id="brModel"' + (blocked ? " disabled" : "") + ">" + opts + "</select>") +
-    '<p style="font-size:11.5px;color:' + tone + ';line-height:1.6;margin:6px 0 0">' + esc(status) + "</p>" +
-    (st.status === "ready" && st.asked
-      ? '<p class="hint2">' + esc(L("BrainStats", { asked:st.asked, answered:st.answered, ms:st.lastMs })) + "</p>"
-      : "") +
-    /* nought per cent is normal for a while and fatal after a while, and the
-       only difference is how long the runtime has been silent */
-    (st.status === "loading" && (st.silentFor || 0) >= 25
-      ? '<p style="font-size:11.5px;color:' + ((st.silentFor >= 90) ? "var(--p1)" : "var(--p2)") +
-        ';line-height:1.6;margin:6px 0 0">' +
-        esc(L(st.silentFor >= 90 ? "BrainStuck" : "BrainQuiet", { secs:st.silentFor })) + "</p>"
-      : "") +
-    /* Which files are actually running. "I replaced it" and "the browser is
-       running what I replaced" are different claims, and an iframe hides the
-       difference completely. */
-    '<p class="hint2" style="font-family:var(--f-mono);font-size:10.5px">' +
-      esc(L("BrainVersions", { app:DossierBrain.version || "?",
-                              run:st.runner || "\u2014" })) + "</p>" +
-    (st.runner && st.runner !== "?" && st.runner !== DossierBrain.version
-      ? '<p style="font-size:11.5px;color:var(--p1);line-height:1.6;margin:6px 0 0">' +
-        esc(L("BrainStaleRunner", { run:st.runner, want:DossierBrain.version })) + "</p>"
-      : "") +
-    '<div class="brow" style="margin-top:10px">' +
-      (st.status === "ready" || st.status === "loading"
-        ? '<button class="btn" id="brStop">' + esc(L("BrainUnload")) + "</button>"
-        : '<button class="btn pri" id="brGo"' + (blocked ? " disabled" : "") + ">" +
-          esc(L("BrainLoad")) + "</button>") +
-      '<button class="btn" id="brCheck">' + esc(L("BrainCheck")) + "</button>" +
-      '<button class="btn" id="brShow">' +
-        esc(L(BRAIN.shown ? "BrainHideRunner" : "BrainShowRunner")) + "</button>" +
-      '<button class="btn" id="brPlan">' + esc(L("BrainPlan")) + "</button>" +
-    "</div>" +
-    '<div id="brainPlan"></div>' +
-    fr(L("BrainLibrary"), '<input class="in mono" id="brLib" style="font-size:11px" value="' +
-      esc(cfg.lib || DossierBrain.DEFAULT_LIB) + '" spellcheck="false">') +
-    '<p class="hint2">' + esc(L("BrainLibraryHint")) + "</p>" +
-    fr(L("BrainHost"), '<input class="in mono" id="brHost" style="font-size:11px" value="' +
-      esc(cfg.host || "") + '" spellcheck="false" placeholder="https://huggingface.co">') +
-    '<p class="hint2">' + esc(L("BrainHostHint")) + "</p>";
-
-  const on = $("brOn"); if (on) on.onchange = e => {
-    cfg.on = e.target.value === "1"; touch();
-    if (cfg.on) brainStart(); else brainStop();
-  };
-  const md = $("brModel"); if (md) md.onchange = e => {
-    cfg.model = e.target.value; touch();
-    if (DossierBrain.state().status === "ready") brainStart(true);
-    else renderBrain();
-  };
-  const lb = $("brLib"); if (lb) lb.onchange = e => { cfg.lib = e.target.value.trim(); touch(); };
-  const hh = $("brHost"); if (hh) hh.onchange = e => { cfg.host = e.target.value.trim(); touch(); };
-  const go = $("brGo"); if (go) go.onclick = () => { cfg.on = true; touch(); brainStart(); };
-  const sp = $("brStop"); if (sp) sp.onclick = () => { cfg.on = false; touch(); brainStop(); };
-  const ck = $("brCheck"); if (ck) ck.onclick = () => window.open("model/check.html", "_blank");
-  const pl = $("brPlan"); if (pl) pl.onclick = brainPlan;
-  const sh = $("brShow"); if (sh) sh.onclick = () => {
-    BRAIN.shown = !BRAIN.shown;
-    const f = document.querySelector('iframe[title="Dossier model runner"]');
-    if (f) f.style.cssText = BRAIN.shown
-      ? "position:static;width:100%;height:76px;border:1px solid var(--rule);border-radius:6px;margin-top:8px"
-      : "position:absolute;width:1px;height:1px;left:-9999px;top:0;border:0";
-    renderBrain();
-    if (BRAIN.shown && f) f.scrollIntoView({ block:"center" });
-  };
-}
-
-/* ── doing it by hand ────────────────────────────────────────────────────
-   When the weights host is unreachable and no mirror is open, the model can
-   still be fetched somewhere else and copied in. Which files, and where they
-   go, is not something to take on trust from a README: the model library is
-   pinned to a version of the runtime, and a mismatched pair fails in a way
-   that looks like a corrupt download.
-
-   So it is asked. The library is already loaded on this machine \u2014 that is
-   why the model list filled in \u2014 and it knows exactly what it wants. */
-async function brainPlan(){
-  const box = $("brainPlan");
-  if (!box || !brainHere()) return;
-  const cfg = brainCfg();
-  box.innerHTML = '<p class="hint2">' + esc(L("BrainPlanAsking")) + "</p>";
-  let e;
-  try { e = await DossierBrain.plan({ lib:cfg.lib || undefined, model:cfg.model || undefined }); }
-  catch(err){
-    box.innerHTML = '<p style="font-size:11.5px;color:var(--p1);line-height:1.6">' +
-      esc(L("BrainPlanFailed", { err:String((err && err.message) || err) })) + "</p>";
-    return;
-  }
-  const wasm = String(e.model_lib || "");
-  const file = wasm.split("/").pop();
-  const repo = String(e.model || "");
-  const folder = repo.split("/").pop();
-  const idx = JSON.stringify([{ model_id:e.model_id,
-    model:"models/" + folder,
-    model_lib:"models/lib/" + file }], null, 1);
-
-  box.innerHTML =
-    '<p class="hint2" style="margin-top:10px">' + esc(L("BrainPlanHead")) + "</p>" +
-    '<ol style="font-size:12px;line-height:1.75;padding-left:18px;margin:8px 0">' +
-      "<li><b>The weights</b> \u2014 this is the blocked one, about " + (e.mb || "?") + " MB.<br>" +
-        '<code class="mono">git lfs install &amp;&amp; git clone ' + esc(repo) + "</code><br>" +
-        "Put the folder it makes at <code>model/models/" + esc(folder) + "</code>.</li>" +
-      "<li><b>The model library</b>, one file, on a host you can reach:<br>" +
-        '<a href="' + esc(wasm) + '" target="_blank" rel="noopener">' + esc(file) + "</a><br>" +
-        "Save it as <code>model/models/lib/" + esc(file) + "</code>.</li>" +
-      "<li><b>The runtime</b>, so even that is local:<br>" +
-        '<a href="' + esc(cfg.lib || DossierBrain.DEFAULT_LIB) + '" target="_blank" rel="noopener">' +
-        esc(cfg.lib || DossierBrain.DEFAULT_LIB) + "</a><br>" +
-        "Save it as <code>model/web-llm.js</code>.</li>" +
-      "<li>Finally <code>model/models/index.json</code>, exactly this:</li>" +
-    "</ol>" +
-    '<pre class="mono" style="font-size:11px;white-space:pre-wrap;background:var(--paper-2);' +
-      'border:1px solid var(--rule);border-radius:6px;padding:9px 11px;overflow-x:auto">' +
-      esc(idx) + "</pre>" +
-    '<button class="btn sm" id="brCopyIdx">' + esc(L("BrainPlanCopy")) + "</button>" +
-    '<p class="hint2">Once index.json is there, Dossier uses the folder and never asks the ' +
-      "network for anything.</p>";
-
-  const cp = $("brCopyIdx");
-  if (cp) cp.onclick = function(){
-    navigator.clipboard.writeText(idx).then(() => {
-      this.textContent = L("BrainPlanCopied");
-      setTimeout(() => { this.textContent = L("BrainPlanCopy"); }, 1600);
-    }).catch(() => { this.textContent = "Select the text above and copy it"; });
-  };
-}
-
-const BRAIN = { catalogue:null, busy:false, probe:null, shown:false };
-
-async function brainStart(restart){
-  if (!brainHere()) return;
-  const cfg = brainCfg();
-  try {
-    if (restart) await DossierBrain.unload();
-    /* the real list of models, so the picker shows what the library actually
-       has rather than what this file was written against */
-    if (!BRAIN.catalogue){
-      try { BRAIN.catalogue = await DossierBrain.catalogue(cfg.lib || undefined); }
-      catch(e){ /* offline or blocked — the built-in preferences still work */ }
-      /* A dropdown with nothing selected shows whichever entry happens to sort
-         first, which is not the one that gets downloaded. Write the real
-         choice in so the two agree. */
-      if (!cfg.model && BRAIN.catalogue && BRAIN.catalogue.length){
-        const real = DossierBrain.preferred(BRAIN.catalogue);
-        if (real){ cfg.model = real; touch(); }
-      }
-      renderBrain();
-    }
-    await DossierBrain.load({
-      model: cfg.model || undefined,
-      lib: cfg.lib || undefined,
-      host: cfg.host || undefined,
-      /* whatever it settled on, show that */
-      onModel: id => { if (cfg.model !== id){ cfg.model = id; touch(); } },
-      onProgress: () => renderBrain()
-    });
-    renderBrain();
-    toast(L("BrainStatusReady", { model:DossierBrain.state().model }));
-  } catch(e){
-    renderBrain();
-    toast(L("BrainStatusFailed", { err:String(e && e.message || e) }), { bad:true });
-  }
-}
-async function brainStop(){
-  if (!brainHere()) return;
-  await DossierBrain.unload();
-  BRAIN.catalogue = null;
-  renderBrain();
-}
-
-/* Ask the model which of the assistant's own candidates was meant. Returns
-   null for every reason there is — not loaded, not sure, timed out, threw —
-   because a fallback that can fail loudly is worse than no fallback. */
-async function brainGuess(text, alreadySaid, wide){
-  if (!brainReady() || !window.DossierChat || !DossierChat.shortlist) return null;
-  if (BRAIN.busy) return null;
-  BRAIN.busy = true;
-  try {
-    /* Everything it can answer, every time, in the assistant's own order of
-       preference. A shortlist was tried first and it is the wrong instinct:
-       "how much of my week went on Imaging" put twelve candidates in front of
-       the model and time tracked \u2014 the answer \u2014 was not one of them, because
-       the ranking that produced the shortlist is the very thing being
-       doubted. Seventy-odd short labels cost a fraction of a second more to
-       read and remove the whole failure mode. */
-    const list = DossierChat.shortlist(text, chatApi(), wide === false ? 12 : 0)
-      .filter(x => x.name !== alreadySaid);
-    if (!list.length) return null;
-    const g = await DossierBrain.guess(text, list);
-    if (!g || !g.intent || g.intent === alreadySaid) return null;
-    const hit = list.find(x => x.name === g.intent);
-    return hit ? { intent:hit.name, label:hit.label, ms:g.ms } : null;
-  } catch(e){ return null; }
-  finally { BRAIN.busy = false; }
-}
-
 /* ═══ TEACHING IT ════════════════════════════════════════════════════════
    Two ways in, and they are different jobs.
 
@@ -6666,33 +6368,6 @@ function chatAsk(text){
   chatBot(r, q);
   chatSide();
 
-  /* The answer above has already been given. Only if it was a guess, or no
-     answer at all, is the local model worth waking \u2014 and even then it comes
-     back as a suggestion underneath rather than replacing what was said. */
-  if (brainReady() && (!r.intent || r.unsure)) brainOffer(q, r.intent || "");
-}
-
-/* the second opinion, offered rather than acted on */
-async function brainOffer(q, said){
-  const log = $("chatLog");
-  const wait = document.createElement("div");
-  wait.className = "chb bot";
-  wait.innerHTML = '<div class="carry">' + esc(L("BrainAsking")) + "</div>";
-  log.appendChild(wait);
-  chatScroll();
-  let g = null;
-  /* the full menu, always — see brainGuess for why a shortlist is the wrong
-     instinct here */
-  try { g = await brainGuess(q, said); } catch(e){ g = null; }
-  wait.remove();
-  if (!g) return;
-  /* One button, and it is the same correction the "did you mean" buttons use
-     \u2014 so accepting the model's reading answers the question AND teaches the
-     shape, and the model is not needed for that question again. Every bot
-     message already carries its own "not what I meant", so this does not
-     need a second one. */
-  chatBot({ say:L("BrainThought"),
-            chips:[{ label:g.label, act:{ kind:"reread", intent:g.intent, text:q } }] }, q);
 }
 
 /* ═══ ASKING THROUGH A FLOW ═══════════════════════════════════════════════
@@ -6738,11 +6413,60 @@ function flowContext(){
   })).filter(m => m.text);
   const live = S.tasks.filter(t => LIVE.indexOf(t.status) >= 0);
   const k = today();
+
+  /* Dates are where an endpoint gets it wrong, and it gets it wrong silently.
+     "Every Monday" is unanswerable without knowing which Mondays are
+     holidays, and "the next working day" is a guess unless somebody has
+     already worked it out. So the answers travel with the question rather
+     than the raw material for them. */
+  let next = addDays(k, 1);
+  for (let i = 0; i < 30 && isOffDay(next); i++) next = addDays(next, 1);
+  const from = addDays(k, -30), to = addDays(k, 400);
+  const hols = holidays().filter(h => h.d >= from && h.d <= to).slice(0, 90);
+
   return {
     today: k,
     weekday: ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"][dow(k)],
     tasks: S.tasks, routines: S.routines, scripts: S.scripts, settings: st,
     conversation: msgs,
+    calendar: {
+      tomorrow: addDays(k, 1),
+      nextWorkingDay: next,
+      todayIsOffDay: isOffDay(k),
+      thisMonday: mondayOf(k),
+      weekendDays: ["Saturday", "Sunday"]
+    },
+    /* a year forward and a month back is what a question could turn on, and
+       it keeps the payload honest about its size */
+    holidays: hols.map(h => ({ d:h.d, n:h.n, k:h.k })),
+    holidaysTotal: holidays().length,
+    /* the rules the app applies by itself, so an endpoint does not propose
+       something the app is about to overrule a second later */
+    policy: {
+      targetDates: (st.sla && st.sla.on)
+        ? { on:true, hoursFromRaising:{ P1:+st.sla.P1, P2:+st.sla.P2,
+                                        P3:+st.sla.P3, P4:+st.sla.P4 } }
+        : { on:false },
+      chaseAfterDays: +st.remindWait || 3,
+      blockingSetsStatus: !!st.autoBlock
+    },
+    /* every field of a routine, not only its name. "Which Mondays", "does it
+       run its own script", "when does it next fire" are the questions people
+       ask about a schedule, and none of them were answerable before. */
+    routineDetail: S.routines.map(r => ({
+      id: r.id, title: r.title, freq: r.freq,
+      days: (r.days || []).slice(), dom: r.dom || 1, cron: r.cron || "",
+      time: r.time || "", paused: !!r.paused,
+      system: r.system || "", type: r.type || "", priority: r.priority || "",
+      checklist: (r.checklist || []).slice(),
+      notes: r.notes || "", message: r.message || "",
+      scripts: (r.scripts || []).map(id => { const sc = scriptById(id); return sc ? sc.name : id; }),
+      autoRun: !!r.autoRun,
+      raisesRecord: !r.message,
+      nextDue: r.paused ? "" : routineNextDue(r),
+      lastRaised: (S.tasks.filter(t => t.fromRoutine === r.id)
+                     .map(t => t.forDate).filter(Boolean).sort().pop()) || ""
+    })),
     people: knownValues("requester").concat(knownValues("waitOn"))
               .filter((v, i, a) => v && a.indexOf(v) === i),
     tags: knownValues("tags"),
@@ -6885,6 +6609,64 @@ function flowDescribe(a){
                confirm:"Change that?" };
     case "undo":
       return { say:"Undo the last change", confirm:"Undo it?" };
+
+    case "clearWait":
+      return { say:"Stop the waiting clock on " + ref(), note:g.note || "",
+               confirm:"Mark it as back with you?" };
+    case "logTime":
+      return { say:"Add " + mins(g.minutes) + " to " + ref(), note:g.note || "",
+               confirm:"Log that time?" };
+    case "timer":
+      return { say:(g.on === false ? "Stop" : "Start") + " the clock on " + ref(),
+               confirm:"Do that?" };
+    case "block":
+      return { say:"Hold " + ref() + " until " + g.blockedBy.join(", ") + " are done",
+               note:S.settings.autoBlock ? "It will move to Blocked." : "",
+               confirm:"Add the hold?" };
+    case "unblock":
+      return { say:(g.blockedBy || []).length
+                 ? "Stop " + ref() + " waiting on " + g.blockedBy.join(", ")
+                 : "Clear everything holding " + ref() + " up",
+               confirm:"Clear it?" };
+    case "tags":
+      return { say:"Retag " + ref(),
+               note:[(g.add || []).length ? "add " + g.add.join(", ") : "",
+                     (g.remove || []).length ? "remove " + g.remove.join(", ") : ""]
+                      .filter(Boolean).join(" · "),
+               confirm:"Change the tags?" };
+    case "updateRoutine":
+      return { say:"Change the schedule \u201c" + g.routine + "\u201d",
+               note:Object.keys(g).filter(k => k !== "routine")
+                      .map(k => k + " \u2192 " + JSON.stringify(g[k])).join(", "),
+               confirm:"Change it?" };
+    case "deleteRoutine":
+      return { say:"Delete the schedule \u201c" + g.routine + "\u201d",
+               note:"The records it already raised are left alone.",
+               confirm:"Delete the routine?" };
+    case "runRoutine":
+      return { say:"Raise the record for \u201c" + g.routine + "\u201d now",
+               confirm:"Raise it now?" };
+    case "addHoliday":
+      return { say:"Mark " + g.date + " as \u201c" + g.name + "\u201d",
+               note:(g.kind === "office" ? "An office closure \u2014 marked, but it still counts as a working day."
+                                         : "A public holiday \u2014 not a working day."),
+               confirm:"Add it to the calendar?" };
+    case "removeHoliday":
+      return { say:"Unmark " + g.date,
+               note:(function(){ const h = holidayOn(g.date); return h ? h.n : ""; })(),
+               confirm:"Remove it?" };
+    case "addName":
+      return { say:"Add \u201c" + g.name + "\u201d as a " +
+                   (g.kind === "system" ? "system" : g.kind === "type" ? "work type" : "party"),
+               confirm:"Add it?" };
+    case "deleteRecord": {
+      const t = findByRef(g.record);
+      return { say:"Delete " + ref(),
+               note:"Its folder and documents stay on disk" +
+                    (t && (t.log || []).length > 1 ? ", but " + t.log.length +
+                     " work-log entries go with it" : "") + ". Cancelling keeps the history.",
+               confirm:"Delete it for good?" };
+    }
   }
   return { say:a.do, confirm:"Do that?" };
 }
@@ -6929,6 +6711,61 @@ function flowRun(a, quiet){
     case "view":  closeChat(); setView(g.view); return null;
     case "panel": closeChat(); openModal(g.panel); return null;
     case "report": closeChat(); openModal("report"); return null;
+
+    case "getRecord": {
+      const t = need(g.record); if (!t) return null;
+      const L2 = [];
+      L2.push(t.code + " \u2014 " + t.title);
+      L2.push([stMeta(t.status).label, t.priority, t.system, t.type].filter(Boolean).join(" \u00b7 "));
+      if (t.ticket) L2.push("Ticket " + t.ticket);
+      if (t.requester) L2.push("Raised by " + t.requester);
+      if (t.due) L2.push("Due " + t.due + (t.dueTime ? " " + t.dueTime : ""));
+      if (t.waitOn) L2.push("Waiting on " + t.waitOn + " since " + dayOf(t.waitSince) +
+                            " (" + (t.chases || []).length + " chases)");
+      if (t.estimate || t.spent)
+        L2.push("Estimated " + mins(t.estimate || 0) + ", spent " + mins(live(t)));
+      if ((t.tags || []).length) L2.push("Tags: " + t.tags.join(", "));
+      if ((t.blockedBy || []).length)
+        L2.push("Held up by " + t.blockedBy.map(id => { const x = getTask(id);
+                  return x ? x.code : id; }).join(", "));
+      if (t.notes) L2.push("\nNotes:\n" + t.notes);
+      if ((t.checklist || []).length)
+        L2.push("\nSteps:\n" + t.checklist.map(c => (c.done ? "[x] " : "[ ] ") + c.text).join("\n"));
+      if ((t.files || []).length) L2.push("\nDocuments: " + t.files.map(f => f.name).join(", "));
+      if ((t.log || []).length)
+        L2.push("\nWork log, most recent last:\n" +
+          t.log.slice(-12).map(l => dayOf(l.at) + "  " + String(l.text || "")).join("\n"));
+      return { say:L2.join("\n"),
+               rows:[{ id:t.id, code:t.code, text:t.title, sub:stMeta(t.status).label }] };
+    }
+
+    case "listRoutines": {
+      const list = S.routines.filter(r => g.includePaused === false ? !r.paused : true);
+      if (!list.length) return { say:"There are no schedules yet." };
+      return { say: list.map(r => {
+        const bits = [r.freq === "cron" ? "cron " + r.cron
+                    : r.freq === "weekly" ? "weekly on " + (r.days || []).map(d => DOW3[d]).join(", ")
+                    : r.freq === "monthly" ? "day " + (r.dom || 1) + " of the month"
+                    : "daily on " + (r.days || []).map(d => DOW3[d]).join(", "),
+                      r.time ? "at " + r.time : "",
+                      r.message ? "reminds you" : "raises a record",
+                      r.autoRun ? "runs its script itself" : "",
+                      r.paused ? "PAUSED" : ""].filter(Boolean);
+        const nd = r.paused ? "" : routineNextDue(r);
+        return "\u2022 " + r.title + " \u2014 " + bits.join(" \u00b7 ") +
+               (nd ? "\n  next " + nd : "\n  it would never fire");
+      }).join("\n") };
+    }
+
+    case "listHolidays": {
+      const f = g.from || today(), t2 = g.to || addDays(today(), 365);
+      const list = holidays().filter(h => h.d >= f && h.d <= t2);
+      if (!list.length) return { say:"Nothing marked between " + f + " and " + t2 + "." };
+      return { say: list.map(h => h.d + "  " + h.n +
+        (h.k === "office" ? "  (office closure \u2014 still a working day)" : "")).join("\n") };
+    }
+
+    case "chaseSheet": closeChat(); openChase(); return null;
 
     /* ── writes ────────────────────────────────────────────────────────── */
     case "createRecord": {
@@ -7070,6 +6907,155 @@ function flowRun(a, quiet){
       touch(); renderAll();
       return done("“" + r.title + "” is " + (r.paused ? "paused" : "running") + ".");
     }
+    case "clearWait": {
+      const t = need(g.record); if (!t) return null;
+      if (!t.waitOn) return flowNeed(a, t.code + " is not sitting with anybody.");
+      const who = t.waitOn;
+      clearWait(t.id, g.note || "Came back");
+      return done(who + " came back \u2014 " + t.code + " is with you again.");
+    }
+    case "logTime": {
+      const t = need(g.record); if (!t) return null;
+      pushUndo("log time");
+      t.spent = (t.spent || 0) + g.minutes;
+      t.log.push({ at:new Date().toISOString(),
+        text:"Logged " + mins(g.minutes) + (g.note ? " \u2014 " + g.note : "") });
+      if (!t.started) t.started = new Date().toISOString();
+      buildModel(); touch(); renderAll(); if (S.open === t.id) renderDrawer();
+      return done(mins(g.minutes) + " on " + t.code + " \u2014 " + mins(live(t)) + " in total.");
+    }
+    case "timer": {
+      const t = need(g.record); if (!t) return null;
+      const want = g.on === false ? false : true;
+      if (!!t.timerStart === want)
+        return done("The clock on " + t.code + " is already " + (want ? "running" : "stopped") + ".");
+      toggleTimer(t.id);
+      return done(want ? "Clock running on " + t.code + "." :
+                         "Stopped \u2014 " + mins(live(t)) + " on " + t.code + " now.");
+    }
+    case "block": {
+      const t = need(g.record); if (!t) return null;
+      const holds = [], missing = [];
+      g.blockedBy.forEach(ref2 => {
+        const x = findByRef(ref2);
+        if (!x) missing.push(String(ref2));
+        else if (x.id === t.id) missing.push(String(ref2) + " (that is this record)");
+        else holds.push(x);
+      });
+      if (missing.length) return flowNeed(a, "no record here is " + missing.join(" or ") + ".");
+      pushUndo("hold");
+      t.blockedBy = (t.blockedBy || []).concat(holds.map(x => x.id))
+                      .filter((v, i, arr) => arr.indexOf(v) === i);
+      applyHold(t, holds.map(x => x.code).join("; "));
+      buildModel(); touch(); renderAll(); if (S.open === t.id) renderDrawer();
+      return done(t.code + " is held up by " + holds.map(x => x.code).join(", ") + ".");
+    }
+    case "unblock": {
+      const t = need(g.record); if (!t) return null;
+      if (!(t.blockedBy || []).length)
+        return flowNeed(a, "nothing is holding " + t.code + " up.");
+      pushUndo("hold");
+      if ((g.blockedBy || []).length){
+        const drop = g.blockedBy.map(r2 => { const x = findByRef(r2); return x && x.id; }).filter(Boolean);
+        t.blockedBy = t.blockedBy.filter(id => drop.indexOf(id) < 0);
+      } else t.blockedBy = [];
+      const freed = syncHolds();
+      buildModel(); touch(); renderAll(); if (S.open === t.id) renderDrawer();
+      announceFreed(freed);
+      return done(t.blockedBy.length
+        ? t.code + " is still held by " + t.blockedBy.length + "."
+        : "Nothing is holding " + t.code + " up now.");
+    }
+    case "tags": {
+      const t = need(g.record); if (!t) return null;
+      pushUndo("tags");
+      const low = x => String(x).toLowerCase().trim();
+      let tags = (t.tags || []).slice();
+      (g.remove || []).forEach(x => { tags = tags.filter(y => low(y) !== low(x)); });
+      (g.add || []).forEach(x => { if (!tags.some(y => low(y) === low(x))) tags.push(low(x)); });
+      t.tags = tags;
+      buildModel(); touch(); renderAll(); if (S.open === t.id) renderDrawer();
+      return done(t.code + ": " + (tags.length ? tags.join(", ") : "no tags now") + ".");
+    }
+    case "updateRoutine": {
+      const r = flowRoutine(g.routine);
+      if (!r) return flowNeed(a, "there is no routine called \u201c" + g.routine + "\u201d. " +
+        "You have: " + S.routines.map(x => x.title).join(", "));
+      if ("cron" in g && cronOk(g.cron))
+        return flowNeed(a, "that cron expression will not do: " + cronOk(g.cron));
+      pushUndo("routine");
+      ["title","freq","cron","dom","time","system","type","priority","message"]
+        .forEach(k => { if (k in g) r[k] = g[k]; });
+      if ("days" in g) r.days = g.days.map(Number).filter(n => n >= 0 && n <= 6);
+      if ("checklist" in g) r.checklist = g.checklist.slice();
+      if ("autoRun" in g) r.autoRun = !!g.autoRun;
+      if ("scripts" in g)
+        r.scripts = g.scripts.map(n => { const sc = findScript(n); return sc && sc.id; }).filter(Boolean);
+      touch(); renderAll();
+      const nd = r.paused ? "" : routineNextDue(r);
+      return done("\u201c" + r.title + "\u201d changed" + (nd ? " \u2014 next " + nd : "") + ".",
+                  [{ label:L("AiOpenRoutines"), act:{ kind:"panel", panel:"routine" } }]);
+    }
+    case "deleteRoutine": {
+      const r = flowRoutine(g.routine);
+      if (!r) return flowNeed(a, "there is no routine called \u201c" + g.routine + "\u201d.");
+      pushUndo("routine");
+      S.routines = S.routines.filter(x => x.id !== r.id);
+      touch(); renderAll();
+      return done("\u201c" + r.title + "\u201d is gone.");
+    }
+    case "runRoutine": {
+      const r = flowRoutine(g.routine);
+      if (!r) return flowNeed(a, "there is no routine called \u201c" + g.routine + "\u201d.");
+      if (r.message)
+        return flowNeed(a, "\u201c" + r.title + "\u201d only reminds you \u2014 it raises no record.");
+      const made = makeRoutines(r.id, true);
+      renderAll();
+      return done(made ? "Raised the record for \u201c" + r.title + "\u201d."
+                       : "\u201c" + r.title + "\u201d is paused, so nothing was raised.");
+    }
+    case "addHoliday": {
+      pushUndo("holiday");
+      const res = addHolidays([{ d:g.date, n:g.name, k:g.kind || "public" }]);
+      touch(); renderAll();
+      return done(g.date + " is now \u201c" + g.name + "\u201d" +
+                  (res.replaced ? " (it replaced what was there)" : "") + ".");
+    }
+    case "removeHoliday": {
+      const h = holidayOn(g.date);
+      if (!h) return flowNeed(a, g.date + " is not marked as anything.");
+      pushUndo("holiday");
+      S.settings.holidays = holidays().filter(x => x.d !== g.date);
+      touch(); renderAll();
+      return done(g.date + " is an ordinary day again.");
+    }
+    case "addName": {
+      const name = String(g.name).trim();
+      const st2 = S.settings;
+      const has = list => list.some(x => String(x.name || x).toLowerCase() === name.toLowerCase());
+      pushUndo("vocabulary");
+      if (g.kind === "system"){
+        if (has(st2.systems || [])) return done("\u201c" + name + "\u201d is already a system.");
+        st2.systems = (st2.systems || []).concat([{ name:name,
+          colour:/^#[0-9a-f]{6}$/i.test(g.colour || "") ? g.colour : "#6B7A90" }]);
+      } else if (g.kind === "type"){
+        if (has(st2.types || [])) return done("\u201c" + name + "\u201d is already a work type.");
+        st2.types = (st2.types || []).concat([name]);
+      } else {
+        if (has(st2.parties || [])) return done("\u201c" + name + "\u201d is already a party.");
+        st2.parties = (st2.parties || []).concat([name]);
+      }
+      buildModel(); touch(); renderAll();
+      if (window.DossierChat && DossierChat.forget) DossierChat.forget();
+      return done("\u201c" + name + "\u201d is one of your " +
+                  (g.kind === "system" ? "systems" : g.kind === "type" ? "work types" : "parties") + " now.");
+    }
+    case "deleteRecord": {
+      const t = need(g.record); if (!t) return null;
+      const code = t.code;
+      deleteTasks([t.id]);
+      return { say:code + " is gone. Ctrl+Z brings it back." };
+    }
     case "notify":
       return chatDo({ kind:"notify", on:!!g.on, __ok:true });
     case "undo":
@@ -7077,6 +7063,17 @@ function flowRun(a, quiet){
   }
   return null;
 }
+
+/* one routine, by id or by title, the way a person would name it */
+function flowRoutine(name){
+  const want = String(name || "").toLowerCase().trim();
+  if (!want) return null;
+  return S.routines.find(x => String(x.id).toLowerCase() === want)
+      || S.routines.find(x => String(x.title || "").toLowerCase() === want)
+      || S.routines.find(x => String(x.title || "").toLowerCase().indexOf(want) >= 0)
+      || null;
+}
+const DOW3 = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
 
 /* the filter behind the find action. Deliberately the same vocabulary the
    rail uses, so a flow cannot ask for a slice the application cannot show. */
@@ -9883,12 +9880,8 @@ async function renderModal(){
       "placeholder=\"Restart app pool @&quot;Infra / IIS&quot; :admin 15m today\"><button class=\"btn sm\" id=\"tplAdd\">" + L("Add") + "</button></div>" +
 
     "<h5 class=\"eyebrow\" style=\"margin:22px 0 8px\">" + L("FlowHead") + "</h5>" +
-    '<div id="flowBox"></div>' +
-
-    "<h5 class=\"eyebrow\" style=\"margin:22px 0 8px\">" + L("BrainHead") + "</h5>" +
-    '<div id="brainBox"></div>';
+    '<div id="flowBox"></div>';
   renderFlow();
-  renderBrain();
 
   $("pHelp").innerHTML =
     "<h4 style=\"margin:0 0 10px\">" + L("QuickAdd") + "</h4><dl class=\"kv mono\" style=\"font-size:11.5px\">" +
@@ -12602,8 +12595,6 @@ async function boot(){
   /* If the local model was left switched on, start it in the background. It
      is already cached by then, so this is quick \u2014 and if it is not, nothing
      waits on it. */
-  if (brainHere() && brainCfg().on && DossierBrain.available())
-    setTimeout(() => { brainStart().catch(() => {}); }, 2000);
 
   // roll the day over if the tab stays open past midnight
   let lastDay = today();

@@ -1,21 +1,22 @@
 {
   "dossier": 1,
   "protocol": "1.0",
-  "askedAt": "2026-09-03T04:48:52.247Z",
+  "askedAt": "2026-09-03T07:17:37.980Z",
   "today": "2026-09-03",
   "weekday": "Thursday",
+  "calendar": {
+    "tomorrow": "2026-09-04",
+    "nextWorkingDay": "2026-09-04",
+    "todayIsOffDay": false,
+    "thisMonday": "2026-08-31",
+    "weekendDays": [
+      "Saturday",
+      "Sunday"
+    ]
+  },
   "timezone": "UTC",
   "message": "create a P1 record to restart the imaging pool on APP02 tomorrow",
-  "conversation": [
-    {
-      "who": "person",
-      "text": "what is overdue"
-    },
-    {
-      "who": "dossier",
-      "text": "Two are past their date."
-    }
-  ],
+  "conversation": [],
   "owner": "",
   "workspace": {
     "scope": "live",
@@ -64,12 +65,20 @@
     ],
     "people": [
       "Operations",
-      "Sokha",
-      "Dara"
+      "Soy Oudom",
+      "Sok Dara",
+      "Finance",
+      "Vendor",
+      "Data team",
+      "DBA",
+      "Infra",
+      "Network",
+      "Security",
+      "Agency ops",
+      "Release management",
+      "Business user"
     ],
-    "tags": [
-      "urgent"
-    ],
+    "tags": [],
     "scripts": [
       {
         "id": "Sopenmorning",
@@ -108,22 +117,144 @@
         "id": "Rmorningtour",
         "title": "Morning tour",
         "freq": "daily",
+        "days": [
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "dom": 1,
+        "cron": "",
         "time": "08:30",
-        "paused": false
+        "paused": false,
+        "system": "Infra / IIS",
+        "type": "Admin",
+        "priority": "P3",
+        "checklist": [
+          "App pools running",
+          "Disk above 15%",
+          "Overnight job failures",
+          "Event log errors"
+        ],
+        "notes": "Anything red becomes its own record.",
+        "message": "",
+        "scripts": [
+          "open-morning-tabs"
+        ],
+        "autoRun": true,
+        "raisesRecord": true,
+        "nextDue": "2026-09-03",
+        "lastRaised": "2026-08-30"
       },
       {
         "id": "Rweekcheck",
         "title": "Friday housekeeping",
         "freq": "weekly",
+        "days": [
+          5
+        ],
+        "dom": 1,
+        "cron": "",
         "time": "16:00",
-        "paused": false
+        "paused": false,
+        "system": "Infra / IIS",
+        "type": "Admin",
+        "priority": "P4",
+        "checklist": [
+          "Archive old logs",
+          "Check backup job"
+        ],
+        "notes": "",
+        "message": "",
+        "scripts": [],
+        "autoRun": false,
+        "raisesRecord": true,
+        "nextDue": "2026-09-04",
+        "lastRaised": ""
       }
     ],
+    "holidays": [
+      {
+        "d": "2026-09-24",
+        "n": "Constitution Day",
+        "k": "public"
+      },
+      {
+        "d": "2026-10-10",
+        "n": "Pchum Ben",
+        "k": "public"
+      },
+      {
+        "d": "2026-10-11",
+        "n": "Pchum Ben",
+        "k": "public"
+      },
+      {
+        "d": "2026-10-12",
+        "n": "Pchum Ben",
+        "k": "public"
+      },
+      {
+        "d": "2026-10-15",
+        "n": "King Sihanouk Commemoration",
+        "k": "public"
+      },
+      {
+        "d": "2026-10-29",
+        "n": "Coronation Day",
+        "k": "public"
+      },
+      {
+        "d": "2026-11-09",
+        "n": "Independence Day",
+        "k": "public"
+      },
+      {
+        "d": "2026-11-24",
+        "n": "Water Festival",
+        "k": "public"
+      },
+      {
+        "d": "2026-11-25",
+        "n": "Water Festival",
+        "k": "public"
+      },
+      {
+        "d": "2026-11-26",
+        "n": "Water Festival",
+        "k": "public"
+      },
+      {
+        "d": "2026-12-10",
+        "n": "Human Rights Day",
+        "k": "public"
+      },
+      {
+        "d": "2026-12-29",
+        "n": "Peace Day",
+        "k": "public"
+      }
+    ],
+    "holidaysTotal": 22,
+    "policy": {
+      "targetDates": {
+        "on": true,
+        "hoursFromRaising": {
+          "P1": 4,
+          "P2": 24,
+          "P3": 48,
+          "P4": 120
+        }
+      },
+      "chaseAfterDays": 3,
+      "blockingSetsStatus": true
+    },
     "counts": {
       "records": 7,
       "live": 5,
-      "overdue": 1,
-      "dueToday": 2,
+      "overdue": 5,
+      "dueToday": 0,
       "waiting": 1,
       "blocked": 1
     },
@@ -303,6 +434,43 @@
         "period": "week | lastWeek | month",
         "format": "summary | standup | handover"
       }
+    },
+    {
+      "do": "getRecord",
+      "write": false,
+      "what": "Read one record in full — its notes, every checklist step, its work log and its documents. Use this when the summary you were sent is not enough.",
+      "needs": [
+        "record"
+      ],
+      "args": {
+        "record": "ref"
+      }
+    },
+    {
+      "do": "listRoutines",
+      "write": false,
+      "what": "List the schedules with what each one does and when it next fires.",
+      "needs": [],
+      "args": {
+        "includePaused": "bool"
+      }
+    },
+    {
+      "do": "listHolidays",
+      "write": false,
+      "what": "List the holidays and office closures in a date range.",
+      "needs": [],
+      "args": {
+        "from": "YYYY-MM-DD",
+        "to": "YYYY-MM-DD"
+      }
+    },
+    {
+      "do": "chaseSheet",
+      "write": false,
+      "what": "Open the chase sheet for everything that is due a chase.",
+      "needs": [],
+      "args": {}
     },
     {
       "do": "createRecord",
@@ -505,6 +673,178 @@
       "args": {
         "routine": "string",
         "paused": "bool"
+      }
+    },
+    {
+      "do": "clearWait",
+      "write": true,
+      "what": "They came back. Stops the waiting clock and files how long it took.",
+      "needs": [
+        "record"
+      ],
+      "args": {
+        "record": "ref",
+        "note": "string"
+      }
+    },
+    {
+      "do": "logTime",
+      "write": true,
+      "what": "Add minutes of work to a record. Use minutes, not hours.",
+      "needs": [
+        "record",
+        "minutes"
+      ],
+      "args": {
+        "record": "ref",
+        "minutes": "int",
+        "note": "string"
+      }
+    },
+    {
+      "do": "timer",
+      "write": true,
+      "what": "Start or stop the clock on a record. Starting one stops any other.",
+      "needs": [
+        "record"
+      ],
+      "args": {
+        "record": "ref",
+        "on": "bool"
+      }
+    },
+    {
+      "do": "block",
+      "write": true,
+      "what": "Say this record cannot finish until other records do. Give their codes.",
+      "needs": [
+        "record",
+        "blockedBy"
+      ],
+      "args": {
+        "record": "ref",
+        "blockedBy": "list of text"
+      }
+    },
+    {
+      "do": "unblock",
+      "write": true,
+      "what": "Remove what was holding a record up. Give codes to remove some, or nothing to clear them all.",
+      "needs": [
+        "record"
+      ],
+      "args": {
+        "record": "ref",
+        "blockedBy": "list of text"
+      }
+    },
+    {
+      "do": "tags",
+      "write": true,
+      "what": "Add or remove tags on a record.",
+      "needs": [
+        "record"
+      ],
+      "args": {
+        "record": "ref",
+        "add": "list of text",
+        "remove": "list of text"
+      }
+    },
+    {
+      "do": "updateRoutine",
+      "write": true,
+      "what": "Change a schedule. Name it by title or id. Only the fields you send change.",
+      "needs": [
+        "routine"
+      ],
+      "args": {
+        "routine": "string",
+        "title": "string",
+        "freq": "daily | weekly | monthly | cron",
+        "cron": "string",
+        "days": "list of text",
+        "dom": "int",
+        "time": "HH:MM",
+        "system": "string",
+        "type": "string",
+        "priority": "P1 | P2 | P3 | P4",
+        "checklist": "list of text",
+        "scripts": "list of text",
+        "message": "string",
+        "autoRun": "bool"
+      }
+    },
+    {
+      "do": "deleteRoutine",
+      "write": true,
+      "what": "Delete a schedule. The records it already raised are left alone.",
+      "needs": [
+        "routine"
+      ],
+      "args": {
+        "routine": "string"
+      }
+    },
+    {
+      "do": "runRoutine",
+      "write": true,
+      "what": "Raise this routine's record now, without waiting for its time.",
+      "needs": [
+        "routine"
+      ],
+      "args": {
+        "routine": "string"
+      }
+    },
+    {
+      "do": "addHoliday",
+      "write": true,
+      "what": "Mark a day as a holiday or an office closure. A public holiday is not a working day; an office closure is marked but still counts.",
+      "needs": [
+        "date",
+        "name"
+      ],
+      "args": {
+        "date": "YYYY-MM-DD",
+        "name": "string",
+        "kind": "public | office"
+      }
+    },
+    {
+      "do": "removeHoliday",
+      "write": true,
+      "what": "Unmark a day that is not a holiday after all.",
+      "needs": [
+        "date"
+      ],
+      "args": {
+        "date": "YYYY-MM-DD"
+      }
+    },
+    {
+      "do": "addName",
+      "write": true,
+      "what": "Add a system, a work type, or a party you wait on, so it can be used from now on. Offer this when they name one you do not have.",
+      "needs": [
+        "kind",
+        "name"
+      ],
+      "args": {
+        "kind": "system | type | party",
+        "name": "string",
+        "colour": "string"
+      }
+    },
+    {
+      "do": "deleteRecord",
+      "write": true,
+      "what": "Delete a record. Its folder and documents stay on disk. Prefer setStatus to cancelled, which keeps the history.",
+      "needs": [
+        "record"
+      ],
+      "args": {
+        "record": "ref"
       }
     },
     {

@@ -33,8 +33,7 @@ job, or a script.
 | 9 | [Scripts and the runner](#9-scripts-and-the-runner) |
 | 10 | [The assistant (`chat.js`)](#10-the-assistant-chatjs) |
 | 11 | [Assist (`assist.js`)](#11-assist-assistjs) |
-| 12 | [The optional local model](#12-the-optional-local-model) |
-| 12A | [Asking through a Power Automate flow](#12a-asking-through-a-power-automate-flow) |
+| 12 | [Asking through a Power Automate flow](#12-asking-through-a-power-automate-flow) |
 | 13 | [Languages](#13-languages) |
 | 14 | [Privacy and safety](#14-privacy-and-safety) |
 | 15 | [Automating Dossier from outside](#15-automating-dossier-from-outside) |
@@ -52,11 +51,11 @@ These are design invariants, not preferences. Anything built on top of Dossier
 | # | Rule | Enforced by |
 |---|---|---|
 | 1 | **`dossier.html` cannot reach the network.** Not fetch, not XHR, not WebSocket, not a form post. | A `Content-Security-Policy` meta tag: `connect-src 'none'; form-action 'none'`. The browser enforces it; you can verify it in F12 → Network. |
-| 2 | **Your records never leave the folder** unless you configure an endpoint and switch it on. No telemetry, no sync, no account, no cloud, and nothing at all by default. | Rule 1, plus there is no server component. The one exception is [§12A](#12a-asking-through-a-power-automate-flow), which is off until you paste in a URL, states what it sends, and shows you the bytes first. |
+| 2 | **Your records never leave the folder** unless you configure an endpoint and switch it on. No telemetry, no sync, no account, no cloud, and nothing at all by default. | Rule 1, plus there is no server component. The one exception is [§12](#12-asking-through-a-power-automate-flow), which is off until you paste in a URL, states what it sends, and shows you the bytes first. |
 | 3 | **The data outlives the app.** `dossier.json` is human-readable JSON; attachments are the original files in ordinary folders. | The save format is plain, indented JSON. |
 | 4 | **Nothing is written while you ask a question.** Reading is read-only, down to not creating an empty object in settings. | `chatApi()` builds its view without mutating state. |
 | 5 | **Anything that writes asks first.** Log, close, hand over, chase, run, remind — each is proposed and confirmed, whether it arrived as a sentence or a button. | `chatDo()` refuses `act.confirm` unless the action carries `__ok`. |
-| 6 | **The optional local model never writes the words you read.** It only returns a *number* choosing between candidate readings that Dossier itself generated. | `brain.js` `readNumber()` — anything that is not an in-range integer becomes "I don't know". |
+| 6 | **Nothing an endpoint returns is trusted.** A reply is data to be validated, never a command. An unknown action, a wrong-shaped argument, or a record reference that resolves to nothing is refused by name. | `flow.js` `validate()` and `checkAction()`. |
 | 7 | **The runner only ever runs a file already in `scripts\`.** A name containing `\`, `/`, `:` or `..` is refused. | `dossier-runner.bat`, before it executes anything. |
 | 8 | **A promise Dossier cannot keep is said out loud.** If a routine is set to run itself and no runner is listening, the Day sheet says so rather than failing silently. | The runner heartbeat, `.runner.txt`. |
 
@@ -104,14 +103,11 @@ That is the entire setup. You should immediately see:
 | `dossier.html` | ~670 KB | **yes** | The whole application: markup, styles, and all of the logic. Open it directly. |
 | `chat.js` | ~360 KB | optional | The assistant — plain-English questions about your own records. Without it, the Ask box says so and everything else works. |
 | `assist.js` | ~20 KB | optional | The ranking and briefing engine behind the **Assist** tab and the Insight cards. |
-| `brain.js` | ~21 KB | optional | Client for the optional local language model. Drives `model/run.html` in a sandboxed iframe. |
-| `model/run.html` | ~18 KB | optional | The *only* page allowed to touch the network. Loads and runs the model; holds no records. |
 | `flow.js` | ~22 KB | optional | Client for a Power Automate endpoint: builds the request, validates the reply, and owns the relay frame. |
-| `flow/relay.html` | ~9 KB | optional | The only page that posts to your endpoint. Sandboxed, holds no records, pinned to one origin. |
+| `flow/relay.html` | ~9 KB | optional | The **only** page allowed to touch the network. Sandboxed, holds no records, pinned to one origin. |
 | `flow/CONTRACT.md` | ~16 KB | — | What your flow receives and must return, generated from `flow.js`. |
 | `flow/POWER-AUTOMATE.md` | ~19 KB | — | How to build the flow: trigger schema, the prompt, knowledge, and the test order. |
 | `flow/sample-request.json` | ~8 KB | — | A real request body, for Power Automate's schema generator. |
-| `model/check.html` | ~35 KB | optional | A diagnostic: can this PC run a model, and can it reach the files? |
 | `dossier.json` | ~15 KB | — | The demo workspace: 7 records, 2 routines, 4 scripts, settings, Cambodian holidays. |
 | `lang/en.xml` | ~175 KB | optional | Every interface phrase in English — 1,343 entries. |
 | `lang/km.xml` | ~125 KB | optional | The same 1,343 keys, **values empty**: a translation template for Khmer. |
@@ -216,7 +212,7 @@ adds `D-0099` without touching `seq` will not cause a collision.
 | `holidays` | array of `{d, n, k}` | Cambodia 2026 | `d` = `YYYY-MM-DD`, `n` = name, `k` = `"public"` \| `"office"`. |
 | `templates` | array | — | Saved record templates. |
 | `chatLearn` | object | — | Everything you have taught the assistant. See [§10.8](#108-teaching-it). |
-| `brain` | `{on, model, lib, host}` | `{on:false,…}` | The optional local model. See [§12](#12-the-optional-local-model). |
+| `flow` | `{on, url, scope, deep, cap, timeout, fallback}` | `{on:false,…}` | The Power Automate endpoint. See [§12](#12-asking-through-a-power-automate-flow). |
 
 ### 5.3 `tasks` — a record
 
@@ -968,182 +964,7 @@ testable on its own.
 
 ---
 
-## 12. The optional local model
-
-**Everything above works with no model at all.** This section is about a small
-language model that runs *inside your browser, on your own graphics card*, and
-is used for exactly one thing.
-
-### 12.1 What it is allowed to do
-
-When `chat.js` is unsure which of its own questions you asked, it hands the
-model a numbered menu of its candidate readings and asks for **a number**.
-
-```
-system: You match a support engineer's message to one of a numbered list of
-        questions their record-keeping app can answer. Reply with the number
-        alone. If none of them fits, reply 0. Never explain.
-user:   Message: "…"
-        1. What is overdue  — e.g. "past due"
-        2. …
-        Which number? Reply with the number only.
-```
-
-The reply is parsed with `/-?\d+/`. Anything that is not an integer in range
-becomes `0` — "I don't know" — which is what the app would have said anyway. It
-is on a timeout it can never exceed.
-
-**So the model never writes a word you read.** Every sentence in every answer
-is still `chat.js`'s. This is the whole reason a 380 MB model is acceptable
-here: it is a tie-breaker, not an author.
-
-### 12.2 The three files and why they are separate
-
-| File | Network | Records |
-|---|---|---|
-| `dossier.html` | **none** — `connect-src 'none'` | all of them |
-| `brain.js` | none — it only talks to the frame | none |
-| `model/run.html` | **the only page allowed out** | **none, ever** |
-
-`run.html` runs in a sandboxed iframe and communicates only by `postMessage`.
-It has its own, much narrower CSP:
-
-```
-default-src 'none';
-script-src  'self' 'unsafe-inline' 'wasm-unsafe-eval' blob:
-            https://cdn.jsdelivr.net https://unpkg.com https://esm.sh;
-connect-src 'self' blob: data:
-            https://cdn.jsdelivr.net https://unpkg.com https://esm.sh
-            https://huggingface.co https://*.huggingface.co https://*.hf.co
-            https://hf-mirror.com https://*.hf-mirror.com
-            https://raw.githubusercontent.com https://*.githubusercontent.com;
-```
-
-`'wasm-unsafe-eval'` is confined to this one page. `dossier.html`'s CSP was
-**not** weakened to make any of this work, and must never be.
-
-### 12.3 The frame protocol
-
-`brain.js` → `run.html`, by `postMessage`:
-
-| Command | Payload | Returns |
-|---|---|---|
-| `ping` | — | `{version}` — proves the plumbing without downloading anything |
-| `catalogue` | `{lib}` | `[{id, mb, local?}]` — what can be loaded |
-| `plan` | `{lib, model}` | `{model_id, model, model_lib, mb}` — the exact URLs, read out of the library rather than remembered |
-| `load` | `{lib, model, host}` | `{model, local}` |
-| `chat` | `{opts}` | `{text}` |
-| `unload` | — | — |
-
-`run.html` posts `{evt:"progress", progress, text}` back throughout, and keeps a
-timestamped transcript on the page — because the last line is not the
-diagnosis.
-
-### 12.4 The models it offers
-
-| id | ≈MB | note |
-|---|---|---|
-| `Qwen2.5-0.5B-Instruct-q4f16_1-MLC` | 380 | fastest, and enough for this job |
-| `Qwen2.5-1.5B-Instruct-q4f16_1-MLC` | 1,100 | steadier on odd phrasing |
-| `Llama-3.2-1B-Instruct-q4f16_1-MLC` | 880 | a middle option |
-| `Llama-3.2-3B-Instruct-q4f16_1-MLC` | 2,300 | only worth it on a real GPU |
-| `gemma-2-2b-it-q4f16_1-MLC` | 1,500 | |
-| `Phi-3.5-mini-instruct-q4f16_1-MLC` | 2,200 | |
-
-### 12.5 `model/check.html` — the diagnostic
-
-Run this **before** anything else. It downloads nothing. It reports:
-
-- **WebGPU** and whether an adapter is actually offered (the API can exist with
-  no graphics card behind it);
-- room: system memory, cores, storage quota, whether storage is persistent;
-- how it is being served: `file://` vs `http://`, secure context, cross-origin
-  isolation, SharedArrayBuffer;
-- the CPU fallback: WebAssembly, SIMD, threads;
-- **file currency** — is `run.html` there, is `brain.js` the version that knows
-  about the frame, is the app current;
-- **the model in the folder** — and, file by file, whether the weights and the
-  `.wasm` are actually readable, in the right place, and not git-lfs pointers;
-- **reachability** — every host, in parallel, with timeouts, plus alternatives.
-
-It ends with a three-way verdict that separates the cases that need different
-fixes: *the hardware cannot*, *the hardware is fine — the network is blocking
-it*, and *yes*.
-
-### 12.6 Installing the model offline
-
-Many corporate networks block `huggingface.co` outright, and no code can argue
-with a firewall. So the model can simply be **put in the folder**, and then the
-network is never asked.
-
-**Menu → Setup → Understanding harder questions → What do I need to download?**
-prints the exact shopping list, read out of the pinned library rather than
-remembered, and generates the `index.json` for you.
-
-The layout:
-
-```
-model/
-  run.html
-  check.html
-  web-llm.js                        the runtime itself
-  models/
-    index.json                      what is present, and where
-    Qwen2.5-0.5B-Instruct-q4f16_1-MLC/
-      mlc-chat-config.json
-      ndarray-cache.json
-      params_shard_0.bin  …
-    lib/
-      Qwen2-0.5B-Instruct-q4f16_1-ctx4k_cs1k-webgpu.wasm
-```
-
-`models/index.json`:
-
-```json
-[{ "model_id":  "Qwen2.5-0.5B-Instruct-q4f16_1-MLC",
-   "model":     "models/Qwen2.5-0.5B-Instruct-q4f16_1-MLC",
-   "model_lib": "models/lib/Qwen2-0.5B-Instruct-q4f16_1-ctx4k_cs1k-webgpu.wasm" }]
-```
-
-Paths are relative to `run.html`.
-
-**Two failure modes look exactly like success, so both are checked:**
-
-1. **A file one folder away.** The instructions say `model/models/lib/x.wasm`
-   and the obvious place to put it is `model/lib/x.wasm`. `run.html` reads the
-   first 256 bytes of every file `index.json` names before believing it, and if
-   the `.wasm` is not at the written path it tries the places it sensibly could
-   be and records in the transcript where it found it.
-2. **A clone made without `git lfs install`.** Every large file is then present,
-   correctly named, showing the right size in a listing — and is a 130-byte text
-   stub. Both `run.html` and `check.html` detect the pointer signature and say
-   so by name, with the fix.
-
-If the folder is present but broken, that is reported as a fault — it does
-**not** fall back to a download the network has already refused. And the picker
-does not have to agree with the folder: whoever put a model on the disk meant
-that one.
-
-The offline route needs the page served over `http://` (use
-`scripts\dossier-serve.bat`); browsers refuse to `fetch` local files from a
-`file://` page.
-
-**Expected transcript when it works:**
-
-```
-0.0s  runtime: local copy
-0.1s  models/index.json lists 1 model
-0.2s    ✓ the folder is complete — nothing will be downloaded
-0.3s  loading Qwen2.5-0.5B-Instruct-q4f16_1-MLC…
-      ready · Qwen2.5-0.5B-Instruct-q4f16_1-MLC (from the folder)
-```
-
-No host checks, no percentages: the preflight is skipped entirely when the
-files are on the disk.
-
----
-
-## 12A. Asking through a Power Automate flow
+## 12. Asking through a Power Automate flow
 
 The local assistant ([§10](#10-the-assistant-chatjs)) answers from your own
 records with no network and no model. This is the other route, and it is the
@@ -1176,8 +997,10 @@ you in full and waits for a yes** — the same gate the local assistant's write
 actions have always used, and it holds whether the action arrived as a
 proposal or as a button.
 
-22 actions, 8 read-only and 14 that write. The strongest is `setStatus` to
-`cancelled`; nothing deletes anything.
+39 actions, 11 read-only and 28 that write — records, checklists, time,
+waiting and chasing, blocking, tags, scripts, routines, holidays, and the
+vocabulary itself. Two of them delete (a record, a routine); both confirm
+like everything else and both are undone by `Ctrl`+`Z`.
 
 ### What it refuses
 
@@ -1512,12 +1335,12 @@ drive the real files in a real browser (Playwright + Chromium), because the
 things that break here are things a unit test cannot see: a stale iframe cache,
 a CSP refusal, a file one folder away from where a manifest says.
 
-There are 47 suite files with 563 assertion sites (many inside loops, so the
-runtime count is higher). The eleven exercised for the current release —
-`teach`, `talk2`, `pick`, `brain.js.test`, `local`, `chkloc`, `ver`, `tr`,
-`plan`, `pre`, `stall` — report **216 passing assertions and no failures**,
-covering the assistant, teaching, selectors, the conversational layer, the
-model client, the frame protocol, the offline folder and the Setup panel.
+The seven exercised for the current release — `teach`, `talk2`, `pick`,
+`flowval`, `flowe2e`, `flowui`, `flowmore` — report **253 passing assertions
+and no failures**, covering the local assistant, teaching, selectors, the
+reply validator, the whole network path in a real browser against an endpoint
+that misbehaves the way real ones do, the Setup panel, and all 39 actions.
+Eight suites covering the local model were deleted with it.
 
 Measured, and stated honestly:
 
@@ -1563,8 +1386,6 @@ model from scratch was tried, measured, and rejected on the numbers.
   *missing script*. Harmless, and deleting those two entries is the fix.
 - **`km.xml` is a template, not a translation.** All 1,343 keys are present with
   empty values.
-- **The local model has never been downloaded successfully over a corporate
-  network** in testing. The offline folder route exists because of that.
 - Parsing `dossier.json` is the one thing that gets slower as work piles up —
   at 20 records a day it is a few megabytes within a year. The runner compares
   its modified time and parses only when something was actually saved.

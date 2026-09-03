@@ -85,6 +85,19 @@ const ACTIONS = {
     args:{ period:["week","lastWeek","month"], format:["summary","standup","handover"] },
     what:"Open the Reports panel at a period and format." },
 
+  getRecord: { write:false, needs:["record"], args:{ record:REF },
+    what:"Read one record in full — its notes, every checklist step, its work " +
+         "log and its documents. Use this when the summary you were sent is not enough." },
+
+  listRoutines: { write:false, needs:[], args:{ includePaused:BOOL },
+    what:"List the schedules with what each one does and when it next fires." },
+
+  listHolidays: { write:false, needs:[], args:{ from:DATE, to:DATE },
+    what:"List the holidays and office closures in a date range." },
+
+  chaseSheet: { write:false, needs:[], args:{},
+    what:"Open the chase sheet for everything that is due a chase." },
+
   /* ── writing: every one of these is confirmed before it runs ─────────── */
   createRecord: { write:true, needs:["title"],
     args:{ title:STR, system:STR, type:STR, priority:["P1","P2","P3","P4"],
@@ -140,6 +153,56 @@ const ACTIONS = {
 
   pauseRoutine: { write:true, needs:["routine"], args:{ routine:STR, paused:BOOL },
     what:"Pause or resume a routine, by its title or id." },
+
+  clearWait: { write:true, needs:["record"], args:{ record:REF, note:STR },
+    what:"They came back. Stops the waiting clock and files how long it took." },
+
+  logTime: { write:true, needs:["record","minutes"],
+    args:{ record:REF, minutes:INT, note:STR },
+    what:"Add minutes of work to a record. Use minutes, not hours." },
+
+  timer: { write:true, needs:["record"], args:{ record:REF, on:BOOL },
+    what:"Start or stop the clock on a record. Starting one stops any other." },
+
+  block: { write:true, needs:["record","blockedBy"], args:{ record:REF, blockedBy:LIST },
+    what:"Say this record cannot finish until other records do. Give their codes." },
+
+  unblock: { write:true, needs:["record"], args:{ record:REF, blockedBy:LIST },
+    what:"Remove what was holding a record up. Give codes to remove some, or " +
+         "nothing to clear them all." },
+
+  tags: { write:true, needs:["record"], args:{ record:REF, add:LIST, remove:LIST },
+    what:"Add or remove tags on a record." },
+
+  updateRoutine: { write:true, needs:["routine"],
+    args:{ routine:STR, title:STR, freq:["daily","weekly","monthly","cron"], cron:STR,
+           days:LIST, dom:INT, time:TIME, system:STR, type:STR,
+           priority:["P1","P2","P3","P4"], checklist:LIST, scripts:LIST,
+           message:STR, autoRun:BOOL },
+    what:"Change a schedule. Name it by title or id. Only the fields you send change." },
+
+  deleteRoutine: { write:true, needs:["routine"], args:{ routine:STR },
+    what:"Delete a schedule. The records it already raised are left alone." },
+
+  runRoutine: { write:true, needs:["routine"], args:{ routine:STR },
+    what:"Raise this routine's record now, without waiting for its time." },
+
+  addHoliday: { write:true, needs:["date","name"],
+    args:{ date:DATE, name:STR, kind:["public","office"] },
+    what:"Mark a day as a holiday or an office closure. A public holiday is " +
+         "not a working day; an office closure is marked but still counts." },
+
+  removeHoliday: { write:true, needs:["date"], args:{ date:DATE },
+    what:"Unmark a day that is not a holiday after all." },
+
+  addName: { write:true, needs:["kind","name"],
+    args:{ kind:["system","type","party"], name:STR, colour:STR },
+    what:"Add a system, a work type, or a party you wait on, so it can be " +
+         "used from now on. Offer this when they name one you do not have." },
+
+  deleteRecord: { write:true, needs:["record"], args:{ record:REF },
+    what:"Delete a record. Its folder and documents stay on disk. Prefer " +
+         "setStatus to cancelled, which keeps the history." },
 
   notify: { write:true, needs:["on"], args:{ on:BOOL },
     what:"Turn Windows reminders on or off." },
@@ -384,6 +447,7 @@ function buildRequest(text, ctx, cfg){
     askedAt: new Date().toISOString(),
     today: ctx.today || "",
     weekday: ctx.weekday || "",
+    calendar: ctx.calendar || {},
     timezone: (function(){ try { return Intl.DateTimeFormat().resolvedOptions().timeZone; }
                            catch(e){ return ""; } })(),
     message: String(text || ""),
@@ -400,8 +464,12 @@ function buildRequest(text, ctx, cfg){
       tags: (ctx.tags || []).slice(0, 200),
       scripts: (ctx.scripts || []).map(s => ({ id:s.id, name:s.name, file:s.file,
                  params:(s.params || []).slice(), desc:s.desc || "" })),
-      routines: (ctx.routines || []).map(r => ({ id:r.id, title:r.title, freq:r.freq,
-                 time:r.time || "", paused:!!r.paused })),
+      /* the app works these out and hands them over, because it has the
+         calendar and the holiday list and this file does not */
+      routines: ctx.routineDetail || (ctx.routines || []).map(r => ({ id:r.id, title:r.title })),
+      holidays: ctx.holidays || [],
+      holidaysTotal: ctx.holidaysTotal || 0,
+      policy: ctx.policy || {},
       counts: ctx.counts || {},
       recordsSent: rows.length,
       recordsTotal: (ctx.tasks || []).length,
