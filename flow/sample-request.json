@@ -1,0 +1,534 @@
+{
+  "dossier": 1,
+  "protocol": "1.0",
+  "askedAt": "2026-09-03T04:48:52.247Z",
+  "today": "2026-09-03",
+  "weekday": "Thursday",
+  "timezone": "UTC",
+  "message": "create a P1 record to restart the imaging pool on APP02 tomorrow",
+  "conversation": [
+    {
+      "who": "person",
+      "text": "what is overdue"
+    },
+    {
+      "who": "dossier",
+      "text": "Two are past their date."
+    }
+  ],
+  "owner": "",
+  "workspace": {
+    "scope": "live",
+    "systems": [
+      "Imaging",
+      "CX Portal",
+      "E-Payment",
+      "Medcare",
+      "Notification",
+      "Reports",
+      "Infra / IIS",
+      "Other"
+    ],
+    "types": [
+      "Incident",
+      "Service request",
+      "Change",
+      "Development",
+      "Meeting",
+      "Admin"
+    ],
+    "parties": [
+      "Data team",
+      "DBA",
+      "Infra",
+      "Network",
+      "Security",
+      "Vendor",
+      "Agency ops",
+      "Finance",
+      "Release management",
+      "Business user"
+    ],
+    "statuses": [
+      "open",
+      "processing",
+      "blocked",
+      "done",
+      "cancelled"
+    ],
+    "priorities": [
+      "P1",
+      "P2",
+      "P3",
+      "P4"
+    ],
+    "people": [
+      "Operations",
+      "Sokha",
+      "Dara"
+    ],
+    "tags": [
+      "urgent"
+    ],
+    "scripts": [
+      {
+        "id": "Sopenmorning",
+        "name": "open-morning-tabs",
+        "file": "open-morning-tabs.bat",
+        "params": [],
+        "desc": "Opens the tabs you start the day with, once per day"
+      },
+      {
+        "id": "Srestartpool",
+        "name": "restart-app-pool",
+        "file": "restart-app-pool.bat",
+        "params": [
+          "server",
+          "pool"
+        ],
+        "desc": "Recycles an IIS application pool on a named server"
+      },
+      {
+        "id": "Srunner",
+        "name": "Dossier runner",
+        "file": "dossier-runner.ps1",
+        "params": [],
+        "desc": "Runs queued scripts and fires routines on time"
+      },
+      {
+        "id": "Swatchmtbrxsj1",
+        "name": "Dossier reminder watch",
+        "file": "dossier-watch.ps1",
+        "params": [],
+        "desc": "Windows toast reminders while Dossier is closed"
+      }
+    ],
+    "routines": [
+      {
+        "id": "Rmorningtour",
+        "title": "Morning tour",
+        "freq": "daily",
+        "time": "08:30",
+        "paused": false
+      },
+      {
+        "id": "Rweekcheck",
+        "title": "Friday housekeeping",
+        "freq": "weekly",
+        "time": "16:00",
+        "paused": false
+      }
+    ],
+    "counts": {
+      "records": 7,
+      "live": 5,
+      "overdue": 1,
+      "dueToday": 2,
+      "waiting": 1,
+      "blocked": 1
+    },
+    "recordsSent": 5,
+    "recordsTotal": 7,
+    "records": [
+      {
+        "code": "D-0007",
+        "title": "Morning tour",
+        "status": "open",
+        "priority": "P3",
+        "system": "Infra / IIS",
+        "type": "Admin",
+        "due": "2026-08-30",
+        "dueTime": "08:30",
+        "created": "2026-08-30",
+        "steps": 4,
+        "stepsLeft": 4,
+        "scripts": [
+          "Sopenmorning"
+        ],
+        "logLines": 1
+      },
+      {
+        "code": "D-0004",
+        "title": "Imaging nightly sync timeout on GetPendingAsync",
+        "status": "processing",
+        "priority": "P1",
+        "system": "Imaging",
+        "type": "Incident",
+        "ticket": "INC0012390",
+        "requester": "Operations",
+        "due": "2026-08-30",
+        "dueTime": "11:00",
+        "created": "2026-08-30",
+        "estimate": 90,
+        "spent": 25,
+        "scripts": [
+          "Srestartpool"
+        ],
+        "logLines": 2
+      },
+      {
+        "code": "D-0001",
+        "title": "Morning health check",
+        "status": "open",
+        "priority": "P3",
+        "system": "Infra / IIS",
+        "type": "Admin",
+        "requester": "Soy Oudom",
+        "due": "2026-08-30",
+        "dueTime": "00:37",
+        "created": "2026-08-27",
+        "logLines": 1
+      },
+      {
+        "code": "D-0005",
+        "title": "Add policy status column to monthly renewal report",
+        "status": "open",
+        "priority": "P3",
+        "system": "Reports",
+        "type": "Service request",
+        "ticket": "REQ0004411",
+        "requester": "Sok Dara",
+        "due": "2026-09-01",
+        "created": "2026-08-27",
+        "estimate": 180,
+        "logLines": 1
+      },
+      {
+        "code": "D-0006",
+        "title": "KHQR callback signature mismatch on 2 transactions",
+        "status": "blocked",
+        "priority": "P2",
+        "system": "E-Payment",
+        "type": "Incident",
+        "ticket": "INC0012350",
+        "requester": "Finance",
+        "due": "2026-08-30",
+        "created": "2026-08-25",
+        "waitOn": "Vendor",
+        "waitSince": "2026-08-25",
+        "waitNote": "Key rotation not confirmed",
+        "estimate": 60,
+        "logLines": 3
+      }
+    ]
+  },
+  "can": [
+    {
+      "do": "say",
+      "write": false,
+      "what": "Say something back. Use for an answer that needs no change.",
+      "needs": [
+        "text"
+      ],
+      "args": {
+        "text": "text"
+      }
+    },
+    {
+      "do": "find",
+      "write": false,
+      "what": "Show a filtered list of records.",
+      "needs": [],
+      "args": {
+        "text": "string",
+        "status": "open | processing | blocked | done | cancelled | live | any",
+        "system": "string",
+        "person": "string",
+        "party": "string",
+        "type": "string",
+        "tag": "string",
+        "priority": "P1 | P2 | P3 | P4",
+        "dueBefore": "YYYY-MM-DD",
+        "dueAfter": "YYYY-MM-DD",
+        "createdAfter": "YYYY-MM-DD",
+        "overdue": "bool",
+        "undated": "bool",
+        "waiting": "bool",
+        "limit": "int",
+        "label": "string"
+      }
+    },
+    {
+      "do": "open",
+      "write": false,
+      "what": "Open one record in the drawer.",
+      "needs": [
+        "record"
+      ],
+      "args": {
+        "record": "ref"
+      }
+    },
+    {
+      "do": "openFile",
+      "write": false,
+      "what": "Open one document attached to a record.",
+      "needs": [
+        "record",
+        "name"
+      ],
+      "args": {
+        "record": "ref",
+        "name": "string"
+      }
+    },
+    {
+      "do": "view",
+      "write": false,
+      "what": "Switch the main view.",
+      "needs": [
+        "view"
+      ],
+      "args": {
+        "view": "day | board | register | week | library | insight | assist"
+      }
+    },
+    {
+      "do": "panel",
+      "write": false,
+      "what": "Open one of the menu panels.",
+      "needs": [
+        "panel"
+      ],
+      "args": {
+        "panel": "ws | report | routine | scripts | look | setup | help"
+      }
+    },
+    {
+      "do": "report",
+      "write": false,
+      "what": "Open the Reports panel at a period and format.",
+      "needs": [],
+      "args": {
+        "period": "week | lastWeek | month",
+        "format": "summary | standup | handover"
+      }
+    },
+    {
+      "do": "createRecord",
+      "write": true,
+      "what": "Raise a new record. title is required; everything else is optional.",
+      "needs": [
+        "title"
+      ],
+      "args": {
+        "title": "string",
+        "system": "string",
+        "type": "string",
+        "priority": "P1 | P2 | P3 | P4",
+        "due": "YYYY-MM-DD",
+        "dueTime": "HH:MM",
+        "requester": "string",
+        "ticket": "string",
+        "tags": "list of text",
+        "notes": "text",
+        "estimate": "int",
+        "checklist": "list of text",
+        "scripts": "list of text",
+        "waitOn": "string",
+        "waitNote": "string"
+      }
+    },
+    {
+      "do": "updateRecord",
+      "write": true,
+      "what": "Change fields on an existing record. Only the fields you send change.",
+      "needs": [
+        "record"
+      ],
+      "args": {
+        "record": "ref",
+        "title": "string",
+        "system": "string",
+        "type": "string",
+        "priority": "P1 | P2 | P3 | P4",
+        "due": "YYYY-MM-DD",
+        "dueTime": "HH:MM",
+        "requester": "string",
+        "ticket": "string",
+        "tags": "list of text",
+        "notes": "text",
+        "estimate": "int"
+      }
+    },
+    {
+      "do": "setStatus",
+      "write": true,
+      "what": "Move a record to another status.",
+      "needs": [
+        "record",
+        "status"
+      ],
+      "args": {
+        "record": "ref",
+        "status": "open | processing | blocked | done | cancelled"
+      }
+    },
+    {
+      "do": "setDue",
+      "write": true,
+      "what": "Set or clear a target date. Send due as \"\" to clear it.",
+      "needs": [
+        "record"
+      ],
+      "args": {
+        "record": "ref",
+        "due": "YYYY-MM-DD",
+        "dueTime": "HH:MM"
+      }
+    },
+    {
+      "do": "addLog",
+      "write": true,
+      "what": "Add a line to a record's work log.",
+      "needs": [
+        "record",
+        "text"
+      ],
+      "args": {
+        "record": "ref",
+        "text": "text"
+      }
+    },
+    {
+      "do": "addSteps",
+      "write": true,
+      "what": "Add checklist steps to a record. Steps it already has are skipped.",
+      "needs": [
+        "record",
+        "steps"
+      ],
+      "args": {
+        "record": "ref",
+        "steps": "list of text"
+      }
+    },
+    {
+      "do": "tickStep",
+      "write": true,
+      "what": "Tick or untick one checklist step, matched by its text.",
+      "needs": [
+        "record",
+        "step"
+      ],
+      "args": {
+        "record": "ref",
+        "step": "string",
+        "done": "bool"
+      }
+    },
+    {
+      "do": "setWait",
+      "write": true,
+      "what": "Hand a record to someone else and start the waiting clock.",
+      "needs": [
+        "record",
+        "waitOn"
+      ],
+      "args": {
+        "record": "ref",
+        "waitOn": "string",
+        "waitNote": "string",
+        "waitUntil": "YYYY-MM-DD"
+      }
+    },
+    {
+      "do": "chase",
+      "write": true,
+      "what": "Open the chase sheet for a record that is sitting with someone.",
+      "needs": [
+        "record"
+      ],
+      "args": {
+        "record": "ref"
+      }
+    },
+    {
+      "do": "attachScript",
+      "write": true,
+      "what": "Attach a registered script to a record, with its parameters filled in.",
+      "needs": [
+        "record",
+        "script"
+      ],
+      "args": {
+        "record": "ref",
+        "script": "string",
+        "args": "object of name/value"
+      }
+    },
+    {
+      "do": "runScript",
+      "write": true,
+      "what": "Run a script against a record. Needs the runner to be listening.",
+      "needs": [
+        "record",
+        "script"
+      ],
+      "args": {
+        "record": "ref",
+        "script": "string",
+        "args": "object of name/value"
+      }
+    },
+    {
+      "do": "createRoutine",
+      "write": true,
+      "what": "Create a schedule that raises a record, or nudges you, on a cadence.",
+      "needs": [
+        "title",
+        "freq"
+      ],
+      "args": {
+        "title": "string",
+        "freq": "daily | weekly | monthly | cron",
+        "cron": "string",
+        "days": "list of text",
+        "dom": "int",
+        "time": "HH:MM",
+        "system": "string",
+        "type": "string",
+        "priority": "P1 | P2 | P3 | P4",
+        "checklist": "list of text",
+        "scripts": "list of text",
+        "message": "string",
+        "autoRun": "bool"
+      }
+    },
+    {
+      "do": "pauseRoutine",
+      "write": true,
+      "what": "Pause or resume a routine, by its title or id.",
+      "needs": [
+        "routine"
+      ],
+      "args": {
+        "routine": "string",
+        "paused": "bool"
+      }
+    },
+    {
+      "do": "notify",
+      "write": true,
+      "what": "Turn Windows reminders on or off.",
+      "needs": [
+        "on"
+      ],
+      "args": {
+        "on": "bool"
+      }
+    },
+    {
+      "do": "undo",
+      "write": true,
+      "what": "Undo the last change to the workspace.",
+      "needs": [],
+      "args": {}
+    }
+  ],
+  "reply": {
+    "say": "a sentence for the person, in their own language",
+    "ask": "a question back, if you need one thing before you can act",
+    "actions": "a list of { do: …, …arguments… } drawn only from can[]"
+  }
+}

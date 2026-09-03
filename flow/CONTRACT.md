@@ -463,6 +463,10 @@ Undo the last change to the workspace.
 
 ## 7. Building the flow
 
+> **[`POWER-AUTOMATE.md`](POWER-AUTOMATE.md) is the step-by-step recipe** —
+> the trigger schema, the prompt to paste in, where the knowledge goes, and
+> the order to test things in. This section is the summary.
+
 1. **When an HTTP request is received** — method `POST`. Leave the schema
    empty; the body arrives as text, so use `json(triggerBody())` wherever you
    need the object.

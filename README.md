@@ -109,6 +109,8 @@ That is the entire setup. You should immediately see:
 | `flow.js` | ~22 KB | optional | Client for a Power Automate endpoint: builds the request, validates the reply, and owns the relay frame. |
 | `flow/relay.html` | ~9 KB | optional | The only page that posts to your endpoint. Sandboxed, holds no records, pinned to one origin. |
 | `flow/CONTRACT.md` | ~16 KB | — | What your flow receives and must return, generated from `flow.js`. |
+| `flow/POWER-AUTOMATE.md` | ~19 KB | — | How to build the flow: trigger schema, the prompt, knowledge, and the test order. |
+| `flow/sample-request.json` | ~8 KB | — | A real request body, for Power Automate's schema generator. |
 | `model/check.html` | ~35 KB | optional | A diagnostic: can this PC run a model, and can it reach the files? |
 | `dossier.json` | ~15 KB | — | The demo workspace: 7 records, 2 routines, 4 scripts, settings, Cambodian holidays. |
 | `lang/en.xml` | ~175 KB | optional | Every interface phrase in English — 1,343 entries. |
@@ -1221,8 +1223,16 @@ Stored in `settings.flow`:
 > workspace, so do not commit that file to a public repository, and rotate the
 > trigger's signature if it gets out.
 
-The full specification — every argument of every action, the request schema,
-and how to build the flow — is in [`flow/CONTRACT.md`](flow/CONTRACT.md).
+Two documents go with this:
+
+- [`flow/POWER-AUTOMATE.md`](flow/POWER-AUTOMATE.md) — the recipe. The trigger
+  schema, the prompt to paste into the AI action, where standing knowledge
+  goes and where it must not go, and the order to test in that finds problems
+  fastest.
+- [`flow/CONTRACT.md`](flow/CONTRACT.md) — the specification. Every argument
+  of every action, generated from `flow.js`.
+- [`flow/sample-request.json`](flow/sample-request.json) — a real request from
+  the demo workspace, for *Use sample payload to generate schema*.
 
 ---
 
