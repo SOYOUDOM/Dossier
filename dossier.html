@@ -1274,9 +1274,29 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
 .chl{flex:1;min-height:0;overflow-y:auto;padding:14px 15px;display:flex;flex-direction:column;gap:13px}
 .chb{max-width:88%;font-size:12.5px;line-height:1.62}
 .chb.you{align-self:flex-end;background:var(--paper-3);border:1px solid var(--rule);
+  white-space:pre-wrap;word-break:break-word;
   border-radius:var(--r) var(--r) var(--r-xs) var(--r);padding:8px 12px;color:var(--ink)}
 .chb.bot{align-self:flex-start;max-width:100%;width:100%}
-.chb.bot .say{color:var(--ink);font-size:13px;line-height:1.6}
+.chb.bot .say{color:var(--ink);font-size:13px;line-height:1.6;white-space:pre-wrap;
+  word-break:break-word}
+.chb.bot .say p{margin:0 0 9px}
+.chb.bot .say p:last-child{margin-bottom:0}
+/* a block of code is a thing to copy, not a thing to read past */
+.chcode{position:relative;margin:10px 0;border:1px solid var(--rule);border-radius:var(--r-sm);
+  background:var(--paper-3);overflow:hidden;white-space:normal}
+.chcode .cch{display:flex;align-items:center;gap:8px;padding:5px 9px;
+  border-bottom:1px solid var(--rule);background:var(--paper-2)}
+.chcode .lang{font-family:var(--f-mono);font-size:9.5px;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--ink-3);flex:1}
+.chcode .cpy{border:1px solid var(--rule);background:var(--paper);color:var(--ink-2);
+  border-radius:999px;font-size:10px;font-weight:600;padding:2px 9px;cursor:pointer;
+  font-family:var(--f-ui);transition:.14s var(--ease)}
+.chcode .cpy:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+.chcode .cpy.ok{color:var(--teal);border-color:var(--teal)}
+.chcode pre{margin:0;padding:10px 11px;overflow-x:auto;font-family:var(--f-mono);
+  font-size:11.5px;line-height:1.6;color:var(--ink);white-space:pre;tab-size:2}
+.chb.bot .say code.inl{font-family:var(--f-mono);font-size:11.5px;background:var(--paper-3);
+  border:1px solid var(--rule);border-radius:4px;padding:0 4px}
 .chb.bot .note{margin-top:6px;font-size:11.5px;color:var(--ink-2);line-height:1.65;white-space:pre-wrap}
 .chb.bot .meta{margin-top:7px;font-size:10px;color:var(--ink-3);font-family:var(--f-mono)}
 .chb.bot .hedge{font-size:10.5px;color:var(--p2);margin-bottom:4px}
@@ -1301,6 +1321,23 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
    in when clicked. And pressing one RESOLVES the group — the others fold
    away and the one you chose stays with a tick, so the thread reads as a
    record of what you did rather than a wall of things you might. */
+/* the notes it has been taught, editable where they are listed */
+.memlist{display:flex;flex-direction:column;gap:7px;margin-top:10px}
+.memn{border:1px solid var(--rule);border-radius:var(--r-sm);background:var(--paper-2);
+  overflow:hidden}
+.memn summary{cursor:pointer;padding:8px 11px;display:flex;align-items:baseline;gap:9px;
+  font-size:12px;list-style:none}
+.memn summary::-webkit-details-marker{display:none}
+.memn summary::before{content:"\25B8";color:var(--ink-3);font-size:9px;transition:transform .15s}
+.memn[open] summary::before{transform:rotate(90deg)}
+.memn summary b{font-weight:600;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;
+  white-space:nowrap}
+.memn .mm{font-size:10px;color:var(--ink-3);font-family:var(--f-mono);flex:0 0 auto}
+.memn .memb{border-radius:0;border-left:0;border-right:0;font-size:11.5px;line-height:1.6;
+  resize:vertical}
+.memn .memf{display:flex;align-items:center;justify-content:space-between;gap:9px;
+  padding:8px 11px}
+
 /* the quiet ✕ on a notice: invisible until you look at the row it is on */
 .noti{position:relative}
 .hushx{border:0;background:none;color:var(--ink-3);cursor:pointer;font-size:12px;
@@ -1351,11 +1388,35 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
 .chask .outcome i{font-style:normal;color:var(--teal);font-weight:700}
 .chask .outcome.no i{color:var(--ink-3)}
 .chalt{margin-top:9px;font-size:10.5px;color:var(--ink-3)}
-.chf{flex:0 0 auto;display:flex;gap:8px;padding:11px 13px;border-top:1px solid var(--rule);
-  background:var(--paper-2)}
-.chf input{flex:1;min-width:0;border:1px solid var(--rule);border-radius:var(--r-sm);background:var(--paper);
-  color:var(--ink);padding:9px 12px;font-size:13px;outline:none;font-family:inherit}
-.chf input:focus{border-color:var(--rule-hi)}
+.chfw{flex:0 0 auto;border-top:1px solid var(--rule);background:var(--paper-2)}
+.chf{display:flex;gap:8px;padding:11px 13px;align-items:flex-end}
+/* A question worth asking is often three lines long. Enter sends it,
+   Shift+Enter starts a new line, and the box grows to about eight lines
+   before it starts scrolling instead. */
+.chf textarea{flex:1;min-width:0;border:1px solid var(--rule);border-radius:var(--r-sm);
+  background:var(--paper);color:var(--ink);padding:9px 12px;font-size:13px;outline:none;
+  font-family:inherit;line-height:1.55;resize:none;max-height:184px;overflow-y:auto}
+.chf textarea:focus{border-color:var(--rule-hi)}
+.chf .btn{align-self:flex-end}
+.chpin{flex:0 0 auto;align-self:flex-end;margin-bottom:1px}
+
+/* what you have attached, before it goes */
+.chclip{display:flex;gap:7px;flex-wrap:wrap;padding:10px 13px 0}
+.chclip:empty{display:none}
+.chclip .cf{display:inline-flex;align-items:center;gap:7px;max-width:210px;
+  border:1px solid var(--rule);border-radius:var(--r-sm);background:var(--paper);
+  padding:4px 5px 4px 7px;font-size:11px;color:var(--ink-2)}
+.chclip .cf img{width:26px;height:26px;object-fit:cover;border-radius:3px;flex:0 0 auto;
+  margin:-1px 0 -1px -3px}
+.chclip .cf .ic{font-size:14px;flex:0 0 auto}
+.chclip .cf .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.chclip .cf .sz{font-family:var(--f-mono);font-size:9.5px;color:var(--ink-3);flex:0 0 auto}
+.chclip .cf button{border:0;background:none;color:var(--ink-3);cursor:pointer;font-size:11px;
+  padding:2px 3px;border-radius:3px}
+.chclip .cf button:hover{color:var(--p1);background:var(--paper-3)}
+/* the same chips, under a question you have already sent */
+.chb.you .cfs{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.chb.you .cfs span{font-size:10px;color:var(--ink-3);font-family:var(--f-mono)}
 .chseed{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
 .chseed button{font-size:10.5px;padding:4px 10px;border:1px solid var(--rule);border-radius:999px;
   transition:transform .13s var(--ease),border-color .16s,color .16s,background .16s;
@@ -1596,10 +1657,17 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
     <aside class="chside" id="chatSide"></aside>
     <div class="chmain">
       <div class="chl" id="chatLog"></div>
-      <div class="chf">
-        <input id="chatq" type="text" data-i18n-ph="ChatPlaceholder"
-               placeholder="Ask about your records…" spellcheck="false" autocomplete="off">
-        <button class="btn pri" id="chatGo" data-i18n="ChatAsk">Ask</button>
+      <div class="chfw">
+        <div class="chclip" id="chatFiles"></div>
+        <div class="chf">
+          <button class="ib chpin" id="chatPin" data-i18n-title="AttachAFile"
+                  title="Attach a file">&#128206;</button>
+          <textarea id="chatq" rows="1" data-i18n-ph="ChatPlaceholder"
+                    placeholder="Ask about your records…" spellcheck="false"></textarea>
+          <button class="btn pri" id="chatGo" data-i18n="ChatAsk">Ask</button>
+        </div>
+        <input type="file" id="chatFile" accept="image/*,application/pdf,.txt,.log,.csv,.json,.xml"
+               multiple hidden>
       </div>
     </div>
   </div>
@@ -3117,6 +3185,18 @@ const STRINGS = {
      They fall back to the English here until somebody adds them to
      lang/*.xml, which is exactly what the fallback is for. */
   DontShowThisAgain: "Don\u2019t show this again",
+  AttachAFile: "Attach a file \u2014 a screenshot, a PDF, a log",
+  AttachTooBig: "{name} is {size} \u2014 too big to send. The limit is 4 MB a file.",
+  AttachTooMany: "Five files at a time is the limit.",
+  AttachUnsupported: "{name} is a {type}. Attach an image, a PDF, or a text file.",
+  AttachNeedsFlow: "Files are sent to your Power Automate endpoint, and there is not one switched on \u2014 so those were left behind. Turn it on in Menu \u2192 Setup.",
+  MemoryHead: "What you have taught it",
+  MemoryHint: "Notes you asked the assistant to keep \u2014 how something is done, what caused something, what to check next time. They live in dossier.json in this folder, they go with every question you ask, and they come back in any conversation. Tell it \u201cremember that\u2026\u201d in the Ask box to add one.",
+  MemoryEmpty: "Nothing taught yet. Explain how you fixed something and say \u201cremember that\u201d.",
+  MemoryUsed: "asked for {n} time(s)",
+  MemoryNever: "never asked for",
+  MemoryForget: "Forget this",
+  MemorySaved: "Saved.",
   NoticeHushed: "Hidden. {what}",
   HiddenNotices: "Hidden notices",
   HiddenNoticesHint: "Notices you told Dossier to stop showing. Bring one back and it will appear again the next time it is true.",
@@ -5998,7 +6078,10 @@ function dr(label, sub, list){
    Conversations are kept, one per subject, in the workspace beside the
    records. Each carries its own running context, so "what is left on it" in
    one thread cannot pick up the record you were discussing in another. */
-const CHAT = { acts:{}, n:0, last:"" };
+const CHAT = { acts:{}, code:{}, files:[], n:0, last:"" };
+/* Power Automate is happy with a few megabytes in a request body and
+   miserable beyond it, and a phone photograph is four on its own. */
+const CHAT_FILE_MAX = 4 * 1024 * 1024, CHAT_FILES_MAX = 5;
 const CHAT_MAX_THREADS = 30, CHAT_MAX_MSGS = 80;
 
 function chatApi(convo){
@@ -6323,12 +6406,65 @@ function closeChat(){
 }
 
 function chatScroll(){ const l = $("chatLog"); l.scrollTop = l.scrollHeight; }
-function chatRenderYou(text){
+function chatRenderYou(text, files){
   const d = document.createElement("div");
   d.className = "chb you";
-  d.textContent = text;
+  /* what you typed, with your line breaks intact — textContent on a
+     white-space:pre-wrap box, so it can never carry markup */
+  const p = document.createElement("div");
+  p.textContent = text;
+  d.appendChild(p);
+  if ((files || []).length){
+    const row = document.createElement("div");
+    row.className = "cfs";
+    files.forEach(f => {
+      const s = document.createElement("span");
+      s.textContent = chatFileIcon(f.type) + " " + f.name + " · " + bytes(f.size);
+      row.appendChild(s);
+    });
+    d.appendChild(row);
+  }
   $("chatLog").appendChild(d);
   chatScroll();
+}
+
+/* ── an answer, as written rather than as one long line ───────────────────
+   An endpoint that has been asked how something is done will answer in
+   paragraphs, and often with a command in the middle of them. Both used to
+   arrive as a single run-on line with the newlines eaten, which is a poor
+   way to read a runbook you wrote yourself.
+
+   Fenced blocks become a code panel with the language and a copy button;
+   `backticks` become inline code; everything else keeps its line breaks and
+   is escaped. Nothing else is interpreted — this is not a markdown renderer
+   and should not become one, because every feature added to it is another
+   way for text from outside to put markup on the page. */
+function chatSay(text){
+  const src = String(text == null ? "" : text);
+  if (!src) return "";
+  let out = "", i = 0;
+  const fence = /```([A-Za-z0-9_+-]*)\r?\n?([\s\S]*?)```/g;
+  let m;
+  while ((m = fence.exec(src))){
+    out += chatProse(src.slice(i, m.index));
+    const lang = m[1] || "";
+    const body = m[2].replace(/\s+$/, "");
+    const id = "cc" + (++CHAT.n) + "x" + m.index;
+    CHAT.code[id] = body;
+    out += '<div class="chcode"><div class="cch"><span class="lang">' +
+             esc(lang || "text") + "</span>" +
+             '<button class="cpy" data-copy="' + id + '">' + esc(L("Copy")) + "</button></div>" +
+           "<pre>" + esc(body) + "</pre></div>";
+    i = m.index + m[0].length;
+  }
+  out += chatProse(src.slice(i));
+  return out;
+}
+function chatProse(t){
+  if (!t) return "";
+  /* trim only the blank lines a fence leaves behind, never the indentation */
+  return esc(t).replace(/^\n+|\n+$/g, "")
+    .replace(/`([^`\n]+)`/g, (x, c) => '<code class="inl">' + c + "</code>");
 }
 
 /* render one answer. Everything clickable is registered in CHAT.acts and
@@ -6353,7 +6489,7 @@ function chatRenderBot(r, sourceText, replaying){
   if (r.taught && r.taught.how && r.taught.how !== "exact")
     h += '<div class="carry">' + esc(L("ChatTaughtFrom", { what:r.taught.from })) + "</div>";
 
-  h += '<div class="say">' + esc(r.say || "") + "</div>";
+  h += '<div class="say">' + chatSay(r.say || "") + "</div>";
   if (r.note) h += '<div class="note">' + esc(r.note) + "</div>";
 
   /* the conditions it read out of the question, said back so a misread one is
@@ -6472,14 +6608,25 @@ function chatAsk(text){
   if (!q) return;
   CHAT.last = q;
   const c = chatThread() || chatNew(true);
-  chatPush({ who:"you", text:q });
-  chatRenderYou(q);
+  const files = CHAT.files.map(f => ({ name:f.name, type:f.type, size:f.size }));
+  chatPush({ who:"you", text:q, files:files });
+  chatRenderYou(q, files);
   $("chatq").value = "";
+  chatGrow();
 
   /* With a flow configured, it answers instead. The local assistant is still
      here and still knows this workspace — it is what a failed call falls back
      to, and what answers when the flow is switched off. */
-  if (flowOn()) return flowAsk(q, c);
+  if (flowOn()){
+    const p = flowAsk(q, c);
+    /* they went with the question; the tray starts empty for the next one */
+    CHAT.files = []; renderChatFiles();
+    return p;
+  }
+  if (CHAT.files.length){
+    CHAT.files = []; renderChatFiles();
+    chatBot({ say:"", note:L("AttachNeedsFlow") });
+  }
 
   let r;
   try { r = DossierChat.ask(q, chatApi(c.convo)); }
@@ -6561,6 +6708,10 @@ function flowContext(){
        it keeps the payload honest about its size */
     holidays: hols.map(h => ({ d:h.d, n:h.n, k:h.k })),
     holidaysTotal: holidays().length,
+    memory: memoryForFlow(),
+    memoryTotal: memoryStore().length,
+    attachments: (CHAT.files || []).map(f => ({
+      name:f.name, type:f.type, size:f.size, data:f.data })),
     /* the rules the app applies by itself, so an endpoint does not propose
        something the app is about to overrule a second later */
     policy: {
@@ -6780,6 +6931,20 @@ function flowDescribe(a){
       return { say:"Add \u201c" + g.name + "\u201d as a " +
                    (g.kind === "system" ? "system" : g.kind === "type" ? "work type" : "party"),
                confirm:"Add it?" };
+    case "remember": {
+      const had = memoryFind(g.replaces || g.title);
+      return { say:(had ? "Update what I know about \u201c" + had.title + "\u201d"
+                        : "Remember \u201c" + g.title + "\u201d"),
+               note:String(g.body).slice(0, 400) +
+                    (String(g.body).length > 400 ? "\u2026" : ""),
+               confirm:had ? "Replace that note?" : "Keep this?" };
+    }
+    case "forget": {
+      const n = memoryFind(g.title);
+      return { say:"Forget \u201c" + (n ? n.title : g.title) + "\u201d",
+               note:n ? String(n.body).slice(0, 200) : "",
+               confirm:"Forget it?" };
+    }
     case "deleteRecord": {
       const t = findByRef(g.record);
       return { say:"Delete " + ref(),
@@ -6887,6 +7052,50 @@ function flowRun(a, quiet){
     }
 
     case "chaseSheet": closeChat(); openChase(); return null;
+
+    case "recall": {
+      const want = String(g.about || "").toLowerCase();
+      let list = memoryStore();
+      if (g.tag) list = list.filter(n => (n.tags || [])
+        .some(t => String(t).toLowerCase() === String(g.tag).toLowerCase()));
+      if (g.system) list = list.filter(n =>
+        String(n.system || "").toLowerCase() === String(g.system).toLowerCase());
+      if (want) list = list.filter(n =>
+        (n.title + " " + n.body + " " + (n.tags || []).join(" ")).toLowerCase().indexOf(want) >= 0);
+      if (!list.length)
+        return { say: memoryStore().length
+          ? "Nothing in memory about that. You have " + memoryStore().length +
+            " note(s): " + memoryStore().map(n => n.title).slice(0, 12).join(" \u00b7 ")
+          : "Nothing has been taught yet. Tell me how something is done and " +
+            "say \u201cremember that\u201d." };
+      list.slice(0, 3).forEach(n => {
+        n.uses = (n.uses || 0) + 1; n.lastUsed = new Date().toISOString();
+      });
+      touch();
+      return { say: list.slice(0, 3).map(n =>
+        n.title + "\n\n" + n.body +
+        ((n.tags || []).length ? "\n\n\u2014 " + n.tags.join(", ") : "")).join("\n\n\u2500\u2500\u2500\n\n") };
+    }
+
+    case "remember": {
+      pushUndo("remember");
+      const r = memorySave({ title:g.title, body:g.body, tags:g.tags,
+                             system:g.system, replaces:g.replaces });
+      touch();
+      return done((r.replaced ? "Updated " : "Kept ") + "\u201c" + r.note.title +
+                  "\u201d. Ask me about it any time.",
+                  [{ label:"What else do I know?", act:{ kind:"say", text:"what have you remembered" } }]);
+    }
+
+    case "forget": {
+      const n = memoryFind(g.title);
+      if (!n) return flowNeed(a, "there is no note called \u201c" + g.title + "\u201d. " +
+        "You have: " + memoryStore().map(x => x.title).join(", "));
+      pushUndo("forget");
+      S.settings.memory = memoryStore().filter(x => x.id !== n.id);
+      touch();
+      return done("Forgotten \u201c" + n.title + "\u201d.");
+    }
 
     /* ── writes ────────────────────────────────────────────────────────── */
     case "createRecord": {
@@ -7185,6 +7394,60 @@ function flowRun(a, quiet){
   return null;
 }
 
+/* ═══ WHAT YOU HAVE TAUGHT IT ════════════════════════════════════════════
+   The assistant's teaching (§10) is about grammar: which of its own
+   questions a sentence maps onto. This is the other kind, and the one people
+   actually mean when they say the app should remember something — the method
+   itself. How the imaging pool gets restarted. Which flag the settlement job
+   needs when it has run twice. What "error 4098" turns out to be.
+
+   You write it once, in words, and it comes back in any conversation months
+   later when you have forgotten you ever wrote it. It is kept in
+   dossier.json beside everything else, so it lives in the folder, is
+   readable without this app, and travels with the workspace. */
+
+function memoryStore(){
+  const st = S.settings;
+  if (!Array.isArray(st.memory)) st.memory = [];
+  return st.memory;
+}
+function memoryFind(title){
+  const want = String(title || "").toLowerCase().trim();
+  if (!want) return null;
+  const m = memoryStore();
+  return m.find(x => String(x.id).toLowerCase() === want)
+      || m.find(x => String(x.title || "").toLowerCase() === want)
+      || m.find(x => String(x.title || "").toLowerCase().indexOf(want) >= 0)
+      || null;
+}
+function memorySave(o){
+  const now = new Date().toISOString();
+  const old = o.replaces ? memoryFind(o.replaces) : memoryFind(o.title);
+  if (old){
+    old.title = o.title || old.title;
+    old.body = o.body;
+    if (o.tags) old.tags = o.tags.slice();
+    if (o.system) old.system = o.system;
+    old.updated = now;
+    return { note:old, replaced:true };
+  }
+  const note = { id:"M" + Date.now().toString(36) + Math.random().toString(36).slice(2,5),
+                 title:o.title, body:o.body, tags:(o.tags || []).slice(),
+                 system:o.system || "", created:now, updated:now, uses:0, lastUsed:"" };
+  memoryStore().unshift(note);
+  return { note:note, replaced:false };
+}
+/* the notes that go with a question. Everything, newest first, trimmed only
+   when there is so much of it that the payload would suffer */
+function memoryForFlow(){
+  const all = memoryStore();
+  return all.slice(0, 60).map(n => ({
+    title: n.title, body: String(n.body || "").slice(0, 6000),
+    tags: (n.tags || []).slice(), system: n.system || "",
+    updated: String(n.updated || "").slice(0, 10)
+  }));
+}
+
 /* one routine, by id or by title, the way a person would name it */
 function flowRoutine(name){
   const want = String(name || "").toLowerCase().trim();
@@ -7225,6 +7488,52 @@ function flowFind(g){
                             .toLowerCase().indexOf(w) >= 0);
   }
   return sortTasks(out).slice(0, Math.max(1, Math.min(200, g.limit || 40)));
+}
+
+/* ── what it has been taught ───────────────────────────────────────────── */
+
+function renderMemory(){
+  const box = $("memBox");
+  if (!box) return;
+  const list = memoryStore();
+  box.innerHTML = '<p class="hint2">' + esc(L("MemoryHint")) + "</p>" +
+    (list.length
+      ? '<div class="memlist">' + list.map((n, i) =>
+          '<details class="memn"' + (i === 0 ? " open" : "") + "><summary>" +
+            '<b>' + esc(n.title) + "</b>" +
+            '<span class="mm">' + esc(n.uses
+              ? L("MemoryUsed", { n:n.uses }) : L("MemoryNever")) +
+              " \u00b7 " + esc(String(n.updated || "").slice(0, 10)) + "</span>" +
+          "</summary>" +
+          '<textarea class="in mono memb" data-mem="' + i + '" rows="6">' +
+            esc(n.body || "") + "</textarea>" +
+          '<div class="memf">' +
+            (( n.tags || []).length
+              ? '<span class="mm">' + esc(n.tags.join(", ")) + "</span>" : "<span></span>") +
+            '<button class="btn sm" data-memdel="' + i + '">' + esc(L("MemoryForget")) +
+          "</button></div></details>").join("") + "</div>"
+      : '<p class="hint2" style="margin-top:8px;color:var(--ink-3)">' +
+        esc(L("MemoryEmpty")) + "</p>");
+
+  box.querySelectorAll("[data-mem]").forEach(t => {
+    t.onchange = () => {
+      const n = memoryStore()[+t.dataset.mem];
+      if (!n) return;
+      n.body = t.value;
+      n.updated = new Date().toISOString();
+      touch(); toast(L("MemorySaved"));
+    };
+  });
+  box.querySelectorAll("[data-memdel]").forEach(b => {
+    b.onclick = () => {
+      const n = memoryStore()[+b.dataset.memdel];
+      if (!n) return;
+      pushUndo("forget");
+      S.settings.memory = memoryStore().filter(x => x.id !== n.id);
+      touch(); renderMemory();
+      toast("Forgotten \u201c" + n.title + "\u201d", { action:L("Undo"), onAction:doUndo });
+    };
+  });
 }
 
 /* ── what you told it to stop saying ───────────────────────────────────── */
@@ -10039,11 +10348,15 @@ async function renderModal(){
     '<div style="display:flex;gap:6px;margin-top:8px"><input class="in mono" id="tplNew" style="font-size:11px" ' +
       "placeholder=\"Restart app pool @&quot;Infra / IIS&quot; :admin 15m today\"><button class=\"btn sm\" id=\"tplAdd\">" + L("Add") + "</button></div>" +
 
+    "<h5 class=\"eyebrow\" style=\"margin:22px 0 8px\">" + L("MemoryHead") + "</h5>" +
+    '<div id="memBox"></div>' +
+
     "<h5 class=\"eyebrow\" style=\"margin:22px 0 8px\">" + L("HiddenNotices") + "</h5>" +
     '<div id="hushBox"></div>' +
 
     "<h5 class=\"eyebrow\" style=\"margin:22px 0 8px\">" + L("FlowHead") + "</h5>" +
     '<div id="flowBox"></div>';
+  renderMemory();
   renderHush();
   renderFlow();
 
@@ -11864,12 +12177,95 @@ $("chatSide").addEventListener("click", e => {
   if (row){ S.chatId = row.dataset.chat; chatPaint(); touch(); $("chatq").focus(); }
 });
 $("chatGo").addEventListener("click", () => chatAsk($("chatq").value));
+
+/* the box grows with what you are typing, up to about eight lines */
+function chatGrow(){
+  const t = $("chatq");
+  t.style.height = "auto";
+  t.style.height = Math.min(184, t.scrollHeight) + "px";
+}
+$("chatq").addEventListener("input", chatGrow);
 $("chatq").addEventListener("keydown", e => {
-  if (e.key === "Enter"){ e.preventDefault(); return chatAsk($("chatq").value); }
+  /* Enter sends, because that is what everybody's fingers already do.
+     Shift+Enter is the new line, and Ctrl+Enter with it for the people who
+     learned it the other way round. */
+  if (e.key === "Enter" && !e.shiftKey){
+    e.preventDefault();
+    return chatAsk($("chatq").value);
+  }
   /* the last thing you asked, back for editing */
   if (e.key === "ArrowUp" && !$("chatq").value && CHAT.last){
-    e.preventDefault(); $("chatq").value = CHAT.last;
+    e.preventDefault(); $("chatq").value = CHAT.last; chatGrow();
   }
+});
+
+/* ── files that come with the question ─────────────────────────────────
+   An error dialog, a page of a specification, the log line that matters.
+   Typing out what a screenshot says is how the detail gets lost, so the
+   screenshot goes instead — read here, carried in the request, never
+   uploaded anywhere except the endpoint you configured. */
+const CHAT_KIND = { "application/pdf":"\u25a4" };
+function chatFileIcon(t){
+  if (/^image\//.test(t)) return "\u25a3";
+  return CHAT_KIND[t] || "\u2261";
+}
+function chatFileOk(f){
+  if (CHAT.files.length >= CHAT_FILES_MAX){ toast(L("AttachTooMany"), { bad:true }); return false; }
+  if (f.size > CHAT_FILE_MAX){
+    toast(L("AttachTooBig", { name:f.name, size:bytes(f.size) }), { bad:true }); return false;
+  }
+  const t = f.type || "";
+  if (!/^image\//.test(t) && t !== "application/pdf" && !/^text\//.test(t) &&
+      !/(json|xml|csv)$/.test(t) && !/\.(txt|log|csv|json|xml)$/i.test(f.name)){
+    toast(L("AttachUnsupported", { name:f.name, type:t || "file" }), { bad:true }); return false;
+  }
+  return true;
+}
+function chatAttach(files){
+  Array.prototype.forEach.call(files || [], f => {
+    if (!chatFileOk(f)) return;
+    const r = new FileReader();
+    r.onload = () => {
+      const url = String(r.result || "");
+      CHAT.files.push({ name:f.name, type:f.type || "application/octet-stream",
+                        size:f.size, url:url,
+                        /* the endpoint gets the bytes without the data: prefix,
+                           which is what every prompt action expects */
+                        data:url.slice(url.indexOf(",") + 1) });
+      renderChatFiles();
+    };
+    r.onerror = () => toast("Could not read " + f.name, { bad:true });
+    r.readAsDataURL(f);
+  });
+}
+function renderChatFiles(){
+  const box = $("chatFiles");
+  if (!box) return;
+  box.innerHTML = CHAT.files.map((f, i) =>
+    '<span class="cf">' +
+      (/^image\//.test(f.type) ? '<img src="' + esc(f.url) + '" alt="">'
+                              : '<span class="ic">' + chatFileIcon(f.type) + "</span>") +
+      '<span class="nm">' + esc(f.name) + "</span>" +
+      '<span class="sz">' + bytes(f.size) + "</span>" +
+      '<button data-unclip="' + i + '" title="Remove">\u2715</button></span>').join("");
+  box.querySelectorAll("[data-unclip]").forEach(b => {
+    b.onclick = () => { CHAT.files.splice(+b.dataset.unclip, 1); renderChatFiles(); };
+  });
+}
+$("chatPin").addEventListener("click", () => $("chatFile").click());
+$("chatFile").addEventListener("change", e => {
+  chatAttach(e.target.files);
+  e.target.value = "";
+});
+/* dropped on the panel, or pasted straight in */
+$("chat").addEventListener("dragover", e => { e.preventDefault(); });
+$("chat").addEventListener("drop", e => {
+  if (!e.dataTransfer || !e.dataTransfer.files.length) return;
+  e.preventDefault(); chatAttach(e.dataTransfer.files);
+});
+$("chatq").addEventListener("paste", e => {
+  const items = (e.clipboardData || {}).files;
+  if (items && items.length){ e.preventDefault(); chatAttach(items); }
 });
 /* A button that stays live after you have pressed it is a button that will
    be pressed twice. Every group here resolves the moment it is used: the
@@ -11897,6 +12293,14 @@ function chatResolve(el, outcome, no){
 }
 
 $("chatLog").addEventListener("click", e => {
+  const cp = e.target.closest("[data-copy]");
+  if (cp){
+    const txt = CHAT.code[cp.dataset.copy] || "";
+    copyText(txt, L("Copied"));
+    cp.textContent = L("Copied"); cp.classList.add("ok");
+    setTimeout(() => { cp.textContent = L("Copy"); cp.classList.remove("ok"); }, 1500);
+    return;
+  }
   const dis = e.target.closest("[data-dismiss]");
   if (dis) return chatResolve(dis, L("ChatLeftAlone"), true);
 

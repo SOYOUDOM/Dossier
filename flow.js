@@ -98,6 +98,11 @@ const ACTIONS = {
   chaseSheet: { write:false, needs:[], args:{},
     what:"Open the chase sheet for everything that is due a chase." },
 
+  recall: { write:false, needs:[], args:{ about:STR, tag:STR, system:STR },
+    what:"Read back what you were taught. Every note is already in " +
+         "workspace.memory, so use this to SHOW one to the person, not to " +
+         "find out what it says." },
+
   /* ── writing: every one of these is confirmed before it runs ─────────── */
   createRecord: { write:true, needs:["title"],
     args:{ title:STR, system:STR, type:STR, priority:["P1","P2","P3","P4"],
@@ -204,6 +209,19 @@ const ACTIONS = {
     what:"Delete a record. Its folder and documents stay on disk. Prefer " +
          "setStatus to cancelled, which keeps the history." },
 
+  remember: { write:true, needs:["title","body"],
+    args:{ title:STR, body:TXT, tags:LIST, system:STR, replaces:STR },
+    what:"Keep what you were just told, so it can be recalled in any later " +
+         "conversation. Use it whenever someone explains how something is " +
+         "done, what caused something, or what to check next time. title is " +
+         "how they will ask for it again; body is the method in full, and may " +
+         "be several paragraphs with code blocks in ``` fences. Pass replaces " +
+         "with an existing note's title to correct that note instead of " +
+         "adding a second one about the same thing." },
+
+  forget: { write:true, needs:["title"], args:{ title:STR },
+    what:"Delete a note from memory, by its title." },
+
   notify: { write:true, needs:["on"], args:{ on:BOOL },
     what:"Turn Windows reminders on or off." },
 
@@ -236,7 +254,7 @@ function coerce(spec, v, name){
   }
   switch (spec){
     case STR:  { const s = str(v, 200);  return s ? { value:s } : { skip:true }; }
-    case TXT:  { const s = str(v, 4000); return s ? { value:s } : { skip:true }; }
+    case TXT:  { const s = str(v, 20000); return s ? { value:s } : { skip:true }; }
     case REF:  { const s = str(v, 60);   return s ? { value:s } : { skip:true }; }
     case INT: {
       if (v === "" || v == null) return { skip:true };
@@ -354,7 +372,7 @@ function validate(payload){
   if (!body.say && !body.actions && !body.ask && body.body && typeof body.body === "object")
     body = body.body;
 
-  out.say = str(body.say || body.message || body.text || body.reply, 4000);
+  out.say = str(body.say || body.message || body.text || body.reply, 20000);
   out.ask = str(body.ask || body.question, 500);
 
   const list = Array.isArray(body.actions) ? body.actions
@@ -451,6 +469,11 @@ function buildRequest(text, ctx, cfg){
     timezone: (function(){ try { return Intl.DateTimeFormat().resolvedOptions().timeZone; }
                            catch(e){ return ""; } })(),
     message: String(text || ""),
+    /* Files the person attached to this question. A PDF or a screenshot is
+       often the whole of what they are asking about, and typing out what an
+       error dialog says is how detail gets lost. */
+    attachments: (ctx.attachments || []).map(a => ({
+      name: a.name, type: a.type, size: a.size, data: a.data })),
     conversation: (ctx.conversation || []).slice(-6),
     owner: st.owner || "",
     workspace: {
@@ -470,6 +493,12 @@ function buildRequest(text, ctx, cfg){
       holidays: ctx.holidays || [],
       holidaysTotal: ctx.holidaysTotal || 0,
       policy: ctx.policy || {},
+      /* What the person has taught this workspace. It travels with every
+         question rather than being fetched, because a note nobody looked up
+         is a note nobody wrote — and the whole point of writing one is that
+         next time you have forgotten you ever did. */
+      memory: ctx.memory || [],
+      memoryTotal: ctx.memoryTotal || 0,
       counts: ctx.counts || {},
       recordsSent: rows.length,
       recordsTotal: (ctx.tasks || []).length,

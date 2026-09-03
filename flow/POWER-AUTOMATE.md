@@ -82,6 +82,18 @@ Parse JSON does not mind the ones left out.
     "weekday":   { "type": "string" },
     "timezone":  { "type": "string" },
     "message":   { "type": "string" },
+    "attachments": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "type": { "type": "string" },
+          "size": { "type": "integer" },
+          "data": { "type": "string" }
+        }
+      }
+    },
     "calendar": {
       "type": "object",
       "properties": {
@@ -166,6 +178,20 @@ Parse JSON does not mind the ones left out.
           }
         },
         "holidaysTotal": { "type": "integer" },
+        "memory": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "title":   { "type": "string" },
+              "body":    { "type": "string" },
+              "tags":    { "type": "array", "items": { "type": "string" } },
+              "system":  { "type": "string" },
+              "updated": { "type": "string" }
+            }
+          }
+        },
+        "memoryTotal": { "type": "integer" },
         "policy": {
           "type": "object",
           "properties": {
@@ -284,7 +310,7 @@ Add your AI action — **AI Builder → Run a prompt**, *Create text with GPT
 using a prompt*, an Azure OpenAI action, whatever you have. They all take a
 prompt and give back text.
 
-Define **seven inputs** and wire them to the parsed body:
+Define **eight inputs** and wire them to the parsed body:
 
 | Input name | Value (expression) |
 |---|---|
@@ -295,6 +321,7 @@ Define **seven inputs** and wire them to the parsed body:
 | `workspace` | `string(body('Parse_JSON')?['workspace'])` |
 | `actions` | `string(body('Parse_JSON')?['can'])` |
 | `history` | `string(body('Parse_JSON')?['conversation'])` |
+| `memory` | `string(body('Parse_JSON')?['workspace']?['memory'])` |
 
 `string()` turns the object or array into JSON text, which is what a prompt
 input wants.
@@ -327,6 +354,24 @@ Their systems, work types, parties, people, tags, registered scripts,
 routines, counts, and a slice of their records:
 
 {workspace}
+
+═══ WHAT THIS PERSON HAS TAUGHT YOU ═══
+
+Notes they wrote themselves, in earlier conversations, about how things are
+done here. This is the most valuable thing in the request: it is knowledge
+that exists nowhere else and that they have very likely forgotten writing.
+
+{memory}
+
+ANSWER FROM THESE FIRST. If a note covers what was asked, give it back — in
+your own words if that reads better, or by returning a "recall" action to show
+it verbatim. Never invent a method when one of these already says how.
+
+And when they explain how something is done, what caused something, or what to
+check next time — return "remember". A title they will search for later, and
+a body with the whole method, including any commands in ``` fences. If a note
+already covers that ground, pass its title as "replaces" so it is corrected
+rather than duplicated.
 
 ═══ WHEN THIS IS ═══
 
@@ -431,6 +476,18 @@ RULES, in order of importance:
 
 12. Time is in minutes everywhere. "logTime" with minutes: 90, never hours.
 
+13. "say" is displayed with its line breaks kept, so write it as you would
+    write it to a person: short paragraphs, numbered steps on their own lines.
+    Put commands, queries and configuration in ``` fences with the language
+    after the opening fence (```cmd, ```powershell, ```sql) — Dossier renders
+    those as a code panel with a copy button. Use `single backticks` for a
+    file name or a setting inside a sentence. Nothing else is interpreted:
+    asterisks and hashes arrive as asterisks and hashes.
+
+14. "attachments" carries files they clipped to the question — a screenshot
+    of an error, a page of a specification, a log. Read them before answering;
+    they are usually the whole of what is being asked about.
+
 ═══ EXAMPLES ═══
 
 Message: "create a p1 to restart the imaging pool on APP02 tomorrow"
@@ -475,6 +532,12 @@ Message: "put an hour and a half on the renewal report one"
 Message: "the vendor got back to us on the payment one"
 {"say":"Good — taking D-0006 off the waiting list.","actions":[{"do":"clearWait","record":"D-0006","note":"Vendor replied"}]}
 
+Message: "when the imaging sync times out you recycle the pool on APP02 and re-run the job. remember that"
+{"say":"Kept. Ask me for it any time.","actions":[{"do":"remember","title":"Imaging sync timeout","body":"When the nightly sync times out on GetPendingAsync:\n\n1. Recycle the application pool on APP02\n2. Re-run the nightly job from the scheduler\n\n```cmd\nrestart-app-pool.bat APP02 ImagingPool\n```","tags":["imaging","runbook"],"system":"Imaging"}]}
+
+Message: "how do we fix the imaging sync again?"   (with that note in memory)
+{"say":"You wrote this down in March.\n\n1. Recycle the application pool on APP02\n2. Re-run the nightly job from the scheduler\n\n```cmd\nrestart-app-pool.bat APP02 ImagingPool\n```"}
+
 Message: "the imaging one can't move until the DBA ticket is done"
 {"ask":"Which record is the DBA one? I can see D-0004 for Imaging, but nothing that looks like a DBA ticket."}
 
@@ -487,6 +550,30 @@ Your earlier attempt failed — *"it couldn't find this information"* — becaus
 the model had no idea what your app is, what a record looks like, or that
 `createRecord` exists. It was being asked to invent an API it had never seen.
 Everything above §"HOW TO ANSWER" is there to fix exactly that.
+
+### Using an attached file
+
+`attachments` arrives as an array. For a prompt action that takes an image or
+a document input, wire it to the **base64 data** of the first file:
+
+```
+body('Parse_JSON')?['attachments']?[0]?['data']
+```
+
+The data is base64 **without** the `data:image/png;base64,` prefix, which is
+what AI Builder's image and document inputs expect. If your action wants a
+data URI instead, build one:
+
+```
+concat('data:', body('Parse_JSON')?['attachments']?[0]?['type'], ';base64,',
+       body('Parse_JSON')?['attachments']?[0]?['data'])
+```
+
+Guard it with a condition on `length(body('Parse_JSON')?['attachments'])` so
+the flow still runs when nothing was attached. Dossier allows up to five
+files, 4 MB each, images / PDF / text only — a limit chosen because Power
+Automate is comfortable with a few megabytes in a request body and miserable
+beyond it.
 
 ---
 
@@ -509,6 +596,13 @@ by hand a list the app already generates from its own running code.
 The `can` array is the important one. It is generated from `flow.js` itself,
 so when Dossier gains an action your flow can use it immediately, with the
 correct argument names, without you editing anything.
+
+There is now a third place, and over time it is the one that matters most:
+**`workspace.memory`** — notes the person wrote themselves through the
+`remember` action. That is knowledge about *their* work that no knowledge base
+you could build would contain, because it did not exist until they typed it.
+It arrives in the request like everything else, and §4's prompt reads it
+first.
 
 ### Knowledge that never changes → **the prompt, or a knowledge source**
 

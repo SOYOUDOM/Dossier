@@ -1,7 +1,7 @@
 {
   "dossier": 1,
   "protocol": "1.0",
-  "askedAt": "2026-09-03T07:17:37.980Z",
+  "askedAt": "2026-09-03T08:07:35.838Z",
   "today": "2026-09-03",
   "weekday": "Thursday",
   "calendar": {
@@ -16,6 +16,7 @@
   },
   "timezone": "UTC",
   "message": "create a P1 record to restart the imaging pool on APP02 tomorrow",
+  "attachments": [],
   "conversation": [],
   "owner": "",
   "workspace": {
@@ -250,6 +251,19 @@
       "chaseAfterDays": 3,
       "blockingSetsStatus": true
     },
+    "memory": [
+      {
+        "title": "Imaging sync timeout",
+        "body": "When the nightly sync times out on GetPendingAsync:\n\n1. Recycle the application pool on APP02\n2. Re-run the nightly job from the scheduler\n3. If it fails a second time it is the DBA index job, not us\n\n```cmd\nrestart-app-pool.bat APP02 ImagingPool\n```",
+        "tags": [
+          "imaging",
+          "runbook"
+        ],
+        "system": "Imaging",
+        "updated": "2026-03-14"
+      }
+    ],
+    "memoryTotal": 1,
     "counts": {
       "records": 7,
       "live": 5,
@@ -471,6 +485,17 @@
       "what": "Open the chase sheet for everything that is due a chase.",
       "needs": [],
       "args": {}
+    },
+    {
+      "do": "recall",
+      "write": false,
+      "what": "Read back what you were taught. Every note is already in workspace.memory, so use this to SHOW one to the person, not to find out what it says.",
+      "needs": [],
+      "args": {
+        "about": "string",
+        "tag": "string",
+        "system": "string"
+      }
     },
     {
       "do": "createRecord",
@@ -845,6 +870,33 @@
       ],
       "args": {
         "record": "ref"
+      }
+    },
+    {
+      "do": "remember",
+      "write": true,
+      "what": "Keep what you were just told, so it can be recalled in any later conversation. Use it whenever someone explains how something is done, what caused something, or what to check next time. title is how they will ask for it again; body is the method in full, and may be several paragraphs with code blocks in ``` fences. Pass replaces with an existing note's title to correct that note instead of adding a second one about the same thing.",
+      "needs": [
+        "title",
+        "body"
+      ],
+      "args": {
+        "title": "string",
+        "body": "text",
+        "tags": "list of text",
+        "system": "string",
+        "replaces": "string"
+      }
+    },
+    {
+      "do": "forget",
+      "write": true,
+      "what": "Delete a note from memory, by its title.",
+      "needs": [
+        "title"
+      ],
+      "args": {
+        "title": "string"
       }
     },
     {

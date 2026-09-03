@@ -90,6 +90,8 @@ One JSON object, POSTed as the body.
   "message": "create a task to restart the imaging pool tomorrow, P1",
   "conversation": [ { "who": "person", "text": "…" },
                     { "who": "dossier", "text": "…" } ],
+  "attachments": [ { "name": "error.png", "type": "image/png",
+                     "size": 84213, "data": "iVBORw0KGgoAAA…" } ],
   "owner": "",
 
   "workspace": {
@@ -122,6 +124,11 @@ One JSON object, POSTed as the body.
                     "blockingSetsStatus": true },
     "counts":     { "records":7, "live":5, "overdue":1,
                     "dueToday":2, "waiting":1, "blocked":1 },
+    "memory":     [ { "title":"Imaging pool restart",
+                      "body":"When the nightly sync times out on GetPendingAsync:\n\n1. Recycle the pool\n2. Re-run the job\n\n```cmd\nrestart-app-pool.bat APP02 ImagingPool\n```",
+                      "tags":["imaging","runbook"], "system":"Imaging",
+                      "updated":"2026-03-14" } ],
+    "memoryTotal": 1,
     "recordsSent": 5,
     "recordsTotal": 7,
     "records": [ { "code":"D-0004", "title":"…", "status":"processing",
@@ -145,6 +152,28 @@ One JSON object, POSTed as the body.
 for, generated from the running code, with every argument and its shape. Feed
 it to your model rather than hard-coding a list — when Dossier gains an action
 your flow gets it for free, and it can never ask for one that does not exist.
+
+### Memory — what the person taught it
+
+`workspace.memory` is the runbook this workspace has written for itself: notes
+kept by the `remember` action, each with a title, a body that may run to
+several paragraphs with fenced code in it, tags, and when it was last changed.
+
+It travels with **every** question rather than being fetched on demand,
+because a note nobody looks up is a note nobody writes — and the whole point
+of keeping one is that next time, you have forgotten you ever did.
+
+So: **answer from `memory` first.** If a note covers what was asked, give it
+back in your own `say` (or return `recall` to show it verbatim) rather than
+inventing a method. And when someone explains how something is done, return
+`remember` — that is the action that makes the app worth teaching.
+
+### Attachments
+
+`attachments` carries what the person clipped to the question — a screenshot
+of an error, a page of a specification, a log. Up to five files, 4 MB each,
+images / PDF / text only. `data` is base64 **without** the `data:` prefix, so
+it can go straight into an AI action's image or document input.
 
 **How much goes** is set in the panel and reported in `workspace.scope`:
 
@@ -223,7 +252,7 @@ answer than deleting, and keeps the history.
 ## 6. The action reference
 
 Generated from `flow.js`. `ref` means a record code (`D-0004`), a ticket
-number, or an id. **39 actions — 11 that read, 28 that write.**
+number, or an id. **42 actions — 12 that read, 30 that write.**
 
 ### Actions that only read
 
@@ -334,6 +363,16 @@ Open the chase sheet for everything that is due a chase.
 | argument | shape | required |
 |---|---|---|
 | *(none)* | | |
+
+#### `recall`
+
+Read back what you were taught. Every note is already in workspace.memory, so use this to SHOW one to the person, not to find out what it says.
+
+| argument | shape | required |
+|---|---|---|
+| `about` | string | no |
+| `tag` | string | no |
+| `system` | string | no |
 
 
 ### Actions that change the workspace
@@ -624,6 +663,26 @@ Delete a record. Its folder and documents stay on disk. Prefer setStatus to canc
 | argument | shape | required |
 |---|---|---|
 | `record` | ref | **yes** |
+
+#### `remember`
+
+Keep what you were just told, so it can be recalled in any later conversation. Use it whenever someone explains how something is done, what caused something, or what to check next time. title is how they will ask for it again; body is the method in full, and may be several paragraphs with code blocks in ``` fences. Pass replaces with an existing note's title to correct that note instead of adding a second one about the same thing.
+
+| argument | shape | required |
+|---|---|---|
+| `title` | string | **yes** |
+| `body` | text | **yes** |
+| `tags` | list of text | no |
+| `system` | string | no |
+| `replaces` | string | no |
+
+#### `forget`
+
+Delete a note from memory, by its title.
+
+| argument | shape | required |
+|---|---|---|
+| `title` | string | **yes** |
 
 #### `notify`
 

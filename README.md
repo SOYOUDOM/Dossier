@@ -107,7 +107,7 @@ That is the entire setup. You should immediately see:
 | `flow/relay.html` | ~9 KB | optional | The **only** page allowed to touch the network. Sandboxed, holds no records, pinned to one origin. |
 | `flow/CONTRACT.md` | ~16 KB | — | What your flow receives and must return, generated from `flow.js`. |
 | `flow/POWER-AUTOMATE.md` | ~19 KB | — | How to build the flow: trigger schema, the prompt, knowledge, and the test order. |
-| `flow/sample-request.json` | ~8 KB | — | A real request body, for Power Automate's schema generator. |
+| `flow/sample-request.json` | ~14 KB | — | A real request body, for Power Automate's schema generator. |
 | `dossier.json` | ~15 KB | — | The demo workspace: 7 records, 2 routines, 4 scripts, settings, Cambodian holidays. |
 | `lang/en.xml` | ~175 KB | optional | Every interface phrase in English — 1,343 entries. |
 | `lang/km.xml` | ~125 KB | optional | The same 1,343 keys, **values empty**: a translation template for Khmer. |
@@ -214,6 +214,7 @@ adds `D-0099` without touching `seq` will not cause a collision.
 | `chatLearn` | object | — | Everything you have taught the assistant. See [§10.8](#108-teaching-it). |
 | `flow` | `{on, url, scope, deep, cap, timeout, fallback}` | `{on:false,…}` | The Power Automate endpoint. See [§12](#12-asking-through-a-power-automate-flow). |
 | `hushed` | array of string | `[]` | Keys of the Day-sheet notices you have silenced. Cleared from **Setup → Hidden notices**. |
+| `memory` | array of `{id, title, body, tags, system, created, updated, uses, lastUsed}` | `[]` | What you have taught the assistant: how something is done, what caused something, what to check next time. See [§12](#12-asking-through-a-power-automate-flow). |
 
 ### 5.3 `tasks` — a record
 
@@ -1006,10 +1007,38 @@ you in full and waits for a yes** — the same gate the local assistant's write
 actions have always used, and it holds whether the action arrived as a
 proposal or as a button.
 
-39 actions, 11 read-only and 28 that write — records, checklists, time,
-waiting and chasing, blocking, tags, scripts, routines, holidays, and the
-vocabulary itself. Two of them delete (a record, a routine); both confirm
-like everything else and both are undone by `Ctrl`+`Z`.
+42 actions, 12 read-only and 30 that write — records, checklists, time,
+waiting and chasing, blocking, tags, scripts, routines, holidays, memory, and
+the vocabulary itself. Three of them delete (a record, a routine, a note); all
+confirm like everything else and all are undone by `Ctrl`+`Z`.
+
+### Memory — teaching it a method
+
+`remember` is the action that makes the app worth teaching. Explain in the Ask
+box how something is done — *"when the imaging sync times out you recycle the
+pool on APP02 and re-run the job, remember that"* — and it proposes a note:
+a title you will search for later, and a body that can run to paragraphs with
+commands in it. Say yes and it is kept in `settings.memory`, in
+`dossier.json`, in your folder.
+
+Every note then travels with **every** later question, in any conversation,
+for as long as the workspace exists. Ask again in March and the answer comes
+back from what you wrote in September. `recall` reads one out verbatim,
+`forget` removes one, and **Menu → Setup → What you have taught it** lists
+them all — editable in place, with how often each has been asked for.
+
+### Asking with a file, and answers with code
+
+The Ask box takes **more than one line** (Enter sends, Shift+Enter breaks) and
+**attachments** — up to five files, 4 MB each, images, PDFs and text. Drop them
+on the panel, paste a screenshot straight in, or use the clip. They go to your
+endpoint as base64 with the question, and nowhere else.
+
+Answers come back with their line breaks intact. A fenced block becomes a code
+panel with its language and a copy button; `backticks` become inline code.
+Nothing else in a reply is interpreted — it is not a markdown renderer and
+should not become one, because every feature added to it is another way for
+text from outside to put markup on your page.
 
 ### What it refuses
 
@@ -1344,12 +1373,13 @@ drive the real files in a real browser (Playwright + Chromium), because the
 things that break here are things a unit test cannot see: a stale iframe cache,
 a CSP refusal, a file one folder away from where a manifest says.
 
-The eight exercised for the current release — `teach`, `talk2`, `pick`,
-`flowval`, `flowe2e`, `flowui`, `flowmore`, `chatui` — report **286 passing
-assertions and no failures**, covering the local assistant, teaching,
+The nine exercised for the current release — `teach`, `talk2`, `pick`,
+`flowval`, `flowe2e`, `flowui`, `flowmore`, `chatui`, `memui` — report **326
+passing assertions and no failures**, covering the local assistant, teaching,
 selectors, the reply validator, the whole network path in a real browser
 against an endpoint that misbehaves the way real ones do, the Setup panel, all
-39 actions, and the docked layout down to where each masthead tab lands.
+42 actions, the docked layout down to where each masthead tab lands, and the
+memory round trip: taught in one conversation, recalled in another.
 Nine suites covering the local model were deleted with it.
 
 Measured, and stated honestly:
