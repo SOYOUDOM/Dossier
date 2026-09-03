@@ -551,6 +551,37 @@ the model had no idea what your app is, what a record looks like, or that
 `createRecord` exists. It was being asked to invent an API it had never seen.
 Everything above §"HOW TO ANSWER" is there to fix exactly that.
 
+### The second run, and how to answer it for nothing
+
+Sometimes you will see **two runs** for one question: your real request, and
+a second, tiny one whose body is
+
+```json
+{ "dossier": 1, "probe": true,
+  "why": "Reachability check from Dossier, not a question. Answer 200 and stop." }
+```
+
+That is Dossier working out **why** the first one failed. A blocked host, a
+dead host and a host that answered without the CORS header all arrive in the
+browser as the identical `Failed to fetch`; the only way to tell them apart is
+to ask again in a way that does not need to read the reply. So:
+
+- **A probe only ever follows a request that has already failed.** If you see
+  one, the run *before* it is the one to open — that is your real question,
+  and that is where the error is.
+- A healthy endpoint is asked **once**, by the chat and by *Test the
+  connection* alike.
+
+Answer it in one condition at the top of the flow, before anything expensive:
+
+| | |
+|---|---|
+| **Condition** | `body('Parse_JSON')?['probe']` **is equal to** `true` |
+| **If yes** | a **Response**, status 200, the headers from §6, body `{"say":"ok"}` — then nothing else |
+| **If no** | the rest of your flow |
+
+Two lines of setup, and probes stop costing you an AI Builder call.
+
 ### Using an attached file
 
 `attachments` arrives as an array. For a prompt action that takes an image or
@@ -570,10 +601,23 @@ concat('data:', body('Parse_JSON')?['attachments']?[0]?['type'], ';base64,',
 ```
 
 Guard it with a condition on `length(body('Parse_JSON')?['attachments'])` so
-the flow still runs when nothing was attached. Dossier allows up to five
-files, 4 MB each, images / PDF / text only — a limit chosen because Power
-Automate is comfortable with a few megabytes in a request body and miserable
-beyond it.
+the flow still runs when nothing was attached.
+
+**On size, which is the thing that breaks this.** Base64 is a third larger
+than the file it encodes, so a 4 MB screenshot arrives as 5.2 MB of JSON —
+enough that a question with a screenshot on it fails while the same question
+typed out succeeds, which is a maddening symptom to chase.
+
+So Dossier shrinks images before they go: redrawn at 1600px on the longest
+edge and re-encoded, dropping through 1280, 1000 and 800px if it is still
+large. A screenshot of an error dialog ends up around 80 KB. An 11 MB image
+in testing came out at 163 KB — 69× smaller — and the whole request at
+230 KB rather than 14.7 MB.
+
+The limits, after shrinking: **five files, 2 MB each, 3.5 MB for one
+question**, images / PDF / text only. A PDF cannot be shrunk in a browser, so
+one over 2 MB is refused before it is read. The composer shows the running
+total, so you can see what a question weighs before you send it.
 
 ---
 
@@ -733,6 +777,8 @@ something it needs, change **What to send** rather than editing the prompt.
 | *there is no script called "…"* | the name is not one of `workspace.scripts`. The message lists the ones that are. |
 | a run that succeeds but Dossier says nothing | the model returned prose, not JSON. Check the `Clean` step, and that the prompt ends with *JSON only*. |
 | nothing at all in the run history | the request never arrived. Almost always the URL. |
+| **two runs, the second tiny with `"probe": true`** | the first one failed. Open that one — the probe is Dossier asking *why*, not the question. See above. |
+| **a question works until you attach something** | size. Check the request body's length in the failed run; Dossier now shrinks images, so if it is still large it will be a PDF. The reply in the chat tells you how much the question weighed. |
 
 ---
 

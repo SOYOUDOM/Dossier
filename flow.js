@@ -39,7 +39,7 @@
 (function(){
 "use strict";
 
-const VERSION = "1.0";
+const VERSION = "1.1";
 let RELAY_SRC = "flow/relay.html";
 
 /* ═══ WHAT AN ENDPOINT MAY ASK FOR ═══════════════════════════════════════
@@ -651,15 +651,17 @@ async function test(cfg, ctx){
 
   await pin(url);
 
-  let reach = false;
-  try { const r = await talk("reach", { url:url, timeout:8000 }, 15000); reach = !!(r && r.reachable); }
-  catch(e){}
-  if (!add("Something answers at that address", reach,
-      reach ? "" : "Nothing came back. This network may block it, or the URL " +
-                   "is wrong or the flow is off."))
-    return { steps, verdict:"unreachable", transcript:S.lastTranscript };
+  /* One request, not two.
 
-  /* the real thing, with a tiny payload */
+     This used to probe for reachability first and then ask a real question,
+     which meant every press of this button ran the flow twice — once with a
+     body that said nothing, which is exactly the run people then went
+     looking at when something broke.
+
+     There is no need. A request that fails already comes back classified:
+     the relay tells "nothing answered" apart from "it answered and the
+     browser would not let us read it". So ask the real question, and read
+     reachability off the answer — or off the way it failed. */
   let out = null, err = null;
   try {
     out = await ask("ping from Dossier — reply with say only",
@@ -668,10 +670,21 @@ async function test(cfg, ctx){
   } catch(e){ err = e; }
 
   if (err){
+    /* "cors", "http" and "timeout" all mean something is there and listening;
+       only "blocked" means nothing came back at all */
+    const answered = err.kind === "cors" || err.kind === "http" || err.kind === "timeout";
+    add("Something answers at that address", answered,
+        answered
+          ? (err.kind === "timeout" ? "it accepted the connection, then went quiet"
+                                    : "it answered")
+          : "Nothing came back. This network may block it, or the URL is wrong " +
+            "or the flow is off.");
+    if (!answered) return { steps, verdict:"unreachable", transcript:S.lastTranscript };
     add("The reply can be read", false, err.message);
     return { steps, verdict:err.kind === "cors" ? "cors" : "failed",
              transcript:S.lastTranscript };
   }
+  add("Something answers at that address", true, "it answered the test question");
   add("The reply can be read", true, "answered " + out.status + " in " + out.ms + " ms");
   add("The reply is the shape Dossier expects",
       !!(out.say || out.actions.length || out.ask),

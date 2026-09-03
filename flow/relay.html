@@ -55,7 +55,7 @@
 <script>
 "use strict";
 
-const RELAY_VERSION = "1.0";
+const RELAY_VERSION = "1.1";
 const T0 = Date.now();
 
 let parentWin = null;
@@ -154,6 +154,8 @@ async function send(opts){
        and a host that answered without the CORS header. Those need three
        different fixes, so they are told apart rather than guessed at. */
     log("  ✗ " + String((e && e.message) || e));
+    log("  sending a probe to tell a blocked host from a missing CORS header —");
+    log("  it is marked probe:true, and it will show as a second run over there");
     const reachable = await probe(url, Math.min(8000, ms));
     if (reachable){
       log("  the host answered when the reply was not read — this is CORS");
@@ -194,12 +196,25 @@ async function send(opts){
 
 /* Did anything answer at all? An opaque no-cors request resolves for any
    reply the server sends, and rejects only when nothing came back — which is
-   exactly the line between "CORS" and "unreachable". */
+   exactly the line between "CORS" and "unreachable".
+
+   It has to be a POST to the same address, so it does reach the flow and it
+   does cost a run. The body used to be "{}", which was a mistake: in a run
+   history it is indistinguishable from a real question that arrived empty,
+   and it sent people looking for a bug in the wrong request. It says what it
+   is now, so a single condition at the top of a flow can answer it and stop
+   before anything expensive happens. */
+const PROBE_BODY = JSON.stringify({
+  dossier: 1,
+  probe: true,
+  why: "Reachability check from Dossier, not a question. Answer 200 and stop."
+});
+
 async function probe(url, ms){
   const ac = new AbortController();
   const t = setTimeout(() => ac.abort(), ms || 8000);
   try {
-    await fetch(url, { method:"POST", mode:"no-cors", body:"{}", cache:"no-store",
+    await fetch(url, { method:"POST", mode:"no-cors", body:PROBE_BODY, cache:"no-store",
                        credentials:"omit", signal:ac.signal,
                        headers:{ "Content-Type":"text/plain;charset=UTF-8" } });
     return true;
@@ -234,6 +249,7 @@ window.addEventListener("message", async function(ev){
       say("answered " + result.status);
     } else if (m.cmd === "reach"){
       /* the diagnostic's own question: is the host there at all */
+      log("reachability probe (marked probe:true — it is not a question)");
       result = { reachable: await probe(String(m.url || ""), m.timeout || 8000) };
     } else if (m.cmd === "clear"){
       el.textContent = ""; say("idle"); result = { cleared:true };

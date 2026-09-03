@@ -1030,9 +1030,15 @@ them all — editable in place, with how often each has been asked for.
 ### Asking with a file, and answers with code
 
 The Ask box takes **more than one line** (Enter sends, Shift+Enter breaks) and
-**attachments** — up to five files, 4 MB each, images, PDFs and text. Drop them
-on the panel, paste a screenshot straight in, or use the clip. They go to your
-endpoint as base64 with the question, and nowhere else.
+**attachments** — drop them on the panel, paste a screenshot straight in, or
+use the clip. They go to your endpoint as base64 with the question, and
+nowhere else.
+
+Images are **shrunk before they go**, because base64 is a third larger than
+the file it encodes and an untouched 4 MB screenshot becomes 5.2 MB of JSON —
+enough to fail a request that the same question typed out would survive. An
+11 MB test image came out at 163 KB. Limits after shrinking: five files, 2 MB
+each, 3.5 MB for one question; the composer shows the running total.
 
 Answers come back with their line breaks intact. A fenced block becomes a code
 panel with its language and a copy button; `backticks` become inline code.
@@ -1373,13 +1379,15 @@ drive the real files in a real browser (Playwright + Chromium), because the
 things that break here are things a unit test cannot see: a stale iframe cache,
 a CSP refusal, a file one folder away from where a manifest says.
 
-The nine exercised for the current release — `teach`, `talk2`, `pick`,
-`flowval`, `flowe2e`, `flowui`, `flowmore`, `chatui`, `memui` — report **326
-passing assertions and no failures**, covering the local assistant, teaching,
+The eleven exercised for the current release — `teach`, `talk2`, `pick`,
+`flowval`, `flowe2e`, `flowui`, `flowmore`, `chatui`, `memui`, `probe`,
+`shrink` — report **361 passing assertions and no failures**, covering the local assistant, teaching,
 selectors, the reply validator, the whole network path in a real browser
 against an endpoint that misbehaves the way real ones do, the Setup panel, all
-42 actions, the docked layout down to where each masthead tab lands, and the
-memory round trip: taught in one conversation, recalled in another.
+42 actions, the docked layout down to where each masthead tab lands, the
+memory round trip (taught in one conversation, recalled in another), and —
+counted against a server that records every request — exactly how many times
+the endpoint is called and how large each call is.
 Nine suites covering the local model were deleted with it.
 
 Measured, and stated honestly:

@@ -171,9 +171,23 @@ inventing a method. And when someone explains how something is done, return
 ### Attachments
 
 `attachments` carries what the person clipped to the question — a screenshot
-of an error, a page of a specification, a log. Up to five files, 4 MB each,
-images / PDF / text only. `data` is base64 **without** the `data:` prefix, so
-it can go straight into an AI action's image or document input.
+of an error, a page of a specification, a log. `data` is base64 **without**
+the `data:` prefix, so it can go straight into an AI action's image or
+document input.
+
+Images are shrunk in the browser first — 1600px on the longest edge,
+re-encoded, dropping further if still large — because base64 is a third
+bigger than the file it encodes and an untouched screenshot will fail a
+request that the same question typed out would survive. Limits after
+shrinking: five files, 2 MB each, 3.5 MB for one question.
+
+### The probe
+
+A second, tiny request may follow a failed one, with `"probe": true` in its
+body. It is Dossier telling a blocked host apart from a missing CORS header —
+both of which reach the browser as the same error. It **only ever follows a
+failure**, so the request before it is the real one. Answer it with a 200 and
+stop; see `POWER-AUTOMATE.md` §4.
 
 **How much goes** is set in the panel and reported in `workspace.scope`:
 

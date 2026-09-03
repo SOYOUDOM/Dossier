@@ -1414,6 +1414,7 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
 .chclip .cf button{border:0;background:none;color:var(--ink-3);cursor:pointer;font-size:11px;
   padding:2px 3px;border-radius:3px}
 .chclip .cf button:hover{color:var(--p1);background:var(--paper-3)}
+.chclip .cftot{align-self:center;font-size:10px;color:var(--ink-3);font-family:var(--f-mono)}
 /* the same chips, under a question you have already sent */
 .chb.you .cfs{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
 .chb.you .cfs span{font-size:10px;color:var(--ink-3);font-family:var(--f-mono)}
@@ -3186,10 +3187,15 @@ const STRINGS = {
      lang/*.xml, which is exactly what the fallback is for. */
   DontShowThisAgain: "Don\u2019t show this again",
   AttachAFile: "Attach a file \u2014 a screenshot, a PDF, a log",
-  AttachTooBig: "{name} is {size} \u2014 too big to send. The limit is 4 MB a file.",
+  AttachTooBig: "{name} is {size} \u2014 too big to send. The limit is {max} a file.",
+  AttachStillTooBig: "{name} is still {size} after shrinking. Send a smaller one.",
+  AttachOverBudget: "That would take this question over {max} of attachments. Remove one first.",
+  AttachShrunk: "Shrunk from {from} to {to} before sending",
+  AttachTotal: "{size} of files with this question",
   AttachTooMany: "Five files at a time is the limit.",
   AttachUnsupported: "{name} is a {type}. Attach an image, a PDF, or a text file.",
   AttachNeedsFlow: "Files are sent to your Power Automate endpoint, and there is not one switched on \u2014 so those were left behind. Turn it on in Menu \u2192 Setup.",
+  FlowHadFiles: "This question carried {n} file(s), about {size} once encoded. If the same question works without them, the size is what your flow is refusing \u2014 its run history will say so.",
   MemoryHead: "What you have taught it",
   MemoryHint: "Notes you asked the assistant to keep \u2014 how something is done, what caused something, what to check next time. They live in dossier.json in this folder, they go with every question you ask, and they come back in any conversation. Tell it \u201cremember that\u2026\u201d in the Ask box to add one.",
   MemoryEmpty: "Nothing taught yet. Explain how you fixed something and say \u201cremember that\u201d.",
@@ -6079,9 +6085,29 @@ function dr(label, sub, list){
    records. Each carries its own running context, so "what is left on it" in
    one thread cannot pick up the record you were discussing in another. */
 const CHAT = { acts:{}, code:{}, files:[], n:0, last:"" };
-/* Power Automate is happy with a few megabytes in a request body and
-   miserable beyond it, and a phone photograph is four on its own. */
-const CHAT_FILE_MAX = 4 * 1024 * 1024, CHAT_FILES_MAX = 5;
+/* ── how big a question is allowed to get ──────────────────────────────────
+   Base64 is a third bigger than the file it encodes, so a 4 MB screenshot
+   arrives at the endpoint as 5.2 MB of JSON, and five of them as 27 MB. A
+   Power Automate request trigger will not thank you for either. That was the
+   first version of this and it was wrong — questions with a screenshot on
+   them simply stopped working, while the same question typed out came back
+   fine, which is a maddening thing to debug from the outside.
+
+   So images are shrunk here, before they go, and there is a budget for the
+   whole question rather than a limit per file. A screenshot of an error
+   dialog does not need four megabytes to be readable; it needs about eighty
+   kilobytes. */
+const CHAT_FILES_MAX = 5;
+/* Tried in order until one fits: longest edge, then JPEG quality. A
+   screenshot of a dialog is done at the first rung; a photograph of a screen
+   taken on a phone might take three. The last rung is the floor — whatever
+   it produces is what goes, because something legible is better than a
+   question that silently fails. */
+const CHAT_STEPS = [[1600, 0.85], [1280, 0.78], [1000, 0.7], [800, 0.6]];
+const CHAT_WANT = 700 * 1024;      /* aim for this much base64 or less */
+const CHAT_ONE_MAX = 2 * 1024 * 1024;   /* one file, after shrinking */
+const CHAT_ALL_MAX = 3.5 * 1024 * 1024; /* everything on one question */
+const CHAT_READ_MAX = 25 * 1024 * 1024; /* refuse to even open one bigger */
 const CHAT_MAX_THREADS = 30, CHAT_MAX_MSGS = 80;
 
 function chatApi(convo){
@@ -6756,6 +6782,10 @@ function flowContext(){
 
 async function flowAsk(q, thread){
   const cfg = flowCfg();
+  /* remembered before the tray is emptied, so a failure can say whether the
+     size of the question was likely to be the reason for it */
+  const sentFiles = CHAT.files.length;
+  const sentBytes = Math.round(chatSentBytes() * 3 / 4);
   const log = $("chatLog");
   const wait = document.createElement("div");
   wait.className = "chb bot";
@@ -6777,10 +6807,14 @@ async function flowAsk(q, thread){
       try { r = DossierChat.ask(q, chatApi(thread ? thread.convo : {})); }
       catch(e2){ r = { say:L("ChatBroke", { msg:String(e2 && e2.message || e2) }) }; }
       if (thread && r.context) thread.convo = r.context;
-      r.note = L("FlowFellBack") + " " + String(err.message || err);
+      r.note = L("FlowFellBack") + " " + String(err.message || err) +
+               (sentFiles ? "\n\n" + L("FlowHadFiles", { n:sentFiles, size:bytes(sentBytes) }) : "");
       return chatBot(r, q);
     }
-    return chatBot({ say:L("FlowFailed"), note:String(err.message || err),
+    return chatBot({ say:L("FlowFailed"),
+                     note:String(err.message || err) + (sentFiles
+                       ? "\n\n" + L("FlowHadFiles", { n:sentFiles, size:bytes(sentBytes) })
+                       : ""),
                      chips:[{ label:L("FlowTest"), act:{ kind:"panel", panel:"setup" } }] }, q);
   }
 
@@ -12209,34 +12243,101 @@ function chatFileIcon(t){
   if (/^image\//.test(t)) return "\u25a3";
   return CHAT_KIND[t] || "\u2261";
 }
+function chatSentBytes(){
+  return CHAT.files.reduce((n, f) => n + (f.data || "").length, 0);
+}
 function chatFileOk(f){
   if (CHAT.files.length >= CHAT_FILES_MAX){ toast(L("AttachTooMany"), { bad:true }); return false; }
-  if (f.size > CHAT_FILE_MAX){
-    toast(L("AttachTooBig", { name:f.name, size:bytes(f.size) }), { bad:true }); return false;
-  }
   const t = f.type || "";
   if (!/^image\//.test(t) && t !== "application/pdf" && !/^text\//.test(t) &&
       !/(json|xml|csv)$/.test(t) && !/\.(txt|log|csv|json|xml)$/i.test(f.name)){
     toast(L("AttachUnsupported", { name:f.name, type:t || "file" }), { bad:true }); return false;
   }
+  /* an image this big is still worth taking, because it is about to be shrunk
+     to a fraction of itself; anything else is refused before it is read */
+  const room = /^image\//.test(t) ? CHAT_READ_MAX : CHAT_ONE_MAX;
+  if (f.size > room){
+    toast(L("AttachTooBig", { name:f.name, size:bytes(f.size),
+                              max:bytes(room) }), { bad:true });
+    return false;
+  }
   return true;
 }
-function chatAttach(files){
-  Array.prototype.forEach.call(files || [], f => {
-    if (!chatFileOk(f)) return;
-    const r = new FileReader();
-    r.onload = () => {
-      const url = String(r.result || "");
-      CHAT.files.push({ name:f.name, type:f.type || "application/octet-stream",
-                        size:f.size, url:url,
-                        /* the endpoint gets the bytes without the data: prefix,
-                           which is what every prompt action expects */
-                        data:url.slice(url.indexOf(",") + 1) });
-      renderChatFiles();
+
+/* A screenshot straight off a 4K display is mostly pixels nobody will read.
+   Redrawn at 1600px and re-encoded it stays perfectly legible and costs a
+   twentieth as much — and if that ever comes out bigger than the original,
+   the original is kept instead. */
+function chatShrinkImage(file){
+  return new Promise(resolve => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      let best = null;
+      try {
+        for (const [edge, q] of CHAT_STEPS){
+          const scale = Math.min(1, edge / Math.max(img.width, img.height));
+          const w = Math.max(1, Math.round(img.width * scale));
+          const h = Math.max(1, Math.round(img.height * scale));
+          const c = document.createElement("canvas");
+          c.width = w; c.height = h;
+          const x = c.getContext("2d");
+          /* a white ground, so a transparent PNG does not turn into a black
+             rectangle when it becomes a JPEG */
+          x.fillStyle = "#fff"; x.fillRect(0, 0, w, h);
+          x.drawImage(img, 0, 0, w, h);
+          const out = c.toDataURL("image/jpeg", q);
+          const b64 = out.length - out.indexOf(",") - 1;
+          best = { url:out, type:"image/jpeg", size:Math.round(b64 * 3 / 4),
+                   w:w, h:h, q:q };
+          if (b64 <= CHAT_WANT) break;
+        }
+      } catch(e){ best = null; }
+      URL.revokeObjectURL(url);
+      /* a small PNG re-encoded as JPEG can come out larger; keep the original */
+      resolve(best && best.size < file.size ? best : null);
     };
-    r.onerror = () => toast("Could not read " + f.name, { bad:true });
-    r.readAsDataURL(f);
+    img.onerror = () => { URL.revokeObjectURL(url); resolve(null); };
+    img.src = url;
   });
+}
+
+function chatReadAsUrl(file){
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(String(r.result || ""));
+    r.onerror = () => reject(new Error("unreadable"));
+    r.readAsDataURL(file);
+  });
+}
+
+async function chatAttach(files){
+  for (const f of Array.prototype.slice.call(files || [])){
+    if (!chatFileOk(f)) continue;
+    let url = "", type = f.type || "application/octet-stream", size = f.size, from = 0;
+    try {
+      const small = /^image\//.test(type) ? await chatShrinkImage(f) : null;
+      if (small){ url = small.url; type = small.type; from = f.size; size = small.size; }
+      else url = await chatReadAsUrl(f);
+    } catch(e){ toast("Could not read " + f.name, { bad:true }); continue; }
+
+    const data = url.slice(url.indexOf(",") + 1);
+    if (data.length > CHAT_ONE_MAX){
+      toast(L("AttachStillTooBig", { name:f.name, size:bytes(data.length * 3 / 4) }),
+            { bad:true });
+      continue;
+    }
+    if (chatSentBytes() + data.length > CHAT_ALL_MAX){
+      toast(L("AttachOverBudget", { max:bytes(CHAT_ALL_MAX * 3 / 4) }), { bad:true });
+      continue;
+    }
+    CHAT.files.push({ name:f.name, type:type, size:size, from:from, url:url,
+                      /* the endpoint gets the bytes without the data: prefix,
+                         which is what every prompt action expects */
+                      data:data });
+    renderChatFiles();
+  }
+  renderChatFiles();
 }
 function renderChatFiles(){
   const box = $("chatFiles");
@@ -12246,8 +12347,16 @@ function renderChatFiles(){
       (/^image\//.test(f.type) ? '<img src="' + esc(f.url) + '" alt="">'
                               : '<span class="ic">' + chatFileIcon(f.type) + "</span>") +
       '<span class="nm">' + esc(f.name) + "</span>" +
-      '<span class="sz">' + bytes(f.size) + "</span>" +
-      '<button data-unclip="' + i + '" title="Remove">\u2715</button></span>').join("");
+      '<span class="sz"' + (f.from ? ' title="' + esc(L("AttachShrunk",
+          { from:bytes(f.from), to:bytes(f.size) })) + '"' : "") + ">" +
+        bytes(f.size) + (f.from ? " \u2193" : "") + "</span>" +
+      '<button data-unclip="' + i + '" title="Remove">\u2715</button></span>').join("") +
+    /* the number that actually matters, because it is the one the endpoint
+       has to swallow, and it is not the number on the files */
+    (CHAT.files.length
+      ? '<span class="cftot">' + esc(L("AttachTotal",
+          { size:bytes(chatSentBytes() * 3 / 4) })) + "</span>"
+      : "");
   box.querySelectorAll("[data-unclip]").forEach(b => {
     b.onclick = () => { CHAT.files.splice(+b.dataset.unclip, 1); renderChatFiles(); };
   });
