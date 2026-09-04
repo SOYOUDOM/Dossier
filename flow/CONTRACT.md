@@ -263,6 +263,27 @@ something and gain nothing: an ISO instant where a date was wanted becomes its
 day, `"urgent, imaging"` becomes a two-item list, `"yes"` becomes `true`, and
 `"DONE"` matches `done`.
 
+### The application's own settings
+
+`workspace.settings` carries `themes` (what `setTheme` accepts), `canSet`
+(every key `setSetting` accepts, and what each one takes) and `now` (what they
+are at the moment). The list is built in the app, so it cannot drift from what
+the app will actually take.
+
+**`settings.flow` is deliberately not in it.** A flow that could rewrite the
+endpoint URL could point Dossier at a different address, and nothing
+downstream would notice. `memory`, `chatLearn`, `hushed`, `chatUI` and
+`palettes` are excluded too — the first two have their own actions with their
+own confirmations, and a generic setter would walk straight past them.
+
+### Email
+
+`draftEmail` writes a message and shows it as a draft with **Copy** and **Open
+in my mail app**. Nothing is sent: Dossier has no way to send mail and should
+not grow one, since that would be a second thing in the application allowed to
+reach the outside, for a job a mail client already does. It counts as a read —
+it changes nothing, so it is not confirmed.
+
 **Two actions delete something** — `deleteRecord` and `deleteRoutine` — and
 both are confirmed like every other write, both are undone by `Ctrl`+`Z`, and
 `deleteRecord` leaves the record's folder and documents on disk. Everything
@@ -274,7 +295,7 @@ answer than deleting, and keeps the history.
 ## 6. The action reference
 
 Generated from `flow.js`. `ref` means a record code (`D-0004`), a ticket
-number, or an id. **42 actions — 12 that read, 30 that write.**
+number, or an id. **45 actions — 13 that read, 32 that write.**
 
 ### Actions that only read
 
@@ -385,6 +406,18 @@ Open the chase sheet for everything that is due a chase.
 | argument | shape | required |
 |---|---|---|
 | *(none)* | | |
+
+#### `draftEmail`
+
+Write an email and show it as a draft they can copy or open in their mail app. Nothing is sent — Dossier cannot send mail and does not try. Put the whole message in body, with real line breaks. Use this for a chase, a hand-over, an incident summary, anything they ask you to write to somebody.
+
+| argument | shape | required |
+|---|---|---|
+| `to` | string | no |
+| `cc` | string | no |
+| `subject` | string | **yes** |
+| `body` | text | **yes** |
+| `record` | ref | no |
 
 #### `recall`
 
@@ -705,6 +738,23 @@ Delete a note from memory, by its title.
 | argument | shape | required |
 |---|---|---|
 | `title` | string | **yes** |
+
+#### `setTheme`
+
+Change the application's theme. The names are in workspace.settings.themes.
+
+| argument | shape | required |
+|---|---|---|
+| `theme` | string | **yes** |
+
+#### `setSetting`
+
+Change one setting. The keys you may use are listed in workspace.settings.canSet, with what each one takes. Anything else is refused — in particular nothing here can reach the endpoint URL.
+
+| argument | shape | required |
+|---|---|---|
+| `key` | string | **yes** |
+| `value` | string | **yes** |
 
 #### `notify`
 

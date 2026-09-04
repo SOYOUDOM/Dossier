@@ -98,6 +98,14 @@ const ACTIONS = {
   chaseSheet: { write:false, needs:[], args:{},
     what:"Open the chase sheet for everything that is due a chase." },
 
+  draftEmail: { write:false, needs:["subject","body"],
+    args:{ to:STR, cc:STR, subject:STR, body:TXT, record:REF },
+    what:"Write an email and show it as a draft they can copy or open in " +
+         "their mail app. Nothing is sent — Dossier cannot send mail and does " +
+         "not try. Put the whole message in body, with real line breaks. Use " +
+         "this for a chase, a hand-over, an incident summary, anything they " +
+         "ask you to write to somebody." },
+
   recall: { write:false, needs:[], args:{ about:STR, tag:STR, system:STR },
     what:"Read back what you were taught. Every note is already in " +
          "workspace.memory, so use this to SHOW one to the person, not to " +
@@ -221,6 +229,15 @@ const ACTIONS = {
 
   forget: { write:true, needs:["title"], args:{ title:STR },
     what:"Delete a note from memory, by its title." },
+
+  setTheme: { write:true, needs:["theme"], args:{ theme:STR },
+    what:"Change the application's theme. The names are in " +
+         "workspace.settings.themes." },
+
+  setSetting: { write:true, needs:["key","value"], args:{ key:STR, value:STR },
+    what:"Change one setting. The keys you may use are listed in " +
+         "workspace.settings.canSet, with what each one takes. Anything else " +
+         "is refused — in particular nothing here can reach the endpoint URL." },
 
   notify: { write:true, needs:["on"], args:{ on:BOOL },
     what:"Turn Windows reminders on or off." },
@@ -507,6 +524,10 @@ function buildRequest(text, ctx, cfg){
       holidays: ctx.holidays || [],
       holidaysTotal: ctx.holidaysTotal || 0,
       policy: ctx.policy || {},
+      /* what setTheme and setSetting are allowed to touch, listed rather
+         than guessed at — and the list is built in the app, so it can never
+         drift from what the app will actually accept */
+      settings: ctx.settable || {},
       /* What the person has taught this workspace. It travels with every
          question rather than being fetched, because a note nobody looked up
          is a note nobody wrote — and the whole point of writing one is that

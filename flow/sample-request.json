@@ -1,12 +1,12 @@
 {
   "dossier": 1,
   "protocol": "1.1",
-  "askedAt": "2026-09-03T15:54:39.311Z",
-  "today": "2026-09-03",
-  "weekday": "Thursday",
+  "askedAt": "2026-09-04T06:21:37.792Z",
+  "today": "2026-09-04",
+  "weekday": "Friday",
   "calendar": {
-    "tomorrow": "2026-09-04",
-    "nextWorkingDay": "2026-09-04",
+    "tomorrow": "2026-09-05",
+    "nextWorkingDay": "2026-09-07",
     "todayIsOffDay": false,
     "thisMonday": "2026-08-31",
     "weekendDays": [
@@ -146,7 +146,7 @@
         ],
         "autoRun": true,
         "raisesRecord": true,
-        "nextDue": "2026-09-03",
+        "nextDue": "2026-09-04",
         "lastRaised": "2026-08-30"
       },
       {
@@ -251,6 +251,47 @@
       },
       "chaseAfterDays": 3,
       "blockingSetsStatus": true
+    },
+    "settings": {
+      "themes": [
+        "Archive",
+        "Vault"
+      ],
+      "canSet": {
+        "owner": "Your name, used in reports and hand-overs (text)",
+        "remind": "Windows reminders on or off (yes/no)",
+        "lead": "Minutes of warning before something is due (number, 0–240)",
+        "remindOverdue": "Nag once a day about late work (yes/no)",
+        "remindWait": "Days before something sitting with somebody is due a chase (number, 1–60)",
+        "autoBlock": "Adding a hold moves a record to Blocked by itself (yes/no)",
+        "rememberFilters": "Restore the filter rail between sessions (yes/no)",
+        "calMode": "Whether the Week tab shows a week or a month (week | month)",
+        "rootPath": "The workspace's full Windows path, for the runner (text)",
+        "runner": "Send scripts to the runner rather than copying the command (yes/no)",
+        "sla.on": "Set a target date from the priority when a record is raised (yes/no)",
+        "sla.P1": "Hours from raising a P1 to its target date (number, 0–2000)",
+        "sla.P2": "Hours for a P2 (number, 0–2000)",
+        "sla.P3": "Hours for a P3 (number, 0–2000)",
+        "sla.P4": "Hours for a P4 (number, 0–2000)"
+      },
+      "now": {
+        "theme": "archive",
+        "owner": "",
+        "remind": false,
+        "lead": 15,
+        "remindOverdue": true,
+        "remindWait": 3,
+        "autoBlock": true,
+        "rememberFilters": true,
+        "calMode": "week",
+        "rootPath": "",
+        "runner": true,
+        "sla.on": true,
+        "sla.P1": 4,
+        "sla.P2": 24,
+        "sla.P3": 48,
+        "sla.P4": 120
+      }
     },
     "memory": [
       {
@@ -486,6 +527,22 @@
       "what": "Open the chase sheet for everything that is due a chase.",
       "needs": [],
       "args": {}
+    },
+    {
+      "do": "draftEmail",
+      "write": false,
+      "what": "Write an email and show it as a draft they can copy or open in their mail app. Nothing is sent — Dossier cannot send mail and does not try. Put the whole message in body, with real line breaks. Use this for a chase, a hand-over, an incident summary, anything they ask you to write to somebody.",
+      "needs": [
+        "subject",
+        "body"
+      ],
+      "args": {
+        "to": "string",
+        "cc": "string",
+        "subject": "string",
+        "body": "text",
+        "record": "ref"
+      }
     },
     {
       "do": "recall",
@@ -898,6 +955,30 @@
       ],
       "args": {
         "title": "string"
+      }
+    },
+    {
+      "do": "setTheme",
+      "write": true,
+      "what": "Change the application's theme. The names are in workspace.settings.themes.",
+      "needs": [
+        "theme"
+      ],
+      "args": {
+        "theme": "string"
+      }
+    },
+    {
+      "do": "setSetting",
+      "write": true,
+      "what": "Change one setting. The keys you may use are listed in workspace.settings.canSet, with what each one takes. Anything else is refused — in particular nothing here can reach the endpoint URL.",
+      "needs": [
+        "key",
+        "value"
+      ],
+      "args": {
+        "key": "string",
+        "value": "string"
       }
     },
     {

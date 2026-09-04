@@ -1347,6 +1347,29 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
 .chat.fx-typing .chwait b i:nth-child(3){animation-delay:.3s}
 @keyframes chDot{0%,100%{opacity:.25;transform:translateY(0)}50%{opacity:1;transform:translateY(-3px)}}
 
+/* ── an email draft ────────────────────────────────────────────────────── */
+.chmail{border:1px solid var(--ch-line);border-radius:var(--r-sm);overflow:hidden;
+  background:var(--ch-panel);margin-top:8px}
+.chmail .mh{display:flex;align-items:center;gap:8px;padding:7px 11px;
+  border-bottom:1px solid var(--ch-line);background:var(--ch-bg)}
+.chmail .tag{font-size:9.5px;letter-spacing:.09em;text-transform:uppercase;
+  font-weight:700;color:var(--ch-acc)}
+.chmail .rc{font-family:var(--f-mono);font-size:9.5px;color:var(--ch-dim);
+  border:1px solid var(--ch-line);border-radius:999px;padding:1px 7px}
+.chmail .mr{display:grid;grid-template-columns:58px minmax(0,1fr);gap:8px;
+  padding:5px 11px;font-size:11.5px;border-bottom:1px solid var(--ch-line)}
+.chmail .mr .k{color:var(--ch-dim);text-transform:uppercase;font-size:9.5px;
+  letter-spacing:.07em;padding-top:2px}
+.chmail .mr .v{color:var(--ch-ink);word-break:break-word}
+.chmail .mb{padding:11px;font-size:12.5px;line-height:1.6;white-space:pre-wrap;
+  word-break:break-word;color:var(--ch-ink);max-height:300px;overflow-y:auto}
+.chmail .mf{display:flex;gap:7px;padding:9px 11px;border-top:1px solid var(--ch-line);
+  background:var(--ch-bg)}
+.chmail .mf button{border:1px solid var(--ch-line);background:var(--ch-panel);
+  color:var(--ch-ink);border-radius:999px;padding:5px 12px;font-size:11px;font-weight:600;
+  cursor:pointer;font-family:var(--f-ui);transition:.15s var(--ease)}
+.chmail .mf button:hover{border-color:var(--ch-acc);color:var(--ch-acc)}
+
 /* ── what happened, after a dialogue is answered ───────────────────────── */
 .chrcpt{display:flex;align-items:flex-start;gap:8px;font-size:11.5px;color:var(--ch-dim);
   padding:7px 10px;border:1px solid var(--ch-line);border-radius:999px;
@@ -3477,6 +3500,14 @@ const STRINGS = {
      Every one of these is new, so the language files do not carry them yet.
      They fall back to the English here until somebody adds them to
      lang/*.xml, which is exactly what the fallback is for. */
+  MailDraft: "Draft email",
+  MailTo: "To",
+  MailCc: "Cc",
+  MailSubject: "Subject",
+  MailOpen: "Open in my mail app",
+  MailLong: "That message is too long for a mailto link \u2014 copy it instead.",
+  MailNoClient: "No mail app answered. Copy it instead.",
+
   ChatLook: "Look and behaviour",
   ChatSkin: "Skin",
   ChatMotion: "Motion",
@@ -6810,6 +6841,71 @@ function chatDeclineAsked(){
   chatAskNext();
 }
 
+/* ── an email, written but not sent ───────────────────────────────────────
+   Dossier has no way to send mail and should not grow one — it would be the
+   second thing in the application allowed to reach the outside, for a job a
+   mail client already does. So it writes the message, shows it, and gives
+   you the two ways out: the clipboard, or your own mail app. */
+function chatDraft(d){
+  const log = $("chatLog"); if (!log) return;
+  const wrap = document.createElement("div");
+  wrap.className = "chb bot";
+  const box = document.createElement("div");
+  box.className = "chmail";
+
+  const head = document.createElement("div");
+  head.className = "mh";
+  head.innerHTML = '<span class="tag">' + esc(L("MailDraft")) + "</span>" +
+    (d.code ? '<span class="rc">' + esc(d.code) + "</span>" : "");
+  box.appendChild(head);
+
+  const rows = [[L("MailTo"), d.to], [L("MailCc"), d.cc], [L("MailSubject"), d.subject]];
+  rows.forEach(([k, v]) => {
+    if (!v) return;
+    const r = document.createElement("div");
+    r.className = "mr";
+    const a = document.createElement("span"); a.className = "k"; a.textContent = k;
+    const b = document.createElement("span"); b.className = "v"; b.textContent = v;
+    r.appendChild(a); r.appendChild(b); box.appendChild(r);
+  });
+
+  const body = document.createElement("div");
+  body.className = "mb";
+  body.textContent = d.body || "";
+  box.appendChild(body);
+
+  const foot = document.createElement("div");
+  foot.className = "mf";
+  const full = (d.subject ? d.subject + "\n\n" : "") + (d.body || "");
+  const cp = document.createElement("button");
+  cp.textContent = L("Copy");
+  cp.onclick = () => {
+    copyText(full, L("Copied"));
+    cp.textContent = L("Copied");
+    setTimeout(() => { cp.textContent = L("Copy"); }, 1500);
+  };
+  const open = document.createElement("button");
+  open.textContent = L("MailOpen");
+  open.onclick = () => {
+    /* mailto is a navigation, not a fetch — the policy in the head forbids
+       the second and says nothing about the first */
+    const q = [];
+    if (d.cc) q.push("cc=" + encodeURIComponent(d.cc));
+    if (d.subject) q.push("subject=" + encodeURIComponent(d.subject));
+    if (d.body) q.push("body=" + encodeURIComponent(d.body));
+    const url = "mailto:" + encodeURIComponent(d.to || "") +
+                (q.length ? "?" + q.join("&") : "");
+    if (url.length > 1900) toast(L("MailLong"), { bad:true });
+    try { window.location.href = url; } catch(e){ toast(L("MailNoClient"), { bad:true }); }
+  };
+  foot.appendChild(cp); foot.appendChild(open);
+  box.appendChild(foot);
+
+  wrap.appendChild(box);
+  log.appendChild(wrap);
+  chatScroll();
+}
+
 function chatReceiptEl(text, declined, replaying){
   const log = $("chatLog"); if (!log) return null;
   const d = document.createElement("div");
@@ -7231,6 +7327,7 @@ function flowContext(){
     holidaysTotal: holidays().length,
     memory: memoryForFlow(),
     memoryTotal: memoryStore().length,
+    settable: flowSettable(),
     attachments: (CHAT.files || []).map(f => ({
       name:f.name, type:f.type, size:f.size, data:f.data })),
     /* the rules the app applies by itself, so an endpoint does not propose
@@ -7479,6 +7576,13 @@ function flowDescribe(a){
                note:n ? String(n.body).slice(0, 200) : "",
                confirm:"Forget it?" };
     }
+    case "setTheme":
+      return { say:"Change the theme to " + g.theme, confirm:"Change it?" };
+    case "setSetting":
+      return { say:"Set " + g.key + " to " + g.value,
+               note:(function(){ const was = flowGetSetting(String(g.key).trim());
+                 return was === undefined ? "" : "It is " + JSON.stringify(was) + " now."; })(),
+               confirm:"Change that setting?" };
     case "deleteRecord": {
       const t = findByRef(g.record);
       return { say:"Delete " + ref(),
@@ -7586,6 +7690,15 @@ function flowRun(a, quiet){
     }
 
     case "chaseSheet": closeChat(); openChase(); return null;
+
+    case "draftEmail": {
+      /* Dossier cannot send mail and does not pretend to. It writes the
+         thing, puts it on screen, and lets you take it from there. */
+      const t = g.record ? findByRef(g.record) : null;
+      chatDraft({ to:g.to || "", cc:g.cc || "", subject:g.subject,
+                  body:g.body, code:t ? t.code : "" });
+      return { say:"" };
+    }
 
     case "recall": {
       const want = String(g.about || "").toLowerCase();
@@ -7920,6 +8033,25 @@ function flowRun(a, quiet){
       deleteTasks([t.id]);
       return { say:code + " is gone. Ctrl+Z brings it back." };
     }
+    case "setTheme": {
+      const want = String(g.theme).toLowerCase().trim();
+      const p2 = allPalettes().find(x => String(x.id).toLowerCase() === want)
+              || allPalettes().find(x => String(x.name || "").toLowerCase() === want)
+              || allPalettes().find(x => String(x.name || "").toLowerCase().indexOf(want) >= 0);
+      if (!p2) return flowNeed(a, "there is no theme called \u201c" + g.theme + "\u201d. " +
+        "You have: " + allPalettes().map(x => x.name || x.id).join(", "));
+      pushUndo("theme");
+      applyTheme(p2.id); touch(); renderAll();
+      return done("The theme is " + (p2.name || p2.id) + " now.");
+    }
+    case "setSetting": {
+      const r = flowSetSetting(String(g.key).trim(), g.value);
+      if (r.bad) return flowNeed(a, r.bad);
+      pushUndo("setting");
+      buildModel(); touch(); renderAll();
+      applyFeel && applyFeel();
+      return done(g.key + " is now " + JSON.stringify(r.value) + ".");
+    }
     case "notify":
       return chatDo({ kind:"notify", on:!!g.on, __ok:true });
     case "undo":
@@ -7980,6 +8112,82 @@ function memoryForFlow(){
     tags: (n.tags || []).slice(), system: n.system || "",
     updated: String(n.updated || "").slice(0, 10)
   }));
+}
+
+/* ── what an endpoint is allowed to change about the application ─────────
+   A whitelist rather than a filter, and written out so the endpoint can be
+   told exactly what exists. Two things are deliberately NOT in it:
+
+     settings.flow   — the endpoint URL. A flow that could rewrite the
+                       address Dossier posts to could point it at itself
+                       somewhere else, and nothing downstream would notice.
+     memory, chatLearn, hushed — those have their own actions, with their
+                       own confirmations, and a generic setter would slip
+                       past them.                                          */
+const FLOW_SET = {
+  owner:          { type:"text",   what:"Your name, used in reports and hand-overs" },
+  remind:         { type:"yes/no", what:"Windows reminders on or off" },
+  lead:           { type:"number", what:"Minutes of warning before something is due",
+                    min:0, max:240 },
+  remindOverdue:  { type:"yes/no", what:"Nag once a day about late work" },
+  remindWait:     { type:"number", what:"Days before something sitting with somebody is due a chase",
+                    min:1, max:60 },
+  autoBlock:      { type:"yes/no", what:"Adding a hold moves a record to Blocked by itself" },
+  rememberFilters:{ type:"yes/no", what:"Restore the filter rail between sessions" },
+  calMode:        { type:"week | month", what:"Whether the Week tab shows a week or a month" },
+  rootPath:       { type:"text",   what:"The workspace's full Windows path, for the runner" },
+  runner:         { type:"yes/no", what:"Send scripts to the runner rather than copying the command" },
+  "sla.on":       { type:"yes/no", what:"Set a target date from the priority when a record is raised" },
+  "sla.P1":       { type:"number", what:"Hours from raising a P1 to its target date", min:0, max:2000 },
+  "sla.P2":       { type:"number", what:"Hours for a P2", min:0, max:2000 },
+  "sla.P3":       { type:"number", what:"Hours for a P3", min:0, max:2000 },
+  "sla.P4":       { type:"number", what:"Hours for a P4", min:0, max:2000 }
+};
+
+function flowSettable(){
+  const out = { themes: allPalettes().map(p => p.name || p.id), canSet: {} };
+  for (const k in FLOW_SET){
+    const d = FLOW_SET[k];
+    out.canSet[k] = d.what + " (" + d.type +
+      (d.min != null ? ", " + d.min + "–" + d.max : "") + ")";
+  }
+  out.now = { theme:S.settings.theme || "archive" };
+  Object.keys(FLOW_SET).forEach(k => { out.now[k] = flowGetSetting(k); });
+  return out;
+}
+function flowGetSetting(k){
+  const st = S.settings;
+  if (k.indexOf("sla.") === 0) return (st.sla || {})[k.slice(4)];
+  return st[k];
+}
+/* one value, coerced to the shape the setting actually is */
+function flowSetSetting(k, raw){
+  const d = FLOW_SET[k];
+  if (!d) return { bad:"“" + k + "” is not a setting Dossier will change from here. " +
+                        "It accepts: " + Object.keys(FLOW_SET).join(", ") };
+  const st = S.settings;
+  let v = raw;
+  if (d.type === "yes/no"){
+    const t = String(raw).toLowerCase();
+    if (["true","yes","on","1"].indexOf(t) >= 0) v = true;
+    else if (["false","no","off","0"].indexOf(t) >= 0) v = false;
+    else return { bad:k + " is on or off, and “" + raw + "” is neither." };
+  } else if (d.type === "number"){
+    v = Math.round(Number(raw));
+    if (!isFinite(v)) return { bad:k + " is a number, and “" + raw + "” is not." };
+    v = Math.max(d.min, Math.min(d.max, v));
+  } else if (d.type === "week | month"){
+    const t = String(raw).toLowerCase();
+    if (t !== "week" && t !== "month") return { bad:k + " is week or month." };
+    v = t;
+  } else {
+    v = String(raw).slice(0, 300);
+  }
+  if (k.indexOf("sla.") === 0){
+    st.sla = st.sla || {};
+    st.sla[k.slice(4)] = v;
+  } else st[k] = v;
+  return { value:v };
 }
 
 /* one routine, by id or by title, the way a person would name it */

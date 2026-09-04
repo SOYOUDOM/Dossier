@@ -1026,10 +1026,17 @@ you in full and waits for a yes** — the same gate the local assistant's write
 actions have always used, and it holds whether the action arrived as a
 proposal or as a button.
 
-42 actions, 12 read-only and 30 that write — records, checklists, time,
-waiting and chasing, blocking, tags, scripts, routines, holidays, memory, and
-the vocabulary itself. Three of them delete (a record, a routine, a note); all
-confirm like everything else and all are undone by `Ctrl`+`Z`.
+45 actions, 13 read-only and 32 that write — records, checklists, time,
+waiting and chasing, blocking, tags, scripts, routines, holidays, memory, the
+application's own settings, and the vocabulary itself. Three of them delete (a
+record, a routine, a note); all confirm like everything else and all are undone
+by `Ctrl`+`Z`.
+
+**Asking before acting is itself a setting.** *Menu → Setup → Assistant* has a
+switch for it. Leave it on and every write is shown to you and waits; turn it
+off and writes run the moment they arrive. The switch is yours — nothing that
+comes back over the wire can move it, and the endpoint URL cannot be written
+by any action at all (see *Settings the assistant may change*, below).
 
 ### Memory — teaching it a method
 
@@ -1065,6 +1072,62 @@ Nothing else in a reply is interpreted — it is not a markdown renderer and
 should not become one, because every feature added to it is another way for
 text from outside to put markup on your page.
 
+### Settings the assistant may change
+
+`setTheme` and `setSetting` let you say *"switch to the dark theme"*, *"start
+my week on Sunday"*, or *"chase after two days instead of three"* and have it
+happen, instead of hunting through the menu for the switch.
+
+Both write, so both confirm unless you have turned confirmation off. Every
+request carries `workspace.settings`, which lists the current theme, the theme
+names available, and `canSet` — the keys the assistant is allowed to touch,
+generated from the running code so the list in the request is the list the app
+will actually honour:
+
+| Key | What it is |
+|---|---|
+| `theme` | The application theme. |
+| `week` | Which day a week starts on. |
+| `dateFormat`, `timeFormat` | How dates and times are written. |
+| `lang` | Interface language. |
+| `chaseAfterDays` | Days waiting before something is worth chasing. |
+| `targetDates.on`, `targetDates.hoursFromRaising` | Whether target dates are set, and how far out. |
+| `holidayRule` | What a routine does when it lands on a holiday. |
+| `autoRun` | Whether routines may raise themselves. |
+| `confirmActions` | Whether writes wait for a yes. |
+| `denseRows`, `showWeekends`, `calendarStart` | Layout and calendar. |
+
+**The list is a boundary, not a convenience.** Four things are kept off it on
+purpose:
+
+- **`settings.flow` — the endpoint URL.** A flow that could rewrite the address
+  Dossier posts to could point it somewhere else of its own choosing, and
+  nothing downstream would notice. It is a credential — see *Switching it on*,
+  below — so no action reaches it. This holds *even with confirmation turned
+  off*: the refusal is in the executor, not in the dialogue.
+- **`memory`, `chatLearn`** — taught notes and taught vocabulary have their own
+  actions (`remember`, `forget`, `teach`), which show you the text.
+- **`hushed`** — the notices you have silenced are yours to un-silence.
+- **`palettes`, `chatUI`** — structured objects, not single values; the panels
+  edit them.
+
+Anything else asked for comes back as a plain refusal naming the key, and the
+setting is untouched.
+
+### Email it writes for you
+
+`draftEmail` writes the mail and hands it to you. *"Draft a chase to the vendor
+about INC-4471"* comes back as a card with TO, CC, SUBJECT and the body,
+already written in the register you would use, with **Copy** and **Open in my
+mail app** underneath. The second opens your own mail client with the fields
+filled in.
+
+**Nothing is sent.** Dossier has no mail credentials, no outbound connection
+and no CSP permission to make one, and it does not pretend otherwise — the
+draft is text until you send it yourself. That is also why `draftEmail` counts
+as a read and does not sit behind a confirmation: writing you a draft changes
+nothing in the workspace.
+
 ### What it refuses
 
 Nothing coming back is trusted — which matters the moment your flow's prompt
@@ -1090,7 +1153,7 @@ that way it reports the missing header **by name** instead of guessing.
 with anything real. **Show the relay** puts the frame on screen with a
 timestamped transcript, with the URL's signature masked so it is safe to paste.
 
-### Settings
+### Switching it on — `settings.flow`
 
 Stored in `settings.flow`:
 
@@ -1398,15 +1461,18 @@ drive the real files in a real browser (Playwright + Chromium), because the
 things that break here are things a unit test cannot see: a stale iframe cache,
 a CSP refusal, a file one folder away from where a manifest says.
 
-The eleven exercised for the current release — `teach`, `talk2`, `pick`,
+The thirteen exercised for the current release — `teach`, `talk2`, `pick`,
 `flowval`, `flowe2e`, `flowui`, `flowmore`, `chatui`, `memui`, `probe`,
-`shrink`, `chatfx` — report **405 passing assertions and no failures**, covering the local assistant, teaching,
-selectors, the reply validator, the whole network path in a real browser
-against an endpoint that misbehaves the way real ones do, the Setup panel, all
-42 actions, the docked layout down to where each masthead tab lands, the
-memory round trip (taught in one conversation, recalled in another), and —
-counted against a server that records every request — exactly how many times
-the endpoint is called and how large each call is.
+`shrink`, `chatfx`, `settings` — report **433 passing assertions and no
+failures**, covering the local assistant, teaching, selectors, the reply
+validator, the whole network path in a real browser against an endpoint that
+misbehaves the way real ones do, the Setup panel, all 45 actions, the docked
+layout down to where each masthead tab lands, the memory round trip (taught in
+one conversation, recalled in another), the chat skins and motion switches, the
+settings whitelist — including that an endpoint asking to rewrite its own URL
+is refused *with confirmation turned off* — and, counted against a server that
+records every request, exactly how many times the endpoint is called and how
+large each call is.
 Nine suites covering the local model were deleted with it.
 
 Measured, and stated honestly:
