@@ -539,6 +539,7 @@
       "args": {
         "to": "string",
         "cc": "string",
+        "bcc": "string",
         "subject": "string",
         "body": "text",
         "record": "ref"

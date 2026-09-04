@@ -99,7 +99,7 @@ const ACTIONS = {
     what:"Open the chase sheet for everything that is due a chase." },
 
   draftEmail: { write:false, needs:["subject","body"],
-    args:{ to:STR, cc:STR, subject:STR, body:TXT, record:REF },
+    args:{ to:STR, cc:STR, bcc:STR, subject:STR, body:TXT, record:REF },
     what:"Write an email and show it as a draft they can copy or open in " +
          "their mail app. Nothing is sent — Dossier cannot send mail and does " +
          "not try. Put the whole message in body, with real line breaks. Use " +

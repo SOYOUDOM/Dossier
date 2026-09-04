@@ -1120,7 +1120,12 @@ setting is untouched.
 about INC-4471"* comes back as a card with TO, CC, SUBJECT and the body,
 already written in the register you would use, with **Copy** and **Open in my
 mail app** underneath. The second opens your own mail client with the fields
-filled in.
+filled in; the first puts the headers and the body on the clipboard together.
+
+TO, CC and BCC are shown even when they are empty — a draft with no recipient
+is the normal case, because you are the one who knows who it goes to, and a
+line that silently is not there reads as a bug rather than as a blank to fill
+in.
 
 **Nothing is sent.** Dossier has no mail credentials, no outbound connection
 and no CSP permission to make one, and it does not pretend otherwise — the
@@ -1461,10 +1466,10 @@ drive the real files in a real browser (Playwright + Chromium), because the
 things that break here are things a unit test cannot see: a stale iframe cache,
 a CSP refusal, a file one folder away from where a manifest says.
 
-The thirteen exercised for the current release — `teach`, `talk2`, `pick`,
+The fourteen exercised for the current release — `teach`, `talk2`, `pick`,
 `flowval`, `flowe2e`, `flowui`, `flowmore`, `chatui`, `memui`, `probe`,
-`shrink`, `chatfx`, `settings` — report **433 passing assertions and no
-failures**, covering the local assistant, teaching, selectors, the reply
+`shrink`, `chatfx`, `settings`, `mend` — report **461 passing assertions and
+no failures**, covering the local assistant, teaching, selectors, the reply
 validator, the whole network path in a real browser against an endpoint that
 misbehaves the way real ones do, the Setup panel, all 45 actions, the docked
 layout down to where each masthead tab lands, the memory round trip (taught in
@@ -1473,6 +1478,12 @@ settings whitelist — including that an endpoint asking to rewrite its own URL
 is refused *with confirmation turned off* — and, counted against a server that
 records every request, exactly how many times the endpoint is called and how
 large each call is.
+
+Several of those assertions now measure **geometry, not just content**. An
+email body once rendered its text correctly into a box 25 pixels square at
+zero opacity — every text assertion passed while nothing was readable on
+screen. Where an element has to be *seen*, the suite measures its height and
+its opacity.
 Nine suites covering the local model were deleted with it.
 
 Measured, and stated honestly:

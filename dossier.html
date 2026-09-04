@@ -1361,8 +1361,13 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
 .chmail .mr .k{color:var(--ch-dim);text-transform:uppercase;font-size:9.5px;
   letter-spacing:.07em;padding-top:2px}
 .chmail .mr .v{color:var(--ch-ink);word-break:break-word}
-.chmail .mb{padding:11px;font-size:12.5px;line-height:1.6;white-space:pre-wrap;
-  word-break:break-word;color:var(--ch-ink);max-height:300px;overflow-y:auto}
+/* NOT .mb — that is the row menu button up in the list styles, 25x25 and
+   opacity:0 until its row is hovered. A body div wearing that class is
+   invisible and clipped to a 25px square, which is exactly what it did. */
+.chmail .mbody{padding:11px;font-size:12.5px;line-height:1.6;white-space:pre-wrap;
+  word-break:break-word;color:var(--ch-ink);max-height:300px;overflow-y:auto;
+  border-top:1px solid var(--ch-line)}
+.chmail .mr .v.none{color:var(--ch-dim);font-style:italic}
 .chmail .mf{display:flex;gap:7px;padding:9px 11px;border-top:1px solid var(--ch-line);
   background:var(--ch-bg)}
 .chmail .mf button{border:1px solid var(--ch-line);background:var(--ch-panel);
@@ -3503,6 +3508,8 @@ const STRINGS = {
   MailDraft: "Draft email",
   MailTo: "To",
   MailCc: "Cc",
+  MailBcc: "Bcc",
+  MailBlank: "\u2014",
   MailSubject: "Subject",
   MailOpen: "Open in my mail app",
   MailLong: "That message is too long for a mailto link \u2014 copy it instead.",
@@ -6859,24 +6866,34 @@ function chatDraft(d){
     (d.code ? '<span class="rc">' + esc(d.code) + "</span>" : "");
   box.appendChild(head);
 
-  const rows = [[L("MailTo"), d.to], [L("MailCc"), d.cc], [L("MailSubject"), d.subject]];
+  /* every line is shown even when it is empty. A draft with no recipient is
+     the normal case — you are the one who knows who it goes to — and a row
+     that silently is not there reads as a bug, not as a blank to fill in. */
+  const rows = [[L("MailTo"), d.to], [L("MailCc"), d.cc],
+                [L("MailBcc"), d.bcc], [L("MailSubject"), d.subject]];
   rows.forEach(([k, v]) => {
-    if (!v) return;
     const r = document.createElement("div");
     r.className = "mr";
     const a = document.createElement("span"); a.className = "k"; a.textContent = k;
-    const b = document.createElement("span"); b.className = "v"; b.textContent = v;
+    const b = document.createElement("span");
+    b.className = "v" + (v ? "" : " none");
+    b.textContent = v || L("MailBlank");
     r.appendChild(a); r.appendChild(b); box.appendChild(r);
   });
 
   const body = document.createElement("div");
-  body.className = "mb";
+  body.className = "mbody";
   body.textContent = d.body || "";
   box.appendChild(body);
 
   const foot = document.createElement("div");
   foot.className = "mf";
-  const full = (d.subject ? d.subject + "\n\n" : "") + (d.body || "");
+  /* what you paste should be the whole thing, headers included */
+  const full = [d.to  ? L("MailTo")  + ": " + d.to  : "",
+                d.cc  ? L("MailCc")  + ": " + d.cc  : "",
+                d.bcc ? L("MailBcc") + ": " + d.bcc : "",
+                d.subject ? L("MailSubject") + ": " + d.subject : ""]
+               .filter(Boolean).join("\n") + "\n\n" + (d.body || "");
   const cp = document.createElement("button");
   cp.textContent = L("Copy");
   cp.onclick = () => {
@@ -6891,6 +6908,7 @@ function chatDraft(d){
        the second and says nothing about the first */
     const q = [];
     if (d.cc) q.push("cc=" + encodeURIComponent(d.cc));
+    if (d.bcc) q.push("bcc=" + encodeURIComponent(d.bcc));
     if (d.subject) q.push("subject=" + encodeURIComponent(d.subject));
     if (d.body) q.push("body=" + encodeURIComponent(d.body));
     const url = "mailto:" + encodeURIComponent(d.to || "") +
@@ -7059,8 +7077,69 @@ function chatRenderYou(text, files){
    is escaped. Nothing else is interpreted — this is not a markdown renderer
    and should not become one, because every feature added to it is another
    way for text from outside to put markup on the page. */
+/* Languages a model actually names when it labels a block. Used only to
+   recognise code that arrived without its fence — see chatMend. */
+const CHAT_LANGS = ["csharp","cs","c#","js","javascript","jsx","ts","typescript",
+  "python","py","sql","tsql","powershell","ps","ps1","bash","sh","shell","cmd","bat",
+  "json","xml","html","css","yaml","yml","ini","toml","java","go","golang","rust",
+  "php","ruby","rb","vb","vbnet","vba","kql","kusto","dax","r","swift","kotlin",
+  "perl","graphql","dockerfile","makefile","diff","regex","text","plaintext"];
+
+/* a line that reads like a sentence rather than like code */
+function chatIsProse(t){
+  const l = String(t || "").trim();
+  if (l.length < 12) return false;
+  if (/[;{}=]$/.test(l) || /^[<#\/]/.test(l)) return false;
+  return /^[A-Z]/.test(l) && /\s/.test(l) && /[.!?:]$/.test(l);
+}
+/* enough of these lines carry code punctuation or indentation to be code */
+function chatLooksCode(t){
+  const l = String(t || "").split("\n").filter(x => x.trim());
+  if (l.length < 2) return false;
+  const hits = l.filter(x =>
+    /[;{}()\[\]=]/.test(x) || /^\s+\S/.test(x) ||
+    /^\s*(using|import|from|def|class|function|func|var|let|const|public|private|static|return|select|insert|update|param|echo|print|#include|\$|<)/i.test(x));
+  return hits.length >= Math.ceil(l.length / 2);
+}
+
+/* Models are told to fence their code and mostly do. When one does not, the
+   answer should still arrive in a code panel — the person asking for a C#
+   program did nothing wrong. Two repairs, both conservative:
+
+     a fence opened and never closed  → close it at the end
+     a bare language name on its own
+     line above something that reads
+     like code                        → fence it
+
+   Anything that does not clearly look like code is left as prose. Getting
+   this wrong in that direction only costs a panel; the other way it would
+   swallow a sentence. */
+function chatMend(src){
+  let s = String(src);
+  const ticks = (s.match(/```/g) || []).length;
+  if (ticks % 2) s += "\n```";
+  if (ticks) return s;
+
+  const lines = s.split("\n");
+  for (let i = 0; i < lines.length; i++){
+    const tok = lines[i].trim().toLowerCase();
+    if (!tok || CHAT_LANGS.indexOf(tok) < 0) continue;
+    if (i && lines[i - 1].trim()) continue;      /* must open a paragraph */
+    let end = lines.length;
+    for (let j = i + 1; j < lines.length - 1; j++){
+      if (lines[j].trim()) continue;
+      if (chatIsProse(lines[j + 1])){ end = j; break; }
+    }
+    if (end <= i + 1) continue;
+    if (!chatLooksCode(lines.slice(i + 1, end).join("\n"))) continue;
+    lines[i] = "```" + lines[i].trim();
+    lines.splice(end, 0, "```");
+    return lines.join("\n");
+  }
+  return s;
+}
 function chatSay(text){
-  const src = String(text == null ? "" : text);
+  const src = chatMend(text == null ? "" : text);
   if (!src) return "";
   let out = "", i = 0;
   const fence = /```([A-Za-z0-9_+-]*)\r?\n?([\s\S]*?)```/g;
@@ -7695,8 +7774,8 @@ function flowRun(a, quiet){
       /* Dossier cannot send mail and does not pretend to. It writes the
          thing, puts it on screen, and lets you take it from there. */
       const t = g.record ? findByRef(g.record) : null;
-      chatDraft({ to:g.to || "", cc:g.cc || "", subject:g.subject,
-                  body:g.body, code:t ? t.code : "" });
+      chatDraft({ to:g.to || "", cc:g.cc || "", bcc:g.bcc || "",
+                  subject:g.subject, body:g.body, code:t ? t.code : "" });
       return { say:"" };
     }
 

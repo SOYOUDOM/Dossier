@@ -415,6 +415,7 @@ Write an email and show it as a draft they can copy or open in their mail app. N
 |---|---|---|
 | `to` | string | no |
 | `cc` | string | no |
+| `bcc` | string | no |
 | `subject` | string | **yes** |
 | `body` | text | **yes** |
 | `record` | ref | no |
