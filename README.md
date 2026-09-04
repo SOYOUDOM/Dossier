@@ -214,6 +214,7 @@ adds `D-0099` without touching `seq` will not cause a collision.
 | `chatLearn` | object | — | Everything you have taught the assistant. See [§10.8](#108-teaching-it). |
 | `flow` | `{on, url, scope, deep, cap, timeout, fallback}` | `{on:false,…}` | The Power Automate endpoint. See [§12](#12-asking-through-a-power-automate-flow). |
 | `hushed` | array of string | `[]` | Keys of the Day-sheet notices you have silenced. Cleared from **Setup → Hidden notices**. |
+| `chatUI` | `{skin, confirm, every, reveal, glow, grid, pulse, typing, chips, ambient}` | all on, `aurora`, ask-first | How the assistant panel looks and behaves. Set from **◎** in the chat header. |
 | `memory` | array of `{id, title, body, tags, system, created, updated, uses, lastUsed}` | `[]` | What you have taught the assistant: how something is done, what caused something, what to check next time. See [§12](#12-asking-through-a-power-automate-flow). |
 
 ### 5.3 `tasks` — a record
@@ -364,6 +365,24 @@ Switch with **1**–**7**, or by clicking the tab.
 Buttons inside an answer **resolve when you press them**: the ones you did not
 choose fold away and the one you did stays with a tick, so a long thread reads
 as a record of what you did rather than a wall of things you might.
+
+**Anything that changes a record is asked in a dialogue over the thread, not
+printed into it.** You answer, it goes, and a single line stays behind saying
+what happened — with an Undo on it. Two actions become two dialogues, one after
+the other, numbered.
+
+The **◎** in the chat header opens *Look and behaviour*, all of it remembered
+in `dossier.json`:
+
+| | |
+|---|---|
+| **Skin** | Aurora · Carbon · Ember · Paper. Every surface in the panel takes its colour from the skin, not from the app theme. |
+| **Motion** | Seven switches — answers arriving, edge light, the living background, the orb pulse, thinking dots, springy buttons, and a passing light on an interval you set. Each one genuinely unhooks its animation. |
+| **Ask before doing anything** | On by default: everything is put to you first. Off: it does what you ask straight away and the line says *done without asking*. `Ctrl`+`Z` still undoes it either way. |
+
+A machine that has asked for reduced motion gets all of it off the first time
+the panel is opened; after that the choice is yours. None of this touches the
+rest of the app — the record sheet stays still while you read it.
 
 ### 6.4 Keyboard
 
@@ -1381,7 +1400,7 @@ a CSP refusal, a file one folder away from where a manifest says.
 
 The eleven exercised for the current release — `teach`, `talk2`, `pick`,
 `flowval`, `flowe2e`, `flowui`, `flowmore`, `chatui`, `memui`, `probe`,
-`shrink` — report **364 passing assertions and no failures**, covering the local assistant, teaching,
+`shrink`, `chatfx` — report **405 passing assertions and no failures**, covering the local assistant, teaching,
 selectors, the reply validator, the whole network path in a real browser
 against an endpoint that misbehaves the way real ones do, the Setup panel, all
 42 actions, the docked layout down to where each masthead tab lands, the

@@ -1247,6 +1247,262 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
   transform:translateX(102%);pointer-events:none;visibility:hidden;overflow:hidden;
   transition:transform .24s var(--ease),visibility 0s .28s}
 .chat.on{pointer-events:auto;visibility:visible;transform:none;transition-delay:0s}
+/* ═══ THE ASSISTANT PANEL ════════════════════════════════════════════════
+   Everything from here to the composer is the chat tab and only the chat
+   tab. The rest of Dossier is deliberately quiet — a record sheet should
+   not move while you read it — so all of this is scoped under .chat and
+   cannot leak into a view.
+
+   Three skins, and every animation behind its own class. Nothing here is
+   decoration for its own sake: the glow marks where the keyboard is, the
+   sweep says the panel is alive and waiting, the reveal gives an answer a
+   direction to arrive from. Any of it can be switched off, and if the
+   machine says prefers-reduced-motion the first time it is asked, all of
+   it starts off. */
+
+/* ── the skins ─────────────────────────────────────────────────────────── */
+.chat{ --ch-bg:var(--paper); --ch-panel:var(--paper-2); --ch-line:var(--rule);
+  --ch-ink:var(--ink); --ch-dim:var(--ink-3); --ch-acc:var(--accent);
+  --ch-acc2:var(--teal); --ch-glow:rgba(139,30,63,.30); --ch-mesh:rgba(139,30,63,.05) }
+.chat[data-skin="aurora"]{ --ch-acc:#7C5CFF; --ch-acc2:#22D3EE;
+  --ch-glow:rgba(124,92,255,.34); --ch-mesh:rgba(124,92,255,.07) }
+.chat[data-skin="carbon"]{ --ch-bg:#0E1116; --ch-panel:#151A21; --ch-line:#232B35;
+  --ch-ink:#E6EDF3; --ch-dim:#7D8896; --ch-acc:#38BDF8; --ch-acc2:#34D399;
+  --ch-glow:rgba(56,189,248,.30); --ch-mesh:rgba(56,189,248,.07) }
+.chat[data-skin="ember"]{ --ch-acc:#FB7185; --ch-acc2:#FBBF24;
+  --ch-glow:rgba(251,113,133,.32); --ch-mesh:rgba(251,113,133,.07) }
+
+.chat{background:var(--ch-bg);color:var(--ch-ink);border-left-color:var(--ch-line)}
+.chat.fx-glow{box-shadow:-22px 0 60px rgba(0,0,0,.22),
+  inset 1px 0 0 var(--ch-line), inset 2px 0 22px -14px var(--ch-glow)}
+
+/* the hairline down the leading edge, which is the whole of the "futuristic"
+   idea: one lit line, not a light show */
+.chat::before{content:"";position:absolute;left:0;top:0;bottom:0;width:1px;z-index:5;
+  background:linear-gradient(180deg,transparent,var(--ch-acc) 18%,var(--ch-acc2) 52%,transparent 92%);
+  opacity:0;transition:opacity .4s var(--ease);pointer-events:none}
+.chat.fx-glow::before{opacity:.85}
+
+/* ── the animated ground ───────────────────────────────────────────────── */
+.chfx{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:0}
+.chgrid,.chaur,.chsweep{position:absolute;inset:0;opacity:0}
+.chgrid{background-image:linear-gradient(var(--ch-mesh) 1px,transparent 1px),
+  linear-gradient(90deg,var(--ch-mesh) 1px,transparent 1px);background-size:34px 34px}
+.chat.fx-grid .chgrid{opacity:1;animation:chDrift 26s linear infinite}
+@keyframes chDrift{from{background-position:0 0,0 0}to{background-position:34px 34px,34px 34px}}
+.chaur{background:
+  radial-gradient(58% 42% at 78% 6%,var(--ch-glow),transparent 70%),
+  radial-gradient(48% 36% at 8% 96%,var(--ch-glow),transparent 72%);filter:blur(6px)}
+.chat.fx-grid .chaur{opacity:.5;animation:chBreathe 14s ease-in-out infinite}
+@keyframes chBreathe{0%,100%{opacity:.34;transform:scale(1)}50%{opacity:.62;transform:scale(1.07)}}
+
+/* the interval animation: a light crosses the panel every so often, on a
+   period you set. It is the one thing here that happens without you. */
+.chsweep{background:linear-gradient(115deg,transparent 42%,var(--ch-glow) 50%,transparent 58%)}
+.chat.fx-ambient .chsweep{opacity:1;animation:chSweep var(--ch-every,12s) ease-in-out infinite}
+@keyframes chSweep{
+  0%,72%{transform:translate3d(-115%,0,0);opacity:0}
+  76%{opacity:.85}
+  96%,100%{transform:translate3d(115%,0,0);opacity:0}}
+
+.chh,.chbody,.chfw{position:relative;z-index:1}
+
+/* ── the orb ───────────────────────────────────────────────────────────── */
+.chorb{width:26px;height:26px;border-radius:50%;flex:0 0 auto;position:relative;
+  display:grid;place-items:center;align-self:center;
+  background:radial-gradient(circle at 34% 30%,var(--ch-acc2),var(--ch-acc) 68%);
+  box-shadow:0 0 0 1px var(--ch-line)}
+.chorb i{width:7px;height:7px;border-radius:50%;background:#fff;opacity:.92;
+  box-shadow:0 0 8px rgba(255,255,255,.85)}
+.chat.fx-glow .chorb{box-shadow:0 0 0 1px var(--ch-line),0 0 16px -2px var(--ch-glow)}
+.chat.fx-pulse .chorb::after{content:"";position:absolute;inset:-4px;border-radius:50%;
+  border:1px solid var(--ch-acc);animation:chPing 2.6s ease-out infinite}
+@keyframes chPing{0%{transform:scale(.86);opacity:.7}70%,100%{transform:scale(1.5);opacity:0}}
+.chat.busy .chorb i{animation:chThink .9s ease-in-out infinite alternate}
+@keyframes chThink{from{transform:scale(.6);opacity:.5}to{transform:scale(1.15);opacity:1}}
+
+.chid{display:flex;flex-direction:column;flex:1;min-width:0;line-height:1.25}
+.chh .t{font-family:var(--f-display);font-size:13px;font-weight:600;letter-spacing:.03em}
+.chh .sub{font-size:10px;color:var(--ch-dim);overflow:hidden;text-overflow:ellipsis;
+  white-space:nowrap}
+
+/* ── messages ──────────────────────────────────────────────────────────── */
+.chat.fx-reveal .chb{animation:chIn .34s cubic-bezier(.2,.8,.25,1) both}
+.chat:not(.fx-reveal) .chb{animation:none}
+@keyframes chIn{from{opacity:0;transform:translateY(10px) scale(.985);filter:blur(3px)}
+  to{opacity:1;transform:none;filter:none}}
+.chat .chb.you{background:linear-gradient(135deg,var(--ch-acc),var(--ch-acc2));
+  color:#fff;border:0;border-radius:14px 14px 4px 14px;padding:9px 12px;
+  box-shadow:0 6px 18px -8px var(--ch-glow)}
+.chat .chb.bot .say{color:var(--ch-ink)}
+.chat .chb.bot{padding-left:11px;border-left:2px solid transparent;
+  border-image:linear-gradient(180deg,var(--ch-acc),transparent) 1}
+
+/* the thinking line, while an endpoint is deciding */
+.chwait{display:flex;align-items:center;gap:8px;color:var(--ch-dim);font-size:11.5px}
+.chwait b{display:flex;gap:4px}
+.chwait b i{width:5px;height:5px;border-radius:50%;background:var(--ch-acc);opacity:.4}
+.chat.fx-typing .chwait b i{animation:chDot 1.1s ease-in-out infinite}
+.chat.fx-typing .chwait b i:nth-child(2){animation-delay:.15s}
+.chat.fx-typing .chwait b i:nth-child(3){animation-delay:.3s}
+@keyframes chDot{0%,100%{opacity:.25;transform:translateY(0)}50%{opacity:1;transform:translateY(-3px)}}
+
+/* ── what happened, after a dialogue is answered ───────────────────────── */
+.chrcpt{display:flex;align-items:flex-start;gap:8px;font-size:11.5px;color:var(--ch-dim);
+  padding:7px 10px;border:1px solid var(--ch-line);border-radius:999px;
+  background:var(--ch-panel);align-self:flex-start;max-width:100%}
+.chat.fx-reveal .chrcpt{animation:chIn .3s cubic-bezier(.2,.8,.25,1) both}
+.chrcpt i{font-style:normal;font-weight:700;color:var(--ch-acc2);flex:0 0 auto}
+.chrcpt.no i{color:var(--ch-dim)}
+.chrcpt span{min-width:0;word-break:break-word}
+.chrcpt button{border:0;background:none;color:var(--ch-acc);cursor:pointer;font-size:10.5px;
+  font-weight:600;font-family:var(--f-ui);padding:0 2px;flex:0 0 auto;text-decoration:underline}
+
+/* ── the confirmation dialogue ─────────────────────────────────────────── */
+.chask2{position:absolute;inset:0;z-index:8;display:grid;place-items:center;padding:18px;
+  background:rgba(10,12,16,.42);backdrop-filter:blur(3px);
+  opacity:0;pointer-events:none;visibility:hidden;transition:opacity .18s var(--ease),visibility 0s .2s}
+.chask2.on{opacity:1;pointer-events:auto;visibility:visible;transition-delay:0s}
+/* .dlg and not .ck — .ck is already the checklist item, and inheriting its
+   display:flex laid this card's rows out side by side, one character wide */
+.chask2 .dlg{display:block;width:100%;max-width:340px;background:var(--ch-bg);
+  color:var(--ch-ink);border:1px solid var(--ch-line);border-radius:var(--r);overflow:hidden;
+  box-shadow:0 24px 60px -18px rgba(0,0,0,.5),0 0 0 1px var(--ch-glow);
+  transform:translateY(10px) scale(.97);transition:transform .22s cubic-bezier(.2,.8,.25,1)}
+.chask2.on .dlg{transform:none}
+.chask2 .dlgh{display:flex;align-items:center;gap:8px;padding:11px 14px;
+  border-bottom:1px solid var(--ch-line);background:var(--ch-panel)}
+.chask2 .dlgn{font-family:var(--f-mono);font-size:9.5px;color:var(--ch-dim);
+  border:1px solid var(--ch-line);border-radius:999px;padding:1px 7px;flex:0 0 auto}
+.chask2 .dlgn:empty{display:none}
+.chask2 .dlgt{font-size:12px;font-weight:600;min-width:0}
+.chask2 .dlgb{display:block;padding:14px;font-size:13px;line-height:1.55;white-space:pre-wrap;
+  word-break:break-word;max-height:34vh;overflow-y:auto}
+.chask2 .dlgw{display:block;padding:0 14px 12px;font-size:11px;color:var(--ch-dim);
+  line-height:1.55;white-space:pre-wrap;word-break:break-word}
+.chask2 .dlgw:empty{display:none}
+.chask2 .dlgf{display:flex;gap:8px;justify-content:flex-end;padding:11px 14px;
+  border-top:1px solid var(--ch-line);background:var(--ch-panel)}
+.chask2 .btn.pri{background:var(--ch-acc);border-color:var(--ch-acc);color:#fff}
+.chask2 .btn.pri:hover{filter:brightness(1.08)}
+
+/* ── the look-and-behaviour sheet ──────────────────────────────────────── */
+.chfxp{position:absolute;left:0;right:0;top:0;bottom:0;z-index:9;background:var(--ch-bg);
+  display:flex;flex-direction:column;transform:translateY(-101%);
+  transition:transform .24s cubic-bezier(.2,.8,.25,1);visibility:hidden}
+.chfxp.on{transform:none;visibility:visible}
+.chfxb{flex:1;overflow-y:auto;padding:14px 15px}
+.chfxb h6{margin:16px 0 8px;font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--ch-dim);font-weight:600}
+.chfxb h6:first-child{margin-top:0}
+.chsw{display:flex;align-items:center;gap:10px;padding:8px 0;font-size:12px}
+.chsw .lb{flex:1;min-width:0}
+.chsw .lb small{display:block;font-size:10.5px;color:var(--ch-dim);line-height:1.5;margin-top:1px}
+.chsw input[type=range]{width:104px;flex:0 0 auto;accent-color:var(--ch-acc)}
+.chsw .val{font-family:var(--f-mono);font-size:10px;color:var(--ch-dim);width:28px;
+  text-align:right;flex:0 0 auto}
+/* the switch */
+.tgl{position:relative;width:38px;height:21px;flex:0 0 auto;border-radius:999px;border:0;
+  background:var(--ch-line);cursor:pointer;transition:background .18s var(--ease)}
+.tgl::after{content:"";position:absolute;top:2px;left:2px;width:17px;height:17px;
+  border-radius:50%;background:var(--ch-bg);box-shadow:0 1px 3px rgba(0,0,0,.3);
+  transition:transform .2s cubic-bezier(.2,.8,.25,1)}
+.tgl[aria-checked="true"]{background:var(--ch-acc)}
+.tgl[aria-checked="true"]::after{transform:translateX(17px)}
+.tgl:focus-visible{outline:2px solid var(--ch-acc);outline-offset:2px}
+.chskins{display:flex;gap:8px;flex-wrap:wrap}
+.chskin{border:1px solid var(--ch-line);background:var(--ch-panel);color:var(--ch-ink);
+  border-radius:var(--r-sm);padding:7px 11px;font-size:11.5px;font-weight:600;cursor:pointer;
+  display:flex;align-items:center;gap:7px;font-family:var(--f-ui);
+  transition:border-color .16s,transform .13s var(--ease)}
+.chskin:hover{transform:translateY(-1px)}
+.chskin .dot{width:13px;height:13px;border-radius:50%;flex:0 0 auto}
+.chskin.on{border-color:var(--ch-acc);box-shadow:0 0 0 1px var(--ch-acc)}
+
+/* ── everything inside the panel takes its colour from the skin ─────────
+   The first cut of this skinned the shell and left the parts alone, which
+   looked fine on a light skin and fell apart on Carbon: white chips on a
+   black panel, and `inline code` rendered white-on-white — invisible, and
+   only because it was still reading the application's palette instead of
+   this one. So every surface in here is bound to --ch-*, and a skin is a
+   real change of clothes rather than a change of border. */
+.chat .chside{background:var(--ch-panel);border-right-color:var(--ch-line)}
+.chat .chsi .n{color:var(--ch-ink)}
+.chat .chsi .d,.chat .chsh,.chat .chsi .x{color:var(--ch-dim)}
+.chat .chsi:hover,.chat .chsi.on{background:var(--ch-bg)}
+.chat .chsi.on{box-shadow:inset 2px 0 0 var(--ch-acc)}
+.chat .chh{border-bottom-color:var(--ch-line)}
+.chat .chh .ib{color:var(--ch-dim)}
+.chat .chh .ib:hover{color:var(--ch-acc);background:var(--ch-panel)}
+
+.chat .chfw{background:var(--ch-panel);border-top-color:var(--ch-line)}
+.chat .chf textarea{background:var(--ch-bg);border-color:var(--ch-line);color:var(--ch-ink)}
+.chat .chf textarea::placeholder{color:var(--ch-dim)}
+.chat .chf textarea:focus{border-color:var(--ch-acc)}
+.chat.fx-glow .chf textarea:focus{box-shadow:0 0 0 3px var(--ch-glow)}
+.chat .chpin{color:var(--ch-dim)}
+.chat .chpin:hover{color:var(--ch-acc)}
+.chat .chf .btn.pri{background:var(--ch-acc);border-color:var(--ch-acc);color:#fff}
+.chat .chf .btn.pri:hover{filter:brightness(1.1);background:var(--ch-acc)}
+
+.chat .chacts button{background:var(--ch-panel);border-color:var(--ch-line);color:var(--ch-ink)}
+.chat .chacts button:hover{border-color:var(--ch-acc);color:var(--ch-acc);
+  background:var(--ch-bg)}
+.chat.fx-glow .chacts button:hover{box-shadow:0 4px 16px -6px var(--ch-glow)}
+.chat .chacts button.pri{background:var(--ch-acc);border-color:var(--ch-acc);color:#fff}
+.chat .chacts button.pri:hover{color:#fff;filter:brightness(1.1)}
+.chat .chacts.done button.picked{background:var(--ch-panel);border-color:var(--ch-line);
+  color:var(--ch-dim)}
+.chat .chacts.done button.picked::before{color:var(--ch-acc2)}
+/* springy is a switch too — off means it still highlights, it just does not move */
+.chat:not(.fx-chips) .chacts button{transition:border-color .16s,color .16s,background .16s}
+.chat:not(.fx-chips) .chacts button:hover{transform:none;box-shadow:none}
+.chat:not(.fx-chips) .chacts button:active{transform:none}
+.chat:not(.fx-chips) .chseed button:hover{transform:none}
+.chat:not(.fx-chips) .chskin:hover{transform:none}
+
+.chat .chseed button{background:var(--ch-panel);border-color:var(--ch-line);color:var(--ch-dim)}
+.chat .chseed button:hover{border-color:var(--ch-acc);color:var(--ch-acc);background:var(--ch-bg)}
+
+.chat .chrow{border-color:var(--ch-line)}
+.chat .chrow:hover{background:var(--ch-panel)}
+.chat .chrow .c,.chat .chrow .x small{color:var(--ch-dim)}
+.chat .chrow .x b{color:var(--ch-ink)}
+
+.chat .chcode{border-color:var(--ch-line);background:var(--ch-panel)}
+.chat .chcode .cch{background:var(--ch-bg);border-bottom-color:var(--ch-line)}
+.chat .chcode .lang{color:var(--ch-dim)}
+.chat .chcode pre{color:var(--ch-ink)}
+.chat .chcode .cpy{background:var(--ch-panel);border-color:var(--ch-line);color:var(--ch-dim)}
+.chat .chcode .cpy:hover{border-color:var(--ch-acc);color:var(--ch-acc);background:var(--ch-bg)}
+.chat .chcode .cpy.ok{color:var(--ch-acc2);border-color:var(--ch-acc2)}
+/* the one that was invisible on a dark skin */
+.chat .chb.bot .say code.inl{background:var(--ch-panel);border-color:var(--ch-line);
+  color:var(--ch-ink)}
+
+.chat .chb.bot .note,.chat .chb.bot .meta,.chat .chb.bot .carry,
+.chat .chb.bot .hedge,.chat .chalt,.chat .chstep .sn{color:var(--ch-dim)}
+.chat .chb.bot .wrong button{color:var(--ch-dim)}
+.chat .chb.bot .wrong button:hover{color:var(--ch-acc)}
+.chat .chclip .cf{background:var(--ch-panel);border-color:var(--ch-line);color:var(--ch-dim)}
+.chat .chclip .cf button:hover{background:var(--ch-bg)}
+.chat .chclip .cftot{color:var(--ch-dim)}
+.chat .chl{scrollbar-color:var(--ch-line) transparent}
+
+/* the two sheets that slide over the thread */
+.chat .chteach,.chat .chfxp{background:var(--ch-bg);color:var(--ch-ink)}
+.chat .chth{background:var(--ch-panel);border-bottom-color:var(--ch-line)}
+.chat .chth .t{color:var(--ch-ink)}
+.chat .chtq input,.chat .chtb,.chat .chtf{border-color:var(--ch-line)}
+.chat .chfxb .btn{background:var(--ch-panel);border-color:var(--ch-line);color:var(--ch-ink)}
+
+/* Somebody who has asked their machine not to animate things has asked
+   everything, not just the parts that were convenient. */
+@media (prefers-reduced-motion:reduce){
+  .chat *,.chat *::before,.chat *::after{animation-duration:.01ms !important;
+    animation-iteration-count:1 !important;transition-duration:.01ms !important}
+}
+
 .chh{display:flex;align-items:baseline;gap:9px;padding:13px 15px;border-bottom:1px solid var(--rule);flex:0 0 auto}
 .chh .t{font-family:var(--f-display);font-size:13px;font-weight:600;letter-spacing:.03em}
 .chh .sub{font-size:10.5px;color:var(--ink-3);flex:1;min-width:0;overflow:hidden;
@@ -1646,10 +1902,19 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
 <!-- Ask the application about your own records. The reading is done by
      chat.js; this is the surface it talks through. -->
 <div class="chat" id="chat">
+  <!-- the animated ground the panel sits on; inert, and removed from the
+       accessibility tree because it is decoration and nothing else -->
+  <div class="chfx" aria-hidden="true">
+    <div class="chgrid"></div><div class="chaur"></div><div class="chsweep"></div>
+  </div>
   <div class="chh">
     <button class="ib" id="chatMenu" data-i18n-title="ChatConversations" title="Conversations">☰</button>
-    <span class="t" data-i18n="ChatTitle">Assistant</span>
-    <span class="sub" data-i18n="ChatSub">reads your records · nothing leaves this folder</span>
+    <span class="chorb" id="chatOrb" aria-hidden="true"><i></i></span>
+    <span class="chid">
+      <span class="t" data-i18n="ChatTitle">Assistant</span>
+      <span class="sub" id="chatState" data-i18n="ChatSub">reads your records · nothing leaves this folder</span>
+    </span>
+    <button class="ib" id="chatFx" data-i18n-title="ChatLook" title="Look and behaviour">◎</button>
     <button class="ib" id="chatTeachBtn" data-i18n-title="ChatTaughtBtn" title="What I have taught you">✎</button>
     <button class="ib" id="chatNew" data-i18n-title="ChatNew" title="New conversation">＋</button>
     <button class="ib" id="chatX">✕</button>
@@ -1671,6 +1936,33 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
                multiple hidden>
       </div>
     </div>
+  </div>
+
+  <!-- ── the confirmation ──────────────────────────────────────────────────
+       It used to be printed into the conversation and left there, so a
+       thread of six answers ended up as a wall of questions nobody had
+       answered and a wall of ones they had. It is a dialogue now: it comes
+       up over the thread, it is answered, it goes, and all that stays is a
+       single line saying what happened. -->
+  <div class="chask2" id="chatAsk" role="dialog" aria-modal="true" aria-hidden="true">
+    <div class="dlg">
+      <div class="dlgh"><span class="dlgn" id="chatAskN"></span>
+        <span class="dlgt" id="chatAskT"></span></div>
+      <div class="dlgb" id="chatAskB"></div>
+      <div class="dlgw" id="chatAskNote"></div>
+      <div class="dlgf">
+        <button class="btn" id="chatAskNo" data-i18n="ChatNo">No</button>
+        <button class="btn pri" id="chatAskYes" data-i18n="ChatYes">Yes, do it</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Look and behaviour. Every switch here is remembered in dossier.json,
+       so the panel comes back the way it was left. -->
+  <div class="chfxp" id="chatFxPanel" aria-hidden="true">
+    <div class="chth"><span class="t" data-i18n="ChatLook">Look and behaviour</span>
+      <button class="ib" id="chatFxX">✕</button></div>
+    <div class="chfxb" id="chatFxBody"></div>
   </div>
 
   <!-- Correcting it, and everything it has been taught. Whatever it learns is
@@ -3185,6 +3477,30 @@ const STRINGS = {
      Every one of these is new, so the language files do not carry them yet.
      They fall back to the English here until somebody adds them to
      lang/*.xml, which is exactly what the fallback is for. */
+  ChatLook: "Look and behaviour",
+  ChatSkin: "Skin",
+  ChatMotion: "Motion",
+  ChatDoing: "Doing things",
+  FxReveal: "Answers arrive",
+  FxRevealWhy: "Each message rises into place instead of appearing.",
+  FxGlow: "Edge light",
+  FxGlowWhy: "A lit hairline down the panel, and a glow where the keyboard is.",
+  FxGrid: "Living background",
+  FxGridWhy: "A drifting grid and a slow aurora behind the conversation.",
+  FxPulse: "Orb pulse",
+  FxPulseWhy: "The ring around the assistant breathes while it is idle.",
+  FxTyping: "Thinking dots",
+  FxTypingWhy: "Three dots while your endpoint is deciding.",
+  FxChips: "Springy buttons",
+  FxChipsWhy: "Buttons lift under the cursor and press in when clicked.",
+  FxAmbient: "Passing light",
+  FxAmbientWhy: "A light crosses the panel every so often.",
+  FxEvery: "How often",
+  FxConfirm: "Ask before doing anything",
+  FxConfirmOn: "On \u2014 anything that changes a record is put to you first.",
+  FxConfirmOff: "Off \u2014 it does what you ask straight away. Ctrl+Z still undoes it.",
+  FxRanDirect: "done without asking",
+
   DontShowThisAgain: "Don\u2019t show this again",
   AttachAFile: "Attach a file \u2014 a screenshot, a PDF, a log",
   AttachTooBig: "{name} is {size} \u2014 too big to send. The limit is {max} a file.",
@@ -6342,6 +6658,186 @@ function teachForgetAll(){
   toast(L("TaughtGone"));
 }
 
+/* ═══ THE ASSISTANT PANEL: LOOK, MOTION, AND WHO SAYS YES ═════════════════
+   Two separate things live here and they are worth keeping apart.
+
+   The first is decoration you control. Every animation is a class on the
+   panel and a switch in the sheet, because motion that cannot be turned off
+   is not a feature, it is something done to you. The first time this is
+   asked, a machine that has requested reduced motion gets all of it off.
+
+   The second is not decoration at all: whether a thing the endpoint asked
+   for happens after you agree, or happens because you asked the question.
+   That switch is off — meaning ask first — until you move it. */
+
+const CHAT_FX = ["reveal", "glow", "grid", "pulse", "ambient", "typing", "chips"];
+const CHAT_SKINS = [
+  { id:"aurora", name:"Aurora", a:"#7C5CFF", b:"#22D3EE" },
+  { id:"carbon", name:"Carbon", a:"#38BDF8", b:"#34D399" },
+  { id:"ember",  name:"Ember",  a:"#FB7185", b:"#FBBF24" },
+  { id:"paper",  name:"Paper",  a:"var(--accent)", b:"var(--teal)" }
+];
+
+function chatUI(){
+  const st = S.settings;
+  if (!st.chatUI || typeof st.chatUI !== "object"){
+    /* asked once, on the first run, and then it is yours */
+    let calm = false;
+    try { calm = window.matchMedia &&
+                 window.matchMedia("(prefers-reduced-motion: reduce)").matches; } catch(e){}
+    st.chatUI = { skin:"aurora", confirm:true, every:12 };
+    CHAT_FX.forEach(k => { st.chatUI[k] = !calm; });
+  }
+  return st.chatUI;
+}
+
+function applyChatUI(){
+  const el = $("chat"); if (!el) return;
+  const u = chatUI();
+  el.dataset.skin = CHAT_SKINS.some(x => x.id === u.skin) ? u.skin : "aurora";
+  CHAT_FX.forEach(k => el.classList.toggle("fx-" + k, !!u[k]));
+  el.style.setProperty("--ch-every", Math.max(4, Math.min(120, +u.every || 12)) + "s");
+}
+
+/* ── the sheet ─────────────────────────────────────────────────────────── */
+function renderChatFx(){
+  const box = $("chatFxBody"); if (!box) return;
+  const u = chatUI();
+  const sw = (key, name, why) =>
+    '<div class="chsw"><span class="lb">' + esc(name) +
+      (why ? "<small>" + esc(why) + "</small>" : "") + "</span>" +
+    '<button class="tgl" role="switch" data-fx="' + key + '" aria-checked="' +
+      (u[key] ? "true" : "false") + '" aria-label="' + esc(name) + '"></button></div>';
+
+  box.innerHTML =
+    "<h6>" + esc(L("ChatSkin")) + "</h6>" +
+    '<div class="chskins">' + CHAT_SKINS.map(k =>
+      '<button class="chskin' + (u.skin === k.id ? " on" : "") + '" data-skin="' + k.id + '">' +
+        '<span class="dot" style="background:linear-gradient(135deg,' + k.a + ',' + k.b + ')"></span>' +
+        esc(k.name) + "</button>").join("") + "</div>" +
+
+    "<h6>" + esc(L("ChatMotion")) + "</h6>" +
+    sw("reveal",  L("FxReveal"),  L("FxRevealWhy")) +
+    sw("glow",    L("FxGlow"),    L("FxGlowWhy")) +
+    sw("grid",    L("FxGrid"),    L("FxGridWhy")) +
+    sw("pulse",   L("FxPulse"),   L("FxPulseWhy")) +
+    sw("typing",  L("FxTyping"),  L("FxTypingWhy")) +
+    sw("chips",   L("FxChips"),   L("FxChipsWhy")) +
+    sw("ambient", L("FxAmbient"), L("FxAmbientWhy")) +
+    '<div class="chsw"><span class="lb">' + esc(L("FxEvery")) + "</span>" +
+      '<input type="range" id="fxEvery" min="4" max="60" step="2" value="' +
+        (+u.every || 12) + '"><span class="val" id="fxEveryV">' +
+        (+u.every || 12) + 's</span></div>' +
+
+    "<h6>" + esc(L("ChatDoing")) + "</h6>" +
+    sw("confirm", L("FxConfirm"), u.confirm ? L("FxConfirmOn") : L("FxConfirmOff"));
+
+  box.querySelectorAll("[data-fx]").forEach(b => {
+    b.onclick = () => {
+      const k = b.dataset.fx;
+      u[k] = !u[k];
+      b.setAttribute("aria-checked", u[k] ? "true" : "false");
+      applyChatUI(); touch();
+      if (k === "confirm") renderChatFx();
+    };
+  });
+  box.querySelectorAll("[data-skin]").forEach(b => {
+    b.onclick = () => { u.skin = b.dataset.skin; applyChatUI(); touch(); renderChatFx(); };
+  });
+  const ev = $("fxEvery");
+  if (ev) ev.oninput = () => {
+    u.every = +ev.value; $("fxEveryV").textContent = ev.value + "s";
+    applyChatUI(); touch();
+  };
+}
+function openChatFx(){ renderChatFx(); $("chatFxPanel").classList.add("on");
+                       $("chatFxPanel").setAttribute("aria-hidden", "false"); }
+function closeChatFx(){ $("chatFxPanel").classList.remove("on");
+                        $("chatFxPanel").setAttribute("aria-hidden", "true"); }
+
+/* ── one question at a time, over the thread rather than inside it ─────── */
+const ASK = { q:[], cur:null };
+
+function chatQueue(items){
+  if (!items || !items.length) return;
+  ASK.q = ASK.q.concat(items);
+  chatAskNext();
+}
+function chatAskNext(){
+  if (ASK.cur) return;
+  const it = ASK.q.shift();
+  if (!it) return;
+  /* switched off, so the thing you asked for simply happens */
+  if (!chatUI().confirm) return chatRunAsked(it, true);
+  ASK.cur = it;
+  $("chatAskN").textContent = ASK.q.length ? "1 / " + (ASK.q.length + 1) : "";
+  $("chatAskT").textContent = it.confirm || L("ChatYes");
+  $("chatAskB").textContent = it.say || "";
+  $("chatAskNote").textContent = it.note || "";
+  const p = $("chatAsk");
+  p.classList.add("on"); p.setAttribute("aria-hidden", "false");
+  setTimeout(() => { const y = $("chatAskYes"); if (y) y.focus(); }, 40);
+}
+function chatAskClose(){
+  const p = $("chatAsk");
+  p.classList.remove("on"); p.setAttribute("aria-hidden", "true");
+  ASK.cur = null;
+}
+
+/* Run it, and leave one line behind saying so. The line is the whole of
+   what stays in the thread — the question that produced it has gone. */
+function chatRunAsked(it, auto){
+  const was = ASK.cur;
+  if (was) chatAskClose(); else ASK.cur = null;
+  try {
+    if (it.act && it.act.kind === "flow"){
+      /* run it without letting it speak, and put the one line up ourselves */
+      const r = flowRun(it.act.a, true);
+      chatReceipt((r && r.say) || it.say || "", false, auto);
+    } else {
+      /* the local assistant answers for itself — "D-0001 is now done" — and
+         a receipt on top of that would only repeat the question back */
+      chatDo(Object.assign({}, it.act, { __ok:true }));
+      if (auto) chatReceipt(it.say || "", false, true);
+    }
+  } catch(e){ chatReceipt(String((e && e.message) || e), false, auto); }
+  chatAskNext();
+}
+function chatDeclineAsked(){
+  const it = ASK.cur;
+  chatAskClose();
+  chatReceipt(it ? it.say : "", true);
+  chatAskNext();
+}
+
+function chatReceiptEl(text, declined, replaying){
+  const log = $("chatLog"); if (!log) return null;
+  const d = document.createElement("div");
+  d.className = "chrcpt" + (declined ? " no" : "");
+  const i = document.createElement("i");
+  i.textContent = declined ? "\u2014" : "\u2713";
+  const sp = document.createElement("span");
+  sp.textContent = text;
+  d.appendChild(i); d.appendChild(sp);
+  /* undo is offered on the thing that just happened, not on a transcript
+     replayed from last week — that button would undo something else */
+  if (!declined && !replaying){
+    const u = document.createElement("button");
+    u.textContent = L("Undo");
+    u.onclick = () => { doUndo(); u.remove(); };
+    d.appendChild(u);
+  }
+  log.appendChild(d);
+  chatScroll();
+  return d;
+}
+function chatReceipt(text, declined, auto){
+  const line = (declined ? L("ChatLeftAlone") : (text || L("FlowRan"))) +
+               (auto ? "  \u00b7 " + L("FxRanDirect") : "");
+  chatReceiptEl(line, declined, false);
+  chatPush({ who:"receipt", text:line, no:!!declined });
+}
+
 /* ── conversations ─────────────────────────────────────────────────────── */
 function chatThread(){
   if (!Array.isArray(S.chats)) S.chats = [];
@@ -6406,7 +6902,8 @@ function chatReplay(){
     return;
   }
   c.msgs.forEach(m => {
-    if (m.who === "you") chatRenderYou(m.text);
+    if (m.who === "you") chatRenderYou(m.text, m.files);
+    else if (m.who === "receipt") chatReceiptEl(m.text, m.no, true);
     else chatRenderBot(m.reply, m.src, true);
   });
   chatScroll();
@@ -6421,6 +6918,7 @@ function openChat(){
      the whole point of moving it there is that the record on the left stays
      workable — readable, tabbable, editable — while it is open */
   document.body.classList.add("chatting");
+  applyChatUI();
   chatPaint();
   setTimeout(() => $("chatq").focus(), 60);
 }
@@ -6545,33 +7043,29 @@ function chatRenderBot(r, sourceText, replaying){
              (row.sub ? "<small>" + esc(row.sub) + "</small>" : "") + "</span></div>";
   });
 
-  /* a compound request comes back as a short plan: each step gets its own
-     confirmation, because agreeing to one is not agreeing to the other */
+  /* A compound request is still a short plan, and it still reads as one —
+     but the asking has moved out of the thread. Anything carrying a
+     confirmation is collected here and put to you afterwards, one dialogue
+     at a time, so the conversation keeps only what was decided. */
+  const pending = [];
   (r.steps || []).forEach((st, i) => {
     h += '<div class="chstep"><div class="sn">' + (i + 1) + "</div><div class=\"sb\">" +
          '<div class="say">' + esc(st.say || "") + "</div>" +
-         (st.note ? '<div class="note">' + esc(st.note) + "</div>" : "");
-    if (st.act && st.act.confirm){
-      CHAT.acts[id + "p" + i] = Object.assign({}, st.act, { __ok:true });
-      h += '<div class="chask"><div class="q">' + esc(st.act.confirm) + "</div>" +
-           '<div class="chacts">' +
-             '<button class="pri" data-act="' + id + "p" + i + '">' + esc(L("ChatYes")) + "</button>" +
-             '<button data-dismiss="1">' + esc(L("ChatNo")) + "</button>" +
-           "</div></div>";
-    }
-    h += "</div></div>";
+         (st.note ? '<div class="note">' + esc(st.note) + "</div>" : "") +
+         "</div></div>";
+    if (st.act && st.act.confirm && !replaying)
+      pending.push({ say:st.say || "", note:st.note || "",
+                     confirm:st.act.confirm, act:st.act });
   });
 
   if (r.act && r.act.confirm){
-    CHAT.acts[id + "yes"] = Object.assign({}, r.act, { __ok:true });
-    h += '<div class="chask"><div class="q">' + esc(r.act.confirm) + "</div>" +
-         '<div class="chacts">' +
-           '<button class="pri" data-act="' + id + 'yes">' + esc(L("ChatYes")) + "</button>" +
-           '<button data-dismiss="1">' + esc(L("ChatNo")) + "</button>" +
-         "</div></div>";
+    if (!replaying)
+      pending.push({ say:r.say || "", note:r.note || "",
+                     confirm:r.act.confirm, act:r.act });
   } else if (r.act && !replaying){
     chatDo(r.act);           /* navigation writes nothing, so it needs no permission */
   }
+  (r.pending || []).forEach(x => { if (!replaying) pending.push(x); });
 
   if ((r.chips || []).length){
     h += '<div class="chacts">';
@@ -6621,6 +7115,7 @@ function chatRenderBot(r, sourceText, replaying){
   d.innerHTML = h;
   $("chatLog").appendChild(d);
   chatScroll();
+  if (pending.length) chatQueue(pending);
 }
 
 /* say something and keep it */
@@ -6789,14 +7284,17 @@ async function flowAsk(q, thread){
   const log = $("chatLog");
   const wait = document.createElement("div");
   wait.className = "chb bot";
-  wait.innerHTML = '<div class="carry">' + esc(L("FlowAsking")) + "</div>";
+  wait.innerHTML = '<div class="chwait"><b><i></i><i></i><i></i></b>' +
+                   esc(L("FlowAsking")) + "</div>";
   log.appendChild(wait);
+  $("chat").classList.add("busy");
   chatScroll();
 
   let out = null, err = null;
   try { out = await DossierFlow.ask(q, flowContext(), cfg); }
   catch(e){ err = e; }
   wait.remove();
+  $("chat").classList.remove("busy");
 
   if (err){
     /* A flow that cannot be reached is a reason to fall back, not a reason
@@ -6844,15 +7342,17 @@ function flowReply(out){
     if (res && res.say) r.say = (r.say ? r.say + "\n" : "") + res.say;
   });
 
-  /* writing waits. One confirmation per action, because agreeing to raise a
-     record is not agreeing to close a different one. */
-  writes.forEach(a => {
+  /* Writing waits — one dialogue per action, because agreeing to raise a
+     record is not agreeing to close a different one. They are handed over
+     as "pending" rather than drawn into the thread; chatRenderBot puts them
+     to you once the answer itself is on screen. */
+  r.pending = writes.map(a => {
     const d = flowDescribe(a);
-    r.steps.push({ say:d.say, note:d.note || "",
-                   act:{ kind:"flow", a:a, confirm:d.confirm } });
+    return { say:d.say, note:d.note || "", confirm:d.confirm,
+             act:{ kind:"flow", a:a, confirm:d.confirm } };
   });
 
-  if (!r.say && !r.rows.length && !r.steps.length && !r.note) r.note = L("FlowNothing");
+  if (!r.say && !r.rows.length && !r.pending.length && !r.note) r.note = L("FlowNothing");
   return r;
 }
 
@@ -12422,6 +12922,13 @@ $("chatLog").addEventListener("click", e => {
   chatDo(act);
 });
 
+$("chatFx").addEventListener("click", openChatFx);
+$("chatFxX").addEventListener("click", closeChatFx);
+$("chatAskYes").addEventListener("click", () => { if (ASK.cur) chatRunAsked(ASK.cur, false); });
+$("chatAskNo").addEventListener("click", chatDeclineAsked);
+/* clicking the dark ground behind the card is the same as saying no */
+$("chatAsk").addEventListener("click", e => { if (e.target === $("chatAsk")) chatDeclineAsked(); });
+
 $("chatTeachBtn").addEventListener("click", openTaught);
 $("teachX").addEventListener("click", closeTeach);
 $("teachq").addEventListener("input", () => { TEACH.filter = $("teachq").value; renderTeach(); });
@@ -13156,6 +13663,8 @@ document.addEventListener("keydown", e => {
   }
   if (e.key === "Escape"){
     if ($("keys").classList.contains("on")) return closeKeys();
+    if ($("chatFxPanel").classList.contains("on")) return closeChatFx();
+    if ($("chatAsk").classList.contains("on")) return chatDeclineAsked();
     if ($("chat").classList.contains("on")) return closeChat();
     if ($("ask").classList.contains("on")) return closeAsk(null);
     if ($("cmd").classList.contains("on")) return closeCmd();
