@@ -193,6 +193,36 @@ Parse JSON does not mind the ones left out.
           }
         },
         "memoryTotal": { "type": "integer" },
+        "runbooks": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "title":    { "type": "string" },
+              "system":   { "type": "string" },
+              "triggers": { "type": "array", "items": { "type": "string" } },
+              "severity": { "type": "string" },
+              "steps":    { "type": "integer" },
+              "status":   { "type": "string" },
+              "verified": { "type": "string" },
+              "stale":    { "type": "boolean" }
+            }
+          }
+        },
+        "runbookTotal": { "type": "integer" },
+        "profiles": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "system": { "type": "string" },
+              "facts":  { "type": "string" },
+              "quirks": { "type": "string" },
+              "tables": { "type": "string" },
+              "owner":  { "type": "string" }
+            }
+          }
+        },
         "settings": {
           "type": "object",
           "properties": {
@@ -335,6 +365,14 @@ Define **nine inputs** and wire them to the parsed body:
 
 `string()` turns the object or array into JSON text, which is what a prompt
 input wants.
+
+> **The runbook library needs no new input.** `workspace` is passed whole, so
+> `runbooks`, `runbookTotal` and `profiles` ride along inside it, and `can`
+> already carries every action there is. Adding a library, or nine actions,
+> changes nothing in the flow — only the prompt. Parse JSON does not strip
+> properties its schema leaves out, so an older schema keeps working; update
+> it (or regenerate from the current sample) only if you want the new fields
+> as dynamic content of their own.
 
 **No Select action, no `item()` expression.** An earlier version of this page
 told you to build the file list yourself with a Data Operation → Select. That
