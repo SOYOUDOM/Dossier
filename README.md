@@ -1026,9 +1026,9 @@ you in full and waits for a yes** — the same gate the local assistant's write
 actions have always used, and it holds whether the action arrived as a
 proposal or as a button.
 
-45 actions, 13 read-only and 32 that write — records, checklists, time,
+54 actions, 17 read-only and 37 that write — records, checklists, time,
 waiting and chasing, blocking, tags, scripts, routines, holidays, memory, the
-application's own settings, and the vocabulary itself. Three of them delete (a
+BAU runbook library, the application's own settings, and the vocabulary itself. Three of them delete (a
 record, a routine, a note); all confirm like everything else and all are undone
 by `Ctrl`+`Z`.
 
@@ -1071,6 +1071,59 @@ panel with its language and a copy button; `backticks` become inline code.
 Nothing else in a reply is interpreted — it is not a markdown renderer and
 should not become one, because every feature added to it is another way for
 text from outside to put markup on your page.
+
+### The BAU library — runbooks and system profiles
+
+Memory is a notebook. This is the shared support library, and it is shaped
+differently because it has to grow.
+
+A **runbook** is one symptom and what to do about it — *not* one document. A
+guideline file usually holds six or eight distinct problems, and split apart
+they can be found; left whole they cannot. Each carries the symptoms somebody
+actually types, the ordered steps, the queries that prove what is wrong, who to
+escalate to, when a human last confirmed it, and whether it is approved.
+
+A **system profile** is what is durably true about a system, especially what it
+*lies* about — *regenCOI returns 200 whether or not it produced a letter.* That
+one line answers a family of tickets no runbook covers, which is why the
+assistant can help with problems nobody wrote down.
+
+**Runbooks travel as an index, never as bodies.** Title, system, trigger
+phrases, severity, freshness — about 15 tokens each, so a hundred of them cost
+less to send than one long memory note. The steps and the SQL stay on your
+machine until something asks for one by name. Send the bodies of all of them
+and the request grows until the model refuses it; that is the wall this shape
+exists to avoid. Profiles are the exception and travel whole, because there are
+few of them and they are the layer that reasons about the unknown.
+
+Ask *"COI is not generating, I clicked generate and it went through"* and it
+finds the runbook by trigger phrase, shows the steps, puts the SQL in a code
+panel you can copy, and offers to raise the record with those steps already on
+its checklist — so the work is tracked and there is evidence of what was done.
+
+Everything arrives as a **draft**: what you import, what the assistant writes,
+what you capture from a closed record. Approving is a human act, and the
+assistant cannot do it — not through `saveRunbook`, and not through the
+settings whitelist either. Anything unconfirmed for over a year shows as
+unchecked wherever it appears, because a procedure nobody has verified is not
+the same as one that works.
+
+**Sharing needs no shared drive.** The whole library exports as one JSON file
+and imports by merge — matched on title, newer edit wins — so two people can
+both add runbooks and neither loses theirs. Mail it, put it on a stick. It is
+copy-and-merge rather than sync, so in practice one person owns the master and
+re-issues it.
+
+All of it works with the flow switched off: the matcher is local and needs no
+network. The flow adds language — understanding *"the letter didn't come out"*
+as the COI symptom when no trigger says that, and writing new runbooks from a
+conversation.
+
+[`flow/BAU-RUNBOOKS.md`](flow/BAU-RUNBOOKS.md) is the full guide, including how
+to decompose existing `.docx` guidelines into runbooks, and
+[`flow/runbooks-starter.json`](flow/runbooks-starter.json) is a shape to copy —
+its table and team names are deliberately left as placeholders, and every entry
+is a draft.
 
 ### Settings the assistant may change
 
@@ -1183,6 +1236,9 @@ Two documents go with this:
   schema, the prompt to paste into the AI action, where standing knowledge
   goes and where it must not go, and the order to test in that finds problems
   fastest.
+- [`flow/BAU-RUNBOOKS.md`](flow/BAU-RUNBOOKS.md) — the support library: how a
+  runbook is shaped, how to turn existing `.docx` guidelines into them, and how
+  a team shares the library with no shared drive.
 - [`flow/CONTRACT.md`](flow/CONTRACT.md) — the specification. Every argument
   of every action, generated from `flow.js`.
 - [`flow/sample-request.json`](flow/sample-request.json) — a real request from
@@ -1466,12 +1522,12 @@ drive the real files in a real browser (Playwright + Chromium), because the
 things that break here are things a unit test cannot see: a stale iframe cache,
 a CSP refusal, a file one folder away from where a manifest says.
 
-The fourteen exercised for the current release — `teach`, `talk2`, `pick`,
+The fifteen exercised for the current release — `teach`, `talk2`, `pick`,
 `flowval`, `flowe2e`, `flowui`, `flowmore`, `chatui`, `memui`, `probe`,
-`shrink`, `chatfx`, `settings`, `mend` — report **461 passing assertions and
-no failures**, covering the local assistant, teaching, selectors, the reply
+`shrink`, `chatfx`, `settings`, `mend`, `runbook` — report **522 passing
+assertions and no failures**, covering the local assistant, teaching, selectors, the reply
 validator, the whole network path in a real browser against an endpoint that
-misbehaves the way real ones do, the Setup panel, all 45 actions, the docked
+misbehaves the way real ones do, the Setup panel, all 54 actions, the docked
 layout down to where each masthead tab lands, the memory round trip (taught in
 one conversation, recalled in another), the chat skins and motion switches, the
 settings whitelist — including that an endpoint asking to rewrite its own URL

@@ -169,6 +169,60 @@ back in your own `say` (or return `recall` to show it verbatim) rather than
 inventing a method. And when someone explains how something is done, return
 `remember` — that is the action that makes the app worth teaching.
 
+### The BAU library — runbooks and system profiles
+
+Two blocks, shaped differently on purpose.
+
+**`workspace.runbooks` is an index, not the runbooks.** Each entry carries the
+title, the system, the trigger phrases, the severity, how many steps it has,
+whether it is approved, and when it was last confirmed — but **never the
+steps, the checks or the escalation**. Those stay in the app until you ask for
+one by name with `readRunbook`.
+
+```json
+{ "title": "COI letter does not generate, but the API returned success",
+  "system": "Imaging",
+  "triggers": ["coi not generated", "regencoi went through but no letter"],
+  "severity": "P3", "steps": 6, "status": "draft",
+  "verified": "", "stale": true }
+```
+
+This is the whole reason the library can grow. A hundred indexed runbooks cost
+less to send than one long note; a hundred *whole* runbooks would grow the
+request until the model refused it. So:
+
+> **Never quote steps for a runbook you have not read.** The index tells you
+> one exists and what it is called. It does not tell you what it says, and
+> inventing the steps is worse than saying you need to look.
+
+`runbookTotal` is how many exist; the index is capped at 200.
+
+**`workspace.profiles` travels whole.** A system profile is what is durably
+true about a system — what it does, what it *lies* about, which tables hold
+the answer. There are few of them and each is meant to be about a page.
+
+```json
+{ "system": "Imaging",
+  "facts": "Generates policy documents including the COI letter…",
+  "quirks": "regenCOI returns 200 whether or not a letter was produced…",
+  "tables": "<COI_REQUEST>  one row per request…",
+  "owner": "" }
+```
+
+Profiles are what let you help with a problem nobody has written down. When a
+symptom matches no runbook, reason from the profile rather than apologising: an
+endpoint that reports success on failure explains a great many confused
+tickets, and saying so is more useful than "I could not find a guideline."
+
+**Freshness.** `verified` is when a human last confirmed the procedure still
+works, and `stale` is set once that is over a year old or never happened. Say
+so when you hand over a stale one. A procedure nobody has checked is not the
+same as a procedure that works, and in a regulated shop the difference matters.
+
+**Draft and approved.** Anything you write with `saveRunbook` is a draft.
+Approving is a human act — never return `saveRunbook` with `status: "approved"`
+unless the person explicitly says they are approving it.
+
 ### Attachments
 
 `attachments` carries what the person clipped to the question — a screenshot
@@ -295,7 +349,7 @@ answer than deleting, and keeps the history.
 ## 6. The action reference
 
 Generated from `flow.js`. `ref` means a record code (`D-0004`), a ticket
-number, or an id. **45 actions — 13 that read, 32 that write.**
+number, or an id. **54 actions — 17 that read, 37 that write.**
 
 ### Actions that only read
 
@@ -407,6 +461,94 @@ Open the chase sheet for everything that is due a chase.
 |---|---|---|
 | *(none)* | | |
 
+#### `findRunbook`
+
+Find the runbooks that match a symptom. Give about the user's own words — the error, what they clicked, what did not happen. This searches trigger phrases, so it finds things a title search would miss. Use it before answering any "how do I fix" question.
+
+| argument | shape | required |
+|---|---|---|
+| `about` | string | no |
+| `system` | string | no |
+
+#### `readRunbook`
+
+Read one runbook in full — its steps, its checks and its escalation. The request carries only the index (titles, systems, trigger phrases), never the bodies, so you must read one before you can quote its steps. Never invent steps for a runbook you have not read.
+
+| argument | shape | required |
+|---|---|---|
+| `title` | string | **yes** |
+
+#### `listRunbooks`
+
+List the runbook library, or just one system's. Use it when somebody asks what is covered, or when you are about to write a new runbook and need to know whether one already exists.
+
+| argument | shape | required |
+|---|---|---|
+| `system` | string | no |
+
+#### `readProfile`
+
+Read what is known about a system: what its API does and does not tell you, the tables that hold the truth, who owns it. When a symptom matches no runbook, this is what you reason from — an endpoint that returns success on failure explains a great many confused tickets.
+
+| argument | shape | required |
+|---|---|---|
+| `system` | string | **yes** |
+
+#### `startRunbook`
+
+Raise a record from a runbook, with its steps already on the checklist. Use it once the person agrees this is the right runbook, so the work is tracked and there is a record of what was done.
+
+| argument | shape | required |
+|---|---|---|
+| `title` | string | **yes** |
+| `requester` | string | no |
+| `ticket` | string | no |
+| `priority` | P1 | P2 | P3 | P4 | no |
+
+#### `saveRunbook`
+
+Write a runbook, or replace one of the same title. triggers are the phrases somebody would actually use when they hit this — the error text, the symptom in their words — and they are what findRunbook matches on, so give several and make them specific. steps is the procedure, one instruction per entry. checks is for the queries and table lookups that prove what is wrong; put them in a ``` fence. New runbooks are drafts until somebody with authority approves them.
+
+| argument | shape | required |
+|---|---|---|
+| `title` | string | **yes** |
+| `system` | string | **yes** |
+| `triggers` | list of text | no |
+| `severity` | P1 | P2 | P3 | P4 | no |
+| `steps` | list of text | no |
+| `checks` | text | no |
+| `escalation` | text | no |
+| `owner` | string | no |
+| `status` | draft | approved | no |
+
+#### `verifyRunbook`
+
+Stamp a runbook as checked today. A procedure nobody has confirmed in a year is a liability, so say so when one is stale.
+
+| argument | shape | required |
+|---|---|---|
+| `title` | string | **yes** |
+
+#### `deleteRunbook`
+
+Remove a runbook from the library.
+
+| argument | shape | required |
+|---|---|---|
+| `title` | string | **yes** |
+
+#### `saveProfile`
+
+Write what is known about a system. facts is what it does; quirks is what it does that surprises people — an endpoint that returns 200 whether or not it worked belongs here; tables is where the truth actually lives. Keep it to about a page: this travels with every question, unlike runbook bodies.
+
+| argument | shape | required |
+|---|---|---|
+| `system` | string | **yes** |
+| `facts` | text | no |
+| `quirks` | text | no |
+| `tables` | text | no |
+| `owner` | string | no |
+
 #### `draftEmail`
 
 Write an email and show it as a draft they can copy or open in their mail app. Nothing is sent — Dossier cannot send mail and does not try. Put the whole message in body, with real line breaks. Use this for a chase, a hand-over, an incident summary, anything they ask you to write to somebody.
@@ -429,11 +571,6 @@ Read back what you were taught. Every note is already in workspace.memory, so us
 | `about` | string | no |
 | `tag` | string | no |
 | `system` | string | no |
-
-
-### Actions that change the workspace
-
-Every one of these is shown to the person and waits for a yes. Returning ten of them does not make ten changes; it makes ten questions.
 
 #### `createRecord`
 
@@ -772,7 +909,6 @@ Undo the last change to the workspace.
 | argument | shape | required |
 |---|---|---|
 | *(none)* | | |
-
 
 ---
 

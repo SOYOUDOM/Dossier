@@ -1375,6 +1375,61 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
   cursor:pointer;font-family:var(--f-ui);transition:.15s var(--ease)}
 .chmail .mf button:hover{border-color:var(--ch-acc);color:var(--ch-acc)}
 
+/* ── runbook and system-profile cards ──────────────────────────────────
+   .sp, .tag and .mm exist elsewhere but only ever scoped to a parent, so
+   they carry nothing here and are defined below. Every colour comes from
+   the --ch-* skin variables, so these follow the chat skin rather than
+   sitting in the app's palette on a dark skin. */
+.chrb{border:1px solid var(--ch-line);border-radius:var(--r-sm);overflow:hidden;
+  background:var(--ch-panel);margin:2px 0;max-width:100%}
+.chrb .rbh{display:flex;align-items:center;gap:8px;padding:8px 11px;flex-wrap:wrap;
+  background:var(--ch-bg);border-bottom:1px solid var(--ch-line)}
+.chrb .rbh b{font-size:12.5px;color:var(--ch-ink);font-weight:650}
+.chrb .sp{margin-left:auto}
+.chrb .tag{font-size:9.5px;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--ch-acc);font-weight:700}
+.chrb .rbs,.chrb .rbp,.chrb .rbst{font-family:var(--f-mono);font-size:9.5px;
+  padding:2px 6px;border-radius:var(--r-xs);border:1px solid var(--ch-line);
+  color:var(--ch-dim);white-space:nowrap}
+.chrb .rbst.ok{color:var(--ch-acc2);border-color:var(--ch-acc2)}
+.chrb .rbst.dr{color:var(--ch-dim)}
+.chrb .rbstale{padding:7px 11px;font-size:11.5px;line-height:1.55;
+  color:var(--ch-ink);background:var(--ch-bg);border-bottom:1px solid var(--ch-line)}
+.chrb .rbstale::before{content:"\26A0";margin-right:7px;color:var(--ch-acc)}
+.chrb .rbsec{padding:9px 11px 3px;font-size:9.5px;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--ch-dim);font-weight:700}
+.chrb .rbsteps{margin:0;padding:0 11px 8px 30px;font-size:12.5px;line-height:1.7;
+  color:var(--ch-ink)}
+.chrb .rbsteps li{margin:0 0 3px;padding-left:3px}
+.chrb .rbsteps li::marker{color:var(--ch-dim);font-family:var(--f-mono);font-size:11px}
+.chrb .rbbody{padding:0 11px 4px;font-size:12.5px;line-height:1.65;color:var(--ch-ink);
+  word-break:break-word}
+.chrb .rbbody .chcode{margin:6px 0}
+.chrb .rbesc{padding:0 11px 9px;font-size:12.5px;line-height:1.65;
+  white-space:pre-wrap;color:var(--ch-ink)}
+.chrb .rbf{display:flex;gap:7px;padding:9px 11px;flex-wrap:wrap;
+  border-top:1px solid var(--ch-line);background:var(--ch-bg)}
+.chrb .rbf button{border:1px solid var(--ch-line);background:var(--ch-panel);
+  color:var(--ch-ink);border-radius:var(--r-xs);padding:5px 11px;font-size:11.5px;
+  cursor:pointer;font-family:inherit;transition:.13s}
+.chrb .rbf button:hover:not(:disabled){border-color:var(--ch-acc);color:var(--ch-acc)}
+.chrb .rbf button.prim{border-color:var(--ch-acc);color:var(--ch-acc)}
+.chrb .rbf button:disabled{opacity:.42;cursor:default}
+
+.chrbp{border:1px solid var(--ch-line);border-radius:var(--r-sm);overflow:hidden;
+  background:var(--ch-panel);margin:2px 0}
+.chrbp .rbph{padding:8px 11px;font-size:11.5px;color:var(--ch-dim);
+  background:var(--ch-bg);border-bottom:1px solid var(--ch-line)}
+.chrbp .rbpi{display:block;width:100%;text-align:left;border:0;background:transparent;
+  border-bottom:1px solid var(--ch-line);padding:9px 11px;cursor:pointer;
+  font-family:inherit;color:var(--ch-ink);transition:.13s}
+.chrbp .rbpi:last-child{border-bottom:0}
+.chrbp .rbpi b{display:block;font-size:12.5px;font-weight:600;margin-bottom:2px}
+.chrbp .rbpi .mm{font-size:10px;color:var(--ch-dim);font-family:var(--f-mono)}
+.chrbp .rbpi:hover:not(:disabled){background:var(--ch-bg);color:var(--ch-acc)}
+.chrbp .rbpi:disabled{opacity:.38;cursor:default}
+.chrbp.picked{opacity:.5}
+
 /* ── what happened, after a dialogue is answered ───────────────────────── */
 .chrcpt{display:flex;align-items:flex-start;gap:8px;font-size:11.5px;color:var(--ch-dim);
   padding:7px 10px;border:1px solid var(--ch-line);border-radius:999px;
@@ -1617,6 +1672,12 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
 .memn summary b{font-weight:600;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;
   white-space:nowrap}
 .memn .mm{font-size:10px;color:var(--ink-3);font-family:var(--f-mono);flex:0 0 auto}
+.rbbar{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0 4px}
+.rbn .rbed{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));
+  gap:6px;margin:6px 0}
+.rbn .rbl{display:block;font-size:9.5px;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--ink-3);margin:9px 0 3px;font-weight:700}
+.rbn .rbt{width:100%;display:block;resize:vertical}
 .memn .memb{border-radius:0;border-left:0;border-right:0;font-size:11.5px;line-height:1.6;
   resize:vertical}
 .memn .memf{display:flex;align-items:center;justify-content:space-between;gap:9px;
@@ -2118,6 +2179,7 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
 <div class="toasts" id="toasts"></div>
 <input type="file" id="fileIn" hidden multiple>
 <input type="file" id="jsonIn" accept=".json" hidden>
+<input type="file" id="rbIn" accept=".json" hidden>
 <input type="file" id="scriptIn" hidden multiple>
 
 <!-- Built fresh every time you print. The app's own layout is a fixed-height
@@ -3507,6 +3569,47 @@ const STRINGS = {
      lang/*.xml, which is exactly what the fallback is for. */
   MailDraft: "Draft email",
   MailTo: "To",
+  RunbookTag: "Runbook",
+  ProfileTag: "System",
+  RunbookApproved: "approved",
+  RunbookDraft: "draft",
+  RunbookSteps: "Steps",
+  RunbookChecks: "Checks",
+  RunbookEscalation: "Escalation",
+  RunbookStart: "Start this",
+  RunbookVerify: "Checked today",
+  RunbookVerified: "Marked as checked today.",
+  RunbookStarted: "Raised {code} with the steps on its checklist.",
+  RunbookStale: "Nobody has confirmed this since {d}. Check it still works before you follow it.",
+  RunbookNeverChecked: "This has never been confirmed. Check it still works before you follow it.",
+  RunbookStaleShort: "unchecked",
+  RunbookStepWord: "steps",
+  RunbookPick: "{n} runbooks match. Which one?",
+  ProfileFacts: "What it does",
+  ProfileQuirks: "What surprises people",
+  ProfileTables: "Where the truth is",
+  RunbookHead: "Runbooks",
+  RunbookHint: "One symptom and what to do about it. The trigger phrases are what the assistant matches on \u2014 write what somebody actually types when they hit this, not a tidy title.",
+  RunbookEmpty: "Nothing yet. Import a starter file, or ask the assistant to write one after you solve something.",
+  ProfileHead: "What each system is like",
+  ProfileHint: "Short, durable facts \u2014 especially what a system lies about. These travel with every question, so keep each to about a page.",
+  ProfileEmpty: "Nothing yet.",
+  RunbookAdd: "Add a runbook",
+  ProfileAdd: "Add a system",
+  RunbookExport: "Export library",
+  RunbookImport: "Import library",
+  RunbookImported: "Imported {a} runbook(s) and {b} system profile(s).",
+  RunbookExported: "Library exported.",
+  RunbookBadFile: "That file is not a Dossier runbook library.",
+  RunbookNothing: "Nothing to export yet.",
+  RunbookForget: "Delete",
+  RunbookSaved: "Saved.",
+  RunbookTriggers: "Trigger phrases, one per line",
+  RunbookStepsField: "Steps, one per line",
+  RunbookChecksField: "Checks \u2014 queries and lookups",
+  RunbookEscField: "Escalation",
+  RunbookFromRecord: "Make a runbook from this",
+  RunbookFromMade: "Drafted \u201c{t}\u201d from this record. Fill in the trigger phrases in Setup.",
   MailCc: "Cc",
   MailBcc: "Bcc",
   MailBlank: "\u2014",
@@ -4737,14 +4840,32 @@ function normalise(t){
   };
 }
 function getTask(id){ return S.tasks.find(t => t.id === id); }
-function pushUndo(label){
-  S.undo.push({ label, tasks: clone(S.tasks) });
+/* Undo snapshots the records. It did not snapshot the library — memory,
+   runbooks, system profiles — which meant forgetting a note offered you an
+   Undo button that restored the records and left the note deleted. Pass
+   lib:true when an action touches the library and the snapshot covers it
+   too. It is not taken for every undo because the library can be large and
+   twenty-five copies of it is real memory for something most edits never
+   touch. */
+function pushUndo(label, lib){
+  const u = { label, tasks: clone(S.tasks) };
+  if (lib) u.lib = { memory: clone(memoryStore()),
+                     runbooks: clone(runbookStore()),
+                     profiles: clone(profileStore()) };
+  S.undo.push(u);
   if (S.undo.length > 25) S.undo.shift();
 }
 function doUndo(){
   const u = S.undo.pop();
   if (!u) return toast(L("NothingLeftToUndo"));
   S.tasks = u.tasks.map(normalise);
+  if (u.lib){
+    S.settings.memory = u.lib.memory;
+    S.settings.runbooks = u.lib.runbooks;
+    S.settings.profiles = u.lib.profiles;
+    if (typeof renderMemory === "function") renderMemory();
+    if (typeof renderRunbooks === "function") renderRunbooks();
+  }
   touch(); buildModel(); renderAll();
   toast("Undid: " + u.label);
 }
@@ -6853,6 +6974,188 @@ function chatDeclineAsked(){
    second thing in the application allowed to reach the outside, for a job a
    mail client already does. So it writes the message, shows it, and gives
    you the two ways out: the clipboard, or your own mail app. */
+/* ── a runbook, on screen ────────────────────────────────────────────────
+   Steps as a list you can read at 3am, the checks in a code panel so the
+   SQL can be copied without reformatting it, and the freshness stamp in
+   plain sight — a step somebody wrote two years ago and never re-checked
+   should not look identical to one confirmed last week. */
+function chatRunbook(rb){
+  const log = $("chatLog"); if (!log) return;
+  const wrap = document.createElement("div");
+  wrap.className = "chb bot";
+  const box = document.createElement("div");
+  box.className = "chrb";
+
+  const stale = rbStale(rb);
+  const head = document.createElement("div");
+  head.className = "rbh";
+  head.innerHTML =
+    '<span class="tag">' + esc(L("RunbookTag")) + "</span>" +
+    '<b>' + esc(rb.title) + "</b>" +
+    '<span class="sp"></span>' +
+    (rb.system ? '<span class="rbs">' + esc(rb.system) + "</span>" : "") +
+    '<span class="rbp">' + esc(rb.severity || "P3") + "</span>" +
+    '<span class="rbst ' + (rb.status === "approved" ? "ok" : "dr") + '">' +
+      esc(rb.status === "approved" ? L("RunbookApproved") : L("RunbookDraft")) + "</span>";
+  box.appendChild(head);
+
+  if (stale){
+    const w = document.createElement("div");
+    w.className = "rbstale";
+    w.textContent = rb.verified
+      ? L("RunbookStale", { d: rb.verified })
+      : L("RunbookNeverChecked");
+    box.appendChild(w);
+  }
+
+  if ((rb.steps || []).length){
+    const h = document.createElement("div"); h.className = "rbsec";
+    h.textContent = L("RunbookSteps"); box.appendChild(h);
+    const ol = document.createElement("ol");
+    ol.className = "rbsteps";
+    rb.steps.forEach(x => { const li = document.createElement("li"); li.textContent = x; ol.appendChild(li); });
+    box.appendChild(ol);
+  }
+
+  if (rb.checks){
+    const h = document.createElement("div"); h.className = "rbsec";
+    h.textContent = L("RunbookChecks"); box.appendChild(h);
+    const d = document.createElement("div");
+    d.className = "rbbody";
+    d.innerHTML = chatSay(rb.checks);
+    box.appendChild(d);
+  }
+
+  if (rb.escalation){
+    const h = document.createElement("div"); h.className = "rbsec";
+    h.textContent = L("RunbookEscalation"); box.appendChild(h);
+    const d = document.createElement("div"); d.className = "rbesc";
+    d.textContent = rb.escalation;
+    box.appendChild(d);
+  }
+
+  const foot = document.createElement("div");
+  foot.className = "rbf";
+  const start = document.createElement("button");
+  start.className = "prim";
+  start.textContent = L("RunbookStart");
+  start.onclick = () => {
+    const t = addTask({
+      title: rb.title, system: rb.system || "", type:"",
+      priority: rb.severity || "P3", requester:"", ticket:"", tags:[], estimate:0,
+      notes: (rb.checks ? "Checks\n" + rb.checks + "\n\n" : "") +
+             (rb.escalation ? "Escalation\n" + rb.escalation : ""),
+      checklist: (rb.steps || []).map(x => ({ text:x, done:false }))
+    });
+    rb.uses = (rb.uses || 0) + 1;
+    renderAll(); touch();
+    chatReceipt(L("RunbookStarted", { code:t.code }));
+    start.disabled = true;
+  };
+  const cp = document.createElement("button");
+  cp.textContent = L("Copy");
+  cp.onclick = () => { copyText(rbText(rb), L("Copied")); };
+  const vf = document.createElement("button");
+  vf.textContent = L("RunbookVerify");
+  vf.onclick = () => {
+    pushUndo("runbook", true);
+    rb.verified = today(); rb.updated = new Date().toISOString();
+    touch(); renderRunbooks();
+    const w = box.querySelector(".rbstale"); if (w) w.remove();
+    vf.disabled = true;
+    toast(L("RunbookVerified"));
+  };
+  foot.appendChild(start); foot.appendChild(cp); foot.appendChild(vf);
+  box.appendChild(foot);
+
+  wrap.appendChild(box);
+  log.appendChild(wrap);
+  chatScroll();
+}
+
+function rbText(rb){
+  const L2 = [rb.title, ""];
+  if (rb.system) L2.push("System: " + rb.system);
+  L2.push("Severity: " + (rb.severity || "P3"),
+          "Status: " + (rb.status || "draft") + (rb.verified ? " · checked " + rb.verified : ""));
+  if ((rb.triggers || []).length) L2.push("Triggers: " + rb.triggers.join(" · "));
+  if ((rb.steps || []).length)
+    L2.push("", "Steps", ...rb.steps.map((x, i) => (i + 1) + ". " + x));
+  if (rb.checks) L2.push("", "Checks", rb.checks);
+  if (rb.escalation) L2.push("", "Escalation", rb.escalation);
+  if (rb.owner) L2.push("", "Owner: " + rb.owner);
+  return L2.join("\n");
+}
+
+/* Several matched. Show what matched rather than guessing — picking wrong
+   silently is how somebody follows the payment runbook for an imaging
+   problem and wastes an hour. */
+function chatRunbookPick(hits){
+  const log = $("chatLog"); if (!log) return;
+  const wrap = document.createElement("div");
+  wrap.className = "chb bot";
+  const box = document.createElement("div");
+  box.className = "chrbp";
+  const h = document.createElement("div");
+  h.className = "rbph";
+  h.textContent = L("RunbookPick", { n: hits.length });
+  box.appendChild(h);
+  hits.forEach(({ rb }) => {
+    const b = document.createElement("button");
+    b.className = "rbpi";
+    b.innerHTML = "<b>" + esc(rb.title) + "</b>" +
+      '<span class="mm">' + esc(rb.system || "") +
+      (rb.system ? " · " : "") + esc(rb.severity || "P3") +
+      " · " + esc((rb.steps || []).length + " " + L("RunbookStepWord")) +
+      (rbStale(rb) ? " · " + esc(L("RunbookStaleShort")) : "") + "</span>";
+    b.onclick = () => {
+      box.querySelectorAll("button").forEach(x => { x.disabled = true; });
+      box.classList.add("picked");
+      rb.uses = (rb.uses || 0) + 1; touch();
+      chatRunbook(rb);
+    };
+    box.appendChild(b);
+  });
+  wrap.appendChild(box);
+  log.appendChild(wrap);
+  chatScroll();
+}
+
+/* What is known about a system, as opposed to what to do about one symptom */
+function chatProfile(pf){
+  const log = $("chatLog"); if (!log) return;
+  const wrap = document.createElement("div");
+  wrap.className = "chb bot";
+  const box = document.createElement("div");
+  box.className = "chrb prof";
+  const head = document.createElement("div");
+  head.className = "rbh";
+  head.innerHTML = '<span class="tag">' + esc(L("ProfileTag")) + "</span><b>" +
+    esc(pf.system) + "</b>" + '<span class="sp"></span>' +
+    (pf.owner ? '<span class="rbs">' + esc(pf.owner) + "</span>" : "");
+  box.appendChild(head);
+  [[L("ProfileFacts"), pf.facts], [L("ProfileQuirks"), pf.quirks],
+   [L("ProfileTables"), pf.tables]].forEach(([k, v]) => {
+    if (!v) return;
+    const h = document.createElement("div"); h.className = "rbsec"; h.textContent = k;
+    box.appendChild(h);
+    const d = document.createElement("div"); d.className = "rbbody";
+    d.innerHTML = chatSay(v);
+    box.appendChild(d);
+  });
+  const foot = document.createElement("div");
+  foot.className = "rbf";
+  const cp = document.createElement("button");
+  cp.textContent = L("Copy");
+  cp.onclick = () => copyText([pf.system, "", pf.facts, "", pf.quirks, "", pf.tables]
+                              .filter(Boolean).join("\n"), L("Copied"));
+  foot.appendChild(cp);
+  box.appendChild(foot);
+  wrap.appendChild(box);
+  log.appendChild(wrap);
+  chatScroll();
+}
+
 function chatDraft(d){
   const log = $("chatLog"); if (!log) return;
   const wrap = document.createElement("div");
@@ -7406,6 +7709,9 @@ function flowContext(){
     holidaysTotal: holidays().length,
     memory: memoryForFlow(),
     memoryTotal: memoryStore().length,
+    runbooks: runbooksForFlow(),
+    runbookTotal: runbookStore().length,
+    profiles: profilesForFlow(),
     settable: flowSettable(),
     attachments: (CHAT.files || []).map(f => ({
       name:f.name, type:f.type, size:f.size, data:f.data })),
@@ -7770,6 +8076,107 @@ function flowRun(a, quiet){
 
     case "chaseSheet": closeChat(); openChase(); return null;
 
+    /* ── the BAU library ───────────────────────────────────────────────── */
+    case "findRunbook": {
+      const hits = rbMatch(g.about || g.system || "", g.system || "", 5);
+      if (!hits.length){
+        const n = runbookStore().length;
+        return { say: n
+          ? "Nothing in the library matches that. There are " + n +
+            " runbook(s): " + runbookStore().map(r => r.title).slice(0, 10).join(" · ")
+          : "The runbook library is empty. Menu → Setup → Runbooks, or ask me to write one." };
+      }
+      if (hits.length === 1){ chatRunbook(hits[0].rb); return { say:"" }; }
+      chatRunbookPick(hits);
+      return { say:"" };
+    }
+    case "readRunbook": {
+      const rb = rbFind(g.title);
+      if (!rb) return { say:"There is no runbook called “" + (g.title || "") + "”." };
+      rb.uses = (rb.uses || 0) + 1; touch();
+      chatRunbook(rb);
+      return { say:"" };
+    }
+    case "listRunbooks": {
+      let list = runbookStore();
+      if (g.system) list = list.filter(r =>
+        String(r.system || "").toLowerCase().indexOf(String(g.system).toLowerCase()) >= 0);
+      if (!list.length) return { say: g.system
+        ? "No runbooks for " + g.system + " yet."
+        : "The runbook library is empty." };
+      chatRunbookPick(list.map(rb => ({ rb, score:0 })));
+      return { say:"" };
+    }
+    case "readProfile": {
+      const pf = profFind(g.system);
+      if (!pf) return { say:"Nothing is recorded about " + (g.system || "that system") +
+                             ". Ask me to write a profile for it." };
+      chatProfile(pf);
+      return { say:"" };
+    }
+    case "startRunbook": {
+      const rb = rbFind(g.title);
+      if (!rb) return { say:"There is no runbook called “" + (g.title || "") + "”." };
+      const t = addTask({
+        title: rb.title, system: rb.system || "", type:"", priority: g.priority || rb.severity || "P3",
+        requester: g.requester || "", ticket: g.ticket || "",
+        tags:[], estimate:0,
+        notes: (rb.checks ? "Checks\n" + rb.checks + "\n\n" : "") +
+               (rb.escalation ? "Escalation\n" + rb.escalation : ""),
+        checklist: (rb.steps || []).map(x => ({ text:x, done:false }))
+      });
+      rb.uses = (rb.uses || 0) + 1;
+      renderAll(); touch();
+      return done("Raised " + t.code + " from “" + rb.title + "”, " +
+                  (rb.steps || []).length + " step(s) on the checklist.",
+                  [{ label:L("AiOpenRecord"), act:{ kind:"open", id:t.id } }]);
+    }
+    case "saveRunbook": {
+      const had = rbFind(g.title);
+      const rb = rbNormalise(g, had);
+      if (!rb.title || !rb.system)
+        return { say:"A runbook needs a title and a system." };
+      pushUndo("runbook", true);
+      if (had) runbookStore()[runbookStore().indexOf(had)] = rb;
+      else runbookStore().unshift(rb);
+      touch(); renderRunbooks();
+      return done((had ? "Replaced “" : "Wrote “") + rb.title + "” — " +
+                  rb.steps.length + " step(s), " + rb.triggers.length + " trigger(s)" +
+                  (rb.status === "draft" ? ", as a draft." : ", approved."));
+    }
+    case "verifyRunbook": {
+      const rb = rbFind(g.title);
+      if (!rb) return { say:"There is no runbook called “" + (g.title || "") + "”." };
+      pushUndo("runbook", true);
+      rb.verified = today(); rb.updated = new Date().toISOString();
+      touch(); renderRunbooks();
+      return done("“" + rb.title + "” checked today.");
+    }
+    case "deleteRunbook": {
+      const rb = rbFind(g.title);
+      if (!rb) return { say:"There is no runbook called “" + (g.title || "") + "”." };
+      pushUndo("runbook", true);
+      S.settings.runbooks = runbookStore().filter(x => x.id !== rb.id);
+      touch(); renderRunbooks();
+      return done("Removed “" + rb.title + "”.");
+    }
+    case "saveProfile": {
+      const had = profFind(g.system);
+      const now = new Date().toISOString();
+      const pf = { system:String(g.system || "").trim(),
+                   facts:String(g.facts || (had && had.facts) || ""),
+                   quirks:String(g.quirks || (had && had.quirks) || ""),
+                   tables:String(g.tables || (had && had.tables) || ""),
+                   owner:String(g.owner || (had && had.owner) || ""),
+                   updated: now };
+      if (!pf.system) return { say:"A profile needs a system." };
+      pushUndo("runbook", true);
+      if (had) profileStore()[profileStore().indexOf(had)] = pf;
+      else profileStore().unshift(pf);
+      touch(); renderRunbooks();
+      return done("Recorded what is known about " + pf.system + ".");
+    }
+
     case "draftEmail": {
       /* Dossier cannot send mail and does not pretend to. It writes the
          thing, puts it on screen, and lets you take it from there. */
@@ -7804,7 +8211,7 @@ function flowRun(a, quiet){
     }
 
     case "remember": {
-      pushUndo("remember");
+      pushUndo("remember", true);
       const r = memorySave({ title:g.title, body:g.body, tags:g.tags,
                              system:g.system, replaces:g.replaces });
       touch();
@@ -7817,7 +8224,7 @@ function flowRun(a, quiet){
       const n = memoryFind(g.title);
       if (!n) return flowNeed(a, "there is no note called \u201c" + g.title + "\u201d. " +
         "You have: " + memoryStore().map(x => x.title).join(", "));
-      pushUndo("forget");
+      pushUndo("forget", true);
       S.settings.memory = memoryStore().filter(x => x.id !== n.id);
       touch();
       return done("Forgotten \u201c" + n.title + "\u201d.");
@@ -8184,6 +8591,176 @@ function memorySave(o){
 }
 /* the notes that go with a question. Everything, newest first, trimmed only
    when there is so much of it that the payload would suffer */
+/* ═══ THE BAU LIBRARY ════════════════════════════════════════════════════
+   Two stores, deliberately separate.
+
+   A RUNBOOK is one symptom and what to do about it. Not one document — a
+   guideline document usually holds six or eight of these, and split apart
+   they can be matched; left whole they cannot. The trigger phrases are the
+   load-bearing field: they are what somebody actually types when they hit
+   the thing, and matching those beats matching a title every time.
+
+   A SYSTEM PROFILE is the durable truth about a system — what it does, what
+   it lies about, which tables hold the answer. It is short, and it is the
+   layer that lets the assistant help with a problem nobody has written down.
+   "regenCOI returns 200 whether or not it produced a letter" is one line
+   that answers a whole family of confused tickets.                        */
+
+function runbookStore(){
+  const st = S.settings;
+  if (!Array.isArray(st.runbooks)) st.runbooks = [];
+  return st.runbooks;
+}
+function profileStore(){
+  const st = S.settings;
+  if (!Array.isArray(st.profiles)) st.profiles = [];
+  return st.profiles;
+}
+function rbId(){ return "rb" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+
+function rbFind(title){
+  const want = String(title || "").toLowerCase().trim();
+  if (!want) return null;
+  const all = runbookStore();
+  return all.find(r => String(r.id).toLowerCase() === want)
+      || all.find(r => String(r.title || "").toLowerCase() === want)
+      || all.find(r => String(r.title || "").toLowerCase().indexOf(want) >= 0)
+      || null;
+}
+function profFind(system){
+  const want = String(system || "").toLowerCase().trim();
+  if (!want) return null;
+  const all = profileStore();
+  return all.find(p => String(p.system || "").toLowerCase() === want)
+      || all.find(p => String(p.system || "").toLowerCase().indexOf(want) >= 0)
+      || all.find(p => want.indexOf(String(p.system || "").toLowerCase()) >= 0)
+      || null;
+}
+
+/* Words too common to carry meaning in a support sentence. Matching on
+   "the" would rank every runbook equally, which is the same as ranking
+   none of them. */
+const RB_STOP = ("the a an and or of to in on for is are was were it its this that " +
+  "with from by at as be been not no if when then than we you i they he she " +
+  "have has had do does did can could would should will shall may might " +
+  "please kindly help me my our your issue problem error unable cannot").split(" ");
+
+function rbWords(t){
+  return String(t || "").toLowerCase()
+    .replace(/[^a-z0-9ក-៿]+/g, " ")
+    .split(" ")
+    .filter(w => w.length > 2 && RB_STOP.indexOf(w) < 0);
+}
+
+/* Score a runbook against what somebody actually said. A whole trigger
+   phrase appearing in the sentence is worth far more than a word overlap,
+   because that is the case the trigger was written for. */
+function rbScore(rb, text, system){
+  const low = " " + String(text || "").toLowerCase() + " ";
+  let sc = 0;
+  (rb.triggers || []).forEach(t => {
+    const p = String(t || "").toLowerCase().trim();
+    if (!p) return;
+    if (low.indexOf(p) >= 0) sc += 20 + Math.min(10, p.length / 4);
+    else {
+      const w = rbWords(p);
+      const hit = w.filter(x => low.indexOf(x) >= 0).length;
+      if (w.length && hit === w.length) sc += 8;
+      else sc += hit * 2;
+    }
+  });
+  const tw = rbWords(rb.title);
+  sc += tw.filter(w => low.indexOf(w) >= 0).length * 3;
+  if (String(rb.title || "").toLowerCase() && low.indexOf(String(rb.title).toLowerCase()) >= 0) sc += 15;
+
+  /* A system named by the caller is authoritative, and outranks a system
+     name that merely turns up in the sentence: "payment not showing" says
+     Payment incidentally, but if the caller said Imaging then they said
+     Imaging. The mismatch scales the score down rather than docking a few
+     points, because a flat penalty loses to a runbook with six triggers
+     that half-match — which is how somebody ends up following the payment
+     procedure for an imaging fault. */
+  const sys = String(rb.system || "").toLowerCase();
+  const named = String(system || "").toLowerCase();
+  if (named){
+    if (sys && named.indexOf(sys) >= 0) sc += 12;
+    else sc *= 0.2;
+  } else if (sys && low.indexOf(sys) >= 0) sc += 10;
+
+  if (rb.status === "approved") sc += 2;    /* a tie goes to the approved one */
+  return sc;
+}
+function rbMatch(text, system, limit){
+  return runbookStore()
+    .map(rb => ({ rb, score: rbScore(rb, text, system) }))
+    .filter(x => x.score >= 8)
+    .sort((a, b) => b.score - a.score || (a.rb.title > b.rb.title ? 1 : -1))
+    .slice(0, Math.max(1, limit || 5));
+}
+
+/* A procedure nobody has confirmed in a year is a liability, not an asset.
+   Anything past this is called out wherever it is shown. */
+const RB_STALE_DAYS = 365;
+function rbStale(rb){
+  const v = String(rb && rb.verified || "").slice(0, 10);
+  if (!v) return true;
+  return between(v, today()) > RB_STALE_DAYS;
+}
+
+function rbNormalise(r, keep){
+  const now = new Date().toISOString();
+  return {
+    id: (keep && keep.id) || r.id || rbId(),
+    title: String(r.title || "").trim(),
+    system: String(r.system || "").trim(),
+    triggers: (Array.isArray(r.triggers) ? r.triggers : String(r.triggers || "")
+                .split(/[\n;|]+/))
+              .map(x => String(x || "").trim()).filter(Boolean).slice(0, 40),
+    severity: ["P1","P2","P3","P4"].indexOf(r.severity) >= 0 ? r.severity : "P3",
+    steps: (Array.isArray(r.steps) ? r.steps : String(r.steps || "").split(/\n+/))
+           .map(x => String(x || "").trim()).filter(Boolean).slice(0, 60),
+    checks: String(r.checks || ""),
+    escalation: String(r.escalation || ""),
+    owner: String(r.owner || ""),
+    status: r.status === "approved" ? "approved" : "draft",
+    /* NOT today(). A runbook nobody has actually confirmed must read as
+       unconfirmed — stamping it with today's date on the way in would make
+       every imported and every freshly written procedure look freshly
+       checked, which is the exact lie the freshness field exists to catch. */
+    verified: String(r.verified || "").slice(0, 10) || (keep && keep.verified) || "",
+    uses: (keep && keep.uses) || r.uses || 0,
+    created: (keep && keep.created) || r.created || now,
+    updated: now
+  };
+}
+
+/* ── what the endpoint is told about the library ────────────────────────
+   The index, and only the index. See the note in flow.js about why the
+   bodies stay here until something asks for one by name. */
+function runbooksForFlow(){
+  return runbookStore().slice(0, 200).map(r => ({
+    title: r.title, system: r.system,
+    triggers: (r.triggers || []).slice(0, 12),
+    severity: r.severity || "P3",
+    steps: (r.steps || []).length,
+    status: r.status || "draft",
+    verified: String(r.verified || "").slice(0, 10),
+    stale: rbStale(r) || undefined
+  }));
+}
+/* Profiles do travel whole. They are few, they are meant to be about a
+   page, and they are the only thing that helps with a symptom that matches
+   nothing. The cap is a backstop against one that grew into a manual. */
+function profilesForFlow(){
+  return profileStore().slice(0, 14).map(p => ({
+    system: p.system,
+    facts: String(p.facts || "").slice(0, 2500),
+    quirks: String(p.quirks || "").slice(0, 2500),
+    tables: String(p.tables || "").slice(0, 1500),
+    owner: p.owner || ""
+  }));
+}
+
 function memoryForFlow(){
   const all = memoryStore();
   return all.slice(0, 60).map(n => ({
@@ -8200,9 +8777,11 @@ function memoryForFlow(){
      settings.flow   — the endpoint URL. A flow that could rewrite the
                        address Dossier posts to could point it at itself
                        somewhere else, and nothing downstream would notice.
-     memory, chatLearn, hushed — those have their own actions, with their
-                       own confirmations, and a generic setter would slip
-                       past them.                                          */
+     memory, chatLearn, hushed, runbooks, profiles — those have their own
+                       actions, with their own confirmations, and a generic
+                       setter would slip past them. A runbook rewritten
+                       through a settings key would skip the draft/approved
+                       distinction entirely, which is the whole point of it. */
 const FLOW_SET = {
   owner:          { type:"text",   what:"Your name, used in reports and hand-overs" },
   remind:         { type:"yes/no", what:"Windows reminders on or off" },
@@ -8349,12 +8928,231 @@ function renderMemory(){
     b.onclick = () => {
       const n = memoryStore()[+b.dataset.memdel];
       if (!n) return;
-      pushUndo("forget");
+      pushUndo("forget", true);
       S.settings.memory = memoryStore().filter(x => x.id !== n.id);
       touch(); renderMemory();
       toast("Forgotten \u201c" + n.title + "\u201d", { action:L("Undo"), onAction:doUndo });
     };
   });
+}
+
+/* ── the runbook library, in Setup ─────────────────────────────────────
+   The trigger phrases get the most room because they are what actually
+   decides whether the assistant finds the right procedure, and they are
+   the field people leave empty. */
+
+function renderRunbooks(){
+  const box = $("rbBox");
+  if (box){
+    const list = runbookStore();
+    box.innerHTML = '<p class="hint2">' + esc(L("RunbookHint")) + "</p>" +
+      '<div class="rbbar">' +
+        '<button class="btn sm" id="rbAdd">' + esc(L("RunbookAdd")) + "</button>" +
+        '<button class="btn sm" id="rbExp">' + esc(L("RunbookExport")) + "</button>" +
+        '<button class="btn sm" id="rbImp">' + esc(L("RunbookImport")) + "</button>" +
+      "</div>" +
+      (list.length
+        ? '<div class="memlist">' + list.map((r, i) =>
+            '<details class="memn rbn"><summary><b>' + esc(r.title) + "</b>" +
+              '<span class="mm">' + esc(r.system || "—") + " · " +
+                esc(r.severity || "P3") + " · " +
+                esc(r.status === "approved" ? L("RunbookApproved") : L("RunbookDraft")) +
+                (rbStale(r) ? " · " + esc(L("RunbookStaleShort")) : "") +
+              "</span></summary>" +
+            '<div class="rbed">' +
+              '<input class="in" data-rbf="title" data-rb="' + i + '" value="' + esc(r.title) + '" placeholder="Title">' +
+              '<input class="in" data-rbf="system" data-rb="' + i + '" value="' + esc(r.system || "") + '" placeholder="System">' +
+              '<select class="in" data-rbf="severity" data-rb="' + i + '">' +
+                ["P1","P2","P3","P4"].map(x => '<option' + (x === (r.severity || "P3") ? " selected" : "") + ">" + x + "</option>").join("") +
+              "</select>" +
+              '<select class="in" data-rbf="status" data-rb="' + i + '">' +
+                ["draft","approved"].map(x => '<option value="' + x + '"' + (x === (r.status || "draft") ? " selected" : "") + ">" + esc(L(x === "approved" ? "RunbookApproved" : "RunbookDraft")) + "</option>").join("") +
+              "</select>" +
+              '<input class="in" data-rbf="owner" data-rb="' + i + '" value="' + esc(r.owner || "") + '" placeholder="Owner">' +
+              '<input class="in mono" data-rbf="verified" data-rb="' + i + '" value="' + esc(r.verified || "") + '" placeholder="YYYY-MM-DD">' +
+            "</div>" +
+            '<label class="rbl">' + esc(L("RunbookTriggers")) + "</label>" +
+            '<textarea class="in mono rbt" data-rbf="triggers" data-rb="' + i + '" rows="3">' +
+              esc((r.triggers || []).join("\n")) + "</textarea>" +
+            '<label class="rbl">' + esc(L("RunbookStepsField")) + "</label>" +
+            '<textarea class="in rbt" data-rbf="steps" data-rb="' + i + '" rows="4">' +
+              esc((r.steps || []).join("\n")) + "</textarea>" +
+            '<label class="rbl">' + esc(L("RunbookChecksField")) + "</label>" +
+            '<textarea class="in mono rbt" data-rbf="checks" data-rb="' + i + '" rows="4">' +
+              esc(r.checks || "") + "</textarea>" +
+            '<label class="rbl">' + esc(L("RunbookEscField")) + "</label>" +
+            '<textarea class="in rbt" data-rbf="escalation" data-rb="' + i + '" rows="2">' +
+              esc(r.escalation || "") + "</textarea>" +
+            '<div class="memf"><span class="mm">' +
+              esc(r.uses ? L("MemoryUsed", { n:r.uses }) : L("MemoryNever")) + "</span>" +
+              '<button class="btn sm" data-rbdel="' + i + '">' + esc(L("RunbookForget")) +
+            "</button></div></details>").join("") + "</div>"
+        : '<p class="hint2" style="margin-top:8px;color:var(--ink-3)">' +
+          esc(L("RunbookEmpty")) + "</p>");
+
+    box.querySelectorAll("[data-rb]").forEach(el => {
+      el.onchange = () => {
+        const r = runbookStore()[+el.dataset.rb];
+        if (!r) return;
+        const f = el.dataset.rbf;
+        if (f === "triggers" || f === "steps")
+          r[f] = el.value.split("\n").map(x => x.trim()).filter(Boolean);
+        else r[f] = el.value;
+        r.updated = new Date().toISOString();
+        touch(); toast(L("RunbookSaved"));
+        if (f === "title" || f === "system" || f === "status" || f === "severity") renderRunbooks();
+      };
+    });
+    box.querySelectorAll("[data-rbdel]").forEach(b => {
+      b.onclick = () => {
+        const r = runbookStore()[+b.dataset.rbdel];
+        if (!r) return;
+        pushUndo("runbook", true);
+        S.settings.runbooks = runbookStore().filter(x => x.id !== r.id);
+        touch(); renderRunbooks();
+        toast("Removed “" + r.title + "”", { action:L("Undo"), onAction:doUndo });
+      };
+    });
+    const add = $("rbAdd");
+    if (add) add.onclick = () => {
+      pushUndo("runbook", true);
+      runbookStore().unshift(rbNormalise({ title:"New runbook", system:"", severity:"P3" }));
+      touch(); renderRunbooks();
+    };
+    const exp = $("rbExp"); if (exp) exp.onclick = rbExport;
+    const imp = $("rbImp"); if (imp) imp.onclick = () => { const f = $("rbIn"); if (f){ f.value = ""; f.click(); } };
+  }
+
+  const pbox = $("profBox");
+  if (!pbox) return;
+  const ps = profileStore();
+  pbox.innerHTML = '<p class="hint2">' + esc(L("ProfileHint")) + "</p>" +
+    '<div class="rbbar"><button class="btn sm" id="pfAdd">' + esc(L("ProfileAdd")) + "</button></div>" +
+    (ps.length
+      ? '<div class="memlist">' + ps.map((pf, i) =>
+          '<details class="memn rbn"><summary><b>' + esc(pf.system) + "</b>" +
+            '<span class="mm">' + esc(pf.owner || "") + "</span></summary>" +
+          '<div class="rbed">' +
+            '<input class="in" data-pff="system" data-pf="' + i + '" value="' + esc(pf.system) + '" placeholder="System">' +
+            '<input class="in" data-pff="owner" data-pf="' + i + '" value="' + esc(pf.owner || "") + '" placeholder="Owner">' +
+          "</div>" +
+          '<label class="rbl">' + esc(L("ProfileFacts")) + "</label>" +
+          '<textarea class="in rbt" data-pff="facts" data-pf="' + i + '" rows="3">' + esc(pf.facts || "") + "</textarea>" +
+          '<label class="rbl">' + esc(L("ProfileQuirks")) + "</label>" +
+          '<textarea class="in rbt" data-pff="quirks" data-pf="' + i + '" rows="3">' + esc(pf.quirks || "") + "</textarea>" +
+          '<label class="rbl">' + esc(L("ProfileTables")) + "</label>" +
+          '<textarea class="in mono rbt" data-pff="tables" data-pf="' + i + '" rows="3">' + esc(pf.tables || "") + "</textarea>" +
+          '<div class="memf"><span></span><button class="btn sm" data-pfdel="' + i + '">' +
+            esc(L("RunbookForget")) + "</button></div></details>").join("") + "</div>"
+      : '<p class="hint2" style="margin-top:8px;color:var(--ink-3)">' + esc(L("ProfileEmpty")) + "</p>");
+
+  pbox.querySelectorAll("[data-pf]").forEach(el => {
+    el.onchange = () => {
+      const pf = profileStore()[+el.dataset.pf];
+      if (!pf) return;
+      pf[el.dataset.pff] = el.value;
+      pf.updated = new Date().toISOString();
+      touch(); toast(L("RunbookSaved"));
+      if (el.dataset.pff === "system") renderRunbooks();
+    };
+  });
+  pbox.querySelectorAll("[data-pfdel]").forEach(b => {
+    b.onclick = () => {
+      const pf = profileStore()[+b.dataset.pfdel];
+      if (!pf) return;
+      pushUndo("runbook", true);
+      S.settings.profiles = profileStore().filter(x => x !== pf);
+      touch(); renderRunbooks();
+      toast("Removed “" + pf.system + "”", { action:L("Undo"), onAction:doUndo });
+    };
+  });
+  const pa = $("pfAdd");
+  if (pa) pa.onclick = () => {
+    pushUndo("runbook", true);
+    profileStore().unshift({ system:"New system", facts:"", quirks:"", tables:"",
+                             owner:"", updated:new Date().toISOString() });
+    touch(); renderRunbooks();
+  };
+}
+
+/* ── sharing a library without a shared drive ──────────────────────────
+   One file holds the whole library. Mail it, put it on a stick, drop it in
+   a chat — anywhere a file can go, the library can go. Import merges by
+   title and keeps whichever side was edited more recently, so two people
+   can both add runbooks and neither loses theirs. */
+
+const RB_BUNDLE = "dossier.runbooks";
+
+function rbExport(){
+  const rb = runbookStore(), pf = profileStore();
+  if (!rb.length && !pf.length){ toast(L("RunbookNothing"), { bad:true }); return; }
+  const bundle = { kind:RB_BUNDLE, version:1, exported:new Date().toISOString(),
+                   runbooks:rb, profiles:pf };
+  download("runbooks-" + today() + ".json", JSON.stringify(bundle, null, 2),
+           "application/json;charset=utf-8");
+  toast(L("RunbookExported"));
+}
+
+function rbImportBundle(text){
+  let b;
+  try { b = JSON.parse(text); } catch(e){ return null; }
+  if (!b || b.kind !== RB_BUNDLE || !Array.isArray(b.runbooks)) return null;
+
+  pushUndo("runbook", true);
+  let a = 0, c = 0;
+  (b.runbooks || []).forEach(raw => {
+    const inc = rbNormalise(raw, null);
+    if (!inc.title) return;
+    inc.updated = String(raw.updated || inc.updated);
+    inc.verified = String(raw.verified || "").slice(0, 10) || inc.verified;
+    inc.uses = raw.uses || 0;
+    const had = rbFind(inc.title);
+    if (had){
+      /* the newer edit wins — otherwise importing a colleague's copy would
+         quietly undo whatever you fixed this morning */
+      if (String(inc.updated) <= String(had.updated || "")) return;
+      inc.id = had.id;
+      inc.uses = Math.max(had.uses || 0, inc.uses);
+      runbookStore()[runbookStore().indexOf(had)] = inc;
+    } else runbookStore().push(inc);
+    a++;
+  });
+  (b.profiles || []).forEach(raw => {
+    const sys = String(raw.system || "").trim();
+    if (!sys) return;
+    const inc = { system:sys, facts:String(raw.facts || ""), quirks:String(raw.quirks || ""),
+                  tables:String(raw.tables || ""), owner:String(raw.owner || ""),
+                  updated:String(raw.updated || new Date().toISOString()) };
+    const had = profFind(sys);
+    if (had){
+      if (String(inc.updated) <= String(had.updated || "")) return;
+      profileStore()[profileStore().indexOf(had)] = inc;
+    } else profileStore().push(inc);
+    c++;
+  });
+  touch(); renderRunbooks();
+  return { a, c };
+}
+
+/* ── a runbook out of work you already did ─────────────────────────────
+   Nobody writes runbooks in advance. They write them straight after
+   solving something, if it is one button away, and never otherwise. */
+function rbFromTask(t){
+  if (!t) return null;
+  pushUndo("runbook", true);
+  const rb = rbNormalise({
+    title: t.title,
+    system: t.system || "",
+    severity: t.priority || "P3",
+    triggers: [t.title],
+    steps: (t.checklist || []).map(c => c.text),
+    checks: t.notes || "",
+    status: "draft"
+  });
+  runbookStore().unshift(rb);
+  touch(); renderRunbooks();
+  toast(L("RunbookFromMade", { t: rb.title }));
+  return rb;
 }
 
 /* ── what you told it to stop saying ───────────────────────────────────── */
@@ -10380,6 +11178,7 @@ function renderDrawer(){
       "<button class=\"btn pri\" id=\"tCon\">" + L("WorkOnThis") + "</button>" +
       "<button class=\"btn\" id=\"tDup\">" + L("Duplicate") + "</button>" +
       "<button class=\"btn\" id=\"tRout\">" + L("MakeRoutine") + "</button>" +
+      "<button class=\"btn\" id=\"tRb\">" + L("RunbookFromRecord") + "</button>" +
       "<button class=\"btn\" id=\"tCopy\">" + L("CopySummary") + "</button>" +
       "<button class=\"btn\" id=\"tPrint\">" + L("PrintThisRecord") + "</button>" +
       "<button class=\"btn danger\" id=\"tDel\">" + L("Delete") + "</button></div></div>";
@@ -11172,12 +11971,19 @@ async function renderModal(){
     "<h5 class=\"eyebrow\" style=\"margin:22px 0 8px\">" + L("MemoryHead") + "</h5>" +
     '<div id="memBox"></div>' +
 
+    "<h5 class=\"eyebrow\" style=\"margin:22px 0 8px\">" + L("RunbookHead") + "</h5>" +
+    '<div id="rbBox"></div>' +
+
+    "<h5 class=\"eyebrow\" style=\"margin:22px 0 8px\">" + L("ProfileHead") + "</h5>" +
+    '<div id="profBox"></div>' +
+
     "<h5 class=\"eyebrow\" style=\"margin:22px 0 8px\">" + L("HiddenNotices") + "</h5>" +
     '<div id="hushBox"></div>' +
 
     "<h5 class=\"eyebrow\" style=\"margin:22px 0 8px\">" + L("FlowHead") + "</h5>" +
     '<div id="flowBox"></div>';
   renderMemory();
+  renderRunbooks();
   renderHush();
   renderFlow();
 
@@ -13664,6 +14470,9 @@ $("dBody").addEventListener("click", async e => {
       checklist:(t.checklist||[]).map(c => c.text), notes:t.notes });
     touch(); return toast(L("AddedAsAWeekdayRoutine"));
   }
+  /* the moment a runbook actually gets written: right after the thing was
+     solved, with the steps you really followed already on the checklist */
+  if (id === "tRb"){ rbFromTask(t); return; }
   if (id === "tCon") return openConsole(t.id);
   if (id === "tCopy") return copyText(taskSummary(t), L("SummaryCopied"));
   if (id === "tDel"){ const i = t.id; closeDrawer(); return deleteTasks([i]); }
@@ -13878,6 +14687,18 @@ $("askO").addEventListener("click", e => {
 });
 
 /* JSON import (migrating from the old Day Log file, or another machine) */
+$("rbIn").addEventListener("change", e => {
+  const f = e.target.files && e.target.files[0];
+  if (!f) return;
+  const r = new FileReader();
+  r.onload = () => {
+    const got = rbImportBundle(String(r.result || ""));
+    if (!got) toast(L("RunbookBadFile"), { bad:true });
+    else toast(L("RunbookImported", { a:got.a, b:got.c }),
+               { action:L("Undo"), onAction:doUndo });
+  };
+  r.readAsText(f);
+});
 $("jsonIn").addEventListener("change", e => {
   const f = e.target.files[0]; e.target.value = "";
   if (!f) return;

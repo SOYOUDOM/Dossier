@@ -1,13 +1,13 @@
 {
   "dossier": 1,
   "protocol": "1.1",
-  "askedAt": "2026-09-04T06:21:37.792Z",
-  "today": "2026-09-04",
-  "weekday": "Friday",
+  "askedAt": "2026-09-06T15:03:50.984Z",
+  "today": "2026-09-06",
+  "weekday": "Sunday",
   "calendar": {
-    "tomorrow": "2026-09-05",
+    "tomorrow": "2026-09-07",
     "nextWorkingDay": "2026-09-07",
-    "todayIsOffDay": false,
+    "todayIsOffDay": true,
     "thisMonday": "2026-08-31",
     "weekendDays": [
       "Saturday",
@@ -146,7 +146,7 @@
         ],
         "autoRun": true,
         "raisesRecord": true,
-        "nextDue": "2026-09-04",
+        "nextDue": "2026-09-06",
         "lastRaised": "2026-08-30"
       },
       {
@@ -172,7 +172,7 @@
         "scripts": [],
         "autoRun": false,
         "raisesRecord": true,
-        "nextDue": "2026-09-04",
+        "nextDue": "2026-09-11",
         "lastRaised": ""
       }
     ],
@@ -306,6 +306,76 @@
       }
     ],
     "memoryTotal": 1,
+    "runbooks": [
+      {
+        "title": "COI letter does not generate, but the API returned success",
+        "system": "Imaging",
+        "triggers": [
+          "coi not generated",
+          "coi letter not generated",
+          "confirmation of insurance not generated",
+          "regencoi went through but no letter",
+          "clicked generate and nothing happened",
+          "coi regenerate no output",
+          "letter did not come out"
+        ],
+        "severity": "P3",
+        "steps": 6,
+        "status": "draft",
+        "verified": "",
+        "stale": true
+      },
+      {
+        "title": "Payment not flowing to IL enquiry",
+        "system": "Payment",
+        "triggers": [
+          "payment not flow to il",
+          "payment not flowing to il enquiry",
+          "payment not showing in il",
+          "paid but not reflected",
+          "premium paid not updated",
+          "receipt not in il enquiry"
+        ],
+        "severity": "P2",
+        "steps": 6,
+        "status": "draft",
+        "verified": "",
+        "stale": true
+      },
+      {
+        "title": "User asks for a report that has not refreshed",
+        "system": "Reporting",
+        "triggers": [
+          "report is empty",
+          "report not updated",
+          "yesterday data missing in report",
+          "dashboard showing old numbers",
+          "report still showing last week"
+        ],
+        "severity": "P3",
+        "steps": 5,
+        "status": "draft",
+        "verified": "",
+        "stale": true
+      }
+    ],
+    "runbookTotal": 3,
+    "profiles": [
+      {
+        "system": "Imaging",
+        "facts": "Generates and stores policy documents, including the Confirmation of Insurance (COI) letter. Regeneration is normally done through Swagger by passing one or more policy numbers.",
+        "quirks": "The regenCOI endpoint returns 200 whether or not a letter was actually produced. It reports that the request was accepted, not that the document exists. This is the single most common source of confusion on this system: staff click generate, see success, and assume the letter is there.\n\nSo a successful call proves nothing. Always confirm the letter row exists before telling a user it is done.\n\nWhen the source data is incomplete the template silently renders nothing rather than raising an error.",
+        "tables": "<COI_REQUEST>   one row per regeneration request\n<COI_LETTER>    one row per letter actually produced\n<POLICY_MASTER> the fields the template reads\n\nReplace these with your real names.",
+        "owner": ""
+      },
+      {
+        "system": "Payment",
+        "facts": "Takes premium payments from the gateway and posts them to IL, where they become visible in enquiry.",
+        "quirks": "There are two hops, and they fail differently. Gateway → staging is where payments go missing entirely. Staging → IL is where they arrive but do not post, usually because the policy is in a state that will not accept a payment or the amount does not match what was expected.\n\nAlways establish which hop broke before escalating. Escalating to the wrong team costs a day.",
+        "tables": "<IL_PAYMENT_STAGING> arrived, not yet posted\n<IL_RECEIPT>         posted\n\nReplace these with your real names.",
+        "owner": ""
+      }
+    ],
     "counts": {
       "records": 7,
       "live": 5,
@@ -527,6 +597,118 @@
       "what": "Open the chase sheet for everything that is due a chase.",
       "needs": [],
       "args": {}
+    },
+    {
+      "do": "findRunbook",
+      "write": false,
+      "what": "Find the runbooks that match a symptom. Give about the user's own words — the error, what they clicked, what did not happen. This searches trigger phrases, so it finds things a title search would miss. Use it before answering any \"how do I fix\" question.",
+      "needs": [],
+      "args": {
+        "about": "string",
+        "system": "string"
+      }
+    },
+    {
+      "do": "readRunbook",
+      "write": false,
+      "what": "Read one runbook in full — its steps, its checks and its escalation. The request carries only the index (titles, systems, trigger phrases), never the bodies, so you must read one before you can quote its steps. Never invent steps for a runbook you have not read.",
+      "needs": [
+        "title"
+      ],
+      "args": {
+        "title": "string"
+      }
+    },
+    {
+      "do": "listRunbooks",
+      "write": false,
+      "what": "List the runbook library, or just one system's. Use it when somebody asks what is covered, or when you are about to write a new runbook and need to know whether one already exists.",
+      "needs": [],
+      "args": {
+        "system": "string"
+      }
+    },
+    {
+      "do": "readProfile",
+      "write": false,
+      "what": "Read what is known about a system: what its API does and does not tell you, the tables that hold the truth, who owns it. When a symptom matches no runbook, this is what you reason from — an endpoint that returns success on failure explains a great many confused tickets.",
+      "needs": [
+        "system"
+      ],
+      "args": {
+        "system": "string"
+      }
+    },
+    {
+      "do": "startRunbook",
+      "write": true,
+      "what": "Raise a record from a runbook, with its steps already on the checklist. Use it once the person agrees this is the right runbook, so the work is tracked and there is a record of what was done.",
+      "needs": [
+        "title"
+      ],
+      "args": {
+        "title": "string",
+        "requester": "string",
+        "ticket": "string",
+        "priority": "P1 | P2 | P3 | P4"
+      }
+    },
+    {
+      "do": "saveRunbook",
+      "write": true,
+      "what": "Write a runbook, or replace one of the same title. triggers are the phrases somebody would actually use when they hit this — the error text, the symptom in their words — and they are what findRunbook matches on, so give several and make them specific. steps is the procedure, one instruction per entry. checks is for the queries and table lookups that prove what is wrong; put them in a ``` fence. New runbooks are drafts until somebody with authority approves them.",
+      "needs": [
+        "title",
+        "system"
+      ],
+      "args": {
+        "title": "string",
+        "system": "string",
+        "triggers": "list of text",
+        "severity": "P1 | P2 | P3 | P4",
+        "steps": "list of text",
+        "checks": "text",
+        "escalation": "text",
+        "owner": "string",
+        "status": "draft | approved"
+      }
+    },
+    {
+      "do": "verifyRunbook",
+      "write": true,
+      "what": "Stamp a runbook as checked today. A procedure nobody has confirmed in a year is a liability, so say so when one is stale.",
+      "needs": [
+        "title"
+      ],
+      "args": {
+        "title": "string"
+      }
+    },
+    {
+      "do": "deleteRunbook",
+      "write": true,
+      "what": "Remove a runbook from the library.",
+      "needs": [
+        "title"
+      ],
+      "args": {
+        "title": "string"
+      }
+    },
+    {
+      "do": "saveProfile",
+      "write": true,
+      "what": "Write what is known about a system. facts is what it does; quirks is what it does that surprises people — an endpoint that returns 200 whether or not it worked belongs here; tables is where the truth actually lives. Keep it to about a page: this travels with every question, unlike runbook bodies.",
+      "needs": [
+        "system"
+      ],
+      "args": {
+        "system": "string",
+        "facts": "text",
+        "quirks": "text",
+        "tables": "text",
+        "owner": "string"
+      }
     },
     {
       "do": "draftEmail",

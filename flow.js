@@ -98,6 +98,69 @@ const ACTIONS = {
   chaseSheet: { write:false, needs:[], args:{},
     what:"Open the chase sheet for everything that is due a chase." },
 
+  /* ── the BAU library ─────────────────────────────────────────────────
+     A runbook is one symptom and what to do about it, not one document.
+     A system profile is the durable truth about a system — what its API
+     lies about, which tables hold the answer — and it is what lets you
+     help with a problem nobody has written down yet. Reach for the
+     profile first when the symptom does not match anything. */
+
+  findRunbook: { write:false, needs:[], args:{ about:STR, system:STR },
+    what:"Find the runbooks that match a symptom. Give about the user's own " +
+         "words — the error, what they clicked, what did not happen. This " +
+         "searches trigger phrases, so it finds things a title search would " +
+         "miss. Use it before answering any \"how do I fix\" question." },
+
+  readRunbook: { write:false, needs:["title"], args:{ title:STR },
+    what:"Read one runbook in full — its steps, its checks and its escalation. " +
+         "The request carries only the index (titles, systems, trigger phrases), " +
+         "never the bodies, so you must read one before you can quote its steps. " +
+         "Never invent steps for a runbook you have not read." },
+
+  listRunbooks: { write:false, needs:[], args:{ system:STR },
+    what:"List the runbook library, or just one system's. Use it when somebody " +
+         "asks what is covered, or when you are about to write a new runbook " +
+         "and need to know whether one already exists." },
+
+  readProfile: { write:false, needs:["system"], args:{ system:STR },
+    what:"Read what is known about a system: what its API does and does not " +
+         "tell you, the tables that hold the truth, who owns it. When a symptom " +
+         "matches no runbook, this is what you reason from — an endpoint that " +
+         "returns success on failure explains a great many confused tickets." },
+
+  startRunbook: { write:true, needs:["title"],
+    args:{ title:STR, requester:STR, ticket:STR, priority:["P1","P2","P3","P4"] },
+    what:"Raise a record from a runbook, with its steps already on the " +
+         "checklist. Use it once the person agrees this is the right runbook, " +
+         "so the work is tracked and there is a record of what was done." },
+
+  saveRunbook: { write:true, needs:["title","system"],
+    args:{ title:STR, system:STR, triggers:LIST, severity:["P1","P2","P3","P4"],
+           steps:LIST, checks:TXT, escalation:TXT, owner:STR,
+           status:["draft","approved"] },
+    what:"Write a runbook, or replace one of the same title. triggers are the " +
+         "phrases somebody would actually use when they hit this — the error " +
+         "text, the symptom in their words — and they are what findRunbook " +
+         "matches on, so give several and make them specific. steps is the " +
+         "procedure, one instruction per entry. checks is for the queries and " +
+         "table lookups that prove what is wrong; put them in a ``` fence. " +
+         "New runbooks are drafts until somebody with authority approves them." },
+
+  verifyRunbook: { write:true, needs:["title"], args:{ title:STR },
+    what:"Stamp a runbook as checked today. A procedure nobody has confirmed " +
+         "in a year is a liability, so say so when one is stale." },
+
+  deleteRunbook: { write:true, needs:["title"], args:{ title:STR },
+    what:"Remove a runbook from the library." },
+
+  saveProfile: { write:true, needs:["system"],
+    args:{ system:STR, facts:TXT, quirks:TXT, tables:TXT, owner:STR },
+    what:"Write what is known about a system. facts is what it does; quirks " +
+         "is what it does that surprises people — an endpoint that returns 200 " +
+         "whether or not it worked belongs here; tables is where the truth " +
+         "actually lives. Keep it to about a page: this travels with every " +
+         "question, unlike runbook bodies." },
+
   draftEmail: { write:false, needs:["subject","body"],
     args:{ to:STR, cc:STR, bcc:STR, subject:STR, body:TXT, record:REF },
     what:"Write an email and show it as a draft they can copy or open in " +
@@ -534,6 +597,21 @@ function buildRequest(text, ctx, cfg){
          next time you have forgotten you ever did. */
       memory: ctx.memory || [],
       memoryTotal: ctx.memoryTotal || 0,
+
+      /* The runbook library arrives as an index and nothing else: title,
+         system, trigger phrases, severity, freshness. A hundred of those
+         cost less than one note does, and the bodies — which are the long
+         part — are fetched with readRunbook only for the one that matches.
+         Send the bodies of all of them and the request grows without bound
+         until the model refuses it, which is the failure this shape exists
+         to avoid.
+
+         System profiles are the exception and travel in full. There are few
+         of them, they are meant to be about a page, and they are what you
+         reason from when a symptom matches no runbook at all. */
+      runbooks: ctx.runbooks || [],
+      runbookTotal: ctx.runbookTotal || 0,
+      profiles: ctx.profiles || [],
       counts: ctx.counts || {},
       recordsSent: rows.length,
       recordsTotal: (ctx.tasks || []).length,
