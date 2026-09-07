@@ -67,6 +67,38 @@ regencoi went through but no letter
 clicked generate and nothing happened
 ```
 
+### How the assistant is supposed to use them
+
+This is worth being explicit about, because the obvious design is wrong.
+
+The index tells the endpoint *that* a procedure exists. It does not tell it
+what the procedure says. An assistant given only the index can do exactly one
+thing with a support question: announce that it is going to look something up.
+That is not support — it is a colleague saying "let me get back to you" and
+walking off.
+
+So the app **matches locally before sending**, and the two or three runbooks
+that match the person's own words travel **whole**. The endpoint reads the
+actual procedure and answers with the thing a document cannot give you:
+
+- which step matters *for this case*
+- what to check **first**, and what each outcome will mean
+- what not to bother doing
+- the check written against the real policy number, not `<policy>`
+
+The full runbook is still drawn on screen underneath, as reference. It is not
+the answer. If the reply is the procedure repeated back, something is wrong —
+almost always an out-of-date prompt.
+
+### Two kinds of angle bracket
+
+`<policy>` is a **value**. The app fills it from the question, so the query on
+screen carries the real policy number.
+
+`<COI_REQUEST>` is a **configuration** your team has not done yet. It is left
+alone, and the card says so at the bottom. Never let one be mistaken for the
+other: a plausible-looking invented table name gets run.
+
 ### System profiles — what is durably true
 
 Short, and mostly about what a system **lies about**.

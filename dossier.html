@@ -1404,6 +1404,9 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
 .chrb .rbstale{padding:7px 11px;font-size:11.5px;line-height:1.55;
   color:var(--ch-ink);background:var(--ch-bg);border-bottom:1px solid var(--ch-line)}
 .chrb .rbstale::before{content:"\26A0";margin-right:7px;color:var(--ch-acc)}
+.chrb .rbunset{padding:7px 11px;font-size:11.5px;line-height:1.55;color:var(--ch-dim);
+  background:var(--ch-bg);border-top:1px solid var(--ch-line)}
+.chrb .rbunset::before{content:"\2699";margin-right:7px;color:var(--ch-dim)}
 .chrb .rbsec{padding:9px 11px 3px;font-size:9.5px;letter-spacing:.08em;
   text-transform:uppercase;color:var(--ch-dim);font-weight:700}
 .chrb .rbsteps{margin:0;padding:0 11px 8px 30px;font-size:12.5px;line-height:1.7;
@@ -3593,6 +3596,8 @@ const STRINGS = {
   RunbookStale: "Nobody has confirmed this since {d}. Check it still works before you follow it.",
   RunbookNeverChecked: "This has never been confirmed. Check it still works before you follow it.",
   RunbookStaleShort: "unchecked",
+  RunbookUnset: "{n} name(s) in here were never filled in for your systems \u2014 {what}. Set them in Setup \u2192 Runbooks before anyone runs these.",
+  RunbookFilled: "filled in from your question",
   RunbookStepWord: "steps",
   RunbookPick: "{n} runbooks match. Which one?",
   ProfileFacts: "What it does",
@@ -4055,7 +4060,7 @@ const STATUSES = [
    the status bar, and clicking it copies a line you can paste into a bug
    report — build date and flow protocol included, because those are the two
    things that actually differ between copies. */
-const APP_VERSION = "2.0.0";
+const APP_VERSION = "2.1.0";
 const APP_BUILT = "2026-09-07";
 function buildLine(){
   return "Dossier v" + APP_VERSION + " \u00b7 built " + APP_BUILT +
@@ -7004,8 +7009,9 @@ function chatDeclineAsked(){
    SQL can be copied without reformatting it, and the freshness stamp in
    plain sight — a step somebody wrote two years ago and never re-checked
    should not look identical to one confirmed last week. */
-function chatRunbook(rb){
+function chatRunbook(rb, idents){
   const log = $("chatLog"); if (!log) return;
+  const ids = idents || [];
   const wrap = document.createElement("div");
   wrap.className = "chb bot";
   const box = document.createElement("div");
@@ -7038,7 +7044,8 @@ function chatRunbook(rb){
     h.textContent = L("RunbookSteps"); box.appendChild(h);
     const ol = document.createElement("ol");
     ol.className = "rbsteps";
-    rb.steps.forEach(x => { const li = document.createElement("li"); li.textContent = x; ol.appendChild(li); });
+    rb.steps.forEach(x => { const li = document.createElement("li");
+      li.textContent = rbFill(x, ids); ol.appendChild(li); });
     box.appendChild(ol);
   }
 
@@ -7047,7 +7054,9 @@ function chatRunbook(rb){
     h.textContent = L("RunbookChecks"); box.appendChild(h);
     const d = document.createElement("div");
     d.className = "rbbody";
-    d.innerHTML = chatSay(rb.checks);
+    /* the real policy number, not <policy> for somebody to substitute by
+       hand at eleven at night */
+    d.innerHTML = chatSay(rbFill(rb.checks, ids));
     box.appendChild(d);
   }
 
@@ -7055,8 +7064,19 @@ function chatRunbook(rb){
     const h = document.createElement("div"); h.className = "rbsec";
     h.textContent = L("RunbookEscalation"); box.appendChild(h);
     const d = document.createElement("div"); d.className = "rbesc";
-    d.textContent = rb.escalation;
+    d.textContent = rbFill(rb.escalation, ids);
     box.appendChild(d);
+  }
+
+  /* <COI_REQUEST> is not a value waiting for a policy number, it is a table
+     nobody has named yet. Saying so beats letting somebody paste a query
+     against a table that does not exist. */
+  const unset = rbUnset(rb);
+  if (unset.length){
+    const u = document.createElement("div");
+    u.className = "rbunset";
+    u.textContent = L("RunbookUnset", { n:unset.length, what:unset.slice(0, 4).join(", ") });
+    box.appendChild(u);
   }
 
   const foot = document.createElement("div");
@@ -7617,6 +7637,17 @@ function chatRenderBot(r, sourceText, replaying){
 
   d.innerHTML = h;
   $("chatLog").appendChild(d);
+
+  /* reference cards go underneath the answer, never above it */
+  (r.cards || []).forEach(c => {
+    if (c.kind === "runbook"){ const rb = rbFind(c.title); if (rb) chatRunbook(rb, r.idents); }
+    else if (c.kind === "profile"){ const pf = profFind(c.system); if (pf) chatProfile(pf); }
+    else if (c.kind === "pick"){
+      const hits = (c.titles || []).map(t => rbFind(t)).filter(Boolean).map(rb => ({ rb }));
+      if (hits.length) chatRunbookPick(hits);
+    }
+  });
+
   chatScroll();
   if (pending.length) chatQueue(pending);
 }
@@ -7696,7 +7727,14 @@ function flowOrigin(){
    that hands over live arrays and every helper the assistant has, which is
    right for something running in this page and wrong for something being
    serialised and posted to a server. */
-function flowContext(){
+/* The question is passed in so the library can be matched HERE, before the
+   request goes out. That is the whole difference between an assistant that
+   reasons and one that photocopies: the index alone tells the endpoint that
+   a procedure exists but not what it says, so the only thing it can do with
+   it is announce that it will go and look. Matching is local and costs
+   nothing, so the two or three that actually match travel in full and the
+   endpoint can read them, weigh them against what was asked, and answer. */
+function flowContext(q){
   const st = S.settings;
   const c = chatThread();
   const msgs = ((c && c.msgs) || []).slice(-6).map(m => ({
@@ -7736,6 +7774,8 @@ function flowContext(){
     memoryTotal: memoryStore().length,
     runbooks: runbooksForFlow(),
     runbookTotal: runbookStore().length,
+    runbooksMatched: runbooksMatchedForFlow(q),
+    mentioned: rbIdents(q),
     profiles: profilesForFlow(),
     settable: flowSettable(),
     attachments: (CHAT.files || []).map(f => ({
@@ -7798,7 +7838,7 @@ async function flowAsk(q, thread){
   chatScroll();
 
   let out = null, err = null;
-  try { out = await DossierFlow.ask(q, flowContext(), cfg); }
+  try { out = await DossierFlow.ask(q, flowContext(q), cfg); }
   catch(e){ err = e; }
   wait.remove();
   $("chat").classList.remove("busy");
@@ -7823,15 +7863,16 @@ async function flowAsk(q, thread){
                      chips:[{ label:L("FlowTest"), act:{ kind:"panel", panel:"setup" } }] }, q);
   }
 
-  chatBot(flowReply(out), q);
+  chatBot(flowReply(out, q), q);
   chatSide();
 }
 
 /* One validated reply, turned into the same shape every other answer uses —
    so a flow's answer looks like an answer rather than like a debug dump, and
    the "not what I meant" button underneath still works. */
-function flowReply(out){
-  const r = { say:out.say || "", note:"", rows:[], steps:[], chips:[] };
+function flowReply(out, asked){
+  const r = { say:out.say || "", note:"", rows:[], steps:[], chips:[],
+              idents: rbIdents(asked || "") };
 
   if (out.ask) r.say = (r.say ? r.say + "\n\n" : "") + out.ask;
   if (out.note) r.note = out.note;
@@ -7847,6 +7888,12 @@ function flowReply(out){
     const res = flowRun(a, true);
     if (res && res.rows) r.rows = r.rows.concat(res.rows);
     if (res && res.say) r.say = (r.say ? r.say + "\n" : "") + res.say;
+    /* A runbook card is reference material, not the answer. It used to be
+       appended the moment the action ran — which put it ABOVE the sentence
+       explaining it, so the screen read as a procedure dumped verbatim
+       followed by an afterthought. Cards are carried on the reply now and
+       drawn underneath it. Stored by name so a replayed thread redraws. */
+    if (res && res.card) (r.cards = r.cards || []).push(res.card);
   });
 
   /* Writing waits — one dialogue per action, because agreeing to raise a
@@ -8111,16 +8158,14 @@ function flowRun(a, quiet){
             " runbook(s): " + runbookStore().map(r => r.title).slice(0, 10).join(" · ")
           : "The runbook library is empty. Menu → Setup → Runbooks, or ask me to write one." };
       }
-      if (hits.length === 1){ chatRunbook(hits[0].rb); return { say:"" }; }
-      chatRunbookPick(hits);
-      return { say:"" };
+      if (hits.length === 1) return { card:{ kind:"runbook", title:hits[0].rb.title } };
+      return { card:{ kind:"pick", titles:hits.map(h => h.rb.title) } };
     }
     case "readRunbook": {
       const rb = rbFind(g.title);
       if (!rb) return { say:"There is no runbook called “" + (g.title || "") + "”." };
       rb.uses = (rb.uses || 0) + 1; touch();
-      chatRunbook(rb);
-      return { say:"" };
+      return { card:{ kind:"runbook", title:rb.title } };
     }
     case "listRunbooks": {
       let list = runbookStore();
@@ -8129,15 +8174,13 @@ function flowRun(a, quiet){
       if (!list.length) return { say: g.system
         ? "No runbooks for " + g.system + " yet."
         : "The runbook library is empty." };
-      chatRunbookPick(list.map(rb => ({ rb, score:0 })));
-      return { say:"" };
+      return { card:{ kind:"pick", titles:list.map(r => r.title) } };
     }
     case "readProfile": {
       const pf = profFind(g.system);
       if (!pf) return { say:"Nothing is recorded about " + (g.system || "that system") +
                              ". Ask me to write a profile for it." };
-      chatProfile(pf);
-      return { say:"" };
+      return { card:{ kind:"profile", system:pf.system } };
     }
     case "startRunbook": {
       const rb = rbFind(g.title);
@@ -8677,27 +8720,60 @@ function rbWords(t){
     .filter(w => w.length > 2 && RB_STOP.indexOf(w) < 0);
 }
 
-/* Score a runbook against what somebody actually said. A whole trigger
-   phrase appearing in the sentence is worth far more than a word overlap,
+/* People do not type the trigger phrase. They type the tense they are in:
+   the runbook says "coi not generated", they write "COI not generating".
+   Matching on the exact string misses that, and missing it is the whole
+   ball game — a library nobody can find is a library nobody has. So words
+   are compared as stems, and a trigger counts as hit when its words appear
+   in order, even inflected differently. */
+function rbStem(w){ return String(w).replace(/(ing|ed|es|s)$/, "").replace(/e$/, ""); }
+
+/* '' | 'words' | 'phrase' — one definition of "this trigger matched", used
+   both for scoring and for telling the endpoint WHY something matched. */
+function rbTriggerHit(trigger, text){
+  const p = String(trigger || "").toLowerCase().trim();
+  if (!p) return "";
+  if ((" " + String(text).toLowerCase() + " ").indexOf(p) >= 0) return "phrase";
+  const tw = rbWords(p).map(rbStem);
+  if (!tw.length) return "";
+  const qw = rbWords(text).map(rbStem);
+  let i = 0;
+  tw.forEach(w => { const at = qw.indexOf(w, i); if (at >= 0) i = at + 1; });
+  const all = tw.every(w => qw.indexOf(w) >= 0);
+  if (!all) return "";
+  /* every word present, and in the order the trigger has them */
+  return i > 0 && tw.length > 1 ? "phrase" : "words";
+}
+
+/* Score a runbook against what somebody actually said. A trigger the
+   sentence really carries is worth far more than a stray word overlap,
    because that is the case the trigger was written for. */
 function rbScore(rb, text, system){
   const low = " " + String(text || "").toLowerCase() + " ";
-  let sc = 0;
+  const qw = rbWords(text).map(rbStem);
+
+  /* evidence = the runbook's own words turning up. The system bonus is
+     added to this, never a substitute for it: naming a system must not be
+     able to surface a runbook on its own, or "the imaging queue is stuck"
+     drags up every imaging procedure there is. */
+  let ev = 0;
   (rb.triggers || []).forEach(t => {
-    const p = String(t || "").toLowerCase().trim();
-    if (!p) return;
-    if (low.indexOf(p) >= 0) sc += 20 + Math.min(10, p.length / 4);
+    const hit = rbTriggerHit(t, text);
+    if (hit === "phrase") ev += 22 + Math.min(10, String(t).length / 4);
+    else if (hit === "words") ev += 10;
     else {
-      const w = rbWords(p);
-      const hit = w.filter(x => low.indexOf(x) >= 0).length;
-      if (w.length && hit === w.length) sc += 8;
-      else sc += hit * 2;
+      const w = rbWords(t).map(rbStem);
+      ev += w.filter(x => qw.indexOf(x) >= 0).length * 2;
     }
   });
-  const tw = rbWords(rb.title);
-  sc += tw.filter(w => low.indexOf(w) >= 0).length * 3;
-  if (String(rb.title || "").toLowerCase() && low.indexOf(String(rb.title).toLowerCase()) >= 0) sc += 15;
+  const tw = rbWords(rb.title).map(rbStem);
+  ev += tw.filter(w => qw.indexOf(w) >= 0).length * 3;
+  if (String(rb.title || "").toLowerCase() &&
+      low.indexOf(String(rb.title).toLowerCase()) >= 0) ev += 15;
 
+  if (ev < 6) return 0;                 /* nothing of this runbook was said */
+
+  let sc = ev;
   /* A system named by the caller is authoritative, and outranks a system
      name that merely turns up in the sentence: "payment not showing" says
      Payment incidentally, but if the caller said Imaging then they said
@@ -8759,6 +8835,59 @@ function rbNormalise(r, keep){
   };
 }
 
+/* ── the identifiers in what they said ──────────────────────────────────
+   "COI not generating for policy A018346A10" carries the one value that
+   makes a procedure specific instead of generic. Pulling it out lets the
+   checks be written against the real policy rather than handed over with
+   <policy> still in them for somebody to substitute by hand at 11pm. */
+const RB_SLOT = { policy:1, reference:1, ref:1, ticket:1, txn:1, receipt:1,
+                  job:1, id:1, code:1, user:1, account:1, number:1 };
+function rbIdents(text){
+  const out = [];
+  String(text || "").split(/[\s,;()"']+/).forEach(w => {
+    const t = w.replace(/[.:]+$/, "");
+    if (t.length < 5 || t.length > 32) return;
+    if (!/\d/.test(t)) return;              /* an identifier has a digit in it */
+    if (!/^[A-Za-z0-9][A-Za-z0-9._\/-]*$/.test(t)) return;
+    if (/^\d{4}-\d{2}-\d{2}$/.test(t)) return;            /* that is a date */
+    if (/^(p[1-4]|\d{1,2}[hm])$/i.test(t)) return;        /* priority, duration */
+    if (out.indexOf(t) < 0) out.push(t);
+  });
+  return out.slice(0, 6);
+}
+
+/* Two kinds of angle-bracket in a runbook, and they must not look alike:
+
+     <policy>        a VALUE, filled from the question
+     <COI_REQUEST>   a CONFIGURATION the team has not done yet
+
+   Filling the first is help. Leaving the second looking like the first is
+   how somebody runs a query against a table that does not exist. */
+function rbIsSlot(name){
+  return /^[a-z][a-z_]*$/.test(name) && (RB_SLOT[name] || name.length <= 12);
+}
+function rbFill(text, idents){
+  const ids = (idents || []).slice();
+  const seen = {};
+  return String(text || "").replace(/<([^<>\n]{1,40})>/g, (whole, name) => {
+    if (!rbIsSlot(name)) return whole;                 /* configuration */
+    if (!ids.length) return whole;
+    if (!(name in seen)) seen[name] = ids.length > 1 && name !== "policy"
+      ? ids[Math.min(Object.keys(seen).length, ids.length - 1)] : ids[0];
+    return seen[name];
+  });
+}
+/* the configuration placeholders still standing, so the card can say so */
+function rbUnset(rb){
+  const t = [rb.checks, rb.escalation, (rb.steps || []).join("\n")].join("\n");
+  const out = [];
+  (t.match(/<([^<>\n]{1,40})>/g) || []).forEach(m => {
+    const n = m.slice(1, -1);
+    if (!rbIsSlot(n) && out.indexOf(n) < 0) out.push(n);
+  });
+  return out;
+}
+
 /* ── what the endpoint is told about the library ────────────────────────
    The index, and only the index. See the note in flow.js about why the
    bodies stay here until something asks for one by name. */
@@ -8773,6 +8902,26 @@ function runbooksForFlow(){
     stale: rbStale(r) || undefined
   }));
 }
+/* The two or three that match what was actually asked, IN FULL — steps,
+   checks, escalation. This is the block the endpoint answers from. Matching
+   happens here because it is cheap and local; only the winners travel, so
+   the request stays small however large the library grows. */
+function runbooksMatchedForFlow(q){
+  if (!q) return [];
+  return rbMatch(q, "", 3).map(({ rb, score }) => ({
+    title: rb.title, system: rb.system, severity: rb.severity || "P3",
+    why: (rb.triggers || []).filter(t => rbTriggerHit(t, q)).slice(0, 4),
+    confidence: score >= 32 ? "high" : score >= 16 ? "fair" : "weak",
+    steps: (rb.steps || []).slice(0, 40),
+    checks: String(rb.checks || "").slice(0, 4000),
+    escalation: String(rb.escalation || "").slice(0, 1200),
+    status: rb.status || "draft",
+    verified: String(rb.verified || "").slice(0, 10),
+    stale: rbStale(rb) || undefined,
+    unset: rbUnset(rb)
+  }));
+}
+
 /* Profiles do travel whole. They are few, they are meant to be about a
    page, and they are the only thing that helps with a symptom that matches
    nothing. The cap is a backstop against one that grew into a manual. */

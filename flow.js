@@ -611,6 +611,17 @@ function buildRequest(text, ctx, cfg){
          reason from when a symptom matches no runbook at all. */
       runbooks: ctx.runbooks || [],
       runbookTotal: ctx.runbookTotal || 0,
+
+      /* THE ONE TO READ. The app matched the library against what was
+         actually asked before sending, so these two or three arrive whole —
+         steps, checks, escalation — and are what the answer is built from.
+         The index above only says what exists; answering from it is how you
+         end up announcing that you will look something up instead of
+         helping. */
+      runbooksMatched: ctx.runbooksMatched || [],
+      /* the identifiers in their sentence — a policy number, a ticket — so
+         the checks can be written against the real thing */
+      mentioned: ctx.mentioned || [],
       profiles: ctx.profiles || [],
       counts: ctx.counts || {},
       recordsSent: rows.length,

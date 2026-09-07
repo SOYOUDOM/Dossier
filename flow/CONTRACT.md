@@ -197,6 +197,38 @@ request until the model refused it. So:
 
 `runbookTotal` is how many exist; the index is capped at 200.
 
+**`workspace.runbooksMatched` is the block you answer from.** The app matched
+the library against the person's own words *before* sending, so the two or
+three that actually match arrive **whole** — steps, checks, escalation:
+
+```json
+{ "title": "COI letter does not generate, but the API returned success",
+  "system": "Imaging", "severity": "P3",
+  "why": ["coi not generated", "clicked generate and nothing happened"],
+  "confidence": "high",
+  "steps": ["Confirm which policy number(s)…", "…"],
+  "checks": "```sql\nSELECT policy_no, status…\n```",
+  "escalation": "Data missing in <POLICY_MASTER> → …",
+  "stale": true, "unset": ["COI_REQUEST", "COI_LETTER"] }
+```
+
+This exists because the index alone made analysis impossible. Knowing that a
+procedure exists, without its text, leaves only one move: announcing that you
+will go and look it up. That is not support, and it was the shape of the first
+version of this contract.
+
+- `why` — which trigger phrases the sentence actually carried
+- `confidence` — `high` · `fair` · `weak`. On `weak`, say you are not sure and
+  ask the one question that would settle it
+- `unset` — angle-bracketed names this team has never configured. Leave them
+  as they are and say once that they need filling in; never invent a table
+  name to make a query look finished
+
+**`workspace.mentioned`** carries the identifiers from their sentence — a
+policy number, a ticket reference. Put them into any check you quote. Handing
+back SQL with `<policy>` still in it, when the policy number was in the
+question, is the difference between help and a photocopy.
+
 **`workspace.profiles` travels whole.** A system profile is what is durably
 true about a system — what it does, what it *lies* about, which tables hold
 the answer. There are few of them and each is meant to be about a page.

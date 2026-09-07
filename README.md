@@ -1088,7 +1088,15 @@ A **system profile** is what is durably true about a system, especially what it
 one line answers a family of tickets no runbook covers, which is why the
 assistant can help with problems nobody wrote down.
 
-**Runbooks travel as an index, never as bodies.** Title, system, trigger
+**The app matches before it sends.** Matching is local and costs nothing, so
+the two or three runbooks that match your own words travel *whole* — steps,
+checks, escalation — and the assistant answers from the real procedure: which
+step matters here, what to check first, what each outcome means. The full
+runbook is drawn underneath as reference, not as the answer. Identifiers in
+your sentence are substituted in, so the SQL on screen carries the real policy
+number rather than `<policy>`.
+
+**Everything else travels as an index, never as bodies.** Title, system, trigger
 phrases, severity, freshness — about 15 tokens each, so a hundred of them cost
 less to send than one long memory note. The steps and the SQL stay on your
 machine until something asks for one by name. Send the bodies of all of them
@@ -1522,10 +1530,10 @@ drive the real files in a real browser (Playwright + Chromium), because the
 things that break here are things a unit test cannot see: a stale iframe cache,
 a CSP refusal, a file one folder away from where a manifest says.
 
-The sixteen exercised for the current release — `teach`, `talk2`, `pick`,
+The seventeen exercised for the current release — `teach`, `talk2`, `pick`,
 `flowval`, `flowe2e`, `flowui`, `flowmore`, `chatui`, `memui`, `probe`,
-`shrink`, `chatfx`, `settings`, `mend`, `runbook`, `ver` — report **535
-passing assertions and no failures**, covering the local assistant, teaching, selectors, the reply
+`shrink`, `chatfx`, `settings`, `mend`, `runbook`, `ver`, `analyse` — report
+**560 passing assertions and no failures**, covering the local assistant, teaching, selectors, the reply
 validator, the whole network path in a real browser against an endpoint that
 misbehaves the way real ones do, the Setup panel, all 54 actions, the docked
 layout down to where each masthead tab lands, the memory round trip (taught in

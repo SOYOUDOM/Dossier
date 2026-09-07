@@ -6,6 +6,49 @@ holds — which is what to paste into a bug report.
 
 ---
 
+## 2.1.0 — 2026-09-07
+
+**The assistant analyses instead of photocopying.**
+
+2.0.0 had an architectural flaw. Runbooks travelled to the endpoint as an
+index — titles and trigger phrases, never the bodies — and `readRunbook`
+rendered the card *in the app*. So the procedure never reached the model. It
+could not reason about a step it had not read, and the only move left to it
+was announcing that it would go and look something up. The answer on screen
+was the stored runbook, verbatim, with `<policy>` still in the SQL.
+
+Fixed by matching **before** sending. Matching is local and costs nothing, so
+the two or three runbooks that match the person's own words now travel whole,
+in `workspace.runbooksMatched` — steps, checks, escalation. The endpoint reads
+the real procedure and answers with what the document cannot give you: which
+step matters here, what to check first, what each outcome means, and what not
+to waste time on. The full runbook is still drawn underneath, as reference.
+
+- **The answer is rendered above the card**, not below it. Cards used to be
+  appended the moment the action ran, which put the procedure above the
+  sentence explaining it
+- **Identifiers are pulled out of the question** and substituted into the
+  checks, so the SQL on screen carries the real policy number instead of
+  `<policy>` for somebody to fill in by hand at eleven at night
+- **Configuration placeholders are called out.** `<policy>` is a value and
+  gets filled; `<COI_REQUEST>` is a table nobody has named yet, is left alone,
+  and the card says which ones still need setting. A plausible invented table
+  name gets run, so it must never be invented
+- **Matching handles inflection.** "COI not generating" now matches the
+  trigger "coi not generated" — people type the tense they are in, not the
+  phrase in the runbook. On the reported case this took the score from 20 to
+  48
+- **Naming a system is no longer enough to surface a runbook.** "The imaging
+  queue is stuck" used to drag up the COI procedure on the strength of the
+  word *imaging* alone; a runbook now needs its own words to have been said
+- Each matched runbook carries `confidence` and `why` — which phrases hit —
+  so a weak match can be offered as a guess rather than an answer
+
+Prompt rules 9c–9f rewritten. **Repaste §4 of `POWER-AUTOMATE.md`** — without
+it the assistant will keep photocopying, because the old rules told it to.
+
+560 assertions across seventeen suites, no failures.
+
 ## 2.0.0 — 2026-09-07
 
 The release that turns Dossier from a personal tracker into something a

@@ -1,21 +1,21 @@
 {
   "dossier": 1,
   "protocol": "1.1",
-  "askedAt": "2026-09-06T15:03:50.984Z",
-  "today": "2026-09-06",
-  "weekday": "Sunday",
+  "askedAt": "2026-09-07T16:33:03.751Z",
+  "today": "2026-09-07",
+  "weekday": "Monday",
   "calendar": {
-    "tomorrow": "2026-09-07",
-    "nextWorkingDay": "2026-09-07",
-    "todayIsOffDay": true,
-    "thisMonday": "2026-08-31",
+    "tomorrow": "2026-09-08",
+    "nextWorkingDay": "2026-09-08",
+    "todayIsOffDay": false,
+    "thisMonday": "2026-09-07",
     "weekendDays": [
       "Saturday",
       "Sunday"
     ]
   },
   "timezone": "UTC",
-  "message": "create a P1 record to restart the imaging pool on APP02 tomorrow",
+  "message": "COI not generating for policy A018346A10, I clicked generate and it went through",
   "attachments": [],
   "attachmentsText": "None.",
   "conversation": [],
@@ -146,7 +146,7 @@
         ],
         "autoRun": true,
         "raisesRecord": true,
-        "nextDue": "2026-09-06",
+        "nextDue": "2026-09-07",
         "lastRaised": "2026-08-30"
       },
       {
@@ -360,6 +360,40 @@
       }
     ],
     "runbookTotal": 3,
+    "runbooksMatched": [
+      {
+        "title": "COI letter does not generate, but the API returned success",
+        "system": "Imaging",
+        "severity": "P3",
+        "why": [
+          "coi not generated"
+        ],
+        "confidence": "high",
+        "steps": [
+          "Confirm which policy number(s) the user actually asked for — take them from the request, not from memory.",
+          "Re-run the regeneration in Swagger for those policy numbers and note the response. A 200 here does not mean a letter was produced; see the Imaging profile.",
+          "Run the checks below. They tell you whether the source data the letter needs is present and in a state the template can render.",
+          "If a row is missing or its status is not one the template accepts, this is a data problem, not an imaging problem. Do not keep re-running the generation.",
+          "If the data is present and correct and the letter still does not appear, capture the request id and the exact time, then escalate.",
+          "Reply to the user with which of the two it was, so they know whether to wait or to chase another team."
+        ],
+        "checks": "Replace the bracketed names with your real ones.\n\n```sql\n-- is the request even there, and what state is it in\nSELECT policy_no, status, created_on, letter_id\nFROM   <COI_REQUEST>\nWHERE  policy_no IN ('<policy>')\nORDER  BY created_on DESC;\n\n-- did the letter get written at all\nSELECT letter_id, policy_no, generated_on, file_path\nFROM   <COI_LETTER>\nWHERE  policy_no IN ('<policy>');\n\n-- the fields the template will not render without\nSELECT policy_no, insured_name, sum_insured, effective_date, expiry_date\nFROM   <POLICY_MASTER>\nWHERE  policy_no IN ('<policy>');\n```\n\nA row in <COI_REQUEST> with no matching <COI_LETTER> row is the signature of this problem. A NULL in any of the last four fields is usually the reason.",
+        "escalation": "Data missing in <POLICY_MASTER> → <team that owns policy data>, with the policy number and which field is null.\nData present and letter still missing → <Imaging owner>, with the request id and the timestamp.\nP1 only if it blocks an issuance deadline the same day.",
+        "status": "draft",
+        "verified": "",
+        "stale": true,
+        "unset": [
+          "COI_REQUEST",
+          "COI_LETTER",
+          "POLICY_MASTER",
+          "team that owns policy data",
+          "Imaging owner"
+        ]
+      }
+    ],
+    "mentioned": [
+      "A018346A10"
+    ],
     "profiles": [
       {
         "system": "Imaging",
