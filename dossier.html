@@ -915,6 +915,14 @@ pre.out{margin:0;padding:12px;background:var(--paper-2);border:1px solid var(--r
   border-top:1px solid var(--rule);background:var(--paper-2);font-family:var(--f-mono);font-size:10.5px;color:var(--ink-3)}
 .status b{color:var(--ink-2);font-weight:600}
 .status .sp{margin-left:auto}
+/* the build, at the far right where a version belongs. A button rather than
+   a span because it does something — clicking copies the whole build line
+   for pasting into a bug report — and a button is what a keyboard reaches. */
+.status .ver{font-family:var(--f-mono);font-size:10.5px;color:var(--ink-3);
+  background:transparent;border:1px solid transparent;border-radius:3px;
+  padding:1px 6px;cursor:pointer;letter-spacing:.02em;transition:.13s}
+.status .ver:hover{color:var(--accent);border-color:var(--rule-hi);background:var(--paper)}
+.status .ver:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
 kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);border-radius:3px;
   padding:0 4px;color:var(--ink-2);background:var(--paper)}
 .dropveil{position:fixed;inset:0;z-index:80;background:var(--accent-soft);border:3px dashed var(--accent);
@@ -1962,6 +1970,7 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
     <span><kbd>Ctrl</kbd><kbd>K</kbd> <span data-i18n="Foot_Commands">commands</span></span>
     <span><kbd>N</kbd> <span data-i18n="Foot_New">new</span></span>
     <span><kbd>Ctrl</kbd><kbd>V</kbd> <span data-i18n="Foot_PasteAScreenshot">paste a screenshot</span></span>
+    <button class="ver" id="sbV" type="button">—</button>
   </footer>
 </div>
 
@@ -3569,6 +3578,7 @@ const STRINGS = {
      lang/*.xml, which is exactly what the fallback is for. */
   MailDraft: "Draft email",
   MailTo: "To",
+  VersionCopied: "Build details copied \u2014 paste them into the bug report.",
   RunbookTag: "Runbook",
   ProfileTag: "System",
   RunbookApproved: "approved",
@@ -4039,6 +4049,21 @@ const STATUSES = [
   { id:"done",       label:"Done",       colour:"var(--st-done)"   },
   { id:"cancelled",  label:"Cancelled",  colour:"var(--st-cancel)" }
 ];
+/* Which build this is. It matters more than it looks: the app is shared by
+   sending the file, so five people can be running five different copies and
+   "it does not do that on mine" is a real conversation. The version sits in
+   the status bar, and clicking it copies a line you can paste into a bug
+   report — build date and flow protocol included, because those are the two
+   things that actually differ between copies. */
+const APP_VERSION = "2.0.0";
+const APP_BUILT = "2026-09-07";
+function buildLine(){
+  return "Dossier v" + APP_VERSION + " \u00b7 built " + APP_BUILT +
+         " \u00b7 flow protocol " + (window.DossierFlow ? DossierFlow.version : "\u2014") +
+         " \u00b7 " + S.tasks.length + " records, " +
+         runbookStore().length + " runbooks, " + memoryStore().length + " notes";
+}
+
 const LIVE = ["open","processing","blocked"];
 const PRIS = ["P1","P2","P3","P4"];
 const DEF_SYS = [
@@ -10904,6 +10929,8 @@ function renderAll(){
   $("sbD").textContent = S.tasks.filter(t => dayOf(t.completed) === k).length;
   $("sbF").textContent = S.tasks.reduce((s,t) => s + (t.files||[]).length, 0);
   $("sbH").textContent = mins(S.tasks.reduce((s,t) => s + live(t), 0));
+  const vb = $("sbV");
+  if (vb){ vb.textContent = "v" + APP_VERSION; vb.title = buildLine(); }
 
   if (S.view === "day") renderDay();
   else if (S.view === "board") renderBoard();
@@ -14687,6 +14714,9 @@ $("askO").addEventListener("click", e => {
 });
 
 /* JSON import (migrating from the old Day Log file, or another machine) */
+$("sbV").addEventListener("click", () => {
+  copyText(buildLine(), L("VersionCopied"));
+});
 $("rbIn").addEventListener("change", e => {
   const f = e.target.files && e.target.files[0];
   if (!f) return;

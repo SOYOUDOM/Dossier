@@ -1522,10 +1522,10 @@ drive the real files in a real browser (Playwright + Chromium), because the
 things that break here are things a unit test cannot see: a stale iframe cache,
 a CSP refusal, a file one folder away from where a manifest says.
 
-The fifteen exercised for the current release — `teach`, `talk2`, `pick`,
+The sixteen exercised for the current release — `teach`, `talk2`, `pick`,
 `flowval`, `flowe2e`, `flowui`, `flowmore`, `chatui`, `memui`, `probe`,
-`shrink`, `chatfx`, `settings`, `mend`, `runbook` — report **522 passing
-assertions and no failures**, covering the local assistant, teaching, selectors, the reply
+`shrink`, `chatfx`, `settings`, `mend`, `runbook`, `ver` — report **535
+passing assertions and no failures**, covering the local assistant, teaching, selectors, the reply
 validator, the whole network path in a real browser against an endpoint that
 misbehaves the way real ones do, the Setup panel, all 54 actions, the docked
 layout down to where each masthead tab lands, the memory round trip (taught in
