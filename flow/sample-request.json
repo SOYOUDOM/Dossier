@@ -1,12 +1,12 @@
 {
   "dossier": 1,
   "protocol": "1.1",
-  "askedAt": "2026-09-07T16:33:03.751Z",
-  "today": "2026-09-07",
-  "weekday": "Monday",
+  "askedAt": "2026-09-11T07:21:04.470Z",
+  "today": "2026-09-11",
+  "weekday": "Friday",
   "calendar": {
-    "tomorrow": "2026-09-08",
-    "nextWorkingDay": "2026-09-08",
+    "tomorrow": "2026-09-12",
+    "nextWorkingDay": "2026-09-14",
     "todayIsOffDay": false,
     "thisMonday": "2026-09-07",
     "weekendDays": [
@@ -146,7 +146,7 @@
         ],
         "autoRun": true,
         "raisesRecord": true,
-        "nextDue": "2026-09-07",
+        "nextDue": "2026-09-11",
         "lastRaised": "2026-08-30"
       },
       {
@@ -631,6 +631,38 @@
       "what": "Open the chase sheet for everything that is due a chase.",
       "needs": [],
       "args": {}
+    },
+    {
+      "do": "incidentReview",
+      "write": false,
+      "what": "Look at the incident history over a window and show the counted picture: volume by system, what repeats, how long things take, and where the records are too thin to tell what happened. The numbers are computed by the app, not by you. Read them and say what they mean — which system is the real problem, what is recurring, what should become a problem record. Default window is 30 days.",
+      "needs": [],
+      "args": {
+        "days": "int",
+        "system": "string",
+        "group": "string"
+      }
+    },
+    {
+      "do": "incidentGaps",
+      "write": false,
+      "what": "List the incidents whose records cannot answer what happened: closed with no resolution note, a note too short to mean anything, no root cause, reopened, or the same fault closed as a workaround again and again. kind narrows it — noNotes, thinNotes, noCause, reopened, repeatWorkaround, recurring.",
+      "needs": [],
+      "args": {
+        "days": "int",
+        "kind": "string"
+      }
+    },
+    {
+      "do": "whoFixedThis",
+      "write": false,
+      "what": "Who has resolved this kind of incident before, how often, how fast, and how often it came back. This is a count over what actually happened, not a guess. Use it when somebody asks who to assign something to — and give them the evidence, not just a name, because an assignment nobody can argue with is one nobody trusts.",
+      "needs": [
+        "about"
+      ],
+      "args": {
+        "about": "string"
+      }
     },
     {
       "do": "findRunbook",

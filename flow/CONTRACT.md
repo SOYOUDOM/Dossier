@@ -381,7 +381,7 @@ answer than deleting, and keeps the history.
 ## 6. The action reference
 
 Generated from `flow.js`. `ref` means a record code (`D-0004`), a ticket
-number, or an id. **54 actions — 17 that read, 37 that write.**
+number, or an id. **57 actions — 20 that read, 37 that write.**
 
 ### Actions that only read
 
@@ -492,6 +492,33 @@ Open the chase sheet for everything that is due a chase.
 | argument | shape | required |
 |---|---|---|
 | *(none)* | | |
+
+#### `incidentReview`
+
+Look at the incident history over a window and show the counted picture: volume by system, what repeats, how long things take, and where the records are too thin to tell what happened. The numbers are computed by the app, not by you. Read them and say what they mean — which system is the real problem, what is recurring, what should become a problem record. Default window is 30 days.
+
+| argument | shape | required |
+|---|---|---|
+| `days` | int | no |
+| `system` | string | no |
+| `group` | string | no |
+
+#### `incidentGaps`
+
+List the incidents whose records cannot answer what happened: closed with no resolution note, a note too short to mean anything, no root cause, reopened, or the same fault closed as a workaround again and again. kind narrows it — noNotes, thinNotes, noCause, reopened, repeatWorkaround, recurring.
+
+| argument | shape | required |
+|---|---|---|
+| `days` | int | no |
+| `kind` | string | no |
+
+#### `whoFixedThis`
+
+Who has resolved this kind of incident before, how often, how fast, and how often it came back. This is a count over what actually happened, not a guess. Use it when somebody asks who to assign something to — and give them the evidence, not just a name, because an assignment nobody can argue with is one nobody trusts.
+
+| argument | shape | required |
+|---|---|---|
+| `about` | string | **yes** |
 
 #### `findRunbook`
 

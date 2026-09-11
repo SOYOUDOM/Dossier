@@ -105,6 +105,32 @@ const ACTIONS = {
      help with a problem nobody has written down yet. Reach for the
      profile first when the symptom does not match anything. */
 
+  /* ── the incident history ────────────────────────────────────────────
+     workspace.incidents already carries the counted picture of the last 30
+     days. These are for looking wider, or at one slice. */
+
+  incidentReview: { write:false, needs:[], args:{ days:INT, system:STR, group:STR },
+    what:"Look at the incident history over a window and show the counted " +
+         "picture: volume by system, what repeats, how long things take, and " +
+         "where the records are too thin to tell what happened. The numbers " +
+         "are computed by the app, not by you. Read them and say what they " +
+         "mean — which system is the real problem, what is recurring, what " +
+         "should become a problem record. Default window is 30 days." },
+
+  incidentGaps: { write:false, needs:[], args:{ days:INT, kind:STR },
+    what:"List the incidents whose records cannot answer what happened: " +
+         "closed with no resolution note, a note too short to mean anything, " +
+         "no root cause, reopened, or the same fault closed as a workaround " +
+         "again and again. kind narrows it — noNotes, thinNotes, noCause, " +
+         "reopened, repeatWorkaround, recurring." },
+
+  whoFixedThis: { write:false, needs:["about"], args:{ about:STR },
+    what:"Who has resolved this kind of incident before, how often, how fast, " +
+         "and how often it came back. This is a count over what actually " +
+         "happened, not a guess. Use it when somebody asks who to assign " +
+         "something to — and give them the evidence, not just a name, because " +
+         "an assignment nobody can argue with is one nobody trusts." },
+
   findRunbook: { write:false, needs:[], args:{ about:STR, system:STR },
     what:"Find the runbooks that match a symptom. Give about the user's own " +
          "words — the error, what they clicked, what did not happen. This " +
@@ -622,6 +648,16 @@ function buildRequest(text, ctx, cfg){
       /* the identifiers in their sentence — a policy number, a ticket — so
          the checks can be written against the real thing */
       mentioned: ctx.mentioned || [],
+
+      /* The incident history, ALREADY COUNTED. Volume by system, what
+         repeats, how long things take, where the records are too thin to
+         tell what happened. The rows themselves never travel — there can be
+         thousands and nothing about them needs re-counting at your end.
+         Read these numbers and say what they MEAN. Do not recompute them
+         and do not quote a figure that is not here: a total you worked out
+         yourself is a total nobody can check. Absent when no incident
+         history has been imported. */
+      incidents: ctx.incidents || undefined,
       profiles: ctx.profiles || [],
       counts: ctx.counts || {},
       recordsSent: rows.length,

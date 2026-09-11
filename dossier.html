@@ -1404,6 +1404,31 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
 .chrb .rbstale{padding:7px 11px;font-size:11.5px;line-height:1.55;
   color:var(--ch-ink);background:var(--ch-bg);border-bottom:1px solid var(--ch-line)}
 .chrb .rbstale::before{content:"\26A0";margin-right:7px;color:var(--ch-acc)}
+.chrb.inc .istat{display:grid;grid-template-columns:repeat(auto-fit,minmax(84px,1fr));
+  gap:1px;background:var(--ch-line);border-bottom:1px solid var(--ch-line)}
+.chrb.inc .istat div{background:var(--ch-panel);padding:9px 11px;text-align:center}
+.chrb.inc .istat b{display:block;font-size:19px;font-weight:650;color:var(--ch-ink);
+  font-family:var(--f-mono);line-height:1.2}
+.chrb.inc .istat span{font-size:9.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--ch-dim)}
+.chrb.inc .ibody{padding:2px 11px 8px}
+.chrb.inc .itab{width:100%;border-collapse:collapse;font-size:12px}
+.chrb.inc .itab td{padding:3px 0;color:var(--ch-ink);vertical-align:middle}
+.chrb.inc .itab td:first-child{padding-right:9px;max-width:0;width:99%;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chrb.inc .itab td:last-child{text-align:right;font-family:var(--f-mono);
+  font-size:11px;color:var(--ch-dim);white-space:nowrap;padding-left:8px}
+.chrb.inc .itab.rep td:first-child,.chrb.inc .itab.gap td:nth-child(2),
+.chrb.inc .itab.who td:first-child{white-space:normal;overflow:visible}
+.chrb.inc .itab b{font-weight:600;display:block;line-height:1.4}
+.chrb.inc .itab .mm{display:block;font-family:var(--f-mono);font-size:10px;
+  color:var(--ch-dim);line-height:1.5;margin-top:1px}
+.chrb.inc .itab .num{font-family:var(--f-mono);font-size:10.5px;color:var(--ch-dim);
+  vertical-align:top;padding-right:9px;white-space:nowrap;width:1%}
+.chrb.inc .ibar{display:inline-block;width:84px;height:5px;border-radius:3px;
+  background:var(--ch-bg);overflow:hidden;vertical-align:middle}
+.chrb.inc .ibar i{display:block;height:100%;background:var(--ch-acc);border-radius:3px}
+.chrb.inc .itab td:nth-child(2){width:1%;white-space:nowrap;text-align:right}
+.chrb.inc .ibody .mm{font-size:10.5px;color:var(--ch-dim);line-height:1.5}
 .chrb .rbunset{padding:7px 11px;font-size:11.5px;line-height:1.55;color:var(--ch-dim);
   background:var(--ch-bg);border-top:1px solid var(--ch-line)}
 .chrb .rbunset::before{content:"\2699";margin-right:7px;color:var(--ch-dim)}
@@ -2192,6 +2217,7 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
 <input type="file" id="fileIn" hidden multiple>
 <input type="file" id="jsonIn" accept=".json" hidden>
 <input type="file" id="rbIn" accept=".json" hidden>
+<input type="file" id="incIn" accept=".csv,.txt" hidden>
 <input type="file" id="scriptIn" hidden multiple>
 
 <!-- Built fresh every time you print. The app's own layout is a fixed-height
@@ -3582,6 +3608,41 @@ const STRINGS = {
   MailDraft: "Draft email",
   MailTo: "To",
   VersionCopied: "Build details copied \u2014 paste them into the bug report.",
+  IncTag: "Incidents",
+  IncGapTag: "Thin records",
+  IncWhoTag: "Who has fixed this",
+  IncOver: "{n} in the last {d} days",
+  IncRaised: "raised",
+  IncStillOpen: "still open",
+  IncMedian: "median to resolve",
+  IncReopened: "reopened",
+  IncReopenedN: "{n} reopened",
+  IncBySystem: "By system",
+  IncByGroup: "By assignment group",
+  IncByPriority: "By priority",
+  IncRepeats: "The same thing, again",
+  IncGaps: "Records that cannot answer what happened",
+  IncGapsN: "{n} of them, last {d} days",
+  IncWorkarounds: "{n} closed as a workaround",
+  IncOfN: "{n} of {of}",
+  IncCameBack: "{n} came back",
+  IncWhoNote: "Counted from what actually happened, not predicted. Check the numbers before you assign on them.",
+  IncGap_noNotes: "Closed with no resolution note",
+  IncGap_thinNotes: "Resolution note too short to mean anything",
+  IncGap_noCause: "No root cause recorded",
+  IncGap_reopened: "Reopened after closing",
+  IncGap_repeatWorkaround: "Closed as a workaround again and again",
+  IncGap_recurring: "Same fault repeatedly \u2014 worth a problem record",
+  IncHead: "Incident history",
+  IncHint: "Export an incident list from ServiceNow (the list view \u2192 right-click the header \u2192 Export \u2192 CSV) and import it here. Re-importing an overlapping range updates rather than duplicates. Nothing is sent anywhere \u2014 it is counted on this machine.",
+  IncImport: "Import a ServiceNow CSV",
+  IncClear: "Remove all incidents",
+  IncNone: "Nothing imported yet.",
+  IncHave: "{n} incidents, {a} to {b}.",
+  IncImported: "Imported \u2014 {a} new, {u} updated, {t} in total.",
+  IncBadFile: "That file does not look like an incident export \u2014 no Number column.",
+  IncMissingCols: "Missing columns: {what}. Some of the analysis will be blank without them.",
+  IncCleared: "Incident history removed.",
   RunbookTag: "Runbook",
   ProfileTag: "System",
   RunbookApproved: "approved",
@@ -4060,8 +4121,8 @@ const STATUSES = [
    the status bar, and clicking it copies a line you can paste into a bug
    report — build date and flow protocol included, because those are the two
    things that actually differ between copies. */
-const APP_VERSION = "2.1.0";
-const APP_BUILT = "2026-09-07";
+const APP_VERSION = "2.2.0";
+const APP_BUILT = "2026-09-11";
 function buildLine(){
   return "Dossier v" + APP_VERSION + " \u00b7 built " + APP_BUILT +
          " \u00b7 flow protocol " + (window.DossierFlow ? DossierFlow.version : "\u2014") +
@@ -4117,7 +4178,8 @@ const S = {
   sel:new Set(), open:null, drill:null, intake:null, chase:null, problem:null, folds:{}, editRoutine:null, sort:{ by:"due", dir:1 },
   weekStart:null, undo:[], dirty:false, saving:false, lastSaved:null,
   rows:[], cursor:-1, reminded:{}, blobCache:{},
-  chats:[], chatId:""
+  chats:[], chatId:"",
+  incidents:[]
 };
 
 /* ═══ UTIL ═══════════════════════════════════════════════════════════════ */
@@ -5336,6 +5398,10 @@ function rollOver(){
 function payload(){
   return { app:"dossier", version:3, savedAt:new Date().toISOString(),
            seq:S.seq, settings:S.settings, routines:S.routines, scripts:S.scripts, tasks:S.tasks,
+           /* the incident history, kept beside the records rather than inside
+              settings: there can be thousands of them and they are data, not
+              preferences */
+           incidents:S.incidents,
            /* the assistant's conversations live with the records, so they
               survive a reload and follow the folder to another machine */
            chats:S.chats, chatId:S.chatId };
@@ -5345,6 +5411,7 @@ function hydrate(d){
   S.seq = +d.seq || 0;
   S.tasks = Array.isArray(d.tasks) ? d.tasks.map(normalise) : [];
   S.routines = Array.isArray(d.routines) ? d.routines : [];
+  S.incidents = Array.isArray(d.incidents) ? d.incidents : [];
   S.scripts = Array.isArray(d.scripts) ? d.scripts.map(x => ({
     id:x.id || ("S" + Math.random().toString(36).slice(2,8)), file:x.file || "",
     name:x.name || splitExt(x.file || "script")[0], size:+x.size || 0,
@@ -7004,6 +7071,163 @@ function chatDeclineAsked(){
    second thing in the application allowed to reach the outside, for a job a
    mail client already does. So it writes the message, shows it, and gives
    you the two ways out: the clipboard, or your own mail app. */
+/* ── the counted picture, on screen ─────────────────────────────────────
+   Tables, because this is arithmetic and arithmetic should look like it. The
+   assistant's conclusion goes above; this is the working underneath it. */
+
+function incBar(n, max){
+  const w = Math.max(2, Math.round((n / Math.max(1, max)) * 100));
+  return '<span class="ibar"><i style="width:' + w + '%"></i></span>';
+}
+function incTable(rows, label){
+  if (!rows.length) return "";
+  const max = rows[0].n;
+  return '<table class="itab"><tbody>' + rows.map(r =>
+    "<tr><td>" + esc(r.name) + "</td><td>" + incBar(r.n, max) +
+    "</td><td>" + r.n + "</td></tr>").join("") + "</tbody></table>";
+}
+function incSection(box, title, html){
+  if (!html) return;
+  const h = document.createElement("div"); h.className = "rbsec"; h.textContent = title;
+  box.appendChild(h);
+  const d = document.createElement("div"); d.className = "ibody";
+  d.innerHTML = html;
+  box.appendChild(d);
+}
+
+function chatIncidents(days, system, group){
+  const log = $("chatLog"); if (!log) return;
+  let list = incWindow(days);
+  if (system) list = list.filter(x =>
+    String(x.sys || "").toLowerCase().indexOf(String(system).toLowerCase()) >= 0);
+  if (group) list = list.filter(x =>
+    String(x.group || "").toLowerCase().indexOf(String(group).toLowerCase()) >= 0);
+
+  const wrap = document.createElement("div"); wrap.className = "chb bot";
+  const box = document.createElement("div"); box.className = "chrb inc";
+  const head = document.createElement("div"); head.className = "rbh";
+  head.innerHTML = '<span class="tag">' + esc(L("IncTag")) + "</span><b>" +
+    esc(L("IncOver", { n:list.length, d:days })) + "</b>" +
+    '<span class="sp"></span>' +
+    (system ? '<span class="rbs">' + esc(system) + "</span>" : "") +
+    (group ? '<span class="rbs">' + esc(group) + "</span>" : "");
+  box.appendChild(head);
+
+  const open = list.filter(x => !x.resolved && !x.closed).length;
+  const mt = round1(incMTTR(list));
+  const sum = document.createElement("div"); sum.className = "istat";
+  sum.innerHTML =
+    '<div><b>' + list.length + "</b><span>" + esc(L("IncRaised")) + "</span></div>" +
+    '<div><b>' + open + "</b><span>" + esc(L("IncStillOpen")) + "</span></div>" +
+    '<div><b>' + (mt == null ? "—" : mt + "h") + "</b><span>" + esc(L("IncMedian")) + "</span></div>" +
+    '<div><b>' + list.filter(x => x.reopens > 0).length + "</b><span>" + esc(L("IncReopened")) + "</span></div>";
+  box.appendChild(sum);
+
+  incSection(box, L("IncBySystem"), incTable(incTop(list, "sys", 6)));
+  incSection(box, L("IncByGroup"), incTable(incTop(list, "group", 5)));
+  incSection(box, L("IncByPriority"), incTable(incTop(list, "pri", 4)));
+
+  const rep = incRepeats(list, 5);
+  if (rep.length){
+    incSection(box, L("IncRepeats"), '<table class="itab rep"><tbody>' + rep.map(r =>
+      "<tr><td><b>" + esc(r.what) + "</b><span class=\"mm\">" +
+        esc(r.numbers.join(" · ")) +
+        (r.workarounds ? " · " + esc(L("IncWorkarounds", { n:r.workarounds })) : "") +
+        (r.reopened ? " · " + esc(L("IncReopenedN", { n:r.reopened })) : "") +
+      "</span></td><td>" + r.n + "×</td><td>" +
+        (r.medianHours == null ? "—" : r.medianHours + "h") +
+      "</td></tr>").join("") + "</tbody></table>");
+  }
+
+  const gaps = incGaps(list);
+  if (gaps.length){
+    const c = incGapCounts(gaps);
+    incSection(box, L("IncGaps"), '<table class="itab"><tbody>' +
+      Object.keys(c).map(k => "<tr><td>" + esc(L("IncGap_" + k)) +
+        "</td><td>" + incBar(c[k], gaps.length) + "</td><td>" + c[k] + "</td></tr>").join("") +
+      "</tbody></table>");
+  }
+
+  const foot = document.createElement("div"); foot.className = "rbf";
+  const cp = document.createElement("button");
+  cp.textContent = L("Copy");
+  cp.onclick = () => copyText(incText(list, days), L("Copied"));
+  foot.appendChild(cp);
+  box.appendChild(foot);
+  wrap.appendChild(box); log.appendChild(wrap); chatScroll();
+}
+
+function incText(list, days){
+  const L2 = ["Incidents, last " + days + " days", "",
+    "Raised: " + list.length,
+    "Still open: " + list.filter(x => !x.resolved && !x.closed).length,
+    "Median time to resolve: " + (round1(incMTTR(list)) || "—") + "h", ""];
+  [["By system", "sys"], ["By assignment group", "group"], ["By priority", "pri"]]
+    .forEach(([t, k]) => {
+      L2.push(t);
+      incTop(list, k, 6).forEach(r => L2.push("  " + r.name + " — " + r.n));
+      L2.push("");
+    });
+  const rep = incRepeats(list, 5);
+  if (rep.length){
+    L2.push("Repeating");
+    rep.forEach(r => L2.push("  " + r.n + "× " + r.what + "  (" + r.numbers.join(", ") + ")"));
+    L2.push("");
+  }
+  const gaps = incGaps(list);
+  if (gaps.length){
+    L2.push("Records that cannot answer what happened");
+    gaps.slice(0, 20).forEach(g2 => L2.push("  " + g2.num + " — " + g2.why));
+  }
+  return L2.join("\n");
+}
+
+function chatGaps(days, only){
+  const log = $("chatLog"); if (!log) return;
+  const gaps = incGaps(incWindow(days)).filter(x => !only || x.kind === only);
+  const wrap = document.createElement("div"); wrap.className = "chb bot";
+  const box = document.createElement("div"); box.className = "chrb inc";
+  const head = document.createElement("div"); head.className = "rbh";
+  head.innerHTML = '<span class="tag">' + esc(L("IncGapTag")) + "</span><b>" +
+    esc(L("IncGapsN", { n:gaps.length, d:days })) + "</b>";
+  box.appendChild(head);
+  const t = document.createElement("div"); t.className = "ibody";
+  t.innerHTML = '<table class="itab gap"><tbody>' + gaps.slice(0, 30).map(g2 =>
+    "<tr><td class=\"num\">" + esc(g2.num) + "</td><td><b>" +
+      esc(String(g2.title || "").slice(0, 70)) + "</b><span class=\"mm\">" +
+      esc(g2.why) + "</span></td></tr>").join("") + "</tbody></table>";
+  box.appendChild(t);
+  const foot = document.createElement("div"); foot.className = "rbf";
+  const cp = document.createElement("button"); cp.textContent = L("Copy");
+  cp.onclick = () => copyText(gaps.map(g2 => g2.num + " — " + g2.why).join("\n"), L("Copied"));
+  foot.appendChild(cp); box.appendChild(foot);
+  wrap.appendChild(box); log.appendChild(wrap); chatScroll();
+}
+
+/* Who has actually fixed this before — with the evidence beside it, because
+   an assignment nobody can argue with is an assignment nobody trusts. */
+function chatWho(about){
+  const log = $("chatLog"); if (!log) return;
+  const who = incWho(about, 4);
+  const wrap = document.createElement("div"); wrap.className = "chb bot";
+  const box = document.createElement("div"); box.className = "chrb inc";
+  const head = document.createElement("div"); head.className = "rbh";
+  head.innerHTML = '<span class="tag">' + esc(L("IncWhoTag")) + "</span><b>" +
+    esc(String(about).slice(0, 60)) + "</b>";
+  box.appendChild(head);
+  const t = document.createElement("div"); t.className = "ibody";
+  t.innerHTML = '<table class="itab who"><tbody>' + who.map(w =>
+    "<tr><td><b>" + esc(w.group || "—") + "</b><span class=\"mm\">" +
+      esc(w.who || "") + " · " + esc(w.numbers.join(", ")) + "</span></td>" +
+    "<td>" + esc(L("IncOfN", { n:w.n, of:w.of })) + "</td>" +
+    "<td>" + (w.medianHours == null ? "—" : w.medianHours + "h") + "</td>" +
+    "<td>" + (w.reopened ? esc(L("IncCameBack", { n:w.reopened })) : "") + "</td></tr>"
+  ).join("") + "</tbody></table>" +
+    '<p class="mm" style="padding:6px 0 2px">' + esc(L("IncWhoNote")) + "</p>";
+  box.appendChild(t);
+  wrap.appendChild(box); log.appendChild(wrap); chatScroll();
+}
+
 /* ── a runbook, on screen ────────────────────────────────────────────────
    Steps as a list you can read at 3am, the checks in a code panel so the
    SQL can be copied without reformatting it, and the freshness stamp in
@@ -7642,6 +7866,9 @@ function chatRenderBot(r, sourceText, replaying){
   (r.cards || []).forEach(c => {
     if (c.kind === "runbook"){ const rb = rbFind(c.title); if (rb) chatRunbook(rb, r.idents); }
     else if (c.kind === "profile"){ const pf = profFind(c.system); if (pf) chatProfile(pf); }
+    else if (c.kind === "incidents") chatIncidents(c.days, c.system, c.group);
+    else if (c.kind === "gaps") chatGaps(c.days, c.only);
+    else if (c.kind === "who") chatWho(c.about);
     else if (c.kind === "pick"){
       const hits = (c.titles || []).map(t => rbFind(t)).filter(Boolean).map(rb => ({ rb }));
       if (hits.length) chatRunbookPick(hits);
@@ -7776,6 +8003,7 @@ function flowContext(q){
     runbookTotal: runbookStore().length,
     runbooksMatched: runbooksMatchedForFlow(q),
     mentioned: rbIdents(q),
+    incidents: incidentsForFlow(30),
     profiles: profilesForFlow(),
     settable: flowSettable(),
     attachments: (CHAT.files || []).map(f => ({
@@ -8147,6 +8375,38 @@ function flowRun(a, quiet){
     }
 
     case "chaseSheet": closeChat(); openChase(); return null;
+
+    /* ── the incident history ──────────────────────────────────────────── */
+    case "incidentReview": {
+      if (!incStore().length)
+        return { say:"No incident history has been imported yet. Menu \u2192 Setup \u2192 " +
+                     "Incidents \u2192 Import, with a CSV exported from ServiceNow." };
+      let list = incWindow(g.days || 30);
+      if (g.system) list = list.filter(x =>
+        String(x.sys || "").toLowerCase().indexOf(String(g.system).toLowerCase()) >= 0);
+      if (g.group) list = list.filter(x =>
+        String(x.group || "").toLowerCase().indexOf(String(g.group).toLowerCase()) >= 0);
+      if (!list.length)
+        return { say:"Nothing in the history matches that." };
+      return { card:{ kind:"incidents", days:g.days || 30,
+                      system:g.system || "", group:g.group || "" } };
+    }
+    case "incidentGaps": {
+      const gaps = incGaps(incWindow(g.days || 30))
+        .filter(x => !g.kind || x.kind === g.kind);
+      if (!gaps.length)
+        return { say: g.kind
+          ? "Nothing of that kind in the window."
+          : "Every closed incident in the window has a resolution note and a cause. That is unusual \u2014 worth checking the export actually carried those columns." };
+      return { card:{ kind:"gaps", days:g.days || 30, only:g.kind || "" } };
+    }
+    case "whoFixedThis": {
+      const who = incWho(g.about, 4);
+      if (!who.length)
+        return { say:"Nothing like that in the incident history, so there is no " +
+                     "assignment evidence to go on." };
+      return { card:{ kind:"who", about:g.about } };
+    }
 
     /* ── the BAU library ───────────────────────────────────────────────── */
     case "findRunbook": {
@@ -8835,6 +9095,340 @@ function rbNormalise(r, keep){
   };
 }
 
+/* ═══ THE INCIDENT HISTORY ═══════════════════════════════════════════════
+   What an incident manager needs is not another ticket queue — ServiceNow
+   already is one — but the questions ServiceNow answers badly: which system
+   keeps breaking, whether the things being closed were actually resolved,
+   what the same fault cost the last four times, and who has actually fixed
+   this kind of thing before.
+
+   All of that is ARITHMETIC. It is counted here, in code, deterministically,
+   and only the conclusions travel to the endpoint. The model's job is to
+   read the numbers and say what they mean; it is not asked to count, because
+   a model that counts is a model that quietly gets it wrong and nobody can
+   tell. Numbers from code, judgement from the model.                       */
+
+function incStore(){
+  if (!Array.isArray(S.incidents)) S.incidents = [];
+  return S.incidents;
+}
+
+/* A ServiceNow export can come out with the field names or with the column
+   labels, and every instance has been customised by somebody. So headers are
+   matched loosely against every spelling we have seen, and anything we do
+   not recognise is simply ignored rather than refused. */
+const INC_COLS = {
+  num:       ["number","incident","incident number","task number","ticket","ref"],
+  opened:    ["opened_at","opened","created","sys_created_on","opened at","create date"],
+  resolved:  ["resolved_at","resolved","resolve time","resolved at"],
+  closed:    ["closed_at","closed","closed at"],
+  title:     ["short_description","short description","summary","subject","title"],
+  desc:      ["description","details","additional comments"],
+  ci:        ["cmdb_ci","configuration item","ci","affected ci"],
+  sys:       ["business_service","service","application","system","u_application","u_system"],
+  cat:       ["category","u_category"],
+  sub:       ["subcategory","sub category","u_subcategory"],
+  group:     ["assignment_group","assignment group","assigned group","support group"],
+  who:       ["assigned_to","assigned to","resolved_by","resolved by","owner"],
+  pri:       ["priority","u_priority"],
+  urg:       ["urgency"],
+  state:     ["state","incident_state","status"],
+  closeCode: ["close_code","close code","resolution code","u_resolution_code","closure code"],
+  closeNotes:["close_notes","close notes","resolution notes","resolution","u_resolution_notes"],
+  cause:     ["cause","root cause","u_root_cause","cause_notes","problem_id","problem"],
+  reopens:   ["reopen_count","reopen count","reopened"],
+  caller:    ["caller_id","caller","opened_by","opened by","requested for"],
+  contact:   ["contact_type","contact type","channel"]
+};
+
+function incHeaderMap(header){
+  const map = {};
+  header.forEach((h, i) => {
+    const k = String(h || "").toLowerCase().trim().replace(/\s+/g, " ");
+    if (!k) return;
+    for (const field in INC_COLS){
+      if (field in map) continue;
+      if (INC_COLS[field].indexOf(k) >= 0){ map[field] = i; return; }
+    }
+  });
+  return map;
+}
+
+/* CSV with quoted fields, embedded commas and embedded newlines — all three
+   turn up in a close note, and a split on "," loses half the export. */
+function csvRows(text){
+  const out = [];
+  let row = [], cell = "", q = false;
+  const s2 = String(text || "").replace(/^﻿/, "");
+  for (let i = 0; i < s2.length; i++){
+    const c = s2[i];
+    if (q){
+      if (c === '"'){ if (s2[i + 1] === '"'){ cell += '"'; i++; } else q = false; }
+      else cell += c;
+    } else if (c === '"') q = true;
+    else if (c === ","){ row.push(cell); cell = ""; }
+    else if (c === "\r"){ /* wait for the \n */ }
+    else if (c === "\n"){ row.push(cell); out.push(row); row = []; cell = ""; }
+    else cell += c;
+  }
+  if (cell !== "" || row.length){ row.push(cell); out.push(row); }
+  return out.filter(r => r.length > 1 || (r[0] || "").trim());
+}
+
+/* "1 - Critical" and "P1" and "1" all mean the same thing */
+function incPri(v){
+  const t = String(v || "").toLowerCase();
+  if (/1|critical/.test(t)) return "P1";
+  if (/2|high/.test(t)) return "P2";
+  if (/3|moderate|medium/.test(t)) return "P3";
+  if (/4|low/.test(t)) return "P4";
+  return "";
+}
+function incDate(v){
+  const t = String(v || "").trim();
+  if (!t) return "";
+  /* ServiceNow writes YYYY-MM-DD HH:MM:SS; some exports write DD/MM/YYYY */
+  let m = t.match(/^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})/);
+  if (m) return m[1] + "-" + m[2] + "-" + m[3] + "T" + m[4] + ":" + m[5] + ":00";
+  m = t.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (m) return t + "T00:00:00";
+  m = t.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:[ ,]+(\d{1,2}):(\d{2}))?/);
+  if (m) return m[3] + "-" + pad2(+m[2]) + "-" + pad2(+m[1]) +
+                "T" + pad2(+(m[4] || 0)) + ":" + pad2(+(m[5] || 0)) + ":00";
+  const d = new Date(t);
+  return isNaN(d) ? "" : d.toISOString().slice(0, 19);
+}
+
+function incFrom(row, map){
+  const g = k => (k in map) ? String(row[map[k]] == null ? "" : row[map[k]]).trim() : "";
+  const num = g("num");
+  if (!num) return null;
+  return {
+    num: num,
+    opened: incDate(g("opened")),
+    resolved: incDate(g("resolved")),
+    closed: incDate(g("closed")),
+    title: g("title") || g("desc").slice(0, 140),
+    desc: g("desc").slice(0, 2000),
+    sys: g("sys") || g("ci"),
+    ci: g("ci"),
+    cat: g("cat"), sub: g("sub"),
+    group: g("group"), who: g("who"),
+    pri: incPri(g("pri") || g("urg")),
+    state: g("state"),
+    closeCode: g("closeCode"),
+    closeNotes: g("closeNotes").slice(0, 4000),
+    cause: g("cause").slice(0, 2000),
+    reopens: Math.max(0, parseInt(g("reopens"), 10) || 0),
+    caller: g("caller"), contact: g("contact")
+  };
+}
+
+/* Import merges on the incident number: re-exporting a month that overlaps
+   the last one updates those rows rather than doubling them, because an
+   incident manager will absolutely export overlapping ranges. */
+function incImportCsv(text){
+  const rows = csvRows(text);
+  if (rows.length < 2) return null;
+  const map = incHeaderMap(rows[0]);
+  if (!("num" in map)) return null;          /* not an incident export */
+  const have = {};
+  incStore().forEach((x, i) => { have[x.num] = i; });
+  let added = 0, updated = 0;
+  for (let i = 1; i < rows.length; i++){
+    const inc = incFrom(rows[i], map);
+    if (!inc) continue;
+    if (inc.num in have){ S.incidents[have[inc.num]] = inc; updated++; }
+    else { have[inc.num] = S.incidents.length; S.incidents.push(inc); added++; }
+  }
+  if (!added && !updated) return null;
+  S.incidents.sort((a, b) => String(b.opened).localeCompare(String(a.opened)));
+  touch();
+  return { added, updated, total: S.incidents.length,
+           fields: Object.keys(map).length, missing: incMissing(map) };
+}
+/* which useful columns the export did not contain — worth saying, because an
+   export without close notes cannot answer the question they came to ask */
+function incMissing(map){
+  return ["title","sys","group","who","closeNotes","closeCode","cause","resolved","pri"]
+    .filter(k => !(k in map));
+}
+
+/* ── the analysis ───────────────────────────────────────────────────── */
+
+function incWindow(days){
+  const n = Math.max(1, Math.min(3650, days || 30));
+  const from = addDays(today(), -n);
+  return incStore().filter(x => !x.opened || x.opened.slice(0, 10) >= from);
+}
+function incTop(list, key, n){
+  const c = {};
+  list.forEach(x => { const v = String(x[key] || "").trim() || "—"; c[v] = (c[v] || 0) + 1; });
+  return Object.keys(c).map(k => ({ name:k, n:c[k] }))
+    .sort((a, b) => b.n - a.n || (a.name > b.name ? 1 : -1)).slice(0, n || 6);
+}
+function incHours(a, b){
+  if (!a || !b) return null;
+  const h = (new Date(b) - new Date(a)) / 3600000;
+  return isFinite(h) && h >= 0 ? h : null;
+}
+function incMedian(ns){
+  const v = ns.filter(x => x != null).sort((a, b) => a - b);
+  if (!v.length) return null;
+  const m = Math.floor(v.length / 2);
+  return v.length % 2 ? v[m] : (v[m - 1] + v[m]) / 2;
+}
+function incMTTR(list){
+  return incMedian(list.map(x => incHours(x.opened, x.resolved || x.closed)));
+}
+
+/* The signature is what makes "the same thing again" countable. Identifiers
+   and numbers are stripped out — a title is only comparable once the policy
+   number it carries is gone — and what is left is stemmed and sorted, so
+   "COI letter not generated" and "COI letters not generating" land together. */
+function incSig(inc){
+  const w = rbWords(String(inc.title || ""))
+    .filter(x => !/\d/.test(x))
+    .map(rbStem);
+  const uniq = [];
+  w.forEach(x => { if (uniq.indexOf(x) < 0) uniq.push(x); });
+  return uniq.sort().slice(0, 6).join(" ");
+}
+function incGroupBySig(list){
+  const g = {};
+  list.forEach(x => {
+    const k = incSig(x);
+    if (!k) return;
+    (g[k] = g[k] || { sig:k, items:[] }).items.push(x);
+  });
+  return Object.keys(g).map(k => g[k]).sort((a, b) => b.items.length - a.items.length);
+}
+function incRepeats(list, n){
+  return incGroupBySig(list).filter(x => x.items.length > 1).slice(0, n || 6)
+    .map(x => ({
+      what: x.items[0].title.slice(0, 90),
+      n: x.items.length,
+      systems: incTop(x.items, "sys", 2).map(s => s.name),
+      groups: incTop(x.items, "group", 2).map(s => s.name),
+      medianHours: round1(incMTTR(x.items)),
+      workarounds: x.items.filter(i => /work.?around/i.test(i.closeCode)).length,
+      reopened: x.items.filter(i => i.reopens > 0).length,
+      numbers: x.items.slice(0, 5).map(i => i.num)
+    }));
+}
+function round1(v){ return v == null ? null : Math.round(v * 10) / 10; }
+
+/* Quality findings are about the RECORD, never about the person. "Was the fix
+   correct" usually cannot be known from a ticket; "was it written down well
+   enough that anybody could tell" always can, and it is the thing an incident
+   manager can actually act on. */
+/* "Thin" has to mean a non-answer — "done", "fixed", "as per user" — and not
+   merely a short sentence. "Regenerated manually for the customer." is 38
+   characters and says what was done; flagging it produces noise, and a
+   quality report full of noise is one nobody reads. Not saying WHY is a
+   separate finding (noCause), so it is counted separately. */
+const INC_THIN = 25, INC_THIN_WORDS = 4;
+function incThin(t){
+  const c = String(t || "").replace(/\s+/g, " ").trim();
+  return c.length < INC_THIN || c.split(" ").filter(Boolean).length < INC_THIN_WORDS;
+}
+function incGaps(list){
+  const out = [];
+  const done = list.filter(x => x.resolved || x.closed ||
+                                /resolv|closed|complete/i.test(x.state));
+  done.forEach(x => {
+    if (!x.closeNotes) out.push({ kind:"noNotes", num:x.num, title:x.title,
+      why:"closed with no resolution note at all" });
+    else if (incThin(x.closeNotes))
+      out.push({ kind:"thinNotes", num:x.num, title:x.title,
+        why:"the resolution note says only " +
+            JSON.stringify(x.closeNotes.replace(/\s+/g, " ").trim().slice(0, 46)) });
+    if (!x.cause && !/because|caused|root cause|due to/i.test(x.closeNotes || ""))
+      out.push({ kind:"noCause", num:x.num, title:x.title,
+        why:"nothing recorded about why it happened" });
+    if (x.reopens > 0) out.push({ kind:"reopened", num:x.num, title:x.title,
+      why:"reopened " + x.reopens + " time(s) after being closed" });
+  });
+  /* the same fault closed as a workaround more than once is a problem record
+     nobody has raised, and it is the single most useful thing in here */
+  incGroupBySig(done).forEach(g => {
+    const wa = g.items.filter(i => /work.?around/i.test(i.closeCode));
+    if (wa.length >= 2) out.push({ kind:"repeatWorkaround", num:wa[0].num,
+      title:g.items[0].title,
+      why:"closed as a workaround " + wa.length + " times — " +
+          wa.map(i => i.num).slice(0, 4).join(", ") + ". No permanent fix." });
+    else if (g.items.length >= 3) out.push({ kind:"recurring", num:g.items[0].num,
+      title:g.items[0].title,
+      why:"the same fault " + g.items.length + " times — " +
+          g.items.map(i => i.num).slice(0, 4).join(", ") + ". Worth a problem record." });
+  });
+  return out;
+}
+function incGapCounts(gaps){
+  const c = {};
+  gaps.forEach(g => { c[g.kind] = (c[g.kind] || 0) + 1; });
+  return c;
+}
+
+/* Who has actually fixed this kind of thing — evidence, not a prediction.
+   It is a count over what happened, which means it can be shown, argued
+   with, and audited. A model guessing an assignment group cannot. */
+function incWho(text, limit){
+  const sig = incSig({ title:text });
+  const qw = sig.split(" ").filter(Boolean);
+  if (!qw.length) return [];
+  const hits = incStore().filter(x => {
+    const w = incSig(x).split(" ");
+    const shared = qw.filter(t => w.indexOf(t) >= 0).length;
+    return shared >= Math.max(2, Math.ceil(qw.length / 2));
+  });
+  if (!hits.length) return [];
+  const by = {};
+  hits.forEach(x => {
+    const k = (x.group || "—") + " · " + (x.who || "—");
+    const b = by[k] = by[k] || { group:x.group || "", who:x.who || "",
+                                 n:0, hours:[], reopened:0, numbers:[] };
+    b.n++;
+    const h = incHours(x.opened, x.resolved || x.closed);
+    if (h != null) b.hours.push(h);
+    if (x.reopens > 0) b.reopened++;
+    if (b.numbers.length < 4) b.numbers.push(x.num);
+  });
+  return Object.keys(by).map(k => {
+    const b = by[k];
+    return { group:b.group, who:b.who, n:b.n, of:hits.length,
+             medianHours:round1(incMedian(b.hours)),
+             reopened:b.reopened, numbers:b.numbers };
+  }).sort((a, b) => b.n - a.n || (a.medianHours || 1e9) - (b.medianHours || 1e9))
+    .slice(0, limit || 4);
+}
+
+/* What the endpoint is told: the conclusions, never the rows. Three thousand
+   incidents are not going over the wire, and they do not need to — everything
+   worth saying about them has already been counted. */
+function incidentsForFlow(days){
+  const all = incStore();
+  if (!all.length) return null;
+  const n = days || 30;
+  const w = incWindow(n);
+  if (!w.length) return { total:all.length, window:n, inWindow:0 };
+  const gaps = incGaps(w);
+  return {
+    total: all.length, window: n, inWindow: w.length,
+    oldest: (all[all.length - 1] || {}).opened || "",
+    newest: (all[0] || {}).opened || "",
+    topSystems: incTop(w, "sys", 6),
+    topCategories: incTop(w, "cat", 5),
+    topGroups: incTop(w, "group", 5),
+    byPriority: incTop(w, "pri", 4),
+    medianHoursToResolve: round1(incMTTR(w)),
+    stillOpen: w.filter(x => !x.resolved && !x.closed).length,
+    repeats: incRepeats(w, 5),
+    gapCounts: incGapCounts(gaps),
+    gapExamples: gaps.slice(0, 8)
+  };
+}
+
 /* ── the identifiers in what they said ──────────────────────────────────
    "COI not generating for policy A018346A10" carries the one value that
    makes a procedure specific instead of generic. Pulling it out lets the
@@ -9246,6 +9840,33 @@ function renderRunbooks(){
     profileStore().unshift({ system:"New system", facts:"", quirks:"", tables:"",
                              owner:"", updated:new Date().toISOString() });
     touch(); renderRunbooks();
+  };
+}
+
+/* ── the incident history, in Setup ──────────────────────────────────── */
+
+function renderIncidents(){
+  const box = $("incBox");
+  if (!box) return;
+  const all = incStore();
+  box.innerHTML = '<p class="hint2">' + esc(L("IncHint")) + "</p>" +
+    '<div class="rbbar">' +
+      '<button class="btn sm" id="incImp">' + esc(L("IncImport")) + "</button>" +
+      (all.length ? '<button class="btn sm" id="incDel">' + esc(L("IncClear")) + "</button>" : "") +
+    "</div>" +
+    (all.length
+      ? '<p class="hint2" style="margin-top:8px">' + esc(L("IncHave", {
+          n: all.length,
+          a: String((all[all.length - 1] || {}).opened || "").slice(0, 10) || "—",
+          b: String((all[0] || {}).opened || "").slice(0, 10) || "—" })) + "</p>"
+      : '<p class="hint2" style="margin-top:8px;color:var(--ink-3)">' + esc(L("IncNone")) + "</p>");
+
+  const imp = $("incImp");
+  if (imp) imp.onclick = () => { const f = $("incIn"); if (f){ f.value = ""; f.click(); } };
+  const del = $("incDel");
+  if (del) del.onclick = () => {
+    if (!confirm(L("IncClear") + "?")) return;
+    S.incidents = []; touch(); renderIncidents(); toast(L("IncCleared"));
   };
 }
 
@@ -12147,6 +12768,9 @@ async function renderModal(){
     "<h5 class=\"eyebrow\" style=\"margin:22px 0 8px\">" + L("MemoryHead") + "</h5>" +
     '<div id="memBox"></div>' +
 
+    "<h5 class=\"eyebrow\" style=\"margin:22px 0 8px\">" + L("IncHead") + "</h5>" +
+    '<div id="incBox"></div>' +
+
     "<h5 class=\"eyebrow\" style=\"margin:22px 0 8px\">" + L("RunbookHead") + "</h5>" +
     '<div id="rbBox"></div>' +
 
@@ -12159,6 +12783,7 @@ async function renderModal(){
     "<h5 class=\"eyebrow\" style=\"margin:22px 0 8px\">" + L("FlowHead") + "</h5>" +
     '<div id="flowBox"></div>';
   renderMemory();
+  renderIncidents();
   renderRunbooks();
   renderHush();
   renderFlow();
@@ -14865,6 +15490,23 @@ $("askO").addEventListener("click", e => {
 /* JSON import (migrating from the old Day Log file, or another machine) */
 $("sbV").addEventListener("click", () => {
   copyText(buildLine(), L("VersionCopied"));
+});
+$("incIn").addEventListener("change", e => {
+  const f = e.target.files && e.target.files[0];
+  if (!f) return;
+  const r = new FileReader();
+  r.onload = () => {
+    const got = incImportCsv(String(r.result || ""));
+    if (!got){ toast(L("IncBadFile"), { bad:true }); return; }
+    renderIncidents();
+    toast(L("IncImported", { a:got.added, u:got.updated, t:got.total }));
+    /* an export without close notes cannot answer the question they came
+       with, and finding that out later wastes an afternoon */
+    if (got.missing.length)
+      setTimeout(() => toast(L("IncMissingCols", { what:got.missing.join(", ") }),
+                             { bad:true }), 1400);
+  };
+  r.readAsText(f);
 });
 $("rbIn").addEventListener("change", e => {
   const f = e.target.files && e.target.files[0];

@@ -1133,6 +1133,41 @@ to decompose existing `.docx` guidelines into runbooks, and
 its table and team names are deliberately left as placeholders, and every entry
 is a draft.
 
+### The incident history — for an incident manager
+
+Export your incidents from ServiceNow as CSV, import them in **Setup →
+Incident history**, and the app counts what ServiceNow answers badly: which
+system keeps breaking, what is recurring, how long things take, and whether
+the things being closed were actually resolved.
+
+**The counting happens in code, never in the model.** Volume, medians,
+repeat groupings, quality findings — all computed locally and deterministically.
+The assistant reads those numbers and says what they *mean*. A model that
+counts is a model that quietly gets it wrong with nobody able to tell, and a
+number in an incident report has to be defensible.
+
+Titles are reduced to a signature with policy numbers stripped and words
+stemmed, so *"COI letter not generated"* and *"COI letters not generating"*
+count as the same fault. Six of them is one problem, not six incidents.
+
+It flags the records that cannot answer what happened — closed with no
+resolution note, a note that is a non-answer, no root cause, reopened, and
+most valuably **the same fault closed as a workaround again and again**, which
+means nobody has fixed it. The findings are about the *record*, never the
+person: whether somebody is careless is not something ticket data supports.
+
+*"Who should I assign this to"* is answered from history — who resolved this
+kind of incident before, how many, how fast, how often it came back — with the
+evidence beside the name. Nothing is trained and nothing is predicted; when
+there is no history the answer is that there is no history.
+
+Only the conclusions travel to the flow, never the rows: 13 incidents summarise
+to 2.4 KB, and 3,000 would summarise to about the same.
+
+[`flow/SERVICENOW.md`](flow/SERVICENOW.md) is the step-by-step guide, including
+which columns to add to the export and how to connect the Table API through
+Power Automate once you have a service account.
+
 ### Settings the assistant may change
 
 `setTheme` and `setSetting` let you say *"switch to the dark theme"*, *"start
@@ -1244,6 +1279,8 @@ Two documents go with this:
   schema, the prompt to paste into the AI action, where standing knowledge
   goes and where it must not go, and the order to test in that finds problems
   fastest.
+- [`flow/SERVICENOW.md`](flow/SERVICENOW.md) — getting your incident history
+  in, what the app works out from it, and connecting the ServiceNow API.
 - [`flow/BAU-RUNBOOKS.md`](flow/BAU-RUNBOOKS.md) — the support library: how a
   runbook is shaped, how to turn existing `.docx` guidelines into them, and how
   a team shares the library with no shared drive.
@@ -1530,12 +1567,12 @@ drive the real files in a real browser (Playwright + Chromium), because the
 things that break here are things a unit test cannot see: a stale iframe cache,
 a CSP refusal, a file one folder away from where a manifest says.
 
-The seventeen exercised for the current release — `teach`, `talk2`, `pick`,
+The eighteen exercised for the current release — `teach`, `talk2`, `pick`,
 `flowval`, `flowe2e`, `flowui`, `flowmore`, `chatui`, `memui`, `probe`,
-`shrink`, `chatfx`, `settings`, `mend`, `runbook`, `ver`, `analyse` — report
-**560 passing assertions and no failures**, covering the local assistant, teaching, selectors, the reply
+`shrink`, `chatfx`, `settings`, `mend`, `runbook`, `ver`, `analyse`,
+`incident` — report **602 passing assertions and no failures**, covering the local assistant, teaching, selectors, the reply
 validator, the whole network path in a real browser against an endpoint that
-misbehaves the way real ones do, the Setup panel, all 54 actions, the docked
+misbehaves the way real ones do, the Setup panel, all 57 actions, the docked
 layout down to where each masthead tab lands, the memory round trip (taught in
 one conversation, recalled in another), the chat skins and motion switches, the
 settings whitelist — including that an endpoint asking to rewrite its own URL

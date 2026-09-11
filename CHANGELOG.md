@@ -6,6 +6,47 @@ holds — which is what to paste into a bug report.
 
 ---
 
+## 2.2.0 — 2026-09-11
+
+**Incident analysis, for an incident manager.**
+
+Export your incidents from ServiceNow as CSV, import them in Setup, and the
+app answers the questions ServiceNow answers badly: which system keeps
+breaking, what is recurring, how long things take, and whether what is being
+closed was actually resolved.
+
+- **Counting happens in code, never in the model.** Volume, medians, repeat
+  groupings and quality findings are computed locally and deterministically;
+  the assistant reads them and says what they mean. A model that counts is a
+  model that quietly gets it wrong with nobody able to tell
+- **Repeats are found by signature** — identifiers stripped, words stemmed —
+  so "COI letter not generated" and "COI letters not generating" are one fault
+- **Records that cannot answer what happened**: no resolution note, a note
+  that is a non-answer, no root cause, reopened, and the same fault closed as
+  a workaround again and again — which means nobody fixed it
+- **Assignment from evidence**, not prediction: who resolved this kind of
+  incident before, how many, how fast, how often it came back, with the
+  numbers beside the name
+- **Only conclusions travel to the flow** — 13 incidents summarise to 2.4 KB,
+  and 3,000 would summarise to about the same
+- Import is tolerant: field names or display labels, any order, quoted fields
+  with commas and newlines, and re-importing an overlapping range updates on
+  the incident number rather than duplicating. It warns which useful columns
+  the export lacked
+- Three actions: `incidentReview`, `incidentGaps`, `whoFixedThis` (57 total)
+
+Findings are about the **record**, never the person. Whether somebody is
+careless is not something ticket data supports, and the prompt says so.
+
+`flow/SERVICENOW.md` is new — the step-by-step guide, including which columns
+to add before exporting and how to connect the Table API through Power
+Automate once you have a service account. Dossier still never calls
+ServiceNow itself; `connect-src 'none'` is unchanged.
+
+**Repaste §4 of `POWER-AUTOMATE.md`** for rules 9f2-9f4.
+
+602 assertions across eighteen suites, no failures.
+
 ## 2.1.0 — 2026-09-07
 
 **The assistant analyses instead of photocopying.**
