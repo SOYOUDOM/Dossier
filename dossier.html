@@ -369,6 +369,131 @@ main{flex:1;min-height:0;overflow:auto;position:relative}
 .kpi.warn .v{color:var(--st-proc)} .kpi.warn .tr i{background:var(--st-proc)}
 .kpi.bad .v{color:var(--p1)}       .kpi.bad .tr i{background:var(--p1)}
 
+/* ═══ QUIET ══════════════════════════════════════════════════════════════
+   A visual layer over everything above, switchable in Setup, kept separate
+   so the old treatment is one attribute away rather than gone.
+
+   Four things it does, all of them subtraction:
+
+   COLOUR IS A BUDGET. It was being spent on everything — a filled pill for
+   status, another for priority, another for the system, a coloured date, a
+   coloured tag. Seven hues in one row buys nothing, because when everything
+   is emphasised nothing is. Here the accent belongs to the active tab and
+   the primary action; status becomes a small dot; only an overdue date and
+   a P1 keep a colour of their own, because those two must shout.
+
+   HIERARCHY BY WEIGHT AND SPACE, NOT BY DECORATION. The title gets size and
+   weight; everything else on the row drops to one quiet line of text with
+   middots between. Same information, a third of the ink.
+
+   HAIRLINES, NOT BOXES. Every record was a bordered, rounded, shadowed card
+   inside a bordered section — boxes inside boxes. A list is a list: rows
+   separated by a single rule, and the card reserved for something that is
+   genuinely a card.
+
+   FOUR-PIXEL RHYTHM. Padding and gaps land on multiples of four so the page
+   has a beat instead of a dozen hand-picked values.                        */
+
+:root[data-ui="quiet"]{
+  --q-gap:4px; --q-2:8px; --q-3:12px; --q-4:16px; --q-6:24px;
+}
+
+/* ── rows: hairline-separated, not boxed ─────────────────────────────── */
+:root[data-ui="quiet"] .row{
+  border:0;border-radius:0;background:transparent;
+  border-bottom:1px solid var(--rule);
+  padding:var(--q-3) var(--q-2) var(--q-3) var(--q-3);
+  gap:var(--q-3);
+}
+:root[data-ui="quiet"] .row:hover{
+  border-color:var(--rule);box-shadow:none;background:var(--paper-2)}
+:root[data-ui="quiet"] .row:last-child{border-bottom:0}
+:root[data-ui="quiet"] .row::before{width:2px}
+/* only P1 keeps a bar — a marker every row carries marks nothing */
+:root[data-ui="quiet"] .row.p2::before{background:transparent}
+:root[data-ui="quiet"] .row.cur{outline:0;background:var(--accent-soft);
+  box-shadow:inset 2px 0 0 var(--accent)}
+:root[data-ui="quiet"] .tt{font-size:14px;font-weight:560;margin-bottom:3px;letter-spacing:-.005em}
+
+/* ── the metadata line: one quiet sentence, middots between ──────────── */
+:root[data-ui="quiet"] .meta{gap:0;column-gap:var(--q-2);row-gap:2px;font-size:11.5px}
+
+/* The chip treatment is global, not scoped to the list rows: the register is
+   a table of the same records and the same pills were shouting there too.
+   Only the middot separator belongs to .meta — a table separates by column
+   and does not need one. */
+:root[data-ui="quiet"] .chip{
+  background:transparent;border:0;padding:0;font-weight:450;font-size:11.5px;
+  color:var(--ink-3);letter-spacing:0}
+:root[data-ui="quiet"] .chip.code{font-size:10.5px;color:var(--ink-3);
+  font-variant-numeric:tabular-nums}
+
+/* The separator is an ::after on the chip BEFORE the gap, not a ::before on
+   the chip after it. ::before is already taken: the system chip draws its
+   colour dot with it, and claiming it for a middot silently deleted the one
+   piece of colour on the row that was actually earning its place. */
+:root[data-ui="quiet"] .meta .chip:not(:last-child)::after{
+  content:"·";margin-left:var(--q-2);color:var(--rule-hi);font-weight:400}
+
+:root[data-ui="quiet"] .chip.sys{color:var(--ink-2);gap:var(--q-gap)}
+:root[data-ui="quiet"] .chip.sys::before{
+  content:"";width:5px;height:5px;border-radius:50%;background:var(--sc,var(--ink-3));
+  flex:0 0 auto}
+
+/* status: a dot and a word, never a filled pill */
+:root[data-ui="quiet"] .chip.st{background:transparent;gap:var(--q-gap)}
+:root[data-ui="quiet"] .chip.st::before{
+  content:"";width:5px;height:5px;border-radius:50%;background:currentColor;flex:0 0 auto}
+:root[data-ui="quiet"] .chip.st.open{color:var(--st-open)}
+:root[data-ui="quiet"] .chip.st.processing{color:var(--st-proc)}
+:root[data-ui="quiet"] .chip.st.blocked{color:var(--st-block)}
+:root[data-ui="quiet"] .chip.st.done{color:var(--st-done)}
+:root[data-ui="quiet"] .chip.st.cancelled{color:var(--ink-3)}
+
+/* priority: P1 is the only one that earns ink */
+:root[data-ui="quiet"] .chip.pri{font-weight:700;font-size:10.5px;letter-spacing:.03em;
+  font-family:var(--f-mono)}
+:root[data-ui="quiet"] .chip.pri.P1{color:var(--p1);background:transparent}
+:root[data-ui="quiet"] .chip.pri.P2{color:var(--ink-2)}
+:root[data-ui="quiet"] .chip.pri.P3,
+:root[data-ui="quiet"] .chip.pri.P4{color:var(--ink-3);font-weight:500}
+
+/* a date only shouts when it is late */
+:root[data-ui="quiet"] .chip.due{color:var(--ink-2);font-weight:500}
+:root[data-ui="quiet"] .chip.due.soon{color:var(--ink);font-weight:600}
+:root[data-ui="quiet"] .chip.due.over{color:var(--p1);font-weight:650;background:transparent}
+:root[data-ui="quiet"] .chip.clip,
+:root[data-ui="quiet"] .chip.slip{background:transparent;font-size:10.5px}
+
+/* ── the numbers band: cells divided by a rule, not five boxes ───────── */
+:root[data-ui="quiet"] .cards{
+  gap:0;margin-bottom:var(--q-6);border:1px solid var(--rule);
+  border-radius:var(--r-sm);overflow:hidden;background:var(--paper);
+  grid-template-columns:repeat(auto-fit,minmax(140px,1fr))}
+:root[data-ui="quiet"] .kpi{
+  border:0;border-radius:0;border-left:1px solid var(--rule);
+  padding:var(--q-3) var(--q-4);background:transparent}
+:root[data-ui="quiet"] .kpi:first-child{border-left:0}
+:root[data-ui="quiet"] .kpi .k{font-size:9.5px;letter-spacing:.09em;color:var(--ink-3);font-weight:600}
+:root[data-ui="quiet"] .kpi .v{font-size:26px;font-weight:350;margin-top:var(--q-gap);
+  font-variant-numeric:tabular-nums;color:var(--ink)}
+/* the value carries meaning, so it keeps its colour; the bar under it does
+   not need to repeat the same thing in the same hue */
+:root[data-ui="quiet"] .kpi .d{font-size:11px;color:var(--ink-3);margin-top:var(--q-gap)}
+:root[data-ui="quiet"] .kpi .tr{height:2px;margin-top:var(--q-2);background:var(--rule)}
+:root[data-ui="quiet"] .kpi.good .tr i,
+:root[data-ui="quiet"] .kpi.warn .tr i,
+:root[data-ui="quiet"] .kpi.bad .tr i{background:var(--ink-3)}
+
+/* ── section headings: quieter, and given room to breathe ────────────── */
+:root[data-ui="quiet"] .sechead,
+:root[data-ui="quiet"] .grouphead{margin-top:var(--q-6)}
+
+/* numbers that sit in a column should line up */
+:root[data-ui="quiet"] .tm,
+:root[data-ui="quiet"] .status,
+:root[data-ui="quiet"] .cnt{font-variant-numeric:tabular-nums}
+
 /* ═══ BOARD ══════════════════════════════════════════════════════════════ */
 .board{display:flex;gap:11px;padding:18px;align-items:flex-start;overflow-x:auto;min-height:100%}
 .col{flex:1 1 0;min-width:230px;max-width:390px;background:var(--paper-2);border:1px solid var(--rule);
@@ -3608,6 +3733,10 @@ const STRINGS = {
   MailDraft: "Draft email",
   MailTo: "To",
   VersionCopied: "Build details copied \u2014 paste them into the bug report.",
+  UiMode: "Look",
+  UiQuiet: "Quiet \u2014 one line per record, colour where it counts",
+  UiClassic: "Classic \u2014 boxed rows and coloured chips",
+  UiNote: "Quiet is the current design: records are rows rather than boxes, and the metadata is one line instead of a row of pills. Colour is kept for the few things that must be noticed \u2014 an overdue date, a P1, a status. Classic is what it looked like before, unchanged.",
   IncTag: "Incidents",
   IncGapTag: "Thin records",
   IncWhoTag: "Who has fixed this",
@@ -4121,7 +4250,7 @@ const STATUSES = [
    the status bar, and clicking it copies a line you can paste into a bug
    report — build date and flow protocol included, because those are the two
    things that actually differ between copies. */
-const APP_VERSION = "2.2.0";
+const APP_VERSION = "2.3.0";
 const APP_BUILT = "2026-09-11";
 function buildLine(){
   return "Dossier v" + APP_VERSION + " \u00b7 built " + APP_BUILT +
@@ -4154,7 +4283,7 @@ const S = {
   tasks: [], routines: [], scripts: [], seq: 0,
   settings: {
     owner:"", systems: DEF_SYS.slice(), types: DEF_TYPE.slice(), parties: DEF_PARTY.slice(),
-    theme:"archive", palettes: [], remind:false, lead:15, remindOverdue:true, remindWait:3,
+    theme:"archive", ui:"quiet", palettes: [], remind:false, lead:15, remindOverdue:true, remindWait:3,
     autoBlock:true, rememberFilters:true, savedFilters:null, rootPath:"", lang:"en",
     /* hours from raising to due, by priority — an undated record is invisible
        to the Day view and to Slipping, which is where work goes to die */
@@ -4374,9 +4503,19 @@ function applyPalettes(){
   if (!tag){ tag = document.createElement("style"); tag.id = "palCss"; document.head.appendChild(tag); }
   tag.textContent = (S.settings.palettes || []).map(paletteCss).join("\n");
 }
+/* The visual treatment, independent of the palette. "quiet" is the current
+   one; "classic" is what the app looked like before, kept because a big
+   visual change to something somebody uses every day should be one switch
+   away from undone rather than an argument. */
+function applyUi(mode){
+  const m = (mode || S.settings.ui) === "classic" ? "classic" : "quiet";
+  S.settings.ui = m;
+  document.documentElement.setAttribute("data-ui", m);
+}
 function applyTheme(id){
   const p = getPalette(id);
   applyPalettes();
+  applyUi();
   document.documentElement.setAttribute("data-theme", p.id);
   document.documentElement.setAttribute("data-mode", p.mode === "dark" ? "dark" : "light");
   S.settings.theme = p.id;
@@ -9551,6 +9690,7 @@ function memoryForFlow(){
                        through a settings key would skip the draft/approved
                        distinction entirely, which is the whole point of it. */
 const FLOW_SET = {
+  ui:             { type:"text",   what:"The visual treatment: quiet or classic" },
   owner:          { type:"text",   what:"Your name, used in reports and hand-overs" },
   remind:         { type:"yes/no", what:"Windows reminders on or off" },
   lead:           { type:"number", what:"Minutes of warning before something is due",
@@ -12537,6 +12677,11 @@ async function renderModal(){
       '<option value="full"'   + (st.motion !== "subtle" && st.motion !== "none" ? " selected" : "") + ">" + LE("MotionFull") + "</option>" +
       '<option value="subtle"' + (st.motion === "subtle" ? " selected" : "") + ">" + LE("MotionSubtle") + "</option>" +
       '<option value="none"'   + (st.motion === "none" ? " selected" : "") + ">" + LE("MotionNone") + "</option></select>") +
+    fr(L("UiMode"), '<select class="in" id="fUi">' +
+      '<option value="quiet"'   + (st.ui !== "classic" ? " selected" : "") + ">" + LE("UiQuiet") + "</option>" +
+      '<option value="classic"' + (st.ui === "classic" ? " selected" : "") + ">" + LE("UiClassic") + "</option></select>") +
+    '<p style="font-size:11.5px;color:var(--ink-2);margin:-6px 0 14px;line-height:1.7">' +
+      L("UiNote") + "</p>" +
     fr(L("Density"), '<select class="in" id="fDe">' +
       '<option value="comfortable"' + (st.density !== "compact" ? " selected" : "") + ">" + LE("DensityComfortable") + "</option>" +
       '<option value="compact"'     + (st.density === "compact" ? " selected" : "") + ">" + LE("DensityCompact") + "</option></select>") +
@@ -13219,6 +13364,7 @@ function wireModal(){
 
   const feel = (k, v) => { S.settings[k] = v; applyFeel(); touch(); };
   if ($("fMo")) $("fMo").onchange = () => feel("motion", $("fMo").value);
+  if ($("fUi")) $("fUi").onchange = () => { applyUi($("fUi").value); touch(); renderAll(); };
   if ($("fDe")) $("fDe").onchange = () => feel("density", $("fDe").value);
   if ($("fTs")) $("fTs").oninput = () => {
     $("fTsV").textContent = $("fTs").value + "%";

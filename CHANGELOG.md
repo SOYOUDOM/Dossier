@@ -6,6 +6,48 @@ holds — which is what to paste into a bug report.
 
 ---
 
+## 2.3.0 — 2026-09-11
+
+**A quieter interface.** Researched against current minimalist practice, then
+applied as subtraction rather than decoration.
+
+The problem was colour. It was being spent on everything — a filled pill for
+the status, another for the priority, another for the system, a coloured date,
+a coloured tag. Seven hues in one row buys nothing, because when everything is
+emphasised nothing is.
+
+- **Colour is a budget now.** The accent belongs to the active tab and the
+  primary action. Status becomes a small dot and a word. Only an overdue date
+  and a P1 keep a colour of their own, because those two must be noticed
+- **Hierarchy by weight and space, not decoration.** The title gets size and
+  weight; the rest of the row drops to one quiet line with middots between.
+  Same information, roughly a third of the ink
+- **Hairlines, not boxes.** Every record was a bordered, rounded, shadowed
+  card inside a bordered section. A list is a list: rows divided by a single
+  rule
+- **The numbers band** is five cells divided by a rule rather than five
+  separate boxes, with tabular figures so columns line up
+- **Four-pixel rhythm** — padding and gaps land on multiples of four
+- Applies to the register table too, which had the same pills
+
+**One switch away from undone.** *Setup → Look → Look: Quiet or Classic.* A
+big visual change to something you use every day should be reversible, not an
+argument. Classic is exactly what it looked like before. The assistant can
+switch it too.
+
+Two bugs found and fixed while building it, both the same shape — a rule that
+looked right but was measuring the wrong thing:
+
+- The middot separator claimed `::before`, which the system chip was already
+  using for its colour dot. The one piece of colour on the row that was
+  earning its place silently disappeared. The separator is an `::after` now
+- A test read `borderBottomColor` off a zero-width border, which reports the
+  *text* colour — so "the rule is visible on dark" passed with a value of 233
+  on a page of 19. It now asserts the width first, and that the rule sits
+  clear of the page without glaring
+
+636 assertions across nineteen suites, no failures.
+
 ## 2.2.0 — 2026-09-11
 
 **Incident analysis, for an incident manager.**

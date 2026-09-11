@@ -1,7 +1,7 @@
 {
   "dossier": 1,
   "protocol": "1.1",
-  "askedAt": "2026-09-11T07:21:04.470Z",
+  "askedAt": "2026-09-11T09:36:01.178Z",
   "today": "2026-09-11",
   "weekday": "Friday",
   "calendar": {
@@ -258,6 +258,7 @@
         "Vault"
       ],
       "canSet": {
+        "ui": "The visual treatment: quiet or classic (text)",
         "owner": "Your name, used in reports and hand-overs (text)",
         "remind": "Windows reminders on or off (yes/no)",
         "lead": "Minutes of warning before something is due (number, 0–240)",
@@ -276,6 +277,7 @@
       },
       "now": {
         "theme": "archive",
+        "ui": "quiet",
         "owner": "",
         "remind": false,
         "lead": 15,
