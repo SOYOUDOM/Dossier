@@ -90,9 +90,10 @@ One JSON object, POSTed as the body.
   "message": "create a task to restart the imaging pool tomorrow, P1",
   "conversation": [ { "who": "person", "text": "…" },
                     { "who": "dossier", "text": "…" } ],
-  "attachmentsText": "error.png (image/png, 82 KB)",
-  "attachments": [ { "name": "error.png", "type": "image/png",
-                     "size": 84213, "data": "iVBORw0KGgoAAA…" } ],
+  "attachmentsText": "=== error.png (image, 82 KB) ===\n[an image: its pixels are in attachments[].data for the recogniser, not here]",
+  "attachments": [ { "name": "error.png", "type": "image/png", "kind": "image",
+                     "size": 84213, "data": "iVBORw0KGgoAAA…",
+                     "text": "", "pages": 0, "note": "" } ],
   "owner": "",
 
   "workspace": {
@@ -257,28 +258,27 @@ unless the person explicitly says they are approving it.
 
 ### Attachments
 
-`attachments` carries what the person clipped to the question — a screenshot
-of an error, a page of a specification, a log. `data` is base64 **without**
-the `data:` prefix, so it goes straight into an AI action's image or document
-input — which the flow must actually wire up, and which only a vision- or
-document-capable model can read.
+`attachments` carries what the person clipped to the question. Each one has
+`name`, `type`, `size`, `kind` (`image`, `pdf` or `text`) and:
 
-Each attachment also carries `kind` — `image`, `pdf` or `text` — so a flow
-can branch on one word instead of parsing a media type. The recipe for reading
-what is in them (OCR for images and PDFs, plain decoding for text) is
-[`POWER-AUTOMATE.md`](POWER-AUTOMATE.md) §4b.
+- `text` — what the app read out of the file on the person's PC before
+  sending: the whole text of a PDF, page by page with `[page N]` marks, or of
+  a text file, up to 60,000 characters. Empty for an image, a scan, or a file
+  that needs a password.
+- `pages` — the PDF's page count.
+- `note` — `""` when it read cleanly; `cut` (past the cap), `partial` (some
+  characters could not be decoded), `scanned` (pictures of pages, no text
+  layer), `encrypted` (needs a password), `empty`, `unreadable`.
+- `data` — the file as base64 **without** the `data:` prefix, and **only when
+  the words could not be read**: images, scans, locked files. A file that
+  arrived as text carries no bytes; its words are the file.
 
-`attachmentsText` is the same list as one line of plain text
-(`error.png (image/png, 81 KB); spec.pdf (application/pdf, 400 KB)`, or
-`None.`), so the prompt can tell the model a file arrived in a single
-expression and without the base64. A text-only model gets that much even
-when it cannot read the file itself. See `POWER-AUTOMATE.md` §6.
-
-Images are shrunk in the browser first — 1600px on the longest edge,
-re-encoded, dropping further if still large — because base64 is a third
-bigger than the file it encodes and an untouched screenshot will fail a
-request that the same question typed out would survive. Limits after
-shrinking: five files, 2 MB each, 3.5 MB for one question.
+`attachmentsText` is all of that as one piece of plain text a prompt input can
+take whole — a `=== name (kind, size, pages) ===` line, then the text — so the
+prompt built in [`POWER-AUTOMATE.md`](POWER-AUTOMATE.md) §4 reads a document
+without any change to the flow. An image or a scan gets a bracketed line
+saying where its pixels are; §4b reads those with the recogniser. `None.` when
+nothing was clipped. Capped at 80,000 characters, with the cut marked.
 
 ### The probe
 

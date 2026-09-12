@@ -545,6 +545,42 @@ function slimTask(t, deep){
   return o;
 }
 
+/* Every file as plain text a prompt can take whole: a header line naming
+   it, then what it says. A PDF or a text file arrives already read by the
+   app, so its words are here; an image, or a scan with no text in it, is
+   described instead, and its bytes are in attachments[].data for the
+   recogniser (POWER-AUTOMATE.md 4b). Capped, because a prompt input has a
+   ceiling and a report can be long; the cut is marked, so the model knows
+   it is not seeing the end. */
+const ATTACH_TEXT_CAP = 80000;
+function attachmentsAsText(list){
+  if (!list.length) return "None.";
+  const parts = []; let used = 0;
+  for (const x of list){
+    const kb = x.size ? Math.max(1, Math.round(x.size / 1024)) + " KB" : "";
+    const head = "=== " + x.name + " (" + (x.kind || x.type || "file") + (kb ? ", " + kb : "") +
+                 (x.pages ? ", " + x.pages + " page" + (x.pages === 1 ? "" : "s") : "") + ") ===";
+    let body;
+    if (x.text){
+      body = x.text;
+      if (x.note === "cut") body += "\n[cut here: the file goes on past what fits]";
+      else if (x.note === "partial") body += "\n[some characters in this file could not be decoded]";
+    }
+    else if (x.kind === "image") body = "[an image: its pixels are in attachments[].data for the recogniser, not here]";
+    else if (x.note === "scanned") body = "[a scanned PDF, pictures of pages with no text layer: its pages are in attachments[].data for the recogniser]";
+    else if (x.note === "encrypted") body = "[a password-protected PDF: its text could not be read]";
+    else body = "[no text could be read from this file]";
+    let block = head + "\n" + body;
+    if (used + block.length > ATTACH_TEXT_CAP){
+      block = block.slice(0, Math.max(head.length + 1, ATTACH_TEXT_CAP - used)) +
+              "\n[cut here: the attachments are longer than fits in one question]";
+      parts.push(block); break;
+    }
+    used += block.length + 2; parts.push(block);
+  }
+  return parts.join("\n\n");
+}
+
 function buildRequest(text, ctx, cfg){
   const st = ctx.settings || {};
   const scope = (cfg && cfg.scope) || "live";
@@ -579,23 +615,21 @@ function buildRequest(text, ctx, cfg){
        often the whole of what they are asking about, and typing out what an
        error dialog says is how detail gets lost. */
     attachments: (ctx.attachments || []).map(a => ({
-      name: a.name, type: a.type, size: a.size, data: a.data,
+      name: a.name, type: a.type, size: a.size, data: a.data || "",
       kind: a.kind || (/^image\//.test(a.type || "") ? "image"
-                       : a.type === "application/pdf" ? "pdf" : "text") })),
-    /* The same list as one line of plain text, ready to drop into a prompt.
-       This is here because the first version made the flow build it, with a
-       Select action and an item() expression, to turn an array of objects
-       into a sentence. That is work the app already had the answer to, and
-       asking somebody to write a data-transform in a designer to describe
-       files this file just read is the wrong place for it. One expression
-       now: body('Parse_JSON')?['attachmentsText']. */
-    attachmentsText: (function(){
-      const a = ctx.attachments || [];
-      if (!a.length) return "None.";
-      return a.map(x => x.name + " (" + x.type +
-        (x.size ? ", " + Math.max(1, Math.round(x.size / 1024)) + " KB" : "") + ")")
-        .join("; ");
-    })(),
+                       : a.type === "application/pdf" ? "pdf" : "text"),
+      /* what the app read out of the file before sending - the whole text of
+         a PDF or a text file - with its page count, and a note when
+         something got in the way: scanned, encrypted, cut, partial, empty,
+         unreadable. A file with text here carries no data: the words
+         travel, the bytes stay on the PC. */
+      text: a.text || "", pages: a.pages || 0, note: a.note || "" })),
+    /* The same files as one piece of plain text a prompt can take whole -
+       each one's name, then what it says. This is the input the prompt
+       already reads, so a PDF that used to arrive as a name now arrives as
+       its pages, and nothing in the flow has to change to get that.
+       One expression: body('Parse_JSON')?['attachmentsText']. */
+    attachmentsText: attachmentsAsText(ctx.attachments || []),
     conversation: (ctx.conversation || []).slice(-6),
     owner: st.owner || "",
     workspace: {

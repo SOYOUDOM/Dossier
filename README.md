@@ -1065,9 +1065,10 @@ none*.
 
 *Chase → Write it with the assistant* has the flow draft the chase from the
 facts and the tone you chose; every notice on the day view can be handed to
-the assistant with one press. Attachments are read for the model when the
-flow is built as in [`flow/POWER-AUTOMATE.md`](flow/POWER-AUTOMATE.md) §4b —
-the words in a screenshot, not a description of it.
+the assistant with one press. A PDF or a log attached to a question is read
+here and goes as its words; a screenshot is read for the model when the flow
+is built as in [`flow/POWER-AUTOMATE.md`](flow/POWER-AUTOMATE.md) §4b — the
+words in the picture, not a description of it.
 
 ### Memory — teaching it a method
 
@@ -1088,14 +1089,22 @@ them all — editable in place, with how often each has been asked for.
 
 The Ask box takes **more than one line** (Enter sends, Shift+Enter breaks) and
 **attachments** — drop them on the panel, paste a screenshot straight in, or
-use the clip. They go to your endpoint as base64 with the question, and
-nowhere else.
+use the clip. A PDF or a text file is **read here, on your PC**, and its words
+go with the question in the input the prompt already has — so the assistant
+answers from the report's pages, and nothing in the flow changes. The bytes of
+a document with text in it never leave the machine. A screenshot, a scanned
+PDF, or a file that needs a password still goes as base64 to your endpoint,
+and nowhere else, for the recogniser in
+[`flow/POWER-AUTOMATE.md`](flow/POWER-AUTOMATE.md) §4b; the tray says which
+under the file's name.
 
 Images are **shrunk before they go**, because base64 is a third larger than
 the file it encodes and an untouched 4 MB screenshot becomes 5.2 MB of JSON —
 enough to fail a request that the same question typed out would survive. An
-11 MB test image came out at 163 KB. Limits after shrinking: five files, 2 MB
-each, 3.5 MB for one question; the composer shows the running total.
+11 MB test image came out at 163 KB. Limits: five files a question; 25 MB
+each to open; for what travels as bytes, 2 MB each and 3.5 MB for one
+question; 60,000 characters of text a file. The composer shows the running
+total.
 
 Answers come back with their line breaks intact. A fenced block becomes a code
 panel with its language and a copy button; `backticks` become inline code.
@@ -1598,19 +1607,23 @@ drive the real files in a real browser (Playwright + Chromium), because the
 things that break here are things a unit test cannot see: a stale iframe cache,
 a CSP refusal, a file one folder away from where a manifest says.
 
-The twenty-two exercised for the current release — `teach`, `talk2`, `pick`,
+The twenty-four exercised for the current release — `teach`, `talk2`, `pick`,
 `flowval`, `flowe2e`, `flowui`, `flowmore`, `chatui`, `memui`, `probe`,
 `shrink`, `chatfx`, `settings`, `mend`, `runbook`, `ver`, `analyse`,
-`incident`, `quiet`, `studio`, `shell`, `chatv3` — report **837 passing
-assertions and no failures**, covering the local assistant, teaching, selectors, the reply
-validator, the whole network path in a real browser against an endpoint that
-misbehaves the way real ones do, the Setup panel, all 57 actions, the docked
-layout down to where each masthead tab lands, the memory round trip (taught in
-one conversation, recalled in another), the chat skins and motion switches, the
-settings whitelist — including that an endpoint asking to rewrite its own URL
-is refused *with confirmation turned off* — and, counted against a server that
-records every request, exactly how many times the endpoint is called and how
-large each call is.
+`incident`, `quiet`, `studio`, `shell`, `chatv3`, `pdftext`, `pdfattach` —
+report **941 passing assertions and no failures**, covering the local
+assistant, teaching, selectors, the reply validator, the whole network path in
+a real browser against an endpoint that misbehaves the way real ones do, the
+Setup panel, all 57 actions, the docked layout down to where each masthead tab
+lands, the memory round trip (taught in one conversation, recalled in
+another), the chat skins and motion switches, the settings whitelist —
+including that an endpoint asking to rewrite its own URL is refused *with
+confirmation turned off* — the PDF reader against pdf.js on real files and
+against files built to hit one thing each (three encodings, object streams,
+an incremental update, wrong offsets, form fields, four kinds of encryption),
+the attachment tray and the request it produces, and, counted against a server
+that records every request, exactly how many times the endpoint is called and
+how large each call is.
 
 Several of those assertions now measure **geometry, not just content**. An
 email body once rendered its text correctly into a box 25 pixels square at

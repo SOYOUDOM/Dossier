@@ -6,6 +6,44 @@ holds — which is what to paste into a bug report.
 
 ---
 
+## 3.2.0 — 2026-09-12
+
+**A PDF that comes with a question is read, here, before it goes** — and
+the assistant answers from its pages instead of saying it cannot read
+documents.
+
+- **Attach a report and ask about it.** The text is read out of the PDF on
+  your PC — objects, compressed streams, fonts and their encodings, the
+  operators that place the glyphs — by a reader written into `dossier.html`
+  for the purpose. Nothing is downloaded to do it and nothing leaves the
+  machine but the words. A two-page report reads in about 30 ms; ten pages in
+  under 50
+- **The words go, the bytes stay.** `attachments[].text` carries the pages
+  (`[page N]` marks), `pages` the count, `note` what got in the way; a file
+  that arrived as text has no `data` at all. `attachmentsText` — the input the
+  §4 prompt already reads — is now every file's name and then its text, so
+  **the flow needs no change**. Paste the §4 prompt once more: the old one
+  told the model it could not read documents, and it believed that with the
+  pages in front of it
+- **Text files too**: a `.log`, `.csv` or `.txt` arrives as its lines, not as
+  base64 for the flow to decode
+- **What has no words still goes as pixels** for the recogniser in §4b — a
+  screenshot, a scanned PDF (`note: scanned`), a file that needs a password
+  (`encrypted`) — and the tray says which, under the file's name, the moment
+  it is read: *2 pages read*, *a scan, no text in it — the pages go for OCR*
+- **"Protected" corporate PDFs open** when their user password is empty —
+  RC4, AES-128 and AES-256 — which is what most of them are; a real password
+  still says so
+- **A question sent while a file is still being read waits for it**
+- A PDF up to 25 MB can be opened, because only its words travel; the caps on
+  what travels as bytes are unchanged (2 MB a file, 3.5 MB a question), and
+  text is cut at 60,000 characters a file with the cut marked for the model
+- Two new suites: `pdftext` — the reader against pdf.js on real files, and
+  against files built to hit one thing each: three encodings, `/Differences`,
+  object streams, an incremental update, wrong offsets and lengths, LZW and
+  ASCII85, form fields, a Type3 font, four kinds of encryption — and
+  `pdfattach`: the tray, the request, the wait
+
 ## 3.1.0 — 2026-09-12
 
 **The assistant panel, rebuilt around how it is used** — and three things

@@ -92,7 +92,10 @@ Parse JSON does not mind the ones left out.
           "type": { "type": "string" },
           "size": { "type": "integer" },
           "data": { "type": "string" },
-          "kind": { "type": "string" }
+          "kind": { "type": "string" },
+          "text": { "type": "string" },
+          "pages": { "type": "integer" },
+          "note": { "type": "string" }
         }
       }
     },
@@ -419,15 +422,27 @@ input wants.
 
 **No Select action, no `item()` expression.** An earlier version of this page
 told you to build the file list yourself with a Data Operation → Select. That
-was wrong — the app already knows the file names, so it now sends them ready
-to use. `attachmentsText` is one line of plain text, like
+was wrong — the app already knows the files, so it sends them ready to use.
+`attachmentsText` is plain text a prompt input takes whole: each file's name
+on a header line, then **what the app read out of it** on your PC before
+sending — the pages of a PDF, the lines of a log:
 
 ```
-error.png (image/png, 81 KB); spec.pdf (application/pdf, 400 KB)
+=== CustomizedReport_Payment_Option.pdf (pdf, 407 KB, 6 pages) ===
+[page 1]
+Customized Report — Payment Option
+Policy No	Insured	Option	Premium (USD)	Status
+A018346A10	Sok Dara	Annual	1,250.00	Grace
+…
+
+=== error.png (image, 81 KB) ===
+[an image: its pixels are in attachments[].data for the recogniser, not here]
 ```
 
-or the single word `None.` when nothing was clipped. If you already added a
-Select for this, delete it.
+or the single word `None.` when nothing was clipped. A document with text in
+it arrives as that text and carries no bytes at all; only what has no words
+to read — a screenshot, a scanned PDF — travels as base64, and §4b is how the
+flow reads those. If you already added a Select for this, delete it.
 
 ### The prompt
 
@@ -506,11 +521,15 @@ policy.chaseAfterDays; and adding a hold moves a record to Blocked by itself.
 
 {attached}
 
-If files are listed above, the images and documents themselves are given to
-you as inputs alongside this prompt — look at them, they are usually the whole
-of what is being asked about. Answer from what you actually see in them. If you
-cannot see an attached image or document — because this model reads only text —
-say that plainly instead of guessing what it contains.
+Each file they clipped is listed above by name, and a document — a PDF, a log,
+a text file — is printed there in full, page by page, read by the app before it
+was sent. That text is usually the whole of what is being asked about: read it
+and answer from it, quoting the figures and the wording it actually contains.
+A line in square brackets after a name means there were no words to read — an
+image, a scan, a locked file — and says where its pixels are; if the flow reads
+pictures (§4b) their words follow under "Text read from them". Never say you
+cannot read documents: the ones with text in them are already in front of you.
+Never invent what a file says.
 
 ═══ HOW TO ANSWER ═══
 
@@ -740,14 +759,16 @@ RULES, in order of importance:
     tracked and there is evidence afterwards of what was actually done. It is
     a write, so it will be confirmed like any other.
 
-9j. WHAT IS ATTACHED HAS BEEN READ FOR YOU. The input "attached" names the
-    files and, when the flow is built as in §4b, carries the text read out
-    of them. A screenshot of an error dialog arrives as the words in that
-    dialog. Quote the error, do not describe the picture — "the screenshot
-    says 'Object reference not set to an instance of an object' on the
-    Generate button" is the answer; "there is a screenshot of an error" is
-    not. If the text read out is empty, say the image could not be read and
-    ask them to paste the message instead. Never invent what a file says.
+9j. WHAT IS ATTACHED HAS BEEN READ FOR YOU. The input "attached" carries
+    each file's name and, for a PDF or a text file, its whole text, page by
+    page — the app reads it before sending. A report arrives as its rows, a
+    log as its lines. Answer from that text: quote the figure, the policy,
+    the error — "page 2 lists 14 policies in grace; the largest premium is
+    1,250.00" is the answer; "you attached a report" is not. An image or a
+    scan arrives as a bracketed line saying so, and its words only when the
+    flow runs the recogniser (§4b); if no text came from a picture, say it
+    could not be read and ask them to paste the message. Never invent what a
+    file says.
 
 10. If the message is an instruction that is already impossible — a script
     they do not have, a party who is not on their list, a routine that does
@@ -781,12 +802,11 @@ RULES, in order of importance:
     file name or a setting inside a sentence. Nothing else is interpreted:
     asterisks and hashes arrive as asterisks and hashes.
 
-14. Files they clipped to the question are listed under WHAT THEY ATTACHED,
-    and the images and documents themselves are wired into this action's own
-    image/document input (§6). When something is attached, read it before
-    answering — a screenshot of an error is usually the whole question. Only a
-    vision- or document-capable action can see them; if yours cannot, say so
-    rather than inventing what the picture showed.
+14. Files they clipped to the question are under WHAT THEY ATTACHED: a
+    document as its full text, a picture as a line saying it is one. Read what
+    is there before answering — the file is usually the whole question. Only
+    when a picture came and nothing was read out of it should you say so,
+    rather than inventing what it showed.
 
 ═══ EXAMPLES ═══
 
@@ -886,8 +906,8 @@ Message: "how do we fix the imaging sync again?"   (with that note in memory)
 Message: "what does this error mean"   (attached: error.png — a vision model sees it)
 {"say":"That is a SQL timeout — the query ran past 30 seconds. It is the same GetPendingAsync failure as D-0004.","actions":[{"do":"find","overdue":true,"system":"Imaging"}]}
 
-Message: "log this against the payment one"   (attached: receipt.pdf, but a text-only model)
-{"ask":"I can see a file called receipt.pdf came with that, but this model cannot read documents. Tell me the amount and reference and I will log it."}
+Message: "log this against the payment one"   (attached: receipt.pdf — its text is under WHAT THEY ATTACHED: "Receipt No 88213 … Amount USD 412.50 … Ref E-Payment/2026-09-10")
+{"ask":"The receipt reads USD 412.50, reference E-Payment/2026-09-10, receipt 88213. Log that as a note on D-0004, the E-Payment gateway timeout?"}
 
 Message: "the imaging one can't move until the DBA ticket is done"
 {"ask":"Which record is the DBA one? I can see D-0004 for Imaging, but nothing that looks like a DBA ticket."}
@@ -933,14 +953,22 @@ Answer it in one condition at the top of the flow, before anything expensive:
 
 Two lines of setup, and probes stop costing you an AI Builder call.
 
-### Attachments: what to actually click
+### Attachments: what actually happens
 
-There are **two separate levels**, and they are worth doing in this order
-because the first one takes a minute and always works.
+Two kinds of file, two paths — and only one of them needs anything built.
+
+| You attach | What travels | What the model gets |
+|---|---|---|
+| a PDF with text in it; a `.txt`, `.log`, `.csv` | **the words**, read out of the file by the app on your PC | the pages, under the file's name, in the `attached` input it already has |
+| a screenshot; a scanned PDF (pictures of pages); a PDF that needs a password | **the bytes**, base64 in `attachments[].data` | the file's name and a line saying it is a picture — until §4b is built, which reads the words out of the picture |
+
+The tray under the Ask box says which path each file took, in the moment it
+is read: *2 pages read — the text goes with the question*, or *a scan, no
+text in it — the pages go for OCR*.
 
 ---
 
-#### Level 1 — the model is told a file arrived
+#### Level 1 — every file is named, every document is read
 
 This is one prompt input. Nothing else. No Select, no loop, no condition.
 
@@ -952,30 +980,41 @@ In your AI action's input list, add an input:
 | **Type** | Text |
 | **Value** | `body('Parse_JSON')?['attachmentsText']` |
 
-That's it. The prompt in §4 already has a `WHAT THEY ATTACHED` section that
-reads `{attached}`, so the model now sees:
+That's it. The prompt in §4 has a `WHAT THEY ATTACHED` section that reads
+`{attached}`, so the model now sees the report:
 
 ```
-error.png (image/png, 81 KB)
+=== CustomizedReport_Payment_Option.pdf (pdf, 407 KB, 6 pages) ===
+[page 1]
+Customized Report — Payment Option
+Policy No	Insured	Option	Premium (USD)	Status
+…
 ```
 
-**What you get:** the model knows a file came, and what it is. It can answer
-*"I can see you attached error.png, but tell me what the error says and I'll
-log it"* instead of ignoring the file entirely. On a text-only action this is
-as far as you can go, and it is still a real improvement over silence.
+**What you get:** the model reads the document and answers from it — the
+figure on page 2, the policy that is in grace, the error in the log. The
+PDF's bytes never left the PC; only its words did.
 
-**What you do not get:** the model cannot see what is *in* the picture.
+**What you do not get:** the inside of a picture. A screenshot arrives as
+`=== error.png (image, 81 KB) ===` and a line saying its pixels are in
+`attachments[].data`. The model can say *"a screenshot came with that — tell
+me what it says, or build §4b and I will read it"*, which is honest, and is
+as far as a text-only action goes.
+
+> If you built the flow before 3.2, **paste the §4 prompt again.** The old one
+> told the model it could not read documents, and it believed that even with
+> the pages in front of it. Nothing else in the flow changes.
 
 ---
 
-#### Level 2 — the model can see inside the file
+#### Level 2 — the model can see the picture
 
-This needs an AI action that accepts images or documents. **Check yours before
-building anything**, like this:
+This needs an AI action that accepts images. **Check yours before building
+anything**, like this:
 
 > In your AI action, add another input and open the **Type** dropdown.
 > - If the only option is **Text** → your action cannot see pictures. Stop at
->   Level 1.
+>   Level 1, and read §4b, which turns a picture into text for it.
 > - If you see **Image**, **File** or **Document** → carry on.
 
 I can't tell you which it will be, because it depends on the action and the
@@ -992,9 +1031,10 @@ work, and it fails in two specific ways worth recognising:
   is about 136,000 tokens, against a 128,000 limit — *This model's maximum
   context length is 128000 tokens*.
 
-For scale: the whole legitimate payload — workspace, all 42 actions, memory,
-calendar, the lot — is about **3,800 tokens**, 3% of the limit. Everything
-else in those errors is the file.
+For scale: the whole legitimate payload — workspace, all the actions, memory,
+calendar, the lot — is about **3,800 tokens**, 3% of the limit. A six-page
+report read as text is another two or three thousand. Everything else in
+those errors is the file.
 
 If you do have an image input, wire it to the first attachment's data:
 
@@ -1011,14 +1051,17 @@ concat('data:', body('Parse_JSON')?['attachments']?[0]?['type'], ';base64,',
        body('Parse_JSON')?['attachments']?[0]?['data'])
 ```
 
-**One caveat that will bite you.** `attachments?[0]` is null when nothing was
+**Two caveats that will bite you.** `attachments?[0]` is null when nothing was
 attached, and some actions fail on a null image input rather than ignoring it.
-If asking a normal question breaks after you add this, that is why. Wrap the
-AI action in a **Condition**:
+And a PDF that was read as text has an **empty** `data` — it is not a picture
+any more — so an image input wired to it gets nothing. The recipe in §4b uses
+a Filter array for exactly this reason: it hands the image input only the
+attachments that are pictures. If asking a normal question breaks after you
+add an image input, wrap the AI action in a **Condition**:
 
 | | |
 |---|---|
-| **Condition** | `length(body('Parse_JSON')?['attachments'])` **is greater than** `0` |
+| **Condition** | `length(body('Filter_array'))` **is greater than** `0` |
 | **If yes** | the AI action *with* the image input wired |
 | **If no** | the AI action *without* it |
 
@@ -1029,13 +1072,15 @@ designer. If your action ignores a null image, skip the condition.
 
 #### Which level am I on?
 
-Ask the assistant something with a screenshot attached and read the reply.
+Attach a PDF report and ask *"what is on page 1"*; then attach a screenshot
+and ask *"what does this say"*.
 
-| The reply says | You are on |
+| The reply | You are on |
 |---|---|
-| nothing about the file at all | Level 0 — the `attached` input is not wired, or you have not repasted the §4 prompt |
-| it names the file but says it cannot read it | **Level 1** — working as designed |
-| it describes what is in the picture | **Level 2** — working |
+| says nothing about either file | Level 0 — the `attached` input is not wired, or you have not repasted the §4 prompt |
+| reads the PDF, but says the screenshot cannot be read | **Level 1** — working as designed; §4b reads pictures for a text-only action |
+| names the PDF but says it cannot read documents | the §4 prompt is the old one — paste it again |
+| reads both | **Level 2**, or Level 1 with §4b built — working |
 | the flow errors only when a file is attached | the null-image caveat above, or size — see §8 |
 
 **On size, which is the thing that breaks this.** Base64 is a third larger
@@ -1049,29 +1094,32 @@ large. A screenshot of an error dialog ends up around 80 KB. An 11 MB image
 in testing came out at 163 KB — 69× smaller — and the whole request at
 230 KB rather than 14.7 MB.
 
-The limits, after shrinking: **five files, 2 MB each, 3.5 MB for one
-question**, images / PDF / text only. A PDF cannot be shrunk in a browser, so
-one over 2 MB is refused before it is read. The composer shows the running
-total, so you can see what a question weighs before you send it.
+A PDF is not shrunk; it is **read**. Its words go and its bytes stay, so a
+9 MB report costs the request a few thousand characters. The limits: five
+files a question; up to 25 MB each to open; for what still travels as bytes —
+screenshots, scans, locked files — 2 MB each and 3.5 MB for one question;
+and 60,000 characters of text a file, with the cut marked so the model knows
+it is not seeing the end. The composer shows the running total, so you can
+see what a question weighs before you send it.
 
 ---
 
-## 4b. Reading what is attached
+## 4b. Reading pictures: OCR for screenshots and scans
 
-The request already carries every file the person clipped to the question, in
-`attachments[]`, each with `name`, `type`, `size`, `kind` and `data` — the
-file itself, base64, with no `data:` prefix. `attachmentsText` is the same
-list as one sentence, and that is what the prompt input `attached` has been
-getting. So the model has known *that* a screenshot was attached and never
-what was in it.
+A document with text in it needs nothing here — its words are already in
+`attachmentsText` (Level 1 above). This section is for what is still a
+picture: a screenshot of an error dialog, a scanned PDF, a photo of a screen.
+In `attachments[]` those are the ones whose `text` is **empty**; their bytes
+are in `data`, base64 with no `data:` prefix, and `note` says `scanned` for a
+PDF that turned out to be pictures of pages.
 
-Two ways to change that. Do the first; add the second if your prompt's model
+Two ways to read them. Do the first; add the second if your prompt's model
 takes pictures.
 
-### A. Read the text out of it (works everywhere)
+### A. Read the text out of the picture (works everywhere)
 
 AI Builder's **Recognize text in an image or a PDF document** returns the
-text in a screenshot or a PDF as lines. The model then gets the actual error
+text in a screenshot or a scan as lines. The model then gets the actual error
 message, which is the thing they attached the picture for.
 
 Above your prompt action, add these, in this order:
@@ -1083,12 +1131,12 @@ Above your prompt action, add these, in this order:
    body('Parse_JSON')?['attachments']
    ```
 
-3. Inside it, **Condition** — expression, is not equal to, `text`:
+3. Inside it, **Condition** — expression, is equal to, `true`:
    ```
-   items('Apply_to_each')?['kind']
+   empty(items('Apply_to_each')?['text'])
    ```
-   `kind` is one of `image`, `pdf`, `text`. Anything that is not plain text
-   goes to the recogniser.
+   A file the app already read has its text and is skipped; a picture, a
+   scan, or a locked file has none and goes to the recogniser.
 
 4. In the **Yes** branch, **AI Builder → Recognize text in an image or a PDF
    document** — *Image*: expression
@@ -1114,11 +1162,7 @@ Above your prompt action, add these, in this order:
    concat(items('Apply_to_each_3')?['text'], ' ')
    ```
 
-8. In the **No** branch (a text file), **Append to string variable** —
-   `attachedText`, value:
-   ```
-   concat(base64ToString(items('Apply_to_each')?['data']), ' ')
-   ```
+8. Leave the **No** branch empty.
 
 9. Change the prompt input `attached` to:
    ```
@@ -1132,8 +1176,8 @@ expression name changes with it — spaces become underscores, and the second
 > Only the recognised **text** reaches the model — never the base64. That is
 > what keeps this out of `TooManyInputTokens`: a screenshot is a few hundred
 > characters of words, not a hundred thousand of encoding. The app has already
-> shrunk images before sending and refuses PDFs above its cap, so the
-> recogniser sees files of a size it handles quickly.
+> shrunk images before sending, so the recogniser sees files of a size it
+> handles quickly — and it is never handed a PDF that was already read.
 
 ### B. Let the model see the picture (if your prompt supports it)
 
@@ -1154,15 +1198,19 @@ dialog box with an icon, a chart, or a layout problem.
    greater than 0, and give the branch without a picture a copy of the action
    with the input left empty.
 
-Keep recipe A even with B in place: a PDF is not an image, and the text of a
-long error is better read than looked at.
+Keep recipe A even with B in place: a scanned PDF is not an image, and the
+text of a long error is better read than looked at.
 
 ### What to check
 
-- Attach a screenshot of an error and ask *"what does this say"*. The answer
-  should quote the error text. If it says it cannot see an attachment, `attached`
-  is still the old one-line expression.
-- Attach a `.txt` log. The No branch should carry it in unchanged.
+- Attach a PDF report and ask *"what is on the first page"*. The answer should
+  quote it. Nothing in this section is needed for that; if it says it cannot
+  read documents, the §4 prompt is the old one — paste it again.
+- Attach a screenshot of an error and ask *"what does this say"*. With recipe
+  A built, the answer quotes the error text. If it says a picture came and it
+  cannot see inside, `attached` is still the plain expression from Level 1.
+- Attach a `.txt` log. It arrives read, in `attachmentsText`, with no
+  recogniser involved — the Yes branch should not run for it.
 - Run history → the recogniser's output: `results` should have one entry per
   page with `lines` inside. Empty `lines` on a real screenshot usually means
   the image arrived as text rather than binary — check step 4's expression.
