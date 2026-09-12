@@ -6,6 +6,43 @@ holds — which is what to paste into a bug report.
 
 ---
 
+## 3.0.0 — 2026-09-12
+
+**A new shell.** 2.3.0 changed the ink; this changes the room.
+
+- **Navigation is a sidebar.** The seven views run down the left with a
+  glyph each, the active one marked with an accent bar. The top of the
+  content column is freed for the thing you type into, which is now a
+  proper command bar with room to breathe
+- **The day is objects on a canvas.** The numbers are rounded cards; each
+  group — overdue, due today, coming up — is one sheet of rows. The page
+  reads as a small set of things rather than one long list
+- **Studio, a new default palette**: cool graphite ink on an off-white
+  canvas with a single indigo accent, and a dark twin. Archive and Vault are
+  exactly as they were and still available
+- **With the assistant docked** the sidebar keeps its labels at desktop
+  widths and folds to a 68px rail of glyphs below ~1240px — every tab still
+  there, none of them stripped. Below 900px the original top bar returns on
+  its own
+- Group counts are figures, not pills; radii, gaps and padding move to a
+  wider scale to match the larger surfaces
+
+Everything Quiet does about colour still holds underneath: one line per
+record, status as a dot, colour only where it must be noticed.
+
+**Three looks, in Setup → Look.** Studio (new, default), Quiet (the top bar
+with the same restraint), Classic (the original, unchanged). An existing
+workspace moves to Studio once on first open; if you were still on the
+Archive theme you move to the Studio palette too. Anything you had *chosen* —
+a look, a theme, a custom palette — is left alone, and choosing again
+afterwards always sticks.
+
+Found on the way: switching the look through the assistant did not count as
+a choice, so the one-time move could have undone it on the next open.
+Choosing a look now counts wherever it comes from.
+
+679 assertions across twenty suites, no failures.
+
 ## 2.3.0 — 2026-09-11
 
 **A quieter interface.** Researched against current minimalist practice, then

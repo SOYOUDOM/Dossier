@@ -395,13 +395,28 @@ rest of the app — the record sheet stays still while you read it.
 Panels trap focus while open and hand it back when they close, so a keyboard
 or screen-reader user is never tabbing around a page they cannot see.
 
-### 6.5 Themes
+### 6.5 Looks and themes
 
-Two built in — **Archive** (warm, paper) and **Vault** (dark) — and neither can
-be deleted. A custom palette is a copy of one with five colours changed; the
-other twenty-odd (rules, muted text, hover states, shadows) are derived from
-those five. Palettes are stored in `dossier.json`, so a theme travels with the
-folder.
+Two separate choices, both in *Menu → Look*.
+
+**The look** is the shape of the interface. **Studio** (default) puts the
+navigation down the left as a sidebar with a glyph per view, lays the day out
+as cards on a canvas, and folds to a rail of glyphs when the assistant is
+docked at narrower widths. **Quiet** keeps the top bar with the same restraint
+— one line per record, status as a dot, colour only where it must be noticed.
+**Classic** is the original: boxed rows and coloured chips, unchanged. Below
+900px every look becomes the top bar. The assistant can switch it (`ui`).
+
+**The theme** is the palette. Four built in — **Studio** (graphite ink,
+off-white canvas, one indigo accent), **Studio Dark**, **Archive** (warm,
+paper) and **Vault** (dark) — none deletable. A custom palette is a copy of
+one with five colours changed; the other twenty-odd (rules, muted text, hover
+states, shadows) are derived from those five. Any look works with any theme.
+Palettes are stored in `dossier.json`, so a theme travels with the folder.
+
+Upgrading from 2.x moves a workspace to Studio once, and to the Studio palette
+if it was still on Archive by default. A look or theme you had chosen is left
+alone, and choosing again afterwards always sticks.
 
 ---
 
@@ -1567,11 +1582,11 @@ drive the real files in a real browser (Playwright + Chromium), because the
 things that break here are things a unit test cannot see: a stale iframe cache,
 a CSP refusal, a file one folder away from where a manifest says.
 
-The nineteen exercised for the current release — `teach`, `talk2`, `pick`,
+The twenty exercised for the current release — `teach`, `talk2`, `pick`,
 `flowval`, `flowe2e`, `flowui`, `flowmore`, `chatui`, `memui`, `probe`,
 `shrink`, `chatfx`, `settings`, `mend`, `runbook`, `ver`, `analyse`,
-`incident`, `quiet` — report **636 passing assertions and no failures**,
-covering the local assistant, teaching, selectors, the reply
+`incident`, `quiet`, `studio` — report **679 passing assertions and no
+failures**, covering the local assistant, teaching, selectors, the reply
 validator, the whole network path in a real browser against an endpoint that
 misbehaves the way real ones do, the Setup panel, all 57 actions, the docked
 layout down to where each masthead tab lands, the memory round trip (taught in

@@ -394,105 +394,253 @@ main{flex:1;min-height:0;overflow:auto;position:relative}
    FOUR-PIXEL RHYTHM. Padding and gaps land on multiples of four so the page
    has a beat instead of a dozen hand-picked values.                        */
 
-:root[data-ui="quiet"]{
+:root:is([data-ui="quiet"],[data-ui="studio"]){
   --q-gap:4px; --q-2:8px; --q-3:12px; --q-4:16px; --q-6:24px;
 }
 
 /* ── rows: hairline-separated, not boxed ─────────────────────────────── */
-:root[data-ui="quiet"] .row{
+:root:is([data-ui="quiet"],[data-ui="studio"]) .row{
   border:0;border-radius:0;background:transparent;
   border-bottom:1px solid var(--rule);
   padding:var(--q-3) var(--q-2) var(--q-3) var(--q-3);
   gap:var(--q-3);
 }
-:root[data-ui="quiet"] .row:hover{
+:root:is([data-ui="quiet"],[data-ui="studio"]) .row:hover{
   border-color:var(--rule);box-shadow:none;background:var(--paper-2)}
-:root[data-ui="quiet"] .row:last-child{border-bottom:0}
-:root[data-ui="quiet"] .row::before{width:2px}
+:root:is([data-ui="quiet"],[data-ui="studio"]) .row:last-child{border-bottom:0}
+:root:is([data-ui="quiet"],[data-ui="studio"]) .row::before{width:2px}
 /* only P1 keeps a bar — a marker every row carries marks nothing */
-:root[data-ui="quiet"] .row.p2::before{background:transparent}
-:root[data-ui="quiet"] .row.cur{outline:0;background:var(--accent-soft);
+:root:is([data-ui="quiet"],[data-ui="studio"]) .row.p2::before{background:transparent}
+:root:is([data-ui="quiet"],[data-ui="studio"]) .row.cur{outline:0;background:var(--accent-soft);
   box-shadow:inset 2px 0 0 var(--accent)}
-:root[data-ui="quiet"] .tt{font-size:14px;font-weight:560;margin-bottom:3px;letter-spacing:-.005em}
+:root:is([data-ui="quiet"],[data-ui="studio"]) .tt{font-size:14px;font-weight:560;margin-bottom:3px;letter-spacing:-.005em}
 
 /* ── the metadata line: one quiet sentence, middots between ──────────── */
-:root[data-ui="quiet"] .meta{gap:0;column-gap:var(--q-2);row-gap:2px;font-size:11.5px}
+:root:is([data-ui="quiet"],[data-ui="studio"]) .meta{gap:0;column-gap:var(--q-2);row-gap:2px;font-size:11.5px}
 
 /* The chip treatment is global, not scoped to the list rows: the register is
    a table of the same records and the same pills were shouting there too.
    Only the middot separator belongs to .meta — a table separates by column
    and does not need one. */
-:root[data-ui="quiet"] .chip{
+:root:is([data-ui="quiet"],[data-ui="studio"]) .chip{
   background:transparent;border:0;padding:0;font-weight:450;font-size:11.5px;
   color:var(--ink-3);letter-spacing:0}
-:root[data-ui="quiet"] .chip.code{font-size:10.5px;color:var(--ink-3);
+:root:is([data-ui="quiet"],[data-ui="studio"]) .chip.code{font-size:10.5px;color:var(--ink-3);
   font-variant-numeric:tabular-nums}
 
 /* The separator is an ::after on the chip BEFORE the gap, not a ::before on
    the chip after it. ::before is already taken: the system chip draws its
    colour dot with it, and claiming it for a middot silently deleted the one
    piece of colour on the row that was actually earning its place. */
-:root[data-ui="quiet"] .meta .chip:not(:last-child)::after{
+:root:is([data-ui="quiet"],[data-ui="studio"]) .meta .chip:not(:last-child)::after{
   content:"·";margin-left:var(--q-2);color:var(--rule-hi);font-weight:400}
 
-:root[data-ui="quiet"] .chip.sys{color:var(--ink-2);gap:var(--q-gap)}
-:root[data-ui="quiet"] .chip.sys::before{
+:root:is([data-ui="quiet"],[data-ui="studio"]) .chip.sys{color:var(--ink-2);gap:var(--q-gap)}
+:root:is([data-ui="quiet"],[data-ui="studio"]) .chip.sys::before{
   content:"";width:5px;height:5px;border-radius:50%;background:var(--sc,var(--ink-3));
   flex:0 0 auto}
 
 /* status: a dot and a word, never a filled pill */
-:root[data-ui="quiet"] .chip.st{background:transparent;gap:var(--q-gap)}
-:root[data-ui="quiet"] .chip.st::before{
+:root:is([data-ui="quiet"],[data-ui="studio"]) .chip.st{background:transparent;gap:var(--q-gap)}
+:root:is([data-ui="quiet"],[data-ui="studio"]) .chip.st::before{
   content:"";width:5px;height:5px;border-radius:50%;background:currentColor;flex:0 0 auto}
-:root[data-ui="quiet"] .chip.st.open{color:var(--st-open)}
-:root[data-ui="quiet"] .chip.st.processing{color:var(--st-proc)}
-:root[data-ui="quiet"] .chip.st.blocked{color:var(--st-block)}
-:root[data-ui="quiet"] .chip.st.done{color:var(--st-done)}
-:root[data-ui="quiet"] .chip.st.cancelled{color:var(--ink-3)}
+:root:is([data-ui="quiet"],[data-ui="studio"]) .chip.st.open{color:var(--st-open)}
+:root:is([data-ui="quiet"],[data-ui="studio"]) .chip.st.processing{color:var(--st-proc)}
+:root:is([data-ui="quiet"],[data-ui="studio"]) .chip.st.blocked{color:var(--st-block)}
+:root:is([data-ui="quiet"],[data-ui="studio"]) .chip.st.done{color:var(--st-done)}
+:root:is([data-ui="quiet"],[data-ui="studio"]) .chip.st.cancelled{color:var(--ink-3)}
 
 /* priority: P1 is the only one that earns ink */
-:root[data-ui="quiet"] .chip.pri{font-weight:700;font-size:10.5px;letter-spacing:.03em;
+:root:is([data-ui="quiet"],[data-ui="studio"]) .chip.pri{font-weight:700;font-size:10.5px;letter-spacing:.03em;
   font-family:var(--f-mono)}
-:root[data-ui="quiet"] .chip.pri.P1{color:var(--p1);background:transparent}
-:root[data-ui="quiet"] .chip.pri.P2{color:var(--ink-2)}
-:root[data-ui="quiet"] .chip.pri.P3,
-:root[data-ui="quiet"] .chip.pri.P4{color:var(--ink-3);font-weight:500}
+:root:is([data-ui="quiet"],[data-ui="studio"]) .chip.pri.P1{color:var(--p1);background:transparent}
+:root:is([data-ui="quiet"],[data-ui="studio"]) .chip.pri.P2{color:var(--ink-2)}
+:root:is([data-ui="quiet"],[data-ui="studio"]) .chip.pri.P3,
+:root:is([data-ui="quiet"],[data-ui="studio"]) .chip.pri.P4{color:var(--ink-3);font-weight:500}
 
 /* a date only shouts when it is late */
-:root[data-ui="quiet"] .chip.due{color:var(--ink-2);font-weight:500}
-:root[data-ui="quiet"] .chip.due.soon{color:var(--ink);font-weight:600}
-:root[data-ui="quiet"] .chip.due.over{color:var(--p1);font-weight:650;background:transparent}
-:root[data-ui="quiet"] .chip.clip,
-:root[data-ui="quiet"] .chip.slip{background:transparent;font-size:10.5px}
+:root:is([data-ui="quiet"],[data-ui="studio"]) .chip.due{color:var(--ink-2);font-weight:500}
+:root:is([data-ui="quiet"],[data-ui="studio"]) .chip.due.soon{color:var(--ink);font-weight:600}
+:root:is([data-ui="quiet"],[data-ui="studio"]) .chip.due.over{color:var(--p1);font-weight:650;background:transparent}
+:root:is([data-ui="quiet"],[data-ui="studio"]) .chip.clip,
+:root:is([data-ui="quiet"],[data-ui="studio"]) .chip.slip{background:transparent;font-size:10.5px}
 
 /* ── the numbers band: cells divided by a rule, not five boxes ───────── */
-:root[data-ui="quiet"] .cards{
+:root:is([data-ui="quiet"],[data-ui="studio"]) .cards{
   gap:0;margin-bottom:var(--q-6);border:1px solid var(--rule);
   border-radius:var(--r-sm);overflow:hidden;background:var(--paper);
   grid-template-columns:repeat(auto-fit,minmax(140px,1fr))}
-:root[data-ui="quiet"] .kpi{
+:root:is([data-ui="quiet"],[data-ui="studio"]) .kpi{
   border:0;border-radius:0;border-left:1px solid var(--rule);
   padding:var(--q-3) var(--q-4);background:transparent}
-:root[data-ui="quiet"] .kpi:first-child{border-left:0}
-:root[data-ui="quiet"] .kpi .k{font-size:9.5px;letter-spacing:.09em;color:var(--ink-3);font-weight:600}
-:root[data-ui="quiet"] .kpi .v{font-size:26px;font-weight:350;margin-top:var(--q-gap);
+:root:is([data-ui="quiet"],[data-ui="studio"]) .kpi:first-child{border-left:0}
+:root:is([data-ui="quiet"],[data-ui="studio"]) .kpi .k{font-size:9.5px;letter-spacing:.09em;color:var(--ink-3);font-weight:600}
+:root:is([data-ui="quiet"],[data-ui="studio"]) .kpi .v{font-size:26px;font-weight:350;margin-top:var(--q-gap);
   font-variant-numeric:tabular-nums;color:var(--ink)}
 /* the value carries meaning, so it keeps its colour; the bar under it does
    not need to repeat the same thing in the same hue */
-:root[data-ui="quiet"] .kpi .d{font-size:11px;color:var(--ink-3);margin-top:var(--q-gap)}
-:root[data-ui="quiet"] .kpi .tr{height:2px;margin-top:var(--q-2);background:var(--rule)}
-:root[data-ui="quiet"] .kpi.good .tr i,
-:root[data-ui="quiet"] .kpi.warn .tr i,
-:root[data-ui="quiet"] .kpi.bad .tr i{background:var(--ink-3)}
+:root:is([data-ui="quiet"],[data-ui="studio"]) .kpi .d{font-size:11px;color:var(--ink-3);margin-top:var(--q-gap)}
+:root:is([data-ui="quiet"],[data-ui="studio"]) .kpi .tr{height:2px;margin-top:var(--q-2);background:var(--rule)}
+:root:is([data-ui="quiet"],[data-ui="studio"]) .kpi.good .tr i,
+:root:is([data-ui="quiet"],[data-ui="studio"]) .kpi.warn .tr i,
+:root:is([data-ui="quiet"],[data-ui="studio"]) .kpi.bad .tr i{background:var(--ink-3)}
 
 /* ── section headings: quieter, and given room to breathe ────────────── */
-:root[data-ui="quiet"] .sechead,
-:root[data-ui="quiet"] .grouphead{margin-top:var(--q-6)}
+:root:is([data-ui="quiet"],[data-ui="studio"]) .sechead,
+:root:is([data-ui="quiet"],[data-ui="studio"]) .grouphead{margin-top:var(--q-6)}
 
 /* numbers that sit in a column should line up */
-:root[data-ui="quiet"] .tm,
-:root[data-ui="quiet"] .status,
-:root[data-ui="quiet"] .cnt{font-variant-numeric:tabular-nums}
+:root:is([data-ui="quiet"],[data-ui="studio"]) .tm,
+:root:is([data-ui="quiet"],[data-ui="studio"]) .status,
+:root:is([data-ui="quiet"],[data-ui="studio"]) .cnt{font-variant-numeric:tabular-nums}
+
+/* ═══ STUDIO ═════════════════════════════════════════════════════════════
+   The shell itself changes here, not only the ink. Navigation moves down
+   the left as a sidebar, which is where every tool built this decade puts
+   it and where the eye now expects it; the top of the content column is
+   freed for the thing you type into. The day is laid out as cards on a
+   canvas — the numbers, then each group as one sheet of rows — so the page
+   reads as a small set of objects rather than one long list.
+
+   Everything Quiet does about colour still applies underneath (the same
+   selectors match both), so a record row is still one line and status is
+   still a dot. Studio adds structure on top of that restraint.
+
+   Below 900px none of the sidebar rules apply and the original top bar
+   comes back on its own, because a 236px column has no business on a
+   phone.                                                                    */
+
+:root[data-ui="studio"]{ --r-xs:5px; --r-sm:8px; --r:12px; --r-lg:16px }
+
+@media (min-width:901px){
+  :root[data-ui="studio"] .app{
+    display:grid;grid-template-columns:236px minmax(0,1fr);
+    grid-template-rows:auto auto auto minmax(0,1fr) auto}
+  :root[data-ui="studio"] .banner,:root[data-ui="studio"] .compose,
+  :root[data-ui="studio"] .rail,:root[data-ui="studio"] main,
+  :root[data-ui="studio"] .status{grid-column:2;min-width:0}
+
+  /* ── the sidebar ─────────────────────────────────────────────────── */
+  :root[data-ui="studio"] .mast{
+    grid-column:1;grid-row:1 / -1;height:auto;min-height:0;
+    flex-direction:column;align-items:stretch;gap:14px;padding:16px 12px 12px;
+    border-bottom:0;border-right:1px solid var(--rule);overflow:hidden auto}
+  :root[data-ui="studio"] .mast::after{display:none}
+  :root[data-ui="studio"] .brand{order:0;gap:10px;padding:0 4px}
+  :root[data-ui="studio"] .brand .seal{width:36px;height:36px;border-radius:10px;box-shadow:none}
+  :root[data-ui="studio"] .brand .wm b{font-size:15px;letter-spacing:.08em}
+  :root[data-ui="studio"] .wsbtn{order:1;max-width:none;width:100%;height:36px;
+    background:var(--paper-2);border-color:var(--rule)}
+  :root[data-ui="studio"] .find{order:2;max-width:none;min-width:0;flex:0 0 auto}
+  :root[data-ui="studio"] .find input{height:36px;background:var(--paper-2)}
+  :root[data-ui="studio"] .tabs{order:3;flex-direction:column;gap:2px;overflow:visible;flex:1 1 auto}
+  :root[data-ui="studio"] .tabs button{
+    width:100%;padding:9px 10px;font-size:13px;font-weight:600;gap:10px;
+    color:var(--ink-2);position:relative;border-radius:var(--r-sm)}
+  /* a glyph per view, so the column reads as navigation and not as a list
+     of words. The same vocabulary the masthead icons already use. */
+  :root[data-ui="studio"] .tabs button::before{
+    content:"";width:18px;text-align:center;font-size:14px;line-height:1;
+    color:var(--ink-3);flex:0 0 auto}
+  :root[data-ui="studio"] .tabs button[data-v="day"]::before{content:"\25F7"}
+  :root[data-ui="studio"] .tabs button[data-v="board"]::before{content:"\25A6"}
+  :root[data-ui="studio"] .tabs button[data-v="register"]::before{content:"\2630"}
+  :root[data-ui="studio"] .tabs button[data-v="week"]::before{content:"\25A4"}
+  :root[data-ui="studio"] .tabs button[data-v="library"]::before{content:"\25A3"}
+  :root[data-ui="studio"] .tabs button[data-v="insight"]::before{content:"\25D4"}
+  :root[data-ui="studio"] .tabs button[data-v="assist"]::before{content:"\273B"}
+  :root[data-ui="studio"] .tabs button .kb{margin-left:auto;opacity:.45;font-size:9.5px}
+  :root[data-ui="studio"] .tabs button:hover{background:var(--paper-2);color:var(--ink)}
+  :root[data-ui="studio"] .tabs button.on{background:var(--accent-soft);color:var(--accent-2)}
+  :root[data-mode="dark"][data-ui="studio"] .tabs button.on{color:var(--accent)}
+  :root[data-ui="studio"] .tabs button.on::before{color:var(--accent)}
+  :root[data-ui="studio"] .tabs button.on::after{
+    content:"";position:absolute;left:0;top:8px;bottom:8px;width:3px;
+    border-radius:0 3px 3px 0;background:var(--accent)}
+  :root[data-ui="studio"] .mastsp{order:4;margin-left:0;margin-top:auto;
+    justify-content:space-between;padding-top:12px;border-top:1px solid var(--rule)}
+
+  /* the assistant dock no longer has to strip the masthead: the sidebar
+     keeps its labels and the seven tabs stay readable */
+  :root[data-ui="studio"] body.chatting .brand .wm{display:flex}
+  :root[data-ui="studio"] body.chatting .tabs button .kb{display:inline}
+  :root[data-ui="studio"] body.chatting .tabs button{padding:9px 10px;font-size:13px}
+  :root[data-ui="studio"] body.chatting .wsbtn .nm{max-width:none}
+  :root[data-ui="studio"] body.chatting .find{max-width:none}
+
+  /* ── the content column ──────────────────────────────────────────── */
+  :root[data-ui="studio"] main{background:var(--canvas)}
+  :root[data-ui="studio"] .compose{background:transparent;border-bottom:0;padding:18px 24px 0}
+  :root[data-ui="studio"] .cbar{height:52px;border-radius:var(--r-lg);border-color:var(--rule);
+    box-shadow:var(--shadow);padding:0 16px}
+  :root[data-ui="studio"] .cbar input{font-size:15px}
+  :root[data-ui="studio"] .sugg{left:24px;right:24px;top:70px;border-radius:var(--r-lg)}
+  :root[data-ui="studio"] .readout{padding:10px 6px 4px}
+  :root[data-ui="studio"] .rail{background:transparent;border-bottom:0;padding:6px 24px 6px}
+  :root[data-ui="studio"] .pill{border-color:transparent;background:transparent;
+    padding:5px 11px;border-radius:var(--r-sm)}
+  :root[data-ui="studio"] .pill:hover{background:var(--paper);border-color:var(--rule)}
+  :root[data-ui="studio"] .pill.on{background:var(--paper);
+    box-shadow:0 1px 2px rgba(0,0,0,.06),inset 0 0 0 1px var(--rule)}
+  :root[data-ui="studio"] .rail select{border-color:transparent;background-color:transparent}
+  :root[data-ui="studio"] .rail select:hover{background-color:var(--paper);border-color:var(--rule)}
+  :root[data-ui="studio"] .pad{padding:8px 24px 40px}
+  :root[data-ui="studio"] .status{border-top:1px solid var(--rule);background:var(--paper)}
+}
+
+/* With the assistant open and less than ~1240px, the sidebar goes to a
+   rail of glyphs. Every tab is still there and still labelled on hover;
+   only the words fold away. */
+@media (min-width:901px) and (max-width:1240px){
+  :root[data-ui="studio"] body.chatting .app{grid-template-columns:68px minmax(0,1fr)}
+  :root[data-ui="studio"] body.chatting .mast{padding:14px 10px 10px;gap:10px}
+  :root[data-ui="studio"] body.chatting .brand{justify-content:center;padding:0}
+  :root[data-ui="studio"] body.chatting .brand .wm,
+  :root[data-ui="studio"] body.chatting .tabs button .lb,
+  :root[data-ui="studio"] body.chatting .tabs button .kb,
+  :root[data-ui="studio"] body.chatting .wsbtn .nm,
+  :root[data-ui="studio"] body.chatting .wsbtn .fld,
+  :root[data-ui="studio"] body.chatting .find .k,
+  :root[data-ui="studio"] body.chatting .dial{display:none}
+  :root[data-ui="studio"] body.chatting .wsbtn{justify-content:center;padding:0}
+  /* the box is 48px wide here; a placeholder cannot fit, so it becomes an
+     icon tile and the text only appears once there is room to type */
+  :root[data-ui="studio"] body.chatting .find input{padding:0 0 0 28px}
+  :root[data-ui="studio"] body.chatting .find input::placeholder{color:transparent}
+  :root[data-ui="studio"] body.chatting .find .ic{left:50%;transform:translateX(-50%)}
+  :root[data-ui="studio"] body.chatting .tabs button{justify-content:center;padding:10px 0}
+  :root[data-ui="studio"] body.chatting .tabs button::before{width:auto;font-size:16px}
+  :root[data-ui="studio"] body.chatting .mastsp{flex-direction:column;gap:8px}
+}
+
+/* ── the day as objects on a canvas (at every width) ────────────────── */
+:root[data-ui="studio"] .cards{
+  gap:12px;border:0;background:transparent;overflow:visible;border-radius:0;
+  grid-template-columns:repeat(auto-fit,minmax(150px,1fr));margin-bottom:28px}
+:root[data-ui="studio"] .kpi{
+  border:1px solid var(--rule);border-left:1px solid var(--rule);border-radius:var(--r-lg);
+  background:var(--paper);padding:16px 18px;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+:root[data-ui="studio"] .kpi .k{font-size:10px;letter-spacing:.11em}
+:root[data-ui="studio"] .kpi .v{font-size:30px;font-weight:500;letter-spacing:-.03em;margin-top:6px}
+:root[data-ui="studio"] .kpi .tr{height:3px;margin-top:12px}
+:root[data-ui="studio"] .kpi .tr i,:root[data-ui="studio"] .kpi.good .tr i,
+:root[data-ui="studio"] .kpi.warn .tr i,:root[data-ui="studio"] .kpi.bad .tr i{background:var(--accent)}
+
+:root[data-ui="studio"] .hd{margin:20px 0 8px;gap:12px}
+:root[data-ui="studio"] .hd .t{font-size:12px;letter-spacing:.14em;color:var(--ink)}
+:root[data-ui="studio"] .hd .n{font-family:var(--f-display);font-size:14px;font-weight:600;
+  border:0;background:transparent;padding:0;color:var(--ink-3);font-variant-numeric:tabular-nums}
+:root[data-ui="studio"] .hd.alarm .t,:root[data-ui="studio"] .hd.alarm .n{color:var(--p1)}
+:root[data-ui="studio"] .hd .ln{opacity:.7}
+
+/* each group is one sheet: the rows share a card and are divided by the
+   hairline Quiet already gives them */
+:root[data-ui="studio"] .rows{
+  gap:0;background:var(--paper);border:1px solid var(--rule);border-radius:var(--r-lg);
+  overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04);margin-bottom:8px}
+:root[data-ui="studio"] .row{padding:14px 16px 14px 18px}
+:root[data-ui="studio"] .row:hover{background:var(--paper-2)}
+:root[data-ui="studio"] .row.cur{background:var(--accent-soft)}
 
 /* ═══ BOARD ══════════════════════════════════════════════════════════════ */
 .board{display:flex;gap:11px;padding:18px;align-items:flex-start;overflow-x:auto;min-height:100%}
@@ -3734,9 +3882,10 @@ const STRINGS = {
   MailTo: "To",
   VersionCopied: "Build details copied \u2014 paste them into the bug report.",
   UiMode: "Look",
-  UiQuiet: "Quiet \u2014 one line per record, colour where it counts",
+  UiStudio: "Studio \u2014 sidebar navigation, cards, one accent",
+  UiQuiet: "Quiet \u2014 the top bar, one line per record",
   UiClassic: "Classic \u2014 boxed rows and coloured chips",
-  UiNote: "Quiet is the current design: records are rows rather than boxes, and the metadata is one line instead of a row of pills. Colour is kept for the few things that must be noticed \u2014 an overdue date, a P1, a status. Classic is what it looked like before, unchanged.",
+  UiNote: "Studio is the current design: navigation down the left, the day laid out in cards, and one accent colour. Quiet keeps the top bar with the same restraint. Classic is what it looked like originally, unchanged. All three work with every theme.",
   IncTag: "Incidents",
   IncGapTag: "Thin records",
   IncWhoTag: "Who has fixed this",
@@ -4250,8 +4399,8 @@ const STATUSES = [
    the status bar, and clicking it copies a line you can paste into a bug
    report — build date and flow protocol included, because those are the two
    things that actually differ between copies. */
-const APP_VERSION = "2.3.0";
-const APP_BUILT = "2026-09-11";
+const APP_VERSION = "3.0.0";
+const APP_BUILT = "2026-09-12";
 function buildLine(){
   return "Dossier v" + APP_VERSION + " \u00b7 built " + APP_BUILT +
          " \u00b7 flow protocol " + (window.DossierFlow ? DossierFlow.version : "\u2014") +
@@ -4283,7 +4432,7 @@ const S = {
   tasks: [], routines: [], scripts: [], seq: 0,
   settings: {
     owner:"", systems: DEF_SYS.slice(), types: DEF_TYPE.slice(), parties: DEF_PARTY.slice(),
-    theme:"archive", ui:"quiet", palettes: [], remind:false, lead:15, remindOverdue:true, remindWait:3,
+    theme:"studio", ui:"studio", palettes: [], remind:false, lead:15, remindOverdue:true, remindWait:3,
     autoBlock:true, rememberFilters:true, savedFilters:null, rootPath:"", lang:"en",
     /* hours from raising to due, by priority — an undated record is invisible
        to the Day view and to Slipping, which is where work goes to die */
@@ -4453,9 +4602,16 @@ function isDarkHex(h){
    surface, text, accent, second accent — and written into a <style> tag at
    runtime. Still no network: these are just strings. */
 const BUILTIN_PAL = [
-  { id:"archive", name:"Archive", builtin:true, mode:"light",
+  /* Studio is the current default: a cool graphite ink on an off-white
+     canvas with one indigo accent — the palette the sidebar shell was drawn
+     for. Archive and Vault stay exactly as they were. */
+  { id:"studio", name:"Studio", builtin:true, mode:"light",
+    base:{ canvas:"#F3F4F6", paper:"#FFFFFF", ink:"#14151A", accent:"#4F46E5", teal:"#0E7490" } },
+  { id:"studio-dark", name:"Studio Dark", builtin:true, mode:"dark",
+    base:{ canvas:"#0E0F13", paper:"#16171D", ink:"#EDEDF2", accent:"#8B8FF7", teal:"#22B8CF" } },
+  { id:"archive", name:"Archive", builtin:true, mode:"light", handwritten:true,
     base:{ canvas:"#EDEAE3", paper:"#FFFFFF", ink:"#1C1B18", accent:"#8B1E3F", teal:"#1F4E5F" } },
-  { id:"vault", name:"Vault", builtin:true, mode:"dark",
+  { id:"vault", name:"Vault", builtin:true, mode:"dark", handwritten:true,
     base:{ canvas:"#131316", paper:"#1B1B20", ink:"#E9E7E2", accent:"#D9506F", teal:"#4FA3B8" } }
 ];
 const ST_LIGHT = { open:"#6B7A90", proc:"#C8791A", block:"#7E57C2", done:"#1F7A5C", cancel:"#8A8580",
@@ -4464,11 +4620,11 @@ const ST_DARK  = { open:"#8494A8", proc:"#E0A34A", block:"#A98CE0", done:"#3FBF9
                    p1:"#E8556F", p2:"#E0A34A", p3:"#6BA6E0", p4:"#7C7770" };
 
 function allPalettes(){ return BUILTIN_PAL.concat(S.settings.palettes || []); }
-function getPalette(id){ return allPalettes().find(p => p.id === id) || BUILTIN_PAL[0]; }
+function getPalette(id){ return allPalettes().find(p => p.id === id) || BUILTIN_PAL.find(p => p.id === "archive"); }
 function paletteMode(id){ return getPalette(id).mode === "dark" ? "dark" : "light"; }
 
 function paletteVars(p){
-  const b = p.base || BUILTIN_PAL[0].base;
+  const b = p.base || BUILTIN_PAL.find(x => x.id === "archive").base;
   const dark = p.mode === "dark";
   const st = dark ? ST_DARK : ST_LIGHT;
   const lift = dark ? "#FFFFFF" : "#000000";
@@ -4497,18 +4653,26 @@ function paletteCss(p){
   return ':root[data-theme="' + p.id + '"]{' +
     Object.keys(v).map(k => "--" + k + ":" + v[k]).join(";") + "}";
 }
-/* only custom palettes are emitted — the two built-ins stay hand-written */
+/* Archive and Vault are hand-written in the stylesheet; every other palette,
+   built-in or custom, is derived from its five base colours here. */
 function applyPalettes(){
   let tag = document.getElementById("palCss");
   if (!tag){ tag = document.createElement("style"); tag.id = "palCss"; document.head.appendChild(tag); }
-  tag.textContent = (S.settings.palettes || []).map(paletteCss).join("\n");
+  tag.textContent = BUILTIN_PAL.filter(p => !p.handwritten).concat(S.settings.palettes || [])
+    .map(paletteCss).join("\n");
 }
 /* The visual treatment, independent of the palette. "quiet" is the current
    one; "classic" is what the app looked like before, kept because a big
    visual change to something somebody uses every day should be one switch
    away from undone rather than an argument. */
+const UI_MODES = ["studio", "quiet", "classic"];
 function applyUi(mode){
-  const m = (mode || S.settings.ui) === "classic" ? "classic" : "quiet";
+  const want = mode || S.settings.ui;
+  const m = UI_MODES.indexOf(want) >= 0 ? want : "studio";
+  /* an explicit mode is a choice — from Setup, from the assistant, from
+     anywhere — and a choice is what the one-time move to Studio must never
+     override. Booting with no argument is not a choice. */
+  if (mode) S.settings.uiPicked = true;
   S.settings.ui = m;
   document.documentElement.setAttribute("data-ui", m);
 }
@@ -5570,6 +5734,15 @@ function hydrate(d){
   if (!S.settings.types || !S.settings.types.length) S.settings.types = DEF_TYPE.slice();
   if (!S.settings.parties || !S.settings.parties.length) S.settings.parties = DEF_PARTY.slice();
   if (!Array.isArray(S.settings.palettes)) S.settings.palettes = [];
+  /* Existing workspaces move to the Studio shell once, and to its palette
+     if they were still on the original default. Anyone who chose a look
+     or a theme keeps it; the flags mean this never runs twice, so going
+     back to Archive or Classic sticks. */
+  if (!S.settings.studioSeen){
+    if (!S.settings.uiPicked) S.settings.ui = "studio";
+    if (S.settings.theme === "archive" && !(S.settings.palettes || []).length) S.settings.theme = "studio";
+    S.settings.studioSeen = true;
+  }
   if (!S.settings.fonts) S.settings.fonts = { display:"auto", ui:"auto", mono:"auto" };
   S.settings.sla = Object.assign({ on:true, P1:4, P2:24, P3:48, P4:120 }, S.settings.sla || {});
   holidays().sort((a, b) => a.d < b.d ? -1 : a.d > b.d ? 1 : 0);
@@ -9690,7 +9863,7 @@ function memoryForFlow(){
                        through a settings key would skip the draft/approved
                        distinction entirely, which is the whole point of it. */
 const FLOW_SET = {
-  ui:             { type:"text",   what:"The visual treatment: quiet or classic" },
+  ui:             { type:"text",   what:"The visual treatment: studio, quiet or classic" },
   owner:          { type:"text",   what:"Your name, used in reports and hand-overs" },
   remind:         { type:"yes/no", what:"Windows reminders on or off" },
   lead:           { type:"number", what:"Minutes of warning before something is due",
@@ -12678,7 +12851,8 @@ async function renderModal(){
       '<option value="subtle"' + (st.motion === "subtle" ? " selected" : "") + ">" + LE("MotionSubtle") + "</option>" +
       '<option value="none"'   + (st.motion === "none" ? " selected" : "") + ">" + LE("MotionNone") + "</option></select>") +
     fr(L("UiMode"), '<select class="in" id="fUi">' +
-      '<option value="quiet"'   + (st.ui !== "classic" ? " selected" : "") + ">" + LE("UiQuiet") + "</option>" +
+      '<option value="studio"'  + (st.ui !== "quiet" && st.ui !== "classic" ? " selected" : "") + ">" + LE("UiStudio") + "</option>" +
+      '<option value="quiet"'   + (st.ui === "quiet" ? " selected" : "") + ">" + LE("UiQuiet") + "</option>" +
       '<option value="classic"' + (st.ui === "classic" ? " selected" : "") + ">" + LE("UiClassic") + "</option></select>") +
     '<p style="font-size:11.5px;color:var(--ink-2);margin:-6px 0 14px;line-height:1.7">' +
       L("UiNote") + "</p>" +

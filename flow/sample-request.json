@@ -1,13 +1,13 @@
 {
   "dossier": 1,
   "protocol": "1.1",
-  "askedAt": "2026-09-11T09:36:01.178Z",
-  "today": "2026-09-11",
-  "weekday": "Friday",
+  "askedAt": "2026-09-12T15:27:49.146Z",
+  "today": "2026-09-12",
+  "weekday": "Saturday",
   "calendar": {
-    "tomorrow": "2026-09-12",
+    "tomorrow": "2026-09-13",
     "nextWorkingDay": "2026-09-14",
-    "todayIsOffDay": false,
+    "todayIsOffDay": true,
     "thisMonday": "2026-09-07",
     "weekendDays": [
       "Saturday",
@@ -146,7 +146,7 @@
         ],
         "autoRun": true,
         "raisesRecord": true,
-        "nextDue": "2026-09-11",
+        "nextDue": "2026-09-12",
         "lastRaised": "2026-08-30"
       },
       {
@@ -172,7 +172,7 @@
         "scripts": [],
         "autoRun": false,
         "raisesRecord": true,
-        "nextDue": "2026-09-11",
+        "nextDue": "2026-09-18",
         "lastRaised": ""
       }
     ],
@@ -254,11 +254,13 @@
     },
     "settings": {
       "themes": [
+        "Studio",
+        "Studio Dark",
         "Archive",
         "Vault"
       ],
       "canSet": {
-        "ui": "The visual treatment: quiet or classic (text)",
+        "ui": "The visual treatment: studio, quiet or classic (text)",
         "owner": "Your name, used in reports and hand-overs (text)",
         "remind": "Windows reminders on or off (yes/no)",
         "lead": "Minutes of warning before something is due (number, 0–240)",
@@ -276,8 +278,8 @@
         "sla.P4": "Hours for a P4 (number, 0–2000)"
       },
       "now": {
-        "theme": "archive",
-        "ui": "quiet",
+        "theme": "studio",
+        "ui": "studio",
         "owner": "",
         "remind": false,
         "lead": 15,
