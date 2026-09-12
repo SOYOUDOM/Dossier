@@ -1053,6 +1053,22 @@ off and writes run the moment they arrive. The switch is yours — nothing that
 comes back over the wire can move it, and the endpoint URL cannot be written
 by any action at all (see *Settings the assistant may change*, below).
 
+### The panel itself
+
+While your flow decides, the panel shows the shape of the answer to come —
+three shimmering lines and a live status in the header that starts counting
+after two seconds. Hover any answer for *copy* and *not what I meant*. A reply
+that arrives while you are scrolled up shows a *New reply* pill rather than
+dragging you down. The send button is dim until there is something to send
+and spins while the endpoint works. Everything goes still under *Motion:
+none*.
+
+*Chase → Write it with the assistant* has the flow draft the chase from the
+facts and the tone you chose; every notice on the day view can be handed to
+the assistant with one press. Attachments are read for the model when the
+flow is built as in [`flow/POWER-AUTOMATE.md`](flow/POWER-AUTOMATE.md) §4b —
+the words in a screenshot, not a description of it.
+
 ### Memory — teaching it a method
 
 `remember` is the action that makes the app worth teaching. Explain in the Ask
@@ -1582,11 +1598,11 @@ drive the real files in a real browser (Playwright + Chromium), because the
 things that break here are things a unit test cannot see: a stale iframe cache,
 a CSP refusal, a file one folder away from where a manifest says.
 
-The twenty exercised for the current release — `teach`, `talk2`, `pick`,
+The twenty-two exercised for the current release — `teach`, `talk2`, `pick`,
 `flowval`, `flowe2e`, `flowui`, `flowmore`, `chatui`, `memui`, `probe`,
 `shrink`, `chatfx`, `settings`, `mend`, `runbook`, `ver`, `analyse`,
-`incident`, `quiet`, `studio` — report **679 passing assertions and no
-failures**, covering the local assistant, teaching, selectors, the reply
+`incident`, `quiet`, `studio`, `shell`, `chatv3` — report **837 passing
+assertions and no failures**, covering the local assistant, teaching, selectors, the reply
 validator, the whole network path in a real browser against an endpoint that
 misbehaves the way real ones do, the Setup panel, all 57 actions, the docked
 layout down to where each masthead tab lands, the memory round trip (taught in

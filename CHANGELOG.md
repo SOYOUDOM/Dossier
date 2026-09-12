@@ -6,6 +6,79 @@ holds — which is what to paste into a bug report.
 
 ---
 
+## 3.1.0 — 2026-09-12
+
+**The assistant panel, rebuilt around how it is used** — and three things
+that were wrong.
+
+### The panel
+
+- **An answer arrives where a skeleton said it would.** While the endpoint
+  is deciding, the panel shows the shape of the answer to come — three
+  shimmering lines — with the status line live in the header. After two
+  seconds it starts counting; after eight it says the endpoint is slow, not
+  stuck. When the answer lands the skeleton is gone that instant and only
+  its afterimage fades, so nothing that counts messages ever sees both
+- **Tools appear on the answer you are looking at.** Hover any answer for
+  *copy* and *not what I meant*. The reading ("What to do next · 88%") is
+  there when you look for it, not printed under every answer like a receipt
+- **The thread never yanks you down while you read.** Sending always lands
+  at the bottom; a reply that arrives while you are scrolled up shows a
+  *New reply* pill instead, and takes you there when you press it
+- **Result rows are one sheet**, each arriving a beat after the last, with an
+  arrow that leans toward its record on hover
+- **The composer is one calm rounded shape.** The send button is dim until
+  there is something to send, carries an arrow, and turns into a spinner
+  while the endpoint works. A keyboard hint appears under it only while it
+  has focus: Enter sends · Shift+Enter new line · ↑ last question
+- Your messages are a tint of the accent with a border, not a saturated
+  gradient shouting in the thread; consecutive ones tuck together. A small
+  time mark separates messages more than half an hour apart
+- Suggestions scroll sideways instead of stacking into a wall
+- Everything goes still under *Motion: none* and under the system's
+  reduced-motion preference, skeleton included
+
+### The assistant writes the chase
+
+*Chase → Write it with the assistant* sends the facts — who, which records,
+how long, how many times chased, the tone you picked — to your flow and
+puts the returned draft in the box, where you can still edit it before
+copying. The button only shows when the flow is on. Every notice in the day
+view has an *ask the assistant about this* button beside its dismiss.
+
+### Fixed
+
+- **The footer floated above empty space** on machines with the text size
+  changed. The shell was sized as `100dvh` divided by the zoom, which is
+  right for one reading of how zoom and viewport units combine and wrong for
+  the other — and browsers have changed their minds. The shell is a fixed
+  box with `inset:0` now, which fills the viewport under either reading, and
+  the document itself can no longer scroll. Verified at 80, 100 and 120%
+  across three views, two window sizes, with and without the dock
+- **The register and the week forced a sideways scroll** in a narrow column.
+  The four optional columns fold at 980px of *column* width — early, because
+  below that the title was being squeezed into a sliver six lines tall,
+  which is worse than the scroll it replaced — then at 780px the fixed
+  column widths and single-line titles give way; the week drops to four
+  days, then two. Found on the way: the first version of these rules sat
+  earlier in the stylesheet than the week grid they override, so the week
+  rule won and nothing folded — a container query is still just a rule
+- Attachments now carry `kind` — `image`, `pdf` or `text` — so a flow can
+  branch on one word
+
+### Reading attachments in Power Automate
+
+`POWER-AUTOMATE.md` §4b is new. The request has always carried the files;
+the prompt input `attached` was only ever getting their *names*. The recipe
+runs each image and PDF through AI Builder's *Recognize text in an image or
+a PDF document* and hands the prompt the words — nine steps, every
+expression written out, the action names as the defaults so they can be
+pasted. A second recipe passes the picture itself to a prompt with an Image
+input, for prompts that take one. Prompt rule 9j tells the model to quote
+the error in the screenshot rather than describe the picture.
+
+837 assertions across twenty-two suites, no failures.
+
 ## 3.0.0 — 2026-09-12
 
 **A new shell.** 2.3.0 changed the ink; this changes the room.

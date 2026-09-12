@@ -263,6 +263,11 @@ the `data:` prefix, so it goes straight into an AI action's image or document
 input — which the flow must actually wire up, and which only a vision- or
 document-capable model can read.
 
+Each attachment also carries `kind` — `image`, `pdf` or `text` — so a flow
+can branch on one word instead of parsing a media type. The recipe for reading
+what is in them (OCR for images and PDFs, plain decoding for text) is
+[`POWER-AUTOMATE.md`](POWER-AUTOMATE.md) §4b.
+
 `attachmentsText` is the same list as one line of plain text
 (`error.png (image/png, 81 KB); spec.pdf (application/pdf, 400 KB)`, or
 `None.`), so the prompt can tell the model a file arrived in a single

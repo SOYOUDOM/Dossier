@@ -123,8 +123,15 @@ h1,h2,h3,h4,.disp{font-family:var(--f-display);font-weight:600;letter-spacing:.0
 /* CSS zoom deliberately does not scale viewport units, so a zoomed shell
    asking for 100dvh becomes 130% of the window and pushes the footer off
    the bottom. Divide it back out. --z is 1 unless text size is changed. */
-.app{height:calc(100dvh / var(--z, 1));display:flex;flex-direction:column;
+/* Fixed to the viewport rather than sized from it. The old rule divided
+   100dvh by the text-size zoom, which is right for one reading of how zoom
+   and viewport units combine and wrong for the other — and browsers have
+   changed their minds about which. A fixed box with inset:0 fills the
+   viewport under either reading, so the footer sits on the bottom edge
+   whatever the text size, and the document itself never scrolls. */
+.app{position:fixed;inset:0;display:flex;flex-direction:column;
   transition:padding-right .24s var(--ease)}
+@media screen{ html{overflow:hidden} }
 /* The assistant is a dock, so it takes room rather than covering the search
    box and half the masthead. Below 900px there is no room to give, and it
    goes back to sitting on top. */
@@ -286,7 +293,7 @@ body.chatting .find{max-width:190px}
 .rail .ct{font-family:var(--f-mono);font-size:11px;color:var(--ink-3)}
 
 /* ═══ MAIN ═══════════════════════════════════════════════════════════════ */
-main{flex:1;min-height:0;overflow:auto;position:relative}
+main{flex:1;min-height:0;overflow:auto;position:relative;container-type:inline-size}
 .view{display:none;min-height:100%}
 .view.on{display:block}
 .pad{padding:18px}
@@ -674,7 +681,12 @@ table.reg tbody tr:hover td{background:var(--paper-2)}
 table.reg tbody tr.cur td{background:var(--sel);box-shadow:inset 0 0 0 1px var(--accent)}
 table.reg td.m{font-family:var(--f-mono);font-size:11.5px;color:var(--ink-2);white-space:nowrap}
 table.reg td.ttd{max-width:420px}
-table.reg td.ttd span{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:550}
+/* A title wraps only under pressure. Auto table layout gives every column
+   its full width while there is room, so at desk width this is still one
+   line; in a narrow column the title folds instead of the whole register
+   sliding sideways. overflow-wrap lets a ticket number or a path break too,
+   so the table's minimum width is never decided by its longest token. */
+table.reg td.ttd span{display:block;white-space:normal;overflow-wrap:anywhere;font-weight:550;line-height:1.35}
 .cb{appearance:none;width:15px;height:15px;border:1.5px solid var(--rule-hi);border-radius:var(--r-xs);
   background:var(--paper);cursor:pointer;position:relative;flex:0 0 auto}
 .cb:checked{background:var(--accent);border-color:var(--accent)}
@@ -773,6 +785,30 @@ table.reg td.ttd span{display:block;overflow:hidden;text-overflow:ellipsis;white
 .wk.drag{opacity:.4}
 .wk.done{opacity:.5} .wk.done .wt{text-decoration:line-through}
 .wk .km{display:flex;gap:4px;margin-top:5px;flex-wrap:wrap}
+
+/* ── a narrow column folds before it scrolls ──────────────────────────
+   With the assistant docked the content column can be 450px wide. The
+   register's .hs columns (system, ticket, documents, time) are the ones a
+   glance can do without, and they go first; then the fixed column widths
+   and the single-line titles, so the table takes the width it is given.
+   The week drops to four days, then two. The unit is the column's own
+   width, not the window's — and these sit AFTER the rules they override,
+   because a container query is still just a rule and the later one wins. */
+/* The optional columns go first and go early: with all ten columns the
+   register wants about 950px, and below that the title is what gets
+   squeezed — into a sliver six lines tall, which is worse than the scroll
+   it replaced. So they fold at 980px of column width, well before the
+   title feels it; the width rules below only kick in once the column is
+   genuinely narrow. */
+@container (max-width:980px){ .reg .hs{display:none} }
+@container (max-width:780px){
+  table.reg th{width:auto!important;white-space:normal}
+  table.reg td.ttd{max-width:none}
+  table.reg td.ttd span,table.reg td.m{white-space:normal}
+  .week{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .wkh,.wkh .bb{flex-wrap:wrap}
+}
+@container (max-width:520px){ .week{grid-template-columns:repeat(2,minmax(0,1fr))} }
 
 /* ═══ LIBRARY ════════════════════════════════════════════════════════════ */
 .lib{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:11px;padding:18px}
@@ -1868,6 +1904,130 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
 .chat .chcode .cpy{background:var(--ch-panel);border-color:var(--ch-line);color:var(--ch-dim)}
 .chat .chcode .cpy:hover{border-color:var(--ch-acc);color:var(--ch-acc);background:var(--ch-bg)}
 .chat .chcode .cpy.ok{color:var(--ch-acc2);border-color:var(--ch-acc2)}
+
+/* ═══ THE PANEL, THIRD TIME ══════════════════════════════════════════════
+   Two earlier passes styled the parts. This one changes what the panel IS
+   for the person using it: an answer arrives where a skeleton said it
+   would, tools appear on the answer you are looking at and nowhere else,
+   the thread never yanks you to the bottom while you read, and the box you
+   type into is one calm rounded shape with the send button telling you
+   whether there is anything to send. Motion is used to say "arriving",
+   "leaving", "working", "there is more below" — and for nothing else. */
+
+.chat{transition:transform .36s cubic-bezier(.2,.8,.2,1),visibility 0s .38s}
+.chat.on{transition:transform .36s cubic-bezier(.2,.8,.2,1)}
+.chmain{position:relative}
+
+/* header: the status line is live, and says so */
+.chh{align-items:center;padding:10px 10px 10px 14px;gap:10px}
+.chh .ib{width:30px;height:30px;border-radius:9px}
+.chh .sub{transition:color .2s}
+.chh .sub.live{color:var(--ch-acc);font-weight:600}
+.chorb{width:30px;height:30px}
+
+/* the thread */
+.chl{padding:16px 16px 10px;gap:12px;overscroll-behavior:contain}
+:root:not([data-motion="none"]) .chl{scroll-behavior:smooth}
+.chtime{align-self:center;font-family:var(--f-mono);font-size:9.5px;letter-spacing:.06em;
+  color:var(--ch-dim);padding:2px 9px;border-radius:999px;background:var(--ch-panel);margin:2px 0}
+
+/* you: a tinted shape, not a saturated gradient shouting in the thread */
+.chat .chb.you{background:color-mix(in srgb,var(--ch-acc) 13%,var(--ch-bg));color:var(--ch-ink);
+  border:1px solid color-mix(in srgb,var(--ch-acc) 30%,transparent);
+  border-radius:16px 16px 5px 16px;padding:9px 13px;box-shadow:none;max-width:84%;font-size:13px}
+.chat .chb.you + .chb.you{border-top-right-radius:6px;margin-top:-6px}
+
+/* the assistant: no bar, just the answer, with tools on hover */
+.chat .chb.bot{border-left:0;border-image:none;padding-left:0;position:relative}
+.chat .chb.bot .say{font-size:13.5px;line-height:1.62}
+.chtools{position:absolute;right:0;top:-10px;display:flex;gap:1px;padding:2px;z-index:2;
+  background:var(--ch-panel);border:1px solid var(--ch-line);border-radius:999px;
+  opacity:0;transform:translateY(4px);
+  transition:opacity .16s var(--ease),transform .16s var(--ease)}
+.chb.bot:hover .chtools,.chb.bot:focus-within .chtools{opacity:1;transform:none}
+.chtools button{border:0;background:transparent;color:var(--ch-dim);width:24px;height:24px;
+  border-radius:999px;cursor:pointer;font-size:12px;display:grid;place-items:center;
+  font-family:inherit;transition:color .14s,background .14s}
+.chtools button:hover{color:var(--ch-acc);background:var(--ch-bg)}
+.chtools button.ok{color:var(--ch-acc2)}
+/* the reading ("Hello · 82%") is there when you look for it, not printed
+   under every answer like a receipt */
+.chat .chb.bot .meta{opacity:0;max-height:0;overflow:hidden;margin-top:0;
+  transition:opacity .18s,max-height .18s,margin .18s}
+.chat .chb.bot:hover .meta,.chat .chb.bot:focus-within .meta{opacity:1;max-height:20px;margin-top:6px}
+
+/* result rows: one sheet, an arrow that leans toward the record */
+.chrows{margin-top:9px;border:1px solid var(--ch-line);border-radius:12px;overflow:hidden;
+  background:var(--ch-panel)}
+.chat .chrow{border:0;border-bottom:1px solid var(--ch-line);border-radius:0;margin:0;
+  padding:8px 10px;grid-template-columns:auto minmax(0,1fr) auto;align-items:center}
+.chat .chrow:last-child{border-bottom:0}
+.chat .chrow::after{content:"\203A";color:var(--ch-dim);font-size:17px;line-height:1;
+  transition:transform .16s var(--ease),color .16s}
+.chat .chrow:hover::after{transform:translateX(3px);color:var(--ch-acc)}
+.chat.fx-reveal .chrows .chrow{animation:chIn .3s cubic-bezier(.2,.8,.25,1) both;
+  animation-delay:calc(var(--i,0) * 38ms)}
+.chat.fx-reveal .chb.bot > .chacts,.chat.fx-reveal .chb.bot > .chseed,
+.chat.fx-reveal .chb.bot > .chrows{animation:chIn .3s cubic-bezier(.2,.8,.25,1) both;animation-delay:110ms}
+
+/* thinking: the shape of the answer to come */
+.chthink{display:flex;flex-direction:column;gap:9px;padding:2px 0}
+.chthink .ln{height:11px;border-radius:6px;background-size:220% 100%;background-position:120% 0;
+  background-image:linear-gradient(90deg,var(--ch-panel) 0%,
+    color-mix(in srgb,var(--ch-acc) 22%,var(--ch-panel)) 50%,var(--ch-panel) 100%)}
+.chthink .ln:nth-child(2){width:74%}
+.chthink .ln:nth-child(3){width:48%}
+.chat.fx-typing .chthink .ln{animation:chShimmer 1.4s ease-in-out infinite}
+.chat.fx-typing .chthink .ln:nth-child(2){animation-delay:.12s}
+.chat.fx-typing .chthink .ln:nth-child(3){animation-delay:.24s}
+@keyframes chShimmer{from{background-position:120% 0}to{background-position:-120% 0}}
+.chthink .chwait{margin-top:2px}
+.chthink .el{font-family:var(--f-mono);font-size:10px;color:var(--ch-dim);margin-left:auto}
+.chthink .el:empty{display:none}
+.chghost{overflow:hidden;animation:chOut .24s ease-in both;pointer-events:none}
+@keyframes chOut{from{opacity:1;max-height:120px}to{opacity:0;max-height:0;margin-top:-12px;transform:translateY(-6px)}}
+
+/* the composer: one rounded shape, and a send button that knows */
+.chat .chfw{background:transparent;border-top:0;padding:0 12px 12px}
+.chat .chf{padding:5px 5px 5px 8px;gap:4px;border:1px solid var(--ch-line);border-radius:18px;
+  background:var(--ch-panel);align-items:flex-end;
+  transition:border-color .18s,box-shadow .18s,background .18s}
+.chat .chf:focus-within{border-color:var(--ch-acc);background:var(--ch-bg);
+  box-shadow:0 0 0 4px color-mix(in srgb,var(--ch-acc) 15%,transparent)}
+.chat .chf textarea,.chat .chf textarea:focus{border:0;background:transparent;box-shadow:none;
+  padding:8px 6px;font-size:13.5px;line-height:1.5}
+.chat.fx-glow .chf textarea:focus{box-shadow:none}
+.chat .chf .btn.pri{border-radius:999px;padding:0 13px 0 14px;height:34px;display:inline-flex;
+  align-items:center;gap:6px;font-weight:650;
+  transition:transform .16s var(--ease),opacity .16s,background .16s}
+.chat .chf .btn.pri::after{content:"\2191";font-size:13px;font-weight:700}
+.chat .chf .btn.pri.empty{opacity:.42;transform:scale(.96)}
+.chat.busy .chf .btn.pri{pointer-events:none}
+.chat.busy .chf .btn.pri::after{content:"";width:11px;height:11px;border:2px solid #fff;
+  border-right-color:transparent;border-radius:50%;animation:chSpin .8s linear infinite}
+@keyframes chSpin{to{transform:rotate(360deg)}}
+.chat .chpin{width:32px;height:32px;border-radius:999px;align-self:flex-end;margin-bottom:1px}
+.chhint{font-size:10px;color:var(--ch-dim);padding:6px 12px 0;opacity:0;max-height:0;overflow:hidden;
+  transition:opacity .2s,max-height .2s}
+.chfw:focus-within .chhint{opacity:1;max-height:20px}
+.chhint kbd{font-size:9px;padding:0 3px}
+
+/* there is a new reply below where you are reading */
+.chpill{position:absolute;left:50%;top:-38px;transform:translate(-50%,10px);opacity:0;
+  pointer-events:none;z-index:4;border:1px solid var(--ch-line);background:var(--ch-panel);
+  color:var(--ch-acc);border-radius:999px;padding:6px 13px;font-size:11px;font-weight:650;
+  cursor:pointer;font-family:inherit;box-shadow:0 8px 20px -10px rgba(0,0,0,.5);
+  transition:opacity .2s var(--ease),transform .22s cubic-bezier(.2,.8,.25,1)}
+.chpill.on{opacity:1;pointer-events:auto;transform:translate(-50%,0)}
+
+/* suggestions scroll sideways instead of stacking into a wall */
+.chat .chseed{flex-wrap:nowrap;overflow-x:auto;padding:2px 0 4px;scrollbar-width:none;margin-top:8px}
+.chat .chseed::-webkit-scrollbar{display:none}
+.chat .chseed button{flex:0 0 auto}
+
+/* the whole panel goes still when the machine asks for still */
+:root[data-motion="none"] .chat *,:root[data-motion="none"] .chat *::before,
+:root[data-motion="none"] .chat *::after{animation:none!important;transition:none!important}
 /* the one that was invisible on a dark skin */
 .chat .chb.bot .say code.inl{background:var(--ch-panel);border-color:var(--ch-line);
   color:var(--ch-ink)}
@@ -1998,6 +2158,12 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
   line-height:1;padding:4px 6px;border-radius:var(--r-xs);opacity:0;
   transition:opacity .14s,color .14s,background .14s}
 .noti:hover .hushx,.hushx:focus-visible{opacity:1}
+.notix{display:flex;gap:2px;align-items:center}
+.askx{border:0;background:none;color:var(--accent);cursor:pointer;font-size:12px;
+  line-height:1;padding:4px 6px;border-radius:var(--r-xs);opacity:0;
+  transition:opacity .14s,background .14s}
+.noti:hover .askx,.askx:focus-visible{opacity:1}
+.askx:hover{background:var(--accent-soft)}
 .hushx:hover{color:var(--p1);background:var(--paper-3)}
 
 .chacts{display:flex;gap:8px;flex-wrap:wrap;margin-top:11px}
@@ -2323,6 +2489,7 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
     <div class="chmain">
       <div class="chl" id="chatLog"></div>
       <div class="chfw">
+        <button class="chpill" id="chatPill" type="button">↓ <span data-i18n="ChatNewReply">New reply</span></button>
         <div class="chclip" id="chatFiles"></div>
         <div class="chf">
           <button class="ib chpin" id="chatPin" data-i18n-title="AttachAFile"
@@ -2331,6 +2498,7 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
                     placeholder="Ask about your records…" spellcheck="false"></textarea>
           <button class="btn pri" id="chatGo" data-i18n="ChatAsk">Ask</button>
         </div>
+        <div class="chhint" id="chatHint" aria-hidden="true"></div>
         <input type="file" id="chatFile" accept="image/*,application/pdf,.txt,.log,.csv,.json,.xml"
                multiple hidden>
       </div>
@@ -2443,6 +2611,7 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
   </div>
   <div class="if2">
     <button class="btn sm" id="chaseSkip">Log it, I called them</button>
+    <button class="btn sm" id="chaseAi" data-i18n="ChaseAi" hidden>Write it with the assistant</button>
     <span class="sp"></span>
     <button class="btn" id="chaseCopy">Copy only</button>
     <button class="btn pri" id="chaseGo">Copy and log the chase</button>
@@ -3882,6 +4051,21 @@ const STRINGS = {
   MailTo: "To",
   VersionCopied: "Build details copied \u2014 paste them into the bug report.",
   UiMode: "Look",
+  ChatThinking: "thinking\u2026",
+  ChatStill: "still thinking \u2014 the endpoint is slow, not stuck",
+  ChatAnswered: "answered in {s}s",
+  ChatNewReply: "New reply",
+  ChatCopyAnswer: "Copy the answer",
+  ChatTools: "Answer tools",
+  ChatHintSend: "sends",
+  ChatHintLine: "new line",
+  ChatHintLast: "last question",
+  ChaseAi: "Write it with the assistant",
+  ChaseAiBusy: "Writing\u2026",
+  ChaseAiOff: "Switch the assistant's flow on in Setup and it can write this for you.",
+  ChaseAiDone: "Written. Read it before you send it.",
+  NoticeAsk: "Ask the assistant about this",
+  NoticeAskQ: "You noticed: {what}. What should I do about it?",
   UiStudio: "Studio \u2014 sidebar navigation, cards, one accent",
   UiQuiet: "Quiet \u2014 the top bar, one line per record",
   UiClassic: "Classic \u2014 boxed rows and coloured chips",
@@ -4399,7 +4583,7 @@ const STATUSES = [
    the status bar, and clicking it copies a line you can paste into a bug
    report — build date and flow protocol included, because those are the two
    things that actually differ between copies. */
-const APP_VERSION = "3.0.0";
+const APP_VERSION = "3.1.0";
 const APP_BUILT = "2026-09-12";
 function buildLine(){
   return "Dossier v" + APP_VERSION + " \u00b7 built " + APP_BUILT +
@@ -6426,9 +6610,13 @@ function renderDay(){
         '<div class="row noti" ' + (x.id ? 'data-id="' + x.id + '"' : "") + ' style="cursor:' + (x.id ? "pointer" : "default") + '">' +
         '<span style="width:24px;text-align:center;color:var(--teal);font-size:14px">' + x.icon + "</span>" +
         '<div class="body"><div class="tt" style="font-weight:500">' + x.html + "</div></div>" +
+        /* both buttons in one cell, so the row grid keeps its three columns */
+        '<span class="notix">' +
+        '<button class="askx" data-asknote="1" title="' + esc(L("NoticeAsk")) +
+          '" aria-label="' + esc(L("NoticeAsk")) + '">\u273B</button>' +
         (x.key ? '<button class="hushx" data-hush="' + esc(x.key) + '" title="' +
                  esc(L("DontShowThisAgain")) + '" aria-label="' + esc(L("DontShowThisAgain")) +
-                 '">\u2715</button>' : "<div></div>") + "</div>").join("") +
+                 '">\u2715</button>' : "") + "</span></div>").join("") +
       "</div>";
   }
 
@@ -7917,7 +8105,12 @@ function openChat(){
      workable — readable, tabbable, editable — while it is open */
   document.body.classList.add("chatting");
   applyChatUI();
+  CHAT.stuck = true;            /* opening always lands on the newest thing */
   chatPaint();
+  $("chatHint").innerHTML = "<kbd>Enter</kbd> " + esc(L("ChatHintSend")) +
+    " \u00b7 <kbd>Shift</kbd><kbd>Enter</kbd> " + esc(L("ChatHintLine")) +
+    " \u00b7 <kbd>\u2191</kbd> " + esc(L("ChatHintLast"));
+  chatGrow();
   setTimeout(() => $("chatq").focus(), 60);
 }
 function closeChat(){
@@ -7927,8 +8120,79 @@ function closeChat(){
   /* it never took the focus trap or the scrim, so it gives back neither */
 }
 
-function chatScroll(){ const l = $("chatLog"); l.scrollTop = l.scrollHeight; }
+/* Scroll to the newest thing only when you were already at the bottom.
+   Jumping while somebody is reading three answers up is the single most
+   irritating thing a chat panel can do; instead a pill says there is a new
+   reply and takes you there when you are ready. Sending a message always
+   scrolls, because you are the one who just moved the conversation on. */
+function chatNear(){
+  const l = $("chatLog");
+  return !l || (l.scrollHeight - l.scrollTop - l.clientHeight) < 140;
+}
+/* ── while the endpoint is deciding ─────────────────────────────────────
+   Three dots said "something is happening". A skeleton of the answer says
+   "an answer is coming, about here, about this size", which is what a
+   person waiting actually wants to know — and after two seconds it starts
+   counting, because silence past that point reads as a hang. */
+function chatThinking(log){
+  const w = document.createElement("div");
+  w.className = "chb bot thinking";
+  w.innerHTML = '<div class="chthink"><div class="ln"></div><div class="ln"></div><div class="ln"></div>' +
+    '<div class="chwait"><b><i></i><i></i><i></i></b><span class="tx">' + esc(L("FlowAsking")) +
+    '</span><span class="el"></span></div></div>';
+  log.appendChild(w);
+  $("chat").classList.add("busy");
+  chatState(L("ChatThinking"), true);
+  w._t0 = Date.now();
+  w._tick = setInterval(() => {
+    const sec = Math.round((Date.now() - w._t0) / 1000);
+    const el = w.querySelector(".el"), tx = w.querySelector(".tx");
+    if (el && sec >= 2) el.textContent = sec + "s";
+    if (tx && sec >= 8) tx.textContent = L("ChatStill");
+  }, 500);
+  chatScroll();
+  return w;
+}
+/* The skeleton goes the moment the answer is in, so nothing that counts
+   messages ever sees both. What fades is a ghost of it — not a message,
+   just its afterimage. */
+function chatThought(w, err){
+  clearInterval(w._tick);
+  const ms = Date.now() - (w._t0 || Date.now());
+  $("chat").classList.remove("busy");
+  const ghost = document.createElement("div");
+  ghost.className = "chghost";
+  ghost.innerHTML = w.innerHTML;
+  w.replaceWith(ghost);
+  setTimeout(() => ghost.remove(), 240);
+  chatState(err ? L("ChatSub") : L("ChatAnswered", { s:(ms / 1000).toFixed(1) }), false);
+  if (!err) setTimeout(() => chatState(L("ChatSub"), false), 6000);
+}
+function chatState(text, live){
+  const el = $("chatState"); if (!el) return;
+  el.textContent = text; el.classList.toggle("live", !!live);
+}
+function chatScroll(force){
+  const l = $("chatLog"); if (!l) return;
+  if (force || CHAT.stuck !== false){ l.scrollTop = l.scrollHeight; chatPill(false); return; }
+  chatPill(true);
+}
+function chatPill(on){ const p = $("chatPill"); if (p) p.classList.toggle("on", !!on); }
+
+/* a small time between messages more than half an hour apart, so a thread
+   picked up after lunch does not read as one breathless exchange */
+function chatTimeMark(){
+  const log = $("chatLog"); if (!log) return;
+  const now = Date.now();
+  if (CHAT.lastAt && now - CHAT.lastAt < 30 * 60000){ CHAT.lastAt = now; return; }
+  CHAT.lastAt = now;
+  const d = new Date(now), t = document.createElement("div");
+  t.className = "chtime";
+  t.textContent = pad2(d.getHours()) + ":" + pad2(d.getMinutes());
+  log.appendChild(t);
+}
 function chatRenderYou(text, files){
+  chatTimeMark();
   const d = document.createElement("div");
   d.className = "chb you";
   /* what you typed, with your line breaks intact — textContent on a
@@ -7947,7 +8211,7 @@ function chatRenderYou(text, files){
     d.appendChild(row);
   }
   $("chatLog").appendChild(d);
-  chatScroll();
+  chatScroll(true);
 }
 
 /* ── an answer, as written rather than as one long line ───────────────────
@@ -8094,13 +8358,16 @@ function chatRenderBot(r, sourceText, replaying){
     }
   }
 
+  /* one sheet, and each row arrives a beat after the one above it */
+  if ((r.rows || []).length) h += '<div class="chrows">';
   (r.rows || []).forEach((row, i) => {
     if (row.id) CHAT.acts[id + "r" + i] = { kind:"open", id:row.id };
-    h += '<div class="chrow"' + (row.id ? ' data-act="' + id + "r" + i + '"' : "") + ">" +
+    h += '<div class="chrow" style="--i:' + i + '"' + (row.id ? ' data-act="' + id + "r" + i + '"' : "") + ">" +
            '<span class="c">' + esc(row.code || "") + "</span>" +
            '<span class="x"><b>' + esc(row.text || "") + "</b>" +
              (row.sub ? "<small>" + esc(row.sub) + "</small>" : "") + "</span></div>";
   });
+  if ((r.rows || []).length) h += "</div>";
 
   /* A compound request is still a short plan, and it still reads as one —
      but the asking has moved out of the thread. Anything carrying a
@@ -8169,6 +8436,15 @@ function chatRenderBot(r, sourceText, replaying){
     CHAT.acts[id + "wrong"] = { kind:"teach", text:src };
     h += '<div class="wrong"><button data-act="' + id + 'wrong">' +
          esc(L("ChatWrong")) + "</button></div>";
+  }
+  /* the toolbar that appears when you hover an answer: copy it, or say it
+     was wrong — the same teaching act as the link, one hover nearer */
+  if (r.say && !r.examples){
+    CHAT.code[id + "say"] = r.say;
+    h += '<div class="chtools" aria-label="' + esc(L("ChatTools")) + '">' +
+         '<button data-copysay="' + id + 'say" title="' + esc(L("ChatCopyAnswer")) + '">\u2398</button>' +
+         (src ? '<button data-act="' + id + 'wrong" title="' + esc(L("ChatWrong")) + '">\u21BA</button>' : "") +
+         "</div>";
   }
 
   d.innerHTML = h;
@@ -8319,7 +8595,11 @@ function flowContext(q){
     profiles: profilesForFlow(),
     settable: flowSettable(),
     attachments: (CHAT.files || []).map(f => ({
-      name:f.name, type:f.type, size:f.size, data:f.data })),
+      name:f.name, type:f.type, size:f.size, data:f.data,
+      /* image | pdf | text — so a flow can branch on one word instead of
+         parsing a media type */
+      kind:/^image\//.test(f.type || "") ? "image"
+           : (f.type === "application/pdf" ? "pdf" : "text") })),
     /* the rules the app applies by itself, so an endpoint does not propose
        something the app is about to overrule a second later */
     policy: {
@@ -8369,19 +8649,11 @@ async function flowAsk(q, thread){
   const sentFiles = CHAT.files.length;
   const sentBytes = Math.round(chatSentBytes() * 3 / 4);
   const log = $("chatLog");
-  const wait = document.createElement("div");
-  wait.className = "chb bot";
-  wait.innerHTML = '<div class="chwait"><b><i></i><i></i><i></i></b>' +
-                   esc(L("FlowAsking")) + "</div>";
-  log.appendChild(wait);
-  $("chat").classList.add("busy");
-  chatScroll();
-
+  const wait = chatThinking(log);
   let out = null, err = null;
   try { out = await DossierFlow.ask(q, flowContext(q), cfg); }
   catch(e){ err = e; }
-  wait.remove();
-  $("chat").classList.remove("busy");
+  chatThought(wait, err);
 
   if (err){
     /* A flow that cannot be reached is a reason to fall back, not a reason
@@ -11516,6 +11788,42 @@ function renderChase(){
                         : L("PutYourNameInSetupAnd")) + "</p>";
 
   chaseCompose();
+  /* the assistant can write it, when there is an assistant to ask */
+  const ai = $("chaseAi"); if (ai) ai.hidden = !flowOn();
+}
+
+/* ── the chase, written by the endpoint rather than by a template ────────
+   The template knows the facts. The endpoint knows the facts AND how the
+   last three messages to this vendor were worded, what the record is
+   about, and how to say "this is the third time" without sounding like a
+   form letter. It comes back as a draftEmail and lands in the box, where
+   it can still be edited before it is copied. */
+async function chaseAi(){
+  const c = S.chase; if (!c) return;
+  const g = c.groups[c.at], on = chaseOn();
+  if (!on.length) return toast(L("NothingSelectedToChase"), { bad:true });
+  if (!flowOn()) return toast(L("ChaseAiOff"), { bad:true });
+  const tone = c.tone || chaseTone(on);
+  const facts = on.map(t => {
+    const n = (t.chases || []).length;
+    return refOf(t) + " \u201c" + t.title + "\u201d \u2014 with them " + waitDays(t) + " day(s)" +
+      (n ? ", chased " + times(n) : ", not chased yet") +
+      (t.waitNote ? " (" + t.waitNote + ")" : "");
+  }).join("; ");
+  const q = "Write a " + String(TONE_LABEL[tone] || tone).toLowerCase() +
+    " chase message to " + g.party + " about: " + facts +
+    ". Return it as a draftEmail to " + g.party + ", signed with the owner's name.";
+  const b = $("chaseAi"); const was = b.textContent;
+  b.disabled = true; b.textContent = L("ChaseAiBusy");
+  try {
+    const out = await DossierFlow.ask(q, flowContext(q), flowCfg());
+    const a = (out.actions || []).find(x => x.do === "draftEmail");
+    const body = String(a && a.args && a.args.body || out.say || "").trim();
+    if (!body) throw new Error(L("FlowNothing"));
+    $("chaseMsg").value = body; c.edited = true;
+    toast(L("ChaseAiDone"));
+  } catch(e){ toast(String(e && e.message || e), { bad:true }); }
+  b.disabled = false; b.textContent = was;
 }
 /* copying is the moment the chase actually happened, so that is when it is logged */
 function chaseDo(alsoLog){
@@ -14931,8 +15239,15 @@ function chatGrow(){
   const t = $("chatq");
   t.style.height = "auto";
   t.style.height = Math.min(184, t.scrollHeight) + "px";
+  /* the send button knows whether there is anything to send */
+  $("chatGo").classList.toggle("empty", !t.value.trim());
 }
 $("chatq").addEventListener("input", chatGrow);
+$("chatLog").addEventListener("scroll", () => {
+  CHAT.stuck = chatNear();
+  if (CHAT.stuck) chatPill(false);
+}, { passive:true });
+$("chatPill").addEventListener("click", () => { CHAT.stuck = true; chatScroll(true); });
 $("chatq").addEventListener("keydown", e => {
   /* Enter sends, because that is what everybody's fingers already do.
      Shift+Enter is the new line, and Ctrl+Enter with it for the people who
@@ -15116,6 +15431,12 @@ function chatResolve(el, outcome, no){
 }
 
 $("chatLog").addEventListener("click", e => {
+  const cs = e.target.closest("[data-copysay]");
+  if (cs){
+    copyText(CHAT.code[cs.dataset.copysay] || "", L("Copied"));
+    cs.classList.add("ok"); setTimeout(() => cs.classList.remove("ok"), 1200);
+    return;
+  }
   const cp = e.target.closest("[data-copy]");
   if (cp){
     const txt = CHAT.code[cp.dataset.copy] || "";
@@ -15236,6 +15557,17 @@ $("q").addEventListener("input", debounce(function(){ S.filters.q = $("q").value
 $("main").addEventListener("click", e => {
   /* before the row underneath it claims the click */
   /* the ✕ on a notice — before the row it sits in opens a record */
+  /* the ✻ on a notice: hand the thing it noticed to the assistant */
+  const ax = e.target.closest("[data-asknote]");
+  if (ax){
+    e.stopPropagation();
+    const row = ax.closest(".row");
+    const tt = row && row.querySelector(".tt");
+    const what = tt ? tt.textContent.replace(/\s+/g, " ").trim().slice(0, 160) : "";
+    openChat();
+    setTimeout(() => chatAsk(L("NoticeAskQ", { what })), 90);
+    return;
+  }
   const hx = e.target.closest("[data-hush]");
   if (hx){
     e.stopPropagation();
@@ -15373,6 +15705,7 @@ $("probReg").addEventListener("click", () => {
 $("chaseX").addEventListener("click", closeChase);
 $("chaseSkip").addEventListener("click", () => chaseDo(true));
 $("chaseCopy").addEventListener("click", () => chaseDo(false));
+$("chaseAi").addEventListener("click", chaseAi);
 $("chaseGo").addEventListener("click", () => chaseDo(true));
 $("chaseMsg").addEventListener("input", () => { if (S.chase) S.chase.edited = true; });
 $("chaseTabs").addEventListener("click", e => {

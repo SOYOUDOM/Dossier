@@ -579,7 +579,9 @@ function buildRequest(text, ctx, cfg){
        often the whole of what they are asking about, and typing out what an
        error dialog says is how detail gets lost. */
     attachments: (ctx.attachments || []).map(a => ({
-      name: a.name, type: a.type, size: a.size, data: a.data })),
+      name: a.name, type: a.type, size: a.size, data: a.data,
+      kind: a.kind || (/^image\//.test(a.type || "") ? "image"
+                       : a.type === "application/pdf" ? "pdf" : "text") })),
     /* The same list as one line of plain text, ready to drop into a prompt.
        This is here because the first version made the flow build it, with a
        Select action and an item() expression, to turn an array of objects

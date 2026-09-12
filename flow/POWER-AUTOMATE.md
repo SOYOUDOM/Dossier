@@ -91,7 +91,8 @@ Parse JSON does not mind the ones left out.
           "name": { "type": "string" },
           "type": { "type": "string" },
           "size": { "type": "integer" },
-          "data": { "type": "string" }
+          "data": { "type": "string" },
+          "kind": { "type": "string" }
         }
       }
     },
@@ -739,6 +740,15 @@ RULES, in order of importance:
     tracked and there is evidence afterwards of what was actually done. It is
     a write, so it will be confirmed like any other.
 
+9j. WHAT IS ATTACHED HAS BEEN READ FOR YOU. The input "attached" names the
+    files and, when the flow is built as in §4b, carries the text read out
+    of them. A screenshot of an error dialog arrives as the words in that
+    dialog. Quote the error, do not describe the picture — "the screenshot
+    says 'Object reference not set to an instance of an object' on the
+    Generate button" is the answer; "there is a screenshot of an error" is
+    not. If the text read out is empty, say the image could not be read and
+    ask them to paste the message instead. Never invent what a file says.
+
 10. If the message is an instruction that is already impossible — a script
     they do not have, a party who is not on their list, a routine that does
     not exist — say which one is missing and list the ones that do exist.
@@ -1045,6 +1055,117 @@ one over 2 MB is refused before it is read. The composer shows the running
 total, so you can see what a question weighs before you send it.
 
 ---
+
+## 4b. Reading what is attached
+
+The request already carries every file the person clipped to the question, in
+`attachments[]`, each with `name`, `type`, `size`, `kind` and `data` — the
+file itself, base64, with no `data:` prefix. `attachmentsText` is the same
+list as one sentence, and that is what the prompt input `attached` has been
+getting. So the model has known *that* a screenshot was attached and never
+what was in it.
+
+Two ways to change that. Do the first; add the second if your prompt's model
+takes pictures.
+
+### A. Read the text out of it (works everywhere)
+
+AI Builder's **Recognize text in an image or a PDF document** returns the
+text in a screenshot or a PDF as lines. The model then gets the actual error
+message, which is the thing they attached the picture for.
+
+Above your prompt action, add these, in this order:
+
+1. **Initialize variable** — name `attachedText`, type String, value empty.
+
+2. **Apply to each** — *Select an output*: expression
+   ```
+   body('Parse_JSON')?['attachments']
+   ```
+
+3. Inside it, **Condition** — expression, is not equal to, `text`:
+   ```
+   items('Apply_to_each')?['kind']
+   ```
+   `kind` is one of `image`, `pdf`, `text`. Anything that is not plain text
+   goes to the recogniser.
+
+4. In the **Yes** branch, **AI Builder → Recognize text in an image or a PDF
+   document** — *Image*: expression
+   ```
+   base64ToBinary(items('Apply_to_each')?['data'])
+   ```
+   The data is base64 and the action wants the file, so it is decoded here.
+
+5. Still in Yes, **Apply to each** — *Select an output*:
+   ```
+   outputs('Recognize_text_in_an_image_or_a_PDF_document')?['body/responsev2/predictionOutput/results']
+   ```
+   That is one item per page.
+
+6. Inside it, another **Apply to each** — *Select an output*:
+   ```
+   items('Apply_to_each_2')?['lines']
+   ```
+   One item per line of text on the page.
+
+7. Inside *that*, **Append to string variable** — `attachedText`, value:
+   ```
+   concat(items('Apply_to_each_3')?['text'], ' ')
+   ```
+
+8. In the **No** branch (a text file), **Append to string variable** —
+   `attachedText`, value:
+   ```
+   concat(base64ToString(items('Apply_to_each')?['data']), ' ')
+   ```
+
+9. Change the prompt input `attached` to:
+   ```
+   concat(body('Parse_JSON')?['attachmentsText'], '. Text read from them: ', variables('attachedText'))
+   ```
+
+The action names in the expressions are the defaults; if you renamed one, the
+expression name changes with it — spaces become underscores, and the second
+*Apply to each* becomes `Apply_to_each_2` on its own.
+
+> Only the recognised **text** reaches the model — never the base64. That is
+> what keeps this out of `TooManyInputTokens`: a screenshot is a few hundred
+> characters of words, not a hundred thousand of encoding. The app has already
+> shrunk images before sending and refuses PDFs above its cap, so the
+> recogniser sees files of a size it handles quickly.
+
+### B. Let the model see the picture (if your prompt supports it)
+
+Custom prompts take **Image** as an input type alongside Text. If yours does,
+the model can look at the screenshot itself, which is better than OCR for a
+dialog box with an icon, a chart, or a layout problem.
+
+1. In the prompt builder, add an input, type **Image**, named `picture`.
+2. In the flow, **Filter array** — *From*:
+   `body('Parse_JSON')?['attachments']`, condition `item()?['kind']` is equal
+   to `image`.
+3. On the prompt action, set `picture` to:
+   ```
+   base64ToBinary(first(body('Filter_array'))?['data'])
+   ```
+   One image per input; this takes the first. If there may be none, wrap the
+   prompt action in a Condition on `length(body('Filter_array'))` being
+   greater than 0, and give the branch without a picture a copy of the action
+   with the input left empty.
+
+Keep recipe A even with B in place: a PDF is not an image, and the text of a
+long error is better read than looked at.
+
+### What to check
+
+- Attach a screenshot of an error and ask *"what does this say"*. The answer
+  should quote the error text. If it says it cannot see an attachment, `attached`
+  is still the old one-line expression.
+- Attach a `.txt` log. The No branch should carry it in unchanged.
+- Run history → the recogniser's output: `results` should have one entry per
+  page with `lines` inside. Empty `lines` on a real screenshot usually means
+  the image arrived as text rather than binary — check step 4's expression.
 
 ## 5. How to give it the knowledge
 
