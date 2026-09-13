@@ -3388,6 +3388,10 @@ const STRINGS = {
   SupportedByThisBrowser: "supported by this browser",
   SupposedToBeHappeningRecordsYour: "supposed to be happening. Records your routines created are left out of it.</p>",
   SwitchFolder: "Switch folder…",
+  ThisBrowser: "this browser",
+  KeepRecordsInThisBrowser: "Keep records in this browser",
+  NothingIsBeingKeptYetBrowser: "Nothing is being kept yet. This browser cannot open a folder on disk, so Dossier can keep every record, note and document inside the browser instead. Clearing the browser\u2019s data would remove them, so export a copy from Setup now and then \u2014 or open this file in Edge or Chrome to use a folder.",
+  KeptInThisBrowserInstead: "no folder on disk in this browser \u2014 records are kept inside the browser; export a copy now and then",
   System: "System",
   System2: "System    : ",
   Systems: "Systems",
@@ -4518,9 +4522,11 @@ const IDB = (function(){
     if (dbp) return dbp;
     dbp = new Promise((res, rej) => {
       let rq;
-      try { rq = indexedDB.open(NAME, 1); }
+      try { rq = indexedDB.open(NAME, 2); }
       catch(e){ return rej(e); }
-      rq.onupgradeneeded = () => { if (!rq.result.objectStoreNames.contains(STORE)) rq.result.createObjectStore(STORE); };
+      rq.onupgradeneeded = () => {
+        for (const st of [STORE, "files"]) if (!rq.result.objectStoreNames.contains(st)) rq.result.createObjectStore(st);
+      };
       rq.onsuccess = () => res(rq.result);
       rq.onerror = () => rej(rq.error);
     });
@@ -4534,12 +4540,85 @@ const IDB = (function(){
       rq.onerror = () => rej(rq.error);
     }));
   }
+  function ftx(mode, fn){
+    return open().then(db => new Promise((res, rej) => {
+      const t = db.transaction("files", mode);
+      const rq = fn(t.objectStore("files"));
+      rq.onsuccess = () => res(rq.result);
+      rq.onerror = () => rej(rq.error);
+    }));
+  }
   return {
     available: typeof indexedDB !== "undefined",
     get: k => tx("readonly", s => s.get(k)).catch(() => null),
     set: (k, v) => tx("readwrite", s => s.put(v, k)).catch(() => null),
-    del: k => tx("readwrite", s => s.delete(k)).catch(() => null)
+    del: k => tx("readwrite", s => s.delete(k)).catch(() => null),
+    files: { get: k => ftx("readonly", s => s.get(k)), put: (k, v) => ftx("readwrite", s => s.put(v, k)),
+             del: k => ftx("readwrite", s => s.delete(k)), keys: () => ftx("readonly", s => s.getAllKeys()) }
   };
+})();
+
+/* ═══ A FOLDER INSIDE THE BROWSER ═══════════════════════════════════════
+   Firefox and Safari cannot open a folder on disk. What they can do is keep
+   files in the browser's own store, so that is what this is: a directory
+   handle that speaks exactly the interface the real one does - getFileHandle,
+   createWritable, getFile, values, removeEntry - over IndexedDB. Everything
+   above it (saving, backups, attachments, scripts, languages) does not know
+   the difference. The one difference that matters is written on the Setup
+   page: clearing the browser's data removes these, so export a copy. */
+const MEM = (function(){
+  const mem = new Map();   /* when even IndexedDB is missing: this session only */
+  const F = IDB.files;
+  const get = k => IDB.available ? F.get(k).catch(() => undefined) : Promise.resolve(mem.get(k));
+  const put = (k, v) => IDB.available ? F.put(k, v) : Promise.resolve(mem.set(k, v));
+  const del = k => IDB.available ? F.del(k) : Promise.resolve(mem.delete(k));
+  const keys = () => IDB.available ? F.keys().catch(() => []) : Promise.resolve(Array.from(mem.keys()));
+  const nf = () => { const e = new Error("not found"); e.name = "NotFoundError"; return e; };
+  class MemFile {
+    constructor(path, name){ this.kind = "file"; this.path = path; this.name = name; }
+    async getFile(){
+      const r = await get(this.path); if (!r) throw nf();
+      return new File([r.blob], this.name, { type:r.type || "", lastModified:r.at || 0 });
+    }
+    async createWritable(){
+      const parts = [], path = this.path;
+      return { async write(d){ parts.push(d); }, async abort(){},
+               async close(){ const blob = new Blob(parts); await put(path, { kind:"file", blob:blob, type:blob.type, at:Date.now() }); } };
+    }
+    async queryPermission(){ return "granted"; }
+    async requestPermission(){ return "granted"; }
+  }
+  class MemDir {
+    constructor(path, name){ this.kind = "directory"; this.path = path; this.name = name; this.mem = true; }
+    child(n){ return (this.path ? this.path + "/" : "") + n; }
+    async getDirectoryHandle(n, o){
+      const p = this.child(n), r = await get(p);
+      if (!r){ if (!(o && o.create)) throw nf(); await put(p, { kind:"dir" }); }
+      return new MemDir(p, n);
+    }
+    async getFileHandle(n, o){
+      const p = this.child(n), r = await get(p);
+      if (!r){ if (!(o && o.create)) throw nf(); await put(p, { kind:"file", blob:new Blob([]), type:"", at:Date.now() }); }
+      return new MemFile(p, n);
+    }
+    async removeEntry(n){
+      const p = this.child(n);
+      for (const k of await keys()) if (k === p || k.indexOf(p + "/") === 0) await del(k);
+    }
+    async *values(){
+      const pre = this.path ? this.path + "/" : "";
+      for (const k of await keys()){
+        if (k.indexOf(pre) !== 0) continue;
+        const rest = k.slice(pre.length);
+        if (!rest || rest.indexOf("/") >= 0) continue;
+        const r = await get(k);
+        yield r && r.kind === "dir" ? new MemDir(k, rest) : new MemFile(k, rest);
+      }
+    }
+    async queryPermission(){ return "granted"; }
+    async requestPermission(){ return "granted"; }
+  }
+  return { root: () => new MemDir("", L("ThisBrowser")) };
 })();
 
 /* ═══ FILE SYSTEM ════════════════════════════════════════════════════════
@@ -4561,6 +4640,7 @@ const FS = {
     } catch(e){ return false; }
   },
   async pick(){
+    if (!HAS_FS) return this.attach(MEM.root());
     const h = await window.showDirectoryPicker({ mode:"readwrite", id:"dossier", startIn:"documents" });
     if (!(await this.perm(h))) throw new Error("Permission refused");
     return this.attach(h);
@@ -4610,7 +4690,7 @@ const STATUSES = [
    the status bar, and clicking it copies a line you can paste into a bug
    report — build date and flow protocol included, because those are the two
    things that actually differ between copies. */
-const APP_VERSION = "3.4.0";
+const APP_VERSION = "3.5.0";
 const APP_BUILT = "2026-09-13";
 function buildLine(){
   return "Dossier v" + APP_VERSION + " \u00b7 built " + APP_BUILT +
@@ -6017,12 +6097,15 @@ async function rememberWorkspace(handle){
   if (!IDB.available) return;
   const list = (await IDB.get("workspaces")) || [];
   const idx = list.findIndex(w => w.name === handle.name);
-  const rec = { name:handle.name, handle, last:new Date().toISOString() };
+  const rec = { name:handle.name, handle:handle.mem ? { mem:true, name:handle.name } : handle, last:new Date().toISOString() };
   if (idx >= 0) list[idx] = rec; else list.unshift(rec);
   await IDB.set("workspaces", list.slice(0, 8));
   await IDB.set("lastWorkspace", handle.name);
 }
 async function listWorkspaces(){ return (await IDB.get("workspaces")) || []; }
+/* the handle a remembered workspace opens with: the one inside the browser is
+   rebuilt, a real one comes back as stored */
+function wsHandle(w){ return w && w.handle && w.handle.mem ? MEM.root() : (w ? w.handle : null); }
 
 async function openWorkspace(handle, quiet){
   if (!(await FS.perm(handle))) { toast(L("PermissionToThatFolderWasNot"), { bad:true }); return false; }
@@ -12999,7 +13082,7 @@ async function renderModal(){
   const ws = await listWorkspaces();
   $("pWs").innerHTML =
     '<div class="brow" style="margin-bottom:14px">' +
-      '<button class="btn pri" id="wsPick">' + (FS.ok ? L("SwitchFolder") : L("ChooseWorkspaceFolder")) + "</button>" +
+      '<button class="btn pri" id="wsPick">' + (FS.ok ? L("SwitchFolder") : L(HAS_FS ? "ChooseWorkspaceFolder" : "KeepRecordsInThisBrowser")) + "</button>" +
       (FS.ok ? "<button class=\"btn\" id=\"wsSave\">" + L("SaveNow") + "</button>" +
                "<button class=\"btn\" id=\"wsReveal\">" + L("ShowLayout") + "</button>" : "") +
       "<button class=\"btn\" id=\"wsImport\">" + L("ImportAJsonExport") + "</button>" +
@@ -13012,7 +13095,7 @@ async function renderModal(){
       "<dt>" + L("Kpi_Documents") + "</dt><dd>" + S.tasks.reduce((s,t)=>s+(t.files||[]).length,0) + "</dd>" +
       "<dt>" + L("LastSaved") + "</dt><dd>" + (S.lastSaved ? stamp(S.lastSaved) : "—") + "</dd>" +
       "<dt>" + L("FolderAccess") + "</dt><dd>" + (HAS_FS ? L("SupportedByThisBrowser") :
-        "<span style=\"color:var(--p1)\">" + L("NotSupportedUseEdgeOrChrome") + "</span>") + "</dd>" +
+        "<span style=\"color:var(--p2)\">" + L("KeptInThisBrowserInstead") + "</span>") + "</dd>" +
     "</dl>" +
     (ws.length > 1 ? "<h5 class=\"eyebrow\" style=\"margin:18px 0 8px\">" + L("RecentFolders") + "</h5>" +
       ws.map((w,i) => '<div class="tagx" style="display:flex;width:100%;margin-bottom:6px;border-radius:var(--r-sm);padding:8px 11px">' +
@@ -13680,7 +13763,6 @@ function freqLabel(r){
 function wireModal(){
   const on = (id, fn) => { const el = $(id); if (el) el.onclick = fn; };
   on("wsPick", async () => {
-    if (!HAS_FS) return toast(L("ThisBrowserCannotOpenFoldersUse"), { bad:true });
     try { const h = await FS.pick(); await openWorkspace(h); renderModal(); }
     catch(e){ if (e && e.name !== "AbortError") toast(L("CouldNotOpenThatFolder") + e.message, { bad:true }); }
   });
@@ -13691,7 +13773,7 @@ function wireModal(){
   $$("[data-wsopen]").forEach(b => b.onclick = async () => {
     const ws = await listWorkspaces();
     const w = ws[+b.dataset.wsopen];
-    if (w && w.handle){ await openWorkspace(w.handle); renderModal(); }
+    if (w && w.handle){ await openWorkspace(wsHandle(w)); renderModal(); }
   });
   on("repCopy", () => copyText($("repOut").textContent, L("ReportCopied")));
   on("repSave", () => saveReportToFolder("report-" + today() + ".md", $("repOut").textContent));
@@ -18066,25 +18148,20 @@ async function boot(){
   refreshSelects(); syncRail();
   S.weekStart = mondayOf(today());
 
-  if (!HAS_FS){
-    seedDemo(); rollOver(); renderAll();
-    showBanner(L("ThisBrowserCannotOpenFoldersSo"), [], false);
-    return;
-  }
-
   // try to reopen the folder used last time
   let restored = false;
   try {
     const list = await listWorkspaces();
     const last = await IDB.get("lastWorkspace");
     const w = list.find(x => x.name === last) || list[0];
-    if (w && w.handle){
-      const p = await w.handle.queryPermission({ mode:"readwrite" });
-      if (p === "granted"){ restored = await openWorkspace(w.handle, true); }
+    const wh = wsHandle(w);
+    if (wh){
+      const p = await wh.queryPermission({ mode:"readwrite" });
+      if (p === "granted"){ restored = await openWorkspace(wh, true); }
       else {
         showBanner(L("DossierRemembersYourFolderBrowsersRequire", { p0: esc(w.name) }),
           [{ label:L("Reconnect") + w.name, run: async () => {
-              if (await openWorkspace(w.handle)) hideBanner();
+              if (await openWorkspace(wh)) hideBanner();
             } },
            { label:L("ChooseAnother"), run: async () => {
               try { const h = await FS.pick(); await openWorkspace(h); } catch(e){}
@@ -18095,8 +18172,8 @@ async function boot(){
 
   if (!restored && !$("banner").classList.contains("on")){
     seedDemo(); makeRoutines(); rollOver(); renderAll();
-    showBanner(L("NothingIsBeingSavedYetPick"),
-      [{ label:L("ChooseWorkspaceFolder"), run: async () => {
+    showBanner(L(HAS_FS ? "NothingIsBeingSavedYetPick" : "NothingIsBeingKeptYetBrowser"),
+      [{ label:L(HAS_FS ? "ChooseWorkspaceFolder" : "KeepRecordsInThisBrowser"), run: async () => {
           try {
             const h = await FS.pick();
             const wipe = S.tasks.length && S.tasks.every(t => t.code && +t.code.slice(2) <= 7);

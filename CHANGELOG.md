@@ -6,6 +6,24 @@ holds — which is what to paste into a bug report.
 
 ---
 
+## 3.5.0 — 2026-09-13
+
+**Any browser.** Firefox, Safari and the rest can now keep records, not just
+show the demo.
+
+- **A folder inside the browser.** Where a page cannot open a folder on disk,
+  Dossier keeps the same files — `dossier.json`, the daily backups, every
+  attachment — in the browser's own store, behind a directory handle that
+  speaks exactly the interface the real one does. Nothing above it changed:
+  saving, backups, attachments, scripts and language files work as they
+  did, and the workspace reopens by itself next time
+- The first-run banner offers *Keep records in this browser*; Setup says
+  plainly that they live in the browser and to export a copy now and then.
+  Edge and Chrome still get a real folder, and are asked for one as before
+- A new suite, `anybrowser`: Chromium with the folder API removed, standing
+  in for Firefox — a record, an attachment and a backup written, reloaded,
+  and read back
+
 ## 3.4.0 — 2026-09-13
 
 **Any picture, in words — and one expression away from being seen.**

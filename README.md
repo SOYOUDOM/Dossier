@@ -71,7 +71,9 @@ scripts to go with it.
 git clone https://github.com/SOYOUDOM/Dossier
 ```
 
-1. **Open `dossier.html`** in Microsoft Edge or Google Chrome — double-click it.
+1. **Open `dossier.html`** in your browser — double-click it. Edge or Chrome
+   can keep everything in a folder you choose; any other browser keeps it
+   inside the browser instead.
 2. Click **Choose workspace folder…** in the banner and pick **this repository
    folder** (the one holding `dossier.html`). Allow "Edit files" when asked.
 
@@ -83,10 +85,13 @@ That is the entire setup. You should immediately see:
 - **Menu → Scripts** — the scripts, already registered
 - **Insight** — a recurring problem, with the case already written
 
-> **Browser support.** Dossier needs the File System Access API
-> (`window.showDirectoryPicker`), which today means **Edge or Chrome on
-> desktop**. Firefox and Safari can open the page but cannot open a folder, so
-> they only ever show demo data.
+> **Browser support.** In **Edge or Chrome on desktop** Dossier keeps every
+> record, note and document in a folder you choose, as ordinary files. In
+> **Firefox, Safari, or anything else** there is no way for a page to open a
+> folder, so Dossier keeps the same files inside the browser's own store
+> (IndexedDB) — records, backups and attachments alike, surviving reloads and
+> restarts. Clearing that browser's site data would remove them, so use
+> Setup → export now and then, and prefer a folder where one is possible.
 
 > **Windows notifications need `http://`.** Chrome and Edge refuse the
 > Notification API on `file://` with no way to allow it. Double-click
@@ -1614,11 +1619,11 @@ drive the real files in a real browser (Playwright + Chromium), because the
 things that break here are things a unit test cannot see: a stale iframe cache,
 a CSP refusal, a file one folder away from where a manifest says.
 
-The twenty-five exercised for the current release — `teach`, `talk2`, `pick`,
+The twenty-six exercised for the current release — `teach`, `talk2`, `pick`,
 `flowval`, `flowe2e`, `flowui`, `flowmore`, `chatui`, `memui`, `probe`,
 `shrink`, `chatfx`, `settings`, `mend`, `runbook`, `ver`, `analyse`,
 `incident`, `quiet`, `studio`, `shell`, `chatv3`, `pdftext`, `pdfattach`,
-`ocrattach` — report **985 passing assertions and no failures**, covering the local
+`ocrattach`, `anybrowser` — report **1,003 passing assertions and no failures**, covering the local
 assistant, teaching, selectors, the reply validator, the whole network path in
 a real browser against an endpoint that misbehaves the way real ones do, the
 Setup panel, all 57 actions, the docked layout down to where each masthead tab
@@ -1632,7 +1637,8 @@ the attachment tray and the request it produces, a screenshot of an error
 dialog read and described by the optional recogniser in the real page, a photo
 told from a screenshot, a scanned PDF read page by page, the `picture` field
 and its blank pixel, a read stopped when a picture of noise would hold it up,
-and, counted against a server that
+a browser with no folder access — records, backups and attachments kept in
+the browser's store across a reload — and, counted against a server that
 records every request, exactly how many times the endpoint is called and how
 large each call is.
 
@@ -1666,8 +1672,10 @@ model from scratch was tried, measured, and rejected on the numbers.
 
 ## 17. Known limits
 
-- **Edge and Chrome on desktop only.** Firefox and Safari have no File System
-  Access API, so they can show the app but not open a folder.
+- **A folder on disk needs Edge or Chrome.** Other browsers keep the records
+  inside the browser, which is theirs to clear; export a copy now and then.
+  Scripts cannot run from a browser store, since there is no folder for the
+  runner to watch.
 - **Notifications need `http://`**, not `file://`. Use
   `scripts\dossier-serve.bat`.
 - **With the tab closed, nothing is queued.** Dossier schedules its own
