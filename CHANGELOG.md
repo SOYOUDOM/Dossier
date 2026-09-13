@@ -6,6 +6,35 @@ holds — which is what to paste into a bug report.
 
 ---
 
+## 3.4.0 — 2026-09-13
+
+**Any picture, in words — and one expression away from being seen.**
+
+- **A picture is described, not just read.** With `ocr.js` beside the app, a
+  picture goes as what it is — *a screenshot, 1920×1080 landscape; mostly
+  white and dark grey; text in 5 places* — then every piece of text with
+  where it sits and what it sits on: *middle, centre, on white: Generate COI
+  — Error …*. A photo says so, names its colours, and says when it looks like
+  it has a person in it (the browser's face detector where there is one, skin
+  tones otherwise). For a system screen that is most of what a person sees.
+  Nothing in the flow or the prompt changes
+- **A scanned PDF is read page by page.** The pictures of pages inside it —
+  JPEG as the scanner wrote them, or raw samples — go through the recogniser
+  on your PC, and the words go with the question with `[page N]` marks; the
+  PDF's bytes stay. Fax-coded (CCITT) scans are left for the flow as before.
+  Two pages read in under four seconds
+- **`picture`: the one expression for a prompt with an image input.** The
+  request now carries the first picture attached, or the first page of a
+  scan, or a blank white pixel when there is none, so an Image input is
+  wired with `base64ToBinary(body('Parse_JSON')?['picture'])` and nothing
+  else — no filter, no condition, no null. That is what lets the model see
+  a face or a chart, and the guide's Level 2 is now five minutes
+- The tray says *described — no words in it*, *2 scanned pages read*, and
+  shows *page 2/5* while a scan reads
+- Notes `seen` (a picture described, no words) and `ocr` on a PDF (scanned
+  pages read) join the contract; `nowords` is gone, a picture is always
+  described
+
 ## 3.3.0 — 2026-09-13
 
 **A screenshot is read too** — on your PC, with nothing changed in the flow

@@ -1092,15 +1092,18 @@ The Ask box takes **more than one line** (Enter sends, Shift+Enter breaks) and
 use the clip. A PDF or a text file is **read here, on your PC**, and its words
 go with the question in the input the prompt already has — so the assistant
 answers from the report's pages, and nothing in the flow changes. The bytes of
-a document with text in it never leave the machine. A screenshot is read the
-same way when the optional `ocr.js` is in the folder beside `dossier.html`: it
-holds a text recogniser and its English model, runs them in a worker, and
-nothing is fetched. A scanned PDF, a file that needs a password, or a
-screenshot in a copy without `ocr.js` still goes as base64 to your endpoint,
-and nowhere else, for the recogniser in
-[`flow/POWER-AUTOMATE.md`](flow/POWER-AUTOMATE.md) §4b; a picture that was
-read keeps its pixels too. The tray says what happened under each file's
-name.
+a document with text in it never leave the machine. With the optional `ocr.js`
+in the folder beside `dossier.html` — a text recogniser and its English model,
+run in a worker, nothing fetched — a picture goes **described**: what kind it
+is, its size and colours, whether it looks like a photo of a person, and every
+piece of text with where it sits; and a scanned PDF goes as its pages, read
+one by one. A file that needs a password, a fax-coded scan, or a picture in a
+copy without `ocr.js` still goes as base64 to your endpoint, and nowhere else.
+A picture keeps its pixels in any case, and the request carries the first one
+as `picture`, so a prompt with an image input — the only thing that lets the
+model *see* a face or a chart — is one expression away
+([`flow/POWER-AUTOMATE.md`](flow/POWER-AUTOMATE.md) §4, Level 2). The tray says
+what happened under each file's name.
 
 Images are **shrunk before they go**, because base64 is a third larger than
 the file it encodes and an untouched 4 MB screenshot becomes 5.2 MB of JSON —
@@ -1615,7 +1618,7 @@ The twenty-five exercised for the current release — `teach`, `talk2`, `pick`,
 `flowval`, `flowe2e`, `flowui`, `flowmore`, `chatui`, `memui`, `probe`,
 `shrink`, `chatfx`, `settings`, `mend`, `runbook`, `ver`, `analyse`,
 `incident`, `quiet`, `studio`, `shell`, `chatv3`, `pdftext`, `pdfattach`,
-`ocrattach` — report **960 passing assertions and no failures**, covering the local
+`ocrattach` — report **985 passing assertions and no failures**, covering the local
 assistant, teaching, selectors, the reply validator, the whole network path in
 a real browser against an endpoint that misbehaves the way real ones do, the
 Setup panel, all 57 actions, the docked layout down to where each masthead tab
@@ -1626,8 +1629,10 @@ confirmation turned off* — the PDF reader against pdf.js on real files and
 against files built to hit one thing each (three encodings, object streams,
 an incremental update, wrong offsets, form fields, four kinds of encryption),
 the attachment tray and the request it produces, a screenshot of an error
-dialog read by the optional recogniser in the real page — and stopped when a
-picture of noise would hold it up — and, counted against a server that
+dialog read and described by the optional recogniser in the real page, a photo
+told from a screenshot, a scanned PDF read page by page, the `picture` field
+and its blank pixel, a read stopped when a picture of noise would hold it up,
+and, counted against a server that
 records every request, exactly how many times the endpoint is called and how
 large each call is.
 

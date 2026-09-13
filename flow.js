@@ -553,6 +553,7 @@ function slimTask(t, deep){
    ceiling and a report can be long; the cut is marked, so the model knows
    it is not seeing the end. */
 const ATTACH_TEXT_CAP = 80000;
+const BLANK_PNG = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADklEQVR4AWL6////fwAAAAD//w7I1cwAAAAGSURBVAMACgUD/9k79a8AAAAASUVORK5CYII=";
 function attachmentsAsText(list){
   if (!list.length) return "None.";
   const parts = []; let used = 0;
@@ -565,7 +566,9 @@ function attachmentsAsText(list){
       body = x.text;
       if (x.note === "cut") body += "\n[cut here: the file goes on past what fits]";
       else if (x.note === "partial") body += "\n[some characters in this file could not be decoded]";
-      else if (x.note === "ocr") body += "\n[the words above were read off the picture by the app's recogniser and may carry a stray character - an l for an I; the pixels are in attachments[].data]";
+      else if (x.note === "ocr" && x.kind === "pdf") body += "\n[read off the scanned pages by the app's recogniser; a stray character is possible; the first page is in picture]";
+      else if (x.note === "ocr" || x.note === "seen") body += "\n[the description and words above were read off the picture by the app on the PC; a stray character is possible - an l for an I; the pixels are in attachments[].data and in picture]";
+      else if (x.note === "ocrslow") body += "\n[the description above was read off the picture by the app on the PC; its text took too long to read and was left; the pixels are in attachments[].data and in picture]";
     }
     else if (x.kind === "image") body = x.note === "nowords"
       ? "[an image with no words the app's recogniser could find: its pixels are in attachments[].data]"
@@ -637,6 +640,13 @@ function buildRequest(text, ctx, cfg){
        its pages, and nothing in the flow has to change to get that.
        One expression: body('Parse_JSON')?['attachmentsText']. */
     attachmentsText: attachmentsAsText(ctx.attachments || []),
+    /* The picture of the question, for a prompt that has an image input:
+       the first picture attached, or the first page of a scan, as base64
+       without a data: prefix - and a blank white pixel when there is none,
+       so the input is never handed null. One expression in the flow:
+       base64ToBinary(body('Parse_JSON')?['picture']) */
+    picture: ctx.picture || BLANK_PNG,
+    pictureName: ctx.pictureName || "",
     conversation: (ctx.conversation || []).slice(-6),
     owner: st.owner || "",
     workspace: {

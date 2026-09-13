@@ -263,20 +263,30 @@ unless the person explicitly says they are approving it.
 
 - `text` — what the app read out of the file on the person's PC before
   sending: the whole text of a PDF, page by page with `[page N]` marks, or of
-  a text file, up to 60,000 characters; or the words read off a picture, when
-  the optional `ocr.js` is beside the app. Empty for a scan, a file that
-  needs a password, or a picture with no words in it.
+  a text file, up to 60,000 characters. With the optional `ocr.js` beside the
+  app: for a picture, a description — its kind, size and colours, whether it
+  looks like a photo of a person, then every piece of text with where it sits
+  and on what — and for a scanned PDF, the words read off each page. Empty
+  for a fax-coded scan, a file that needs a password, or a picture the
+  recogniser gave up on.
 - `pages` — the PDF's page count.
-- `note` — `""` when it read cleanly; `ocr` (the text was read off a picture
-  and may carry a stray character), `cut` (past the cap), `partial` (some
-  characters could not be decoded), `scanned` (pictures of pages, no text
-  layer), `encrypted` (needs a password), `nowords` (a picture the
-  recogniser could make nothing of), `empty`, `unreadable`.
+- `note` — `""` when it read cleanly; `ocr` (words read off a picture or a
+  scanned page, a stray character possible), `seen` (a picture described,
+  with no words in it), `cut` (past the cap), `partial` (some characters
+  could not be decoded), `scanned` (pictures of pages the app could not
+  read), `encrypted` (needs a password), `ocrslow` (a picture the
+  recogniser gave up on), `empty`, `unreadable`.
 - `data` — the file as base64 **without** the `data:` prefix. A document that
   arrived as text carries no bytes; its words are the file. A picture always
   carries its pixels, read or not, so a flow that looks at pictures still
   can; a scan or a locked file carries them because there was nothing else
   to send.
+
+`picture` is the picture of the question, for a prompt that has an image
+input: the first picture attached, or the first page of a scanned PDF shrunk
+to travel, as base64 without a `data:` prefix — and a blank white 1×1 PNG when
+there is none, so the input is never handed `null`. `pictureName` names it,
+or is `""`. One expression wires it: `base64ToBinary(body('Parse_JSON')?['picture'])`.
 
 `attachmentsText` is all of that as one piece of plain text a prompt input can
 take whole — a `=== name (kind, size, pages) ===` line, then the text — so the

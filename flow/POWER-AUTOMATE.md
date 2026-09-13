@@ -960,8 +960,14 @@ Two kinds of file, two paths — and only one of them needs anything built.
 | You attach | What travels | What the model gets |
 |---|---|---|
 | a PDF with text in it; a `.txt`, `.log`, `.csv` | **the words**, read out of the file by the app on your PC | the pages, under the file's name, in the `attached` input it already has |
-| a screenshot, with `ocr.js` beside `dossier.html` | **the words**, read off the picture by the app on your PC — and the pixels too, for a flow that looks at them | the words, under the file's name, in `attached`; a line after them says they came off a picture |
-| a screenshot without `ocr.js`; a scanned PDF (pictures of pages); a PDF that needs a password | **the bytes**, base64 in `attachments[].data` | the file's name and a line saying it is a picture — until §4b is built, which reads the words out of the picture |
+| any picture, with `ocr.js` beside `dossier.html` | **a description and the words**: what kind of picture it is, its size and colours, whether it looks like a photo of a person, and every piece of text with where it sits and what it sits on — plus the pixels, for a flow that looks at them | all of that under the file's name, in `attached`; a line after it says it was read off a picture |
+| a scanned PDF (pictures of pages), with `ocr.js` | **the words**, read off each page on your PC; the first page shrunk, as `picture` | the pages, under the file's name, in `attached` |
+| a picture without `ocr.js`; a fax-coded (CCITT) scan; a PDF that needs a password | **the bytes**, base64 in `attachments[].data` | the file's name and a line saying it is a picture — until §4b is built, which reads the words out of the picture |
+
+And, for a prompt that has an **image input**: `picture` — the first picture
+attached, or the first page of a scan, or a blank white pixel when there is
+none — so wiring it is one expression with no filter and no condition. That is
+the only way a model *sees* a face or a chart; everything above is words.
 
 `ocr.js` is optional and does nothing to the flow: it is a recogniser (Tesseract,
 compiled to WebAssembly) and its English model in one file, which the app uses
@@ -1002,13 +1008,15 @@ Policy No	Insured	Option	Premium (USD)	Status
 figure on page 2, the policy that is in grace, the error in the log. The
 PDF's bytes never left the PC; only its words did.
 
-**What you do not get:** the inside of a picture — unless `ocr.js` is beside
-the app, in which case a screenshot arrives as its words too, with a line
-after them saying they were read off a picture. Without it, a screenshot
-arrives as `=== error.png (image, 81 KB) ===` and a line saying its pixels are
-in `attachments[].data`. The model can say *"a screenshot came with that —
-tell me what it says"*, which is honest, and is as far as a text-only action
-goes on its own.
+**What you do not get:** a look at the picture itself. With `ocr.js` beside
+the app, a picture arrives described — *a screenshot, 1920×1080 landscape;
+mostly white and dark grey; text in 5 places*, then each piece of text with
+where it sits — and a scanned PDF arrives as its pages, which for a system
+screen or a form is most of what there is to know. But nothing here can say
+whose face is in a photo or what a chart's curve does; that needs the model
+to see the pixels, which is Level 2, and now one expression away. Without
+`ocr.js` a picture arrives as `=== error.png (image, 81 KB) ===` and a line
+saying its pixels are in `attachments[].data`.
 
 > If you built the flow before 3.2, **paste the §4 prompt again.** The old one
 > told the model it could not read documents, and it believed that even with
@@ -1018,8 +1026,35 @@ goes on its own.
 
 #### Level 2 — the model can see the picture
 
-This needs an AI action that accepts images. **Check yours before building
-anything**, like this:
+This is the one that reads a face, a chart, a diagram, a screen laid out in
+panels: the model looks at the pixels. It needs one input of type **Image**
+on your prompt, and the app now makes wiring it a single expression.
+
+**The five-minute version:**
+
+1. Open the prompt in the AI Builder prompt builder. Add an input, type
+   **Image**, named `picture`. Leave the prompt text alone. Save.
+2. In the flow, the prompt action now shows a `picture` field. Set it to:
+   ```
+   base64ToBinary(body('Parse_JSON')?['picture'])
+   ```
+3. Save the flow. Attach a photo and ask *"what is in this picture"*.
+
+That is all. `picture` is always there: the first picture attached, or the
+first page of a scanned PDF (shrunk to travel), or — when nothing was
+attached — a **blank white pixel**, so the input is never handed `null` and
+the action never fails on a question with no file. The model sees a blank
+square and says nothing about it; if you would rather it knew, add one line to
+the prompt: *"A blank white picture means nothing was attached."*
+
+A PDF that was read as text is not a picture and is not in `picture`; its
+words are in `attached`. If two pictures are attached, the second is described
+in `attached` and its pixels are in `attachments[1].data`; an image input
+takes one.
+
+If your action's Type dropdown has no **Image** — only **Text** — the prompt's
+model cannot see, and Level 1 with `ocr.js` is the ceiling. **Check the
+dropdown before anything else:**
 
 > In your AI action, add another input and open the **Type** dropdown.
 > - If the only option is **Text** → your action cannot see pictures. Stop at
@@ -1060,13 +1095,13 @@ concat('data:', body('Parse_JSON')?['attachments']?[0]?['type'], ';base64,',
        body('Parse_JSON')?['attachments']?[0]?['data'])
 ```
 
-**Two caveats that will bite you.** `attachments?[0]` is null when nothing was
-attached, and some actions fail on a null image input rather than ignoring it.
-And a PDF that was read as text has an **empty** `data` — it is not a picture
-any more — so an image input wired to it gets nothing. The recipe in §4b uses
-a Filter array for exactly this reason: it hands the image input only the
-attachments that are pictures. If asking a normal question breaks after you
-add an image input, wrap the AI action in a **Condition**:
+**Two caveats that will bite you if you wire `attachments[0]` instead of
+`picture`.** `attachments?[0]` is null when nothing was attached, and some
+actions fail on a null image input rather than ignoring it. And a PDF that
+was read as text has an **empty** `data` — it is not a picture any more — so
+an image input wired to it gets nothing. `picture` sidesteps both. If you
+built it the old way and a normal question breaks, wrap the AI action in a
+**Condition**:
 
 | | |
 |---|---|
@@ -1087,7 +1122,8 @@ and ask *"what does this say"*.
 | The reply | You are on |
 |---|---|
 | says nothing about either file | Level 0 — the `attached` input is not wired, or you have not repasted the §4 prompt |
-| reads the PDF, but says the screenshot cannot be read | **Level 1** — working as designed; §4b reads pictures for a text-only action |
+| reads the PDF and describes the screenshot's text and layout, but cannot say what is in a photo | **Level 1 with `ocr.js`** — working as designed; Level 2 above is the one expression that lets it see |
+| reads the PDF, but says the screenshot cannot be read | **Level 1** without `ocr.js` — put the file beside the app, or build §4b |
 | names the PDF but says it cannot read documents | the §4 prompt is the old one — paste it again |
 | reads both | **Level 2**, or Level 1 with §4b built — working |
 | the flow errors only when a file is attached | the null-image caveat above, or size — see §8 |
@@ -1116,14 +1152,16 @@ see what a question weighs before you send it.
 ## 4b. Reading pictures: OCR for screenshots and scans
 
 A document with text in it needs nothing here — its words are already in
-`attachmentsText` (Level 1 above), and so are a screenshot's when `ocr.js` is
-beside the app. This section is for what is still a picture when it arrives:
-a screenshot from a copy of the app without `ocr.js`, a scanned PDF, a photo
-of a screen the recogniser could make nothing of (`note` says `nowords`). In
-`attachments[]` those are the ones whose `text` is **empty**; their bytes are
-in `data`, base64 with no `data:` prefix, and `note` says `scanned` for a PDF
-that turned out to be pictures of pages. A screenshot that was read still
-carries its pixels, so recipe B below can look at it.
+`attachmentsText` (Level 1 above), and so are a picture's description and a
+scanned PDF's pages when `ocr.js` is beside the app. This section is for what
+is still only pixels when it arrives: a picture from a copy of the app without
+`ocr.js`, a fax-coded (CCITT) scan, a picture the recogniser gave up on
+(`note` says `ocrslow`). In `attachments[]` those are the ones whose `text` is
+**empty**; their bytes are in `data`, base64 with no `data:` prefix, and
+`note` says `scanned` for a PDF that is still pictures of pages. A picture
+that was described still carries its pixels, so recipe B below can look at
+it — and recipe B is now simpler than what follows: it is the `picture`
+field, wired as in Level 2.
 
 Two ways to read them. Do the first; add the second if your prompt's model
 takes pictures.
