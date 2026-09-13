@@ -1625,7 +1625,7 @@ The twenty-seven exercised for the current release — `teach`, `talk2`, `pick`,
 `flowval`, `flowe2e`, `flowui`, `flowmore`, `chatui`, `memui`, `probe`,
 `shrink`, `chatfx`, `settings`, `mend`, `runbook`, `ver`, `analyse`,
 `incident`, `quiet`, `studio`, `shell`, `chatv3`, `pdftext`, `pdfattach`,
-`ocrattach`, `anybrowser`, `guide` — report **1,027 passing assertions and no failures**, covering the local
+`ocrattach`, `anybrowser`, `guide` — report **1,032 passing assertions and no failures**, covering the local
 assistant, teaching, selectors, the reply validator, the whole network path in
 a real browser against an endpoint that misbehaves the way real ones do, the
 Setup panel, all 57 actions, the docked layout down to where each masthead tab
