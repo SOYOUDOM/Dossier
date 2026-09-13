@@ -6,6 +6,28 @@ holds — which is what to paste into a bug report.
 
 ---
 
+## 3.7.2 — 2026-09-13
+
+**Every script lands in a code panel, not only the first one.**
+
+- An answer carrying three queries usually arrives with the first one fenced
+  properly and the rest as a bare `sql` line followed by loose text. The
+  repair that exists for this gave up the moment it found one real fence, and
+  only ever fixed one block. It now works the stretches between the fences,
+  and every bare block in each, so all three become panels with a copy button
+- It also accepts a block introduced by a sentence ending in a colon, with no
+  blank line before the language name
+- **Long lines wrap inside the panel.** A real query is wider than a 452px
+  panel, and a line that does not wrap is a line half hidden behind a
+  scrollbar nobody notices. Indentation is kept, and the copy button still
+  hands over the original
+- **The §4 prompt gained rule 13a**: every script in a fence, every fence
+  closed, no shorthand after the first block — and rule 9d now says to take
+  the policy number from anywhere in the conversation, not only the last
+  message, so asking "can you give me the script?" three turns later still
+  gets the real number rather than `<policy number>`. Paste the §4 prompt
+  again to get both
+
 ## 3.7.1 — 2026-09-13
 
 Two things the Nebula panel got wrong.
