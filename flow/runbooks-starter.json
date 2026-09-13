@@ -1,0 +1,104 @@
+{
+  "kind": "dossier.runbooks",
+  "version": 1,
+  "exported": "2026-01-01T00:00:00.000Z",
+  "_note": "A starter library, not a correct one. Every angle-bracketed name is a placeholder — <COI_REQUEST>, <IL_PAYMENT_STAGING>, <team> — and must be replaced with what your systems actually call things before anybody follows these. Every runbook here is a draft on purpose: approve one only when somebody who knows the system has read it. Import from Menu → Setup → Runbooks → Import library.",
+  "runbooks": [
+    {
+      "title": "COI letter does not generate, but the API returned success",
+      "system": "Imaging",
+      "triggers": [
+        "coi not generated",
+        "coi letter not generated",
+        "confirmation of insurance not generated",
+        "regencoi went through but no letter",
+        "clicked generate and nothing happened",
+        "coi regenerate no output",
+        "letter did not come out"
+      ],
+      "severity": "P3",
+      "steps": [
+        "Confirm which policy number(s) the user actually asked for — take them from the request, not from memory.",
+        "Re-run the regeneration in Swagger for those policy numbers and note the response. A 200 here does not mean a letter was produced; see the Imaging profile.",
+        "Run the checks below. They tell you whether the source data the letter needs is present and in a state the template can render.",
+        "If a row is missing or its status is not one the template accepts, this is a data problem, not an imaging problem. Do not keep re-running the generation.",
+        "If the data is present and correct and the letter still does not appear, capture the request id and the exact time, then escalate.",
+        "Reply to the user with which of the two it was, so they know whether to wait or to chase another team."
+      ],
+      "checks": "Replace the bracketed names with your real ones.\n\n```sql\n-- is the request even there, and what state is it in\nSELECT policy_no, status, created_on, letter_id\nFROM   <COI_REQUEST>\nWHERE  policy_no IN ('<policy>')\nORDER  BY created_on DESC;\n\n-- did the letter get written at all\nSELECT letter_id, policy_no, generated_on, file_path\nFROM   <COI_LETTER>\nWHERE  policy_no IN ('<policy>');\n\n-- the fields the template will not render without\nSELECT policy_no, insured_name, sum_insured, effective_date, expiry_date\nFROM   <POLICY_MASTER>\nWHERE  policy_no IN ('<policy>');\n```\n\nA row in <COI_REQUEST> with no matching <COI_LETTER> row is the signature of this problem. A NULL in any of the last four fields is usually the reason.",
+      "escalation": "Data missing in <POLICY_MASTER> → <team that owns policy data>, with the policy number and which field is null.\nData present and letter still missing → <Imaging owner>, with the request id and the timestamp.\nP1 only if it blocks an issuance deadline the same day.",
+      "owner": "",
+      "status": "draft",
+      "verified": "",
+      "uses": 0
+    },
+    {
+      "title": "Payment not flowing to IL enquiry",
+      "system": "Payment",
+      "triggers": [
+        "payment not flow to il",
+        "payment not flowing to il enquiry",
+        "payment not showing in il",
+        "paid but not reflected",
+        "premium paid not updated",
+        "receipt not in il enquiry"
+      ],
+      "severity": "P2",
+      "steps": [
+        "Get the receipt or transaction reference and the payment date from the user. A policy number alone is not enough to trace one payment.",
+        "Confirm the payment actually settled at the gateway before looking anywhere downstream — an unsettled payment has nothing to flow.",
+        "Check whether the transaction reached the staging table (below). This splits the problem in two: it never arrived, or it arrived and did not post.",
+        "If it never arrived, the break is upstream of IL — collect the gateway reference and escalate to the payment team.",
+        "If it arrived but did not post, read the error on the staging row. Most are a policy in a state that will not accept a payment, or a mismatched amount.",
+        "Tell the user which side it broke on and what happens next. Do not tell them to 'wait and check again' without saying what you found."
+      ],
+      "checks": "```sql\n-- did it arrive\nSELECT txn_ref, policy_no, amount, status, error_msg, received_on\nFROM   <IL_PAYMENT_STAGING>\nWHERE  txn_ref = '<reference>'\n   OR  policy_no = '<policy>'\nORDER  BY received_on DESC;\n\n-- did it post\nSELECT policy_no, receipt_no, amount, posted_on\nFROM   <IL_RECEIPT>\nWHERE  policy_no = '<policy>'\nORDER  BY posted_on DESC;\n```\n\nNo staging row → it never arrived. Staging row with an error_msg → read it before doing anything else.",
+      "escalation": "Never arrived → <payment gateway team> with the gateway reference and the settlement time.\nArrived with an error → fix per the error if it is a known one, otherwise <IL owner>.\nRaise to P1 if it is a lapse-risk policy near its grace date.",
+      "owner": "",
+      "status": "draft",
+      "verified": "",
+      "uses": 0
+    },
+    {
+      "title": "User asks for a report that has not refreshed",
+      "system": "Reporting",
+      "triggers": [
+        "report is empty",
+        "report not updated",
+        "yesterday data missing in report",
+        "dashboard showing old numbers",
+        "report still showing last week"
+      ],
+      "severity": "P3",
+      "steps": [
+        "Ask which report and which date they expected to see. 'The report is wrong' is not something you can act on.",
+        "Check when the feeding job last completed successfully.",
+        "If the job failed, read the failure before re-running it — a job that failed on bad data will fail again the same way.",
+        "If the job succeeded but the data is still missing, the gap is upstream of the job.",
+        "Tell the user the date the data is actually good to, rather than only that you are looking into it."
+      ],
+      "checks": "```sql\nSELECT job_name, run_date, status, rows_loaded, message\nFROM   <ETL_JOB_LOG>\nWHERE  job_name = '<job>'\nORDER  BY run_date DESC;\n```",
+      "escalation": "Job failing repeatedly on the same row → <data team>.\nUpstream source empty → the team that owns the source, not reporting.",
+      "owner": "",
+      "status": "draft",
+      "verified": "",
+      "uses": 0
+    }
+  ],
+  "profiles": [
+    {
+      "system": "Imaging",
+      "facts": "Generates and stores policy documents, including the Confirmation of Insurance (COI) letter. Regeneration is normally done through Swagger by passing one or more policy numbers.",
+      "quirks": "The regenCOI endpoint returns 200 whether or not a letter was actually produced. It reports that the request was accepted, not that the document exists. This is the single most common source of confusion on this system: staff click generate, see success, and assume the letter is there.\n\nSo a successful call proves nothing. Always confirm the letter row exists before telling a user it is done.\n\nWhen the source data is incomplete the template silently renders nothing rather than raising an error.",
+      "tables": "<COI_REQUEST>   one row per regeneration request\n<COI_LETTER>    one row per letter actually produced\n<POLICY_MASTER> the fields the template reads\n\nReplace these with your real names.",
+      "owner": ""
+    },
+    {
+      "system": "Payment",
+      "facts": "Takes premium payments from the gateway and posts them to IL, where they become visible in enquiry.",
+      "quirks": "There are two hops, and they fail differently. Gateway → staging is where payments go missing entirely. Staging → IL is where they arrive but do not post, usually because the policy is in a state that will not accept a payment or the amount does not match what was expected.\n\nAlways establish which hop broke before escalating. Escalating to the wrong team costs a day.",
+      "tables": "<IL_PAYMENT_STAGING> arrived, not yet posted\n<IL_RECEIPT>         posted\n\nReplace these with your real names.",
+      "owner": ""
+    }
+  ]
+}
