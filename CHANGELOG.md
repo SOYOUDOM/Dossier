@@ -6,6 +6,36 @@ holds — which is what to paste into a bug report.
 
 ---
 
+## 3.7.0 — 2026-09-13
+
+**A picture with no words in it is looked at, not just named** — and still
+nothing changes in the flow or the prompt inputs.
+
+- Since 3.3 a screenshot with text in it went as its text. A screenshot
+  *without* text — a dashboard, a panel, a photo — went as one line, so the
+  assistant could only say it could not tell. The app now looks at the
+  picture properly, on your PC, and writes down what it finds:
+  - **Laid out as** — the big blocks of colour, where each sits and how much
+    of the picture it takes
+  - **Structure** — a bar across the top, a panel down the side, evenly
+    spaced rows that look like a table or a list
+  - **Worth noting** — a panel sitting over the page (usually a dialog or a
+    card), an area in a colour screens keep for warnings and charts
+  - **a map of the picture**: a grid of letters with its own key, one letter
+    a square, capitals where the square looks like it holds text. A model
+    reads the shape off it — a red-headed dialog over a white page, columns
+    rising and falling where a chart is
+- **A dark interface no longer collapses into one colour.** Navy ground,
+  navy panels and a bright blue chart are three different letters, and the
+  thresholds that find borders come from the picture's own range rather
+  than a fixed number, so a dark theme has structure again
+- **The §4 prompt now says what a described picture contains and how to
+  answer from it** — say what it plainly is, then ask the one question that
+  settles what cannot be seen. *"I cannot tell what this image is"* is
+  named as a wrong answer. Paste the §4 prompt again to get it
+- Faces are looked for on any picture with skin tones in it, not only ones
+  already judged to be photographs
+
 ## 3.6.0 — 2026-09-13
 
 **The assistant guides instead of quoting, and looks the part.**

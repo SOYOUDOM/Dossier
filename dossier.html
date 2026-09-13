@@ -4781,7 +4781,7 @@ const STATUSES = [
    the status bar, and clicking it copies a line you can paste into a bug
    report — build date and flow protocol included, because those are the two
    things that actually differ between copies. */
-const APP_VERSION = "3.6.0";
+const APP_VERSION = "3.7.0";
 const APP_BUILT = "2026-09-13";
 function buildLine(){
   return "Dossier v" + APP_VERSION + " \u00b7 built " + APP_BUILT +
@@ -17049,6 +17049,226 @@ function chatColourName(r, g, b){
   if (h < 300) return "purple";
   return "pink";
 }
+/* -- looking at a picture -----------------------------------------------
+   A text model cannot see pixels, and the input this app already has is
+   text. So the picture is looked at here, on the PC, and what is found is
+   written down: what kind of picture it is, how it is laid out, what sits
+   where and on what colour, and - because a shape is hard to put in a
+   sentence - a small map of the picture the model can read directly.
+
+   None of this is a vision model. It is arithmetic over the pixels:
+   brightness, edges, where the long straight lines are, which blocks of
+   colour are big enough to matter. That is enough to say "a dark bar
+   across the top, a panel down the left quarter, nine evenly spaced rows
+   in the middle, a red band under them" - which for a screenshot of a
+   system is most of what a person sees, and for a photo is the honest
+   minimum. */
+const VIS_W = 160, VIS_MAP_W = 40, VIS_MAP_H = 22;
+const VIS_LETTER = { white:"w", black:"k", "dark grey":"d", grey:"g", "light grey":"l",
+  "skin tone":"s", red:"r", "dark red":"r", brown:"m", orange:"o", yellow:"y",
+  green:"n", "dark green":"e", teal:"c", blue:"b", navy:"v", purple:"p", pink:"i" };
+const VIS_NAME = { w:"white", k:"black", d:"dark grey", g:"grey", l:"light grey",
+  s:"skin", r:"red", m:"brown", o:"orange", y:"yellow", n:"green", e:"dark green",
+  c:"teal", b:"blue", v:"navy", a:"pale blue", p:"purple", i:"pink" };
+const VIS_KEYS = "wkdglsrmoyncbvapi";
+/* A screen in a dark theme is navy at the back, navy in its panels and
+   bright blue in its chart, and calling all three "blue" turns the map into
+   a wall of one letter. So the family is tiered by how light it is: the
+   ground, the panel and the chart come out as three different letters. */
+function chatColourClass(r, g, b){
+  let k = VIS_LETTER[chatColourName(r, g, b)] || "g";
+  const l = (Math.max(r, g, b) + Math.min(r, g, b)) / 510;
+  if (k === "b" || k === "v") k = l < 0.30 ? "v" : l > 0.62 ? "a" : "b";
+  else if (k === "n" || k === "e") k = l < 0.30 ? "e" : "n";
+  const i = VIS_KEYS.indexOf(k);
+  return i < 0 ? 4 : i;
+}
+/* where a region sits, in words */
+function visWhere(x0, y0, x1, y1, w, h){
+  const cx = (x0 + x1) / 2 / w, cy = (y0 + y1) / 2 / h;
+  const wide = (x1 - x0) / w > 0.72, tall = (y1 - y0) / h > 0.72;
+  const v = tall ? "" : cy < 0.34 ? "top" : cy < 0.67 ? "middle" : "bottom";
+  const hz = wide ? "across" : cx < 0.34 ? "left" : cx < 0.67 ? "centre" : "right";
+  return (v ? v + ", " : "") + hz;
+}
+function visPct(n){ return Math.round(n * 100) + "%"; }
+
+/* The whole pass: one small copy of the picture, then everything is read
+   off it. Returns the lines that describe it and the map. */
+function chatVision(canvas, paras, prepW, prepH){
+  const w = Math.max(8, Math.min(VIS_W, canvas.width));
+  const h = Math.max(4, Math.round(canvas.height * w / canvas.width));
+  const c = document.createElement("canvas"); c.width = w; c.height = h;
+  const x = c.getContext("2d");
+  x.imageSmoothingEnabled = true; x.imageSmoothingQuality = "high";
+  x.drawImage(canvas, 0, 0, w, h);
+  const d = x.getImageData(0, 0, w, h).data;
+  const N = w * h;
+  const lum = new Float32Array(N), cls = new Uint8Array(N), sat = new Float32Array(N);
+  for (let i = 0, k = 0; i < N; i++, k += 4){
+    const r = d[k], g = d[k + 1], b = d[k + 2];
+    lum[i] = (r * 299 + g * 587 + b * 114) / 1000;
+    cls[i] = chatColourClass(r, g, b);
+    const mx = Math.max(r, g, b), mn = Math.min(r, g, b);
+    sat[i] = mx ? (mx - mn) / mx : 0;
+  }
+  /* edges: how much the picture changes from one pixel to the next */
+  const edge = new Float32Array(N);
+  let edgeSum = 0;
+  for (let y = 1; y < h; y++) for (let i = 1; i < w; i++){
+    const o = y * w + i;
+    edge[o] = Math.abs(lum[o] - lum[o - 1]) + Math.abs(lum[o] - lum[o - w]);
+    edgeSum += edge[o];
+  }
+  const busy = edgeSum / N;
+
+  /* A dark interface is drawn in shades a few points apart, so a fixed
+     threshold sees no borders at all in one and borders everywhere in a
+     bright one. The threshold comes from this picture's own range. */
+  const sorted = Float32Array.from(lum).sort();
+  const p5 = sorted[Math.floor(N * 0.05)], p95 = sorted[Math.floor(N * 0.95)];
+  const range = Math.max(12, p95 - p5);
+  const step = Math.max(5, range * 0.10);
+  /* the long straight lines: a row where nearly every pixel changes from
+     the row above it is a border, a rule, the edge of a panel - a change of
+     shade, or a change of colour altogether */
+  const hCut = [], vCut = [];
+  for (let y = 1; y < h; y++){
+    let n = 0;
+    for (let i = 0; i < w; i++){
+      const o = y * w + i, u = o - w;
+      if (Math.abs(lum[o] - lum[u]) > step || cls[o] !== cls[u]) n++;
+    }
+    if (n > w * 0.55) hCut.push(y);
+  }
+  for (let i = 1; i < w; i++){
+    let n = 0;
+    for (let y = 0; y < h; y++){
+      const o = y * w + i;
+      if (Math.abs(lum[o] - lum[o - 1]) > step || cls[o] !== cls[o - 1]) n++;
+    }
+    if (n > h * 0.55) vCut.push(i);
+  }
+  const thin = a => a.filter((v, k) => !k || v - a[k - 1] > 2);
+  const hS = thin(hCut), vS = thin(vCut);
+
+  /* the map: one character a cell, upper case where the cell looks like
+     it holds text. The model reads the shape of the page off this. */
+  const mw = Math.min(VIS_MAP_W, w), mh = Math.max(4, Math.min(VIS_MAP_H, Math.round(mw * h / w)));
+  const cellC = new Uint8Array(mw * mh), cellT = new Uint8Array(mw * mh);
+  const counts = new Uint16Array(VIS_KEYS.length);
+  for (let my = 0; my < mh; my++) for (let mx = 0; mx < mw; mx++){
+    const x0 = Math.floor(mx * w / mw), x1 = Math.max(x0 + 1, Math.floor((mx + 1) * w / mw));
+    const y0 = Math.floor(my * h / mh), y1 = Math.max(y0 + 1, Math.floor((my + 1) * h / mh));
+    counts.fill(0);
+    let e = 0, n = 0;
+    for (let y = y0; y < y1; y++) for (let i = x0; i < x1; i++){
+      const o = y * w + i; counts[cls[o]]++; e += edge[o] > step * 1.4 ? 1 : 0; n++;
+    }
+    let best = 0, bestN = -1, second = 0;
+    for (let k = 0; k < counts.length; k++){
+      if (counts[k] > bestN){ second = bestN; bestN = counts[k]; best = k; }
+      else if (counts[k] > second) second = counts[k];
+    }
+    const share = bestN / n, dens = e / n;
+    cellC[my * mw + mx] = best;
+    /* text is busy, but only against one steady background - which is what
+       separates a paragraph from a photograph of leaves */
+    cellT[my * mw + mx] = (dens > 0.1 && share > 0.5 && share < 0.97 && second / n > 0.02) ? 1 : 0;
+  }
+  /* where the recogniser found words, the cell holds text whatever the
+     arithmetic thought */
+  (paras || []).forEach(p => {
+    const a = Math.floor(p.l / prepW * mw), b = Math.ceil(p.r / prepW * mw);
+    const t = Math.floor(p.t / prepH * mh), u = Math.ceil(p.b / prepH * mh);
+    for (let my = Math.max(0, t); my < Math.min(mh, u); my++)
+      for (let mx = Math.max(0, a); mx < Math.min(mw, b); mx++) cellT[my * mw + mx] = 1;
+  });
+  const map = [];
+  for (let my = 0; my < mh; my++){
+    let row = "";
+    for (let mx = 0; mx < mw; mx++){
+      const k = VIS_KEYS[cellC[my * mw + mx]];
+      row += cellT[my * mw + mx] ? k.toUpperCase() : k;
+    }
+    map.push(row);
+  }
+  const used = {};
+  for (const row of map) for (const ch of row.toLowerCase()) used[ch] = (used[ch] || 0) + 1;
+
+  /* blocks of one colour, big enough to be a part of the layout */
+  const seen = new Uint8Array(mw * mh), regions = [];
+  for (let i = 0; i < mw * mh; i++){
+    if (seen[i]) continue;
+    const k = cellC[i], q = [i]; seen[i] = 1;
+    let x0 = i % mw, x1 = x0, y0 = (i / mw) | 0, y1 = y0, n = 0, texty = 0;
+    while (q.length){
+      const o = q.pop(); n++; texty += cellT[o];
+      const ox = o % mw, oy = (o / mw) | 0;
+      if (ox < x0) x0 = ox; if (ox > x1) x1 = ox;
+      if (oy < y0) y0 = oy; if (oy > y1) y1 = oy;
+      const nb = [ox > 0 ? o - 1 : -1, ox < mw - 1 ? o + 1 : -1, oy > 0 ? o - mw : -1, oy < mh - 1 ? o + mw : -1];
+      for (const p of nb) if (p >= 0 && !seen[p] && cellC[p] === k){ seen[p] = 1; q.push(p); }
+    }
+    if (n >= mw * mh * 0.04) regions.push({ k:k, n:n, x0:x0, y0:y0, x1:x1 + 1, y1:y1 + 1, texty:texty / n });
+  }
+  regions.sort((a, b) => b.n - a.n);
+
+  /* what all that adds up to, in sentences */
+  const lines = [], notes = [];
+  const say = [];
+  regions.slice(0, 5).forEach(r => {
+    const share = r.n / (mw * mh);
+    if (share < 0.04) return;
+    const wide = (r.x1 - r.x0) / mw, tall = (r.y1 - r.y0) / mh;
+    let shape = "area";
+    if (wide > 0.85 && tall < 0.25) shape = "band across";
+    else if (tall > 0.85 && wide < 0.3) shape = "column down";
+    else if (share > 0.55) shape = "ground";
+    const where = visWhere(r.x0, r.y0, r.x1, r.y1, mw, mh);
+    say.push(VIS_NAME[VIS_KEYS[r.k]] + " " + shape + " " + (shape === "ground" ? "" : where + " ") +
+             "(" + visPct(share) + " of it" + (r.texty > 0.4 ? ", with text on it" : "") + ")");
+  });
+  if (say.length) lines.push("Laid out as: " + say.join("; ") + ".");
+
+  /* a sidebar, a header, a row of cards: the straight lines say so */
+  const struct = [];
+  const topBand = hS.find(y => y / h > 0.02 && y / h < 0.18);
+  if (topBand) struct.push("a bar across the top about " + visPct(topBand / h) + " tall");
+  const side = vS.find(i => i / w > 0.08 && i / w < 0.36);
+  if (side) struct.push("a panel down the left about " + visPct(side / w) + " wide");
+  const rightSide = vS.filter(i => i / w > 0.62 && i / w < 0.94).pop();
+  if (rightSide) struct.push("a panel down the right starting at " + visPct(rightSide / w));
+  /* evenly spaced rules: a table, a list, a set of cards */
+  const body = hS.filter(y => y / h > 0.1 && y / h < 0.96);
+  if (body.length >= 4){
+    const gaps = [];
+    for (let i = 1; i < body.length; i++) gaps.push(body[i] - body[i - 1]);
+    const med = gaps.slice().sort((a, b) => a - b)[gaps.length >> 1];
+    const even = gaps.filter(g => Math.abs(g - med) <= Math.max(2, med * 0.35)).length;
+    if (even >= 3 && med > 1)
+      struct.push("about " + (even + 1) + " evenly spaced rows, like a table or a list");
+  }
+  if (struct.length) lines.push("Structure: " + struct.join("; ") + ".");
+
+  /* a bright panel floating over a darker page is a dialog; a saturated
+     band is a status or an error strip */
+  const mid = regions.find(r => r.x0 > 0 && r.y0 > 0 && r.x1 < mw && r.y1 < mh &&
+    (r.x1 - r.x0) / mw > 0.25 && (r.x1 - r.x0) / mw < 0.9 &&
+    (r.y1 - r.y0) / mh > 0.12 && (r.y1 - r.y0) / mh < 0.8 && r.n / (mw * mh) < 0.5);
+  if (mid) notes.push("a panel sitting over the page in the " + visWhere(mid.x0, mid.y0, mid.x1, mid.y1, mw, mh) +
+                      ", " + visPct((mid.x1 - mid.x0) / mw) + " wide and " + visPct((mid.y1 - mid.y0) / mh) +
+                      " tall" + (mid.texty > 0.3 ? " with text in it" : "") + " - often a dialog or a card");
+  const loud = regions.find(r => "rmoyn".indexOf(VIS_KEYS[r.k]) >= 0 && r.n / (mw * mh) > 0.03);
+  if (loud) notes.push("a " + VIS_NAME[VIS_KEYS[loud.k]] + " area " + visWhere(loud.x0, loud.y0, loud.x1, loud.y1, mw, mh) +
+                       " - a colour a screen usually keeps for a warning, a status or a chart");
+  if (notes.length) lines.push("Worth noting: " + notes.join("; ") + ".");
+
+  return { lines:lines, map:map, used:used, busy:busy, mw:mw, mh:mh,
+           dark:lum.reduce((a, b) => a + b, 0) / N < 90,
+           soft:busy < 2.2 };
+}
+
 /* the picture as a whole: photo or screenshot, and its colours */
 function chatImageSummary(canvas){
   const tw = 96, th = Math.max(1, Math.round(canvas.height * tw / canvas.width));
@@ -17131,19 +17351,39 @@ function chatBackdrop(canvas, p){
 /* the description itself - what the endpoint gets in place of pixels */
 async function chatDescribeImage(prep, ocr){
   const sum = chatImageSummary(prep.canvas);
-  const faces = sum.kind === "photo" ? await chatFaces(prep.canvas) : -1;
   const paras = chatOcrParagraphs(ocr && ocr.tsv);
   const words = paras.reduce((n, p) => n + p.words, 0);
+  const faces = (sum.kind === "photo" || sum.skin >= 0.06) ? await chatFaces(prep.canvas) : -1;
+  let vis = null;
+  try { vis = chatVision(prep.canvas, paras, prep.w, prep.h); } catch(e){ vis = null; }
   const shape = prep.ow > prep.oh * 1.15 ? "landscape" : prep.oh > prep.ow * 1.15 ? "portrait" : "square";
   let head = "[a " + sum.kind + ", " + prep.ow + "\u00d7" + prep.oh + " " + shape;
   if (sum.main.length) head += "; mostly " + sum.main.join(", ") + (sum.some.length ? ", with some " + sum.some.join(" and ") : "");
+  if (vis && vis.dark) head += "; a dark picture";
+  if (vis && vis.soft && sum.kind === "photo") head += "; soft, or out of focus";
   if (faces > 0) head += "; " + faces + (faces === 1 ? " face" : " faces") + " in it";
   else if (sum.skin >= (sum.kind === "photo" ? 0.08 : 0.15)) head += "; looks like it has a person in it";
   head += words ? "; text in " + paras.length + (paras.length === 1 ? " place" : " places") + "]" : "; no words in it]";
   const parts = [head];
+  /* what the picture looks like: the bands, the panels, the rows */
+  if (vis && vis.lines.length) parts.push(vis.lines.join("\n"));
+  /* then the words, where they sit and on what */
   for (const p of paras.slice(0, 60)){
     const on = chatBackdrop(prep.canvas, p);
     parts.push(chatWhere(p, prep.w, prep.h) + (on ? ", on " + on : "") + ":\n" + p.lines.join("\n"));
+  }
+  /* and the map, last, because it is the longest. A page of dense text is
+     its own best description, so the map is only drawn when the words are
+     not already carrying the picture. */
+  /* two maps in one question is already a lot of prompt; after that the
+     sentences carry it */
+  const mapped = (CHAT.files || []).filter(f => (f.text || "").indexOf("A map of the picture") >= 0).length;
+  if (vis && words < 120 && mapped < 2){
+    const key = Object.keys(vis.used).sort((a, b) => vis.used[b] - vis.used[a])
+      .map(k => k + "=" + (VIS_NAME[k] || k)).join(" ");
+    parts.push("A map of the picture, " + vis.mw + " squares across by " + vis.mh + " down, one letter a square" +
+               " (a CAPITAL letter means that square looks like it holds text): " + key + "\n" +
+               vis.map.join("\n"));
   }
   return { text:parts.join("\n"), words:words, kind:sum.kind };
 }

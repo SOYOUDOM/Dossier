@@ -1100,8 +1100,10 @@ answers from the report's pages, and nothing in the flow changes. The bytes of
 a document with text in it never leave the machine. With the optional `ocr.js`
 in the folder beside `dossier.html` — a text recogniser and its English model,
 run in a worker, nothing fetched — a picture goes **described**: what kind it
-is, its size and colours, whether it looks like a photo of a person, and every
-piece of text with where it sits; and a scanned PDF goes as its pages, read
+is, its size and colours, whether it looks like a photo of a person, how it is
+laid out (a bar across the top, a panel down the side, rows like a table, a
+dialog sitting over the page), every piece of text with where it sits, and a
+map of the picture in letters that a model can read the shape off; and a scanned PDF goes as its pages, read
 one by one. A file that needs a password, a fax-coded scan, or a picture in a
 copy without `ocr.js` still goes as base64 to your endpoint, and nowhere else.
 A picture keeps its pixels in any case, and the request carries the first one
@@ -1623,7 +1625,7 @@ The twenty-seven exercised for the current release — `teach`, `talk2`, `pick`,
 `flowval`, `flowe2e`, `flowui`, `flowmore`, `chatui`, `memui`, `probe`,
 `shrink`, `chatfx`, `settings`, `mend`, `runbook`, `ver`, `analyse`,
 `incident`, `quiet`, `studio`, `shell`, `chatv3`, `pdftext`, `pdfattach`,
-`ocrattach`, `anybrowser`, `guide` — report **1,018 passing assertions and no failures**, covering the local
+`ocrattach`, `anybrowser`, `guide` — report **1,027 passing assertions and no failures**, covering the local
 assistant, teaching, selectors, the reply validator, the whole network path in
 a real browser against an endpoint that misbehaves the way real ones do, the
 Setup panel, all 57 actions, the docked layout down to where each masthead tab
@@ -1635,7 +1637,9 @@ against files built to hit one thing each (three encodings, object streams,
 an incremental update, wrong offsets, form fields, four kinds of encryption),
 the attachment tray and the request it produces, a screenshot of an error
 dialog read and described by the optional recogniser in the real page, a photo
-told from a screenshot, a scanned PDF read page by page, the `picture` field
+told from a screenshot, a wordless screenshot described down to its dialog and
+its chart, a dark interface that does not collapse into one colour, a scanned
+PDF read page by page, the `picture` field
 and its blank pixel, a read stopped when a picture of noise would hold it up,
 a browser with no folder access — records, backups and attachments kept in
 the browser's store across a reload — the assistant as a guide (the hero on an

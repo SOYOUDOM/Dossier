@@ -571,7 +571,7 @@ function attachmentsAsText(list){
       if (x.note === "cut") body += "\n[cut here: the file goes on past what fits]";
       else if (x.note === "partial") body += "\n[some characters in this file could not be decoded]";
       else if (x.note === "ocr" && x.kind === "pdf") body += "\n[read off the scanned pages by the app's recogniser; a stray character is possible; the first page is in picture]";
-      else if (x.note === "ocr" || x.note === "seen") body += "\n[the description and words above were read off the picture by the app on the PC; a stray character is possible - an l for an I; the pixels are in attachments[].data and in picture]";
+      else if (x.note === "ocr" || x.note === "seen") body += "\n[the picture was looked at by the app on the PC: the line in brackets, the layout, any words read off it, and the map of letters above are what it found. A stray character is possible - an l for an I. Answer from it rather than saying you cannot see the picture; the pixels themselves are in attachments[].data and in picture.]";
       else if (x.note === "ocrslow") body += "\n[the description above was read off the picture by the app on the PC; its text took too long to read and was left; the pixels are in attachments[].data and in picture]";
     }
     else if (x.kind === "image") body = x.note === "nowords"

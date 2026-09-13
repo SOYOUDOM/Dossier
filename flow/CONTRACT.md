@@ -265,8 +265,10 @@ unless the person explicitly says they are approving it.
   sending: the whole text of a PDF, page by page with `[page N]` marks, or of
   a text file, up to 60,000 characters. With the optional `ocr.js` beside the
   app: for a picture, a description — its kind, size and colours, whether it
-  looks like a photo of a person, then every piece of text with where it sits
-  and on what — and for a scanned PDF, the words read off each page. Empty
+  looks like a photo of a person, how it is laid out (bands, panels, rows, a
+  dialog over the page), every piece of text with where it sits and on what,
+  and a map of the picture in letters with its own key, capitals where a
+  square looks like it holds text — and for a scanned PDF, the words read off each page. Empty
   for a fax-coded scan, a file that needs a password, or a picture the
   recogniser gave up on.
 - `pages` — the PDF's page count.
