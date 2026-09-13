@@ -6,6 +6,21 @@ holds — which is what to paste into a bug report.
 
 ---
 
+## 3.7.1 — 2026-09-13
+
+Two things the Nebula panel got wrong.
+
+- **A mark of your own stopped fading.** The pulse ring was drawn on the
+  same pseudo-element that carries `assets/assistant-logo.png`, so every
+  2.6 seconds your logo was scaled up and faded out along with it. The ring
+  has its own element now, and a mark of your own never animates
+- **Answers hold against the picture behind them.** A photograph is light
+  in places, and text written straight onto one disappears wherever it
+  happens to be bright. The picture now sits under a veil that deepens
+  towards the composer, the thread has a second soft scrim under it, every
+  answer carries a shadow, and the ink is a shade nearer white. The picture
+  is still clearly a picture
+
 ## 3.7.0 — 2026-09-13
 
 **A picture with no words in it is looked at, not just named** — and still

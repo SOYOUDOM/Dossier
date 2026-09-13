@@ -1599,12 +1599,23 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
 /* ── Nebula: a night sky with a planet's rim over a ridge, drawn in SVG so
    nothing is fetched; a photo of your own at assets/assistant-bg.jpg takes
    its place. Everything that holds text is glass over it. */
-.chat[data-skin="nebula"]{ --ch-bg:#060c1a; --ch-panel:rgba(14,24,48,.62); --ch-line:rgba(140,170,230,.16);
-  --ch-ink:#e7edf8; --ch-dim:#8d9dbd; --ch-acc:#6EA8FF; --ch-acc2:#9AD7FF;
+.chat[data-skin="nebula"]{ --ch-bg:#060c1a; --ch-panel:rgba(14,24,48,.72); --ch-line:rgba(150,180,235,.20);
+  --ch-ink:#f3f7ff; --ch-dim:#aebcd8; --ch-acc:#7FB6FF; --ch-acc2:#A8DEFF;
   --ch-glow:rgba(110,168,255,.34); --ch-mesh:rgba(110,168,255,.05);
   --ch-photo:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 452 900' preserveAspectRatio='xMidYMid slice'><defs><linearGradient id='sky' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='%23050b1a'/><stop offset='.55' stop-color='%230a1630'/><stop offset='1' stop-color='%23131c33'/></linearGradient><radialGradient id='neb' cx='.25' cy='.42' r='.55'><stop offset='0' stop-color='%236b8fd6' stop-opacity='.28'/><stop offset='1' stop-color='%236b8fd6' stop-opacity='0'/></radialGradient><radialGradient id='neb2' cx='.85' cy='.62' r='.45'><stop offset='0' stop-color='%23a9c8ff' stop-opacity='.16'/><stop offset='1' stop-color='%23a9c8ff' stop-opacity='0'/></radialGradient><radialGradient id='pl' cx='.35' cy='.35' r='.8'><stop offset='0' stop-color='%23142848'/><stop offset='1' stop-color='%23050a18'/></radialGradient><linearGradient id='rim' x1='0' y1='1' x2='1' y2='0'><stop offset='0' stop-color='%23bfe3ff' stop-opacity='0'/><stop offset='.5' stop-color='%23bfe3ff' stop-opacity='.9'/><stop offset='1' stop-color='%236ea8ff' stop-opacity='0'/></linearGradient><linearGradient id='mt' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='%23253552'/><stop offset='1' stop-color='%230b1224'/></linearGradient><linearGradient id='mt2' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='%23151f36'/><stop offset='1' stop-color='%23070c18'/></linearGradient><filter id='soft' x='-20%' y='-20%' width='140%' height='140%'><feGaussianBlur stdDeviation='18'/></filter></defs><rect width='452' height='900' fill='url(%23sky)'/><rect width='452' height='900' fill='url(%23neb)'/><rect width='452' height='900' fill='url(%23neb2)'/><g fill='%23dbe9ff'><circle cx='40' cy='120' r='1.1'/><circle cx='120' cy='60' r='.8'/><circle cx='210' cy='150' r='1'/><circle cx='300' cy='40' r='.7'/><circle cx='80' cy='260' r='.9'/><circle cx='170' cy='330' r='.7'/><circle cx='30' cy='420' r='1'/><circle cx='250' cy='250' r='.8'/><circle cx='140' cy='500' r='.9'/><circle cx='330' cy='560' r='.7'/><circle cx='60' cy='600' r='.8'/><circle cx='390' cy='120' r='.6'/></g><circle cx='700' cy='20' r='470' fill='url(%23pl)'/><circle cx='700' cy='20' r='470' fill='none' stroke='url(%23rim)' stroke-width='3'/><circle cx='700' cy='20' r='470' fill='none' stroke='%237fbaff' stroke-width='16' opacity='.28' filter='url(%23soft)'/><path d='M0 760 L60 700 L110 730 L160 670 L220 720 L270 690 L330 740 L390 680 L452 730 L452 900 L0 900Z' fill='url(%23mt)'/><path d='M0 820 L50 790 L100 815 L150 780 L210 810 L260 770 L320 805 L380 760 L452 800 L452 900 L0 900Z' fill='url(%23mt2)'/><ellipse cx='226' cy='880' rx='300' ry='80' fill='%23ffffff' opacity='.05' filter='url(%23soft)'/></svg>");
   --ch-mark:none }
-.chat[data-skin="nebula"]{background:var(--ch-photo) center / cover no-repeat, #060c1a}
+/* A picture is light in places and dark in others, and an answer written
+   straight onto one disappears wherever it happens to be light. So the
+   picture goes under a veil - darker towards the bottom, where the thread
+   and the composer are - and every answer carries a soft shadow. The
+   picture is still a picture; the words are still readable on it. */
+.chat[data-skin="nebula"]{background:
+  linear-gradient(rgba(4,9,20,.30) 0%,rgba(4,9,20,.44) 45%,rgba(4,9,20,.62) 100%),
+  var(--ch-photo) center / cover no-repeat, #060c1a}
+/* and a second, narrower veil right under the thread, so a bright patch of
+   sky in the middle of the picture cannot swallow a sentence */
+.chat[data-skin="nebula"] .chl{background:
+  radial-gradient(120% 60% at 50% 40%,rgba(4,9,20,.34),rgba(4,9,20,0) 70%)}
 .chat[data-skin="nebula"] .chfx{display:none}
 .chat[data-skin="nebula"] .chh{border-bottom:0;background:linear-gradient(rgba(6,12,26,.55),rgba(6,12,26,0))}
 .chat[data-skin="nebula"] .chh .t{font-size:14px;letter-spacing:.01em;color:#fff}
@@ -1616,9 +1627,12 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
 .chat[data-skin="nebula"] .chorb::after{content:"";position:absolute;inset:0;background:var(--ch-mark) center / contain no-repeat}
 .chat[data-skin="nebula"] .chside{background:rgba(8,14,30,.78);backdrop-filter:blur(14px);border-color:var(--ch-line)}
 .chat[data-skin="nebula"] .chb.you{background:rgba(110,168,255,.22);border:1px solid rgba(154,215,255,.28);color:#eef4ff;backdrop-filter:blur(10px)}
-.chat[data-skin="nebula"] .chb.bot .say{color:var(--ch-ink)}
+.chat[data-skin="nebula"] .chb.bot .say{color:var(--ch-ink);text-shadow:0 1px 12px rgba(3,8,18,.85),0 0 2px rgba(3,8,18,.55)}
+.chat[data-skin="nebula"] .chb.bot .chseed button,.chat[data-skin="nebula"] .chb.bot .chacts button{text-shadow:none}
 .chat[data-skin="nebula"] .chb.bot .say code.inl{background:rgba(255,255,255,.08);color:#dbe9ff}
-.chat[data-skin="nebula"] .chb.bot .note,.chat[data-skin="nebula"] .chb.bot .carry,.chat[data-skin="nebula"] .chb.bot .hedge{color:var(--ch-dim)}
+.chat[data-skin="nebula"] .chb.bot .note,.chat[data-skin="nebula"] .chb.bot .carry,.chat[data-skin="nebula"] .chb.bot .hedge,
+.chat[data-skin="nebula"] .chtime,.chat[data-skin="nebula"] .chb.bot .unused{color:var(--ch-dim);text-shadow:0 1px 8px rgba(3,8,18,.8)}
+.chat[data-skin="nebula"] .chhero .cht,.chat[data-skin="nebula"] .chhero .chts{text-shadow:0 2px 16px rgba(3,8,18,.8)}
 .chat[data-skin="nebula"] .chrb,.chat[data-skin="nebula"] .chrows,.chat[data-skin="nebula"] .chask,.chat[data-skin="nebula"] .chcode,
 .chat[data-skin="nebula"] .chstep,.chat[data-skin="nebula"] .chprof,.chat[data-skin="nebula"] .chinc{
   background:rgba(12,20,42,.66);border-color:var(--ch-line);color:var(--ch-ink);backdrop-filter:blur(12px)}
@@ -1710,8 +1724,11 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
 .chorb i{width:7px;height:7px;border-radius:50%;background:#fff;opacity:.92;
   box-shadow:0 0 8px rgba(255,255,255,.85)}
 .chat.fx-glow .chorb{box-shadow:0 0 0 1px var(--ch-line),0 0 16px -2px var(--ch-glow)}
-.chat.fx-pulse .chorb::after{content:"";position:absolute;inset:-4px;border-radius:50%;
+/* the ring goes on ::before, because ::after carries the mark - a picture
+   of your own was being scaled up and faded out by this every 2.6 seconds */
+.chat.fx-pulse .chorb::before{content:"";position:absolute;inset:-4px;border-radius:50%;
   border:1px solid var(--ch-acc);animation:chPing 2.6s ease-out infinite}
+.chat.ownmark .chorb::after{animation:none}
 @keyframes chPing{0%{transform:scale(.86);opacity:.7}70%,100%{transform:scale(1.5);opacity:0}}
 .chat.busy .chorb i{animation:chThink .9s ease-in-out infinite alternate}
 @keyframes chThink{from{transform:scale(.6);opacity:.5}to{transform:scale(1.15);opacity:1}}
@@ -4781,7 +4798,7 @@ const STATUSES = [
    the status bar, and clicking it copies a line you can paste into a bug
    report — build date and flow protocol included, because those are the two
    things that actually differ between copies. */
-const APP_VERSION = "3.7.0";
+const APP_VERSION = "3.7.1";
 const APP_BUILT = "2026-09-13";
 function buildLine(){
   return "Dossier v" + APP_VERSION + " \u00b7 built " + APP_BUILT +
