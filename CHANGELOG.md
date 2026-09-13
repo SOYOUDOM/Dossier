@@ -6,6 +6,37 @@ holds — which is what to paste into a bug report.
 
 ---
 
+## 3.6.0 — 2026-09-13
+
+**The assistant guides instead of quoting, and looks the part.**
+
+- **One check per turn.** The §4 prompt now runs a case as a dialogue: what
+  is likely happening here, the single next thing to look at with the
+  person's real identifiers filled in, what each result will mean, and a
+  question — never the procedure copied back. Paste the §4 prompt again to
+  get it
+- **Answers as chips.** A question can carry `choices`; the app shows them
+  under the answer and one press sends the reply. The conversation travels
+  twelve turns deep now, not six, so a guided check keeps its thread
+- **It keeps what it learned.** When a case closes the model returns
+  `remember` with the symptom, cause and fix, and a corrected `saveRunbook`
+  draft when the procedure was wrong or thin — confirmed like any other write
+- **The runbook waits folded** under the answer: title, system, status, and
+  *Show the 6 steps and the checks* one press away, with the identifiers
+  filled in when it opens
+- **Nebula, the new look**: a night sky with a planet's rim over a ridge,
+  drawn in SVG so nothing is fetched; glass over it for everything that
+  holds text; the assistant's mark — a sphere with a lit rim and a
+  four-point star — in the header and, on an empty thread, at the centre
+  above *Dossier Assistant · Your workspace copilot* and *Turn tasks into
+  progress*. A picture of your own beside the app
+  (`assets/assistant-bg.jpg`, `assets/assistant-logo.png`) replaces the
+  drawing. The other skins are still there under the look panel
+- **The footer is back on the bottom edge** in Studio: with the banner
+  hidden, auto-placement had moved every row up one and left the window's
+  bottom empty. Each row is now placed by name
+- A new suite, `guide`: the hero, the chips, the folded runbook, the footer
+
 ## 3.5.0 — 2026-09-13
 
 **Any browser.** Firefox, Safari and the rest can now keep records, not just

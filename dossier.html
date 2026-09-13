@@ -526,6 +526,14 @@ main{flex:1;min-height:0;overflow:auto;position:relative;container-type:inline-s
   :root[data-ui="studio"] .banner,:root[data-ui="studio"] .compose,
   :root[data-ui="studio"] .rail,:root[data-ui="studio"] main,
   :root[data-ui="studio"] .status{grid-column:2;min-width:0}
+  /* each on its own row by name, not by turn: with the banner hidden,
+     auto-placement moved everything up one, put the status bar in the
+     stretching row and left the bottom of the window empty */
+  :root[data-ui="studio"] .banner{grid-row:1}
+  :root[data-ui="studio"] .compose{grid-row:2}
+  :root[data-ui="studio"] .rail{grid-row:3}
+  :root[data-ui="studio"] main{grid-row:4}
+  :root[data-ui="studio"] .status{grid-row:5}
 
   /* ── the sidebar ─────────────────────────────────────────────────── */
   :root[data-ui="studio"] .mast{
@@ -1588,6 +1596,76 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
   --ch-glow:rgba(56,189,248,.30); --ch-mesh:rgba(56,189,248,.07) }
 .chat[data-skin="ember"]{ --ch-acc:#FB7185; --ch-acc2:#FBBF24;
   --ch-glow:rgba(251,113,133,.32); --ch-mesh:rgba(251,113,133,.07) }
+/* ── Nebula: a night sky with a planet's rim over a ridge, drawn in SVG so
+   nothing is fetched; a photo of your own at assets/assistant-bg.jpg takes
+   its place. Everything that holds text is glass over it. */
+.chat[data-skin="nebula"]{ --ch-bg:#060c1a; --ch-panel:rgba(14,24,48,.62); --ch-line:rgba(140,170,230,.16);
+  --ch-ink:#e7edf8; --ch-dim:#8d9dbd; --ch-acc:#6EA8FF; --ch-acc2:#9AD7FF;
+  --ch-glow:rgba(110,168,255,.34); --ch-mesh:rgba(110,168,255,.05);
+  --ch-photo:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 452 900' preserveAspectRatio='xMidYMid slice'><defs><linearGradient id='sky' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='%23050b1a'/><stop offset='.55' stop-color='%230a1630'/><stop offset='1' stop-color='%23131c33'/></linearGradient><radialGradient id='neb' cx='.25' cy='.42' r='.55'><stop offset='0' stop-color='%236b8fd6' stop-opacity='.28'/><stop offset='1' stop-color='%236b8fd6' stop-opacity='0'/></radialGradient><radialGradient id='neb2' cx='.85' cy='.62' r='.45'><stop offset='0' stop-color='%23a9c8ff' stop-opacity='.16'/><stop offset='1' stop-color='%23a9c8ff' stop-opacity='0'/></radialGradient><radialGradient id='pl' cx='.35' cy='.35' r='.8'><stop offset='0' stop-color='%23142848'/><stop offset='1' stop-color='%23050a18'/></radialGradient><linearGradient id='rim' x1='0' y1='1' x2='1' y2='0'><stop offset='0' stop-color='%23bfe3ff' stop-opacity='0'/><stop offset='.5' stop-color='%23bfe3ff' stop-opacity='.9'/><stop offset='1' stop-color='%236ea8ff' stop-opacity='0'/></linearGradient><linearGradient id='mt' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='%23253552'/><stop offset='1' stop-color='%230b1224'/></linearGradient><linearGradient id='mt2' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='%23151f36'/><stop offset='1' stop-color='%23070c18'/></linearGradient><filter id='soft' x='-20%' y='-20%' width='140%' height='140%'><feGaussianBlur stdDeviation='18'/></filter></defs><rect width='452' height='900' fill='url(%23sky)'/><rect width='452' height='900' fill='url(%23neb)'/><rect width='452' height='900' fill='url(%23neb2)'/><g fill='%23dbe9ff'><circle cx='40' cy='120' r='1.1'/><circle cx='120' cy='60' r='.8'/><circle cx='210' cy='150' r='1'/><circle cx='300' cy='40' r='.7'/><circle cx='80' cy='260' r='.9'/><circle cx='170' cy='330' r='.7'/><circle cx='30' cy='420' r='1'/><circle cx='250' cy='250' r='.8'/><circle cx='140' cy='500' r='.9'/><circle cx='330' cy='560' r='.7'/><circle cx='60' cy='600' r='.8'/><circle cx='390' cy='120' r='.6'/></g><circle cx='700' cy='20' r='470' fill='url(%23pl)'/><circle cx='700' cy='20' r='470' fill='none' stroke='url(%23rim)' stroke-width='3'/><circle cx='700' cy='20' r='470' fill='none' stroke='%237fbaff' stroke-width='16' opacity='.28' filter='url(%23soft)'/><path d='M0 760 L60 700 L110 730 L160 670 L220 720 L270 690 L330 740 L390 680 L452 730 L452 900 L0 900Z' fill='url(%23mt)'/><path d='M0 820 L50 790 L100 815 L150 780 L210 810 L260 770 L320 805 L380 760 L452 800 L452 900 L0 900Z' fill='url(%23mt2)'/><ellipse cx='226' cy='880' rx='300' ry='80' fill='%23ffffff' opacity='.05' filter='url(%23soft)'/></svg>");
+  --ch-mark:none }
+.chat[data-skin="nebula"]{background:var(--ch-photo) center / cover no-repeat, #060c1a}
+.chat[data-skin="nebula"] .chfx{display:none}
+.chat[data-skin="nebula"] .chh{border-bottom:0;background:linear-gradient(rgba(6,12,26,.55),rgba(6,12,26,0))}
+.chat[data-skin="nebula"] .chh .t{font-size:14px;letter-spacing:.01em;color:#fff}
+.chat[data-skin="nebula"] .chh .sub{color:var(--ch-dim)}
+.chat[data-skin="nebula"] .chh .ib{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:#dfe8ff;border-radius:50%;backdrop-filter:blur(8px)}
+.chat[data-skin="nebula"] .chh .ib:hover{background:rgba(255,255,255,.12);color:#fff}
+.chat[data-skin="nebula"] .chorb{background:none;box-shadow:none}
+.chat[data-skin="nebula"] .chorb i{display:none}
+.chat[data-skin="nebula"] .chorb::after{content:"";position:absolute;inset:0;background:var(--ch-mark) center / contain no-repeat}
+.chat[data-skin="nebula"] .chside{background:rgba(8,14,30,.78);backdrop-filter:blur(14px);border-color:var(--ch-line)}
+.chat[data-skin="nebula"] .chb.you{background:rgba(110,168,255,.22);border:1px solid rgba(154,215,255,.28);color:#eef4ff;backdrop-filter:blur(10px)}
+.chat[data-skin="nebula"] .chb.bot .say{color:var(--ch-ink)}
+.chat[data-skin="nebula"] .chb.bot .say code.inl{background:rgba(255,255,255,.08);color:#dbe9ff}
+.chat[data-skin="nebula"] .chb.bot .note,.chat[data-skin="nebula"] .chb.bot .carry,.chat[data-skin="nebula"] .chb.bot .hedge{color:var(--ch-dim)}
+.chat[data-skin="nebula"] .chrb,.chat[data-skin="nebula"] .chrows,.chat[data-skin="nebula"] .chask,.chat[data-skin="nebula"] .chcode,
+.chat[data-skin="nebula"] .chstep,.chat[data-skin="nebula"] .chprof,.chat[data-skin="nebula"] .chinc{
+  background:rgba(12,20,42,.66);border-color:var(--ch-line);color:var(--ch-ink);backdrop-filter:blur(12px)}
+.chat[data-skin="nebula"] .chseed button,.chat[data-skin="nebula"] .chacts button{
+  background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);color:#dfe8ff;backdrop-filter:blur(8px)}
+.chat[data-skin="nebula"] .chseed button:hover,.chat[data-skin="nebula"] .chacts button:hover{background:rgba(110,168,255,.22);border-color:rgba(154,215,255,.5);color:#fff}
+.chat[data-skin="nebula"] .chfw{background:linear-gradient(rgba(6,12,26,0),rgba(6,12,26,.6) 30%);border-top:0;padding-bottom:6px}
+.chat[data-skin="nebula"] .chf{background:rgba(12,20,42,.72);border:1px solid rgba(154,215,255,.22);border-radius:999px;
+  margin:0 12px 6px;padding:6px 6px 6px 8px;backdrop-filter:blur(14px);box-shadow:0 10px 40px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.06)}
+.chat[data-skin="nebula"] .chf:focus-within{border-color:rgba(154,215,255,.6);box-shadow:0 0 0 3px rgba(110,168,255,.18),0 10px 40px rgba(0,0,0,.35)}
+.chat[data-skin="nebula"] #chatq{background:none;border:0;color:#eef4ff;box-shadow:none}
+.chat[data-skin="nebula"] #chatq::placeholder{color:#8d9dbd}
+.chat[data-skin="nebula"] .chpin{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:50%;color:#cfe0ff}
+.chat[data-skin="nebula"] #chatGo{border-radius:50%;width:36px;height:36px;padding:0;background:linear-gradient(135deg,#6EA8FF,#3b6fe0);color:#fff;border:0;
+  box-shadow:0 6px 18px rgba(110,168,255,.35)}
+.chat[data-skin="nebula"] #chatGo.empty{background:rgba(255,255,255,.08);color:#8d9dbd;box-shadow:none}
+.chat[data-skin="nebula"] #chatGo{font-size:0}
+.chat[data-skin="nebula"] #chatGo::after{font-size:16px;margin:0}
+.chat[data-skin="nebula"] .chhint{color:#6f7f9f}
+.chat[data-skin="nebula"] .chclip .cf{background:rgba(12,20,42,.7);border-color:var(--ch-line);color:#dfe8ff}
+.chat[data-skin="nebula"] .chpill{background:rgba(12,20,42,.9);border-color:var(--ch-line);color:#eef4ff}
+.chat[data-skin="nebula"] .chthink .ln{background-image:linear-gradient(90deg,rgba(255,255,255,.05),rgba(255,255,255,.14),rgba(255,255,255,.05))}
+/* the mark in the header and the hero: the drawing, or your picture */
+.chat .chorb svg{position:absolute;left:-3px;top:-3px;width:calc(100% + 6px);height:calc(100% + 6px)}
+.chat.ownmark .chorb svg{display:none}
+.chat.ownmark .chorb::after{content:"";position:absolute;inset:0;background:var(--ch-mark) center / contain no-repeat}
+/* ── the hero: an empty thread ─────────────────────────────────────────── */
+.chb.chhero{width:100%;max-width:100%;display:flex;flex-direction:column;align-items:center;text-align:center;
+  padding:26px 8px 6px;gap:0;animation:none}
+.chhero .chorbx{width:150px;height:150px;position:relative;margin-bottom:6px;
+  filter:drop-shadow(0 0 22px rgba(110,168,255,.45)) drop-shadow(0 0 60px rgba(110,168,255,.22))}
+.chhero .chorbx svg{width:100%;height:100%;display:block}
+.chat.ownmark .chhero .chorbx svg{display:none}
+.chat.ownmark .chhero .chorbx{background:var(--ch-mark) center / contain no-repeat}
+.chhero .cht{font-family:var(--f-display);font-size:22px;font-weight:600;letter-spacing:-.01em;color:var(--ch-ink);margin-top:10px}
+.chhero .chts{font-size:12.5px;color:var(--ch-dim);margin-top:4px}
+.chhero .chcard{margin:22px 0 14px;padding:16px 20px;border:1px solid var(--ch-line);border-radius:14px;
+  background:var(--ch-panel);backdrop-filter:blur(12px);box-shadow:0 12px 40px rgba(0,0,0,.25);max-width:340px}
+.chhero .chcard b{display:block;font-size:14.5px;font-weight:600;color:var(--ch-ink)}
+.chhero .chcard span{display:block;font-size:12.5px;color:var(--ch-dim);margin-top:5px}
+/* .chat .chseed below sets nowrap for a thread; the hero is a page, not a
+   row, so it needs the same weight to win */
+.chat .chhero .chseed{justify-content:center;max-width:100%;flex-wrap:wrap;overflow:visible}
+.chat[data-skin="nebula"] .chorb::before,.chat[data-skin="nebula"] .chorb::after{display:none}
+.chat[data-skin="nebula"].ownmark .chorb::after{display:block}
+.chhero .note{display:none}
+.chat[data-skin="nebula"] .chhero .cht{color:#fff;text-shadow:0 2px 24px rgba(110,168,255,.35)}
 
 .chat{background:var(--ch-bg);color:var(--ch-ink);border-left-color:var(--ch-line)}
 .chat.fx-glow{box-shadow:-22px 0 60px rgba(0,0,0,.22),
@@ -1743,6 +1821,12 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
 .chrb .rbunset::before{content:"\2699";margin-right:7px;color:var(--ch-dim)}
 .chrb .rbsec{padding:9px 11px 3px;font-size:9.5px;letter-spacing:.08em;
   text-transform:uppercase;color:var(--ch-dim);font-weight:700}
+.chrb .rbfold{display:none}
+.chrb.open .rbfold{display:block}
+.chrb .rbmore{display:block;width:100%;margin-top:8px;padding:7px 10px;border:1px dashed var(--rule-hi);border-radius:var(--r-xs);
+  background:none;color:var(--ink-2);font:inherit;font-size:11.5px;cursor:pointer;text-align:left}
+.chrb .rbmore:hover{border-color:var(--accent);color:var(--accent)}
+.chrb.open .rbmore{border-style:solid;color:var(--ink-3)}
 .chrb .rbsteps{margin:0;padding:0 11px 8px 30px;font-size:12.5px;line-height:1.7;
   color:var(--ch-ink)}
 .chrb .rbsteps li{margin:0 0 3px;padding-left:3px}
@@ -2484,8 +2568,8 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
     <button class="ib" id="chatMenu" data-i18n-title="ChatConversations" title="Conversations">☰</button>
     <span class="chorb" id="chatOrb" aria-hidden="true"><i></i></span>
     <span class="chid">
-      <span class="t" data-i18n="ChatTitle">Assistant</span>
-      <span class="sub" id="chatState" data-i18n="ChatSub">reads your records · nothing leaves this folder</span>
+      <span class="t" data-i18n="ChatTitle">Dossier Assistant</span>
+      <span class="sub" id="chatState" data-i18n="ChatSub">your workspace copilot · nothing leaves this folder</span>
     </span>
     <button class="ib" id="chatFx" data-i18n-title="ChatLook" title="Look and behaviour">◎</button>
     <button class="ib" id="chatTeachBtn" data-i18n-title="ChatTaughtBtn" title="What I have taught you">✎</button>
@@ -2503,7 +2587,7 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
           <button class="ib chpin" id="chatPin" data-i18n-title="AttachAFile"
                   title="Attach a file">&#128206;</button>
           <textarea id="chatq" rows="1" data-i18n-ph="ChatPlaceholder"
-                    placeholder="Ask about your records…" spellcheck="false"></textarea>
+                    placeholder="Ask Dossier…" spellcheck="false"></textarea>
           <button class="btn pri" id="chatGo" data-i18n="ChatAsk">Ask</button>
         </div>
         <div class="chhint" id="chatHint" aria-hidden="true"></div>
@@ -3990,9 +4074,13 @@ const STRINGS = {
   AiRoutineWhy: "{n} times, and regular enough to schedule",
   Ask: "Ask",
   KeyAskTheAssistant: "Ask the assistant",
-  ChatTitle: "Assistant",
-  ChatSub: "reads your records · nothing leaves this folder",
-  ChatPlaceholder: "Ask about your records…",
+  ChatTitle: "Dossier Assistant",
+  ChatSub: "your workspace copilot \u00b7 nothing leaves this folder",
+  ChatHeroTitle: "Dossier Assistant",
+  ChatHeroSub: "Your workspace copilot",
+  ChatHeroCard1: "Turn tasks into progress.",
+  ChatHeroCard2: "Ask. Analyze. Create. Get more done.",
+  ChatPlaceholder: "Ask Dossier\u2026",
   ChatAsk: "Ask",
   ChatYes: "Yes, do it",
   ChatNo: "No",
@@ -4005,6 +4093,9 @@ const STRINGS = {
   ChatSeedOverdue: "what is overdue",
   ChatSeedBrief: "anything I should know",
   ChatSeedHelp: "help",
+  RunbookShow: "Show the {n} steps",
+  RunbookShowChecks: " and the checks",
+  RunbookHide: "Hide the procedure",
   ChatLogged: "Logged as {code}.",
   ChatMoved: "{code} is now {to}.",
   ChatWaiting: "{code} is with {who} from now.",
@@ -4690,7 +4781,7 @@ const STATUSES = [
    the status bar, and clicking it copies a line you can paste into a bug
    report — build date and flow protocol included, because those are the two
    things that actually differ between copies. */
-const APP_VERSION = "3.5.0";
+const APP_VERSION = "3.6.0";
 const APP_BUILT = "2026-09-13";
 function buildLine(){
   return "Dossier v" + APP_VERSION + " \u00b7 built " + APP_BUILT +
@@ -7537,7 +7628,34 @@ function teachForgetAll(){
    That switch is off — meaning ask first — until you move it. */
 
 const CHAT_FX = ["reveal", "glow", "grid", "pulse", "ambient", "typing", "chips"];
+/* the assistant's mark: a dark sphere with a lit rim and a four-point star */
+const CHAT_ORB_SVG =
+  '<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">' +
+    '<defs>' +
+      '<radialGradient id="orbB" cx="42%" cy="38%" r="70%"><stop offset="0" stop-color="#16305c"/><stop offset=".6" stop-color="#071531"/><stop offset="1" stop-color="#030a1c"/></radialGradient>' +
+      '<linearGradient id="orbR" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#bfe3ff" stop-opacity=".95"/><stop offset=".45" stop-color="#5a8dff" stop-opacity=".25"/><stop offset="1" stop-color="#8fd0ff" stop-opacity=".9"/></linearGradient>' +
+      '<radialGradient id="orbS" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#ffffff"/><stop offset=".55" stop-color="#bfe6ff"/><stop offset="1" stop-color="#6eb0ff" stop-opacity="0"/></radialGradient>' +
+      '<filter id="orbG" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="3"/></filter>' +
+    '</defs>' +
+    '<circle cx="60" cy="60" r="46" fill="url(#orbB)"/>' +
+    '<circle cx="60" cy="60" r="46" fill="none" stroke="url(#orbR)" stroke-width="2.2"/>' +
+    '<circle cx="60" cy="60" r="46" fill="none" stroke="#7fbaff" stroke-width="5" opacity=".35" filter="url(#orbG)"/>' +
+    '<circle cx="60" cy="60" r="22" fill="url(#orbS)" opacity=".55" filter="url(#orbG)"/>' +
+    '<path d="M60 30 C62 50 64 52 84 60 C64 68 62 70 60 90 C58 70 56 68 36 60 C56 52 58 50 60 30Z" fill="url(#orbS)"/>' +
+    '<path d="M43 42 C43.7 46 44.3 46.6 48 47.5 C44.3 48.4 43.7 49 43 53 C42.3 49 41.7 48.4 38 47.5 C41.7 46.6 42.3 46 43 42Z" fill="#dbeeff" opacity=".9"/>' +
+    '<path d="M78 74 C78.6 77 79 77.4 82 78 C79 78.6 78.6 79 78 82 C77.4 79 77 78.6 74 78 C77 77.4 77.4 77 78 74Z" fill="#dbeeff" opacity=".8"/>' +
+  '</svg>';
+/* your own pictures, if they are beside the app: they replace the drawn ones */
+function chatArt(){
+  const chat = $("chat"); if (!chat) return;
+  [["assets/assistant-bg.jpg", "--ch-photo"], ["assets/assistant-logo.png", "--ch-mark"]].forEach(([src, v]) => {
+    const im = new Image();
+    im.onload = () => { chat.style.setProperty(v, "url(\"" + src + "\")"); chat.classList.add(v === "--ch-mark" ? "ownmark" : "ownbg"); };
+    im.src = src;
+  });
+}
 const CHAT_SKINS = [
+  { id:"nebula", name:"Nebula", a:"#6EA8FF", b:"#9AD7FF" },
   { id:"aurora", name:"Aurora", a:"#7C5CFF", b:"#22D3EE" },
   { id:"carbon", name:"Carbon", a:"#38BDF8", b:"#34D399" },
   { id:"ember",  name:"Ember",  a:"#FB7185", b:"#FBBF24" },
@@ -7551,9 +7669,11 @@ function chatUI(){
     let calm = false;
     try { calm = window.matchMedia &&
                  window.matchMedia("(prefers-reduced-motion: reduce)").matches; } catch(e){}
-    st.chatUI = { skin:"aurora", confirm:true, every:12 };
+    st.chatUI = { skin:"nebula", confirm:true, every:12 };
     CHAT_FX.forEach(k => { st.chatUI[k] = !calm; });
   }
+  /* the look was redrawn in 3.6; a skin nobody chose by hand follows it */
+  if (!st.chatUI.skinPicked && !st.chatUI.nebulaSeen){ st.chatUI.skin = "nebula"; st.chatUI.nebulaSeen = true; }
   return st.chatUI;
 }
 
@@ -7608,7 +7728,7 @@ function renderChatFx(){
     };
   });
   box.querySelectorAll("[data-skin]").forEach(b => {
-    b.onclick = () => { u.skin = b.dataset.skin; applyChatUI(); touch(); renderChatFx(); };
+    b.onclick = () => { u.skin = b.dataset.skin; u.skinPicked = true; applyChatUI(); touch(); renderChatFx(); };
   });
   const ev = $("fxEvery");
   if (ev) ev.oninput = () => {
@@ -7873,33 +7993,46 @@ function chatRunbook(rb, idents){
     box.appendChild(w);
   }
 
+  /* everything from the steps down sits in a fold. The answer above the
+     card is the help; the procedure is reference, one press away - so the
+     thread reads as a colleague talking, not a document being handed over */
+  const fold = document.createElement("div");
+  fold.className = "rbfold";
+  const more = document.createElement("button");
+  more.className = "rbmore"; more.type = "button";
+  const n = (rb.steps || []).length;
+  more.textContent = L("RunbookShow", { n:n }) + (rb.checks ? L("RunbookShowChecks") : "");
+  more.onclick = () => { box.classList.toggle("open"); more.textContent = box.classList.contains("open") ? L("RunbookHide") : L("RunbookShow", { n:n }) + (rb.checks ? L("RunbookShowChecks") : ""); };
+  box.appendChild(more);
+  box.appendChild(fold);
+  const into = fold;
   if ((rb.steps || []).length){
     const h = document.createElement("div"); h.className = "rbsec";
-    h.textContent = L("RunbookSteps"); box.appendChild(h);
+    h.textContent = L("RunbookSteps"); into.appendChild(h);
     const ol = document.createElement("ol");
     ol.className = "rbsteps";
     rb.steps.forEach(x => { const li = document.createElement("li");
       li.textContent = rbFill(x, ids); ol.appendChild(li); });
-    box.appendChild(ol);
+    into.appendChild(ol);
   }
 
   if (rb.checks){
     const h = document.createElement("div"); h.className = "rbsec";
-    h.textContent = L("RunbookChecks"); box.appendChild(h);
+    h.textContent = L("RunbookChecks"); into.appendChild(h);
     const d = document.createElement("div");
     d.className = "rbbody";
     /* the real policy number, not <policy> for somebody to substitute by
        hand at eleven at night */
     d.innerHTML = chatSay(rbFill(rb.checks, ids));
-    box.appendChild(d);
+    into.appendChild(d);
   }
 
   if (rb.escalation){
     const h = document.createElement("div"); h.className = "rbsec";
-    h.textContent = L("RunbookEscalation"); box.appendChild(h);
+    h.textContent = L("RunbookEscalation"); into.appendChild(h);
     const d = document.createElement("div"); d.className = "rbesc";
     d.textContent = rbFill(rb.escalation, ids);
-    box.appendChild(d);
+    into.appendChild(d);
   }
 
   /* <COI_REQUEST> is not a value waiting for a policy number, it is a table
@@ -8193,7 +8326,7 @@ function chatReplay(){
   CHAT.acts = {};
   const c = chatThread();
   if (!c || !c.msgs.length){
-    chatRenderBot({ say:L("ChatGreeting"), seeds:[
+    chatRenderBot({ hero:true, say:L("ChatGreeting"), seeds:[
       L("ChatSeedNext"), L("ChatSeedOverdue"), L("ChatSeedBrief"), L("ChatSeedHelp") ] });
     return;
   }
@@ -8207,6 +8340,7 @@ function chatReplay(){
 
 function openChat(){
   chatOcrWarm();
+  if (!CHAT.art){ CHAT.art = true; chatArt(); const o = $("chatOrb"); if (o && !o.querySelector("svg")) o.insertAdjacentHTML("beforeend", CHAT_ORB_SVG); }
   if (!window.DossierChat) return toast(L("ChatNoEngine"), { bad:true });
   if (!Array.isArray(S.chats)) S.chats = [];
   if (!chatThread()) chatNew(true);
@@ -8303,6 +8437,7 @@ function chatTimeMark(){
   log.appendChild(t);
 }
 function chatRenderYou(text, files){
+  { const hero = document.querySelector("#chatLog .chhero"); if (hero) hero.remove(); }
   chatTimeMark();
   const d = document.createElement("div");
   d.className = "chb you";
@@ -8447,7 +8582,17 @@ function chatRenderBot(r, sourceText, replaying){
   if (r.taught && r.taught.how && r.taught.how !== "exact")
     h += '<div class="carry">' + esc(L("ChatTaughtFrom", { what:r.taught.from })) + "</div>";
 
-  h += '<div class="say">' + chatSay(r.say || "") + "</div>";
+  /* an empty thread opens on the assistant itself - its mark, its name,
+     what it is for - rather than on a bubble talking to nobody */
+  if (r.hero){
+    d.classList.add("chhero");
+    h += '<div class="chorbx" aria-hidden="true">' + CHAT_ORB_SVG + "</div>" +
+         '<div class="cht">' + esc(L("ChatHeroTitle")) + "</div>" +
+         '<div class="chts">' + esc(L("ChatHeroSub")) + "</div>" +
+         '<div class="chcard"><b>' + esc(L("ChatHeroCard1")) + "</b><span>" + esc(L("ChatHeroCard2")) + "</span></div>";
+  } else {
+    h += '<div class="say">' + chatSay(r.say || "") + "</div>";
+  }
   if (r.note) h += '<div class="note">' + esc(r.note) + "</div>";
 
   /* the conditions it read out of the question, said back so a misread one is
@@ -8804,6 +8949,8 @@ function flowReply(out, asked){
               idents: rbIdents(asked || "") };
 
   if (out.ask) r.say = (r.say ? r.say + "\n\n" : "") + out.ask;
+  /* the answers it offered with the question: one press sends one */
+  if ((out.choices || []).length) r.seeds = out.choices.slice(0, 6);
   if (out.note) r.note = out.note;
   if (out.refused.length)
     r.note = (r.note ? r.note + "\n" : "") + L("FlowRefused") + " " + out.refused.join(" · ");

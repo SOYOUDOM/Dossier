@@ -324,6 +324,7 @@ counted everything.
 {
   "say": "Raised D-0042 for tomorrow.",
   "ask": "Which server — APP01 or APP02?",
+  "choices": ["APP01", "APP02", "Not sure"],
   "actions": [
     { "do": "createRecord", "title": "Restart imaging pool",
       "system": "Imaging", "type": "Incident", "priority": "P1",
@@ -334,6 +335,11 @@ counted everything.
 
 Everything is optional. `say` alone is a perfectly good reply. Arguments may
 sit at the top level of the action or inside an `args` object — both are read.
+`choices` goes with `ask`: up to six short strings (40 characters each) the
+person can answer with one press. The app shows them as chips under the
+answer, and pressing one sends that text as the next message — so a guided
+check (*is there a row? — A row with a file_path / No row / Cannot run it*)
+moves at the speed of a click.
 
 Dossier is forgiving about the wrapper, because Power Automate's Response
 action produces several shapes depending on how it was built. All of these

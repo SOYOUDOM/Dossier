@@ -1619,11 +1619,11 @@ drive the real files in a real browser (Playwright + Chromium), because the
 things that break here are things a unit test cannot see: a stale iframe cache,
 a CSP refusal, a file one folder away from where a manifest says.
 
-The twenty-six exercised for the current release — `teach`, `talk2`, `pick`,
+The twenty-seven exercised for the current release — `teach`, `talk2`, `pick`,
 `flowval`, `flowe2e`, `flowui`, `flowmore`, `chatui`, `memui`, `probe`,
 `shrink`, `chatfx`, `settings`, `mend`, `runbook`, `ver`, `analyse`,
 `incident`, `quiet`, `studio`, `shell`, `chatv3`, `pdftext`, `pdfattach`,
-`ocrattach`, `anybrowser` — report **1,003 passing assertions and no failures**, covering the local
+`ocrattach`, `anybrowser`, `guide` — report **1,018 passing assertions and no failures**, covering the local
 assistant, teaching, selectors, the reply validator, the whole network path in
 a real browser against an endpoint that misbehaves the way real ones do, the
 Setup panel, all 57 actions, the docked layout down to where each masthead tab
@@ -1638,7 +1638,9 @@ dialog read and described by the optional recogniser in the real page, a photo
 told from a screenshot, a scanned PDF read page by page, the `picture` field
 and its blank pixel, a read stopped when a picture of noise would hold it up,
 a browser with no folder access — records, backups and attachments kept in
-the browser's store across a reload — and, counted against a server that
+the browser's store across a reload — the assistant as a guide (the hero on an
+empty thread, a question's answers as chips, the runbook folded under the
+answer, the footer on the bottom edge) — and, counted against a server that
 records every request, exactly how many times the endpoint is called and how
 large each call is.
 

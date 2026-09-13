@@ -449,7 +449,7 @@ function checkAction(raw){
    quietly ignored — a flow being wrong in a way nobody is told about is how
    this sort of integration rots. */
 function validate(payload){
-  const out = { say:"", ask:"", actions:[], refused:[], note:"" };
+  const out = { say:"", ask:"", actions:[], refused:[], note:"", choices:[] };
   let body = payload;
 
   if (typeof body === "string"){
@@ -480,6 +480,10 @@ function validate(payload){
 
   out.say = str(body.say || body.message || body.text || body.reply, 20000);
   out.ask = str(body.ask || body.question, 500);
+  /* answers offered with the question - "Yes", "No", "row present" - so a
+     one-word reply is one press; at most six, each short */
+  if (Array.isArray(body.choices))
+    out.choices = body.choices.map(c => str(c, 40)).filter(Boolean).slice(0, 6);
 
   const list = Array.isArray(body.actions) ? body.actions
              : body.action ? [body.action] : [];
@@ -647,7 +651,9 @@ function buildRequest(text, ctx, cfg){
        base64ToBinary(body('Parse_JSON')?['picture']) */
     picture: ctx.picture || BLANK_PNG,
     pictureName: ctx.pictureName || "",
-    conversation: (ctx.conversation || []).slice(-6),
+    /* twelve turns, not six: a guided check runs several questions deep,
+       and the model has to remember what was already found */
+    conversation: (ctx.conversation || []).slice(-12),
     owner: st.owner || "",
     workspace: {
       scope: scope,
