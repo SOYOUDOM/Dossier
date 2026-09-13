@@ -1092,11 +1092,15 @@ The Ask box takes **more than one line** (Enter sends, Shift+Enter breaks) and
 use the clip. A PDF or a text file is **read here, on your PC**, and its words
 go with the question in the input the prompt already has — so the assistant
 answers from the report's pages, and nothing in the flow changes. The bytes of
-a document with text in it never leave the machine. A screenshot, a scanned
-PDF, or a file that needs a password still goes as base64 to your endpoint,
+a document with text in it never leave the machine. A screenshot is read the
+same way when the optional `ocr.js` is in the folder beside `dossier.html`: it
+holds a text recogniser and its English model, runs them in a worker, and
+nothing is fetched. A scanned PDF, a file that needs a password, or a
+screenshot in a copy without `ocr.js` still goes as base64 to your endpoint,
 and nowhere else, for the recogniser in
-[`flow/POWER-AUTOMATE.md`](flow/POWER-AUTOMATE.md) §4b; the tray says which
-under the file's name.
+[`flow/POWER-AUTOMATE.md`](flow/POWER-AUTOMATE.md) §4b; a picture that was
+read keeps its pixels too. The tray says what happened under each file's
+name.
 
 Images are **shrunk before they go**, because base64 is a third larger than
 the file it encodes and an untouched 4 MB screenshot becomes 5.2 MB of JSON —
@@ -1607,11 +1611,11 @@ drive the real files in a real browser (Playwright + Chromium), because the
 things that break here are things a unit test cannot see: a stale iframe cache,
 a CSP refusal, a file one folder away from where a manifest says.
 
-The twenty-four exercised for the current release — `teach`, `talk2`, `pick`,
+The twenty-five exercised for the current release — `teach`, `talk2`, `pick`,
 `flowval`, `flowe2e`, `flowui`, `flowmore`, `chatui`, `memui`, `probe`,
 `shrink`, `chatfx`, `settings`, `mend`, `runbook`, `ver`, `analyse`,
-`incident`, `quiet`, `studio`, `shell`, `chatv3`, `pdftext`, `pdfattach` —
-report **941 passing assertions and no failures**, covering the local
+`incident`, `quiet`, `studio`, `shell`, `chatv3`, `pdftext`, `pdfattach`,
+`ocrattach` — report **960 passing assertions and no failures**, covering the local
 assistant, teaching, selectors, the reply validator, the whole network path in
 a real browser against an endpoint that misbehaves the way real ones do, the
 Setup panel, all 57 actions, the docked layout down to where each masthead tab
@@ -1621,9 +1625,11 @@ including that an endpoint asking to rewrite its own URL is refused *with
 confirmation turned off* — the PDF reader against pdf.js on real files and
 against files built to hit one thing each (three encodings, object streams,
 an incremental update, wrong offsets, form fields, four kinds of encryption),
-the attachment tray and the request it produces, and, counted against a server
-that records every request, exactly how many times the endpoint is called and
-how large each call is.
+the attachment tray and the request it produces, a screenshot of an error
+dialog read by the optional recogniser in the real page — and stopped when a
+picture of noise would hold it up — and, counted against a server that
+records every request, exactly how many times the endpoint is called and how
+large each call is.
 
 Several of those assertions now measure **geometry, not just content**. An
 email body once rendered its text correctly into a box 25 pixels square at

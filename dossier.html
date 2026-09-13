@@ -2684,6 +2684,8 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
      holds no records, and is the only page with a connect-src that allows
      anything at all. Absent, the Ask box is exactly as it was. -->
 <script src="flow.js"></script>
+<!-- optional: with ocr.js beside this file, a screenshot attached to a question is read here -->
+<script src="ocr.js"></script>
 
 <script>
 "use strict";
@@ -4207,6 +4209,9 @@ const STRINGS = {
   AttachLocked: "locked \u2014 sent as it is",
   AttachUnreadable: "unreadable \u2014 sent as it is",
   AttachNoText: "no text \u2014 sent as it is",
+  AttachOcrRead: "words read off the picture",
+  AttachOcrNone: "no words found \u2014 sent as pixels",
+  AttachOcrSlow: "took too long to read \u2014 sent as pixels",
   AttachNeedsFlow: "Files are sent to your Power Automate endpoint, and there is not one switched on \u2014 so those were left behind. Turn it on in Menu \u2192 Setup.",
   FlowHadFiles: "This question carried {n} file(s), about {size} once encoded. If the same question works without them, the size is what your flow is refusing \u2014 its run history will say so.",
   MemoryHead: "What you have taught it",
@@ -4601,8 +4606,8 @@ const STATUSES = [
    the status bar, and clicking it copies a line you can paste into a bug
    report — build date and flow protocol included, because those are the two
    things that actually differ between copies. */
-const APP_VERSION = "3.2.0";
-const APP_BUILT = "2026-09-12";
+const APP_VERSION = "3.3.0";
+const APP_BUILT = "2026-09-13";
 function buildLine(){
   return "Dossier v" + APP_VERSION + " \u00b7 built " + APP_BUILT +
          " \u00b7 flow protocol " + (window.DossierFlow ? DossierFlow.version : "\u2014") +
@@ -8114,6 +8119,7 @@ function chatReplay(){
 }
 
 function openChat(){
+  chatOcrWarm();
   if (!window.DossierChat) return toast(L("ChatNoEngine"), { bad:true });
   if (!Array.isArray(S.chats)) S.chats = [];
   if (!chatThread()) chatNew(true);
@@ -16646,14 +16652,83 @@ function chatReadAsText(file){
   });
 }
 
+/* The words in a picture, read here - when ocr.js is beside this file. It
+   carries an optical character recogniser and its English model, and runs
+   them in a worker, so the page stays live while a screenshot is read.
+   Without it, a picture goes as pixels only, for the recogniser in the flow
+   (POWER-AUTOMATE.md 4b), as it always did. */
+function chatOcrOn(){
+  const o = window.DossierOCR;
+  return !!(o && o.available && typeof o.read === "function");
+}
+function chatOcrWarm(){
+  if (chatOcrOn()) try { window.DossierOCR.ready().catch(() => {}); } catch(e){}
+}
+/* A recogniser wants the letters big: a screenshot is redrawn at twice its
+   size before it is read - the original, not the shrunk copy that travels -
+   capped so a photo of a screen does not become a wall. */
+const OCR_MAX_W = 4000, OCR_MAX_PX = 9000000, OCR_PSM = 6, OCR_MIN_CONF = 40;
+function chatOcrBytes(file){
+  return new Promise(resolve => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      let out = null;
+      try {
+        let scale = Math.min(2, OCR_MAX_W / img.width, Math.sqrt(OCR_MAX_PX / (img.width * img.height)));
+        if (img.width * scale < 800) scale = Math.min(3, 800 / img.width);
+        const w = Math.max(1, Math.round(img.width * scale)), h = Math.max(1, Math.round(img.height * scale));
+        const c = document.createElement("canvas"); c.width = w; c.height = h;
+        const x = c.getContext("2d");
+        x.imageSmoothingEnabled = true; x.imageSmoothingQuality = "high";
+        x.fillStyle = "#fff"; x.fillRect(0, 0, w, h);
+        x.drawImage(img, 0, 0, w, h);
+        const b64 = c.toDataURL("image/jpeg", 0.9).split(",")[1];
+        const bin = atob(b64); const u = new Uint8Array(bin.length);
+        for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
+        out = u;
+      } catch(e){ out = null; }
+      URL.revokeObjectURL(url); resolve(out);
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); resolve(null); };
+    img.src = url;
+  });
+}
+/* what the recogniser hands back, made presentable: an icon read as a stray
+   symbol at the start of a line goes, runs of blank lines close up */
+function chatOcrClean(t){
+  return String(t || "").replace(/\r/g, "")
+    .split("\n").map(l => l.replace(/^[^\p{L}\p{N}(\[{"'<]{1,3}\s+/u, "").replace(/\s+$/, "")).join("\n")
+    .replace(/[ \t]{2,}/g, " ").replace(/\n{3,}/g, "\n\n").trim();
+}
+async function chatReadImage(f, entry){
+  if (!chatOcrOn()) return null;
+  const bytes = await chatOcrBytes(f);
+  if (!bytes) return { text:"", pages:0, note:"unreadable", keep:true };
+  const t0 = Date.now();
+  try {
+    const r = await window.DossierOCR.read(bytes, { psm:OCR_PSM, onProgress:p => {
+      if (entry){ entry.progress = p; renderChatFiles(); } } });
+    const text = chatOcrClean(r.text);
+    const words = (text.match(/[\p{L}\p{N}]{2,}/gu) || []).length;
+    /* a picture of texture reads as a page of noise at very low confidence;
+       that is not words, and the model is better off without it */
+    const found = words >= 2 && r.conf >= OCR_MIN_CONF;
+    return { text:found ? text : "", pages:0, note:found ? "ocr" : "nowords", keep:true, conf:r.conf, ms:Date.now() - t0 };
+  } catch(e){
+    return { text:"", pages:0, note:/timeout/.test(String(e && e.message)) ? "ocrslow" : "nowords", keep:true };
+  }
+}
+
 /* What a document says, read here. A PDF goes through the reader above; a
-   text file is taken as it is. An image is not read here - it is shrunk and
-   goes as pixels, for the recogniser in the flow. The answer says what was
-   read (text, pages), what got in the way (note), and whether the bytes
-   still have to travel (keep) - they do when there was nothing to read. */
-async function chatReadText(f, type){
+   text file is taken as it is; a picture goes through ocr.js when it is
+   there. The answer says what was read (text, pages), what got in the way
+   (note), and whether the bytes still have to travel (keep) - they do when
+   there was nothing to read, and always for a picture, so a flow that looks
+   at pictures still can. */
+async function chatReadText(f, type, entry){
   const kind = chatKind(type);
-  if (kind === "image") return null;
+  if (kind === "image") return chatReadImage(f, entry);
   if (kind === "text"){
     const t = String(await chatReadAsText(f) || "").replace(/\r\n?/g, "\n");
     const cut = t.length > PDF_MAX_CHARS;
@@ -16678,7 +16753,7 @@ async function chatAttach(files){
     const drop = () => { const i = CHAT.files.indexOf(entry); if (i >= 0) CHAT.files.splice(i, 1); renderChatFiles(); };
     let read = null;
     try {
-      read = await chatReadText(f, type);
+      read = await chatReadText(f, type, entry);
       const small = /^image\//.test(type) ? await chatShrinkImage(f) : null;
       if (small){ url = small.url; type = small.type; from = f.size; size = small.size; }
       else if (!read || read.keep) url = await chatReadAsUrl(f);
@@ -16707,9 +16782,14 @@ async function chatAttach(files){
 }
 /* the line under a file's name that says what became of it */
 function chatFileNote(f){
-  if (f.reading) return { t:L("AttachReading"), c:"" };
+  if (f.reading) return { t:L("AttachReading") + (f.progress > 0 && f.progress < 100 ? " " + Math.round(f.progress) + "%" : ""), c:"" };
   const kind = chatKind(f.type);
-  if (kind === "image") return null;
+  if (kind === "image"){
+    if (f.text) return { t:L("AttachOcrRead"), c:"ok" };
+    if (f.note === "nowords") return { t:L("AttachOcrNone"), c:"warn" };
+    if (f.note === "ocrslow") return { t:L("AttachOcrSlow"), c:"warn" };
+    return null;
+  }
   if (f.text){
     if (f.note === "cut") return { t:L("AttachCut", { n:PDF_MAX_CHARS.toLocaleString() }), c:"ok" };
     if (f.note === "partial") return { t:L("AttachPartial"), c:"ok" };

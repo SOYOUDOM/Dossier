@@ -565,8 +565,13 @@ function attachmentsAsText(list){
       body = x.text;
       if (x.note === "cut") body += "\n[cut here: the file goes on past what fits]";
       else if (x.note === "partial") body += "\n[some characters in this file could not be decoded]";
+      else if (x.note === "ocr") body += "\n[the words above were read off the picture by the app's recogniser and may carry a stray character - an l for an I; the pixels are in attachments[].data]";
     }
-    else if (x.kind === "image") body = "[an image: its pixels are in attachments[].data for the recogniser, not here]";
+    else if (x.kind === "image") body = x.note === "nowords"
+      ? "[an image with no words the app's recogniser could find: its pixels are in attachments[].data]"
+      : x.note === "ocrslow"
+      ? "[an image the app's recogniser gave up on: its pixels are in attachments[].data]"
+      : "[an image: its pixels are in attachments[].data for the recogniser, not here]";
     else if (x.note === "scanned") body = "[a scanned PDF, pictures of pages with no text layer: its pages are in attachments[].data for the recogniser]";
     else if (x.note === "encrypted") body = "[a password-protected PDF: its text could not be read]";
     else body = "[no text could be read from this file]";
@@ -619,10 +624,12 @@ function buildRequest(text, ctx, cfg){
       kind: a.kind || (/^image\//.test(a.type || "") ? "image"
                        : a.type === "application/pdf" ? "pdf" : "text"),
       /* what the app read out of the file before sending - the whole text of
-         a PDF or a text file - with its page count, and a note when
+         a PDF or a text file, or the words read off a picture (note "ocr")
+         when ocr.js is beside the app - with its page count, and a note when
          something got in the way: scanned, encrypted, cut, partial, empty,
-         unreadable. A file with text here carries no data: the words
-         travel, the bytes stay on the PC. */
+         unreadable, nowords. A document with text here carries no data: the
+         words travel, the bytes stay on the PC. A picture always carries its
+         pixels as well, for a flow that looks at them. */
       text: a.text || "", pages: a.pages || 0, note: a.note || "" })),
     /* The same files as one piece of plain text a prompt can take whole -
        each one's name, then what it says. This is the input the prompt

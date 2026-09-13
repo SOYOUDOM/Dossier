@@ -960,7 +960,14 @@ Two kinds of file, two paths — and only one of them needs anything built.
 | You attach | What travels | What the model gets |
 |---|---|---|
 | a PDF with text in it; a `.txt`, `.log`, `.csv` | **the words**, read out of the file by the app on your PC | the pages, under the file's name, in the `attached` input it already has |
-| a screenshot; a scanned PDF (pictures of pages); a PDF that needs a password | **the bytes**, base64 in `attachments[].data` | the file's name and a line saying it is a picture — until §4b is built, which reads the words out of the picture |
+| a screenshot, with `ocr.js` beside `dossier.html` | **the words**, read off the picture by the app on your PC — and the pixels too, for a flow that looks at them | the words, under the file's name, in `attached`; a line after them says they came off a picture |
+| a screenshot without `ocr.js`; a scanned PDF (pictures of pages); a PDF that needs a password | **the bytes**, base64 in `attachments[].data` | the file's name and a line saying it is a picture — until §4b is built, which reads the words out of the picture |
+
+`ocr.js` is optional and does nothing to the flow: it is a recogniser (Tesseract,
+compiled to WebAssembly) and its English model in one file, which the app uses
+when the file is there and ignores when it is not. Put it in the folder next
+to `dossier.html`, like `flow.js`, and a screenshot is read the way a PDF is —
+in about two seconds for a full screen, in a worker, so the page stays live.
 
 The tray under the Ask box says which path each file took, in the moment it
 is read: *2 pages read — the text goes with the question*, or *a scan, no
@@ -995,11 +1002,13 @@ Policy No	Insured	Option	Premium (USD)	Status
 figure on page 2, the policy that is in grace, the error in the log. The
 PDF's bytes never left the PC; only its words did.
 
-**What you do not get:** the inside of a picture. A screenshot arrives as
-`=== error.png (image, 81 KB) ===` and a line saying its pixels are in
-`attachments[].data`. The model can say *"a screenshot came with that — tell
-me what it says, or build §4b and I will read it"*, which is honest, and is
-as far as a text-only action goes.
+**What you do not get:** the inside of a picture — unless `ocr.js` is beside
+the app, in which case a screenshot arrives as its words too, with a line
+after them saying they were read off a picture. Without it, a screenshot
+arrives as `=== error.png (image, 81 KB) ===` and a line saying its pixels are
+in `attachments[].data`. The model can say *"a screenshot came with that —
+tell me what it says"*, which is honest, and is as far as a text-only action
+goes on its own.
 
 > If you built the flow before 3.2, **paste the §4 prompt again.** The old one
 > told the model it could not read documents, and it believed that even with
@@ -1107,11 +1116,14 @@ see what a question weighs before you send it.
 ## 4b. Reading pictures: OCR for screenshots and scans
 
 A document with text in it needs nothing here — its words are already in
-`attachmentsText` (Level 1 above). This section is for what is still a
-picture: a screenshot of an error dialog, a scanned PDF, a photo of a screen.
-In `attachments[]` those are the ones whose `text` is **empty**; their bytes
-are in `data`, base64 with no `data:` prefix, and `note` says `scanned` for a
-PDF that turned out to be pictures of pages.
+`attachmentsText` (Level 1 above), and so are a screenshot's when `ocr.js` is
+beside the app. This section is for what is still a picture when it arrives:
+a screenshot from a copy of the app without `ocr.js`, a scanned PDF, a photo
+of a screen the recogniser could make nothing of (`note` says `nowords`). In
+`attachments[]` those are the ones whose `text` is **empty**; their bytes are
+in `data`, base64 with no `data:` prefix, and `note` says `scanned` for a PDF
+that turned out to be pictures of pages. A screenshot that was read still
+carries its pixels, so recipe B below can look at it.
 
 Two ways to read them. Do the first; add the second if your prompt's model
 takes pictures.
@@ -1206,9 +1218,11 @@ text of a long error is better read than looked at.
 - Attach a PDF report and ask *"what is on the first page"*. The answer should
   quote it. Nothing in this section is needed for that; if it says it cannot
   read documents, the §4 prompt is the old one — paste it again.
-- Attach a screenshot of an error and ask *"what does this say"*. With recipe
-  A built, the answer quotes the error text. If it says a picture came and it
-  cannot see inside, `attached` is still the plain expression from Level 1.
+- Attach a screenshot of an error and ask *"what does this say"*. With
+  `ocr.js` beside the app, or with recipe A built, the answer quotes the error
+  text. If it says a picture came and it cannot see inside, neither is in
+  place: `attached` is the plain expression from Level 1 and there is no
+  `ocr.js` in the folder.
 - Attach a `.txt` log. It arrives read, in `attachmentsText`, with no
   recogniser involved — the Yes branch should not run for it.
 - Run history → the recogniser's output: `results` should have one entry per

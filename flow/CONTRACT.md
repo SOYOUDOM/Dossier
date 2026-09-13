@@ -263,15 +263,20 @@ unless the person explicitly says they are approving it.
 
 - `text` — what the app read out of the file on the person's PC before
   sending: the whole text of a PDF, page by page with `[page N]` marks, or of
-  a text file, up to 60,000 characters. Empty for an image, a scan, or a file
-  that needs a password.
+  a text file, up to 60,000 characters; or the words read off a picture, when
+  the optional `ocr.js` is beside the app. Empty for a scan, a file that
+  needs a password, or a picture with no words in it.
 - `pages` — the PDF's page count.
-- `note` — `""` when it read cleanly; `cut` (past the cap), `partial` (some
+- `note` — `""` when it read cleanly; `ocr` (the text was read off a picture
+  and may carry a stray character), `cut` (past the cap), `partial` (some
   characters could not be decoded), `scanned` (pictures of pages, no text
-  layer), `encrypted` (needs a password), `empty`, `unreadable`.
-- `data` — the file as base64 **without** the `data:` prefix, and **only when
-  the words could not be read**: images, scans, locked files. A file that
-  arrived as text carries no bytes; its words are the file.
+  layer), `encrypted` (needs a password), `nowords` (a picture the
+  recogniser could make nothing of), `empty`, `unreadable`.
+- `data` — the file as base64 **without** the `data:` prefix. A document that
+  arrived as text carries no bytes; its words are the file. A picture always
+  carries its pixels, read or not, so a flow that looks at pictures still
+  can; a scan or a locked file carries them because there was nothing else
+  to send.
 
 `attachmentsText` is all of that as one piece of plain text a prompt input can
 take whole — a `=== name (kind, size, pages) ===` line, then the text — so the

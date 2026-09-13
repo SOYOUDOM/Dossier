@@ -6,6 +6,33 @@ holds — which is what to paste into a bug report.
 
 ---
 
+## 3.3.0 — 2026-09-13
+
+**A screenshot is read too** — on your PC, with nothing changed in the flow
+or the prompt.
+
+- **`ocr.js`, an optional file beside `dossier.html`.** It carries a text
+  recogniser (Tesseract, compiled to WebAssembly) and its English model,
+  packed so that nothing is fetched; the app uses it when it is there and
+  ignores it when it is not. With it, a screenshot attached to a question is
+  redrawn at twice its size, read in a worker so the page never freezes, and
+  its words go with the question under the file's name, the way a PDF's do.
+  A full screen reads in about two seconds; the tray shows the progress
+- **The pixels still go.** A picture keeps its base64 in
+  `attachments[].data`, so a flow that shows pictures to its model, or runs
+  the §4b recogniser, still can. `note` says `ocr` for words read off a
+  picture — the request tells the model so, because a recogniser can read an
+  `l` as an `I` — and `nowords` for a picture it could make nothing of
+- **A picture that is all texture does not hold the app up.** A read is
+  given 25 seconds — a full screen of log lines takes about ten — and then
+  the worker is stopped and a fresh one boots for the next picture; a page of
+  noise read at very low confidence is not offered as words. Either way the
+  pixels still go and the tray says why
+- Without `ocr.js` a picture goes exactly as in 3.2, as pixels for the flow's
+  recogniser
+- A new suite, `ocrattach`: a screenshot of an error dialog attached in the
+  real page, read, carried, and the tray; and the app without the file
+
 ## 3.2.0 — 2026-09-12
 
 **A PDF that comes with a question is read, here, before it goes** — and
