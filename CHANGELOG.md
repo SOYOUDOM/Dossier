@@ -6,6 +6,23 @@ holds — which is what to paste into a bug report.
 
 ---
 
+## 3.8.1 — 2026-09-14
+
+**A one-line script gets a code panel too.**
+
+- A query that fits on one line — `SELECT request_id, status FROM t WHERE
+  policy_no = 'A1';` — never became a panel when the fence was missing,
+  because the repair required at least two lines before it would believe
+  something was code. That is the script people most want to copy. One line
+  now counts when it opens with a verb something is run with (SELECT, EXEC,
+  Restart-WebAppPool, iisreset, git, docker…) or ends in a semicolon
+- **And the panel no longer swallows the sentence after it.** The block used
+  to end only at something that read like a full sentence, so a short one —
+  *Done.* — was pulled inside the panel. A blank line now ends the block
+  unless the script plainly carries on after it, which is what keeps a SQL
+  batch or a C# body whole
+- A language name above an ordinary sentence is still left as prose
+
 ## 3.8.0 — 2026-09-14
 
 **An answer is laid out now**, and the composer stops swallowing the panel.

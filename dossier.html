@@ -4839,7 +4839,7 @@ const STATUSES = [
    the status bar, and clicking it copies a line you can paste into a bug
    report — build date and flow protocol included, because those are the two
    things that actually differ between copies. */
-const APP_VERSION = "3.8.0";
+const APP_VERSION = "3.8.1";
 const APP_BUILT = "2026-09-13";
 function buildLine(){
   return "Dossier v" + APP_VERSION + " \u00b7 built " + APP_BUILT +
@@ -8545,13 +8545,21 @@ function chatIsProse(t){
   return /^[A-Z]/.test(l) && /\s/.test(l) && /[.!?:]$/.test(l);
 }
 /* enough of these lines carry code punctuation or indentation to be code */
+/* a statement a person would run, on one line: the commonest thing to lose,
+   because a query that fits on a line is exactly the one somebody wants to
+   copy. A sentence never matches this. */
+const CHAT_ONELINER = /^\s*(select|insert|update|delete|with|exec|execute|call|create|alter|drop|truncate|grant|merge|use|set|show|describe|explain|get-|set-|new-|restart-|start-|stop-|import-|invoke-|iisreset|net|sc|curl|wget|ping|tracert|nslookup|ipconfig|systemctl|service|docker|kubectl|npm|node|python|pip|git|dotnet|java|mvn|gradle|ssh|scp|sudo|cd|dir|ls|cat|type|copy|xcopy|robocopy|del|mkdir|echo|print|return|var|let|const|function|def|class|import|using|\$|#|\.\\|\\\\)/i;
+function chatCodeLine(x){
+  return /[;{}()\[\]=]/.test(x) || /^\s+\S/.test(x) || CHAT_ONELINER.test(x) ||
+    /^\s*(using|import|from|def|class|function|func|var|let|const|public|private|static|return|param|#include|<)/i.test(x);
+}
 function chatLooksCode(t){
   const l = String(t || "").split("\n").filter(x => x.trim());
-  if (l.length < 2) return false;
-  const hits = l.filter(x =>
-    /[;{}()\[\]=]/.test(x) || /^\s+\S/.test(x) ||
-    /^\s*(using|import|from|def|class|function|func|var|let|const|public|private|static|return|select|insert|update|param|echo|print|#include|\$|<)/i.test(x));
-  return hits.length >= Math.ceil(l.length / 2);
+  if (!l.length) return false;
+  /* one line is code when it reads like a statement - it opens with a verb
+     something is run with, or it ends in a semicolon */
+  if (l.length < 2) return CHAT_ONELINER.test(l[0]) || /;\s*$/.test(l[0]);
+  return l.filter(chatCodeLine).length >= Math.ceil(l.length / 2);
 }
 
 /* Models are told to fence their code and mostly do. When one does not, the
@@ -8588,10 +8596,16 @@ function chatFenceBare(s){
        ended in a colon - "run this:" then "sql" then the query */
     const prev = i ? lines[i - 1].trim() : "";
     if (prev && !/[:\uff1a]$/.test(prev)) continue;
+    /* A blank line ends the block, unless what comes after it is more of
+       the same script - a SQL batch or a C# body has blank lines in it. The
+       old test asked whether the next line read like a whole sentence, so a
+       short one - "Done." - was swallowed into the panel. */
     let end = lines.length;
-    for (let j = i + 1; j < lines.length - 1; j++){
+    for (let j = i + 1; j < lines.length; j++){
       if (lines[j].trim()) continue;
-      if (chatIsProse(lines[j + 1])){ end = j; break; }
+      let k = j + 1;
+      while (k < lines.length && !lines[k].trim()) k++;
+      if (k >= lines.length || chatIsProse(lines[k]) || !chatCodeLine(lines[k])){ end = j; break; }
     }
     if (end <= i + 1) continue;
     if (!chatLooksCode(lines.slice(i + 1, end).join("\n"))) continue;
