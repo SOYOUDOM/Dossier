@@ -1628,6 +1628,14 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
 .chat[data-skin="nebula"] .chside{background:rgba(8,14,30,.78);backdrop-filter:blur(14px);border-color:var(--ch-line)}
 .chat[data-skin="nebula"] .chb.you{background:rgba(110,168,255,.22);border:1px solid rgba(154,215,255,.28);color:#eef4ff;backdrop-filter:blur(10px)}
 .chat[data-skin="nebula"] .chb.bot .say{color:var(--ch-ink);text-shadow:0 1px 12px rgba(3,8,18,.85),0 0 2px rgba(3,8,18,.55)}
+.chat[data-skin="nebula"] .say h4{color:#fff}
+.chat[data-skin="nebula"] .say h5,.chat[data-skin="nebula"] .say blockquote{color:var(--ch-dim)}
+.chat[data-skin="nebula"] .say strong{color:#fff}
+.chat[data-skin="nebula"] .say a{color:var(--ch-acc2)}
+.chat[data-skin="nebula"] .say blockquote{border-left-color:var(--ch-line)}
+.chat[data-skin="nebula"] .say hr{border-top-color:var(--ch-line)}
+.chat[data-skin="nebula"] .say .sytab th,.chat[data-skin="nebula"] .say .sytab td{border-color:var(--ch-line)}
+.chat[data-skin="nebula"] .say .sytab th{background:rgba(12,20,42,.7)}
 .chat[data-skin="nebula"] .chb.bot .chseed button,.chat[data-skin="nebula"] .chb.bot .chacts button{text-shadow:none}
 .chat[data-skin="nebula"] .chb.bot .say code.inl{background:rgba(255,255,255,.08);color:#dbe9ff}
 .chat[data-skin="nebula"] .chb.bot .note,.chat[data-skin="nebula"] .chb.bot .carry,.chat[data-skin="nebula"] .chb.bot .hedge,
@@ -1640,6 +1648,13 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
   background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);color:#dfe8ff;backdrop-filter:blur(8px)}
 .chat[data-skin="nebula"] .chseed button:hover,.chat[data-skin="nebula"] .chacts button:hover{background:rgba(110,168,255,.22);border-color:rgba(154,215,255,.5);color:#fff}
 .chat[data-skin="nebula"] .chfw{background:linear-gradient(rgba(6,12,26,0),rgba(6,12,26,.6) 30%);border-top:0;padding-bottom:6px}
+.chat[data-skin="nebula"] .chf.tall{border-radius:18px}
+/* Past two lines the pill becomes a box, and the two buttons step down onto
+   a row of their own: a paperclip beside the ninth line of a pasted log is
+   the shape that made this look wrong. */
+.chf.tall{flex-wrap:wrap;align-items:center;row-gap:4px}
+.chf.tall #chatq{flex:1 1 100%;order:-1}
+.chf.tall .chpin{margin-right:auto}
 .chat[data-skin="nebula"] .chf{background:rgba(12,20,42,.72);border:1px solid rgba(154,215,255,.22);border-radius:999px;
   margin:0 12px 6px;padding:6px 6px 6px 8px;backdrop-filter:blur(14px);box-shadow:0 10px 40px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.06)}
 .chat[data-skin="nebula"] .chf:focus-within{border-color:rgba(154,215,255,.6);box-shadow:0 0 0 3px rgba(110,168,255,.18),0 10px 40px rgba(0,0,0,.35)}
@@ -2187,10 +2202,31 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
   white-space:pre-wrap;word-break:break-word;
   border-radius:var(--r) var(--r) var(--r-xs) var(--r);padding:8px 12px;color:var(--ink)}
 .chb.bot{align-self:flex-start;max-width:100%;width:100%}
-.chb.bot .say{color:var(--ink);font-size:13px;line-height:1.6;white-space:pre-wrap;
-  word-break:break-word}
+.chb.bot .say{color:var(--ink);font-size:13px;line-height:1.6;word-break:break-word}
 .chb.bot .say p{margin:0 0 9px}
-.chb.bot .say p:last-child{margin-bottom:0}
+.chb.bot .say > :last-child{margin-bottom:0}
+/* the parts of an answer: a heading over a section, lists that line up, a
+   quote set in, a table that can be read at this width */
+.say h4{font-family:var(--f-display);font-size:13.5px;font-weight:650;letter-spacing:.005em;
+  margin:14px 0 7px;color:var(--ink)}
+.say h5{font-family:var(--f-display);font-size:12px;font-weight:650;letter-spacing:.06em;
+  text-transform:uppercase;color:var(--ink-2);margin:12px 0 6px}
+.say > h4:first-child,.say > h5:first-child{margin-top:0}
+.say ul,.say ol{margin:0 0 9px;padding-left:19px}
+.say ul{list-style:disc}
+.say ol{list-style:decimal}
+.say li{margin:3px 0;padding-left:2px}
+.say li::marker{color:var(--ink-3)}
+.say blockquote{margin:0 0 9px;padding:2px 0 2px 11px;border-left:2px solid var(--rule-hi);color:var(--ink-2)}
+.say hr{border:0;border-top:1px solid var(--rule);margin:12px 0}
+.say strong{font-weight:650;color:var(--ink)}
+.say em{font-style:italic}
+.say a{color:var(--accent);text-decoration:underline;text-underline-offset:2px}
+.say a:hover{text-decoration-thickness:2px}
+.say .sytab{overflow-x:auto;margin:0 0 10px}
+.say .sytab table{border-collapse:collapse;font-size:12px;width:100%}
+.say .sytab th,.say .sytab td{border:1px solid var(--rule);padding:5px 8px;text-align:left;vertical-align:top}
+.say .sytab th{background:var(--paper-2);font-weight:650}
 /* a block of code is a thing to copy, not a thing to read past */
 .chcode{position:relative;margin:10px 0;border:1px solid var(--rule);border-radius:var(--r-sm);
   background:var(--paper-3);overflow:hidden;white-space:normal}
@@ -2322,7 +2358,7 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
    before it starts scrolling instead. */
 .chf textarea{flex:1;min-width:0;border:1px solid var(--rule);border-radius:var(--r-sm);
   background:var(--paper);color:var(--ink);padding:9px 12px;font-size:13px;outline:none;
-  font-family:inherit;line-height:1.55;resize:none;max-height:184px;overflow-y:auto}
+  font-family:inherit;line-height:1.55;resize:none;overflow-y:auto;scrollbar-width:thin}
 .chf textarea:focus{border-color:var(--rule-hi)}
 .chf .btn{align-self:flex-end}
 .chpin{flex:0 0 auto;align-self:flex-end;margin-bottom:1px}
@@ -4803,7 +4839,7 @@ const STATUSES = [
    the status bar, and clicking it copies a line you can paste into a bug
    report — build date and flow protocol included, because those are the two
    things that actually differ between copies. */
-const APP_VERSION = "3.7.2";
+const APP_VERSION = "3.8.0";
 const APP_BUILT = "2026-09-13";
 function buildLine(){
   return "Dossier v" + APP_VERSION + " \u00b7 built " + APP_BUILT +
@@ -8586,11 +8622,127 @@ function chatSay(text){
   out += chatProse(src.slice(i));
   return out;
 }
+/* -- an answer, laid out ------------------------------------------------
+   For a long time this deliberately rendered nothing but code fences and
+   inline backticks, on the grounds that every feature added to a renderer
+   is another way for text from an endpoint to put markup on your page.
+   That reasoning still holds, and it is the reason this is written the way
+   it is: the text is ESCAPED FIRST, once, and every tag below is one this
+   file wrote itself. Nothing from outside can become markup; the worst a
+   hostile endpoint can do is make its own answer bold.
+
+   What it understands, and nothing else: headings, bold, italic, inline
+   code, links, bullet and numbered lists, quotes, a rule, and a simple
+   table. Asterisks that are not a pair, underscores anywhere - policy_no,
+   insured_name - and angle brackets are left exactly as they arrived. */
+const PROSE_SCHEME = /^(https?:\/\/|mailto:)/i;
+function proseInline(s){
+  return s
+    /* [what it is](where it goes) - and only somewhere a browser should go */
+    .replace(/\[([^\]\n]{1,120})\]\(([^)\s]{1,400})\)/g, (x, t, u) =>
+      PROSE_SCHEME.test(u) ? '<a href="' + u + '" target="_blank" rel="noopener noreferrer">' + t + "</a>" : x)
+    /* a bare address, when it is not already inside one */
+    .replace(/(^|[\s(])(https?:\/\/[^\s<)]{4,400})/g, (x, p, u) =>
+      p + '<a href="' + u + '" target="_blank" rel="noopener noreferrer">' + u + "</a>")
+    .replace(/\*\*([^*\n]{1,300})\*\*/g, "<strong>$1</strong>")
+    /* one asterisk is italic only when it hugs its words on both sides, so
+       SELECT * and a * b stay as they were typed */
+    .replace(/(^|[\s("'‘“])\*([^\s*][^*\n]{0,298}[^\s*]|[^\s*])\*(?=$|[\s.,;:!?)"'’”])/g, "$1<em>$2</em>");
+}
+function proseCells(line){
+  return line.replace(/^\s*\|/, "").replace(/\|\s*$/, "").split("|").map(c => c.trim());
+}
+function proseIsRule(line){
+  const c = proseCells(line);
+  return c.length > 0 && c.every(x => /^:?-{2,}:?$/.test(x));
+}
 function chatProse(t){
   if (!t) return "";
-  /* trim only the blank lines a fence leaves behind, never the indentation */
-  return esc(t).replace(/^\n+|\n+$/g, "")
-    .replace(/`([^`\n]+)`/g, (x, c) => '<code class="inl">' + c + "</code>");
+  let s = esc(String(t).replace(/\u0000/g, "")).replace(/^\n+|\n+$/g, "");
+  if (!s) return "";
+  /* inline code is held aside first, so nothing below reaches inside it */
+  const held = [];
+  s = s.replace(/`([^`\n]+)`/g, (x, c) => {
+    held.push('<code class="inl">' + c + "</code>");
+    return "\u0000" + (held.length - 1) + "\u0000";
+  });
+
+  const lines = s.split("\n"), out = [];
+  let para = [];
+  const flush = () => {
+    if (!para.length) return;
+    out.push("<p>" + proseInline(para.join("<br>")) + "</p>");
+    para = [];
+  };
+  for (let i = 0; i < lines.length; i++){
+    const line = lines[i], trimmed = line.trim();
+    if (!trimmed){ flush(); continue; }
+
+    /* ## a section of the answer */
+    let m = /^(#{1,6})\s+(.+?)\s*#*$/.exec(trimmed);
+    if (m){ flush(); const tag = m[1].length >= 3 ? "h5" : "h4";
+      out.push("<" + tag + ">" + proseInline(m[2]) + "</" + tag + ">"); continue; }
+
+    /* a line across, between two halves of an answer */
+    if (/^(-{3,}|_{3,}|\*{3,})$/.test(trimmed)){ flush(); out.push("<hr>"); continue; }
+
+    /* a table: a header row, a row of dashes, then the body */
+    if (trimmed.indexOf("|") >= 0 && i + 1 < lines.length && proseIsRule(lines[i + 1]) &&
+        proseCells(trimmed).length > 1){
+      flush();
+      const head = proseCells(trimmed);
+      const body = [];
+      let j = i + 2;
+      for (; j < lines.length && lines[j].trim().indexOf("|") >= 0; j++) body.push(proseCells(lines[j]));
+      out.push('<div class="sytab"><table><thead><tr>' +
+        head.map(c => "<th>" + proseInline(c) + "</th>").join("") + "</tr></thead><tbody>" +
+        body.map(r => "<tr>" + head.map((h, k) => "<td>" + proseInline(r[k] || "") + "</td>").join("") + "</tr>").join("") +
+        "</tbody></table></div>");
+      i = j - 1; continue;
+    }
+
+    /* > something somebody else said */
+    if (/^&gt;\s?/.test(trimmed)){
+      flush();
+      const q = [];
+      while (i < lines.length && /^\s*&gt;\s?/.test(lines[i])){ q.push(lines[i].replace(/^\s*&gt;\s?/, "")); i++; }
+      i--;
+      out.push("<blockquote>" + proseInline(q.join("<br>")) + "</blockquote>");
+      continue;
+    }
+
+    /* - a list of things, or 1. a list of steps */
+    const bullet = /^\s*([-*•·])\s+(.+)$/.exec(line);
+    const number = /^\s*(\d{1,3})[.)]\s+(.+)$/.exec(line);
+    if (bullet || number){
+      flush();
+      const ordered = !!number;
+      const items = [];
+      let start = ordered ? +number[1] : 0;
+      while (i < lines.length){
+        const b = /^\s*([-*•·])\s+(.+)$/.exec(lines[i]);
+        const n = /^\s*(\d{1,3})[.)]\s+(.+)$/.exec(lines[i]);
+        if (ordered ? !n : !b){
+          /* a plain line under an item belongs to that item */
+          if (items.length && lines[i].trim() && /^\s{2,}\S/.test(lines[i])){ items[items.length - 1] += "<br>" + lines[i].trim(); i++; continue; }
+          break;
+        }
+        items.push((ordered ? n[2] : b[2]).trim());
+        i++;
+      }
+      i--;
+      out.push(ordered
+        ? "<ol" + (start > 1 ? ' start="' + start + '"' : "") + ">" + items.map(x => "<li>" + proseInline(x) + "</li>").join("") + "</ol>"
+        : "<ul>" + items.map(x => "<li>" + proseInline(x) + "</li>").join("") + "</ul>");
+      continue;
+    }
+
+    para.push(line);
+  }
+  flush();
+  let html = out.join("");
+  html = html.replace(/\u0000(\d+)\u0000/g, (x, k) => held[+k] || "");
+  return html;
 }
 
 /* render one answer. Everything clickable is registered in CHAT.acts and
@@ -15534,7 +15686,15 @@ $("chatGo").addEventListener("click", () => chatAsk($("chatq").value));
 function chatGrow(){
   const t = $("chatq");
   t.style.height = "auto";
-  t.style.height = Math.min(184, t.scrollHeight) + "px";
+  /* a long paste should not swallow the conversation: the box takes at most
+     a third of the panel, then scrolls inside itself */
+  const room = Math.min(200, Math.max(110, Math.round(($("chat").clientHeight || 600) * 0.26)));
+  const h = Math.min(room, t.scrollHeight);
+  t.style.height = h + "px";
+  /* and a pill that is nine lines tall is a balloon, so past two lines it
+     becomes a rounded box instead */
+  const f = t.closest(".chf");
+  if (f) f.classList.toggle("tall", h > 46);
   /* the send button knows whether there is anything to send */
   $("chatGo").classList.toggle("empty", !t.value.trim());
 }

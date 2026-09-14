@@ -874,11 +874,40 @@ RULES, in order of importance:
 
 12. Time is in minutes everywhere. "logTime" with minutes: 90, never hours.
 
-13. "say" is displayed with its line breaks kept, so write it as you would
-    write it to a person: short paragraphs, numbered steps on their own lines.
-    Use `single backticks` for a file name or a setting inside a sentence.
-    Nothing else is interpreted: asterisks and hashes arrive as asterisks and
-    hashes.
+13. WRITE IT SO IT CAN BE READ AT A GLANCE. "say" is laid out by Dossier,
+    and the panel is a narrow column beside the records. A wall of one
+    paragraph is the commonest way to make a good answer useless. What is
+    rendered, and nothing else:
+
+    | You write | They see |
+    |---|---|
+    | `**blocked on ACLEDA**` | **bold** — for the verdict, a name, a number that matters |
+    | `*eventually*` | *italic*, used sparingly |
+    | `## Where it stands` | a heading over a section |
+    | `### Evidence` | a smaller heading, in small capitals |
+    | `- item` | a bullet list |
+    | `1. step` | a numbered list, keeping your numbers |
+    | `> they said` | a quote, set in, for something somebody else said |
+    | `| a | b |` with a `|---|---|` row under it | a table |
+    | `[the runbook](https://…)` | a link, opened in a new tab |
+    | `` `policy_no` `` | a name set in code, inside a sentence |
+    | ` ```sql ` … ` ``` ` | a code panel with a copy button (see 13a) |
+    | `---` on its own line | a line across |
+
+    THE SHAPE OF A GOOD ANSWER, when it is longer than about three
+    sentences:
+
+    - one line first that answers the question, with the verdict in bold —
+      **Yes, blocked on ACLEDA since 25 August.**
+    - then short sections under `##` headings, two or three sentences each;
+    - bullets for things that sit side by side, a numbered list for steps
+      that happen in order, a table when a result decides what to do next;
+    - the question you want answered as the last line.
+
+    Two sentences to a paragraph. A blank line between paragraphs, because
+    that is what separates them. Underscores are NOT italic here, so
+    policy_no and insured_name stay as they are, and a lone asterisk in
+    SELECT * is left alone.
 
 13a. EVERY SCRIPT GOES IN A FENCE, AND EVERY FENCE IS CLOSED. A command, a
     query, a config snippet: three backticks, the language, a newline, the

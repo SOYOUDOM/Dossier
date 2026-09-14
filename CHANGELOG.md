@@ -6,6 +6,33 @@ holds — which is what to paste into a bug report.
 
 ---
 
+## 3.8.0 — 2026-09-14
+
+**An answer is laid out now**, and the composer stops swallowing the panel.
+
+- Until now a reply was plain text with code fences, on the grounds that a
+  renderer is a way for an endpoint to put markup on your page. That
+  reasoning is kept — the text is **escaped first**, once, and every tag is
+  one the app wrote itself — but the vocabulary is no longer empty:
+  headings, **bold**, *italic*, bullet and numbered lists, quotes, tables,
+  links that open in a new tab, a line across, and the code panels that
+  were already there
+- Deliberately left alone: `policy_no` and `insured_name`, because
+  underscores are not italic here, and the asterisk in `SELECT *`. Anything
+  an endpoint sends that looks like a tag is shown as the text it is, and a
+  `javascript:` link is refused and left as written
+- **The §4 prompt now shows what is rendered and what a good answer looks
+  like**: the verdict in bold on the first line, short sections under
+  headings, bullets for things side by side, numbers for steps in order, a
+  table when a result decides what happens next, and the question last.
+  Paste the §4 prompt again to get it
+- **The composer no longer becomes a balloon.** Pasting thirty lines used to
+  grow a pill until it covered half the conversation. It now stops at 200px
+  or a quarter of the panel, scrolls inside itself, turns from a pill into a
+  rounded box past two lines, and moves the clip and send buttons onto a row
+  of their own so the text has the full width
+- A new suite, `prose`, including the hostile cases
+
 ## 3.7.2 — 2026-09-13
 
 **Every script lands in a code panel, not only the first one.**
