@@ -6,6 +6,22 @@ holds — which is what to paste into a bug report.
 
 ---
 
+## 3.8.2 — 2026-09-14
+
+**JSON gets a code panel, in every shape it arrives in.**
+
+- A payload on one line — `{"policy_no":"A1","status":"grace"}` or
+  `[{"do":"find","overdue":true}]` — was not recognised as code, so it
+  arrived as grey text
+- **And a payload with nothing written over it now gets one too.** Nobody
+  labels the object they have just copied out of a run history. If a run of
+  lines parses as JSON then it is JSON, which is a surer test than guessing
+  — so `{policy}` in a sentence stays a sentence, and an object that does
+  not parse is left exactly as it was
+- A fence with no language on it is labelled `json` when its body is JSON
+- Fenced and labelled blocks, and multi-line objects under a bare `json`
+  line, worked before and still do
+
 ## 3.8.1 — 2026-09-14
 
 **A one-line script gets a code panel too.**

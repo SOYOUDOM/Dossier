@@ -4839,7 +4839,7 @@ const STATUSES = [
    the status bar, and clicking it copies a line you can paste into a bug
    report — build date and flow protocol included, because those are the two
    things that actually differ between copies. */
-const APP_VERSION = "3.8.1";
+const APP_VERSION = "3.8.2";
 const APP_BUILT = "2026-09-13";
 function buildLine(){
   return "Dossier v" + APP_VERSION + " \u00b7 built " + APP_BUILT +
@@ -8553,12 +8553,25 @@ function chatCodeLine(x){
   return /[;{}()\[\]=]/.test(x) || /^\s+\S/.test(x) || CHAT_ONELINER.test(x) ||
     /^\s*(using|import|from|def|class|function|func|var|let|const|public|private|static|return|param|#include|<)/i.test(x);
 }
+/* Does this parse as JSON? The surest test there is, and the payloads this
+   app deals in are JSON, so an object pasted back out of a run history is
+   a common thing to be handed. */
+function chatIsJson(t){
+  const x = String(t || "").trim();
+  if (x.length < 6) return false;
+  const a = x.charAt(0), b = x.charAt(x.length - 1);
+  if (!((a === "{" && b === "}") || (a === "[" && b === "]"))) return false;
+  try { JSON.parse(x); return true; } catch(e){ return false; }
+}
 function chatLooksCode(t){
   const l = String(t || "").split("\n").filter(x => x.trim());
   if (!l.length) return false;
+  if (chatIsJson(t)) return true;
   /* one line is code when it reads like a statement - it opens with a verb
-     something is run with, or it ends in a semicolon */
-  if (l.length < 2) return CHAT_ONELINER.test(l[0]) || /;\s*$/.test(l[0]);
+     something is run with, it ends in a semicolon, or it is an object or an
+     array written on one line */
+  if (l.length < 2) return CHAT_ONELINER.test(l[0]) || /;\s*$/.test(l[0]) ||
+    /^\s*[{\[].*[}\]]\s*$/.test(l[0]);
   return l.filter(chatCodeLine).length >= Math.ceil(l.length / 2);
 }
 
@@ -8586,9 +8599,28 @@ function chatMend(src){
   for (let k = 0; k < parts.length; k += 2) parts[k] = chatFenceBare(parts[k]);
   return parts.join("");
 }
+/* A payload pasted back with no "json" written over it: nobody labels the
+   thing they just copied out of a run history. If a run of lines parses as
+   JSON then it is JSON, which is a surer test than any amount of guessing -
+   and {policy} in a sentence does not parse, so it is left alone. */
+function chatFenceJson(lines){
+  for (let i = 0; i < lines.length; i++){
+    const t = lines[i].trim();
+    if (t.charAt(0) !== "{" && t.charAt(0) !== "[") continue;
+    const prev = i ? lines[i - 1].trim() : "";
+    if (prev && !/[:\uff1a]$/.test(prev)) continue;
+    let end = i + 1;
+    while (end < lines.length && lines[end].trim()) end++;
+    if (!chatIsJson(lines.slice(i, end).join("\n"))) continue;
+    lines.splice(end, 0, "```");
+    lines.splice(i, 0, "```json");
+    i = end + 2;
+  }
+  return lines;
+}
 function chatFenceBare(s){
   if (!s || s.indexOf("\n") < 0) return s;
-  const lines = s.split("\n");
+  const lines = chatFenceJson(s.split("\n"));
   for (let i = 0; i < lines.length; i++){
     const tok = lines[i].trim().toLowerCase();
     if (!tok || CHAT_LANGS.indexOf(tok) < 0) continue;
@@ -8623,7 +8655,7 @@ function chatSay(text){
   let m;
   while ((m = fence.exec(src))){
     out += chatProse(src.slice(i, m.index));
-    const lang = m[1] || "";
+    const lang = m[1] || (chatIsJson(m[2]) ? "json" : "");
     const body = m[2].replace(/\s+$/, "");
     const id = "cc" + (++CHAT.n) + "x" + m.index;
     CHAT.code[id] = body;
