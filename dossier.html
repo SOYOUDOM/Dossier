@@ -2087,7 +2087,7 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
    dots. If the file is not on disk the probe in chatArt() never sets the
    flag, no <img> is written, and the row is the word and the clock alone. */
 .chthink{display:flex;flex-direction:column;padding:2px 0}
-.chgif{width:20px;height:20px;flex:0 0 auto;display:block;object-fit:contain;
+.chgif{width:24px;height:24px;flex:0 0 auto;display:block;object-fit:contain;
   background:none;border:0;border-radius:0}
 .chthink .el{font-family:var(--f-mono);font-size:10px;color:var(--ch-dim)}
 .chthink .el:empty{display:none}
@@ -4840,7 +4840,7 @@ const STATUSES = [
    the status bar, and clicking it copies a line you can paste into a bug
    report — build date and flow protocol included, because those are the two
    things that actually differ between copies. */
-const APP_VERSION = "3.9.0";
+const APP_VERSION = "3.9.1";
 const APP_BUILT = "2026-09-13";
 function buildLine(){
   return "Dossier v" + APP_VERSION + " \u00b7 built " + APP_BUILT +
@@ -7416,7 +7416,12 @@ function dr(label, sub, list){
    Conversations are kept, one per subject, in the workspace beside the
    records. Each carries its own running context, so "what is left on it" in
    one thread cannot pick up the record you were discussing in another. */
-const CHAT = { acts:{}, code:{}, files:[], n:0, last:"", gif:"" };
+/* The animation shown while an answer is on its way. It is your GIF,
+   byte for byte - assets/thinking.gif in the repository - carried inside
+   this file so that a copy of dossier.html on its own still has it. Two
+   kilobytes. assets/thinking.gif overrides it when there is one. */
+const CHAT_GIF_DATA = "data:image/gif;base64,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";
+const CHAT = { acts:{}, code:{}, files:[], n:0, last:"", gif:CHAT_GIF_DATA };
 /* ── how big a question is allowed to get ──────────────────────────────────
    Base64 is a third bigger than the file it encodes, so a 4 MB screenshot
    arrives at the endpoint as 5.2 MB of JSON, and five of them as 27 MB. A
@@ -7708,17 +7713,26 @@ const CHAT_ORB_SVG =
 const CHAT_GIF = "assets/thinking.gif";
 function chatArt(){
   const chat = $("chat"); if (!chat) return;
+  let folder = false;
   [["assets/assistant-bg.jpg", "--ch-photo"], ["assets/assistant-logo.png", "--ch-mark"]].forEach(([src, v]) => {
     const im = new Image();
-    im.onload = () => { chat.style.setProperty(v, "url(\"" + src + "\")"); chat.classList.add(v === "--ch-mark" ? "ownmark" : "ownbg"); };
+    im.onload = () => {
+      chat.style.setProperty(v, "url(\"" + src + "\")");
+      chat.classList.add(v === "--ch-mark" ? "ownmark" : "ownbg");
+      /* One of the two answered, so there is an assets folder here and a
+         thinking.gif in it is worth asking for. On a copy of dossier.html
+         with no folder beside it nothing is asked for at all, and the
+         animation built into the file is the one you get - which is why
+         there is no way for this to leave a missing file in the console. */
+      if (!folder){ folder = true; chatGifOver(); }
+    };
     im.src = src;
   });
-  /* The waiting animation is a file, dropped into assets/ beside the other
-     two. It is asked for once, here, and only written into the thread if it
-     answered - so the row can never show a broken picture, and dropping the
-     file in later is the whole of the installation. */
+}
+/* your own animation, if you keep one beside the file */
+function chatGifOver(){
   const gif = new Image();
-  gif.onload = () => { CHAT.gif = CHAT_GIF; chat.classList.add("owngif"); };
+  gif.onload = () => { CHAT.gif = CHAT_GIF; };
   gif.src = CHAT_GIF;
 }
 const CHAT_SKINS = [
@@ -8452,10 +8466,13 @@ function chatThinking(log){
     (CHAT.gif ? '<img class="chgif" alt="" src="' + esc(CHAT.gif) + '">' : "") +
     '<span class="tx">' + esc(L("FlowAsking")) +
     '</span><span class="el"></span></div></div>';
-  /* it loaded once already; if it ever stops loading the row loses it
-     rather than showing the browser's broken-picture mark */
+  /* if a folder copy ever stops loading, the row falls back to the one built
+     into the file rather than showing the browser's broken-picture mark */
   const im = w.querySelector(".chgif");
-  if (im) im.onerror = () => { CHAT.gif = ""; im.remove(); };
+  if (im) im.onerror = () => {
+    if (CHAT.gif === CHAT_GIF_DATA){ CHAT.gif = ""; im.remove(); return; }
+    CHAT.gif = CHAT_GIF_DATA; im.src = CHAT_GIF_DATA;
+  };
   log.appendChild(w);
   $("chat").classList.add("busy");
   chatState(L("ChatThinking"), true);

@@ -6,6 +6,26 @@ holds — which is what to paste into a bug report.
 
 ---
 
+## 3.9.1 — 2026-09-15
+
+**The waiting animation travels inside the file.**
+
+- 3.9.0 read it from `assets/thinking.gif` and showed nothing if the file
+  was not there. Which is what happened: the animation was added to the
+  repository, not to the folder the app is actually opened from, so the
+  waiting row stayed a line of text
+- **The animation is now carried inside `dossier.html`** — the same GIF,
+  byte for byte, as two kilobytes of base64. A copy of the file on its own,
+  in any folder, on any machine, has it. There is nothing to install
+- `assets/thinking.gif` still overrides it, so swapping the animation is
+  still a matter of dropping a file in. It is only looked for once the
+  assistant's mark or its background has loaded — a folder that is not there
+  is never asked for, so a lone copy of the file adds nothing to the console
+- If a folder copy ever fails to load, the row falls back to the built-in
+  one rather than showing a broken picture
+- **24px rather than 20.** The animation is a sparse one and at 20px there
+  was almost nothing to see
+
 ## 3.9.0 — 2026-09-15
 
 **The composer, and what it does while it waits.**
