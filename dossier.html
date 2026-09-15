@@ -1648,13 +1648,9 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
   background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);color:#dfe8ff;backdrop-filter:blur(8px)}
 .chat[data-skin="nebula"] .chseed button:hover,.chat[data-skin="nebula"] .chacts button:hover{background:rgba(110,168,255,.22);border-color:rgba(154,215,255,.5);color:#fff}
 .chat[data-skin="nebula"] .chfw{background:linear-gradient(rgba(6,12,26,0),rgba(6,12,26,.6) 30%);border-top:0;padding-bottom:6px}
+/* Past two lines the pill becomes a box. Nothing else moves: the clip and
+   the send button stay on the row, at the bottom, beside the last line. */
 .chat[data-skin="nebula"] .chf.tall{border-radius:18px}
-/* Past two lines the pill becomes a box, and the two buttons step down onto
-   a row of their own: a paperclip beside the ninth line of a pasted log is
-   the shape that made this look wrong. */
-.chf.tall{flex-wrap:wrap;align-items:center;row-gap:4px}
-.chf.tall #chatq{flex:1 1 100%;order:-1}
-.chf.tall .chpin{margin-right:auto}
 .chat[data-skin="nebula"] .chf{background:rgba(12,20,42,.72);border:1px solid rgba(154,215,255,.22);border-radius:999px;
   margin:0 12px 6px;padding:6px 6px 6px 8px;backdrop-filter:blur(14px);box-shadow:0 10px 40px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.06)}
 .chat[data-skin="nebula"] .chf:focus-within{border-color:rgba(154,215,255,.6);box-shadow:0 0 0 3px rgba(110,168,255,.18),0 10px 40px rgba(0,0,0,.35)}
@@ -1664,8 +1660,12 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
 .chat[data-skin="nebula"] #chatGo{border-radius:50%;width:36px;height:36px;padding:0;background:linear-gradient(135deg,#6EA8FF,#3b6fe0);color:#fff;border:0;
   box-shadow:0 6px 18px rgba(110,168,255,.35)}
 .chat[data-skin="nebula"] #chatGo.empty{background:rgba(255,255,255,.08);color:#8d9dbd;box-shadow:none}
-.chat[data-skin="nebula"] #chatGo{font-size:0}
-.chat[data-skin="nebula"] #chatGo::after{font-size:16px;margin:0}
+/* the label is hidden and the arrow is the button, so the button has to
+   centre it rather than sit it on a text baseline that is not there */
+.chat[data-skin="nebula"] #chatGo{font-size:0;display:grid;place-items:center;
+  line-height:1;flex:0 0 auto}
+.chat[data-skin="nebula"] #chatGo::after{font-size:17px;margin:0;line-height:1;
+  display:block;transform:translateY(-.5px)}
 .chat[data-skin="nebula"] .chhint{color:#6f7f9f}
 .chat[data-skin="nebula"] .chclip .cf{background:rgba(12,20,42,.7);border-color:var(--ch-line);color:#dfe8ff}
 .chat[data-skin="nebula"] .chpill{background:rgba(12,20,42,.9);border-color:var(--ch-line);color:#eef4ff}
@@ -2358,7 +2358,8 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
    before it starts scrolling instead. */
 .chf textarea{flex:1;min-width:0;border:1px solid var(--rule);border-radius:var(--r-sm);
   background:var(--paper);color:var(--ink);padding:9px 12px;font-size:13px;outline:none;
-  font-family:inherit;line-height:1.55;resize:none;overflow-y:auto;scrollbar-width:thin}
+  font-family:inherit;line-height:1.55;resize:none;overflow-y:auto;overflow-x:hidden;
+  scrollbar-width:thin;overflow-wrap:anywhere;word-break:break-word}
 .chf textarea:focus{border-color:var(--rule-hi)}
 .chf .btn{align-self:flex-end}
 .chpin{flex:0 0 auto;align-self:flex-end;margin-bottom:1px}
@@ -4839,7 +4840,7 @@ const STATUSES = [
    the status bar, and clicking it copies a line you can paste into a bug
    report — build date and flow protocol included, because those are the two
    things that actually differ between copies. */
-const APP_VERSION = "3.8.2";
+const APP_VERSION = "3.8.3";
 const APP_BUILT = "2026-09-13";
 function buildLine(){
   return "Dossier v" + APP_VERSION + " \u00b7 built " + APP_BUILT +
@@ -15729,18 +15730,30 @@ $("chatSide").addEventListener("click", e => {
 $("chatGo").addEventListener("click", () => chatAsk($("chatq").value));
 
 /* the box grows with what you are typing, up to about eight lines */
+/* The box grows with what is being typed. This used to flicker on every
+   keystroke once the text reached the end of a line, and the cause was a
+   loop of its own making: the height was measured while the box was narrow
+   (sitting between the clip and the send button), that height turned on a
+   class which made the box full width, at which point the same text fitted
+   on one line and the class turned itself off again. Width in, width out.
+
+   So the width no longer changes: the two buttons stay on the row, at the
+   bottom, where every chat composer puts them. All the class does now is
+   round the corners less, and it has a dead band around the switch so a
+   character either side of the boundary cannot set it oscillating. */
+const CHAT_TALL_ON = 58, CHAT_TALL_OFF = 44;
 function chatGrow(){
-  const t = $("chatq");
+  const t = $("chatq"), f = t.closest(".chf");
   t.style.height = "auto";
   /* a long paste should not swallow the conversation: the box takes at most
-     a third of the panel, then scrolls inside itself */
+     a quarter of the panel, then scrolls inside itself */
   const room = Math.min(200, Math.max(110, Math.round(($("chat").clientHeight || 600) * 0.26)));
-  const h = Math.min(room, t.scrollHeight);
-  t.style.height = h + "px";
-  /* and a pill that is nine lines tall is a balloon, so past two lines it
-     becomes a rounded box instead */
-  const f = t.closest(".chf");
-  if (f) f.classList.toggle("tall", h > 46);
+  const full = t.scrollHeight;
+  t.style.height = Math.min(room, full) + "px";
+  if (f){
+    const was = f.classList.contains("tall");
+    f.classList.toggle("tall", full > (was ? CHAT_TALL_OFF : CHAT_TALL_ON));
+  }
   /* the send button knows whether there is anything to send */
   $("chatGo").classList.toggle("empty", !t.value.trim());
 }

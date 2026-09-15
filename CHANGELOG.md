@@ -6,6 +6,26 @@ holds — which is what to paste into a bug report.
 
 ---
 
+## 3.8.3 — 2026-09-15
+
+**The composer stops flickering, and the send arrow is centred.**
+
+- Typing past the end of a line made the box jump about. It was a loop of
+  3.8.0's own making: the height was measured while the box was narrow —
+  sitting between the clip and the send button — that height switched on a
+  class which made the box full width, and at that width the same text
+  fitted on one line, so the class switched itself off again. Width in,
+  width out, once per keystroke
+- The width no longer changes at all. The clip and the send button stay on
+  the row, at the bottom beside the last line, where a chat composer puts
+  them. The class now only rounds the corners less, and it has a dead band
+  around the switch so a character either side of the boundary cannot set
+  it oscillating
+- **A long link wraps** instead of running off the side of the box
+- **The send arrow is centred in its circle.** The label is hidden in this
+  skin and the arrow is drawn after it, so it was sitting on a text
+  baseline that is not there
+
 ## 3.8.2 — 2026-09-14
 
 **JSON gets a code panel, in every shape it arrives in.**
