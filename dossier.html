@@ -1651,7 +1651,7 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
 /* Past two lines the pill becomes a box. Nothing else moves: the clip and
    the send button stay on the row, at the bottom, beside the last line. */
 .chat[data-skin="nebula"] .chf.tall{border-radius:18px}
-.chat[data-skin="nebula"] .chf{background:rgba(12,20,42,.72);border:1px solid rgba(154,215,255,.22);border-radius:999px;
+.chat[data-skin="nebula"] .chf{background:rgba(12,20,42,.72);border:1px solid rgba(154,215,255,.22);border-radius:5px;
   margin:0 12px 6px;padding:5px 6px;backdrop-filter:blur(14px);box-shadow:0 10px 40px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.06)}
 .chat[data-skin="nebula"] .chf:focus-within{border-color:rgba(154,215,255,.6);box-shadow:0 0 0 3px rgba(110,168,255,.18),0 10px 40px rgba(0,0,0,.35)}
 .chat[data-skin="nebula"] #chatq{background:none;border:0;color:#eef4ff;box-shadow:none}
@@ -2647,7 +2647,7 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
                   title="Attach a file">&#128206;</button>
           <textarea id="chatq" rows="1" data-i18n-ph="ChatPlaceholder"
                     placeholder="Ask Dossier…" spellcheck="false"></textarea>
-          <button class="btn pri" id="chatGo" data-i18n="ChatAsk">Ask</button>
+          <button class="btn pri" id="chatGo" data-i18n="ChatAsk"></button>
         </div>
         <div class="chhint" id="chatHint" aria-hidden="true"></div>
         <input type="file" id="chatFile" accept="image/*,application/pdf,.txt,.log,.csv,.json,.xml"
