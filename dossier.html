@@ -1652,24 +1652,25 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
    the send button stay on the row, at the bottom, beside the last line. */
 .chat[data-skin="nebula"] .chf.tall{border-radius:18px}
 .chat[data-skin="nebula"] .chf{background:rgba(12,20,42,.72);border:1px solid rgba(154,215,255,.22);border-radius:999px;
-  margin:0 12px 6px;padding:6px 6px 6px 8px;backdrop-filter:blur(14px);box-shadow:0 10px 40px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.06)}
+  margin:0 12px 6px;padding:5px 6px;backdrop-filter:blur(14px);box-shadow:0 10px 40px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.06)}
 .chat[data-skin="nebula"] .chf:focus-within{border-color:rgba(154,215,255,.6);box-shadow:0 0 0 3px rgba(110,168,255,.18),0 10px 40px rgba(0,0,0,.35)}
 .chat[data-skin="nebula"] #chatq{background:none;border:0;color:#eef4ff;box-shadow:none}
 .chat[data-skin="nebula"] #chatq::placeholder{color:#8d9dbd}
 .chat[data-skin="nebula"] .chpin{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:50%;color:#cfe0ff}
-.chat[data-skin="nebula"] #chatGo{border-radius:50%;width:36px;height:36px;padding:0;background:linear-gradient(135deg,#6EA8FF,#3b6fe0);color:#fff;border:0;
-  box-shadow:0 6px 18px rgba(110,168,255,.35)}
-.chat[data-skin="nebula"] #chatGo.empty{background:rgba(255,255,255,.08);color:#8d9dbd;box-shadow:none}
-/* the label is hidden and the arrow is the button, so the button has to
-   centre it rather than sit it on a text baseline that is not there */
-.chat[data-skin="nebula"] #chatGo{font-size:0;display:grid;place-items:center;
-  line-height:1;flex:0 0 auto}
-.chat[data-skin="nebula"] #chatGo::after{font-size:17px;margin:0;line-height:1;
-  display:block;transform:translateY(-.5px)}
+/* The send control is part of the composer, not a badge stuck on the end of
+   it: the same height as the box beside it, a rounded square rather than a
+   circle, and a blue that is quiet until you look at it. */
+.chat[data-skin="nebula"] #chatGo{background:linear-gradient(180deg,#5C8EE6,#3F68C9);color:#fff;
+  border:1px solid rgba(150,196,255,.32);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.15),0 2px 8px rgba(6,12,28,.45)}
+.chat[data-skin="nebula"] #chatGo:hover{background:linear-gradient(180deg,#6EA0F4,#4B77DC);
+  border-color:rgba(176,212,255,.5);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.22),0 3px 12px rgba(78,125,225,.32)}
+.chat[data-skin="nebula"] #chatGo.empty{background:rgba(255,255,255,.07);color:#8D9DBD;
+  border-color:rgba(154,215,255,.16);box-shadow:none}
 .chat[data-skin="nebula"] .chhint{color:#6f7f9f}
 .chat[data-skin="nebula"] .chclip .cf{background:rgba(12,20,42,.7);border-color:var(--ch-line);color:#dfe8ff}
 .chat[data-skin="nebula"] .chpill{background:rgba(12,20,42,.9);border-color:var(--ch-line);color:#eef4ff}
-.chat[data-skin="nebula"] .chthink .ln{background-image:linear-gradient(90deg,rgba(255,255,255,.05),rgba(255,255,255,.14),rgba(255,255,255,.05))}
 /* the mark in the header and the hero: the drawing, or your picture */
 .chat .chorb svg{position:absolute;left:-3px;top:-3px;width:calc(100% + 6px);height:calc(100% + 6px)}
 .chat.ownmark .chorb svg{display:none}
@@ -1767,12 +1768,6 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
 
 /* the thinking line, while an endpoint is deciding */
 .chwait{display:flex;align-items:center;gap:8px;color:var(--ch-dim);font-size:11.5px}
-.chwait b{display:flex;gap:4px}
-.chwait b i{width:5px;height:5px;border-radius:50%;background:var(--ch-acc);opacity:.4}
-.chat.fx-typing .chwait b i{animation:chDot 1.1s ease-in-out infinite}
-.chat.fx-typing .chwait b i:nth-child(2){animation-delay:.15s}
-.chat.fx-typing .chwait b i:nth-child(3){animation-delay:.3s}
-@keyframes chDot{0%,100%{opacity:.25;transform:translateY(0)}50%{opacity:1;transform:translateY(-3px)}}
 
 /* ── an email draft ────────────────────────────────────────────────────── */
 .chmail{border:1px solid var(--ch-line);border-radius:var(--r-sm);overflow:hidden;
@@ -2086,43 +2081,48 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
 .chat.fx-reveal .chb.bot > .chacts,.chat.fx-reveal .chb.bot > .chseed,
 .chat.fx-reveal .chb.bot > .chrows{animation:chIn .3s cubic-bezier(.2,.8,.25,1) both;animation-delay:110ms}
 
-/* thinking: the shape of the answer to come */
-.chthink{display:flex;flex-direction:column;gap:9px;padding:2px 0}
-.chthink .ln{height:11px;border-radius:6px;background-size:220% 100%;background-position:120% 0;
-  background-image:linear-gradient(90deg,var(--ch-panel) 0%,
-    color-mix(in srgb,var(--ch-acc) 22%,var(--ch-panel)) 50%,var(--ch-panel) 100%)}
-.chthink .ln:nth-child(2){width:74%}
-.chthink .ln:nth-child(3){width:48%}
-.chat.fx-typing .chthink .ln{animation:chShimmer 1.4s ease-in-out infinite}
-.chat.fx-typing .chthink .ln:nth-child(2){animation-delay:.12s}
-.chat.fx-typing .chthink .ln:nth-child(3){animation-delay:.24s}
-@keyframes chShimmer{from{background-position:120% 0}to{background-position:-120% 0}}
-.chthink .chwait{margin-top:2px}
-.chthink .el{font-family:var(--f-mono);font-size:10px;color:var(--ch-dim);margin-left:auto}
+/* Waiting: the animation that came with the design, at the size of the line
+   it sits on, where the answer is about to start. It is a file - assets/
+   thinking.gif - and nothing here stands in for it: no drawn spinner, no
+   dots. If the file is not on disk the probe in chatArt() never sets the
+   flag, no <img> is written, and the row is the word and the clock alone. */
+.chthink{display:flex;flex-direction:column;padding:2px 0}
+.chgif{width:20px;height:20px;flex:0 0 auto;display:block;object-fit:contain;
+  background:none;border:0;border-radius:0}
+.chthink .el{font-family:var(--f-mono);font-size:10px;color:var(--ch-dim)}
 .chthink .el:empty{display:none}
-.chghost{overflow:hidden;animation:chOut .24s ease-in both;pointer-events:none}
-@keyframes chOut{from{opacity:1;max-height:120px}to{opacity:0;max-height:0;margin-top:-12px;transform:translateY(-6px)}}
+/* the afterimage of the row, gone before the answer has finished arriving */
+.chghost{overflow:hidden;animation:chOut .14s ease-in both;pointer-events:none}
+@keyframes chOut{from{opacity:1;max-height:40px}to{opacity:0;max-height:0;margin-top:-4px}}
 
 /* the composer: one rounded shape, and a send button that knows */
 .chat .chfw{background:transparent;border-top:0;padding:0 12px 12px}
-.chat .chf{padding:5px 5px 5px 8px;gap:4px;border:1px solid var(--ch-line);border-radius:18px;
+.chat .chf{padding:5px 6px;gap:6px;border:1px solid var(--ch-line);border-radius:18px;
   background:var(--ch-panel);align-items:flex-end;
   transition:border-color .18s,box-shadow .18s,background .18s}
 .chat .chf:focus-within{border-color:var(--ch-acc);background:var(--ch-bg);
   box-shadow:0 0 0 4px color-mix(in srgb,var(--ch-acc) 15%,transparent)}
+/* six pixels of padding inside the box and six of gap outside it: twelve
+   clear either side, so a line of text never runs into either button */
 .chat .chf textarea,.chat .chf textarea:focus{border:0;background:transparent;box-shadow:none;
-  padding:8px 6px;font-size:13.5px;line-height:1.5}
+  padding:8px 6px;font-size:13.5px;line-height:1.5;min-height:36px}
 .chat.fx-glow .chf textarea:focus{box-shadow:none}
-.chat .chf .btn.pri{border-radius:999px;padding:0 13px 0 14px;height:34px;display:inline-flex;
-  align-items:center;gap:6px;font-weight:650;
-  transition:transform .16s var(--ease),opacity .16s,background .16s}
-.chat .chf .btn.pri::after{content:"\2191";font-size:13px;font-weight:700}
-.chat .chf .btn.pri.empty{opacity:.42;transform:scale(.96)}
-.chat.busy .chf .btn.pri{pointer-events:none}
-.chat.busy .chf .btn.pri::after{content:"";width:11px;height:11px;border:2px solid #fff;
-  border-right-color:transparent;border-radius:50%;animation:chSpin .8s linear infinite}
-@keyframes chSpin{to{transform:rotate(360deg)}}
-.chat .chpin{width:32px;height:32px;border-radius:999px;align-self:flex-end;margin-bottom:1px}
+/* The label is hidden and the arrow is the whole button, so the button has
+   to centre it rather than sit it on a text baseline that is not there. */
+.chat .chf .btn.pri{width:36px;height:36px;padding:0;border-radius:11px;font-size:0;
+  display:grid;place-items:center;line-height:1;flex:0 0 auto;
+  transition:transform .12s var(--ease),opacity .16s,filter .16s,background .16s,
+             box-shadow .16s,border-color .16s}
+.chat .chf .btn.pri::after{content:"\2191";font-size:15px;font-weight:700;line-height:1;
+  display:block;margin:0}
+.chat .chf .btn.pri:active{transform:scale(.94)}
+/* nothing to send, or an answer already on its way: dark, flat, and inert.
+   There is no spinner in here - the waiting animation is up in the thread,
+   and two of them would be one too many. */
+.chat .chf .btn.pri.empty{opacity:.55}
+.chat.busy .chf .btn.pri{pointer-events:none;opacity:.45;filter:saturate(.35);transform:none;
+  box-shadow:none}
+.chat .chpin{width:34px;height:34px;border-radius:999px;align-self:flex-end;margin-bottom:1px}
 .chhint{font-size:10px;color:var(--ch-dim);padding:6px 12px 0;opacity:0;max-height:0;overflow:hidden;
   transition:opacity .2s,max-height .2s}
 .chfw:focus-within .chhint{opacity:1;max-height:20px}
@@ -4840,7 +4840,7 @@ const STATUSES = [
    the status bar, and clicking it copies a line you can paste into a bug
    report — build date and flow protocol included, because those are the two
    things that actually differ between copies. */
-const APP_VERSION = "3.8.3";
+const APP_VERSION = "3.9.0";
 const APP_BUILT = "2026-09-13";
 function buildLine(){
   return "Dossier v" + APP_VERSION + " \u00b7 built " + APP_BUILT +
@@ -7416,7 +7416,7 @@ function dr(label, sub, list){
    Conversations are kept, one per subject, in the workspace beside the
    records. Each carries its own running context, so "what is left on it" in
    one thread cannot pick up the record you were discussing in another. */
-const CHAT = { acts:{}, code:{}, files:[], n:0, last:"" };
+const CHAT = { acts:{}, code:{}, files:[], n:0, last:"", gif:"" };
 /* ── how big a question is allowed to get ──────────────────────────────────
    Base64 is a third bigger than the file it encodes, so a 4 MB screenshot
    arrives at the endpoint as 5.2 MB of JSON, and five of them as 27 MB. A
@@ -7705,6 +7705,7 @@ const CHAT_ORB_SVG =
     '<path d="M78 74 C78.6 77 79 77.4 82 78 C79 78.6 78.6 79 78 82 C77.4 79 77 78.6 74 78 C77 77.4 77.4 77 78 74Z" fill="#dbeeff" opacity=".8"/>' +
   '</svg>';
 /* your own pictures, if they are beside the app: they replace the drawn ones */
+const CHAT_GIF = "assets/thinking.gif";
 function chatArt(){
   const chat = $("chat"); if (!chat) return;
   [["assets/assistant-bg.jpg", "--ch-photo"], ["assets/assistant-logo.png", "--ch-mark"]].forEach(([src, v]) => {
@@ -7712,6 +7713,13 @@ function chatArt(){
     im.onload = () => { chat.style.setProperty(v, "url(\"" + src + "\")"); chat.classList.add(v === "--ch-mark" ? "ownmark" : "ownbg"); };
     im.src = src;
   });
+  /* The waiting animation is a file, dropped into assets/ beside the other
+     two. It is asked for once, here, and only written into the thread if it
+     answered - so the row can never show a broken picture, and dropping the
+     file in later is the whole of the installation. */
+  const gif = new Image();
+  gif.onload = () => { CHAT.gif = CHAT_GIF; chat.classList.add("owngif"); };
+  gif.src = CHAT_GIF;
 }
 const CHAT_SKINS = [
   { id:"nebula", name:"Nebula", a:"#6EA8FF", b:"#9AD7FF" },
@@ -8434,16 +8442,20 @@ function chatNear(){
   return !l || (l.scrollHeight - l.scrollTop - l.clientHeight) < 140;
 }
 /* ── while the endpoint is deciding ─────────────────────────────────────
-   Three dots said "something is happening". A skeleton of the answer says
-   "an answer is coming, about here, about this size", which is what a
-   person waiting actually wants to know — and after two seconds it starts
-   counting, because silence past that point reads as a hang. */
+   One line, where the answer is about to start: the animation, what it is
+   doing, and — after two seconds, because silence past that point reads as
+   a hang — how long it has been doing it. */
 function chatThinking(log){
   const w = document.createElement("div");
   w.className = "chb bot thinking";
-  w.innerHTML = '<div class="chthink"><div class="ln"></div><div class="ln"></div><div class="ln"></div>' +
-    '<div class="chwait"><b><i></i><i></i><i></i></b><span class="tx">' + esc(L("FlowAsking")) +
+  w.innerHTML = '<div class="chthink"><div class="chwait">' +
+    (CHAT.gif ? '<img class="chgif" alt="" src="' + esc(CHAT.gif) + '">' : "") +
+    '<span class="tx">' + esc(L("FlowAsking")) +
     '</span><span class="el"></span></div></div>';
+  /* it loaded once already; if it ever stops loading the row loses it
+     rather than showing the browser's broken-picture mark */
+  const im = w.querySelector(".chgif");
+  if (im) im.onerror = () => { CHAT.gif = ""; im.remove(); };
   log.appendChild(w);
   $("chat").classList.add("busy");
   chatState(L("ChatThinking"), true);
@@ -8457,9 +8469,9 @@ function chatThinking(log){
   chatScroll();
   return w;
 }
-/* The skeleton goes the moment the answer is in, so nothing that counts
-   messages ever sees both. What fades is a ghost of it — not a message,
-   just its afterimage. */
+/* The row goes the moment the answer is in, so nothing that counts messages
+   ever sees both, and the answer never lands under a leftover animation.
+   What fades is a ghost of it — not a message, just its afterimage. */
 function chatThought(w, err){
   clearInterval(w._tick);
   const ms = Date.now() - (w._t0 || Date.now());
@@ -8468,7 +8480,7 @@ function chatThought(w, err){
   ghost.className = "chghost";
   ghost.innerHTML = w.innerHTML;
   w.replaceWith(ghost);
-  setTimeout(() => ghost.remove(), 240);
+  setTimeout(() => ghost.remove(), 140);
   chatState(err ? L("ChatSub") : L("ChatAnswered", { s:(ms / 1000).toFixed(1) }), false);
   if (!err) setTimeout(() => chatState(L("ChatSub"), false), 6000);
 }
@@ -8964,6 +8976,12 @@ function chatBot(r, sourceText){
 function chatAsk(text){
   const q = String(text || "").trim();
   if (!q) return;
+  /* While an answer is on its way the composer is inert: Enter pressed twice
+     in a row, or a seed button clicked while waiting, does not put a second
+     request on an endpoint that is already working on the first. Nothing
+     here cancels a request — there is no way to — so the only honest thing
+     to do with the second one is not to make it. */
+  if ($("chat").classList.contains("busy")) return;
   if (CHAT.files.some(f => f.reading)) return chatReadsDone().then(() => chatAsk(q));
   CHAT.last = q;
   const c = chatThread() || chatNew(true);

@@ -124,6 +124,8 @@ That is the entire setup. You should immediately see:
 | `scripts/queue/` | — | required for the runner | The mailbox between Dossier and the runner. |
 | `backups/` | — | auto | One snapshot per day, 30 kept. |
 | `favicon.ico`, `logo.png` | — | optional | Your own branding; both fall back to a built-in seal if missing. |
+| `assets/assistant-logo.png`, `assets/assistant-bg.jpg` | — | optional | The assistant's own mark and the picture behind its panel. Each is asked for once when the panel opens and used only if it answers. |
+| `assets/thinking.gif` | — | optional | The animation shown while an answer is on its way. Drop the file in and it appears; leave it out and the waiting line is the word and the clock alone. Nothing is drawn in its place. |
 | `.gitattributes` | 28 B | — | `scripts/*.bat text eol=crlf` — a `.bat` with LF line endings breaks `cmd`'s label parsing. |
 
 Everything is a classic script or plain file. There is **no build step, no
@@ -1621,11 +1623,11 @@ drive the real files in a real browser (Playwright + Chromium), because the
 things that break here are things a unit test cannot see: a stale iframe cache,
 a CSP refusal, a file one folder away from where a manifest says.
 
-The twenty-eight exercised for the current release — `teach`, `talk2`, `pick`,
+The twenty-nine exercised for the current release — `teach`, `talk2`, `pick`,
 `flowval`, `flowe2e`, `flowui`, `flowmore`, `chatui`, `memui`, `probe`,
 `shrink`, `chatfx`, `settings`, `mend`, `runbook`, `ver`, `analyse`,
 `incident`, `quiet`, `studio`, `shell`, `chatv3`, `pdftext`, `pdfattach`,
-`ocrattach`, `anybrowser`, `guide`, `prose` — report **1,095 passing assertions and no failures**, covering the local
+`ocrattach`, `anybrowser`, `guide`, `prose`, `compose` — report **1,136 passing assertions and no failures**, covering the local
 assistant, teaching, selectors, the reply validator, the whole network path in
 a real browser against an endpoint that misbehaves the way real ones do, the
 Setup panel, all 57 actions, the docked layout down to where each masthead tab
@@ -1646,7 +1648,10 @@ the browser's store across a reload — an answer laid out into headings,
 lists, tables and links with anything an endpoint sends that looks like a
 tag left inert — the assistant as a guide (the hero on an
 empty thread, a question's answers as chips, the runbook folded under the
-answer, the footer on the bottom edge) — and, counted against a server that
+answer, the footer on the bottom edge) — the composer down to the four states
+of its send control, that a second question cannot be put on an endpoint
+already working on the first, and that the waiting animation is the file in
+`assets/` or nothing at all — and, counted against a server that
 records every request, exactly how many times the endpoint is called and how
 large each call is.
 

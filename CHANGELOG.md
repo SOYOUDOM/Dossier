@@ -6,6 +6,45 @@ holds — which is what to paste into a bug report.
 
 ---
 
+## 3.9.0 — 2026-09-15
+
+**The composer, and what it does while it waits.**
+
+- **The send control is part of the composer now, not a badge stuck on the
+  end of it.** 36 by 36 — the height of the box beside it — a rounded square
+  rather than an oversized circle, one small arrow centred in it, and a blue
+  that is restrained rather than lit up. A hairline border and a single
+  inside highlight give it an edge; the glow it used to carry is gone
+- **Four states, and you can tell them apart.** Quiet with nothing to send,
+  awake with something, brighter under the pointer, compressed when pressed,
+  and dark, desaturated and inert while an answer is on its way
+- **No spinner inside the button.** There is already something on screen
+  saying an answer is coming; two of them was one too many
+- **One question at a time.** Pressing Enter twice, or clicking send while a
+  request is already out, used to put a second question on an endpoint still
+  working on the first. It does not any more. Nothing here cancels a request
+  — there is no way to — so the second one is simply not made, and what you
+  typed meanwhile stays in the box
+- Six pixels of padding inside the box and six of gap outside it: twelve
+  clear either side, so a line of text never runs into the clip or the
+  arrow. On one line the box and the button share a centre; past one line
+  the button stays with the last of the text
+
+**The waiting animation is a file, not a drawing.**
+
+- The three shimmering lines and the three bouncing dots are gone. In their
+  place: `assets/thinking.gif`, drawn at 20px with its transparency kept,
+  beside the word and the clock, at the left edge where the answer itself
+  will start. No bubble around it
+- **It is asked for once, when the panel opens, the same way the assistant's
+  mark and its background are.** If it answers, the row carries it. If it is
+  not there, no `<img>` is written and nothing is drawn in its place — no
+  spinner, no dots, no substitute loader. Drop the file into `assets/` and
+  it appears; there is no code to change
+- The afterimage of the row now fades in 140ms rather than 240, and the row
+  itself goes the instant the answer is in, so the two are never on screen
+  together and the answer does not land under a leftover animation
+
 ## 3.8.3 — 2026-09-15
 
 **The composer stops flickering, and the send arrow is centred.**
