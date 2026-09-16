@@ -1,14 +1,14 @@
 {
   "dossier": 1,
   "protocol": "1.1",
-  "askedAt": "2026-09-12T15:27:49.146Z",
-  "today": "2026-09-12",
-  "weekday": "Saturday",
+  "askedAt": "2026-09-16T04:11:17.100Z",
+  "today": "2026-09-16",
+  "weekday": "Wednesday",
   "calendar": {
-    "tomorrow": "2026-09-13",
-    "nextWorkingDay": "2026-09-14",
-    "todayIsOffDay": true,
-    "thisMonday": "2026-09-07",
+    "tomorrow": "2026-09-17",
+    "nextWorkingDay": "2026-09-17",
+    "todayIsOffDay": false,
+    "thisMonday": "2026-09-14",
     "weekendDays": [
       "Saturday",
       "Sunday"
@@ -18,6 +18,8 @@
   "message": "COI not generating for policy A018346A10, I clicked generate and it went through",
   "attachments": [],
   "attachmentsText": "None.",
+  "picture": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADklEQVR4AWL6////fwAAAAD//w7I1cwAAAAGSURBVAMACgUD/9k79a8AAAAASUVORK5CYII=",
+  "pictureName": "",
   "conversation": [],
   "owner": "",
   "workspace": {
@@ -146,7 +148,7 @@
         ],
         "autoRun": true,
         "raisesRecord": true,
-        "nextDue": "2026-09-12",
+        "nextDue": "2026-09-16",
         "lastRaised": "2026-08-30"
       },
       {
@@ -309,11 +311,17 @@
         "updated": "2026-03-14"
       }
     ],
+    "memoryIndex": [],
     "memoryTotal": 1,
     "runbooks": [
       {
         "title": "COI letter does not generate, but the API returned success",
         "system": "Imaging",
+        "severity": "P3",
+        "steps": 6,
+        "status": "draft",
+        "verified": "",
+        "stale": true,
         "triggers": [
           "coi not generated",
           "coi letter not generated",
@@ -322,16 +330,16 @@
           "clicked generate and nothing happened",
           "coi regenerate no output",
           "letter did not come out"
-        ],
-        "severity": "P3",
-        "steps": 6,
-        "status": "draft",
-        "verified": "",
-        "stale": true
+        ]
       },
       {
         "title": "Payment not flowing to IL enquiry",
         "system": "Payment",
+        "severity": "P2",
+        "steps": 6,
+        "status": "draft",
+        "verified": "",
+        "stale": true,
         "triggers": [
           "payment not flow to il",
           "payment not flowing to il enquiry",
@@ -339,28 +347,23 @@
           "paid but not reflected",
           "premium paid not updated",
           "receipt not in il enquiry"
-        ],
-        "severity": "P2",
-        "steps": 6,
-        "status": "draft",
-        "verified": "",
-        "stale": true
+        ]
       },
       {
         "title": "User asks for a report that has not refreshed",
         "system": "Reporting",
+        "severity": "P3",
+        "steps": 5,
+        "status": "draft",
+        "verified": "",
+        "stale": true,
         "triggers": [
           "report is empty",
           "report not updated",
           "yesterday data missing in report",
           "dashboard showing old numbers",
           "report still showing last week"
-        ],
-        "severity": "P3",
-        "steps": 5,
-        "status": "draft",
-        "verified": "",
-        "stale": true
+        ]
       }
     ],
     "runbookTotal": 3,
@@ -408,10 +411,9 @@
       },
       {
         "system": "Payment",
+        "owner": "",
         "facts": "Takes premium payments from the gateway and posts them to IL, where they become visible in enquiry.",
-        "quirks": "There are two hops, and they fail differently. Gateway → staging is where payments go missing entirely. Staging → IL is where they arrive but do not post, usually because the policy is in a state that will not accept a payment or the amount does not match what was expected.\n\nAlways establish which hop broke before escalating. Escalating to the wrong team costs a day.",
-        "tables": "<IL_PAYMENT_STAGING> arrived, not yet posted\n<IL_RECEIPT>         posted\n\nReplace these with your real names.",
-        "owner": ""
+        "summary": true
       }
     ],
     "counts": {
@@ -424,7 +426,57 @@
     },
     "recordsSent": 5,
     "recordsTotal": 7,
+    "recordsMatched": 1,
+    "recordsDigest": {
+      "inScope": 5,
+      "sent": 5,
+      "notSent": 0,
+      "byStatus": {
+        "open": 3,
+        "blocked": 1,
+        "processing": 1
+      },
+      "bySystem": {
+        "Infra / IIS": 2,
+        "E-Payment": 1,
+        "Reports": 1,
+        "Imaging": 1
+      },
+      "byPriority": {
+        "P3": 3,
+        "P2": 1,
+        "P1": 1
+      },
+      "overdue": 5,
+      "dueToday": 0,
+      "dueThisWeek": 0,
+      "undated": 0,
+      "waiting": 1,
+      "blocked": 1,
+      "longestWaiting": [
+        {
+          "code": "D-0006",
+          "title": "KHQR callback signature mismatch on 2 transactions",
+          "waitOn": "Vendor",
+          "since": "2026-08-25"
+        }
+      ]
+    },
     "records": [
+      {
+        "code": "D-0005",
+        "title": "Add policy status column to monthly renewal report",
+        "status": "open",
+        "priority": "P3",
+        "system": "Reports",
+        "type": "Service request",
+        "ticket": "REQ0004411",
+        "requester": "Sok Dara",
+        "due": "2026-09-01",
+        "created": "2026-08-27",
+        "estimate": 180,
+        "logLines": 1
+      },
       {
         "code": "D-0007",
         "title": "Morning tour",
@@ -472,20 +524,6 @@
         "due": "2026-08-30",
         "dueTime": "00:37",
         "created": "2026-08-27",
-        "logLines": 1
-      },
-      {
-        "code": "D-0005",
-        "title": "Add policy status column to monthly renewal report",
-        "status": "open",
-        "priority": "P3",
-        "system": "Reports",
-        "type": "Service request",
-        "ticket": "REQ0004411",
-        "requester": "Sok Dara",
-        "due": "2026-09-01",
-        "created": "2026-08-27",
-        "estimate": 180,
         "logLines": 1
       },
       {
@@ -608,6 +646,29 @@
       ],
       "args": {
         "record": "ref"
+      }
+    },
+    {
+      "do": "needRecords",
+      "write": false,
+      "what": "Ask for records you were not sent. workspace.records holds the ones this question matched, not the whole workspace, and workspace.recordsDigest counts what is missing. If the digest shows the answer is in records you cannot see, return THIS AND NOTHING ELSE — no say, no other action — and the same question is asked again with what the filter found. It is allowed once per question, so make the filter wide enough to finish the job.",
+      "needs": [],
+      "args": {
+        "text": "string",
+        "status": "open | processing | blocked | done | cancelled | live | any",
+        "system": "string",
+        "person": "string",
+        "party": "string",
+        "type": "string",
+        "tag": "string",
+        "priority": "P1 | P2 | P3 | P4",
+        "dueBefore": "YYYY-MM-DD",
+        "dueAfter": "YYYY-MM-DD",
+        "createdAfter": "YYYY-MM-DD",
+        "overdue": "bool",
+        "undated": "bool",
+        "waiting": "bool",
+        "limit": "int"
       }
     },
     {

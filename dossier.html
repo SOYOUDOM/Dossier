@@ -4403,6 +4403,8 @@ const STRINGS = {
   FlowDeep: "Include notes and work logs",
   FlowDeepHint: "Off by default. This is the most detailed and most sensitive part of a record.",
   FlowCap: "Most records to send",
+  FlowCapHint: "The ones the question is about, not the newest ones — they are ranked here, on this PC, before anything is sent. Everything else still travels as counts, so “how many are overdue” is answered from the whole workspace. Raising this makes every question slower.",
+  FlowSecondLook: "asked again with the records it wanted",
   FlowTimeout: "Give up after (seconds)",
   FlowFallback: "If the flow fails, answer locally instead",
   FlowTest: "Test the connection",
@@ -4840,7 +4842,7 @@ const STATUSES = [
    the status bar, and clicking it copies a line you can paste into a bug
    report — build date and flow protocol included, because those are the two
    things that actually differ between copies. */
-const APP_VERSION = "3.9.1";
+const APP_VERSION = "3.10.0";
 const APP_BUILT = "2026-09-13";
 function buildLine(){
   return "Dossier v" + APP_VERSION + " \u00b7 built " + APP_BUILT +
@@ -9049,10 +9051,17 @@ const FLOW = { probe:null, testing:false, last:null };
 function flowCfg(){
   const st = S.settings;
   if (!st.flow || typeof st.flow !== "object")
-    st.flow = { on:false, url:"", scope:"live", deep:false, cap:400,
+    st.flow = { on:false, url:"", scope:"live", deep:false, cap:FLOW_CAP,
                 timeout:30, fallback:true };
+  /* Four hundred was the right number when the four hundred were the newest
+     records and nothing knew which of them mattered. They are ranked against
+     the question now, so sixty of them carry more of the answer than four
+     hundred did and the question is a quarter of the size. A number anybody
+     chose by hand is theirs and is left alone. */
+  if (!st.flow.capPicked && +st.flow.cap === 400){ st.flow.cap = FLOW_CAP; }
   return st.flow;
 }
+const FLOW_CAP = 60;
 function flowHere(){ return typeof window !== "undefined" && !!window.DossierFlow; }
 function flowOn(){
   const c = flowCfg();
@@ -9076,9 +9085,13 @@ function flowOrigin(){
 function flowContext(q){
   const st = S.settings;
   const c = chatThread();
+  /* Six turns back, and a turn is capped: what the last answer SAID matters,
+     the whole of a two-thousand-word answer does not, and the history is
+     otherwise the one part of a question that grows all afternoon. */
   const msgs = ((c && c.msgs) || []).slice(-6).map(m => ({
     who: m.who === "you" ? "person" : "dossier",
-    text: m.who === "you" ? String(m.text || "") : String((m.reply && m.reply.say) || "")
+    text: (m.who === "you" ? String(m.text || "")
+                           : String((m.reply && m.reply.say) || "")).slice(0, 1200)
   })).filter(m => m.text);
   const live = S.tasks.filter(t => LIVE.indexOf(t.status) >= 0);
   const k = today();
@@ -9109,14 +9122,15 @@ function flowContext(q){
        it keeps the payload honest about its size */
     holidays: hols.map(h => ({ d:h.d, n:h.n, k:h.k })),
     holidaysTotal: holidays().length,
-    memory: memoryForFlow(),
+    memory: memoryForFlow(q),
+    memoryIndex: memoryIndexForFlow(q),
     memoryTotal: memoryStore().length,
-    runbooks: runbooksForFlow(),
+    runbooks: runbooksForFlow(q),
     runbookTotal: runbookStore().length,
     runbooksMatched: runbooksMatchedForFlow(q),
     mentioned: rbIdents(q),
     incidents: incidentsForFlow(30),
-    profiles: profilesForFlow(),
+    profiles: profilesForFlow(q),
     settable: flowSettable(),
     attachments: (CHAT.files || []).filter(f => !f.reading).map(f => ({
       name:f.name, type:f.type, size:f.size, data:f.data || "",
@@ -9204,8 +9218,49 @@ async function flowAsk(q, thread){
                      chips:[{ label:L("FlowTest"), act:{ kind:"panel", panel:"setup" } }] }, q);
   }
 
+  /* ── the second look ───────────────────────────────────────────────────
+     workspace.records is a selection now, so there is one question it can
+     miss: about records nobody named and no word in the sentence reaches.
+     For that, and only that, the endpoint may answer with needRecords and
+     nothing else — a filter instead of an answer. The filter runs HERE, over
+     every record on the PC, and the same question goes again with what it
+     found.
+
+     Once. A second needRecords is ignored: a conversation that fetches its
+     way through a workspace one page at a time is the slow thing this whole
+     change exists to remove, and two round trips is already the most a
+     question should ever cost. */
+  const more = flowNeeds(out);
+  if (more){
+    const rows = flowFind(more.args || {});
+    const wait2 = chatThinking(log);
+    let out2 = null, err2 = null;
+    try {
+      out2 = await DossierFlow.ask(q, Object.assign(flowContext(q), {
+        forceRecords: rows,
+        followUp: { of:q, wanted:more.args || {}, gave:rows.length }
+      }), cfg);
+    } catch(e){ err2 = e; }
+    chatThought(wait2, err2);
+    if (!err2 && out2){
+      out = out2;
+      out.note = (out.note ? out.note + "\n" : "") +
+                 L("FlowSecondLook") + " (" + rows.length + ")";
+    }
+  }
+
   chatBot(flowReply(out, q), q);
   chatSide();
+}
+
+/* One needRecords and nothing else is a request for more records. Anything
+   else — a needRecords alongside an answer, or two of them — is treated as
+   the answer it came with, because the endpoint has already said something
+   and asking again would throw it away. */
+function flowNeeds(out){
+  if (!out || !Array.isArray(out.actions) || out.actions.length !== 1) return null;
+  const a = out.actions[0];
+  return (a && a.do === "needRecords") ? a : null;
 }
 
 /* One validated reply, turned into the same shape every other answer uses —
@@ -9436,6 +9491,10 @@ function flowRun(a, quiet){
     case "panel": closeChat(); openModal(g.panel); return null;
     case "report": closeChat(); openModal("report"); return null;
 
+    /* handled in flowAsk, before anything is executed: it is a request for a
+       bigger question, not something to do. One that arrives beside an answer
+       reaches here, and saying so is better than refusing it by name. */
+    case "needRecords": return { say:"" };
     case "getRecord": {
       const t = need(g.record); if (!t) return null;
       const L2 = [];
@@ -10600,16 +10659,32 @@ function rbUnset(rb){
 /* ── what the endpoint is told about the library ────────────────────────
    The index, and only the index. See the note in flow.js about why the
    bodies stay here until something asks for one by name. */
-function runbooksForFlow(){
-  return runbookStore().slice(0, 200).map(r => ({
-    title: r.title, system: r.system,
-    triggers: (r.triggers || []).slice(0, 12),
-    severity: r.severity || "P3",
-    steps: (r.steps || []).length,
-    status: r.status || "draft",
-    verified: String(r.verified || "").slice(0, 10),
-    stale: rbStale(r) || undefined
-  }));
+function runbooksForFlow(q){
+  const all = runbookStore();
+  /* The index is what says a procedure EXISTS; the triggers are what let the
+     endpoint find one the local matcher missed. Triggers are also most of the
+     weight of it, so they ride only on the twenty the question came nearest
+     to. A library of two hundred used to put forty kilobytes on every
+     question, most of it phrases about something nobody asked. */
+  const rank = {};
+  if (q) rbMatch(q, "", 500).forEach(h => { rank[h.rb.id || h.rb.title] = h.score; });
+  const sorted = all.slice().sort((a, b) =>
+    (rank[b.id || b.title] || 0) - (rank[a.id || a.title] || 0) ||
+    String(a.title || "").localeCompare(String(b.title || "")));
+  return sorted.slice(0, 200).map((r, i) => {
+    /* The far end of a long library is there to answer "is there a procedure
+       for this" and nothing else, so it goes as the two things that answer
+       that. readRunbook fetches any of them whole by name. */
+    if (i >= 60) return { title: r.title, system: r.system };
+    const o = { title: r.title, system: r.system,
+      severity: r.severity || "P3",
+      steps: (r.steps || []).length,
+      status: r.status || "draft",
+      verified: String(r.verified || "").slice(0, 10),
+      stale: rbStale(r) || undefined };
+    if (i < 20) o.triggers = (r.triggers || []).slice(0, 12);
+    return o;
+  });
 }
 /* The two or three that match what was actually asked, IN FULL — steps,
    checks, escalation. This is the block the endpoint answers from. Matching
@@ -10634,23 +10709,80 @@ function runbooksMatchedForFlow(q){
 /* Profiles do travel whole. They are few, they are meant to be about a
    page, and they are the only thing that helps with a symptom that matches
    nothing. The cap is a backstop against one that grew into a manual. */
-function profilesForFlow(){
-  return profileStore().slice(0, 14).map(p => ({
-    system: p.system,
-    facts: String(p.facts || "").slice(0, 2500),
-    quirks: String(p.quirks || "").slice(0, 2500),
-    tables: String(p.tables || "").slice(0, 1500),
-    owner: p.owner || ""
-  }));
+function profilesForFlow(q){
+  const low = " " + String(q || "").toLowerCase() + " ";
+  /* the systems this question is about: the ones it names, and the ones the
+     runbooks it matched belong to */
+  const hot = {};
+  const all = profileStore().slice(0, 14);
+  all.forEach(p => { const sys = String(p.system || "").toLowerCase();
+                     if (sys && low.indexOf(sys) >= 0) hot[sys] = 1; });
+  /* nothing named, so the best guess is whichever runbook the question came
+     nearest to — one of them, not the three */
+  if (q && !Object.keys(hot).length){
+    const top = runbooksMatchedForFlow(q)[0];
+    if (top && top.system) hot[String(top.system).toLowerCase()] = 1;
+  }
+  let full = 0;
+  return all.map(p => {
+    const sys = String(p.system || "").toLowerCase();
+    const near = !q || (!!hot[sys] && ++full <= 3);
+    /* A profile is about a page, and fourteen pages of systems nobody asked
+       about is most of a question spent on nothing. The one in play goes
+       whole; the others go as what they are, so the endpoint still knows
+       they exist and can ask with readProfile. */
+    return near
+      ? { system: p.system,
+          facts: String(p.facts || "").slice(0, 2500),
+          quirks: String(p.quirks || "").slice(0, 2500),
+          tables: String(p.tables || "").slice(0, 1500),
+          owner: p.owner || "" }
+      : { system: p.system, owner: p.owner || "",
+          facts: String(p.facts || "").slice(0, 300),
+          summary: true };
+  });
 }
 
-function memoryForFlow(){
-  const all = memoryStore();
-  return all.slice(0, 60).map(n => ({
-    title: n.title, body: String(n.body || "").slice(0, 6000),
+/* Every note travelled with every question, whole, up to sixty of them.
+   That is fine for the first ten and it is the reason the app got slower the
+   more it was taught — which is the worst possible thing to punish. So the
+   notes are ranked against the question the same way the records are: the
+   ten it reaches go in full, and the rest go as their titles, which is
+   enough for the endpoint to know what is known and to ask for one by name
+   with recall. */
+function memScore(n, q){
+  if (!q) return 0;
+  const low = " " + String(q).toLowerCase() + " ";
+  const qw = rbWords(q).map(rbStem);
+  if (!qw.length) return 0;
+  const hay = (String(n.title || "") + " " + (n.tags || []).join(" ") + " " +
+               String(n.system || "") + " " + String(n.body || "")).toLowerCase();
+  let s = 0;
+  const tw = rbWords(n.title).map(rbStem);
+  s += tw.filter(w => qw.indexOf(w) >= 0).length * 12;
+  s += qw.filter(w => hay.indexOf(w) >= 0).length * 5;
+  (n.tags || []).forEach(t => { if (low.indexOf(String(t).toLowerCase()) >= 0) s += 10; });
+  if (n.system && low.indexOf(String(n.system).toLowerCase()) >= 0) s += 8;
+  return s;
+}
+function memoryForFlow(q){
+  const all = memoryStore().slice();
+  const sc = {};
+  all.forEach(n => { sc[n.id || n.title] = memScore(n, q); });
+  all.sort((a, b) => (sc[b.id || b.title] - sc[a.id || a.title]) ||
+                     String(b.updated || "").localeCompare(String(a.updated || "")));
+  return all.slice(0, 10).map(n => ({
+    title: n.title, body: String(n.body || "").slice(0, 1500),
     tags: (n.tags || []).slice(), system: n.system || "",
     updated: String(n.updated || "").slice(0, 10)
   }));
+}
+/* what else has been taught, by name only */
+function memoryIndexForFlow(q){
+  const sent = {};
+  memoryForFlow(q).forEach(n => { sent[n.title] = 1; });
+  return memoryStore().filter(n => !sent[n.title]).slice(0, 200)
+    .map(n => ({ title:n.title, tags:(n.tags || []).slice(0, 6), system:n.system || "" }));
 }
 
 /* ── what an endpoint is allowed to change about the application ─────────
@@ -11158,7 +11290,8 @@ function renderFlow(){
 
   h += '<div class="fr"><label>' + esc(L("FlowCap")) + "</label>" +
        '<input class="in" id="flCap" type="number" min="0" max="2000" value="' +
-       (+c.cap || 400) + '"></div>';
+       (+c.cap || FLOW_CAP) + '"></div>';
+  h += '<p class="hint2">' + esc(L("FlowCapHint")) + "</p>";
   h += '<div class="fr"><label>' + esc(L("FlowTimeout")) + "</label>" +
        '<input class="in" id="flTmo" type="number" min="5" max="120" value="' +
        (+c.timeout || 30) + '"></div>';
@@ -11185,7 +11318,8 @@ function renderFlow(){
   on("flScope", e => { c.scope = e.target.value; save(); }, "onchange");
   on("flDeep", e => { c.deep = e.target.value === "1"; save(); }, "onchange");
   on("flFb", e => { c.fallback = e.target.value === "1"; save(); }, "onchange");
-  on("flCap", e => { c.cap = Math.max(0, Math.min(2000, +e.target.value || 0)); touch(); }, "onchange");
+  on("flCap", e => { c.cap = Math.max(0, Math.min(2000, +e.target.value || 0));
+                     c.capPicked = true; touch(); }, "onchange");
   on("flTmo", e => { c.timeout = Math.max(5, Math.min(120, +e.target.value || 30)); touch(); }, "onchange");
   on("flUrl", e => { c.url = String(e.target.value || "").trim(); save(); }, "onchange");
   on("flTest", flowTest);

@@ -581,10 +581,33 @@ RULES, in order of importance:
    nothing is close, use "ask".
 
 3. Never invent a record code. You may only reference a code that appears in
-   workspace.records. If they mean a record you cannot see — because the
-   records were capped, or the scope sends none — return a "find" action to
-   locate it, or "ask" which one they mean. Guessing D-0042 and being wrong
-   is worse than asking.
+   workspace.records.
+
+   workspace.records is THE PART OF THE WORKSPACE THIS QUESTION MATCHED, not
+   all of it. The app ranked every record against what was asked and sent the
+   best ones. workspace.recordsSent of workspace.recordsTotal says how many;
+   workspace.recordsMatched says how many the question reached.
+
+   COUNT FROM workspace.recordsDigest, NEVER FROM workspace.records. The
+   digest is totalled over every record in scope — by status, by system, by
+   priority, plus overdue, dueToday, dueThisWeek, undated, waiting, blocked,
+   and what has been waiting longest. Counting the rows you were sent gives a
+   number that is wrong and looks right.
+
+   If the digest shows the answer is in records you were not sent, return
+   needRecords — that action ALONE, with no "say" and no other action — and
+   the same question comes back with those records in it. You get one. Make
+   the filter wide enough to finish the job. If you can answer from what you
+   have, answer; a second round trip costs the person another wait.
+
+   workspace.memory holds the notes this question reached, in full;
+   workspace.memoryIndex lists the rest by title, and recall fetches one by
+   name. The runbook library is ordered the same way, and
+   workspace.runbooksMatched is still the block to answer from.
+
+   If they mean a record you cannot see and no filter would reach it, return
+   a "find" action to locate it, or "ask" which one they mean. Guessing
+   D-0042 and being wrong is worse than asking.
 
 4. Resolve every date against today ({today}) and write it as YYYY-MM-DD.
    "tomorrow" is the day after today. "next Friday" is the Friday of next
@@ -1577,19 +1600,33 @@ something it needs, change **What to send** rather than editing the prompt.
 
 ## 9. What it costs, and what to watch
 
-Each question sends the whole workspace slice — around **8 KB** for a small
-one, more as records pile up. That is one AI call per question, and the
-records make up most of the tokens.
+One AI call per question. What it costs is how much that question carries,
+because the model reads all of it before it starts answering.
+
+Measured, with a library and notes in proportion:
+
+| workspace | before 3.10 | now |
+|---|---|---|
+| 100 records | 50 KB | **41 KB** |
+| 1,000 records | 164 KB | **52 KB** |
+| 5,000 records | 185 KB | **61 KB** |
+
+It used to grow with everything you did — more records, more notes, more
+runbooks, all of it travelling on every question. It is ranked against the
+question on the PC now and only the part that matched travels. **flow/SPEED.md
+is the whole of that change**, including the one prompt edit it asks for.
 
 Three dials, all in the Setup panel:
 
 - **What to send** — *Names only* sends no records at all. It is enough to
   raise work, run scripts and create routines, and it is dramatically cheaper.
   Use it if most of what you ask is "create…" rather than "what is…".
-- **Most records to send** — the cap. Live work is kept first when it has to
-  cut, and the payload always says `recordsSent` of `recordsTotal` so the
-  model can say *"of the 40 I can see"* rather than pretending to have counted
-  everything.
+- **Most records to send** — 60 by default, and it now means *the sixty the
+  question is about*, not the sixty most recent. The payload says `recordsSent`
+  of `recordsTotal`, and `recordsDigest` counts everything in scope, so the
+  model can say *"1 of your 1,204 is overdue"* without having been sent 1,204
+  of anything. Raising it makes every question slower and adds little: what
+  comes after the first sixty is what the question did not reach.
 - **Include notes and work logs** — off by default. It is the most useful
   context and the most sensitive; turn it on deliberately.
 

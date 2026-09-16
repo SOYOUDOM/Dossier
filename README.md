@@ -112,6 +112,7 @@ That is the entire setup. You should immediately see:
 | `flow/relay.html` | ~9 KB | optional | The **only** page allowed to touch the network. Sandboxed, holds no records, pinned to one origin. |
 | `flow/CONTRACT.md` | ~16 KB | — | What your flow receives and must return, generated from `flow.js`. |
 | `flow/POWER-AUTOMATE.md` | ~19 KB | — | How to build the flow: trigger schema, the prompt, knowledge, and the test order. |
+| `flow/SPEED.md` | ~9 KB | — | Why a question used to grow with the workspace, what is ranked on the PC now, and the one prompt edit that goes with it. |
 | `flow/sample-request.json` | ~14 KB | — | A real request body, for Power Automate's schema generator. |
 | `dossier.json` | ~15 KB | — | The demo workspace: 7 records, 2 routines, 4 scripts, settings, Cambodian holidays. |
 | `lang/en.xml` | ~175 KB | optional | Every interface phrase in English — 1,343 entries. |
@@ -1329,7 +1330,7 @@ Stored in `settings.flow`:
 > workspace, so do not commit that file to a public repository, and rotate the
 > trigger's signature if it gets out.
 
-Two documents go with this:
+Five documents go with this:
 
 - [`flow/POWER-AUTOMATE.md`](flow/POWER-AUTOMATE.md) — the recipe. The trigger
   schema, the prompt to paste into the AI action, where standing knowledge
@@ -1342,6 +1343,10 @@ Two documents go with this:
   a team shares the library with no shared drive.
 - [`flow/CONTRACT.md`](flow/CONTRACT.md) — the specification. Every argument
   of every action, generated from `flow.js`.
+- [`flow/SPEED.md`](flow/SPEED.md) — what a question carries and why it stopped
+  growing with the workspace: how records, notes, runbooks and profiles are
+  ranked on the PC before anything is sent, how the endpoint asks for records
+  it was not given, and the one paste that goes into the prompt.
 - [`flow/sample-request.json`](flow/sample-request.json) — a real request from
   the demo workspace, for *Use sample payload to generate schema*.
 
@@ -1623,11 +1628,11 @@ drive the real files in a real browser (Playwright + Chromium), because the
 things that break here are things a unit test cannot see: a stale iframe cache,
 a CSP refusal, a file one folder away from where a manifest says.
 
-The twenty-nine exercised for the current release — `teach`, `talk2`, `pick`,
+The thirty exercised for the current release — `teach`, `talk2`, `pick`,
 `flowval`, `flowe2e`, `flowui`, `flowmore`, `chatui`, `memui`, `probe`,
 `shrink`, `chatfx`, `settings`, `mend`, `runbook`, `ver`, `analyse`,
 `incident`, `quiet`, `studio`, `shell`, `chatv3`, `pdftext`, `pdfattach`,
-`ocrattach`, `anybrowser`, `guide`, `prose`, `compose` — report **1,140 passing assertions and no failures**, covering the local
+`ocrattach`, `anybrowser`, `guide`, `prose`, `compose`, `speed` — report **1,180 passing assertions and no failures**, covering the local
 assistant, teaching, selectors, the reply validator, the whole network path in
 a real browser against an endpoint that misbehaves the way real ones do, the
 Setup panel, all 57 actions, the docked layout down to where each masthead tab
@@ -1652,7 +1657,13 @@ answer, the footer on the bottom edge) — the composer down to the four states
 of its send control, that a second question cannot be put on an endpoint
 already working on the first, and that a copy of `dossier.html` alone in a
 folder still shows the waiting animation without asking for a single file
-that is not there — and, counted against a server that
+that is not there — what a question carries, measured: that a workspace of two
+thousand records asks a question the same size as one of a hundred, that the
+record named by its code, its ticket, its system, its person or the words in
+its title is the one that travels, that the counts sent alongside are the
+totals for the whole workspace and not for the slice, and that the endpoint
+asking for records it was not given costs one more round trip and never two —
+and, counted against a server that
 records every request, exactly how many times the endpoint is called and how
 large each call is.
 

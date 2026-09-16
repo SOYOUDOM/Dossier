@@ -6,6 +6,63 @@ holds — which is what to paste into a bug report.
 
 ---
 
+## 3.10.0 — 2026-09-16
+
+**A question stops growing with the workspace.**
+
+The complaint was that the assistant got slower the more the app was used, and
+it was right. Every question carried the newest 400 records whatever was
+asked, every note ever taught, the whole runbook index and every system
+profile. On a thousand records that is 164 KB — about 45,000 tokens the model
+reads before it begins to answer, most of them about something nobody asked.
+Four of those five grow as you use the app, so using the app made it slower.
+Measured, with a library and notes in proportion:
+
+| workspace | before | now |
+|---|---|---|
+| 100 records | 50 KB | **41 KB** |
+| 1,000 records | 164 KB | **52 KB** |
+| 5,000 records | 185 KB | **61 KB** |
+
+- **Records are ranked against the question, on the PC, before anything is
+  sent.** A code or a ticket number in the sentence outranks everything; then
+  words in the title, stemmed, so *settling* finds *settlement*; then the
+  filing — system, type, who raised it, who it is with — which is worth less,
+  because in a workspace with two hundred Imaging records *"something wrong
+  with Imaging"* matches every one of them on the system and only one of them
+  on what it says; then what the question is about: overdue, due today, this
+  week, waiting, blocked, a priority. The best sixty travel
+- **With nothing to go on it behaves exactly as it always did.** *"Hello"*, a
+  question about a holiday: every score is zero and what is left is unfinished
+  first, then newest — the old order. A small workspace notices nothing
+- **What did not travel is counted, not lost.** `recordsDigest` totals every
+  record in scope — by status, by system, by priority, plus overdue, due
+  today, due this week, undated, waiting, blocked, and what has been waiting
+  longest. *"How many are overdue"* is still answered from the whole workspace
+- **Notes, the library and the profiles are ranked the same way.** Ten notes
+  travel in full and the rest as their titles; the library is ordered by
+  nearness to the question, with trigger phrases on the top twenty and the far
+  end reduced to title and system; the profile for the system in play travels
+  whole and the others as a line
+- **The endpoint can ask for records it was not sent.** `needRecords`,
+  returned alone, is a filter rather than an answer: Dossier runs it here, over
+  every record it has, and asks the same question again with what it found.
+  Once — a conversation that fetches its way through a workspace one page at a
+  time is the slow thing this removes
+- **Most records to send** is 60 rather than 400, and means the sixty the
+  question is about rather than the sixty most recent. A number set by hand is
+  left alone
+- **No second model, and no second call on the ordinary question.** Choosing
+  which records a sentence is about is word, date and identifier matching:
+  5,000 records ranked and packed in about 6ms, here, per question. A model
+  asked to choose would have to be sent the records first — the thing being
+  avoided — and paid for a round trip to find out
+
+**In Power Automate: the flow does not change.** Same six actions, same nine
+inputs, same expressions; Parse JSON passes the new fields through untouched.
+There is one prompt edit, and it is a paste — `flow/SPEED.md` is the whole of
+it, with the before-and-after numbers and how to check them.
+
 ## 3.9.1 — 2026-09-15
 
 **The waiting animation travels inside the file.**

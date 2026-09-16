@@ -314,9 +314,49 @@ stop; see `POWER-AUTOMATE.md` §4.
 | `all` | finished records too. |
 
 Notes and work logs are **not** sent unless *Include notes and work logs* is
-switched on. `recordsSent` vs `recordsTotal` tells you when the list was
-capped, so you can say "of the 400 I can see" rather than pretending to have
-counted everything.
+switched on.
+
+### `records` is a selection, and `recordsDigest` is the total
+
+Since 3.10 the records are **ranked against the question on the PC** before
+anything is sent — code and ticket numbers first, then words in the title,
+then the filing, then what the question is about (overdue, due today,
+waiting, blocked, a system, a person). The best `cap` of them travel; sixty
+by default.
+
+- `recordsSent` / `recordsTotal` — how many went, of how many exist.
+- `recordsMatched` — how many in scope the question actually reached. Larger
+  than `recordsSent` means there were more matches than fitted.
+- `recordsDigest` — **every record in scope, counted**: `inScope`, `sent`,
+  `notSent`, `byStatus`, `bySystem`, `byPriority`, `overdue`, `dueToday`,
+  `dueThisWeek`, `undated`, `waiting`, `blocked`, and `longestWaiting`.
+  Absent when the scope is `names`.
+
+**Answer "how many" from the digest, not by counting `records`.** Counting the
+rows you were sent gives a number that is wrong and looks right.
+
+The same ranking applies to what else travels: `memory` holds the ten notes
+the question reached in full, `memoryIndex` lists the rest by title;
+`runbooks` is ordered by nearness to the question, with trigger phrases on the
+top twenty; `profiles` sends the system in play whole and the others as a
+line. `runbooksMatched` is unchanged.
+
+### Asking for records you were not sent
+
+`needRecords` is a read action with the same filter vocabulary as `find`.
+Return it **alone** — no `say`, no other action — and Dossier runs the filter
+over every record it has, then asks the same question again with what it found
+at the front of `records`. The second request carries `followUp`:
+
+```jsonc
+"followUp": { "of": "how is Medcare doing this month",
+              "wanted": { "system": "Medcare", "status": "live", "limit": 25 },
+              "gave": 25 }
+```
+
+**Once per question.** A second `needRecords` is ignored. Scope still applies:
+a filter asking for finished records gets none while *What to send* is
+*Unfinished records*.
 
 ---
 
@@ -495,6 +535,32 @@ Read one record in full — its notes, every checklist step, its work log and it
 | argument | shape | required |
 |---|---|---|
 | `record` | ref | **yes** |
+
+#### `needRecords`
+
+Ask for records you were not sent. `workspace.records` holds the ones this
+question matched; `workspace.recordsDigest` counts the rest. Return this
+**alone** — no `say`, no other action — and the same question comes back with
+what the filter found. **Once per question**, and the scope you were given
+still applies.
+
+| argument | shape | required |
+|---|---|---|
+| `text` | string | no |
+| `status` | open \| processing \| blocked \| done \| cancelled \| live \| any | no |
+| `system` | string | no |
+| `person` | string | no |
+| `party` | string | no |
+| `type` | string | no |
+| `tag` | string | no |
+| `priority` | P1 \| P2 \| P3 \| P4 | no |
+| `dueBefore` | YYYY-MM-DD | no |
+| `dueAfter` | YYYY-MM-DD | no |
+| `createdAfter` | YYYY-MM-DD | no |
+| `overdue` | bool | no |
+| `undated` | bool | no |
+| `waiting` | bool | no |
+| `limit` | int | no |
 
 #### `listRoutines`
 

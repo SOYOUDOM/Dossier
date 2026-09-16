@@ -89,6 +89,18 @@ const ACTIONS = {
     what:"Read one record in full — its notes, every checklist step, its work " +
          "log and its documents. Use this when the summary you were sent is not enough." },
 
+  needRecords: { write:false, needs:[],
+    args:{ text:STR, status:["open","processing","blocked","done","cancelled","live","any"],
+           system:STR, person:STR, party:STR, type:STR, tag:STR,
+           priority:["P1","P2","P3","P4"], dueBefore:DATE, dueAfter:DATE,
+           createdAfter:DATE, overdue:BOOL, undated:BOOL, waiting:BOOL, limit:INT },
+    what:"Ask for records you were not sent. workspace.records holds the ones this " +
+         "question matched, not the whole workspace, and workspace.recordsDigest counts " +
+         "what is missing. If the digest shows the answer is in records you cannot see, " +
+         "return THIS AND NOTHING ELSE — no say, no other action — and the same question " +
+         "is asked again with what the filter found. It is allowed once per question, so " +
+         "make the filter wide enough to finish the job." },
+
   listRoutines: { write:false, needs:[], args:{ includePaused:BOOL },
     what:"List the schedules with what each one does and when it next fires." },
 
@@ -515,6 +527,203 @@ function validate(payload){
    logs are the bulkiest and the most sensitive part of a record, so they are
    summarised rather than sent, unless you ask for them. */
 
+/* ═══ WHICH RECORDS TRAVEL ══════════════════════════════════════════
+
+   Every question used to carry the same four hundred records, newest first,
+   whatever was asked. Fifty records made a ten-kilobyte question; a thousand
+   made a hundred and forty, and a model reads every byte of a question before
+   it begins to answer it. That is where the waiting came from, and it grew
+   the longer the app was used — which is exactly the wrong way round.
+
+   So the records are RANKED here, against the sentence that was actually
+   typed, and the best of them go. The rest are counted rather than sent:
+   recordsDigest holds the totals for everything in scope, so "how many are
+   overdue" is still answered from the whole workspace and not from a slice
+   of it. When the ranking is not enough the endpoint may ask for more with
+   needRecords, and that is the only case that costs a second round trip.
+
+   There is no second model in any of this, and there should not be. Choosing
+   which records a sentence is about is word, date and identifier matching
+   over a few thousand rows — a millisecond of arithmetic on the PC. Asking a
+   model to choose would mean sending it the rows first, which is the thing
+   being avoided, and paying for an extra call to find out.                  */
+
+const LIVE_SET = ["open", "processing", "blocked"];
+const PICK_STOP = (" the a an and or of to in on for is are was were it its this that with " +
+  "from by at as be been being has have had do does did what which who whom when where why " +
+  "how all any can could should would will not no yes my our your their there here me you " +
+  "we they them us him her his she he i am pls please thanks thank now still yet about into " +
+  "over under out up down off than then but so if just get got give show tell say said " +
+  "need want know think see look").split(" ");
+
+function pickWords(t){
+  return String(t || "").toLowerCase().replace(/[^a-z0-9\u1780-\u17ff]+/g, " ").split(" ")
+    .filter(w => w.length > 2 && PICK_STOP.indexOf(w) < 0);
+}
+/* the same stemming the runbook matcher uses: people type the tense they are
+   in, not the one the record was written in */
+function pickStem(w){ return String(w).replace(/(ing|ed|es|s)$/, "").replace(/e$/, ""); }
+function dayShift(ymd, n){
+  const d = new Date(String(ymd) + "T00:00:00Z");
+  if (isNaN(d.getTime())) return "";
+  d.setUTCDate(d.getUTCDate() + n);
+  return d.toISOString().slice(0, 10);
+}
+
+/* what the question names, and what it is about */
+function pickAsk(text, ctx){
+  const raw = String(text || "");
+  const low = " " + raw.toLowerCase().replace(/\s+/g, " ") + " ";
+  const st = (ctx && ctx.settings) || {};
+  const stems = [];
+  pickWords(raw).forEach(w => {
+    const x = pickStem(w);
+    if (x.length > 2 && stems.indexOf(x) < 0) stems.push(x);
+  });
+  /* D-0042, INC0012345, a policy number: a word with a digit in it */
+  const ids = [];
+  raw.split(/[\s,;()"'\[\]]+/).forEach(w => {
+    const t = w.replace(/[.:,!?]+$/, "").toLowerCase();
+    if (t.length < 3 || t.length > 32) return;
+    if (!/\d/.test(t)) return;
+    if (!/^[a-z0-9][a-z0-9._\/-]*$/.test(t)) return;
+    if (/^\d{4}-\d{2}-\d{2}$/.test(t)) return;          /* a date */
+    if (/^p[1-4]$/.test(t)) return;                     /* a priority */
+    if (ids.indexOf(t) < 0) ids.push(t);
+  });
+  const has = v => !!v && low.indexOf(String(v).toLowerCase()) >= 0;
+  const pri = /\b(p[1-4])\b/i.exec(raw);
+  return {
+    stems: stems, ids: ids,
+    systems: (st.systems || []).map(x => x && x.name || x).filter(has),
+    people: ((ctx && ctx.people) || []).filter(has),
+    parties: (st.parties || []).filter(has),
+    types: (st.types || []).filter(has),
+    priority: pri ? pri[1].toUpperCase() : "",
+    overdue: /overdue|late|past due|slipping|behind|breach|missed/.test(low),
+    today:   /today|tonight|due now/.test(low),
+    week:    /this week|next week|the week|weekly|by friday/.test(low),
+    waiting: /wait|chase|chasing|chased|reply|replied|response|no answer|come back/.test(low),
+    blocked: /blocked|stuck|held up|on hold|cannot proceed/.test(low),
+    open:    /open|unfinished|in progress|ongoing|on my plate|to do|todo|pending|outstanding|left/.test(low),
+    closed:  /closed|finished|completed|resolved|delivered|last week|last month/.test(low)
+  };
+}
+
+function pickScore(t, ask, k){
+  let s = 0;
+  const code = String(t.code || "").toLowerCase();
+  const tick = String(t.ticket || "").toLowerCase();
+  /* a number somebody typed beats everything: they are asking about THAT one */
+  for (let i = 0; i < ask.ids.length; i++){
+    const x = ask.ids[i];
+    if (x === code || x === tick){ s += 1000; break; }
+    if (tick && (tick.indexOf(x) >= 0 || x.indexOf(tick) >= 0)){ s += 500; break; }
+    if (code && code.indexOf(x) >= 0){ s += 300; break; }
+  }
+  if (ask.stems.length){
+    /* A word in the TITLE is what the record is about. The same word in a
+       field is a coincidence of filing: in a workspace with two hundred
+       Imaging records, "something wrong with Imaging" matches every one of
+       them on the system and only one of them on what it says. Weighted the
+       same, the one that says it loses to whichever is newest. */
+    const title = (String(t.title || "") + " " + (t.tags || []).join(" ")).toLowerCase();
+    const side = (String(t.system || "") + " " + String(t.type || "") + " " +
+                  String(t.requester || "") + " " + String(t.waitOn || "") + " " +
+                  String(t.waitNote || "")).toLowerCase();
+    let hit = 0, near = 0;
+    for (let i = 0; i < ask.stems.length; i++){
+      const w = ask.stems[i];
+      if (title.indexOf(w) >= 0) hit++;
+      else if (side.indexOf(w) >= 0) near++;
+    }
+    /* two of its words is much better evidence than one of them twice */
+    if (hit) s += hit * 16 + (hit > 1 ? 12 : 0);
+    if (near) s += near * 6;
+  }
+  const sys = String(t.system || "").toLowerCase();
+  if (ask.systems.length && ask.systems.some(x => String(x).toLowerCase() === sys)) s += 30;
+  if (ask.people.length || ask.parties.length){
+    const who = (String(t.requester || "") + " " + String(t.waitOn || "")).toLowerCase();
+    if (ask.people.concat(ask.parties).some(x => who.indexOf(String(x).toLowerCase()) >= 0)) s += 30;
+  }
+  if (ask.types.length &&
+      ask.types.some(x => String(x).toLowerCase() === String(t.type || "").toLowerCase())) s += 12;
+  if (ask.priority && t.priority === ask.priority) s += 26;
+  const isLive = LIVE_SET.indexOf(t.status) >= 0;
+  if (k && t.due){
+    if (ask.overdue && isLive && t.due < k) s += 55;
+    if (ask.today && t.due === k) s += 55;
+    if (ask.week && t.due >= k && t.due <= dayShift(k, 7)) s += 35;
+  }
+  if (ask.waiting && t.waitOn) s += 40;
+  if (ask.blocked && t.status === "blocked") s += 40;
+  if (ask.closed && !isLive) s += 20;
+  if (ask.open && isLive) s += 8;
+  return s;
+}
+
+/* The order is: what the question is about, then unfinished before finished,
+   then newest. With nothing to go on — "hello", a question about a holiday
+   — every score is zero and what is left is exactly the order this used to
+   send in, which is the right default and keeps a small workspace behaving
+   the way it always did. */
+function pickRecords(text, list, cap, ctx){
+  const ask = pickAsk(text, ctx);
+  const k = (ctx && ctx.today) || "";
+  const inScope = {};
+  list.forEach(t => { inScope[t.code] = t; });
+  const forced = [], seen = {};
+  ((ctx && ctx.forceRecords) || []).forEach(t => {
+    /* it was asked for, but scope is still the person's answer, not the
+       endpoint's: a record outside what they agreed to send does not go */
+    if (t && inScope[t.code] && !seen[t.code]){ seen[t.code] = 1; forced.push(t); }
+  });
+  const scored = [];
+  for (let i = 0; i < list.length; i++){
+    const t = list[i];
+    if (seen[t.code]) continue;
+    scored.push({ t: t, s: pickScore(t, ask, k) });
+  }
+  const rank = t => LIVE_SET.indexOf(t.status) >= 0 ? 0 : 1;
+  scored.sort((a, b) => (b.s - a.s) || (rank(a.t) - rank(b.t)) ||
+                        String(b.t.created || "").localeCompare(String(a.t.created || "")));
+  return { rows: forced.concat(scored.map(x => x.t)).slice(0, cap),
+           matched: scored.filter(x => x.s > 0).length + forced.length };
+}
+
+/* What is NOT being sent, counted. Every total here is over the whole of
+   what is in scope, so a question about how many is answered from the
+   workspace and not from the selection. About six hundred bytes. */
+function recordsDigest(list, sent, k){
+  const out = { inScope:list.length, sent:(sent || []).length,
+                notSent:Math.max(0, list.length - (sent || []).length),
+                byStatus:{}, bySystem:{}, byPriority:{},
+                overdue:0, dueToday:0, dueThisWeek:0, undated:0, waiting:0, blocked:0 };
+  const sys = {}, waits = [];
+  const wk = k ? dayShift(k, 7) : "";
+  for (let i = 0; i < list.length; i++){
+    const t = list[i], isLive = LIVE_SET.indexOf(t.status) >= 0;
+    out.byStatus[t.status] = (out.byStatus[t.status] || 0) + 1;
+    if (t.system) sys[t.system] = (sys[t.system] || 0) + 1;
+    if (t.priority) out.byPriority[t.priority] = (out.byPriority[t.priority] || 0) + 1;
+    if (t.due && k){
+      if (isLive && t.due < k) out.overdue++;
+      else if (t.due === k) out.dueToday++;
+      else if (wk && t.due > k && t.due <= wk) out.dueThisWeek++;
+    } else if (!t.due && isLive) out.undated++;
+    if (t.waitOn){ out.waiting++; if (t.waitSince) waits.push(t); }
+    if (t.status === "blocked") out.blocked++;
+  }
+  Object.keys(sys).sort((a, b) => sys[b] - sys[a]).slice(0, 12)
+        .forEach(x => { out.bySystem[x] = sys[x]; });
+  waits.sort((a, b) => String(a.waitSince).localeCompare(String(b.waitSince)));
+  out.longestWaiting = waits.slice(0, 5).map(t => ({ code:t.code,
+    title:String(t.title || "").slice(0, 70), waitOn:t.waitOn,
+    since:String(t.waitSince).slice(0, 10) }));
+  return out;
+}
+
 function slimTask(t, deep){
   const o = {
     code: t.code, title: t.title, status: t.status, priority: t.priority,
@@ -599,18 +808,14 @@ function buildRequest(text, ctx, cfg){
   const deep = !!(cfg && cfg.deep);
   const cap = Math.max(0, Math.min(2000, (cfg && +cfg.cap) || 400));
 
-  const live = ["open", "processing", "blocked"];
-  let rows = [];
+  let rows = [], digest = null, matched = 0;
   if (scope !== "names"){
     const all = (ctx.tasks || []).slice();
-    const pick = scope === "all" ? all : all.filter(t => live.indexOf(t.status) >= 0);
-    /* if it has to be cut, cut the least useful: finished, then oldest */
-    pick.sort((a, b) => {
-      const la = live.indexOf(a.status) >= 0 ? 0 : 1, lb = live.indexOf(b.status) >= 0 ? 0 : 1;
-      if (la !== lb) return la - lb;
-      return String(b.created || "").localeCompare(String(a.created || ""));
-    });
-    rows = pick.slice(0, cap).map(t => slimTask(t, deep));
+    const pool = scope === "all" ? all : all.filter(t => LIVE_SET.indexOf(t.status) >= 0);
+    const got = pickRecords(text, pool, cap, ctx);
+    rows = got.rows.map(t => slimTask(t, deep));
+    matched = got.matched;
+    digest = recordsDigest(pool, got.rows, ctx.today || "");
   }
 
   const req = {
@@ -623,6 +828,10 @@ function buildRequest(text, ctx, cfg){
     timezone: (function(){ try { return Intl.DateTimeFormat().resolvedOptions().timeZone; }
                            catch(e){ return ""; } })(),
     message: String(text || ""),
+    /* set only on the second of a pair: the endpoint answered the first with
+       needRecords, the app ran that filter here, and the rows it found are in
+       workspace.records. There is no third. */
+    followUp: (ctx.followUp || undefined),
     /* Files the person attached to this question. A PDF or a screenshot is
        often the whole of what they are asking about, and typing out what an
        error dialog says is how detail gets lost. */
@@ -681,6 +890,9 @@ function buildRequest(text, ctx, cfg){
          is a note nobody wrote — and the whole point of writing one is that
          next time you have forgotten you ever did. */
       memory: ctx.memory || [],
+      /* the notes this question did not reach, by name. Enough to know what
+         is known; recall fetches one by name when it turns out to matter. */
+      memoryIndex: ctx.memoryIndex || [],
       memoryTotal: ctx.memoryTotal || 0,
 
       /* The runbook library arrives as an index and nothing else: title,
@@ -721,6 +933,14 @@ function buildRequest(text, ctx, cfg){
       counts: ctx.counts || {},
       recordsSent: rows.length,
       recordsTotal: (ctx.tasks || []).length,
+      /* how many of the records in scope the question actually reached. When
+         this is larger than recordsSent, the ones that did not fit are the
+         lower-scoring ones, and needRecords will fetch them. */
+      recordsMatched: matched,
+      /* THE REST OF THE WORKSPACE, COUNTED. records is a selection; this is
+         every record in scope, totalled. Answer "how many" from here. Do not
+         answer it by counting records[] — that is the slice, not the total. */
+      recordsDigest: digest || undefined,
       records: rows
     },
     can: Object.keys(ACTIONS).map(k => ({ do:k, write:ACTIONS[k].write,
@@ -928,6 +1148,8 @@ window.DossierFlow = {
   test: test,
   validate: validate,
   buildRequest: buildRequest,
+  _pick: pickRecords,
+  _digest: recordsDigest,
   checkAction: checkAction,
   describeArgs: describeArgs,
   show: show,
