@@ -1572,6 +1572,9 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
   transform:translateX(102%);pointer-events:none;visibility:hidden;overflow:hidden;
   transition:transform .24s var(--ease),visibility 0s .28s}
 .chat.on{pointer-events:auto;visibility:visible;transform:none;transition-delay:0s}
+/* a file held over the assistant: the panel takes it, so the panel says so
+   rather than the full-page veil, which means something else */
+.chat.dropping{outline:2px dashed var(--ch-acc);outline-offset:-6px}
 /* ═══ THE ASSISTANT PANEL ════════════════════════════════════════════════
    Everything from here to the composer is the chat tab and only the chat
    tab. The rest of Dossier is deliberately quiet — a record sheet should
@@ -2101,7 +2104,8 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
    crisp-edges first, pixelated second: the browsers that only understand
    the older keyword take it, everything else takes the one below. */
 .pxl{image-rendering:crisp-edges;image-rendering:pixelated;
-  width:16px;height:16px;flex:0 0 auto;display:block;background:none;border:0}
+  width:16px;height:16px;flex:0 0 auto;display:block;background:none;border:0;
+  -webkit-user-drag:none;user-select:none}
 .pxl.p32{width:32px;height:32px}
 .pxl.p144{width:144px;height:144px}
 /* the waiting row, when the set is on: a bigger sprite deserves a bit of air */
@@ -2148,7 +2152,8 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
 .pet.away{opacity:0;pointer-events:none}
 .pet.dragging{transition:none}
 .petb{pointer-events:auto;border:0;background:none;padding:0;line-height:0;display:block;
-  cursor:grab;touch-action:none;filter:drop-shadow(0 7px 10px rgba(0,0,0,.34))}
+  cursor:grab;touch-action:none;user-select:none;-webkit-user-drag:none;
+  filter:drop-shadow(0 7px 10px rgba(0,0,0,.34))}
 .pet.dragging .petb{cursor:grabbing}
 .petb:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:8px}
 .petb .pxl{width:48px;height:48px}
@@ -2883,7 +2888,7 @@ body.chatting .pet[data-corner="br"],body.chatting .pet[data-corner="tr"]{
     <label class="all" id="askAllWrap"><input type="checkbox" class="cb" id="askAll"> Do this for the rest of the files</label></div>
 </div>
 
-<div class="dropveil" id="veil"><div>Drop to attach</div></div>
+<div class="dropveil" id="veil"><div id="veilT" data-i18n="DropToAttach">Drop to attach</div></div>
 <div class="toasts" id="toasts"></div>
 <input type="file" id="fileIn" hidden multiple>
 <input type="file" id="jsonIn" accept=".json" hidden>
@@ -3950,6 +3955,10 @@ const STRINGS = {
   Palette: "Palette",
   Off: "Off",
   On: "On",
+  DropToAttach: "Drop to attach",
+  DropOnRecord: "Drop it on a record",
+  DropNeedsRecord: "{name} was not filed \u2014 open a record first, or drop it straight onto one.",
+  DropMakeRecord: "Make a record for it",
   OnceADay: "Once a day",
   Never: "Never",
   WhenThisTabIsClosed: "When this tab is closed",
@@ -4944,7 +4953,7 @@ const STATUSES = [
    the status bar, and clicking it copies a line you can paste into a bug
    report — build date and flow protocol included, because those are the two
    things that actually differ between copies. */
-const APP_VERSION = "3.12.0";
+const APP_VERSION = "3.12.1";
 const APP_BUILT = "2026-09-17";
 function buildLine(){
   return "Dossier v" + APP_VERSION + " \u00b7 built " + APP_BUILT +
@@ -7911,8 +7920,14 @@ function pixOver(){
    reader reading "picture, tick" after "Done" is noise. */
 function pixArt(name, size){
   if (!PIX[name]) return "";
+  /* draggable="false" is not decoration. A browser lets you drag any <img>
+     out of a page, and it puts the picture on the drag as a FILE - so
+     dragging the desk pet across the sheet looked exactly like dragging a
+     screenshot in from the desktop, veil and all, and dropping it filed the
+     pet as a document. It also hijacks the pointer: once a native drag
+     starts, pointermove stops arriving and the pet cannot be moved at all. */
   return '<img class="pxl' + (size ? " " + size : "") + '" data-pix="' + name +
-         '" alt="" aria-hidden="true" src="' + esc(PIX[name]) + '">';
+         '" alt="" aria-hidden="true" draggable="false" src="' + esc(PIX[name]) + '">';
 }
 /* the chat panel's own switch. The desk pet has a separate one, in Menu →
    Appearance: they share the drawings and nothing else, so turning the
@@ -8103,6 +8118,8 @@ function petWire(){
   const el = $("pet"), b = $("petBtn");
   let from = null, moved = false;
 
+  /* whatever the attribute says, this drag belongs to the pet */
+  b.addEventListener("dragstart", e => { e.preventDefault(); });
   b.addEventListener("pointerdown", e => {
     if (e.button) return;
     from = { x:e.clientX, y:e.clientY };
@@ -18551,7 +18568,14 @@ $("chatFile").addEventListener("change", e => {
 $("chat").addEventListener("dragover", e => { e.preventDefault(); });
 $("chat").addEventListener("drop", e => {
   if (!e.dataTransfer || !e.dataTransfer.files.length) return;
-  e.preventDefault(); chatAttach(e.dataTransfer.files);
+  /* stopPropagation, and it matters: without it the same drop carried on up
+     to the document handler below, which filed the file as a document too -
+     so one screenshot dragged onto a question also opened a record named
+     after it. A drop lands in one place. */
+  e.preventDefault(); e.stopPropagation();
+  $("chat").classList.remove("dropping");
+  $("veil").classList.remove("on"); dragDepth = 0;
+  chatAttach(e.dataTransfer.files);
 });
 $("chatq").addEventListener("paste", e => {
   const items = (e.clipboardData || {}).files;
@@ -19219,32 +19243,78 @@ function addLog(){
   setTimeout(() => { const n = $("lgNew"); if (n) n.focus(); }, 20);
 }
 
-/* drawer drop zone + global file drop */
+/* ── dropping a file ──────────────────────────────────────────────────────
+   A file dropped on Dossier is filed against ONE record: the one you have
+   open, or the one you dropped it on. It used to invent a record when it was
+   neither — which is a surprising thing to have happen while you are aiming
+   at something else, and the commonest way it happened was not aiming at all
+   (a drag that started on a picture inside the page). Nothing is created
+   without being asked for now: the toast offers it, and the offer is a
+   button you have to press.
+
+   The assistant panel handles its own drops and stops them there, because a
+   file dragged onto a question belongs to the question. */
 let dragDepth = 0;
+const dragOverChat = e => {
+  const el = e.target && e.target.nodeType === 1 ? e.target
+                                                 : (e.target && e.target.parentElement);
+  return !!(el && el.closest && el.closest("#chat"));
+};
+const dragFiles = e => !!e.dataTransfer &&
+  Array.prototype.indexOf.call(e.dataTransfer.types || [], "Files") >= 0;
+/* the veil says what will actually happen, which depends on whether there is
+   anything for the file to land on */
+function dragVeil(on){
+  const v = $("veil"); if (!v) return;
+  const t = $("veilT");
+  if (t) t.textContent = S.open ? L("DropToAttach") : L("DropOnRecord");
+  v.classList.toggle("on", !!on);
+}
 document.addEventListener("dragenter", e => {
-  if (!e.dataTransfer || Array.prototype.indexOf.call(e.dataTransfer.types || [], "Files") < 0) return;
-  dragDepth++; $("veil").classList.add("on");
+  if (!dragFiles(e)) return;
+  dragDepth++;
+  if (!dragOverChat(e)) dragVeil(true);
 });
-document.addEventListener("dragleave", () => { if (--dragDepth <= 0){ dragDepth = 0; $("veil").classList.remove("on"); } });
+document.addEventListener("dragleave", () => {
+  if (--dragDepth <= 0){ dragDepth = 0; dragVeil(false); $("chat").classList.remove("dropping"); }
+});
 document.addEventListener("dragover", e => {
-  if (e.dataTransfer && Array.prototype.indexOf.call(e.dataTransfer.types || [], "Files") >= 0) e.preventDefault();
+  if (!dragFiles(e)) return;
+  e.preventDefault();
+  /* dragover keeps firing for as long as the file is over the page, so this
+     is the one place that can never be left in the wrong state */
+  const chat = dragOverChat(e);
+  $("chat").classList.toggle("dropping", chat);
+  dragVeil(!chat && dragDepth > 0);
 });
 document.addEventListener("drop", async e => {
   if (!e.dataTransfer || !e.dataTransfer.files || !e.dataTransfer.files.length) return;
   e.preventDefault();
-  dragDepth = 0; $("veil").classList.remove("on");
-  const files = e.dataTransfer.files;
+  dragDepth = 0; dragVeil(false); $("chat").classList.remove("dropping");
+  /* the FileList belongs to an event that is about to be over; the toast
+     below can be pressed seconds later */
+  const files = Array.prototype.slice.call(e.dataTransfer.files);
   if (!FS.ok) return toast(L("ChooseAWorkspaceFolderBeforeAttaching"), { bad:true });
-  const onRow = e.target.closest("[data-id]");
+  const onRow = e.target.closest ? e.target.closest("[data-id]") : null;
   let t = S.open ? getTask(S.open) : null;
   if (onRow && !t) t = getTask(onRow.dataset.id);
   if (!t){
-    const base = splitExt(files[0].name)[0];
-    t = addTask({ title: base.replace(/[-_]+/g," ").trim() || L("NewRecord2"), due: today() });
-    toast(L("Opened3") + t.code + " for " + files[0].name);
+    const first = files[0];
+    return toast(L("DropNeedsRecord", { name:first.name }), {
+      action: L("DropMakeRecord"),
+      onAction: async () => {
+        const base = splitExt(first.name)[0];
+        const made = addTask({ title: base.replace(/[-_]+/g, " ").trim() || L("NewRecord2"),
+                               due: today() });
+        const n = await attachFiles(made, files);
+        openDrawer(made.id);
+        toast(L("Opened3") + made.code + " for " + first.name);
+        if (n) petMood("work", 1600);
+      }
+    });
   }
   const n = await attachFiles(t, files);
-  if (n) { openDrawer(t.id); toast(n + " document(s) filed"); }
+  if (n) { openDrawer(t.id); toast(n + " document(s) filed"); petMood("work", 1600); }
 });
 $("scriptIn").addEventListener("change", async e => {
   const files = e.target.files; e.target.value = "";

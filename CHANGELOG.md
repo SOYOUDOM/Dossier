@@ -6,6 +6,46 @@ holds — which is what to paste into a bug report.
 
 ---
 
+## 3.12.1 — 2026-09-17
+
+**Three ways a dropped file went to the wrong place.**
+
+- **Dragging the desk pet looked like dragging in a screenshot.** A browser
+  lets you drag any `<img>` out of a page and puts the picture on the drag as
+  a *file*, so moving the pet across the sheet raised the **Drop to attach**
+  veil, and letting go filed the pet itself as a document. It also took the
+  pointer with it: once a native drag starts, `pointermove` stops arriving,
+  which is why the pet would not go where it was put. Every sprite in the app
+  is now `draggable="false"`, with `-webkit-user-drag:none` behind it and the
+  pet refusing `dragstart` outright
+- **A file dropped on the assistant also opened a record.** The panel took
+  the attachment and then let the same drop carry on up to the document,
+  where the global handler filed it a second time — one screenshot dragged
+  onto a question, one new record named after it. The panel stops the event
+  where it lands now. While a file is held over the panel it outlines itself
+  rather than raising the full-page veil, because the veil means something
+  else
+- **Nothing invents a record any more.** A dropped file is filed against the
+  record you have open or the one you dropped it onto. Anywhere else, nothing
+  is created: the toast says *"report.pdf was not filed — open a record
+  first, or drop it straight onto one"* and offers **Make a record for it**,
+  which is a button you press rather than something that happens to you
+
+The veil says which of those you are about to get: **Drop to attach** with a
+record open, **Drop it on a record** without one.
+
+### Tested
+
+Real `DataTransfer` drops dispatched at the panel, at the sheet with nothing
+open, at the sheet with a record open, and straight onto a row: one filing
+each and no record created in any of them, the offer button creating one when
+pressed, and the four drag-over states (veil wording with and without a
+record, the panel outlined, everything cleared on leave). The pet drag was
+re-run with real mouse events and still lands in the corner it was carried
+to.
+
+---
+
 ## 3.12.0 — 2026-09-17
 
 **The assistant comes out of its panel.**

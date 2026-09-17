@@ -543,6 +543,12 @@ instead of the default once it has enough to go on.
 `tasks/<folder>/`; `files[]` records `{name, size, type, added}` and the work
 log gets a line.
 
+A dropped file is filed against **one** record: the one you have open, or the
+one you dropped it onto. Drop it anywhere else and nothing is created — the
+toast says so and offers *Make a record for it*, which is a button you press
+rather than something that happens to you. A file dropped on the assistant
+panel is an attachment to **that question** and goes nowhere near a record.
+
 **Carrying forward.** Rolling a record to another day increments `carried`.
 That number is evidence: a record carried five times is not a scheduling
 problem, it is a stuck one, and Assist says so.
