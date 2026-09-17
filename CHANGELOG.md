@@ -6,6 +6,87 @@ holds — which is what to paste into a bug report.
 
 ---
 
+## 3.11.0 — 2026-09-17
+
+**The assistant gets a face.**
+
+The panel already said what it was doing in words — *thinking…*, *still
+thinking — the endpoint is slow, not stuck*, a `✓` on a line for something
+carried out. Nine small pixel animations now say the same things in pictures,
+in the places those words already appear, and nowhere else.
+
+| | Where it is | What it means |
+|---|---|---|
+| **think** | the waiting row, where the answer will start | a question is out with your flow |
+| **slow** | the same row, past eight seconds | the endpoint is slow, not stuck |
+| **orb** | the mark in the header | the panel, idle — it changes to **think** while an answer is on its way |
+| **hero** | the middle of an empty thread | the assistant itself, waving |
+| **done** | the line left behind by something carried out | it happened, and **Undo** is beside it |
+| **no** | the line left behind by something declined | nothing happened |
+| **oops** | above a failed answer | the flow could not be reached, or the assistant threw |
+| **ask** | the confirmation dialogue | you are being asked before anything is changed |
+| **new** | the pill above the composer | an answer arrived while you were reading further up |
+
+- **Sixteen colours and one palette for all nine**, picked so that the same
+  file reads on Paper and on Nebula: no pure black, no pure white, mid-tone
+  fills, and an outline that is dark blue rather than black so it does not
+  punch a hole in a night sky. `art/contact-sheet.png` is every frame of
+  every sprite on a dark band and a light one, which is where a colour that
+  disappears on one skin is caught
+- **Shown at 16, 32 or 144 pixels and never in between** — one, two and six
+  times the size they were drawn at. A sixteen-pixel drawing shown at
+  twenty-four is resampled onto half-pixels and arrives as a smudge, so the
+  slots are sized to the art rather than the art squeezed into the slots
+- **A tick that has been stamped stops.** **done** and **no** carry no loop
+  block at all, so they play once and hold on their last frame. A receipt
+  that keeps ticking all afternoon is a receipt nobody reads
+- **Six kilobytes for all nine, inside `dossier.html`.** Same bargain as the
+  waiting animation before them: a copy of the file on a memory stick is the
+  whole application, art included. `assets/pixel/<name>.gif` overrides any
+  one of them, and a folder copy that stops loading falls back to the
+  built-in rather than leaving a broken-image mark in the thread
+- **A picture of your own still wins.** `assets/assistant-logo.png` replaces
+  the header mark and the one on an empty thread whether the set is on or
+  off — and that is settled in CSS rather than in script, because a logo is
+  a megabyte and lands after the thread it belongs to has been drawn
+- **One switch, in Look and behaviour, under *Pixel art*.** Off puts the
+  panel back exactly as it was: the drawn orb, `assets/thinking.gif`, a `✓`
+  on a receipt. A machine that has asked for reduced motion gets the set off
+  the first time the panel is opened, like every other switch there; a panel
+  set up before this build had no answer for it and gets the same one a new
+  one would, rather than a silent no
+
+### Where the art lives
+
+`art/make-pixel-art.py` draws it: every frame is a picture written out in
+characters, one per pixel, so changing a sprite means editing a picture in a
+text file rather than decoding a blob and hoping. It writes the GIFs itself —
+LZW, sub-blocks, the Netscape loop block and all — on the standard library
+alone. `art/embed-pixel-art.py` then carries the same files into
+`dossier.html` as base64, between two marker comments.
+
+There is still **no build step**: the GIFs and the base64 are committed, the
+app generates neither, and nothing in Dossier needs Python to run.
+
+### Upgrading from the previous build
+
+Replace the files. Nothing in your workspace needs migrating, and no flow
+change is needed — this build does not touch what a question carries. If you
+keep an `assets/` folder beside `dossier.html`, copy `assets/pixel/` in with
+it; if you do not, the nine sprites are already inside the file.
+
+### Tested
+
+Driven in headless Chromium over the DevTools protocol, against the real
+`dossier.html`: every sprite in place on Nebula and on Paper, the header mark
+following the panel from idle to thinking and back, the confirmation
+dialogue, the new-reply pill, the switch turned off restoring the drawn orb,
+the old waiting animation, the `✓` and the plain `↓` — and a copy of
+`dossier.html` alone in a folder showing all nine without asking for a file
+that is not there.
+
+---
+
 ## 3.10.0 — 2026-09-16
 
 **A question stops growing with the workspace.**

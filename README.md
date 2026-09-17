@@ -126,7 +126,10 @@ That is the entire setup. You should immediately see:
 | `backups/` | — | auto | One snapshot per day, 30 kept. |
 | `favicon.ico`, `logo.png` | — | optional | Your own branding; both fall back to a built-in seal if missing. |
 | `assets/assistant-logo.png`, `assets/assistant-bg.jpg` | — | optional | The assistant's own mark and the picture behind its panel. Each is asked for once when the panel opens and used only if it answers. |
-| `assets/thinking.gif` | 1.5 KB | optional | The animation shown while an answer is on its way. The same file travels inside `dossier.html` as two kilobytes of base64, so a copy on its own still has it; a file here overrides that. |
+| `assets/thinking.gif` | 1.5 KB | optional | The animation shown while an answer is on its way, when the pixel set is off. The same file travels inside `dossier.html` as two kilobytes of base64, so a copy on its own still has it; a file here overrides that. |
+| `assets/pixel/*.gif` | 4.6 KB | optional | The pixel set — nine sprites the assistant panel wears when **Pixel art** is on. All nine also travel inside `dossier.html` as six kilobytes of base64; a file here overrides its copy, one sprite at a time. |
+| `art/make-pixel-art.py` | ~21 KB | — | Where the sprites are drawn: each frame is a picture written out in characters, one per pixel. Stdlib Python — it writes the GIFs itself, LZW and all. Also writes `art/contact-sheet.png`, every frame on a dark band and a light one. |
+| `art/embed-pixel-art.py` | 2.1 KB | — | Carries `assets/pixel/*.gif` into `dossier.html` as base64, between two marker comments. Run after the art changes; never otherwise. |
 | `.gitattributes` | 28 B | — | `scripts/*.bat text eol=crlf` — a `.bat` with LF line endings breaks `cmd`'s label parsing. |
 
 Everything is a classic script or plain file. There is **no build step, no
@@ -384,13 +387,52 @@ in `dossier.json`:
 
 | | |
 |---|---|
-| **Skin** | Aurora · Carbon · Ember · Paper. Every surface in the panel takes its colour from the skin, not from the app theme. |
+| **Skin** | Nebula · Aurora · Carbon · Ember · Paper. Every surface in the panel takes its colour from the skin, not from the app theme. |
 | **Motion** | Seven switches — answers arriving, edge light, the living background, the orb pulse, thinking dots, springy buttons, and a passing light on an interval you set. Each one genuinely unhooks its animation. |
+| **Pixel art** | One switch, for the sprites below. Off leaves the panel exactly as it was: the drawn orb, the old waiting animation, a `✓` on a receipt. |
 | **Ask before doing anything** | On by default: everything is put to you first. Off: it does what you ask straight away and the line says *done without asking*. `Ctrl`+`Z` still undoes it either way. |
 
 A machine that has asked for reduced motion gets all of it off the first time
 the panel is opened; after that the choice is yours. None of this touches the
 rest of the app — the record sheet stays still while you read it.
+
+#### The pixel set
+
+Nine sprites, sixteen colours, drawn at sixteen pixels square — twenty-four
+for the big one. They are not decoration hung on the panel: each one marks a
+state the panel was already in, and each appears where that state is already
+said in words.
+
+| | Where it is | What it means |
+|---|---|---|
+| **think** | the waiting row, where the answer will start | a question is out with your flow |
+| **slow** | the same row, after eight seconds | the endpoint is slow, not stuck — the line says so too |
+| **orb** | the mark in the header | the panel, idle. It changes to **think** while an answer is on its way |
+| **hero** | the middle of an empty thread | the assistant itself, waving |
+| **done** | the line left behind by something carried out | it happened, and there is an **Undo** beside it |
+| **no** | the line left behind by something declined | nothing happened |
+| **oops** | above a failed answer | the flow could not be reached, or the assistant threw |
+| **ask** | the confirmation dialogue | you are being asked before anything is changed |
+| **new** | the pill above the composer | an answer arrived while you were reading further up |
+
+Three rules hold them together:
+
+1. **They are shown at 16, 32 or 144 pixels and never in between.** One, two
+   and six times the size they were drawn at. A pixel and a half is a blur,
+   and a blurred sprite is the one thing this art cannot survive.
+2. **A picture of your own wins.** `assets/assistant-logo.png` replaces the
+   header mark and the one on an empty thread whether the set is on or not,
+   because a mark you chose is not something a mode should paint over.
+3. **The order is: your folder, then the file.** `assets/pixel/<name>.gif`
+   overrides the copy carried inside `dossier.html`, one sprite at a time,
+   and a folder copy that stops loading falls back to the built-in rather
+   than leaving a broken-image mark in the thread. A `dossier.html` with no
+   folder beside it asks for nothing at all and still has all nine.
+
+To change one, edit its picture in `art/make-pixel-art.py` — the frames are
+written out as characters, one per pixel, from a sixteen-colour palette —
+then run it and `art/embed-pixel-art.py`. There is still no build step: the
+GIFs and the base64 are committed, and the app never generates either.
 
 ### 6.4 Keyboard
 
