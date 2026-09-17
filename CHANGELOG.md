@@ -6,6 +6,77 @@ holds — which is what to paste into a bug report.
 
 ---
 
+## 3.12.0 — 2026-09-17
+
+**The assistant comes out of its panel.**
+
+The character that greets an empty thread now has the run of the application:
+a desk pet, parked in a corner of the window, that answers to the workspace
+rather than to the conversation.
+
+The restraint is the point. A record sheet does not move while it is being
+read, so for the whole of an ordinary afternoon it is a drawing in a corner
+that blinks. Every other mood is an answer to something that just happened,
+and when that thing is over it goes back to standing still.
+
+| It does this | when |
+|---|---|
+| cheers | you mark a record **done** |
+| looks put out | something is overdue, for as long as it is |
+| holds a record and stamps it | the workspace is being saved, or a script has gone out to the runner |
+| falls asleep | nothing has been touched for four minutes — and waves when you come back |
+| stretches | once, at the end of the working day, if you are still here |
+| is carried | while you are dragging it somewhere else |
+
+- **Drag it to any of the four corners.** It snaps to the nearest one rather
+  than staying where it was dropped — a pet halfway down the left edge is a
+  pet in the way of a record. The corner is remembered in `dossier.json`.
+  Arrow keys do the same thing when it has focus
+- **Click it for one line about your day**, and click again for the next:
+  what is overdue, what is due, what it would pick up next, what you have
+  closed today. It opens nothing and it says one true thing at a time
+- **Give it a name** in Menu → Appearance and the line comes back with the
+  name on it. It has an opinion about being nameless, once
+- **It gets out of the way.** It fades out entirely while a drawer, a
+  dialogue or the menu is open over the work, and it steps aside rather
+  than being sat on when the assistant docks over its corner. Only the
+  48-pixel square it occupies takes a click; everything around it does not
+- **It reads your records and writes nothing but its own corner and name.**
+  The same three counts the footer already shows, plus the one record it
+  would point at
+
+Seven new sprites — idle, cheering, worried, asleep, working, stretching and
+being carried — drawn as the same body with different arms, different eyes
+and something over its head, because drawing each pose from scratch is how a
+character stops being the same character by the third one. Thirteen
+kilobytes of base64 for all sixteen sprites now inside `dossier.html`.
+
+**Menu → Appearance → Desk pet** has the switch, the name and the corner. A
+machine that has asked for reduced motion, or an interface already set to
+*Motion: none*, starts with the pet switched off; turning it on there
+overrides that, because it is your corner.
+
+The pet and the assistant panel's sprites are two switches over one set of
+drawings: turning the panel's sprites off does not take the pet away, and
+turning the pet off does not change the panel.
+
+### Upgrading from the previous build
+
+Replace the files. Nothing in your workspace needs migrating: `settings.pet`
+is written the first time the pet is drawn, and a workspace that has never
+seen this build gets the default — on, in the bottom-right corner, unnamed.
+
+### Tested
+
+Driven in headless Chromium over the DevTools protocol against the real
+`dossier.html`: every mood reached through the thing that causes it (a record
+marked done, a save, four minutes of nothing, a panel opening over the work),
+a drag with real mouse events landing in the top-left corner and persisting
+there, a plain click speaking rather than moving it, and the step-aside when
+the assistant opens over the corner it was in.
+
+---
+
 ## 3.11.0 — 2026-09-17
 
 **The assistant gets a face.**

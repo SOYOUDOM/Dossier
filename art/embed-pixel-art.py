@@ -21,7 +21,9 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 SRC = os.path.join(ROOT, "assets", "pixel")
 HTML = os.path.join(ROOT, "dossier.html")
-NAMES = ["think", "slow", "orb", "hero", "done", "no", "oops", "ask", "new"]
+NAMES = ["think", "slow", "orb", "hero", "done", "no", "oops", "ask", "new",
+         "pet-idle", "pet-cheer", "pet-worry", "pet-nap", "pet-work",
+         "pet-stretch", "pet-held"]
 
 START = "/* PIXEL-ART-DATA — written by art/embed-pixel-art.py; do not edit by hand */"
 END = "/* PIXEL-ART-DATA-END */"
@@ -35,10 +37,10 @@ def main():
             sys.exit("missing %s - run art/make-pixel-art.py first" % path)
         raw = open(path, "rb").read()
         total += len(raw)
-        rows.append('  %s: "data:image/gif;base64,%s",' %
+        rows.append('  "%s": "data:image/gif;base64,%s",' %
                     (name, base64.b64encode(raw).decode("ascii")))
 
-    block = START + "\nconst CHAT_PIX_DATA = {\n" + "\n".join(rows) + "\n};\n" + END
+    block = START + "\nconst PIX_DATA = {\n" + "\n".join(rows) + "\n};\n" + END
     html = open(HTML, encoding="utf-8").read()
     pattern = re.compile(re.escape(START) + r".*?" + re.escape(END), re.S)
     if not pattern.search(html):

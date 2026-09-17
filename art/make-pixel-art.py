@@ -324,81 +324,204 @@ def sprite_orb():
     return out, 16
 
 
+# ── the character ───────────────────────────────────────────────────────────
+# One drawing of the assistant, and every pose it holds anywhere in the app is
+# this body with different arms, different eyes and something over its head.
+# Drawing each pose from scratch is how a character stops being the same
+# character by the third one.
+BODY = grid([
+    "........................",
+    "...........YY...........",
+    "...........YY...........",
+    "...........KK...........",
+    ".....KKKKKKKKKKKKKK.....",
+    "....KBBBBBBBBBBBBBBK....",
+    "....KBDDDDDDDDDDDDBK....",
+    "....KBDDDDDDDDDDDDBK....",
+    "....KBDDDDDDDDDDDDBK....",
+    "....KBDDDDDDDDDDDDBK....",
+    "....KBDDDDDDDDDDDDBK....",
+    "....KBBBBBBBBBBBBBBK....",
+    "....KBBBBDDDDDDBBBBK....",
+    ".....KKKKKKKKKKKKKK.....",
+    "..........KKKK..........",
+    ".....KKKKKKKKKKKKKK.....",
+    "....KBBBBBBBBBBBBBBK....",
+    "....KBBBBBAAAABBBBBK....",
+    "....KBBBBBAAAABBBBBK....",
+    "....KBBBBBBBBBBBBBBK....",
+    "....KBBBBBBBBBBBBBBK....",
+    ".....KKKKKKKKKKKKKK.....",
+    "......DDDDDDDDDDDD......",
+    "........................",
+])
+STAR = [".W.", "WWW", ".W."]
+ZED = ["LLL", "..L", ".L.", "LLL"]
+
+
+def arm(g, side, top, hand=None, dy=0):
+    """An arm needs two pixels of blue in it. At one it is a dark outline, a
+    single lit column and another dark outline, which on Nebula is not an arm
+    but a stick lying beside a robot. Two columns of blue with the body's own
+    outline left between them reads as a limb on every skin.
+
+    Raising one moves where it starts. The shoulder stays where it is, which
+    is what keeps it attached to the robot it belongs to - and the hand goes
+    on the far end of the arm, which is the top of a raised one and the
+    bottom of a lowered one. Put it at the top of a lowered arm and the robot
+    appears to be holding both hands up beside its ears at all times."""
+    x, pat = (1, "KBB") if side == "L" else (20, "BBK")
+    for y in range(top, 21):
+        paste(g, [pat], x, y + dy)
+    paste(g, ["KKK"], x, 21 + dy)
+    hx = x + 1 if side == "L" else x   # inside the arm's own outline
+    if hand == "top":
+        paste(g, ["LL", "LL"], hx, top + dy)
+    elif hand == "bottom":
+        paste(g, ["LL", "LL"], hx, 19 + dy)
+
+
+def eyes(g, how="open", dy=0):
+    if how == "shut":
+        paste(g, ["CCC..CCC"], 8, 9 + dy)
+    elif how == "wide":
+        paste(g, ["CCC", "CCC", "CCC"], 8, 7 + dy)
+        paste(g, ["CCC", "CCC", "CCC"], 13, 7 + dy)
+    elif how == "small":
+        paste(g, ["CC", "CC"], 9, 8 + dy)
+        paste(g, ["CC", "CC"], 14, 8 + dy)
+    else:
+        paste(g, ["CCC", "CCC"], 8, 8 + dy)
+        paste(g, ["CCC", "CCC"], 13, 8 + dy)
+
+
+def pose(arms="down", look="open", bulb="Y", dy=0, over=None, front=None):
+    """One frame of the character. dy drops the whole drawing, which is how it
+    sits down to sleep and hops when it is pleased."""
+    g = blank(24, 24)
+    for y, row in enumerate(BODY):
+        for x, ch in enumerate(row):
+            if ch != "." and 0 <= y + dy < 24:
+                g[y + dy][x] = ch
+    if arms == "down":
+        arm(g, "L", 16, dy=dy); arm(g, "R", 16, dy=dy)
+    elif arms == "up":
+        arm(g, "L", 10, "top", dy); arm(g, "R", 10, "top", dy)
+    elif arms == "half":
+        arm(g, "L", 13, "top", dy); arm(g, "R", 13, "top", dy)
+    elif arms == "out":
+        arm(g, "L", 16, "bottom", dy); arm(g, "R", 16, "bottom", dy)
+    paste(g, [bulb * 2, bulb * 2], 11, 1 + dy)
+    eyes(g, look, dy)
+    if front:
+        paste(g, front[0], front[1], front[2])
+    if over:
+        paste(g, over[0], over[1], over[2])
+    return g
+
+
 def sprite_hero():
     """An empty thread opens on this: the assistant itself, waving."""
-    base = grid([
-        "........................",
-        "...........YY...........",
-        "...........YY...........",
-        "...........KK...........",
-        ".....KKKKKKKKKKKKKK.....",
-        "....KBBBBBBBBBBBBBBK....",
-        "....KBDDDDDDDDDDDDBK....",
-        "....KBDDDDDDDDDDDDBK....",
-        "....KBDDDDDDDDDDDDBK....",
-        "....KBDDDDDDDDDDDDBK....",
-        "....KBDDDDDDDDDDDDBK....",
-        "....KBBBBBBBBBBBBBBK....",
-        "....KBBBBDDDDDDBBBBK....",
-        ".....KKKKKKKKKKKKKK.....",
-        "..........KKKK..........",
-        ".....KKKKKKKKKKKKKK.....",
-        "....KBBBBBBBBBBBBBBK....",
-        "....KBBBBBAAAABBBBBK....",
-        "....KBBBBBAAAABBBBBK....",
-        "....KBBBBBBBBBBBBBBK....",
-        "....KBBBBBBBBBBBBBBK....",
-        ".....KKKKKKKKKKKKKK.....",
-        "......DDDDDDDDDDDD......",
-        "........................",
-    ])
-    # An arm needs two pixels of blue in it. At one it is a dark outline, a
-    # single lit column and another dark outline, which on Nebula is not an
-    # arm but a stick lying beside a robot. Two columns of blue with the
-    # body's own outline left between them reads as a limb on every skin.
-    # Waving moves where the arm starts; the shoulder stays where it is.
-    star = [".W.", "WWW", ".W."]
-
-    def frame(wave, eyes, bulb, twinkle):
-        g = copy(base)
-        for y in range(16, 21):                       # the arm that stays put
-            paste(g, ["KBB"], 1, y)
-        paste(g, ["KKK"], 1, 21)
-        if wave == 0:                                 # down, by its side
-            for y in range(16, 21):
-                paste(g, ["BBK"], 20, y)
-            paste(g, ["KKK"], 20, 21)
-        else:
-            # A raised arm straight up is a post. It reads as a wave when it
-            # bends: shoulder, then a step outward, then a hand on the end
-            # that moves between the two poses.
+    def wave(step, look="open", bulb="Y", twinkle=None):
+        g = pose("down", look, bulb)
+        if step:
+            # the waving arm bends: shoulder, a step outward, then the hand
             for y in (16, 17):
                 paste(g, ["BBK"], 20, y)
             for y in (13, 14, 15):
                 paste(g, ["BBK"], 21, y)
             paste(g, ["KK"], 20, 18)
-            hx = 21 if wave == 1 else 22
-            paste(g, ["LLK", "LLK"], hx, 11)
-        paste(g, [bulb * 2, bulb * 2], 11, 1)
-        if eyes == "shut":
-            paste(g, ["CCC..CCC"], 8, 9)
-        else:
-            paste(g, ["CCC", "CCC"], 8, 8)
-            paste(g, ["CCC", "CCC"], 13, 8)
+            paste(g, ["LLK", "LLK"], 21 if step == 1 else 22, 11)
         if twinkle:
-            paste(g, star, twinkle[0], twinkle[1])
+            paste(g, STAR, twinkle[0], twinkle[1])
         return g
 
     return [
-        frame(0, "open", "Y", None),
-        frame(1, "open", "O", (2, 6)),
-        frame(2, "open", "Y", None),
-        frame(1, "open", "O", (2, 6)),
-        frame(2, "shut", "Y", None),
-        frame(0, "open", "L", None),
-        frame(0, "open", "Y", (2, 6)),
-        frame(0, "open", "Y", None),
+        wave(0), wave(1, bulb="O", twinkle=(2, 6)), wave(2),
+        wave(1, bulb="O", twinkle=(2, 6)), wave(2, "shut"),
+        wave(0, bulb="L"), wave(0, twinkle=(2, 6)), wave(0),
     ], 18
+
+
+# ═══ the desk pet ═══════════════════════════════════════════════════════════
+# The same character, everywhere else in the app. It is still for most of the
+# day on purpose: a record sheet should not move while it is being read, so
+# the only sprite that runs all day is idle, and idle is a blink.
+def sprite_pet_idle():
+    """Standing about. Two long still frames, one blink, one slow pulse of the
+    antenna - which is the most a thing parked in the corner of somebody's
+    afternoon has any business doing."""
+    return [pose(), pose("down", "shut"), pose(), pose("down", "open", "L")], [180, 12, 150, 40]
+
+
+def sprite_pet_cheer():
+    """Something was finished. Arms up, a hop, and two sparks."""
+    return [
+        pose("half", "open", "O"),
+        pose("up", "open", "Y", dy=-1, over=(STAR, 2, 5)),
+        pose("up", "open", "O", dy=-1, over=(STAR, 19, 4)),
+        pose("up", "open", "Y", dy=-1, over=(STAR, 2, 5)),
+        pose("half", "open", "O"),
+        pose("down", "open", "Y"),
+    ], [10, 10, 10, 10, 12, 30]
+
+
+def sprite_pet_worry():
+    """Something is overdue. It is not a siren - a small shuffle on the spot
+    and one amber mark over its head, which is as loud as a pet gets."""
+    bang = ["YY", "YY", "YY", "..", "YY"]   # beside the head, never over it
+    out = []
+    for i, (look, mark) in enumerate((("small", True), ("small", True),
+                                      ("small", False), ("open", True))):
+        g = pose("out", look, "O", over=(bang, 21, 5) if mark else None)
+        out.append(g)
+    return out, [26, 26, 20, 26]
+
+
+def sprite_pet_nap():
+    """Nobody has touched anything for a while. It sits down two pixels and
+    sleeps, and the z rises the way a z is obliged to."""
+    return [
+        pose("down", "shut", "S", dy=2, over=(ZED, 20, 1)),
+        pose("down", "shut", "S", dy=2, over=(ZED, 20, 0)),
+        pose("down", "shut", "D", dy=2, over=(["WW", ".W", "WW"], 20, 2)),
+        pose("down", "shut", "S", dy=2),
+    ], [70, 70, 70, 90]
+
+
+def sprite_pet_work():
+    """A save, a backup, a script going out: it is holding a record and
+    stamping it."""
+    card = ["LLLLL", "LDDDL", "LDDDL", "LLLLL"]
+    done = ["LLLLL", "LDGDL", "LGDGL", "LLLLL"]
+    return [
+        pose("out", "open", "Y", front=(card, 9, 17)),
+        pose("out", "open", "O", dy=-1, front=(card, 9, 16)),
+        pose("out", "open", "Y", front=(done, 9, 17)),
+        pose("out", "open", "Y", front=(done, 9, 17)),
+    ], [16, 12, 16, 26]
+
+
+def sprite_pet_stretch():
+    """The end of the working day, once."""
+    return [
+        pose("down"),
+        pose("half", "shut", "Y"),
+        pose("up", "shut", "L", dy=-1, over=(["LL", "..", "LL"], 20, 3)),
+        pose("up", "shut", "L", dy=-1, over=(["LL", "..", "LL"], 20, 2)),
+        pose("half", "open", "Y"),
+        pose("down"),
+    ], [24, 24, 40, 40, 24, 60]
+
+
+def sprite_pet_held():
+    """Picked up and being carried to another corner."""
+    return [
+        pose("up", "wide", "O", dy=-1),
+        pose("up", "wide", "Y", dy=0),
+        pose("up", "wide", "O", dy=-1),
+        pose("up", "wide", "Y", dy=1),
+    ], 9
 
 
 def sprite_done():
@@ -548,6 +671,13 @@ SPRITES = [
     ("oops",  sprite_oops,  True),
     ("ask",   sprite_ask,   True),
     ("new",   sprite_new,   True),
+    ("pet-idle",    sprite_pet_idle,    True),
+    ("pet-cheer",   sprite_pet_cheer,   True),
+    ("pet-worry",   sprite_pet_worry,   True),
+    ("pet-nap",     sprite_pet_nap,     True),
+    ("pet-work",    sprite_pet_work,    True),
+    ("pet-stretch", sprite_pet_stretch, True),
+    ("pet-held",    sprite_pet_held,    True),
 ]
 
 

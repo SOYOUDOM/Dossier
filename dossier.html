@@ -2100,12 +2100,12 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
    the art rather than the art squeezed into the slots.
    crisp-edges first, pixelated second: the browsers that only understand
    the older keyword take it, everything else takes the one below. */
-.chpix{image-rendering:crisp-edges;image-rendering:pixelated;
+.pxl{image-rendering:crisp-edges;image-rendering:pixelated;
   width:16px;height:16px;flex:0 0 auto;display:block;background:none;border:0}
-.chpix.p32{width:32px;height:32px}
-.chpix.p144{width:144px;height:144px}
+.pxl.p32{width:32px;height:32px}
+.pxl.p144{width:144px;height:144px}
 /* the waiting row, when the set is on: a bigger sprite deserves a bit of air */
-.chthink .chwait .chpix{margin:1px 2px 1px 0}
+.chthink .chwait .pxl{margin:1px 2px 1px 0}
 /* the alert over a failed answer */
 .chb.bot .chalert{margin:0 0 7px}
 /* a receipt's mark is the sprite itself, not a character */
@@ -2114,21 +2114,60 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
    the same way it outranks the drawn one - and for the same reason it is
    settled here rather than in script: your logo may still be loading when
    the panel is drawn. */
-.chat.ownmark .chpix.p144,.chat.ownmark .chorb .chpix{display:none}
+.chat.ownmark .pxl.p144,.chat.ownmark .chorb .pxl{display:none}
 .chorb.pixorb{width:32px;height:32px;background:none;box-shadow:none}
 .chorb.pixorb i,.chorb.pixorb svg{display:none}
 .chorb.pixorb::before{display:none}
-.chorb.pixorb .chpix{position:relative;z-index:1}
+.chorb.pixorb .pxl{position:relative;z-index:1}
 /* the pill that says an answer arrived above where you are reading */
-.chat .chpill .chpix{display:inline-block;vertical-align:-3px;margin-right:5px}
+.chat .chpill .pxl{display:inline-block;vertical-align:-3px;margin-right:5px}
 /* and the mark on the confirmation */
 .chask2 .dlgi{display:flex;flex:0 0 auto}
 .chask2 .dlgi:empty{display:none}
 /* the whole cast, on the sheet where the switch for them is */
-.chpixrow{display:flex;gap:10px;flex-wrap:wrap;align-items:center;padding:4px 0 2px}
+.pxlrow{display:flex;gap:10px;flex-wrap:wrap;align-items:center;padding:4px 0 2px}
+
+/* ═══ THE DESK PET ═══════════════════════════════════════════════════════
+   The same character as the one on an empty thread, parked in a corner of
+   the window for the rest of the day.
+
+   Everything here is in service of a rule the rest of this application
+   already keeps: a record sheet does not move while it is being read. So it
+   sits in a corner rather than walking about, it is 48 pixels, the only
+   animation it runs all day is a blink, and it fades out entirely while a
+   panel is open over the work. A companion, not a banner. */
+.pet{position:fixed;z-index:56;display:flex;flex-direction:column;gap:7px;
+  pointer-events:none;
+  transition:opacity .3s var(--ease),transform .3s var(--ease)}
+.pet[data-corner="br"]{right:16px;bottom:38px;align-items:flex-end}
+.pet[data-corner="bl"]{left:16px;bottom:38px;align-items:flex-start}
+.pet[data-corner="tr"]{right:16px;top:70px;align-items:flex-end;flex-direction:column-reverse}
+.pet[data-corner="tl"]{left:16px;top:70px;align-items:flex-start;flex-direction:column-reverse}
+/* while a drawer, a dialogue or the menu is open, the corner it is in
+   belongs to that instead */
+.pet.away{opacity:0;pointer-events:none}
+.pet.dragging{transition:none}
+.petb{pointer-events:auto;border:0;background:none;padding:0;line-height:0;display:block;
+  cursor:grab;touch-action:none;filter:drop-shadow(0 7px 10px rgba(0,0,0,.34))}
+.pet.dragging .petb{cursor:grabbing}
+.petb:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:8px}
+.petb .pxl{width:48px;height:48px}
+/* what it says when you click it: one line, and gone again */
+.petsay{pointer-events:auto;max-width:236px;background:var(--paper);color:var(--ink);
+  border:1px solid var(--rule-hi);border-radius:12px;padding:7px 11px;
+  font-size:11.5px;line-height:1.5;box-shadow:0 12px 30px -14px rgba(0,0,0,.55);
+  opacity:0;transform:translateY(4px);transition:opacity .18s var(--ease),transform .18s var(--ease)}
+.petsay.on{opacity:1;transform:none}
+.petsay:empty{display:none}
+.petsay b{font-weight:650}
+/* The assistant docks against the right-hand edge and takes 452px of it. A
+   pet parked in a right-hand corner steps aside rather than being sat on. */
+body.chatting .pet[data-corner="br"],body.chatting .pet[data-corner="tr"]{
+  transform:translateX(calc(-1 * min(452px,96vw)))}
+:root[data-motion="none"] .pet{transition:none}
 /* the big one, in the middle of an empty thread: 144 inside the 150 the
    drawn mark uses, so the glow around it lands in the same place */
-.chhero .chorbx .chpix{margin:3px auto}
+.chhero .chorbx .pxl{margin:3px auto}
 /* the afterimage of the row, gone before the answer has finished arriving */
 .chghost{overflow:hidden;animation:chOut .14s ease-in both;pointer-events:none}
 @keyframes chOut{from{opacity:1;max-height:40px}to{opacity:0;max-height:0;margin-top:-4px}}
@@ -3910,6 +3949,7 @@ const STRINGS = {
   NoExtraFacesWereDetected: "No extra faces were detected.",
   Palette: "Palette",
   Off: "Off",
+  On: "On",
   OnceADay: "Once a day",
   Never: "Never",
   WhenThisTabIsClosed: "When this tab is closed",
@@ -4379,6 +4419,26 @@ const STRINGS = {
   FxAmbient: "Passing light",
   FxAmbientWhy: "A light crosses the panel every so often.",
   FxEvery: "How often",
+  PetHeading: "Desk pet",
+  PetIntro: "The assistant, out of its panel and parked in a corner. It blinks, and otherwise it only moves when something happens: a record finished, something overdue, a save going out. Drag it to whichever corner is out of your way, click it for a line about your day. It reads your records and writes nothing but its own corner and name.",
+  PetOnOff: "Keep it on screen",
+  PetName: "What you call it",
+  PetNamePh: "Pip",
+  PetCorner: "Corner",
+  PetCornerBR: "Bottom right",
+  PetCornerBL: "Bottom left",
+  PetCornerTR: "Top right",
+  PetCornerTL: "Top left",
+  PetCornerHint: "Or drag it there. With the assistant open it steps aside rather than being sat on.",
+  PetMotionOff: "Motion is set to none, so it starts switched off. Turning it on here overrides that — it is your corner.",
+  PetLabel: "Desk pet",
+  PetNamedLabel: "{name}, the desk pet",
+  PetOverdue: "{n} overdue.",
+  PetDueToday: "{n} due today.",
+  PetNext: "Next: {what}",
+  PetClosed: "{n} closed today — good going.",
+  PetClear: "Nothing overdue, nothing due. Quiet one.",
+  PetNoName: "I have not got a name yet — Menu → Appearance.",
   FxPixel: "Sprites",
   FxPixelWhy: "A small drawn cast: one waiting while an answer is on its way, one on the mark in the header, a tick for something carried out, an alert when a flow cannot be reached. Off leaves the panel exactly as it was.",
   FxConfirm: "Ask before doing anything",
@@ -4884,7 +4944,7 @@ const STATUSES = [
    the status bar, and clicking it copies a line you can paste into a bug
    report — build date and flow protocol included, because those are the two
    things that actually differ between copies. */
-const APP_VERSION = "3.11.0";
+const APP_VERSION = "3.12.0";
 const APP_BUILT = "2026-09-17";
 function buildLine(){
   return "Dossier v" + APP_VERSION + " \u00b7 built " + APP_BUILT +
@@ -5780,6 +5840,8 @@ function setStatus(id, status){
   t.log.push({ at:now, kind:"status", text: stMeta(from).label + " → " + stMeta(status).label });
   const freed = syncHolds();
   touch(); renderAll();
+  /* the one moment in a support day worth celebrating */
+  if (status === "done") petMood("cheer", 2600);
   announceFreed(freed);
 }
 function cycleStatus(id){
@@ -6256,6 +6318,7 @@ async function saveNow(silent){
   if (!FS.ok || !FS.root){ if (!silent) toast(L("LanguageNeedsWorkspace"), { bad:true }); return false; }
   if (S.saving) return false;
   S.saving = true; setSaveState("saving");
+  petMood("work", 1700);          /* it carries the record out to the folder */
   try {
     await FS.writeText(FS.root, "dossier.json", JSON.stringify(payload(), null, 2));
     await dailyBackup();
@@ -6329,6 +6392,7 @@ async function openWorkspace(handle, quiet){
   S.hush = true;
   restoreFilters();
   applyFonts(); applyFeel(); applyTheme(S.settings.theme || "archive");
+  petPaint();          /* this folder's pet, in this folder's corner */
   refreshSelects(); syncRail(); renderTemplates();
   setView(S.view);
   setTimeout(() => { S.hush = false; }, 1500);
@@ -7776,7 +7840,7 @@ function chatArt(){
          with no folder beside it nothing is asked for at all, and the
          animation built into the file is the one you get - which is why
          there is no way for this to leave a missing file in the console. */
-      if (!folder){ folder = true; chatGifOver(); chatPixOver(); }
+      if (!folder){ folder = true; chatGifOver(); pixOver(); }
     };
     im.src = src;
   });
@@ -7808,57 +7872,299 @@ function chatGifOver(){
    half times its size is a blurred sprite, which is the one thing pixel art
    cannot survive. */
 /* PIXEL-ART-DATA — written by art/embed-pixel-art.py; do not edit by hand */
-const CHAT_PIX_DATA = {
-  think: "data:image/gif;base64,R0lGODlhEAAQAPMAAE991g4XKSM3X0991m6o/7fc//P5/3/o5FbXm//Ea/+aW/9/kqiM/3uTvi6PbhYgOCH/C05FVFNDQVBFMi4wAwEAAAAh+QQJDwAAACwAAAAAEAAQAAAEPhDISauVKd2btw2BB47kSAVDqq7hhApwDA+t9B4HjAv0OQg7YK7n+sliRJtKpqoBSlDnybSJUn0pAqH5sdYiACH5BAkPAAAALAAAAAAQABAAAARBEMgJlKKYWpvzvh0WBCEwnuhJBUPrvuTECnRND7HEHgfN3znT4Ccg4lYDm+0ocy1bwZQ0uFKFplZki0BwUU3YXAQAIfkECQ8AAAAsAAAAABAAEAAABD4QyEmrlSndm7cNgQeO5EgFQ6qu4YQKcAwPrfQeB4wL9DkIO2Cu5/rJYkSbSqaqAUpQ58m0iVJ9KQKh+bHWIgAh+QQJDwAAACwAAAAAEAAQAAAEQhDICZSimFqb874dFgQhMJ7oSQVD677kxAp0TQ+xNAvHQfe41eDn4x2CsqGthtS5bK6cKUUNoUrUq8hFIEQzWZUkAgAh+QQJDwAAACwAAAAAEAAQAAAEPhDISauVKd2btw2BB47kSAVDqq7hhApwDA+t9MoxfQ7CccA+gc7Fw81qAFRKpkKWnsiTaQOd7lIEQvNTrUUAACH5BAkPAAAALAAAAAAQABAAAAQ+EMhJq5Wl3Ju3DYEHjuRIBUOqruGECnAMD630HgeMC/Q5CDtgruf6yWJEm0qmqgFKUOfJtIlSfSkCofmx1iIAOw==",
-  slow: "data:image/gif;base64,R0lGODlhEAAQAPMAAE991g4XKSM3X0991m6o/7fc//P5/3/o5FbXm//Ea/+aW/9/kqiM/3uTvi6PbhYgOCH/C05FVFNDQVBFMi4wAwEAAAAh+QQJKgAAACwAAAAAEAAQAAAERRDISauVrc3CL8hV4QUBJU5kqgbcCQRDLM8lOgh4jg+1BOs6HuV3OOCKAqENmFP6ZMFY77WqjlIeapVkgcUIBNnUt+VKIgAh+QQJKgAAACwAAAAAEAAQAAAETBDISWW5dbZWS5YbYBiA9wFBIBmXiaZwOqZUMNx4rk624P++wU7SA/6EtYHgcPAxBUie0hgconBAnDXGhZ1ip1eXVrHdCARtZuyVRAAAIfkECSoAAAAsAAAAABAAEAAABEQQyEmrla0BYy7NUudJQbCJVKmuajq8cGxOwSDc+D3MpJ3jO5fgcLgRBUGa74fkAWqvHMzJqjpTLY8163oRCFPLtjSJAAAh+QQJKgAAACwAAAAAEAAQAAAEPhDISauVrd2btw2BB47kSAVDqq7hhApwDA+t9MoxfQ7CccA+gc7Fw81qAFRKpkKWnsiTaQOd7lIEQvNTrUUAADs=",
-  orb: "data:image/gif;base64,R0lGODlhEAAQAPMAAE991g4XKSM3X0991m6o/7fc//P5/3/o5FbXm//Ea/+aW/9/kqiM/3uTvi6PbhYgOCH/C05FVFNDQVBFMi4wAwEAAAAh+QQJEAAAACwAAAAAEAAQAAAERBDISauVpVyae7/ZIA6CkFUhoYqGqU3FoM5GbXLyTAztjcW6Hcn1E81GpRNGMEImOaVm6QkrTK9EjhWrRHk+m194TIkAACH5BAkQAAAALAAAAAAQABAAAARFEMhJq5WlXJp7v9kgDoKQVSGhiuU5FYMqsyYXywStYTCeDwbTLnT7GY4uQEEwGgmCO0ypWWpxltVskpdtRa+eLei7KUsiACH5BAkQAAAALAAAAAAQABAAAARFEMhJq5WlXJp7v9kgDoKQVSGhiuU5FYMqsyYXywStYTCek6Zd6PYDugAFwWhUqr1KS0Nzx2sKDNggKtmUHjmez4Y3LlMiACH5BAkQAAAALAAAAAAQABAAAARFEMhJq5WlXJp7v9kgDoKQVSGhiuU5FYMqsyYXywStYTCek6Zd6PYDugAFwWhUqr1KAwOtxUkars0gypo9Vj1e0G5DpkQAACH5BAkQAAAALAAAAAAQABAAAARCEMhJq5WlXJp7v9kgDoKQVSGhiuU5FYMqsyYXywStYbCB67uMYbgCvgSGEa12FChLLU4BSjXtXtOqC+X5bHjfMCUCACH5BAkQAAAALAAAAAAQABAAAARFEMhJq5WlXJp7v9kgDoKQVaFBEGJ5TsVgzGtrcgOh1uSNxaug7RXK8XovQEEwGpV8mFLzCVUuqc/kD2vSWDyeDcwrLksiACH5BAkQAAAALAAAAAAQABAAAARGEMhJq5WlXJp7v9kwGIMgZFVIGGx5alMxELRBiCaMzTSNnzFZz+dCAUK82894FIieLmDMBDXlOAWr9pXKbplYDxik25gnEQAh+QQJEAAAACwAAAAAEAAQAAAERBDISauVpVyae7/ZIA6GkFUhoRqsqU3FoM7GIJicPBPi/QKpXc+Fiel4wxNGMBrdcLBb8wktUqlKWOFKtHg8G214TIkAADs=",
-  hero: "data:image/gif;base64,R0lGODlhGAAYAPMAAE991g4XKSM3X0991m6o/7fc//P5/3/o5FbXm//Ea/+aW/9/kqiM/3uTvi6PbhYgOCH/C05FVFNDQVBFMi4wAwEAAAAh+QQJEgAAACwAAAAAGAAYAAAEaxDISau9NyXMq+4gEAQhNZ5oygVD674vebFCbd/1IFs07uuY3mFYGx5yu4qQKDAigwPfL2mCWV3UCcv1w65S4FFJghqLwmBea3uFbWVvGGFOcK/JazndDhTl23xwf4BYd2ckaGknF1I4ZmYRACH5BAkSAAAALAAAAAAYABgAAAR6EMhJq71XKcyr7iAQBCE1nmjKBUPrvi9pGaxg37g9yJThD7mgYHehAQWHpC150PEqNaRS2hw+TUfhjXhhwb4tUqHw9LaCMcD4mmqfJOEO6hI3udtwotcMjtX3MASCBDB7EoAvg4QxIxOIfWlYO5CFUI13eB1aOCWdExEAIfkECRIAAAAsAAAAABgAGAAABHIQyEmrvTclzKvuIBAEITWeaMoFQ+u+L3mxQm3f9SBbNO7rmN5hWBsecruKkCgwIoMD3y9pglldskKh6vphJVplajyStKjisuWcJqPMQJbuepXL7DCCngCzS/Ave3wxaiJndFZUgIhfJmVuYyBSOCWVExEAIfkECRIAAAAsAAAAABgAGAAABHoQyEmrvVcpzKvuIBAEITWeaMoFQ+u+L2kZrGDfuD3IlOEPuaBgd6EBBYekLXnQ8So1pFLaHD5NR+GNeGHBvi1SofD0toIxwPiaap8k4Q7qEje523Ci1wyO1fcwBIIEMHsSgC+DhDEjE4h9aVg7kIVQjXd4HVo4JZ0TEQAh+QQJEgAAACwAAAAAGAAYAAAEcRDISau9NyXMq+4gEAQhNZ5oygVD674vebFCbd/1IFs07uuYnu8GnA1qhyRSKSjyjkPirsKCWVuyQsH0+rmyW1NqPJJgO6jLWUxWAc7V6hUWl8RhhDyBvr6/9HsxZXZYc1ZTIoWGMVRlbWMgUTcllBMRACH5BAkSAAAALAAAAAAYABgAAARrEMhJq723FMyr7iAQBCE1nmjKBUPrvi95sUJt3/UgWzTu65jeYVgbHnK7ipAoMCKDA98vaYJZXdQJy/XDrlLgUUmCGovCYF5re4VtZW8YYU5wr8lrOd0OFOXbfHB/gFh3ZyRoaScXUjhmZhEAIfkECRIAAAAsAAAAABgAGAAABHQQyEmrvTclzKvuIBAEITWeaMoFQ+u+L2kZrGDfuD3IlOEPuaBgd6EBBYekLXnQ8So1pFLaHD5NR+GNeGHBvq3rxNsKxlap9KgkQbFF6rTFSwbHwu0wjMAnwOh5O3t9f3gienaFXHSJijIncHFukBZaOG9vEQAh+QQJEgAAACwAAAAAGAAYAAAEaxDISau9NyXMq+4gEAQhNZ5oygVD674vebFCbd/1IFs07uuY3mFYGx5yu4qQKDAigwPfL2mCWV3UCcv1w65S4FFJghqLwmBea3uFbWVvGGFOcK/JazndDhTl23xwf4BYd2ckaGknF1I4ZmYRADs=",
-  done: "data:image/gif;base64,R0lGODlhEAAQAPMAAE991g4XKSM3X0991m6o/7fc//P5/3/o5FbXm//Ea/+aW/9/kqiM/3uTvi6PbhYgOCH5BAkHAAAALAAAAAAQABAAAAQWEMhJq704680r6hLygSIIlKSprmzrRgAh+QQJBwAAACwAAAAAEAAQAAAEHBDISau9OOvNK+oS8lHjJU5ndqaaWG4vKM90TUUAIfkECQcAAAAsAAAAABAAEAAABCAQyEmrvTgDpCni3QZOo1dKX5Veq6ilbfadcmjfeK4DEQAh+QQJCQAAACwAAAAAEAAQAAAEJxDISau9wGBr+q4G8k2ISJlVaaknmqIspsZb6YLn1mmjxPfAoLASAQAh+QQJKAAAACwAAAAAEAAQAAAEIBDISau9OAOkKeLdBk6jV0pflV6rqKVt9p1yaN94rgMRADs=",
-  no: "data:image/gif;base64,R0lGODlhEAAQAPMAAE991g4XKSM3X0991m6o/7fc//P5/3/o5FbXm//Ea/+aW/9/kqiM/3uTvi6PbhYgOCH5BAkHAAAALAAAAAAQABAAAAQnEMhJq70YtM3xtl/VeGKmUWOWSmmIvto6yTIIk3cp1rHHuaagEBABACH5BAkHAAAALAAAAAAQABAAAAQoEMhJq70YtM3xtl/VeGKmUWOWSim3nlPbxaj5vmB54Rofgi6eaWiKAAAh+QQJBwAAACwAAAAAEAAQAAAEKRDISau9GLTN8bZf1XhiplFjlkop151T67aoucJkfd0sr/k9l2lIpEQAACH5BAk8AAAALAAAAAAQABAAAAQpEMhJq70YtM3xtl/VeGKmUWOWSinXnVPrtqi5wmR93Syv+T2XaUikRAAAOw==",
-  oops: "data:image/gif;base64,R0lGODlhEAAQAPMAAE991g4XKSM3X0991m6o/7fc//P5/3/o5FbXm//Ea/+aW/9/kqiM/3uTvi6PbhYgOCH/C05FVFNDQVBFMi4wAwEAAAAh+QQJFAAAACwAAAAAEAAQAAAELRDISau9ONvAu69BIo5kQIUjV54lKpqTm6gpm8qwJJOv/eI+Xu/kKWqOyGQlAgAh+QQJFAAAACwAAAAAEAAQAAAEMBDISau9ONvAu6+BIo5kQIUjV54lKpqAAriKmsYybb+xRJO8iU7HAq5OnqRmyWxWIgAh+QQJFAAAACwAAAAAEAAQAAAEMBDISau9ONvAu6/BIo5kQIUjV54lKprAAriLmsYybb+xRJO8iU7HAq5OnqRmyWxWIgAh+QQJFAAAACwAAAAAEAAQAAAELRDISau9ONvAu6+BIo5kQIUjV54lKpqTq6gpm8qwJJOv/eI+Xu/kKWqOyGQlAgA7",
-  ask: "data:image/gif;base64,R0lGODlhEAAQAPMAAE991g4XKSM3X0991m6o/7fc//P5/3/o5FbXm//Ea/+aW/9/kqiM/3uTvi6PbhYgOCH/C05FVFNDQVBFMi4wAwEAAAAh+QQJFgAAACwAAAAAEAAQAAAENRDISSsNOOsaiP9gcIFG+YlT5xkfS6CSChIuDMjtOZLhPuupmctju2mOlhsxacEwn9CoNBkBACH5BAkWAAAALAAAAAAQABAAAAQ1EMhJKw046xqI/2BwgUb5iVPnGR9LoJIKEi4MyO05kuE+66mZy2O7aY6WGzFpwTCf0Kg0GQEAIfkECRYAAAAsAAAAABAAEAAABDUQyEmrvTfozWsgYCgG1BcaaEhOJmGc4Cq14kvIAA3adym6I98vyPrxeiWOMhPDeHDOqPQSAQAh+QQJFgAAACwAAAAAEAAQAAAENRDISau9N+jNayBgKAbUFxpoSE4mYZzgKrXiS8gADdp3Kboj3y/I+vF6JY4yE8N4cM6o9BIBADs=",
-  new: "data:image/gif;base64,R0lGODlhEAAQAPMAAE991g4XKSM3X0991m6o/7fc//P5/3/o5FbXm//Ea/+aW/9/kqiM/3uTvi6PbhYgOCH/C05FVFNDQVBFMi4wAwEAAAAh+QQJCwAAACwAAAAAEAAQAAAEHxDISau9WJJN8uSdB4DiyGVgGlbqhqYiWbplbd84HgEAIfkECQsAAAAsAAAAABAAEAAABB8QyEmrvThnwomWnfeFH0BiYSpWKrelY1ea62zfuBYBACH5BAkLAAAALAAAAAAQABAAAAQhEMhJqwVF5su770RIfIA4fiaZcmZ7Vm4ItqhIlu+t714EACH5BAkLAAAALAAAAAAQABAAAAQfEMhJq71YFp27/xIhEt9IemY5ZmZ7Vq7ItuiqgvgXAQAh+QQJCwAAACwAAAAAEAAQAAAEIRDISasFRebLu+9ESHyAOH4mmXJme1ZuCLaoSJbvre9eBAAh+QQJCwAAACwAAAAAEAAQAAAEHxDISau9OGfCiZad94UfQGJhKlYqt6VjV5rrbN+4FgEAOw==",
+const PIX_DATA = {
+  "think": "data:image/gif;base64,R0lGODlhEAAQAPMAAE991g4XKSM3X0991m6o/7fc//P5/3/o5FbXm//Ea/+aW/9/kqiM/3uTvi6PbhYgOCH/C05FVFNDQVBFMi4wAwEAAAAh+QQJDwAAACwAAAAAEAAQAAAEPhDISauVKd2btw2BB47kSAVDqq7hhApwDA+t9B4HjAv0OQg7YK7n+sliRJtKpqoBSlDnybSJUn0pAqH5sdYiACH5BAkPAAAALAAAAAAQABAAAARBEMgJlKKYWpvzvh0WBCEwnuhJBUPrvuTECnRND7HEHgfN3znT4Ccg4lYDm+0ocy1bwZQ0uFKFplZki0BwUU3YXAQAIfkECQ8AAAAsAAAAABAAEAAABD4QyEmrlSndm7cNgQeO5EgFQ6qu4YQKcAwPrfQeB4wL9DkIO2Cu5/rJYkSbSqaqAUpQ58m0iVJ9KQKh+bHWIgAh+QQJDwAAACwAAAAAEAAQAAAEQhDICZSimFqb874dFgQhMJ7oSQVD677kxAp0TQ+xNAvHQfe41eDn4x2CsqGthtS5bK6cKUUNoUrUq8hFIEQzWZUkAgAh+QQJDwAAACwAAAAAEAAQAAAEPhDISauVKd2btw2BB47kSAVDqq7hhApwDA+t9MoxfQ7CccA+gc7Fw81qAFRKpkKWnsiTaQOd7lIEQvNTrUUAACH5BAkPAAAALAAAAAAQABAAAAQ+EMhJq5Wl3Ju3DYEHjuRIBUOqruGECnAMD630HgeMC/Q5CDtgruf6yWJEm0qmqgFKUOfJtIlSfSkCofmx1iIAOw==",
+  "slow": "data:image/gif;base64,R0lGODlhEAAQAPMAAE991g4XKSM3X0991m6o/7fc//P5/3/o5FbXm//Ea/+aW/9/kqiM/3uTvi6PbhYgOCH/C05FVFNDQVBFMi4wAwEAAAAh+QQJKgAAACwAAAAAEAAQAAAERRDISauVrc3CL8hV4QUBJU5kqgbcCQRDLM8lOgh4jg+1BOs6HuV3OOCKAqENmFP6ZMFY77WqjlIeapVkgcUIBNnUt+VKIgAh+QQJKgAAACwAAAAAEAAQAAAETBDISWW5dbZWS5YbYBiA9wFBIBmXiaZwOqZUMNx4rk624P++wU7SA/6EtYHgcPAxBUie0hgconBAnDXGhZ1ip1eXVrHdCARtZuyVRAAAIfkECSoAAAAsAAAAABAAEAAABEQQyEmrla0BYy7NUudJQbCJVKmuajq8cGxOwSDc+D3MpJ3jO5fgcLgRBUGa74fkAWqvHMzJqjpTLY8163oRCFPLtjSJAAAh+QQJKgAAACwAAAAAEAAQAAAEPhDISauVrd2btw2BB47kSAVDqq7hhApwDA+t9MoxfQ7CccA+gc7Fw81qAFRKpkKWnsiTaQOd7lIEQvNTrUUAADs=",
+  "orb": "data:image/gif;base64,R0lGODlhEAAQAPMAAE991g4XKSM3X0991m6o/7fc//P5/3/o5FbXm//Ea/+aW/9/kqiM/3uTvi6PbhYgOCH/C05FVFNDQVBFMi4wAwEAAAAh+QQJEAAAACwAAAAAEAAQAAAERBDISauVpVyae7/ZIA6CkFUhoYqGqU3FoM5GbXLyTAztjcW6Hcn1E81GpRNGMEImOaVm6QkrTK9EjhWrRHk+m194TIkAACH5BAkQAAAALAAAAAAQABAAAARFEMhJq5WlXJp7v9kgDoKQVSGhiuU5FYMqsyYXywStYTCeDwbTLnT7GY4uQEEwGgmCO0ypWWpxltVskpdtRa+eLei7KUsiACH5BAkQAAAALAAAAAAQABAAAARFEMhJq5WlXJp7v9kgDoKQVSGhiuU5FYMqsyYXywStYTCek6Zd6PYDugAFwWhUqr1KS0Nzx2sKDNggKtmUHjmez4Y3LlMiACH5BAkQAAAALAAAAAAQABAAAARFEMhJq5WlXJp7v9kgDoKQVSGhiuU5FYMqsyYXywStYTCek6Zd6PYDugAFwWhUqr1KAwOtxUkars0gypo9Vj1e0G5DpkQAACH5BAkQAAAALAAAAAAQABAAAARCEMhJq5WlXJp7v9kgDoKQVSGhiuU5FYMqsyYXywStYbCB67uMYbgCvgSGEa12FChLLU4BSjXtXtOqC+X5bHjfMCUCACH5BAkQAAAALAAAAAAQABAAAARFEMhJq5WlXJp7v9kgDoKQVaFBEGJ5TsVgzGtrcgOh1uSNxaug7RXK8XovQEEwGpV8mFLzCVUuqc/kD2vSWDyeDcwrLksiACH5BAkQAAAALAAAAAAQABAAAARGEMhJq5WlXJp7v9kwGIMgZFVIGGx5alMxELRBiCaMzTSNnzFZz+dCAUK82894FIieLmDMBDXlOAWr9pXKbplYDxik25gnEQAh+QQJEAAAACwAAAAAEAAQAAAERBDISauVpVyae7/ZIA6GkFUhoRqsqU3FoM7GIJicPBPi/QKpXc+Fiel4wxNGMBrdcLBb8wktUqlKWOFKtHg8G214TIkAADs=",
+  "hero": "data:image/gif;base64,R0lGODlhGAAYAPMAAE991g4XKSM3X0991m6o/7fc//P5/3/o5FbXm//Ea/+aW/9/kqiM/3uTvi6PbhYgOCH/C05FVFNDQVBFMi4wAwEAAAAh+QQJEgAAACwAAAAAGAAYAAAEaxDISau9NyXMq+4gEAQhNZ5oygVD674vebFCbd/1IFs07uuY3mFYGx5yu4qQKDAigwPfL2mCWV3UCcv1w65S4FFJghqLwmBea3uFbWVvGGFOcK/JazndDhTl23xwf4BYd2ckaGknF1I4ZmYRACH5BAkSAAAALAAAAAAYABgAAAR9EMhJq71XKcyr7iAQBCE1nmjKBUPrvi9pGaxg37g9yJThD7mgYHehAQWHpC150PEqNaRS2hw+TUfhjXhhwb4tUqHw9LaCMcD4mmqfJOEO6hI3udtwotcMjtX3MASCBDB7EoAvg4QxbyJhfV+GjjuQhX8jIncqjRVaOCWgExEAIfkECRIAAAAsAAAAABgAGAAABHYQyEmrvTclzKvuIBAEITWeaMoFQ+u+L3mxQm3f9SBbNO7rmN5hWBsecruKkCgwIoMD3y9pglldskKh6vphJVplajyStKjisuWcJqPMQJbuepXL7DCCngCzS/Ave3wxJ39ndFZ+IoeIMWwiZW5jkGgAUjglmRMRACH5BAkSAAAALAAAAAAYABgAAAR9EMhJq71XKcyr7iAQBCE1nmjKBUPrvi9pGaxg37g9yJThD7mgYHehAQWHpC150PEqNaRS2hw+TUfhjXhhwb4tUqHw9LaCMcD4mmqfJOEO6hI3udtwotcMjtX3MASCBDB7EoAvg4QxbyJhfV+GjjuQhX8jIncqjRVaOCWgExEAIfkECRIAAAAsAAAAABgAGAAABHMQyEmrvTclzKvuIBAEITWeaMoFQ+u+L3mxQm3f9SBbNO7rmJ7vBpwNaockUiko8o5D4q7CgllbskLB9Pq5sltTajySYDuoy1lMVgHO1eoVFpfEYYQ8gb6+v/R7MSd2WHNWdSKFhjF9ZW1jImUWUTcllhMRACH5BAkSAAAALAAAAAAYABgAAARrEMhJq723FMyr7iAQBCE1nmjKBUPrvi95sUJt3/UgWzTu65jeYVgbHnK7ipAoMCKDA98vaYJZXdQJy/XDrlLgUUmCGovCYF5re4VtZW8YYU5wr8lrOd0OFOXbfHB/gFh3ZyRoaScXUjhmZhEAIfkECRIAAAAsAAAAABgAGAAABHQQyEmrvTclzKvuIBAEITWeaMoFQ+u+L2kZrGDfuD3IlOEPuaBgd6EBBYekLXnQ8So1pFLaHD5NR+GNeGHBvq3rxNsKxlap9KgkQbFF6rTFSwbHwu0wjMAnwOh5O3t9f3gienaFXHSJijIncHFukBZaOG9vEQAh+QQJEgAAACwAAAAAGAAYAAAEaxDISau9NyXMq+4gEAQhNZ5oygVD674vebFCbd/1IFs07uuY3mFYGx5yu4qQKDAigwPfL2mCWV3UCcv1w65S4FFJghqLwmBea3uFbWVvGGFOcK/JazndDhTl23xwf4BYd2ckaGknF1I4ZmYRADs=",
+  "done": "data:image/gif;base64,R0lGODlhEAAQAPMAAE991g4XKSM3X0991m6o/7fc//P5/3/o5FbXm//Ea/+aW/9/kqiM/3uTvi6PbhYgOCH5BAkHAAAALAAAAAAQABAAAAQWEMhJq704680r6hLygSIIlKSprmzrRgAh+QQJBwAAACwAAAAAEAAQAAAEHBDISau9OOvNK+oS8lHjJU5ndqaaWG4vKM90TUUAIfkECQcAAAAsAAAAABAAEAAABCAQyEmrvTgDpCni3QZOo1dKX5Veq6ilbfadcmjfeK4DEQAh+QQJCQAAACwAAAAAEAAQAAAEJxDISau9wGBr+q4G8k2ISJlVaaknmqIspsZb6YLn1mmjxPfAoLASAQAh+QQJKAAAACwAAAAAEAAQAAAEIBDISau9OAOkKeLdBk6jV0pflV6rqKVt9p1yaN94rgMRADs=",
+  "no": "data:image/gif;base64,R0lGODlhEAAQAPMAAE991g4XKSM3X0991m6o/7fc//P5/3/o5FbXm//Ea/+aW/9/kqiM/3uTvi6PbhYgOCH5BAkHAAAALAAAAAAQABAAAAQnEMhJq70YtM3xtl/VeGKmUWOWSmmIvto6yTIIk3cp1rHHuaagEBABACH5BAkHAAAALAAAAAAQABAAAAQoEMhJq70YtM3xtl/VeGKmUWOWSim3nlPbxaj5vmB54Rofgi6eaWiKAAAh+QQJBwAAACwAAAAAEAAQAAAEKRDISau9GLTN8bZf1XhiplFjlkop151T67aoucJkfd0sr/k9l2lIpEQAACH5BAk8AAAALAAAAAAQABAAAAQpEMhJq70YtM3xtl/VeGKmUWOWSinXnVPrtqi5wmR93Syv+T2XaUikRAAAOw==",
+  "oops": "data:image/gif;base64,R0lGODlhEAAQAPMAAE991g4XKSM3X0991m6o/7fc//P5/3/o5FbXm//Ea/+aW/9/kqiM/3uTvi6PbhYgOCH/C05FVFNDQVBFMi4wAwEAAAAh+QQJFAAAACwAAAAAEAAQAAAELRDISau9ONvAu69BIo5kQIUjV54lKpqTm6gpm8qwJJOv/eI+Xu/kKWqOyGQlAgAh+QQJFAAAACwAAAAAEAAQAAAEMBDISau9ONvAu6+BIo5kQIUjV54lKpqAAriKmsYybb+xRJO8iU7HAq5OnqRmyWxWIgAh+QQJFAAAACwAAAAAEAAQAAAEMBDISau9ONvAu6/BIo5kQIUjV54lKprAAriLmsYybb+xRJO8iU7HAq5OnqRmyWxWIgAh+QQJFAAAACwAAAAAEAAQAAAELRDISau9ONvAu6+BIo5kQIUjV54lKpqTq6gpm8qwJJOv/eI+Xu/kKWqOyGQlAgA7",
+  "ask": "data:image/gif;base64,R0lGODlhEAAQAPMAAE991g4XKSM3X0991m6o/7fc//P5/3/o5FbXm//Ea/+aW/9/kqiM/3uTvi6PbhYgOCH/C05FVFNDQVBFMi4wAwEAAAAh+QQJFgAAACwAAAAAEAAQAAAENRDISSsNOOsaiP9gcIFG+YlT5xkfS6CSChIuDMjtOZLhPuupmctju2mOlhsxacEwn9CoNBkBACH5BAkWAAAALAAAAAAQABAAAAQ1EMhJKw046xqI/2BwgUb5iVPnGR9LoJIKEi4MyO05kuE+66mZy2O7aY6WGzFpwTCf0Kg0GQEAIfkECRYAAAAsAAAAABAAEAAABDUQyEmrvTfozWsgYCgG1BcaaEhOJmGc4Cq14kvIAA3adym6I98vyPrxeiWOMhPDeHDOqPQSAQAh+QQJFgAAACwAAAAAEAAQAAAENRDISau9N+jNayBgKAbUFxpoSE4mYZzgKrXiS8gADdp3Kboj3y/I+vF6JY4yE8N4cM6o9BIBADs=",
+  "new": "data:image/gif;base64,R0lGODlhEAAQAPMAAE991g4XKSM3X0991m6o/7fc//P5/3/o5FbXm//Ea/+aW/9/kqiM/3uTvi6PbhYgOCH/C05FVFNDQVBFMi4wAwEAAAAh+QQJCwAAACwAAAAAEAAQAAAEHxDISau9WJJN8uSdB4DiyGVgGlbqhqYiWbplbd84HgEAIfkECQsAAAAsAAAAABAAEAAABB8QyEmrvThnwomWnfeFH0BiYSpWKrelY1ea62zfuBYBACH5BAkLAAAALAAAAAAQABAAAAQhEMhJqwVF5su770RIfIA4fiaZcmZ7Vm4ItqhIlu+t714EACH5BAkLAAAALAAAAAAQABAAAAQfEMhJq71YFp27/xIhEt9IemY5ZmZ7Vq7ItuiqgvgXAQAh+QQJCwAAACwAAAAAEAAQAAAEIRDISasFRebLu+9ESHyAOH4mmXJme1ZuCLaoSJbvre9eBAAh+QQJCwAAACwAAAAAEAAQAAAEHxDISau9OGfCiZad94UfQGJhKlYqt6VjV5rrbN+4FgEAOw==",
+  "pet-idle": "data:image/gif;base64,R0lGODlhGAAYAPMAAE991g4XKSM3X0991m6o/7fc//P5/3/o5FbXm//Ea/+aW/9/kqiM/3uTvi6PbhYgOCH/C05FVFNDQVBFMi4wAwEAAAAh+QQJtAAAACwAAAAAGAAYAAAEaxDISau9NyXMq+4gEAQhNZ5oygVD674vebFCbd/1IFs07uuY3mFYGx5yu4qQKDAigwPfL2mCWV3UCcv1w65S4FFJghqLwmBea3uFbWVvGGFOcK/JazndDhTl23xwf4BYd2ckaGknF1I4ZmYRACH5BAkMAAAALAAAAAAYABgAAARqEMhJq703Jcyr7iAQBCE1nmjKBUPrvi95sUJt3/UgWzTu65ie7wacDWqHJFIpKPKOQ+KuwoJZW1PT6+fKmlLgUUmCGovC4Kfueq3K3DCCnABzk7HxeR17X7P3RXB/MXxnJGhpJxdRN2ZmEQAh+QQJlgAAACwAAAAAGAAYAAAEaxDISau9NyXMq+4gEAQhNZ5oygVD674vebFCbd/1IFs07uuY3mFYGx5yu4qQKDAigwPfL2mCWV3UCcv1w65S4FFJghqLwmBea3uFbWVvGGFOcK/JazndDhTl23xwf4BYd2ckaGknF1I4ZmYRACH5BAkoAAAALAAAAAAYABgAAARrEMhJq723FMyr7iAQBCE1nmjKBUPrvi95sUJt3/UgWzTu65jeYVgbHnK7ipAoMCKDA98vaYJZXdQJy/XDrlLgUUmCGovCYF5re4VtZW8YYU5wr8lrOd0OFOXbfHB/gFh3ZyRoaScXUjhmZhEAOw==",
+  "pet-cheer": "data:image/gif;base64,R0lGODlhGAAYAPMAAE991g4XKSM3X0991m6o/7fc//P5/3/o5FbXm//Ea/+aW/9/kqiM/3uTvi6PbhYgOCH/C05FVFNDQVBFMi4wAwEAAAAh+QQJCgAAACwAAAAAGAAYAAAEdxDISau9VynMq+4gEAQhNZ5oygVD674vebFCbd/1IFs07uuY3mFYGx5yu4qQKDAigwPfL2mCWV3UCcv1wyoLBVFqPAKAZQEw72Q5S7ZisqqFpl+v27oORugTYHlvdi9+fzF0gnt3gIgig4tYjWxyY3EXUjglmhMRACH5BAkKAAAALAAAAAAYABgAAASDEMhJQUo1a3q3r0HwZWFpnl4wrGzbipmhCnRt0wNMGfxw/4KcRuYTHI604wGnAxWVSWSwCQgUCjOgLXeFWbGuMOvrXalYv5dZcq6e3iHAuroilTLzNhwuF9JzYmJnZYAtBIcELoNsZi6IiWp+g4Fhi39nlGN5cXtvblQSWjYjpKWmFBEAIfkECQoAAAAsAAAAABgAGAAABIEQyEmBUjVrerevQfBlYWmeXjCsbNsGhqYKdG3Tg6GTw+0LA5isJzgYacYDTjREHovPIKhQmP1sQSozoHV5WdyqRBVs+V6r7QpwapcA6fEa9K7E2Wu3Gy7Fl79eZGp/LASGBC6CcoQrh4hofYKAgXeSk5BbIWx6KHUVVzYjoqOkFBEAIfkECQoAAAAsAAAAABgAGAAABIMQyElBSjVrerevQfBlYWmeXjCsbNuKmaEKdG3TA0wZ/HD/gpxG5hMcjrTjAacDFZVJZLAJCBQKM6Atd4VZsa4w6+tdqVi/l1lyrp7eIcC6uiKVMvM2HC4X0nNiYmdlgC0EhwQug2xmLoiJan6DgWGLf2eUY3lxe29uVBJaNiOkpaYUEQAh+QQJDAAAACwAAAAAGAAYAAAEdxDISau9VynMq+4gEAQhNZ5oygVD674vebFCbd/1IFs07uuY3mFYGx5yu4qQKDAigwPfL2mCWV3UCcv1wyoLBVFqPAKAZQEw72Q5S7ZisqqFpl+v27oORugTYHlvdi9+fzF0gnt3gIgig4tYjWxyY3EXUjglmhMRACH5BAkeAAAALAAAAAAYABgAAARrEMhJq703Jcyr7iAQBCE1nmjKBUPrvi95sUJt3/UgWzTu65jeYVgbHnK7ipAoMCKDA98vaYJZXdQJy/XDrlLgUUmCGovCYF5re4VtZW8YYU5wr8lrOd0OFOXbfHB/gFh3ZyRoaScXUjhmZhEAOw==",
+  "pet-worry": "data:image/gif;base64,R0lGODlhGAAYAPMAAE991g4XKSM3X0991m6o/7fc//P5/3/o5FbXm//Ea/+aW/9/kqiM/3uTvi6PbhYgOCH/C05FVFNDQVBFMi4wAwEAAAAh+QQJGgAAACwAAAAAGAAYAAAEdhDISau9VynMq+4gEAQhNZ5oygVD674vmSQVK9x4fg8ybQ66oIAHmNWAt8MBp9yRLrbkUuos+iZRIY4IhXldTwvLFYytUuhRSYJai9JocWv8hY2fdxhhT7DP2XN6fH5cAQUFdHVgh3iMinaMbGpwcScXWjlubhEAIfkECRoAAAAsAAAAABgAGAAABHYQyEmrvVcpzKvuIBAEITWeaMoFQ+u+L5kkFSvceH4PMm0OuqCAB5jVgLfDAafckS625FLqLPomUSGOCIV5XU8LyxWMrVLoUUmCWovSaHFr/IWNn3cYYU+wz9lzenx+XAEFBXR1YId4jIp2jGxqcHEnF1o5bm4RACH5BAkUAAAALAAAAAAYABgAAARuEMhJq71XKcyr7iAQBCE1nmjKBUPrvi95sUJt3/UgWzTu65ie4HCwEXO7ivBYYwJnA98vaYJZXdQJy/XDrlLgUUmCGovCYF5re4VtZW8YYU5wr8lrOd3+DBQKbG1Yf3CEgm6EZGJoaScXUjhmZhEAIfkECRoAAAAsAAAAABgAGAAABHYQyEmrvVcpzKvuIBAEITWeaMoFQ+u+L5kkFSvceH4PMm0OuqCAB5jVgIKD8qY87EgXW3I5dQ57R6GOGIV5XVALyxWMrVLoUUmCWovSaHFr/IWNoXcYYU+wz9lzenx+XAEFBXR1YId4jIp2jGxqcHEnF1o5bm4RADs=",
+  "pet-nap": "data:image/gif;base64,R0lGODlhGAAYAPMAAE991g4XKSM3X0991m6o/7fc//P5/3/o5FbXm//Ea/+aW/9/kqiM/3uTvi6PbhYgOCH/C05FVFNDQVBFMi4wAwEAAAAh+QQJRgAAACwAAAAAGAAYAAAEcRDISau9GJedOy0e0DRaKJLWBnpBYE5tLM9ZMNx4nruXLfzA4G/As/iESCLmiAwqe4PfYSqlCp7GaNNZrNh04FuX8r0lcWPybN16AWRuNjtLDIe/PLyOwCfo8BJ6OX1+O2KBYnZggG+JioZPMW9yNJIRACH5BAlGAAAALAAAAAAYABgAAARyEMhJay3Y6i0L/5MHAk2jYeJXjl8QsJMrzzQXDHiu6692C8CgEDjoWX7DZHGDTAqXvgHwQJ1WBdCj1Pk0Vm67MM5LAeOUOXKZxnbBALN3u60tisXgXn5H6BN2eRJ7On5/PGOCY3dhgXCKi4dQMnBzNZMRACH5BAlGAAAALAAAAAAYABgAAARuEMhJq7046y2N4YAgYB8nXh4YBOC0vnCcBUNt3zd70WLv9wOdhfcrBjHEou+4G4gO0GdUwBw6lUthhYbr1rQUbs1oA4dj6FULAFun09ag18vV1XGEPAFXl9xvens5X35fc119bIaHg0wvbG8yjxEAIfkECVoAAAAsAAAAABgAGAAABGgQyEmrvTjrzWtrXfaFWBCQgKmubBYMcCzL5/UKeK7jQ23du2CvNAgKfRXgYYlbHnhICtCYG9pm2Fh08ooJtS6W2ERalcfiH6ybnXVr7xlhTnCvJXEZvU67p9ZtWG94gIF9ViopaC2JEQA7",
+  "pet-work": "data:image/gif;base64,R0lGODlhGAAYAPMAAE991g4XKSM3X0991m6o/7fc//P5/3/o5FbXm//Ea/+aW/9/kqiM/3uTvi6PbhYgOCH/C05FVFNDQVBFMi4wAwEAAAAh+QQJEAAAACwAAAAAGAAYAAAEchDISau9NyXMq+4gEAQhNZ5oygVD674vebFCbd/1IFs07uuY3mFYGx5yu4qQKDAigwPfL2mCWV3UCcv1w65S4FFJghqLwmBea3uFbWXvV2E+d6/Ja7mtYAeK5mwDBXtugGSAcnR8MYZnJGhpJxdSOGZmEQAh+QQJDAAAACwAAAAAGAAYAAAEdxDISYFSNWt6t69B8GVhaZ5eMKxs24qaKsx0PQ8wOdi8gG8ywWE4Gx5uOdBOSGQefUlKsEf7xVxYVnSiYvFeqZM4NJKWytyxWIfLZrsweKtAp7vgEjmrQCvcV3F0XSt8M34vgnmCc3WHWokAZ2prZxlUNWiZmmURACH5BAkQAAAALAAAAAAYABgAAAR2EMhJq703Jcyr7iAQBCE1nmjKBUPrvi95sUJt3/UgWzTu65jeYVgbHnK7ipAoMCKDA98vaYJZXdQJy/XDrlLgUUmCGovCYF5re4VtZe9XYT53r8lruQAhKNiBInNsAwV8CH4xgmSCcnSIWIpnJGhpJxdSOGZmEQAh+QQJGgAAACwAAAAAGAAYAAAEdhDISau9NyXMq+4gEAQhNZ5oygVD674vebFCbd/1IFs07uuY3mFYGx5yu4qQKDAigwPfL2mCWV3UCcv1w65S4FFJghqLwmBea3uFbWXvV2E+d6/Ja7kAISjYgSJzbAMFfAh+MYJkgnJ0iFiKZyRoaScXUjhmZhEAOw==",
+  "pet-stretch": "data:image/gif;base64,R0lGODlhGAAYAPMAAE991g4XKSM3X0991m6o/7fc//P5/3/o5FbXm//Ea/+aW/9/kqiM/3uTvi6PbhYgOCH/C05FVFNDQVBFMi4wAwEAAAAh+QQJGAAAACwAAAAAGAAYAAAEaxDISau9NyXMq+4gEAQhNZ5oygVD674vebFCbd/1IFs07uuY3mFYGx5yu4qQKDAigwPfL2mCWV3UCcv1w65S4FFJghqLwmBea3uFbWVvGGFOcK/JazndDhTl23xwf4BYd2ckaGknF1I4ZmYRACH5BAkYAAAALAAAAAAYABgAAAR2EMhJq703Jcyr7iAQBCE1nmjKBUPrvi95sUJt3/UgWzTu65ie7wacDWqHJFIpKPKOQ+KuwoJZW1PT6+fKBgoFUWo8AoBl3zD1ZDlLqmKyCvvGXq9VtP1F6BNgeXU6MH5/MXQie3eHRXmLgIhscmNxF1E3JZkTEQAh+QQJKAAAACwAAAAAGAAYAAAEfRDISUEpNWt6t69B8GVhaZ4WBg5s67qiFgxCbd/1EHQr7gu6zeyHC8pogoOypjzkYpNdYUi06S4x6ezFZWkl2y3LB/OCWYCTugQwp9EgdsW9Ta/VbWO42w2fdS8EggQvfm+ALoOEZXpefFyGe4+MWSF2dyaXGlU2I56foBQRACH5BAkoAAAALAAAAAAYABgAAAR6EMhJQSk1a3q3r0GgdVlonqgXDGzrugFJrUJt3/UgajTu65ue7wbkDWqHJFIpKE5iBeEwB91VX9hWVbLSuX5alpUFQJlNADGXDEJX1GXy+ZwudrvZ133tdRH+BHpwdy+AgTCDYnlYe3F9i2F2IWVzKW4VUzcfm5ydGxEAIfkECRgAAAAsAAAAABgAGAAABHcQyEmrvTclzKvuIBAEITWeaMoFQ+u+L3mxQm3f9SBbNO7rmN5hWBsecruKkCgwIoMD3y9pglld1AnL9cMqCwVRajwCgGUBMO9kOUu2YrKqhaZfr9u6DkboE2B5b3Yvfn8xdIJ7d4CIIoOLWI1scmNxF1I4JZoTEQAh+QQJPAAAACwAAAAAGAAYAAAEaxDISau9NyXMq+4gEAQhNZ5oygVD674vebFCbd/1IFs07uuY3mFYGx5yu4qQKDAigwPfL2mCWV3UCcv1w65S4FFJghqLwmBea3uFbWVvGGFOcK/JazndDhTl23xwf4BYd2ckaGknF1I4ZmYRADs=",
+  "pet-held": "data:image/gif;base64,R0lGODlhGAAYAPMAAE991g4XKSM3X0991m6o/7fc//P5/3/o5FbXm//Ea/+aW/9/kqiM/3uTvi6PbhYgOCH/C05FVFNDQVBFMi4wAwEAAAAh+QQJCQAAACwAAAAAGAAYAAAEgRDISYFSNWt6t69B8GVhaZ5eMKxs24qaKsx0PQ8wOcxHz/sC3EYm6B1+x2AOtCsCjbclIFAoEG02XBVGtbq+rC53pWJhX2RJeXpqhwDp6YpUysTXbjdcKMeBwWVjfi0EhQQugWpkLoaHaHyBf1+JfWWSYXdveW1sUhJYWCOio6QUEQAh+QQJCQAAACwAAAAAGAAYAAAEfxDISau9NyXMq+4gEAQhNZ5oygVD674vebFCbd/1IFu0cPy13yG3q/SEQaBAhzkqkcuiqFDo4XA6qiyghXld3KqEpXtdY61tS5RqjwDp8dp4ssRFa7cbzsSXv15kan8uBIYEMIJyhC2HiGh9goCBd5KTkFtvem1sUhJXVyWiExEAIfkECQkAAAAsAAAAABgAGAAABIEQyEmBUjVrerevQfBlYWmeXjCsbNuKmirMdD0PMDnMR8/7AtxGJugdfsdgDrQrAo23JSBQKBBtNlwVRrW6vqwud6ViYV9kSXl6aocA6emKVMrE1243XCjHgcFlY34tBIUELoFqZC6Gh2h8gX9fiX1lkmF3b3ltbFISWFgjoqOkFBEAIfkECQkAAAAsAAAAABgAGAAABH4QyEmrvThrmtLe3acFgTiRaKpmweC+MFxerWDfuD3MVi0cQBvwoONVfENhULDDIJdJphEQKBR8udzOOqteY+CXt+tqvbKyssRMVblJADXV1UNZ5Oz3O96c78JhZmR/MASGBDGCa2Uxh4hpfYKAYIp+ZpNieHB6bm1TEllZFhEAOw==",
 };
 /* PIXEL-ART-DATA-END */
-const CHAT_PIX = Object.assign({}, CHAT_PIX_DATA);
-const CHAT_PIX_NAMES = Object.keys(CHAT_PIX_DATA);
+const PIX = Object.assign({}, PIX_DATA);
+const PIX_NAMES = Object.keys(PIX_DATA);
 
 /* your own sprites, if you keep a pixel folder beside the file. Asked for
    once, and only when something else in assets/ has already answered — the
    same gate the thinking animation goes through, so a copy with no folder
    next to it asks for nothing and logs nothing. */
-function chatPixOver(){
-  CHAT_PIX_NAMES.forEach(n => {
+function pixOver(){
+  PIX_NAMES.forEach(n => {
     const src = "assets/pixel/" + n + ".gif";
     const im = new Image();
-    im.onload = () => { CHAT_PIX[n] = src; };
+    im.onload = () => { PIX[n] = src; };
     im.src = src;
   });
 }
-function chatPixOn(){ return !!chatUI().pixel; }
-/* An <img> for one sprite, or nothing at all when the set is off. Inert and
-   out of the accessibility tree: every one of these sits beside words that
-   already say what it means, and a screen reader reading "picture, tick"
-   after "Done" is noise. */
-function chatPix(name, size){
-  if (!chatPixOn() || !CHAT_PIX[name]) return "";
-  return '<img class="chpix' + (size ? " " + size : "") + '" data-pix="' + name +
-         '" alt="" aria-hidden="true" src="' + esc(CHAT_PIX[name]) + '">';
+/* An <img> for one sprite. Inert and out of the accessibility tree: every one
+   of these sits beside words that already say what it means, and a screen
+   reader reading "picture, tick" after "Done" is noise. */
+function pixArt(name, size){
+  if (!PIX[name]) return "";
+  return '<img class="pxl' + (size ? " " + size : "") + '" data-pix="' + name +
+         '" alt="" aria-hidden="true" src="' + esc(PIX[name]) + '">';
 }
+/* the chat panel's own switch. The desk pet has a separate one, in Menu →
+   Appearance: they share the drawings and nothing else, so turning the
+   panel's sprites off does not take the pet away with them. */
+function chatPixOn(){ return !!chatUI().pixel; }
+function chatPix(name, size){ return chatPixOn() ? pixArt(name, size) : ""; }
 /* A sprite from the folder that stops loading falls back to the one built
    into this file; if that is somehow gone too, the picture leaves rather
    than standing there as a broken-image mark. */
-function chatPixFix(el){
+function pixFix(el){
   if (!el || !el.querySelectorAll) return el;
-  el.querySelectorAll("img.chpix").forEach(im => {
+  el.querySelectorAll("img.pxl").forEach(im => {
     im.onerror = () => {
       const n = im.getAttribute("data-pix");
-      if (n && CHAT_PIX[n] !== CHAT_PIX_DATA[n]){ CHAT_PIX[n] = CHAT_PIX_DATA[n]; im.src = CHAT_PIX_DATA[n]; }
+      if (n && PIX[n] !== PIX_DATA[n]){ PIX[n] = PIX_DATA[n]; im.src = PIX_DATA[n]; }
       else im.remove();
     };
   });
   return el;
 }
+
+/* ═══ THE DESK PET ═══════════════════════════════════════════════════════
+   The assistant, out of its panel and parked in a corner of the window.
+
+   It is the same character as the one that greets an empty thread and the
+   same nine-colour palette, but it answers to the application rather than to
+   the conversation: it cheers a record you finished, looks put out while
+   something is overdue, holds a record while the workspace is being saved,
+   and falls asleep if you leave the tab alone.
+
+   The restraint is the design. A record sheet does not move while it is
+   being read, so for the whole of an ordinary afternoon the pet is a
+   drawing in a corner that blinks — every other mood is an answer to
+   something that just happened, and it goes back to standing still when
+   that thing is over. It fades out while a panel is open over the work, it
+   never sits on top of the assistant, and one switch in Menu → Appearance
+   takes it away entirely.
+
+   It reads the workspace and writes nothing but its own corner and name. */
+const PET = { mood:"", until:0, seen:Date.now(), stretched:"", tip:0, drag:null, said:0 };
+const PET_NAP = 4 * 60000;        /* left alone this long and it sleeps */
+const PET_CORNERS = ["br", "bl", "tr", "tl"];
+/* mood → which sprite. "wave" borrows the one from an empty thread: it is
+   the same character doing the same thing, and drawing it twice would only
+   be two drawings to keep in step. */
+const PET_ART = {
+  wave:"hero", idle:"pet-idle", cheer:"pet-cheer", worry:"pet-worry",
+  nap:"pet-nap", work:"pet-work", stretch:"pet-stretch", held:"pet-held"
+};
+
+function petCfg(){
+  const st = S.settings;
+  if (!st.pet || typeof st.pet !== "object")
+    /* A machine that has asked not to be moved at, or an interface already
+       set to hold still, does not get a pet without being asked for one. */
+    st.pet = { on: !chatCalm() && st.motion !== "none", name:"", corner:"br" };
+  if (PET_CORNERS.indexOf(st.pet.corner) < 0) st.pet.corner = "br";
+  return st.pet;
+}
+function petOn(){ return !!petCfg().on && !!PIX["pet-idle"]; }
+
+/* ── the element ───────────────────────────────────────────────────────── */
+function petPaint(){
+  const cfg = petCfg();
+  let el = $("pet");
+  if (!petOn()){ if (el) el.remove(); return; }
+  if (!el){
+    el = document.createElement("div");
+    el.id = "pet";
+    el.className = "pet";
+    el.innerHTML = '<div class="petsay" id="petSay" role="status" aria-live="polite"></div>' +
+                   '<button class="petb" id="petBtn" type="button"></button>';
+    document.body.appendChild(el);
+    petWire();
+    PET.mood = "";
+    petMood("wave", 2600);
+  }
+  el.dataset.corner = cfg.corner;
+  const b = $("petBtn");
+  b.title = cfg.name || L("PetLabel");
+  b.setAttribute("aria-label", cfg.name
+    ? L("PetNamedLabel", { name:cfg.name }) : L("PetLabel"));
+  /* forced only when there is nothing there yet: setting src to what it
+     already is restarts the animation */
+  petShow(PET.mood || "idle", !b.querySelector("img.pxl"));
+}
+
+/* Swap the picture only when the mood has actually changed. Setting src to
+   what it already is restarts the animation, and a pet that restarts its
+   blink every five seconds has a twitch rather than a blink. */
+function petShow(mood, force){
+  const b = $("petBtn"); if (!b) return;
+  const art = PIX[PET_ART[mood] || "pet-idle"];
+  if (!art) return;
+  if (!force && PET.mood === mood) return;
+  PET.mood = mood;
+  b.innerHTML = pixArt(PET_ART[mood] || "pet-idle");
+  pixFix(b);
+}
+/* A mood with a clock on it: held for ms, then back to whatever the day
+   says it should be. */
+function petMood(mood, ms){
+  if (!petOn()) return;
+  PET.until = Date.now() + (ms || 2400);
+  petShow(mood);
+}
+/* What it would be doing if nothing had just happened. */
+function petRest(){
+  if (PET.drag) return "held";
+  if (Date.now() - PET.seen > PET_NAP) return "nap";
+  return petDay().overdue ? "worry" : "idle";
+}
+
+/* ── what it knows about the day ────────────────────────────────────────
+   Read-only, and cheap enough to run every few seconds: the same three
+   counts the footer already shows, plus the one record it would point at. */
+function petDay(){
+  const k = today();
+  const live = S.tasks.filter(t => LIVE.indexOf(t.status) >= 0);
+  const over = live.filter(t => t.due && t.due < k);
+  const due = live.filter(t => t.due === k);
+  const rank = t => (t.due || "9999-99-99") + (t.priority || "P4");
+  const first = over.concat(due, live).sort((a, b) => rank(a) < rank(b) ? -1 : 1)[0];
+  return {
+    overdue: over.length, due: due.length,
+    closed: S.tasks.filter(t => dayOf(t.completed) === k).length,
+    next: first || null
+  };
+}
+
+/* ── the tick ──────────────────────────────────────────────────────────
+   Five seconds is slow enough to cost nothing and quick enough that the
+   pet notices an overdue record about when you would. */
+function petTick(){
+  if (!petOn()) return;
+  const el = $("pet"); if (!el) return;
+  /* Somebody is reading a record, running a script or talking to the
+     assistant's sheet. The pet is not part of that. */
+  el.classList.toggle("away", !!document.querySelector(
+    ".modal.on, .drawer.on, .problem.on, .intake.on, .drill.on, .ask.on, .cmd.on"));
+
+  const now = Date.now();
+  /* the end of the working day, once, and only if you are still here */
+  if (new Date().getHours() >= 17 && PET.stretched !== today() &&
+      now - PET.seen < 60000){
+    PET.stretched = today();
+    return petMood("stretch", 3400);
+  }
+  if (PET.until > now) return;      /* a mood with a clock on it is running */
+  petShow(petRest());
+}
+
+/* Anything you do is proof you are here. Coming back from a nap is worth a
+   wave; coming back from anything else is not worth interrupting. */
+function petSeen(){
+  PET.seen = Date.now();
+  if (PET.mood === "nap") petMood("wave", 1800);
+}
+
+/* ── one line about your day ────────────────────────────────────────────
+   Clicking it does not open anything. It says one true thing and goes
+   quiet again, and clicking it repeatedly walks through the rest. */
+function petSpeak(){
+  const d = petDay(), cfg = petCfg(), lines = [];
+  if (d.overdue) lines.push(L("PetOverdue", { n:d.overdue }));
+  if (d.due) lines.push(L("PetDueToday", { n:d.due }));
+  if (d.next) lines.push(L("PetNext", { what:d.next.code + " · " + d.next.title }));
+  if (d.closed) lines.push(L("PetClosed", { n:d.closed }));
+  if (!d.overdue && !d.due) lines.push(L("PetClear"));
+  if (!cfg.name) lines.push(L("PetNoName"));
+  const say = $("petSay"); if (!say) return;
+  const line = lines[PET.tip++ % lines.length];
+  say.innerHTML = (cfg.name ? "<b>" + esc(cfg.name) + "</b> · " : "") + esc(line);
+  say.classList.add("on");
+  clearTimeout(PET.said);
+  PET.said = setTimeout(() => {
+    say.classList.remove("on");
+    setTimeout(() => { if (!say.classList.contains("on")) say.textContent = ""; }, 260);
+  }, 4200);
+  petMood(d.overdue ? "worry" : "cheer", 2000);
+}
+
+/* ── picking it up ─────────────────────────────────────────────────────
+   Drag it to whichever corner is out of your way today. It snaps to the
+   nearest one rather than staying wherever it was dropped: a pet halfway
+   down the left edge is a pet in the way of a record. */
+function petWire(){
+  const el = $("pet"), b = $("petBtn");
+  let from = null, moved = false;
+
+  b.addEventListener("pointerdown", e => {
+    if (e.button) return;
+    from = { x:e.clientX, y:e.clientY };
+    moved = false;
+    /* capture keeps the drag alive over the record sheet underneath. A
+       pointer that has already gone refuses it, which is not a reason to
+       lose the click that goes with it. */
+    try { b.setPointerCapture(e.pointerId); } catch(err){}
+  });
+  b.addEventListener("pointermove", e => {
+    if (!from) return;
+    if (!moved && Math.abs(e.clientX - from.x) + Math.abs(e.clientY - from.y) < 7) return;
+    if (!moved){
+      moved = true; PET.drag = true;
+      el.classList.add("dragging");
+      petShow("held");
+    }
+    /* while it is in the air it goes where the pointer goes; the corner it
+       had is put back, or taken away, on the way down */
+    el.style.left = (e.clientX - 24) + "px";
+    el.style.top = (e.clientY - 24) + "px";
+    el.style.right = "auto"; el.style.bottom = "auto";
+  });
+  const drop = e => {
+    if (!from) return;
+    const was = moved;
+    from = null; moved = false; PET.drag = null;
+    el.classList.remove("dragging");
+    el.style.left = el.style.top = el.style.right = el.style.bottom = "";
+    if (!was) return petSpeak();
+    const cfg = petCfg();
+    cfg.corner = (e.clientY < window.innerHeight / 2 ? "t" : "b") +
+                 (e.clientX < window.innerWidth / 2 ? "l" : "r");
+    el.dataset.corner = cfg.corner;
+    touch();
+    petMood("cheer", 1400);
+  };
+  b.addEventListener("pointerup", drop);
+  b.addEventListener("pointercancel", drop);
+  /* a keyboard gets the same two things: the line, and the four corners */
+  b.addEventListener("keydown", e => {
+    if (e.key === "Enter" || e.key === " "){ e.preventDefault(); return petSpeak(); }
+    if (e.key !== "ArrowLeft" && e.key !== "ArrowRight" &&
+        e.key !== "ArrowUp" && e.key !== "ArrowDown") return;
+    e.preventDefault();
+    const cfg = petCfg();
+    const v = cfg.corner[0], h = cfg.corner[1];
+    cfg.corner = (e.key === "ArrowUp" ? "t" : e.key === "ArrowDown" ? "b" : v) +
+                 (e.key === "ArrowLeft" ? "l" : e.key === "ArrowRight" ? "r" : h);
+    el.dataset.corner = cfg.corner;
+    touch();
+  });
+}
+
+/* ── starting it up ────────────────────────────────────────────────────── */
+function petBoot(){
+  ["pointerdown", "pointermove", "keydown", "wheel"].forEach(ev =>
+    document.addEventListener(ev, petSeen, { passive:true }));
+  petPaint();
+  setInterval(petTick, 5000);
+}
+
 const CHAT_SKINS = [
   { id:"nebula", name:"Nebula", a:"#6EA8FF", b:"#9AD7FF" },
   { id:"aurora", name:"Aurora", a:"#7C5CFF", b:"#22D3EE" },
@@ -7905,15 +8211,15 @@ function chatPixDress(){
   if (orb){
     const art = chatPix("orb", "p32");
     orb.classList.toggle("pixorb", !!art);
-    const had = orb.querySelector("img.chpix");
+    const had = orb.querySelector("img.pxl");
     if (!art){ if (had) had.remove(); }
-    else if (!had){ orb.insertAdjacentHTML("beforeend", art); chatPixFix(orb); }
+    else if (!had){ orb.insertAdjacentHTML("beforeend", art); pixFix(orb); }
   }
   if (pill){
     const art = chatPix("new");
     pill.innerHTML = (art || "↓ ") +
       '<span data-i18n="ChatNewReply">' + LE("ChatNewReply") + "</span>";
-    chatPixFix(pill);
+    pixFix(pill);
   }
 }
 
@@ -7951,14 +8257,14 @@ function renderChatFx(){
     sw("pixel", L("FxPixel"), L("FxPixelWhy")) +
     /* the whole cast, at the size each one is actually shown at, so the
        switch is a picture of what it does rather than a sentence about it */
-    (u.pixel ? '<div class="chpixrow">' +
+    (u.pixel ? '<div class="pxlrow">' +
         ["think", "orb", "done", "no", "ask", "oops", "new", "slow"]
           .map(n => chatPix(n)).join("") + "</div>" : "") +
 
     "<h6>" + esc(L("ChatDoing")) + "</h6>" +
     sw("confirm", L("FxConfirm"), u.confirm ? L("FxConfirmOn") : L("FxConfirmOff"));
 
-  chatPixFix(box);
+  pixFix(box);
   box.querySelectorAll("[data-fx]").forEach(b => {
     b.onclick = () => {
       const k = b.dataset.fx;
@@ -8001,7 +8307,7 @@ function chatAskNext(){
   if (!chatUI().confirm) return chatRunAsked(it, true);
   ASK.cur = it;
   const mark = $("chatAskIcon");
-  if (mark){ mark.innerHTML = chatPix("ask"); chatPixFix(mark); }
+  if (mark){ mark.innerHTML = chatPix("ask"); pixFix(mark); }
   $("chatAskN").textContent = ASK.q.length ? "1 / " + (ASK.q.length + 1) : "";
   $("chatAskT").textContent = it.confirm || L("ChatYes");
   $("chatAskB").textContent = it.say || "";
@@ -8493,7 +8799,7 @@ function chatReceiptEl(text, declined, replaying){
   /* the tick stamps itself in once and then holds; the dash for something
      left alone arrives without ceremony, which is the point of it */
   const art = chatPix(declined ? "no" : "done");
-  if (art){ i.className = "pix"; i.innerHTML = art; chatPixFix(i); }
+  if (art){ i.className = "pix"; i.innerHTML = art; pixFix(i); }
   else i.textContent = declined ? "\u2014" : "\u2713";
   const sp = document.createElement("span");
   sp.textContent = text;
@@ -8640,7 +8946,7 @@ function chatThinking(log){
     '</span><span class="el"></span></div></div>';
   /* if a folder copy ever stops loading, the row falls back to the one built
      into the file rather than showing the browser's broken-picture mark */
-  chatPixFix(w);
+  pixFix(w);
   const im = w.querySelector(".chgif");
   if (im) im.onerror = () => {
     if (CHAT.gif === CHAT_GIF_DATA){ CHAT.gif = ""; im.remove(); return; }
@@ -8660,8 +8966,8 @@ function chatThinking(log){
        sprite says the same thing and settles in for it */
     if (sec >= 8 && !w._slow){
       w._slow = true;
-      const s = w.querySelector("img.chpix");
-      if (s && CHAT_PIX.slow){ s.setAttribute("data-pix", "slow"); s.src = CHAT_PIX.slow; }
+      const s = w.querySelector("img.pxl");
+      if (s && PIX.slow){ s.setAttribute("data-pix", "slow"); s.src = PIX.slow; }
       chatOrbPix("slow");
     }
   }, 500);
@@ -8671,8 +8977,8 @@ function chatThinking(log){
 /* the mark in the header follows what the panel is doing: thinking while an
    answer is on its way, itself again once it has arrived */
 function chatOrbPix(name){
-  const im = document.querySelector("#chatOrb img.chpix");
-  if (im && CHAT_PIX[name]){ im.setAttribute("data-pix", name); im.src = CHAT_PIX[name]; }
+  const im = document.querySelector("#chatOrb img.pxl");
+  if (im && PIX[name]){ im.setAttribute("data-pix", name); im.src = PIX[name]; }
 }
 /* The row goes the moment the answer is in, so nothing that counts messages
    ever sees both, and the answer never lands under a leftover animation.
@@ -9169,7 +9475,7 @@ function chatRenderBot(r, sourceText, replaying){
   }
 
   d.innerHTML = h;
-  chatPixFix(d);
+  pixFix(d);
   $("chatLog").appendChild(d);
 
   /* reference cards go underneath the answer, never above it */
@@ -14040,6 +14346,28 @@ async function renderModal(){
       (+st.textScale || 100) + '"><span id="fTsV">' + (+st.textScale || 100) + '%</span>' +
       '<button class="btn sm" id="fFeelReset">' + LE("ResetToDefaults") + "</button></div>") +
 
+    '<h5 class="eyebrow" style="margin:20px 0 8px">' + LE("PetHeading") + "</h5>" +
+    '<p style="font-size:11.5px;color:var(--ink-2);margin:0 0 10px;line-height:1.7">' +
+      L("PetIntro") + "</p>" +
+    (() => {
+      const pc = petCfg();
+      return fr(L("PetOnOff"), '<select class="in" id="fPet">' +
+          '<option value="1"' + (pc.on ? " selected" : "") + ">" + LE("On") + "</option>" +
+          '<option value="0"' + (pc.on ? "" : " selected") + ">" + LE("Off") + "</option></select>") +
+        (st.motion === "none" && !pc.on
+          ? '<p style="font-size:11.5px;color:var(--ink-3);margin:-6px 0 12px;line-height:1.7">' +
+            L("PetMotionOff") + "</p>" : "") +
+        fr(L("PetName"), '<input class="in" id="fPetName" maxlength="24" value="' +
+          esc(pc.name || "") + '" placeholder="' + LE("PetNamePh") + '">') +
+        fr(L("PetCorner"), '<select class="in" id="fPetCorner">' +
+          [["br", "PetCornerBR"], ["bl", "PetCornerBL"],
+           ["tr", "PetCornerTR"], ["tl", "PetCornerTL"]].map(([v, k]) =>
+            '<option value="' + v + '"' + (pc.corner === v ? " selected" : "") + ">" +
+            LE(k) + "</option>").join("") + "</select>") +
+        '<p style="font-size:11.5px;color:var(--ink-2);margin:-6px 0 4px;line-height:1.7">' +
+          L("PetCornerHint") + "</p>";
+    })() +
+
     '<h5 class="eyebrow" style="margin:20px 0 8px">' + LE("Typeface") + "</h5>" +
     fr(L("Headings"), '<select class="in" id="fD">' + opts("display") + "</select>") +
     fr(L("BodyText"), '<select class="in" id="fU">' + opts("ui") + "</select>") +
@@ -14719,6 +15047,18 @@ function wireModal(){
   if ($("fTs")) $("fTs").oninput = () => {
     $("fTsV").textContent = $("fTs").value + "%";
     feel("textScale", +$("fTs").value);
+  };
+  if ($("fPet")) $("fPet").onchange = () => {
+    petCfg().on = $("fPet").value === "1";
+    touch(); petPaint(); renderModal();
+  };
+  if ($("fPetName")) $("fPetName").oninput = () => {
+    petCfg().name = $("fPetName").value.trim().slice(0, 24);
+    touch(); petPaint();
+  };
+  if ($("fPetCorner")) $("fPetCorner").onchange = () => {
+    petCfg().corner = $("fPetCorner").value;
+    touch(); petPaint();
   };
   on("fFeelReset", () => {
     S.settings.motion = "full"; S.settings.density = "comfortable"; S.settings.textScale = 100;
@@ -15917,6 +16257,7 @@ async function queueRun(t, sc, vals){
   markScriptUse(sc);
   if (!t.started) t.started = new Date().toISOString();
   PENDING.add(id);
+  petMood("work", 2400);          /* something has gone out to the runner */
   toast(L("SentToTheRunner") + sc.name);
 
   /* the runner picks the request up within half a second; the minute is for
@@ -19195,6 +19536,7 @@ async function boot(){
         } }], false);
   }
   if (restored) renderAll();
+  petBoot();
   $("bellBtn").classList.toggle("hot", !!S.settings.remind);
   setSaveState(S.dirty ? "dirty" : "saved");
   setTimeout(() => { S.hush = false; }, 1500);

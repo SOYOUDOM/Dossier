@@ -127,9 +127,9 @@ That is the entire setup. You should immediately see:
 | `favicon.ico`, `logo.png` | — | optional | Your own branding; both fall back to a built-in seal if missing. |
 | `assets/assistant-logo.png`, `assets/assistant-bg.jpg` | — | optional | The assistant's own mark and the picture behind its panel. Each is asked for once when the panel opens and used only if it answers. |
 | `assets/thinking.gif` | 1.5 KB | optional | The animation shown while an answer is on its way, when the pixel set is off. The same file travels inside `dossier.html` as two kilobytes of base64, so a copy on its own still has it; a file here overrides that. |
-| `assets/pixel/*.gif` | 4.6 KB | optional | The pixel set — nine sprites the assistant panel wears when **Pixel art** is on. All nine also travel inside `dossier.html` as six kilobytes of base64; a file here overrides its copy, one sprite at a time. |
-| `art/make-pixel-art.py` | ~21 KB | — | Where the sprites are drawn: each frame is a picture written out in characters, one per pixel. Stdlib Python — it writes the GIFs itself, LZW and all. Also writes `art/contact-sheet.png`, every frame on a dark band and a light one. |
-| `art/embed-pixel-art.py` | 2.1 KB | — | Carries `assets/pixel/*.gif` into `dossier.html` as base64, between two marker comments. Run after the art changes; never otherwise. |
+| `assets/pixel/*.gif` | 9.7 KB | optional | The pixel set — nine sprites the assistant panel wears when **Pixel art** is on, and seven the desk pet wears. All sixteen also travel inside `dossier.html` as thirteen kilobytes of base64; a file here overrides its copy, one sprite at a time. |
+| `art/make-pixel-art.py` | ~27 KB | — | Where the sprites are drawn: each frame is a picture written out in characters, one per pixel. Stdlib Python — it writes the GIFs itself, LZW and all. Also writes `art/contact-sheet.png`, every frame on a dark band and a light one. |
+| `art/embed-pixel-art.py` | 2.2 KB | — | Carries `assets/pixel/*.gif` into `dossier.html` as base64, between two marker comments. Run after the art changes; never otherwise. |
 | `.gitattributes` | 28 B | — | `scripts/*.bat text eol=crlf` — a `.bat` with LF line endings breaks `cmd`'s label parsing. |
 
 Everything is a classic script or plain file. There is **no build step, no
@@ -401,7 +401,8 @@ rest of the app — the record sheet stays still while you read it.
 Nine sprites, sixteen colours, drawn at sixteen pixels square — twenty-four
 for the big one. They are not decoration hung on the panel: each one marks a
 state the panel was already in, and each appears where that state is already
-said in words.
+said in words. (Seven more, in the same palette and the same hand, belong to
+[the desk pet](#66-the-desk-pet) and are listed there.)
 
 | | Where it is | What it means |
 |---|---|---|
@@ -427,7 +428,7 @@ Three rules hold them together:
    overrides the copy carried inside `dossier.html`, one sprite at a time,
    and a folder copy that stops loading falls back to the built-in rather
    than leaving a broken-image mark in the thread. A `dossier.html` with no
-   folder beside it asks for nothing at all and still has all nine.
+   folder beside it asks for nothing at all and still has all sixteen.
 
 To change one, edit its picture in `art/make-pixel-art.py` — the frames are
 written out as characters, one per pixel, from a sixteen-colour palette —
@@ -467,6 +468,44 @@ Palettes are stored in `dossier.json`, so a theme travels with the folder.
 Upgrading from 2.x moves a workspace to Studio once, and to the Studio palette
 if it was still on Archive by default. A look or theme you had chosen is left
 alone, and choosing again afterwards always sticks.
+
+### 6.6 The desk pet
+
+The character that greets an empty thread, parked in a corner of the window
+for the rest of the day. It is the same drawing and the same sixteen colours
+as [the pixel set](#the-pixel-set); what differs is what it answers to — the
+workspace rather than the conversation.
+
+For the whole of an ordinary afternoon it is a drawing in a corner that
+blinks. Everything else it does is an answer to something that just happened:
+
+| It does this | when |
+|---|---|
+| cheers | you mark a record **done** |
+| looks put out | something is overdue, for as long as it is |
+| holds a record and stamps it | the workspace is being saved, or a script has gone out to the runner |
+| falls asleep | nothing has been touched for four minutes — and waves when you come back |
+| stretches | once, at the end of the working day, if you are still here |
+| is carried | while you are dragging it somewhere else |
+
+**Drag it to any of the four corners** — it snaps to the nearest one, and the
+corner is remembered in `dossier.json`. Arrow keys do the same when it has
+focus. **Click it for one line about your day**, and again for the next: what
+is overdue, what is due, what it would pick up next, what you closed today.
+It opens nothing.
+
+It stays out of the way on purpose. Only the 48-pixel square it occupies
+takes a click. It fades out entirely while a drawer, a dialogue or the menu
+is open over the work, and it steps aside rather than being sat on when the
+assistant docks over the corner it is in. It reads your records and writes
+nothing but its own corner and name.
+
+*Menu → Appearance → Desk pet* holds the switch, the name and the corner. A
+machine that has asked for reduced motion — or an interface already set to
+*Motion: none* — starts with the pet switched off; turning it on there
+overrides that, because it is your corner. The pet and the assistant panel's
+sprites are two switches over one set of drawings: neither takes the other
+away.
 
 ---
 
