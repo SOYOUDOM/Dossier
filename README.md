@@ -159,8 +159,9 @@ With the demo copied in you should immediately see:
 | `sql/pull.sql` | ~1 KB | optional | The newest snapshot back out as JSON — the exact bytes that went in. |
 | `sql/check-reserved-words.py` | ~4 KB | — | Checks every identifier in the SQL against the T-SQL reserved-word list. Written after three of them shipped. |
 | `sql/check-json-paths.py` | ~3 KB | — | Walks every JSON path the loader reads against a workspace holding one of everything. A wrong path loads nothing, quietly. |
+| `scripts/check-bat.py` | ~4 KB | — | The five things that have actually gone wrong in a `.bat`: an argument used as a path (`%1` stops at the first space, and a work folder is `OneDrive - Contoso Ltd`), a redirect on an `if` line (cmd performs it whether the condition holds or not), LF line endings, a byte over 7 bits, a call to PowerShell. |
 | `scripts/dossier-sql.bat` | ~7 KB | optional | The launcher: `init`, `push`, `pull`, `check`, `history`, `find`. Defaults to `(localdb)\MSSQLLocalDB`. |
-| `scripts/dossier-bridge.bat` | ~6 KB | optional | **Starts Dossier**: hands out the page at `http://127.0.0.1:5500/dossier.html` and saves to the database, in one window. Compiles the bridge first with the C# compiler already on the machine. `startup "<folder>"` makes it happen at every login. |
+| `scripts/dossier-bridge.bat` | ~6 KB | optional | **Starts Dossier**: hands out the page at `http://127.0.0.1:5500/dossier.html` and saves to the database, in one window. Compiles the bridge first with the C# compiler already on the machine. `startup "<folder>"` makes it happen at every login, and starts one there and then. |
 | `scripts/bridge/DossierBridge.cs` | ~24 KB | optional | The bridge: a loopback socket, a token, six routes, a read-only handler for the page beside it, and `System.Data.SqlClient`. C# 5, so `csc.exe` from the .NET Framework can build it with nothing installed. |
 | `sql/load-proc.sql` | ~14 KB | optional | `dbo.LoadWorkspace` — the only code that writes the tables, called by both the bridge and `push`. |
 
@@ -622,6 +623,10 @@ scripts\dossier-bridge.bat           then this, and nothing else
 Leave that window open and go to **`http://127.0.0.1:5500/dossier.html`** —
 it opens a browser there for you the first time. Bookmark it.
 
+Tell it your workspace folder once — `scripts\dossier-bridge.bat "D:\Work\Dossier"`
+— and it keeps that beside the `.exe`. From the second run on it is a file you
+double-click. Pass a folder any time to change it.
+
 **One window, not two.** Until v4.1 this was two: `dossier-serve.bat` handed
 out the page, because Chrome and Edge refuse notifications to a page opened
 from `file://`, and `dossier-bridge.bat` talked to the database. The bridge
@@ -643,7 +648,14 @@ scripts\dossier-bridge.bat startup off                    stop doing it
 
 That writes one `.bat` into your Startup folder — no service, no scheduled
 task, no administrator, no PowerShell. It runs minimised and opens no browser;
-your bookmark does that.
+your bookmark does that. It also starts one straight away, so the address
+works now rather than after you next sign in.
+
+**Quote a path with spaces in it**, here and everywhere else. `%1` in a `.bat`
+stops at the first space, so `startup C:\Users\you\OneDrive - Contoso\Dossier`
+without quotes arrives as `C:\Users\you\OneDrive` — which exists, so nothing
+objects. It takes the whole line now, quoted or not, and prints the folder it
+settled on. Read that line.
 
 **Why there is a process at all.** A browser has no SQL client — no page can
 open a connection to SQL Server. So the bridge sits between them: JSON over

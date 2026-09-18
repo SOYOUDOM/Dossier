@@ -39,6 +39,16 @@ rem ===========================================================================
 setlocal
 title Dossier
 
+rem  The whole command line, with any quotes taken off.
+rem
+rem  %%1 stops at the first space, and on a work PC the folder is usually
+rem  something like  C:\Users\you\OneDrive - Contoso Ltd\Dossier  - so %%1
+rem  silently installed "C:\Users\you\OneDrive" for somebody, which exists,
+rem  so nothing complained. %%* keeps the whole thing whether it was quoted or
+rem  not.
+set "ARGS=%*"
+if defined ARGS set "ARGS=%ARGS:"=%"
+
 if /i "%~1"=="startup" goto :startup
 
 set "SERVER=%DOSSIER_SQL%"
@@ -51,8 +61,21 @@ for %%I in ("%~dp0..") do set "APP=%%~fI"
 
 rem  the workspace: where your records live. Not the same folder, and the
 rem  bridge will say so if you point it at the clone.
-set "ROOT=%APP%"
-if not "%~1"=="" set "ROOT=%~f1"
+rem
+rem  Say it once. It is kept beside the .exe, so from the second run on this
+rem  is a file you double-click.
+set "LAST=%~dp0bridge\.workspace.txt"
+set "ROOT="
+if defined ARGS for %%I in ("%ARGS%") do set "ROOT=%%~fI"
+set "REMEMBERED="
+if not defined ROOT if exist "%LAST%" (
+  set /p ROOT=<"%LAST%"
+  set "REMEMBERED=1"
+)
+if defined ROOT set "ROOT=%ROOT:"=%"
+if not defined ROOT set "REMEMBERED="
+if not defined ROOT set "ROOT=%APP%"
+for %%I in ("%ROOT%") do set "ROOT=%%~fI"
 
 set "SRC=%~dp0bridge\DossierBridge.cs"
 set "EXE=%~dp0bridge\DossierBridge.exe"
@@ -99,9 +122,26 @@ if defined BUILD (
   )
 )
 
+rem  Remember it for next time - but never the clone, which is the fallback
+rem  rather than a choice anybody made. Here, after the build, so a folder is
+rem  only remembered if there is something to run with it.
+rem
+rem  The redirect is inside the parentheses on purpose: cmd sets up a
+rem  redirection while parsing the line, so "if <false> >file echo x" empties
+rem  the file anyway. In a block it belongs to the command in the block.
+if /i not "%ROOT%"=="%APP%" (
+  >"%LAST%" echo "%ROOT%"
+)
+
 echo.
 echo   Dossier
-echo   workspace %ROOT%
+if defined REMEMBERED (
+  echo   workspace %ROOT%
+  echo             remembered from last time. To change it, pass a folder:
+  echo             dossier-bridge.bat "D:\Work\Dossier"
+) else (
+  echo   workspace %ROOT%
+)
 "%EXE%" "%ROOT%" "%SERVER%" "%DB%" "%APP%"
 set "RC=%ERRORLEVEL%"
 
@@ -112,6 +152,10 @@ if "%RC%"=="4" (
 ) else (
   echo   Dossier has stopped. It cannot save until this is started again.
 )
+rem  Double-clicked, this window closes the instant it stops - taking the
+rem  reason with it. Wait, unless we were started at login, where a window
+rem  waiting for a keypress nobody will press is worse.
+if not "%RC%"=="0" if not "%DOSSIER_OPEN%"=="0" pause
 exit /b %RC%
 
 rem ---------------------------------------------------------------------------
@@ -124,7 +168,11 @@ rem ---------------------------------------------------------------------------
 :startup
 set "LAUNCH=%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup\Dossier.bat"
 
-if /i "%~2"=="off" (
+rem  everything after the word "startup", spaces and all
+set "WS="
+for /f "tokens=1,*" %%A in ("%ARGS%") do set "WS=%%B"
+
+if /i "%WS%"=="off" (
   if exist "%LAUNCH%" (
     del "%LAUNCH%"
     echo   Dossier will not start at login any more.
@@ -134,7 +182,7 @@ if /i "%~2"=="off" (
   exit /b 0
 )
 
-if "%~2"=="" (
+if not defined WS (
   echo.
   echo   Say which folder holds your records:
   echo       dossier-bridge.bat startup "D:\Work\Dossier"
@@ -143,12 +191,20 @@ if "%~2"=="" (
   echo.
   exit /b 2
 )
-if not exist "%~f2\." (
-  echo   No such folder: %~f2
+
+for %%I in ("%WS%") do set "WS=%%~fI"
+if not exist "%WS%\." (
+  echo.
+  echo   No such folder:
+  echo       %WS%
+  echo.
+  echo   That is what the path came out as. If it is missing everything
+  echo   after a space, put quotes around it:
+  echo       dossier-bridge.bat startup "C:\Users\you\OneDrive - Contoso\Dossier"
+  echo.
   exit /b 3
 )
 
-set "WS=%~f2"
 > "%LAUNCH%" echo @echo off
 >>"%LAUNCH%" echo rem  Written by dossier-bridge.bat startup. To stop this, run
 >>"%LAUNCH%" echo rem      dossier-bridge.bat startup off
@@ -161,7 +217,7 @@ if errorlevel 1 (
 )
 
 echo.
-echo   Dossier will start at every login, minimised, on the workspace
+echo   Dossier will start at every login, minimised, on
 echo       %WS%
 echo   It will not open a browser by itself. Bookmark this and use that:
 echo       http://127.0.0.1:5500/dossier.html
@@ -170,4 +226,19 @@ echo   Written to:
 echo       %LAUNCH%
 echo   Undo it with:  dossier-bridge.bat startup off
 echo.
+
+rem  Scheduling it for a login that is hours away, and leaving nothing
+rem  listening in the meantime, is how you end up typing that address into a
+rem  browser and being told the connection was refused. Start it now too -
+rem  unless it is already running, which is what port 5500 answering means.
+netstat -an | find "127.0.0.1:5500" | find "LISTENING" >NUL 2>&1
+if not errorlevel 1 (
+  echo   Something is already listening on 5500, which will be Dossier
+  echo   itself. Leaving it alone - that address works now.
+  exit /b 0
+)
+echo   Starting it now as well, in the window about to open, so you do not
+echo   have to sign out and back in before that address works.
+echo.
+start "Dossier" "%~dp0dossier-bridge.bat" "%WS%"
 exit /b 0

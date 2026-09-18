@@ -24,3 +24,14 @@ run-*.cmd
 
 # the art tools are Python; nothing here is a build step
 art/__pycache__/
+
+# built on first run by dossier-bridge.bat, from the .cs beside it, and the
+# folder it was last told to use
+/scripts/bridge/DossierBridge.exe
+/scripts/bridge/DossierBridge.pdb
+/scripts/bridge/.workspace.txt
+
+# the bridge's handshake - a port and a token, new every run. It belongs to
+# the workspace, and shows up here only for anyone whose workspace is this
+# folder, which it should not be.
+.bridge.json

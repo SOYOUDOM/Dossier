@@ -39,6 +39,15 @@ setlocal
 set "CMD=%~1"
 if "%CMD%"=="" set "CMD=all"
 
+rem  Whatever came after the command, whole. %%2 stops at the first space, and
+rem  a workspace under OneDrive has spaces in it as a matter of course -
+rem  "C:\Users\you\OneDrive - Contoso Ltd\Dossier\dossier.json" unquoted used
+rem  to arrive here as "C:\Users\you\OneDrive".
+set "ARG="
+set "ALL=%*"
+if defined ALL set "ALL=%ALL:"=%"
+for /f "tokens=1,*" %%A in ("%ALL%") do set "ARG=%%B"
+
 set "SERVER=%DOSSIER_SQL%"
 if "%SERVER%"=="" set "SERVER=(localdb)\MSSQLLocalDB"
 set "DB=%DOSSIER_DB%"
@@ -106,7 +115,7 @@ exit /b %ERRORLEVEL%
 
 rem ---------------------------------------------------------------------------
 :push
-if not "%~2"=="" set "JSON=%~f2"
+if defined ARG for %%I in ("%ARG%") do set "JSON=%%~fI"
 if not exist "%JSON%" (
   echo   No workspace file at "%JSON%".
   echo   Pass the path: dossier-sql.bat push "D:\Work\Dossier\dossier.json"
@@ -129,7 +138,8 @@ rem ---------------------------------------------------------------------------
 :pull
 set "OUT=%ROOT%\dossier-from-sql.json"
 set "REPLACE="
-if /i "%~2"=="--replace" (set "REPLACE=1") else (if not "%~2"=="" set "OUT=%~f2")
+if /i "%ARG%"=="--replace" set "REPLACE=1"
+if not defined REPLACE if defined ARG for %%I in ("%ARG%") do set "OUT=%%~fI"
 
 echo   writing  %OUT%
 sqlcmd -S "%SERVER%" -d "%DB%" -b -E -h -1 -y 0 -W -w 65535 -f 65001 -i "%SQLDIR%\pull.sql" -v id="" -o "%OUT%"

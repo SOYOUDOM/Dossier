@@ -6,6 +6,49 @@ holds — which is what to paste into a bug report.
 
 ---
 
+## 4.1.1 - 2026-09-18
+
+**`startup` kept a quarter of the folder you gave it.**
+
+```
+dossier-bridge.bat startup C:\Users\me\OneDrive - AIA Group Ltd\Helpers\Dossier
+```
+
+installed `C:\Users\me\OneDrive`. `%2` in a `.bat` stops at the first space,
+and on a work PC the folder is *always* something like `OneDrive - Contoso
+Ltd`. The truncated path exists, so nothing complained - it said "Dossier will
+start at every login" and printed the wrong folder in the line above, small
+enough to read past.
+
+- **`%*` instead of `%2`**, so the whole path arrives whether it was quoted or
+  not, and `startup` prints the folder it resolved to
+- **`dossier-sql.bat push` and `pull` had the same bug** in their file
+  argument. Same fix
+- `scripts/check-bat.py` is in the repository now, for the five things that
+  have actually gone wrong in a `.bat`: an argument used as a path, a redirect
+  on an `if` line - cmd performs it whether the condition holds or not - LF
+  line endings, a byte over 7 bits, a call to PowerShell. It catches this bug
+  on the version that shipped, and it caught one of its own while being
+  written
+
+**`startup` now also starts it.** It scheduled the bridge for a login that was
+hours away and left nothing listening, so the address it told you to bookmark
+answered *ERR_CONNECTION_REFUSED* the moment you tried it. It starts one now
+as well, unless something is already on 5500.
+
+**It remembers the folder.** Tell it once - `dossier-bridge.bat "D:\Work\
+Dossier"` - and it keeps that beside the `.exe`, so from the second run on it
+is a file you double-click. Pass a folder any time to change it. It will not
+remember the clone, which is the fallback rather than a choice anybody made.
+
+**A window that fails no longer disappears with the reason in it.** Double-
+clicked, `dossier-bridge.bat` closed instantly on any error - the database not
+being ready, the folder being the clone - taking the explanation with it. It
+waits now, except when started at login, where a window waiting for a keypress
+nobody is there to press is worse.
+
+---
+
 ## 4.1.0 - 2026-09-18
 
 **One window.**
