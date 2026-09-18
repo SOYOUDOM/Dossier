@@ -6,6 +6,37 @@ holds — which is what to paste into a bug report.
 
 ---
 
+## 4.0.3 - 2026-09-18
+
+**`Could not find stored procedure 'dbo.LoadWorkspace'`.**
+
+In 4.0.0 the loader moved out of `push.sql` and into `sql/load-proc.sql`, so
+that the bridge and the file loader would run the same code. `CREATE
+PROCEDURE` has to be the first statement in its batch, which is a good reason
+to keep it in its own file - and not a reason to forget the line that runs
+it. I forgot the line that runs it.
+
+So the database had every table and no loader, and the bridge answered every
+save with that error. Nine of them, in the screenshot that found it.
+
+- `dossier-sql.bat init` and `push` both run `load-proc.sql` now
+- **The bridge checks the loader is there before it binds a port.** Finding
+  out at the first save costs a person their afternoon; finding out at
+  startup costs one line
+- `sql/check-wiring.py` is in the repository: every `.sql` file must be run
+  by the batch, and every file the batch runs must exist. A file nothing
+  executes looks exactly like a file that works
+
+### If your ChatMessage rows look like `áž"áž¶áž"`
+
+That is a file push from before the bridge: UTF-8 bytes read back as
+Windows-1252. The bridge does not have that problem - it passes text to SQL
+Server as `nvarchar` with no encoding round trip at all - and because a save
+replaces every table, **the first successful save through the bridge will
+correct all of it**.
+
+---
+
 ## 4.0.2 - 2026-09-18
 
 **Check the bridge.**

@@ -85,8 +85,24 @@ rem ---------------------------------------------------------------------------
 echo   creating or migrating...
 sqlcmd -S "%SERVER%" -b -E -i "%SQLDIR%\schema.sql" -v db="%DB%"
 if errorlevel 1 goto :failed
+rem  and the loader, which is the only thing that writes the tables. It lives
+rem  in its own file so that CREATE PROCEDURE can be the first statement in
+rem  its batch - which is a reason to keep it apart, not a reason to forget
+rem  to run it. It was forgotten, and the bridge spent an afternoon saying
+rem  "Could not find stored procedure dbo.LoadWorkspace".
+call :proc
+if errorlevel 1 goto :failed
 echo   done.
 exit /b 0
+
+rem ---------------------------------------------------------------------------
+:proc
+if not exist "%SQLDIR%\load-proc.sql" (
+  echo   Cannot find "%SQLDIR%\load-proc.sql" - the loader is missing.
+  exit /b 9
+)
+sqlcmd -S "%SERVER%" -d "%DB%" -b -E -i "%SQLDIR%\load-proc.sql"
+exit /b %ERRORLEVEL%
 
 rem ---------------------------------------------------------------------------
 :push
@@ -100,6 +116,8 @@ echo   file     %JSON%
 rem  the schema first - separate files on purpose, so a mistake in one cannot
 rem  stop the other from running
 sqlcmd -S "%SERVER%" -b -E -i "%SQLDIR%\schema.sql" -v db="%DB%"
+if errorlevel 1 goto :failed
+call :proc
 if errorlevel 1 goto :failed
 sqlcmd -S "%SERVER%" -d "%DB%" -b -E -i "%SQLDIR%\push.sql" -v file="%JSON%"
 if errorlevel 1 goto :failed

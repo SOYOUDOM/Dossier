@@ -98,6 +98,25 @@ public class DossierBridge
                     object v = cmd.ExecuteScalar();
                     Console.WriteLine("  database  " + Database + " on " + Server + ", schema version " + v);
                 }
+                // Everything this process writes goes through one procedure.
+                // Finding out it is missing at the first save means nine
+                // failed writes and a person wondering why nothing happened;
+                // finding out here means one line and a fix.
+                using (SqlCommand cmd = new SqlCommand(
+                    "SELECT OBJECT_ID('dbo.LoadWorkspace', 'P')", c))
+                {
+                    object p = cmd.ExecuteScalar();
+                    if (p == null || p == DBNull.Value)
+                    {
+                        Console.Error.WriteLine();
+                        Console.Error.WriteLine("  The loader dbo.LoadWorkspace is not in this database.");
+                        Console.Error.WriteLine("  Nothing could be saved. Create it with:");
+                        Console.Error.WriteLine();
+                        Console.Error.WriteLine("      scripts\\dossier-sql.bat init");
+                        Console.Error.WriteLine();
+                        return 6;
+                    }
+                }
             }
         }
         catch (Exception e)
