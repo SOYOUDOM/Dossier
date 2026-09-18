@@ -138,7 +138,7 @@ exit /b 0
 
 rem ---------------------------------------------------------------------------
 :check
-sqlcmd -S "%SERVER%" -d "%DB%" -b -E -Q "SET NOCOUNT ON; SELECT Snapshots=(SELECT COUNT(*) FROM dbo.Snapshot), Records=(SELECT COUNT(*) FROM dbo.Record), [Open]=(SELECT COUNT(*) FROM dbo.Record WHERE Status IN ('open','processing','blocked')), Documents=(SELECT COUNT(*) FROM dbo.RecordFile), SchemaVersion=(SELECT Version FROM dbo.SchemaVersion WHERE Id=1), LastPush=(SELECT MAX(TakenAt) FROM dbo.Snapshot);"
+sqlcmd -S "%SERVER%" -d "%DB%" -b -E -Q "SET NOCOUNT ON; SELECT Snapshots=(SELECT COUNT(*) FROM dbo.Snapshot), Records=(SELECT COUNT(*) FROM dbo.Record), [Open]=(SELECT COUNT(*) FROM dbo.Record WHERE Status IN ('open','processing','blocked')), Documents=(SELECT COUNT(*) FROM dbo.RecordFile), Runbooks=(SELECT COUNT(*) FROM dbo.Runbook), Profiles=(SELECT COUNT(*) FROM dbo.SystemProfile), Notes=(SELECT COUNT(*) FROM dbo.Note), Incidents=(SELECT COUNT(*) FROM dbo.Incident), Chats=(SELECT COUNT(*) FROM dbo.Chat), SchemaVersion=(SELECT Version FROM dbo.SchemaVersion WHERE Id=1), LastPush=(SELECT MAX(TakenAt) FROM dbo.Snapshot);"
 if errorlevel 1 goto :failed
 exit /b 0
 

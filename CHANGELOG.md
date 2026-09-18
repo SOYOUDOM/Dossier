@@ -6,6 +6,66 @@ holds — which is what to paste into a bug report.
 
 ---
 
+## 3.14.0 - 2026-09-18
+
+**The whole workspace is in the database now, not just the records.**
+
+There was no Runbook table. The library, the system profiles and the notes
+the assistant has been taught were going into `dbo.Setting` as one lump of
+JSON under one key, and the incident history and the conversations were not
+shredded at all - they travelled inside the snapshot and nowhere else. A
+database you cannot query is a file with extra steps.
+
+Migration 3 adds:
+
+| | |
+|---|---|
+| `Runbook` + `RunbookTrigger`, `RunbookStep` | one row per trigger phrase and per step, so you can ask which phrases you actually have |
+| `SystemProfile` | what each system is like, and what it lies about |
+| `Note` | what the assistant has been taught |
+| `Incident` | the imported history, indexed by system and date |
+| `Chat` + `ChatMessage` | the conversations, one row per message |
+| `Holiday` | the working calendar |
+
+Migration 4 adds `vRunbooks` (with its trigger and step counts) and
+`vIncidentsBySystem`. `dbo.Setting` now holds only what has no table of its
+own, rather than a second copy of all of the above.
+
+`dossier-sql.bat check` counts them: records, documents, runbooks, profiles,
+notes, incidents, conversations.
+
+### Where the data lives, said plainly
+
+The **database holds everything** - every field of every record, the whole
+library, the history, the conversations - and `dbo.Snapshot` also keeps each
+pushed file whole, so a `pull` reconstructs nothing.
+
+The **file is still what the app reads and writes**, because Dossier is a
+page in a browser and cannot open a connection to SQL Server. That has not
+changed and cannot. What has changed is that the file is no longer the only
+complete copy: push nightly and the database is a full one, queryable in
+SSMS, sitting on your own PC.
+
+### Tested
+
+Two checkers, both kept in the repo and both run against this change:
+
+- `sql/check-reserved-words.py` - every identifier position against the T-SQL
+  reserved word list
+- `sql/check-json-paths.py` - **116 JSON paths** walked against a workspace
+  holding one of everything: records, a runbook library, profiles, notes,
+  incidents, a conversation and the holiday list. A path that does not
+  resolve loads nothing quietly, which is the failure mode worth catching in
+  advance
+
+Plus the structural check (BEGIN/END, TRY/CATCH, TRAN/COMMIT balance per
+batch) and a cross-check that every table the loader writes is one the schema
+creates, and every table the schema creates is one the loader fills.
+
+Still no engine here to run it against - that has not changed either.
+
+---
+
 ## 3.13.2 - 2026-09-18
 
 **The LocalDB schema, for the third time - and the reason it took three.**

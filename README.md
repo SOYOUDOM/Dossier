@@ -155,6 +155,8 @@ With the demo copied in you should immediately see:
 | `.gitignore` | ~1 KB | — | Every path the app writes — `dossier.json`, `backups/`, `tasks/`, the runner's queue. Git must never create, replace or delete one of them. |
 | `sql/schema.sql` | ~16 KB | optional | Creates the LocalDB database, creates or migrates the tables, and loads a `dossier.json` into them. Idempotent, and its own migration history. |
 | `sql/pull.sql` | ~1 KB | optional | The newest snapshot back out as JSON — the exact bytes that went in. |
+| `sql/check-reserved-words.py` | ~4 KB | — | Checks every identifier in the SQL against the T-SQL reserved-word list. Written after three of them shipped. |
+| `sql/check-json-paths.py` | ~3 KB | — | Walks every JSON path the loader reads against a workspace holding one of everything. A wrong path loads nothing, quietly. |
 | `scripts/dossier-sql.bat` | ~6 KB | optional | The launcher: `init`, `push`, `pull`, `check`, `history`. Defaults to `(localdb)\MSSQLLocalDB`. |
 
 Everything is a classic script or plain file. There is **no build step, no
@@ -627,10 +629,22 @@ What it builds:
 - **`dbo.Snapshot`** — the file, whole, one row per push, kept forever. A
   `pull` reads this, so a round trip is a copy rather than a reconstruction
   and cannot quietly drop a field nobody thought to shred.
-- **`dbo.Record`, `RecordLog`, `RecordFile`, `RecordStep`, `RecordTag`,
-  `RecordBlocker`, `Routine`, `Script`, `Setting`** — the same JSON in
-  columns, replaced on each push, so you can ask SQL questions of your own
-  work. Two views to start from: `vOpenWork` and `vClosedByWeek`.
+- **Everything else in columns**, replaced on each push, so you can ask SQL
+  questions of your own work:
+
+  | | |
+  |---|---|
+  | `Record` + `RecordLog`, `RecordFile`, `RecordStep`, `RecordTag`, `RecordBlocker` | the records and everything hanging off one |
+  | `Runbook` + `RunbookTrigger`, `RunbookStep` | the library, one row per trigger phrase and per step |
+  | `SystemProfile` | what each system is like, and what it lies about |
+  | `Note` | what the assistant has been taught |
+  | `Incident` | the imported history — the table most worth a query |
+  | `Chat` + `ChatMessage` | the assistant's conversations |
+  | `Holiday` | the working calendar, without which "overdue" means nothing |
+  | `Routine`, `Script`, `Setting` | the rest. `Setting` holds only what has no table of its own |
+
+  Four views to start from: `vOpenWork`, `vClosedByWeek`, `vRunbooks`,
+  `vIncidentsBySystem`.
 - **`dbo.SchemaVersion`** — one number. Every step in `sql/schema.sql` is
   wrapped in a test of it, so running the file against any older database
   brings it forward and running it twice does nothing.

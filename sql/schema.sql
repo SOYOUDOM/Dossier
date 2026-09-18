@@ -257,6 +257,162 @@ BEGIN
 END
 GO
 
+/* -- 3 -- the rest of the workspace ------------------------------------------
+   Migration 1 covered records. Everything else a workspace holds was going
+   into dbo.Setting as a lump of JSON under one key - the runbook library,
+   the system profiles, the notes the assistant has been taught - and the
+   incident history and the conversations were not shredded at all. A
+   database you cannot query is a file with extra steps, so they each get a
+   table. */
+IF (SELECT Version FROM dbo.SchemaVersion WHERE Id = 1) < 3
+BEGIN
+    PRINT 'migrating to 3: runbooks, profiles, notes, incidents, conversations';
+    BEGIN TRY
+    BEGIN TRAN;
+
+    /* A runbook has no id of its own in the workspace; its title is what the
+       app matches on and what an import replaces by. So the title is the
+       natural key and the surrogate below is only here for the child rows. */
+    IF OBJECT_ID('dbo.Runbook') IS NULL
+    CREATE TABLE dbo.Runbook (
+        RunbookId   int           IDENTITY(1,1) CONSTRAINT PK_Runbook PRIMARY KEY,
+        Title       nvarchar(400) NOT NULL,
+        System      nvarchar(120) NULL,
+        Severity    nvarchar(4)   NULL,
+        Status      nvarchar(30)  NULL,       /* draft, verified, ... */
+        Owner       nvarchar(200) NULL,
+        Verified    nvarchar(40)  NULL,       /* when somebody last stood behind it */
+        Uses        int           NULL,
+        Escalation  nvarchar(max) NULL,
+        Checks      nvarchar(max) NULL,       /* the queries, as written */
+        CONSTRAINT UQ_Runbook_Title UNIQUE (Title)
+    );
+    IF OBJECT_ID('dbo.RunbookTrigger') IS NULL
+    CREATE TABLE dbo.RunbookTrigger (
+        RunbookId  int           NOT NULL,
+        Ordinal    int           NOT NULL,
+        Phrase     nvarchar(400) NULL,
+        CONSTRAINT PK_RunbookTrigger PRIMARY KEY (RunbookId, Ordinal)
+    );
+    IF OBJECT_ID('dbo.RunbookStep') IS NULL
+    CREATE TABLE dbo.RunbookStep (
+        RunbookId  int           NOT NULL,
+        Ordinal    int           NOT NULL,
+        Text       nvarchar(max) NULL,
+        CONSTRAINT PK_RunbookStep PRIMARY KEY (RunbookId, Ordinal)
+    );
+
+    IF OBJECT_ID('dbo.SystemProfile') IS NULL
+    CREATE TABLE dbo.SystemProfile (
+        System   nvarchar(120) NOT NULL CONSTRAINT PK_SystemProfile PRIMARY KEY,
+        Facts    nvarchar(max) NULL,
+        Quirks   nvarchar(max) NULL,          /* what the system lies about */
+        Tables   nvarchar(max) NULL,
+        Owner    nvarchar(200) NULL,
+        Updated  datetime2(0)  NULL
+    );
+
+    /* what the assistant has been taught, in plain sight and deletable */
+    IF OBJECT_ID('dbo.Note') IS NULL
+    CREATE TABLE dbo.Note (
+        Id       nvarchar(60)  NOT NULL CONSTRAINT PK_Note PRIMARY KEY,
+        Title    nvarchar(400) NULL,
+        Body     nvarchar(max) NULL,
+        System   nvarchar(120) NULL,
+        Tags     nvarchar(400) NULL,
+        Created  datetime2(0)  NULL,
+        Updated  datetime2(0)  NULL
+    );
+
+    /* the imported incident history - the one table here likely to run to
+       thousands of rows, and the one most worth a SQL question */
+    IF OBJECT_ID('dbo.Incident') IS NULL
+    CREATE TABLE dbo.Incident (
+        Num        nvarchar(40)  NOT NULL CONSTRAINT PK_Incident PRIMARY KEY,
+        Opened     datetime2(0)  NULL,
+        Resolved   datetime2(0)  NULL,
+        Closed     datetime2(0)  NULL,
+        Title      nvarchar(400) NULL,
+        Descr      nvarchar(max) NULL,
+        Sys        nvarchar(160) NULL,
+        Ci         nvarchar(160) NULL,
+        Cat        nvarchar(120) NULL,
+        Sub        nvarchar(120) NULL,
+        [Group]    nvarchar(160) NULL,
+        Who        nvarchar(160) NULL,
+        Caller     nvarchar(160) NULL,
+        Pri        nvarchar(10)  NULL,
+        State      nvarchar(60)  NULL,
+        CloseCode  nvarchar(120) NULL,
+        CloseNotes nvarchar(max) NULL,
+        Cause      nvarchar(max) NULL,
+        Reopens    int           NULL
+    );
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_Incident_Sys'
+                   AND object_id = OBJECT_ID('dbo.Incident'))
+    CREATE INDEX IX_Incident_Sys ON dbo.Incident (Sys, Opened);
+
+    /* the assistant's conversations, which live with the records on purpose */
+    IF OBJECT_ID('dbo.Chat') IS NULL
+    CREATE TABLE dbo.Chat (
+        Id       nvarchar(60)  NOT NULL CONSTRAINT PK_Chat PRIMARY KEY,
+        Title    nvarchar(400) NULL,
+        Created  datetime2(0)  NULL,
+        Updated  datetime2(0)  NULL,
+        Messages int           NULL
+    );
+    IF OBJECT_ID('dbo.ChatMessage') IS NULL
+    CREATE TABLE dbo.ChatMessage (
+        ChatId   nvarchar(60)  NOT NULL,
+        Ordinal  int           NOT NULL,
+        Who      nvarchar(20)  NULL,          /* you, bot, receipt */
+        Text     nvarchar(max) NULL,
+        CONSTRAINT PK_ChatMessage PRIMARY KEY (ChatId, Ordinal)
+    );
+
+    /* the working calendar, because "overdue" means nothing without it */
+    IF OBJECT_ID('dbo.Holiday') IS NULL
+    CREATE TABLE dbo.Holiday (
+        [Date]  date          NOT NULL CONSTRAINT PK_Holiday PRIMARY KEY,
+        Name    nvarchar(200) NULL,
+        Kind    nvarchar(40)  NULL
+    );
+
+    UPDATE dbo.SchemaVersion SET Version = 3, AppliedAt = SYSUTCDATETIME() WHERE Id = 1;
+    COMMIT;
+    END TRY
+    BEGIN CATCH
+        IF XACT_STATE() <> 0 ROLLBACK;
+        PRINT 'migration 3 rolled back; the database is as it was';
+        THROW;
+    END CATCH
+END
+GO
+
+/* -- 4 -- what the library looks like ---------------------------------------- */
+IF (SELECT Version FROM dbo.SchemaVersion WHERE Id = 1) < 4
+BEGIN
+    PRINT 'migrating to 4: library views';
+    EXEC (N'
+        CREATE OR ALTER VIEW dbo.vRunbooks AS
+        SELECT  b.Title, b.System, b.Severity, b.Status, b.Owner, b.Uses,
+                Triggers  = (SELECT COUNT(*) FROM dbo.RunbookTrigger t WHERE t.RunbookId = b.RunbookId),
+                Steps     = (SELECT COUNT(*) FROM dbo.RunbookStep    s WHERE s.RunbookId = b.RunbookId),
+                HasChecks = CASE WHEN DATALENGTH(b.Checks) > 0 THEN 1 ELSE 0 END
+        FROM    dbo.Runbook b;
+    ');
+    EXEC (N'
+        CREATE OR ALTER VIEW dbo.vIncidentsBySystem AS
+        SELECT  Sys, Pri, Incidents = COUNT(*),
+                Reopened  = SUM(CASE WHEN Reopens > 0 THEN 1 ELSE 0 END),
+                FirstSeen = MIN(Opened), LastSeen = MAX(Opened)
+        FROM    dbo.Incident
+        GROUP BY Sys, Pri;
+    ');
+    UPDATE dbo.SchemaVersion SET Version = 4, AppliedAt = SYSUTCDATETIME() WHERE Id = 1;
+END
+GO
+
 /* what the database looks like now */
 SELECT  SchemaVersion = (SELECT Version FROM dbo.SchemaVersion WHERE Id = 1),
         Tables        = (SELECT COUNT(*) FROM sys.tables WHERE schema_id = SCHEMA_ID('dbo')),
