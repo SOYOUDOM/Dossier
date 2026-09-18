@@ -6,6 +6,55 @@ holds — which is what to paste into a bug report.
 
 ---
 
+## 3.12.2 — 2026-09-18
+
+**Git can no longer touch your records.**
+
+This one cost somebody their week, so it is worth saying plainly what
+happened. The quick start told you to clone the repository and then pick the
+clone as your workspace. The repository tracked `dossier.json` and a file
+under `backups/`. Those two facts together mean that a `git pull`, a
+`git checkout` or a re-clone in that folder replaces your records and your
+backup with whatever the repository last said they were — no warning, no
+prompt, and nothing in the app's own history to undo, because the app never
+did it.
+
+- **Nothing in this repository tracks a workspace file any more.**
+  `dossier.json`, `backups/`, `tasks/` and the runner's queue are in a new
+  `.gitignore`, and the demo workspace has moved to `demo/dossier.json`
+  where nothing the app writes can collide with it
+- **The quick start no longer tells you to work inside the clone.** Make a
+  folder for your records, copy `demo\dossier.json` into it if you want the
+  demo, and point Dossier at that
+- **Dossier notices for itself.** Open a workspace with a `.git` in it and a
+  banner says so — once per folder — with a button that writes the
+  `.gitignore` for you, covering every path the app owns. It cannot untrack
+  what git is already tracking, so it tells you the one command that does
+
+### If your records are in a clone made before this build
+
+In that folder, once:
+
+```
+git rm --cached dossier.json
+git rm -r --cached backups
+```
+
+That stops git tracking them without deleting anything. The pull that brings
+you this build removes the repository's own `dossier.json` — if yours is
+still tracked and has your records in it, git will stop with a
+modify/delete conflict rather than throwing it away, and the two commands
+above settle it.
+
+### Tested
+
+The banner raised against a folder that reports a `.git`, silent against one
+that does not, silent the second time in the same folder, and the
+`.gitignore` it writes carrying all seven paths — appended to an existing
+file rather than replacing it.
+
+---
+
 ## 3.12.1 — 2026-09-17
 
 **Three ways a dropped file went to the wrong place.**

@@ -63,21 +63,42 @@ These are design invariants, not preferences. Anything built on top of Dossier
 
 ## 2. Quick start
 
-**This repository folder is itself a ready-to-use workspace.** There is
-already work on the sheet, a routine that runs a script by itself, and the
-scripts to go with it.
+> ### Keep your records in a folder of their own
+>
+> **Do not use the folder you cloned this into as your workspace.** Earlier
+> versions of this page told you to, and it cost somebody their week: a
+> `git pull` or a `git checkout` replaces every file git tracks, and
+> `dossier.json` used to be one of them. One command in the wrong folder and
+> the records and the day's backup are whatever the repository last said they
+> were.
+>
+> Nothing in this repository tracks a workspace file any more — `dossier.json`
+> and `backups/` are in [`.gitignore`](.gitignore), and the demo has moved to
+> `demo/`. **If you cloned before v3.12.2 and your records are in the clone**,
+> run this once, in that folder:
+>
+> ```
+> git rm --cached dossier.json
+> git rm -r --cached backups
+> ```
+>
+> Dossier also notices for itself: open a workspace with a `.git` in it and it
+> says so, once, and offers to write the `.gitignore` for you.
 
 ```
 git clone https://github.com/SOYOUDOM/Dossier
 ```
 
-1. **Open `dossier.html`** in your browser — double-click it. Edge or Chrome
+1. **Make a folder for your records**, anywhere but the clone —
+   `Documents\Dossier` will do. To start with the demo rather than an empty
+   sheet, copy `demo\dossier.json` into it as `dossier.json`.
+2. **Open `dossier.html`** in your browser — double-click it. Edge or Chrome
    can keep everything in a folder you choose; any other browser keeps it
    inside the browser instead.
-2. Click **Choose workspace folder…** in the banner and pick **this repository
-   folder** (the one holding `dossier.html`). Allow "Edit files" when asked.
+3. Click **Choose workspace folder…** in the banner and pick **the folder you
+   made**. Allow "Edit files" when asked.
 
-That is the entire setup. You should immediately see:
+With the demo copied in you should immediately see:
 
 - records on the **Day** tab, including today's **Morning tour**
 - **Menu → Routines** — *Morning tour*, every weekday 08:30, running
@@ -114,7 +135,7 @@ That is the entire setup. You should immediately see:
 | `flow/POWER-AUTOMATE.md` | ~19 KB | — | How to build the flow: trigger schema, the prompt, knowledge, and the test order. |
 | `flow/SPEED.md` | ~9 KB | — | Why a question used to grow with the workspace, what is ranked on the PC now, and the one prompt edit that goes with it. |
 | `flow/sample-request.json` | ~14 KB | — | A real request body, for Power Automate's schema generator. |
-| `dossier.json` | ~15 KB | — | The demo workspace: 7 records, 2 routines, 4 scripts, settings, Cambodian holidays. |
+| `demo/dossier.json` | ~15 KB | — | The demo workspace: 7 records, 2 routines, 4 scripts, settings, Cambodian holidays. It sits in `demo/` so that nothing the app writes can collide with it — copy it into your own folder to start from it. |
 | `lang/en.xml` | ~175 KB | optional | Every interface phrase in English — 1,343 entries. |
 | `lang/km.xml` | ~125 KB | optional | The same 1,343 keys, **values empty**: a translation template for Khmer. |
 | `fonts/NotoSansKhmer-*.woff2` | ~33 KB | optional | Bundled Khmer typeface, so Khmer renders without fetching a webfont. `OFL.txt` is its licence. |
@@ -123,7 +144,7 @@ That is the entire setup. You should immediately see:
 | `scripts/open-morning-tabs.bat` | 1.8 KB | demo | Opens the tabs you start the day with, once a day. |
 | `scripts/restart-app-pool.bat` | 1.4 KB | demo | A **parameter template** — the `{{server}}` / `{{pool}}` marks become boxes in Dossier. |
 | `scripts/queue/` | — | required for the runner | The mailbox between Dossier and the runner. |
-| `backups/` | — | auto | One snapshot per day, 30 kept. |
+| `backups/` | — | auto | One snapshot per day, 30 kept, **in your workspace folder**. Git-ignored, and never in this repository. `demo/backup-2026-08-28.json` is a sample of the shape. |
 | `favicon.ico`, `logo.png` | — | optional | Your own branding; both fall back to a built-in seal if missing. |
 | `assets/assistant-logo.png`, `assets/assistant-bg.jpg` | — | optional | The assistant's own mark and the picture behind its panel. Each is asked for once when the panel opens and used only if it answers. |
 | `assets/thinking.gif` | 1.5 KB | optional | The animation shown while an answer is on its way, when the pixel set is off. The same file travels inside `dossier.html` as two kilobytes of base64, so a copy on its own still has it; a file here overrides that. |
@@ -131,6 +152,7 @@ That is the entire setup. You should immediately see:
 | `art/make-pixel-art.py` | ~27 KB | — | Where the sprites are drawn: each frame is a picture written out in characters, one per pixel. Stdlib Python — it writes the GIFs itself, LZW and all. Also writes `art/contact-sheet.png`, every frame on a dark band and a light one. |
 | `art/embed-pixel-art.py` | 2.2 KB | — | Carries `assets/pixel/*.gif` into `dossier.html` as base64, between two marker comments. Run after the art changes; never otherwise. |
 | `.gitattributes` | 28 B | — | `scripts/*.bat text eol=crlf` — a `.bat` with LF line endings breaks `cmd`'s label parsing. |
+| `.gitignore` | ~1 KB | — | Every path the app writes — `dossier.json`, `backups/`, `tasks/`, the runner's queue. Git must never create, replace or delete one of them. |
 
 Everything is a classic script or plain file. There is **no build step, no
 bundler, no package manager and no `node_modules`**.
@@ -139,7 +161,13 @@ bundler, no package manager and no `node_modules`**.
 
 ## 4. The workspace on disk
 
-A *workspace* is any folder you point Dossier at. It looks like this:
+A *workspace* is any folder you point Dossier at — and it should be a folder
+of its own, not a git checkout. **Only Dossier writes these files.** Nothing
+else should create, replace or delete one of them, which is exactly what a
+`git pull` into the folder does if the folder is a clone (see
+[§2](#2-quick-start)).
+
+It looks like this:
 
 ```
 <your folder>/

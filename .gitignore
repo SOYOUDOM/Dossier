@@ -1,0 +1,26 @@
+# ── Your workspace ────────────────────────────────────────────────────────
+# Dossier owns every path below. Git must never create, replace or delete
+# one of them, because people keep records in the same folder they cloned
+# this into — and a `git pull` that overwrites dossier.json is the whole of
+# somebody's week, gone, with the backups taken out in the same stroke.
+#
+# The demo workspace that used to sit at dossier.json now lives in demo/,
+# where nothing the app writes can collide with it. Copy it in if you want
+# something to look at:  copy demo\dossier.json dossier.json
+/dossier.json
+/dossier.json.bak
+/backups/
+/tasks/
+
+# what the runner passes back and forth
+/scripts/queue/*.run.txt
+/scripts/queue/*.done.txt
+/scripts/queue/*.out.txt
+/scripts/queue/.runner.txt
+/scripts/queue/run-*.cmd
+
+# a one-shot launcher Dossier writes beside a record
+run-*.cmd
+
+# the art tools are Python; nothing here is a build step
+art/__pycache__/

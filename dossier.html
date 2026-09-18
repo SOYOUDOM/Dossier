@@ -3955,6 +3955,12 @@ const STRINGS = {
   Palette: "Palette",
   Off: "Off",
   On: "On",
+  GitFolderWarning: "<b>{p0}</b> is a git checkout as well as your workspace. A <b>git pull</b> or <b>git checkout</b> replaces every file git tracks \u2014 which can take your records and your backups with it. Nothing in the Dossier repository tracks a workspace file any more; if yours was cloned before that, run <b>git rm --cached dossier.json</b> once, and keep the backups out too.",
+  GitFolderProtect: "Write a .gitignore for me",
+  GitFolderUnderstood: "I understand",
+  GitFolderWrote: "Added {n} line(s) to .gitignore. Anything git already tracks still needs git rm --cached.",
+  GitFolderAlready: ".gitignore already covers every path Dossier writes.",
+  GitFolderFailed: "Could not write .gitignore: ",
   DropToAttach: "Drop to attach",
   DropOnRecord: "Drop it on a record",
   DropNeedsRecord: "{name} was not filed \u2014 open a record first, or drop it straight onto one.",
@@ -4953,7 +4959,7 @@ const STATUSES = [
    the status bar, and clicking it copies a line you can paste into a bug
    report — build date and flow protocol included, because those are the two
    things that actually differ between copies. */
-const APP_VERSION = "3.12.1";
+const APP_VERSION = "3.12.2";
 const APP_BUILT = "2026-09-17";
 function buildLine(){
   return "Dossier v" + APP_VERSION + " \u00b7 built " + APP_BUILT +
@@ -6402,6 +6408,7 @@ async function openWorkspace(handle, quiet){
   restoreFilters();
   applyFonts(); applyFeel(); applyTheme(S.settings.theme || "archive");
   petPaint();          /* this folder's pet, in this folder's corner */
+  gitCheck();          /* and a word if this folder is a git checkout */
   refreshSelects(); syncRail(); renderTemplates();
   setView(S.view);
   setTimeout(() => { S.hush = false; }, 1500);
@@ -16419,6 +16426,67 @@ window.addEventListener("beforeprint", buildPrintSheet);
 window.addEventListener("afterprint", () => { printMode = null; });
 
 /* ═══ BANNER ═════════════════════════════════════════════════════════════ */
+/* ═══ A WORKSPACE THAT IS ALSO A GIT CHECKOUT ════════════════════════════
+   Dossier is one file you can mail to somebody, so a lot of people clone
+   the repository and then keep their records in the folder they cloned it
+   into. That is a reasonable thing to do and it was quietly dangerous: a
+   `git pull` or a `git checkout` replaces every file git tracks, and
+   dossier.json used to be one of them. One command, and the records and
+   the day's backup go back to whatever the repository last said they were.
+
+   Nothing in this repository tracks a workspace file any more. This is the
+   belt to that pair of braces: if the folder you just opened has a .git in
+   it, say so once, and offer to write the .gitignore that keeps every path
+   the app owns out of git's reach. */
+const GIT_IGNORE_LINES = [
+  "# Written by Dossier. These are the paths the app owns; git must never",
+  "# create, replace or delete one of them.",
+  "/dossier.json",
+  "/backups/",
+  "/tasks/",
+  "/scripts/queue/*.run.txt",
+  "/scripts/queue/*.done.txt",
+  "/scripts/queue/*.out.txt",
+  "/scripts/queue/.runner.txt"
+];
+async function gitCheck(){
+  if (!FS.ok || !FS.root || !FS.root.getDirectoryHandle) return;
+  let repo = false;
+  try { await FS.root.getDirectoryHandle(".git"); repo = true; }
+  catch(e){ repo = false; }          /* not a checkout, or not allowed to look */
+  if (!repo) return;
+  /* said once per folder: it is a caution, not a nag */
+  const seen = S.settings.gitSeen || "";
+  if (seen === FS.name) return;
+  showBanner(L("GitFolderWarning", { p0: esc(FS.name) }), [
+    { label:L("GitFolderProtect"), run: () => gitProtect() },
+    { label:L("GitFolderUnderstood"), run: () => {
+        S.settings.gitSeen = FS.name; touch(); hideBanner(); } }
+  ], true);
+}
+/* Add what is missing to .gitignore and leave every line already there
+   alone — it is their file, not ours. It cannot untrack what git is
+   already tracking, so the banner says the one command that does. */
+async function gitProtect(){
+  try {
+    let had = "";
+    try { had = await FS.readText(FS.root, ".gitignore"); } catch(e){ had = ""; }
+    const lines = had.split(/\r?\n/);
+    const add = GIT_IGNORE_LINES.filter(l => l[0] === "#" ? false : lines.indexOf(l) < 0);
+    if (!add.length){
+      toast(L("GitFolderAlready"));
+    } else {
+      const body = (had ? had.replace(/\s*$/, "") + "\n\n" : "") +
+                   GIT_IGNORE_LINES.slice(0, 2).join("\n") + "\n" + add.join("\n") + "\n";
+      await FS.writeText(FS.root, ".gitignore", body);
+      toast(L("GitFolderWrote", { n:add.length }));
+    }
+    S.settings.gitSeen = FS.name; touch(); hideBanner();
+  } catch(e){
+    toast(L("GitFolderFailed") + (e.message || e), { bad:true });
+  }
+}
+
 function showBanner(html, buttons, info){
   $("bannerTxt").innerHTML = html;
   $("bannerAct").innerHTML = (buttons || []).map((b,i) => '<button class="btn sm" data-bb="' + i + '">' + esc(b.label) + "</button>").join("");
