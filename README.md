@@ -153,6 +153,9 @@ With the demo copied in you should immediately see:
 | `art/embed-pixel-art.py` | 2.2 KB | — | Carries `assets/pixel/*.gif` into `dossier.html` as base64, between two marker comments. Run after the art changes; never otherwise. |
 | `.gitattributes` | 28 B | — | `scripts/*.bat text eol=crlf` — a `.bat` with LF line endings breaks `cmd`'s label parsing. |
 | `.gitignore` | ~1 KB | — | Every path the app writes — `dossier.json`, `backups/`, `tasks/`, the runner's queue. Git must never create, replace or delete one of them. |
+| `sql/dossier.sql` | ~16 KB | optional | Creates the LocalDB database, creates or migrates the tables, and loads a `dossier.json` into them. Idempotent, and its own migration history. |
+| `sql/pull.sql` | ~1 KB | optional | The newest snapshot back out as JSON — the exact bytes that went in. |
+| `scripts/dossier-sql.bat` | ~6 KB | optional | The launcher: `init`, `push`, `pull`, `check`, `history`. Defaults to `(localdb)\MSSQLLocalDB`. |
 
 Everything is a classic script or plain file. There is **no build step, no
 bundler, no package manager and no `node_modules`**.
@@ -566,6 +569,77 @@ else. After `settings.remindWait` days it is *due a chase*. Each chase appends
 to `chases`; `waitLog` keeps the whole hand-over history. The assistant learns
 each party's *usual* response time from your own closed records and uses that
 instead of the default once it has enough to go on.
+
+### Three copies, and what each is for
+
+| | Where | Survives | Read it with |
+|---|---|---|---|
+| **The folder** | `dossier.json` beside your records | anything but the file being replaced or deleted | any text editor — this is the record |
+| **This PC remembers** | the browser's own database, on this machine | the folder being wiped, replaced, or pulled over | Dossier, which compares it on every open |
+| **A JSON export** | wherever you put it | a new PC, a new browser, a rebuild | Dossier on the other machine — Import |
+
+**What this PC remembers** is written on every save and read on every open. If
+the folder comes back with fewer records than this machine remembers, Dossier
+**writes nothing** and puts the difference to you — both numbers, both dates —
+with three ways out: restore what the PC remembers, keep the folder as it is,
+or download the remembered copy as a file and decide later. That check is the
+one that catches a folder replaced from outside while the app was closed. It
+is not a sync engine: it notices, it stops, and it asks.
+
+It is not somewhere to keep your only copy either. Clearing the browser's site
+data removes it, another browser cannot see it, and another PC certainly
+cannot.
+
+**Backups on disk** — one snapshot a day in `backups/` — are listed in *Menu →
+Workspace* with their size and date, and restore in two clicks. Restoring
+writes what is on the sheet now out to a file first, so it is never a one-way
+door.
+
+**Moving to another PC** is *Menu → Workspace → Export JSON*, which writes the
+same shape `dossier.json` has — every record, routine, script, setting and
+conversation — and *Import a JSON export…* on the other machine. Attachments
+are files in `tasks/`; copy the folder for those.
+
+### 4.1 A real database, if you want one
+
+`scripts\dossier-sql.bat` loads your workspace into **SQL Server LocalDB** —
+`(localdb)\MSSQLLocalDB` by default, database `Dossier`, no server to install
+and nothing to keep running.
+
+Dossier itself never talks to it, and cannot: it is a page in a browser, it
+has no SQL client, and [rule 1](#1-the-rules-that-never-bend) forbids it from
+opening a connection to anything at all. The file is the interface.
+
+```
+scripts\dossier-sql.bat init      create the database and the tables
+scripts\dossier-sql.bat push      load dossier.json into it
+scripts\dossier-sql.bat check     what is in there
+scripts\dossier-sql.bat history   every push, newest first
+scripts\dossier-sql.bat pull      the newest snapshot back out as JSON
+```
+
+Run it with no argument and it does `init` then `push` — which is what you
+want on a **routine**, so the day lands in a database every evening without
+anybody remembering to do it.
+
+What it builds:
+
+- **`dbo.Snapshot`** — the file, whole, one row per push, kept forever. A
+  `pull` reads this, so a round trip is a copy rather than a reconstruction
+  and cannot quietly drop a field nobody thought to shred.
+- **`dbo.Record`, `RecordLog`, `RecordFile`, `RecordStep`, `RecordTag`,
+  `RecordBlocker`, `Routine`, `Script`, `Setting`** — the same JSON in
+  columns, replaced on each push, so you can ask SQL questions of your own
+  work. Two views to start from: `vOpenWork` and `vClosedByWeek`.
+- **`dbo.SchemaVersion`** — one number. Every step in `sql/dossier.sql` is
+  wrapped in a test of it, so running the file against any older database
+  brings it forward and running it twice does nothing.
+
+`pull` writes `dossier-from-sql.json` and stops there. `pull --replace` puts
+it back as `dossier.json`, keeping the current one as `dossier-before-pull.json`
+first. Set `DOSSIER_SQL` / `DOSSIER_DB` to point somewhere else.
+
+It needs `sqlcmd`, which arrives with SQL Server Management Studio.
 
 **Attachments.** Drag in, or `Ctrl`+`V` a screenshot. The bytes go to
 `tasks/<folder>/`; `files[]` records `{name, size, type, added}` and the work

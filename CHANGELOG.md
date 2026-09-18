@@ -6,6 +6,98 @@ holds — which is what to paste into a bug report.
 
 ---
 
+## 3.13.0 — 2026-09-18
+
+**Three copies of your work, and a database if you want one.**
+
+The folder is still the record and always will be. What changed is that it is
+no longer the only thing that knows what you had.
+
+### What this PC remembers
+
+Every save now also writes the whole workspace into this browser's own
+database, on this machine. On the way in, the two are compared.
+
+- **If the folder comes back with fewer records than this PC remembers,
+  nothing is written.** Not the empty workspace Dossier would otherwise have
+  saved over it, not anything. The difference is put to you — 3 records here,
+  47 remembered, saved at 18:04 — with three ways out: restore what the PC
+  remembers, keep the folder as it is, or download the remembered copy and
+  decide later
+- The same check catches an unreadable or missing `dossier.json`, which used
+  to mean "new workspace" and an immediate save of nothing over it
+- *Menu → Workspace → What this PC remembers* shows it at any time, with the
+  date and the count, and both buttons
+
+It is a second copy, not a second home: clearing the browser's site data
+removes it, another browser cannot see it, another PC certainly cannot. It
+exists to notice, to stop, and to ask.
+
+### Backups you can actually restore
+
+`backups/` has held one snapshot a day since the beginning and there was no
+way to open one from inside the app. *Menu → Workspace → Backups on disk*
+lists the last thirty with their size and date; restoring takes two clicks
+and writes what is on the sheet now out to a file first, so it is never a
+one-way door.
+
+### Export JSON
+
+There was an Import and no Export. *Menu → Workspace → Export JSON* writes
+the same shape `dossier.json` has — records, routines, scripts, settings and
+the assistant's conversations — so moving to another PC is Export here,
+Import there.
+
+### A real database, if you want one
+
+`scripts\dossier-sql.bat` loads a workspace into **SQL Server LocalDB**:
+`(localdb)\MSSQLLocalDB`, database `Dossier`, nothing to install beyond the
+`sqlcmd` that comes with SSMS and nothing left running.
+
+```
+dossier-sql.bat init      create the database and the tables
+dossier-sql.bat push      load dossier.json into it
+dossier-sql.bat check     what is in there
+dossier-sql.bat history   every push, newest first
+dossier-sql.bat pull      the newest snapshot back out as JSON
+```
+
+With no argument it does `init` then `push`, which is the form to hang on a
+routine so the day lands in a database every evening by itself.
+
+- **`dbo.Snapshot`** keeps the file whole, one row per push, forever — so
+  `pull` is a copy of what went in rather than a reconstruction, and cannot
+  drop a field nobody thought to shred
+- **`Record`, `RecordLog`, `RecordFile`, `RecordStep`, `RecordTag`,
+  `RecordBlocker`, `Routine`, `Script`, `Setting`** are that JSON in columns,
+  replaced on each push, for asking SQL questions of your own work. Two views
+  to start from: `vOpenWork`, `vClosedByWeek`
+- **`dbo.SchemaVersion`** is one number, and every step in `sql/dossier.sql`
+  is wrapped in a test of it. Running the file creates the database if it is
+  missing, migrates it if it is old, and does nothing if it is current
+- `pull` writes `dossier-from-sql.json` and stops. `pull --replace` puts it
+  back, keeping the current file as `dossier-before-pull.json` first
+- UTF-8 both ways, so a workspace with Khmer in it survives the round trip
+
+**Dossier never talks to SQL Server, and cannot.** It is a page in a browser
+with no SQL client, and rule 1 forbids it from opening a connection to
+anything at all. The file is the interface: Dossier writes `dossier.json`,
+the batch reads it. That is the whole coupling.
+
+### Tested
+
+The comparison driven in a real browser: a folder holding 3 against a
+remembered 47 raises the question, **nothing is written while it is open**
+(a save called mid-question returns without touching the folder), restoring
+brings 47 back and saves them. The backup list reads a folder and offers each
+file; the panel renders with both sections and the export button.
+
+**The SQL half is not tested here** — there is no SQL Server on the machine
+this was written on. The T-SQL is idempotent and transactional by
+construction, and `dossier-sql.bat check` is there to prove it on yours.
+
+---
+
 ## 3.12.2 — 2026-09-18
 
 **Git can no longer touch your records.**

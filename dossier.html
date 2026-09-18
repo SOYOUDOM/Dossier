@@ -3918,6 +3918,31 @@ const STRINGS = {
   PrintThisRecord: "Print this record",
   ShowLayout: "Show layout",
   ImportAJsonExport: "Import a JSON export\u2026",
+  ExportJson: "Export JSON",
+  ExportedJson: "{n} record(s) written out. That file is a whole workspace \u2014 Import it on the other machine.",
+  VaultHeading: "What this PC remembers",
+  VaultIntro: "Every save also writes a copy into this browser's own database, on this PC. The folder is still the record \u2014 this is the thing that notices when the folder loses some, and stops before anything is written over. Clearing this browser's site data removes it, and another PC cannot see it: to move a workspace, use Export JSON.",
+  VaultLooking: "Looking\u2026",
+  VaultNoFolder: "No folder open.",
+  VaultNothingYet: "Nothing yet \u2014 the copy is written the first time this workspace saves.",
+  VaultSame: "the same as the folder",
+  VaultDiffers: "the folder has {p0}",
+  VaultBackups: "Backups on disk",
+  VaultBackupsIntro: "One snapshot a day, in backups/ beside your records. Restoring writes what is on the sheet now out to a file first, so a restore is never a one-way door.",
+  VaultNoBackups: "None yet. The first one is written the next time this workspace saves.",
+  VaultEmpty: "<b>This folder has no records in it</b>, and this PC remembers <b>{p1}</b> from {p2}. Nothing has been written \u2014 choose before Dossier saves anything.",
+  VaultFewer: "<b>This folder has {p0} record(s)</b>; this PC remembers <b>{p1}</b>, saved {p2}. Nothing has been written \u2014 choose before Dossier saves anything.",
+  VaultRestore: "Restore what this PC remembers",
+  VaultRestoreTitle: "Restore from this PC?",
+  VaultKeep: "Keep the folder as it is",
+  VaultKept: "Keeping the folder. This PC now remembers what it holds.",
+  VaultRestored: "{n} record(s) restored and saved.",
+  VaultDownload: "Download it as JSON",
+  VaultBackupTitle: "Restore {p0}?",
+  VaultBackupAsk: "That backup holds {p1} record(s). The sheet holds {p2}. Restoring replaces every record, routine and setting with what is in the backup.",
+  VaultBackupGo: "Restore",
+  VaultBackupGoHint: "What is on the sheet now is written out as a file first.",
+  VaultBackupUnreadable: "That backup could not be read: ",
   Folder: "Folder",
   NoneRecordsAreOnlyInMemory: "none \u2014 records are only in memory",
   LastSaved: "Last saved",
@@ -4959,7 +4984,7 @@ const STATUSES = [
    the status bar, and clicking it copies a line you can paste into a bug
    report — build date and flow protocol included, because those are the two
    things that actually differ between copies. */
-const APP_VERSION = "3.12.2";
+const APP_VERSION = "3.13.0";
 const APP_BUILT = "2026-09-17";
 function buildLine(){
   return "Dossier v" + APP_VERSION + " \u00b7 built " + APP_BUILT +
@@ -6332,6 +6357,10 @@ const scheduleSave = debounce(function(){ saveNow(); }, 700);
 async function saveNow(silent){
   if (!FS.ok || !FS.root){ if (!silent) toast(L("LanguageNeedsWorkspace"), { bad:true }); return false; }
   if (S.saving) return false;
+  /* This PC remembers more records than the folder just gave us and the
+     question is still on the screen. Writing now is how an empty workspace
+     lands on top of a full one - so it does not. */
+  if (VAULT.held) return false;
   S.saving = true; setSaveState("saving");
   petMood("work", 1700);          /* it carries the record out to the folder */
   try {
@@ -6339,6 +6368,7 @@ async function saveNow(silent){
     await dailyBackup();
     S.dirty = false; S.lastSaved = new Date().toISOString();
     setSaveState("saved");
+    vaultWrite();            /* and the copy this PC keeps of it */
     return true;
   } catch(e){
     setSaveState("dirty");
@@ -6421,8 +6451,188 @@ async function openWorkspace(handle, quiet){
   hideBanner();
   if (!quiet) toast(loaded ? S.tasks.length + L("RecordsLoadedFrom") + FS.name
                            : L("NewWorkspaceStartedIn") + FS.name);
-  if (!loaded) await saveNow(true);
+  /* Before the first write of this session, and before the line below turns
+     an unreadable folder into an empty one. */
+  const asked = await vaultCheck(loaded);
+  if (!loaded && !asked) await saveNow(true);
   return true;
+}
+
+/* ═══ THE LOCAL DATABASE ═════════════════════════════════════════════════
+   A second copy of the workspace, in this browser's own database on this PC,
+   written every time the folder is written.
+
+   The folder stays the record: plain JSON you can read, copy and back up
+   without this app, which is rule 3 and is not up for negotiation. But a
+   folder is a thing other programs touch. A sync client can rewrite it, a
+   `git pull` can replace it, somebody can delete it, and Dossier finds out
+   only by opening it afterwards and believing what it says.
+
+   So on the way in, the two are compared. If the folder holds fewer records
+   than this PC remembers, nothing is saved and nothing is overwritten: the
+   difference is put to you, with both numbers and the date each was written,
+   and you choose. That is the whole feature. It is not a sync engine and it
+   does not merge — it notices, it stops, and it asks.
+
+   What it is NOT is somewhere to keep your only copy. Clearing this
+   browser's site data removes it, another browser cannot see it, and another
+   PC certainly cannot. Menu → Workspace → Export JSON is what moves a
+   workspace; this is what survives the folder. */
+const VAULT = { held:false };
+const vaultKey = () => "mirror:" + (FS.name || "-");
+
+/* Written after every successful save, and after a restore. Same shape as
+   dossier.json, plus when and where it came from. */
+async function vaultWrite(){
+  if (!IDB.available || !FS.ok) return;
+  try {
+    await IDB.set(vaultKey(), {
+      at: new Date().toISOString(),
+      folder: FS.name,
+      tasks: S.tasks.length,
+      docs: S.tasks.reduce((n, t) => n + ((t.files || []).length), 0),
+      payload: payload()
+    });
+  } catch(e){ /* a full or blocked store is not a reason to stop working */ }
+}
+async function vaultRead(){
+  if (!IDB.available) return null;
+  try { return (await IDB.get(vaultKey())) || null; } catch(e){ return null; }
+}
+
+/* The one question it exists to ask. Called on the way in, BEFORE anything
+   is written back to the folder. */
+async function vaultCheck(loaded){
+  const m = await vaultRead();
+  if (!m || !m.payload) return false;
+  const here = S.tasks.length, there = (m.payload.tasks || []).length;
+  /* An empty or unreadable folder with records remembered is the loud case;
+     fewer records than last time is the quiet one. Equal or more means the
+     folder is ahead, which is the ordinary state of things. */
+  if (loaded && here >= there) return false;
+  if (!there) return false;
+
+  /* Nothing is written while the question is open. Without this the app
+     would helpfully save its empty self over the folder while you read. */
+  VAULT.held = true;
+  showBanner(L(loaded ? "VaultFewer" : "VaultEmpty",
+                { p0: here, p1: there, p2: stamp(m.at) }), [
+    { label:L("VaultRestore"), run: async () => {
+        hydrate(m.payload);
+        buildModel(); makeRoutines(); rollOver(); syncHolds();
+        VAULT.held = false;
+        await saveNow();
+        renderAll(); hideBanner();
+        toast(L("VaultRestored", { n:S.tasks.length }));
+      } },
+    { label:L("VaultKeep"), run: async () => {
+        VAULT.held = false;
+        await vaultWrite();          /* the folder is the truth from now on */
+        hideBanner();
+        toast(L("VaultKept"));
+      } },
+    { label:L("VaultDownload"), run: () => {
+        download("dossier-remembered-" + today() + ".json",
+                 JSON.stringify(m.payload, null, 2), "application/json");
+      } }
+  ]);
+  return true;
+}
+
+/* ── the backups already on disk ───────────────────────────────────────
+   One snapshot a day has been written into backups/ all along and there has
+   never been a way to open one from in here. A file copy is not hard, but
+   it is not something anybody thinks of at the moment they need it. */
+async function listBackups(){
+  if (!FS.ok) return [];
+  let dir;
+  try { dir = await FS.dir(["backups"], false); } catch(e){ return []; }
+  if (!dir.values) return [];
+  const out = [];
+  try {
+    for await (const entry of dir.values()){
+      if (entry.kind !== "file" || !/\.json$/i.test(entry.name)) continue;
+      let size = 0, when = 0;
+      try { const f = await entry.getFile(); size = f.size; when = f.lastModified; } catch(e){}
+      out.push({ name:entry.name, size, when });
+    }
+  } catch(e){}
+  return out.sort((a, b) => (a.name < b.name ? 1 : -1)).slice(0, 30);
+}
+async function restoreBackup(name){
+  if (!FS.ok) return;
+  let d;
+  try {
+    const dir = await FS.dir(["backups"], false);
+    d = JSON.parse(await FS.readText(dir, name));
+  } catch(e){ return toast(L("VaultBackupUnreadable") + (e.message || e), { bad:true }); }
+  const n = (d.tasks || []).length;
+  const ok = await askUser(L("VaultBackupTitle", { p0: name }),
+    L("VaultBackupAsk", { p1: n, p2: S.tasks.length }),
+    [{ label:L("VaultBackupGo"), hint:L("VaultBackupGoHint") }, { label:L("Cancel") }]);
+  if (ok !== 0) return;
+  /* the state being replaced is itself worth a file, in case the backup
+     turns out to be the wrong one */
+  download("dossier-before-restore-" + today() + ".json",
+           JSON.stringify(payload(), null, 2), "application/json");
+  hydrate(d);
+  buildModel(); makeRoutines(); rollOver(); syncHolds();
+  await saveNow();
+  renderAll(); renderModal();
+  toast(L("VaultRestored", { n:S.tasks.length }));
+}
+
+/* what this PC remembers, and what is in backups/ — both filled in after the
+   panel is on the screen, because both have to go and look */
+async function paintVault(){
+  /* on() is a local helper in the two render functions that have one; this
+     one has its own rather than reaching for a name that is not in scope */
+  const on = (id, fn) => { const el = $(id); if (el) el.onclick = fn; };
+  const box = $("vaultBox");
+  if (box){
+    const m = await vaultRead();
+    if (!FS.ok) box.textContent = L("VaultNoFolder");
+    else if (!m) box.textContent = L("VaultNothingYet");
+    else {
+      const n = (m.payload && m.payload.tasks || []).length;
+      box.innerHTML = '<dl class="kv" style="margin:0">' +
+        "<dt>" + LE("Records") + "</dt><dd><b>" + n + "</b>" +
+          (n === S.tasks.length ? " \u2014 " + LE("VaultSame")
+                                : " \u2014 " + LE("VaultDiffers", { p0:S.tasks.length })) + "</dd>" +
+        "<dt>" + LE("LastSaved") + "</dt><dd>" + esc(stamp(m.at)) + "</dd></dl>" +
+        '<div class="brow" style="margin-top:9px">' +
+          '<button class="btn sm" id="vaultDl">' + LE("VaultDownload") + "</button>" +
+          '<button class="btn sm" id="vaultPut">' + LE("VaultRestore") + "</button></div>";
+      on("vaultDl", () => download("dossier-remembered-" + today() + ".json",
+           JSON.stringify(m.payload, null, 2), "application/json"));
+      on("vaultPut", async () => {
+        const ok = await askUser(L("VaultRestoreTitle"),
+          L("VaultBackupAsk", { p1:n, p2:S.tasks.length }),
+          [{ label:L("VaultBackupGo"), hint:L("VaultBackupGoHint") }, { label:L("Cancel") }]);
+        if (ok !== 0) return;
+        download("dossier-before-restore-" + today() + ".json",
+                 JSON.stringify(payload(), null, 2), "application/json");
+        hydrate(m.payload);
+        buildModel(); makeRoutines(); rollOver(); syncHolds();
+        await saveNow();
+        renderAll(); renderModal();
+        toast(L("VaultRestored", { n:S.tasks.length }));
+      });
+    }
+  }
+  const bk = $("bkBox");
+  if (!bk) return;
+  const list = await listBackups();
+  if (!FS.ok) return void (bk.textContent = L("VaultNoFolder"));
+  if (!list.length) return void (bk.textContent = L("VaultNoBackups"));
+  bk.innerHTML = list.map((b, i) =>
+    '<div class="tagx" style="display:flex;width:100%;margin-bottom:6px;border-radius:var(--r-sm);padding:8px 11px">' +
+    '<span style="flex:1"><b style="all:unset;font-weight:650">' + esc(b.name) + "</b>" +
+    '<small style="display:block;color:var(--ink-3);font-size:10.5px">' + bytes(b.size) +
+    (b.when ? " \u00b7 " + esc(stamp(new Date(b.when).toISOString())) : "") + "</small></span>" +
+    '<button class="btn sm" data-bk="' + i + '">' + LE("VaultBackupGo") + "</button></div>").join("");
+  bk.querySelectorAll("[data-bk]").forEach(b =>
+    b.onclick = () => restoreBackup(list[+b.dataset.bk].name));
 }
 
 /* ═══ ATTACHMENTS ════════════════════════════════════════════════════════ */
@@ -14167,6 +14377,7 @@ async function renderModal(){
       '<button class="btn pri" id="wsPick">' + (FS.ok ? L("SwitchFolder") : L(HAS_FS ? "ChooseWorkspaceFolder" : "KeepRecordsInThisBrowser")) + "</button>" +
       (FS.ok ? "<button class=\"btn\" id=\"wsSave\">" + L("SaveNow") + "</button>" +
                "<button class=\"btn\" id=\"wsReveal\">" + L("ShowLayout") + "</button>" : "") +
+      "<button class=\"btn\" id=\"wsJson\">" + L("ExportJson") + "</button>" +
       "<button class=\"btn\" id=\"wsImport\">" + L("ImportAJsonExport") + "</button>" +
       "<button class=\"btn\" id=\"wsCsv\">" + L("ExportCsv") + "</button>" +
     "</div>" +
@@ -14184,10 +14395,23 @@ async function renderModal(){
       '<span style="flex:1"><b style="all:unset;font-weight:650">' + esc(w.name) + "</b>" +
       "<small style=\"display:block;color:var(--ink-3);font-size:10.5px\">" + L("LastOpened") + " " + stamp(w.last) + "</small></span>" +
       '<button class="btn sm" data-wsopen="' + i + "\">" + L("Label_Open") + "</button></div>").join("") : "") +
+    '<h5 class="eyebrow" style="margin:20px 0 8px">' + LE("VaultHeading") + "</h5>" +
+    '<p style="font-size:11.5px;color:var(--ink-2);margin:0 0 10px;line-height:1.7">' +
+      L("VaultIntro") + "</p>" +
+    '<div id="vaultBox" style="font-size:12px;color:var(--ink-2)">' + L("VaultLooking") + "</div>" +
+
+    '<h5 class="eyebrow" style="margin:20px 0 8px">' + LE("VaultBackups") + "</h5>" +
+    '<p style="font-size:11.5px;color:var(--ink-2);margin:0 0 10px;line-height:1.7">' +
+      L("VaultBackupsIntro") + "</p>" +
+    '<div id="bkBox" style="font-size:12px;color:var(--ink-2)">' + L("VaultLooking") + "</div>" +
+
     '<p style="font-size:12px;color:var(--ink-2);line-height:1.7;margin-top:16px">' +
       L("EverythingLivesInTheFolderYou") +
       L("IsDossierForgetsWhichFolderIt") +
       L("ALaptopRebuild");
+
+  /* both lists read the disk, so they arrive a moment after the panel does */
+  paintVault();
 
   $("pReport").innerHTML =
     '<div class="brow" style="margin-bottom:14px">' +
@@ -14872,6 +15096,13 @@ function wireModal(){
   });
   on("wsSave", async () => { if (await saveNow()) toast(L("WrittenTo") + FS.name + "/dossier.json"); });
   on("wsReveal", () => $$("#mt button").forEach(b => { if (b.dataset.m === "help") b.click(); }));
+  on("wsJson", () => {
+    /* the same shape dossier.json has, so the machine you carry it to
+       imports it without knowing it came from anywhere else */
+    download("dossier-" + today() + ".json",
+             JSON.stringify(payload(), null, 2), "application/json");
+    toast(L("ExportedJson", { n:S.tasks.length }));
+  });
   on("wsImport", () => $("jsonIn").click());
   on("wsCsv", () => download("dossier-" + today() + ".csv", toCSV(), "text/csv"));
   $$("[data-wsopen]").forEach(b => b.onclick = async () => {
