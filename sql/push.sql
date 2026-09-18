@@ -244,7 +244,7 @@ FROM OPENJSON(@doc, '$.settings.memory') WITH (
         title   nvarchar(400) '$.title',
         body    nvarchar(max) '$.body',
         system  nvarchar(120) '$.system',
-        tags    nvarchar(400) '$.tags' AS JSON,
+        tags    nvarchar(max) '$.tags' AS JSON,   /* AS JSON needs max */
         created nvarchar(40)  '$.created',
         updated nvarchar(40)  '$.updated'
      ) AS n

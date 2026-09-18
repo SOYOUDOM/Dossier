@@ -51,6 +51,17 @@ def check(path):
                 hits.append((at(m.start(1)), "insert column", c))
     return sorted(set(hits))
 
+# AS JSON in a WITH clause is only allowed on nvarchar(max) - Msg 13618, and
+# a compile error, so it takes the whole batch down with it
+def as_json_not_max(path):
+    code = blank_noise(open(path).read())
+    out = []
+    for m in re.finditer(r"(?im)^\s*(\w+)\s+(\w+\s*\([^)]*\)|\w+)\s+[^,\n]*?AS\s+JSON", code):
+        if "max" not in m.group(2).lower():
+            out.append((code[:m.start()].count("\n") + 1, m.group(1), m.group(2)))
+    return out
+
+
 # and the other thing SQL Server would not forgive: a subquery inside PRINT
 def print_subqueries(path):
     code = blank_noise(open(path).read())
@@ -66,3 +77,6 @@ for p in sys.argv[1:]:
         print("   line %-4d %-18s %s" % (line, why, word))
     for line in print_subqueries(p):
         print("   line %-4d %-18s subquery inside PRINT" % (line, ""))
+    for line, col, typ in as_json_not_max(p):
+        print("   line %-4d %-18s AS JSON on %s, which is %s not nvarchar(max)"
+              % (line, "", col, typ))

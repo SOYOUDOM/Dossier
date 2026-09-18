@@ -145,11 +145,12 @@ rem  Which file to push is the question everybody has, and the answer is
 rem  never in the clone - the clone deliberately has no dossier.json in it.
 :find
 echo.
-echo   Looking for dossier.json under "%USERPROFILE%" ...
+echo   Looking for dossier.json under "%USERPROFILE%".
+echo   A synced OneDrive can take a minute - results appear as they are found.
 echo.
-for /f "delims=" %%F in ('dir /s /b "%USERPROFILE%\dossier.json" 2^>nul') do @(
-  for %%S in ("%%F") do @echo   %%~zS bytes   %%F
-)
+rem  NOT inside a for /f: that buffers the whole scan before printing a single
+rem  line, so a slow search looks like a hung one. dir prints as it goes.
+dir /s /a-d "%USERPROFILE%\dossier.json" 2>nul | findstr /i "Directory dossier.json"
 echo.
 echo   Push the one in the folder you pick in Dossier's "Choose workspace folder":
 echo       dossier-sql.bat push "<that path>"

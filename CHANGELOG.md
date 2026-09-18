@@ -6,6 +6,28 @@ holds — which is what to paste into a bug report.
 
 ---
 
+## 3.14.2 - 2026-09-18
+
+**`AS JSON` needs `nvarchar(max)`, and a push that loads nothing.**
+
+The note loader declared `tags nvarchar(400) '$.tags' AS JSON`. `AS JSON` is
+only allowed on `nvarchar(max)` - Msg 13618 - and it is a compile error, so
+it took the entire load batch down with it. Nothing was inserted, including
+the snapshot, which is why every count came back 0 while the schema itself
+reported a healthy version 4 with 20 tables.
+
+- the column is `nvarchar(max)`
+- `sql/check-reserved-words.py` knows the rule now: it flags any `AS JSON` on
+  a column that is not `nvarchar(max)`, and was proved against a deliberately
+  broken copy before this shipped
+
+**`find` no longer looks hung.** It was wrapped in `for /f`, which buffers a
+command's entire output before printing any of it - so a scan of a synced
+OneDrive showed nothing at all for minutes. It prints as it goes now, and
+says a slow search is normal.
+
+---
+
 ## 3.14.1 - 2026-09-18
 
 **Empty tables now say why they are empty.**
