@@ -153,7 +153,7 @@ With the demo copied in you should immediately see:
 | `art/embed-pixel-art.py` | 2.2 KB | — | Carries `assets/pixel/*.gif` into `dossier.html` as base64, between two marker comments. Run after the art changes; never otherwise. |
 | `.gitattributes` | 28 B | — | `scripts/*.bat text eol=crlf` — a `.bat` with LF line endings breaks `cmd`'s label parsing. |
 | `.gitignore` | ~1 KB | — | Every path the app writes — `dossier.json`, `backups/`, `tasks/`, the runner's queue. Git must never create, replace or delete one of them. |
-| `sql/dossier.sql` | ~16 KB | optional | Creates the LocalDB database, creates or migrates the tables, and loads a `dossier.json` into them. Idempotent, and its own migration history. |
+| `sql/schema.sql` | ~16 KB | optional | Creates the LocalDB database, creates or migrates the tables, and loads a `dossier.json` into them. Idempotent, and its own migration history. |
 | `sql/pull.sql` | ~1 KB | optional | The newest snapshot back out as JSON — the exact bytes that went in. |
 | `scripts/dossier-sql.bat` | ~6 KB | optional | The launcher: `init`, `push`, `pull`, `check`, `history`. Defaults to `(localdb)\MSSQLLocalDB`. |
 
@@ -631,7 +631,7 @@ What it builds:
   `RecordBlocker`, `Routine`, `Script`, `Setting`** — the same JSON in
   columns, replaced on each push, so you can ask SQL questions of your own
   work. Two views to start from: `vOpenWork` and `vClosedByWeek`.
-- **`dbo.SchemaVersion`** — one number. Every step in `sql/dossier.sql` is
+- **`dbo.SchemaVersion`** — one number. Every step in `sql/schema.sql` is
   wrapped in a test of it, so running the file against any older database
   brings it forward and running it twice does nothing.
 

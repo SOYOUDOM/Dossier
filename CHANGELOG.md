@@ -6,6 +6,51 @@ holds — which is what to paste into a bug report.
 
 ---
 
+## 3.13.2 - 2026-09-18
+
+**The LocalDB schema, for the third time - and the reason it took three.**
+
+`init` failed again, on three more reserved words and a `PRINT`:
+
+- `x.file` and an `OPENJSON` column called `file` - I renamed the *table*
+  column last time and left the two references to it. `FILE` is reserved
+  wherever it appears
+- an output column called `Open`, which `OPEN` reserves
+- `PRINT 'x' + CAST((SELECT COUNT(*) ...))` - a subquery is not an expression,
+  and `PRINT` takes an expression (Msg 1046)
+
+All four are fixed. But the interesting part is why `init` was failing on
+code it never runs: **T-SQL parses an entire batch before executing a line of
+it**, so a syntax error in the load section killed the schema section sitting
+above it, in a file `init` only opened for the first half.
+
+So the file is two files now:
+
+| | |
+|---|---|
+| `sql/schema.sql` | the database and the tables. All `init` runs |
+| `sql/push.sql` | the load. Only `push` runs it, after the schema |
+
+A mistake in one can no longer stop the other. `dossier-sql.bat push` runs
+both, in order.
+
+Also hardened while I was in there: `SUBSTRING` rather than `LEFT` to spot a
+UTF-8 BOM in a varbinary, and `RAISERROR` no longer puts a Windows path in
+its format string, where a `%` in the path would have been read as a
+placeholder.
+
+### Tested
+
+Still not against a real engine - installing SQL Server here is blocked by
+the network policy, which is the honest reason these got through. What the
+checks do cover: every identifier position in all three files against the
+T-SQL reserved-word list (the check that now reproduces all four of the
+errors above from a clean checkout), `PRINT` statements containing
+subqueries, and BEGIN/END, TRY/CATCH, TRAN/COMMIT and GOTO/label balance per
+batch.
+
+---
+
 ## 3.13.1 - 2026-09-18
 
 **The LocalDB schema would not build.**
@@ -95,7 +140,7 @@ routine so the day lands in a database every evening by itself.
   `RecordBlocker`, `Routine`, `Script`, `Setting`** are that JSON in columns,
   replaced on each push, for asking SQL questions of your own work. Two views
   to start from: `vOpenWork`, `vClosedByWeek`
-- **`dbo.SchemaVersion`** is one number, and every step in `sql/dossier.sql`
+- **`dbo.SchemaVersion`** is one number, and every step in `sql/schema.sql`
   is wrapped in a test of it. Running the file creates the database if it is
   missing, migrates it if it is old, and does nothing if it is current
 - `pull` writes `dossier-from-sql.json` and stops. `pull --replace` puts it

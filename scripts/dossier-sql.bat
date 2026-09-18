@@ -59,8 +59,8 @@ if errorlevel 1 (
   exit /b 9
 )
 
-if not exist "%SQLDIR%\dossier.sql" (
-  echo   Cannot find "%SQLDIR%\dossier.sql".
+if not exist "%SQLDIR%\schema.sql" (
+  echo   Cannot find "%SQLDIR%\schema.sql".
   echo   Keep the sql\ folder beside this workspace, or copy it in from the
   echo   Dossier repository.
   exit /b 9
@@ -81,7 +81,7 @@ exit /b 2
 rem ---------------------------------------------------------------------------
 :init
 echo   creating or migrating...
-sqlcmd -S "%SERVER%" -b -E -i "%SQLDIR%\dossier.sql" -v db="%DB%" file="" mode="init"
+sqlcmd -S "%SERVER%" -b -E -i "%SQLDIR%\schema.sql" -v db="%DB%"
 if errorlevel 1 goto :failed
 echo   done.
 exit /b 0
@@ -95,7 +95,11 @@ if not exist "%JSON%" (
   exit /b 3
 )
 echo   file     %JSON%
-sqlcmd -S "%SERVER%" -b -E -i "%SQLDIR%\dossier.sql" -v db="%DB%" file="%JSON%" mode="push"
+rem  the schema first - separate files on purpose, so a mistake in one cannot
+rem  stop the other from running
+sqlcmd -S "%SERVER%" -b -E -i "%SQLDIR%\schema.sql" -v db="%DB%"
+if errorlevel 1 goto :failed
+sqlcmd -S "%SERVER%" -d "%DB%" -b -E -i "%SQLDIR%\push.sql" -v file="%JSON%"
 if errorlevel 1 goto :failed
 exit /b 0
 
