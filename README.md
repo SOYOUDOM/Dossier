@@ -50,9 +50,9 @@ These are design invariants, not preferences. Anything built on top of Dossier
 
 | # | Rule | Enforced by |
 |---|---|---|
-| 1 | **`dossier.html` cannot reach the network.** Not fetch, not XHR, not WebSocket, not a form post. | A `Content-Security-Policy` meta tag: `connect-src 'none'; form-action 'none'`. The browser enforces it; you can verify it in F12 → Network. |
+| 1 | **`dossier.html` can reach exactly one thing: `http://127.0.0.1`.** Not the internet, not `localhost` by name, not any other origin, and no form post anywhere. | A `Content-Security-Policy` meta tag: `connect-src http://127.0.0.1:*; form-action 'none'`. The browser enforces it; you can verify it in F12 → Network. **This was `connect-src 'none'` until v4.0**, when the database bridge arrived — it is the one loosening in the file's history, it is a loopback address, and nothing on the far side of it leaves the machine. |
 | 2 | **Your records never leave the folder** unless you configure an endpoint and switch it on. No telemetry, no sync, no account, no cloud, and nothing at all by default. | Rule 1, plus there is no server component. The one exception is [§12](#12-asking-through-a-power-automate-flow), which is off until you paste in a URL, states what it sends, and shows you the bytes first. |
-| 3 | **The data outlives the app.** `dossier.json` is human-readable JSON; attachments are the original files in ordinary folders. | The save format is plain, indented JSON. |
+| 3 | **The data outlives the app.** Every save writes `dossier.json` — human-readable, indented, openable in Notepad on a machine with no SQL Server and no Dossier on it. In database mode that file is an export rather than the store, and it is still written on every single save, for exactly this reason. | `saveNow()` writes the export after the transaction commits, or writes nothing at all. |
 | 4 | **Nothing is written while you ask a question.** Reading is read-only, down to not creating an empty object in settings. | `chatApi()` builds its view without mutating state. |
 | 5 | **Anything that writes asks first.** Log, close, hand over, chase, run, remind — each is proposed and confirmed, whether it arrived as a sentence or a button. | `chatDo()` refuses `act.confirm` unless the action carries `__ok`. |
 | 6 | **Nothing an endpoint returns is trusted.** A reply is data to be validated, never a command. An unknown action, a wrong-shaped argument, or a record reference that resolves to nothing is refused by name. | `flow.js` `validate()` and `checkAction()`. |
@@ -157,7 +157,10 @@ With the demo copied in you should immediately see:
 | `sql/pull.sql` | ~1 KB | optional | The newest snapshot back out as JSON — the exact bytes that went in. |
 | `sql/check-reserved-words.py` | ~4 KB | — | Checks every identifier in the SQL against the T-SQL reserved-word list. Written after three of them shipped. |
 | `sql/check-json-paths.py` | ~3 KB | — | Walks every JSON path the loader reads against a workspace holding one of everything. A wrong path loads nothing, quietly. |
-| `scripts/dossier-sql.bat` | ~6 KB | optional | The launcher: `init`, `push`, `pull`, `check`, `history`. Defaults to `(localdb)\MSSQLLocalDB`. |
+| `scripts/dossier-sql.bat` | ~7 KB | optional | The launcher: `init`, `push`, `pull`, `check`, `history`, `find`. Defaults to `(localdb)\MSSQLLocalDB`. |
+| `scripts/dossier-bridge.bat` | ~4 KB | optional | Starts the bridge, compiling it first with the C# compiler already on the machine. Leave its window open while you work. |
+| `scripts/bridge/DossierBridge.cs` | ~19 KB | optional | The bridge: a loopback socket, a token, six routes, and `System.Data.SqlClient`. C# 5, so `csc.exe` from the .NET Framework can build it with nothing installed. |
+| `sql/load-proc.sql` | ~14 KB | optional | `dbo.LoadWorkspace` — the only code that writes the tables, called by both the bridge and `push`. |
 
 Everything is a classic script or plain file. There is **no build step, no
 bundler, no package manager and no `node_modules`**.
@@ -602,7 +605,51 @@ same shape `dossier.json` has — every record, routine, script, setting and
 conversation — and *Import a JSON export…* on the other machine. Attachments
 are files in `tasks/`; copy the folder for those.
 
-### 4.1 A real database, if you want one
+### 4.1 The database as the store
+
+With `scripts\dossier-bridge.bat` running, this is where your work lives.
+Every record you create, change or delete is a transaction in **SQL Server
+LocalDB** on your own PC; `dossier.json` is written alongside as an export
+and is not what Dossier reads.
+
+```
+scripts\dossier-sql.bat init         once: create the database and tables
+scripts\dossier-bridge.bat           and leave this window open while you work
+```
+
+**Why there is a process at all.** A browser has no SQL client — no page can
+open a connection to SQL Server, and `dossier.html` runs from `file://`. So
+the bridge sits between them: JSON over `127.0.0.1` on one side, T-SQL on the
+other. It needs nothing installed: it compiles itself on first run with the
+C# compiler that ships in `C:\Windows\Microsoft.NET\Framework64`, binds a
+plain socket to the loopback address (no administrator, no URL reservation),
+and writes its port and a per-run token into your workspace folder as
+`.bridge.json`. Dossier already holds a handle on that folder, so that file
+is the whole of the configuration — and nothing else on the machine can drive
+the bridge without first being able to read your records.
+
+| | |
+|---|---|
+| `GET /health` | is it there, which database, which schema version |
+| `GET /workspace` | the current workspace, whole |
+| `PUT /workspace` | one transaction: the canonical row and every table derived from it, or none of them |
+| `POST`/`GET`/`DELETE /attachment` | document bytes, as rows |
+
+**What it costs you.** Dossier will not open a database-backed workspace when
+the bridge is not running, and will not write one either — not even the
+export, because a file ahead of the database is two versions of the truth.
+It says so and offers to try again. That is the trade for having one copy of
+your work instead of two that can disagree.
+
+**A folder is database-backed once the bridge has run in it**, marked by
+`.bridge.json`. A folder that has never seen the bridge keeps working exactly
+as it always did, reading and writing `dossier.json`.
+
+**Attachments are rows** — `dbo.Attachment`, bytes and all — so a backup of
+the database is a backup of the whole workspace. Documents filed before v4.0
+stay as files in `tasks\` and still open.
+
+### 4.2 Pushing a file in, and pulling one out
 
 `scripts\dossier-sql.bat` loads your workspace into **SQL Server LocalDB** —
 `(localdb)\MSSQLLocalDB` by default, database `Dossier`, no server to install

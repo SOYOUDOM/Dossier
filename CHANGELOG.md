@@ -6,6 +6,84 @@ holds — which is what to paste into a bug report.
 
 ---
 
+## 4.0.0 - 2026-09-18
+
+**The database is the store. The file is the export.**
+
+Everything before this put your work in `dossier.json` and copied it into SQL
+Server afterwards. That is backwards from what was asked for, and it took me
+too long to hear it. With the bridge running, `dossier.json` is no longer
+read by anything: every record you create, change or delete is a transaction
+in SQL Server LocalDB on your PC, and the JSON is written alongside as an
+export.
+
+### The bridge
+
+A browser has no SQL client. No page can open a connection to SQL Server,
+and `dossier.html` runs from `file://` - so one small process has to sit in
+between. `scripts\dossier-bridge.bat` starts it and leaves a window open.
+
+- **Nothing to install.** It compiles itself on first run with the C#
+  compiler that ships with Windows, in
+  `C:\Windows\Microsoft.NET\Framework64\v4.0.30319`. Written in C# 5 for
+  that compiler specifically
+- **A plain socket on 127.0.0.1**, not `HttpListener`, which would want a URL
+  reservation and therefore an administrator
+- **A token generated fresh each run**, written with the port into `.bridge.json` in
+  your workspace folder. Dossier already holds a handle on that folder, so
+  that is the whole of the configuration - and nothing else on the machine
+  can drive the bridge without first being able to read your records
+- Six routes: health, get and put the workspace, and post, get and delete an
+  attachment
+
+### What changed in the app
+
+- **Reads come from SQL.** Open a database-backed workspace and the file is
+  not consulted
+- **Writes are one transaction** - `dbo.LoadWorkspace` writes the canonical
+  workspace row and every table derived from it, or none of them
+- **Attachments are rows.** `dbo.Attachment` holds the bytes, so a backup of
+  the database is a backup of the whole workspace. Documents filed before
+  this build stay as files in `tasks\` and still open
+- **The export is still written on every save** - the same indented JSON,
+  openable in Notepad on a machine with no SQL Server. That is rule 3 and it
+  survives
+- **With the bridge down, nothing is written at all.** Not the database,
+  because it is not there; and not the export either, because a file ahead of
+  the database is two versions of the truth and the beginning of the next bad
+  afternoon. Dossier says so and offers to try again
+- A folder becomes database-backed once the bridge has run in it. One that
+  never has keeps working exactly as before
+
+### Rule 1 has changed, and that is worth saying out loud
+
+`connect-src 'none'` is now `connect-src http://127.0.0.1:*`. It is the first
+loosening of that policy in the file's history. It is a loopback address, the
+only thing on the far side of it is a process you started yourself, and
+nothing there leaves the machine - but it is a change to a stated invariant
+and it belongs at the top of a changelog rather than buried.
+
+### Tested
+
+The bridge **compiles** - `mcs -langversion:5`, the same language level as
+the Windows compiler that will build it on your machine. That is the first
+time this session a compiler has checked my work before you did.
+
+The app was driven against a stub bridge speaking the same six routes, in
+headless Chromium, and the test caught two real bugs before this shipped:
+attachments were failing because the folder was touched before the database
+branch was reached, and a save with the bridge down still wrote the export.
+What passes now: a record created and saved lands in the database; reopening
+reads it back **from the database while the file on disk says zero records**;
+an attachment becomes a row and comes back out as a blob; and with the bridge
+stopped, `saveNow` returns false and the file is byte-for-byte unchanged.
+
+What is still untested here is the half that needs SQL Server: the bridge
+actually talking to LocalDB. `dossier-bridge.bat` printing `listening
+127.0.0.1:<port>` is the proof, and it checks the database before it binds.
+
+---
+
 ## 3.14.2 - 2026-09-18
 
 **`AS JSON` needs `nvarchar(max)`, and a push that loads nothing.**

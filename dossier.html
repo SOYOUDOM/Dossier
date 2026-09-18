@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- The browser itself enforces this: no fetch, no XHR, no WebSocket, no form post.
      Nothing in this file can reach the network even if it wanted to. Verify in F12 → Network. -->
-<meta http-equiv="Content-Security-Policy" content="connect-src 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="connect-src http://127.0.0.1:*; form-action 'none'">
 <!-- Drop your own favicon.ico / logo.png beside this HTML file and they are picked up.
      Both are optional: if the files are missing, Dossier falls back to the built-in seal.
      These are same-folder files, so nothing is fetched over the network. -->
@@ -3986,6 +3986,17 @@ const STRINGS = {
   GitFolderWrote: "Added {n} line(s) to .gitignore. Anything git already tracks still needs git rm --cached.",
   GitFolderAlready: ".gitignore already covers every path Dossier writes.",
   GitFolderFailed: "Could not write .gitignore: ",
+  DbStopped: "<b>The bridge is not running</b>, and this workspace keeps its records in SQL Server rather than in a file. Nothing has been opened and nothing will be written. Start it with <b>scripts\\dossier-bridge.bat</b> and press Try again. {p0}",
+  DbStoppedPlain: "",
+  DbRetry: "Try again",
+  DbHowTo: "What is this?",
+  DbHowToSay: "Dossier is a page in a browser and cannot talk to SQL Server itself. dossier-bridge.bat runs one small process on this PC that can. Leave its window open while you work.",
+  DbStillStopped: "Still nothing on 127.0.0.1. Is the bridge window open?",
+  DbOn: "records in {p0} on {p1}",
+  Ok: "Right",
+  ThatFileIsTooBig: "{p0} is too large to file.",
+  CouldNotFileThatDocument: "That document could not be filed: ",
+  FiledNDocuments: "Filed {n} document(s)",
   DropToAttach: "Drop to attach",
   DropOnRecord: "Drop it on a record",
   DropNeedsRecord: "{name} was not filed \u2014 open a record first, or drop it straight onto one.",
@@ -4984,8 +4995,8 @@ const STATUSES = [
    the status bar, and clicking it copies a line you can paste into a bug
    report — build date and flow protocol included, because those are the two
    things that actually differ between copies. */
-const APP_VERSION = "3.14.2";
-const APP_BUILT = "2026-09-17";
+const APP_VERSION = "4.0.0";
+const APP_BUILT = "2026-09-18";
 function buildLine(){
   return "Dossier v" + APP_VERSION + " \u00b7 built " + APP_BUILT +
          " \u00b7 flow protocol " + (window.DossierFlow ? DossierFlow.version : "\u2014") +
@@ -6361,10 +6372,28 @@ async function saveNow(silent){
      question is still on the screen. Writing now is how an empty workspace
      lands on top of a full one - so it does not. */
   if (VAULT.held) return false;
+  /* The database is the store for this workspace and it is not answering.
+     Writing the export on its own would leave a file ahead of the database,
+     which is two versions of the truth and the beginning of the next bad
+     afternoon. So: nothing is written, and it says so. */
+  if (DB.required && !DB.on){
+    setSaveState("dirty");
+    if (!silent) dbSayStopped();
+    return false;
+  }
   S.saving = true; setSaveState("saving");
   petMood("work", 1700);          /* it carries the record out to the folder */
   try {
-    await FS.writeText(FS.root, "dossier.json", JSON.stringify(payload(), null, 2));
+    const doc = payload();
+    /* The database is the write. If it refuses, the save has not happened -
+       so nothing is marked saved and the file is not touched either, because
+       a file that is ahead of the database is the beginning of two versions
+       of the truth. */
+    if (DB.on) await dbPut(doc);
+    /* and then the export: the same JSON, beside your records, readable in
+       Notepad on a machine with no SQL Server on it. It is not what Dossier
+       reads any more, which is exactly why it is worth writing. */
+    await FS.writeText(FS.root, "dossier.json", JSON.stringify(doc, null, 2));
     await dailyBackup();
     S.dirty = false; S.lastSaved = new Date().toISOString();
     setSaveState("saved");
@@ -6372,7 +6401,11 @@ async function saveNow(silent){
     return true;
   } catch(e){
     setSaveState("dirty");
-    toast(L("CouldNotWriteToTheFolder") + (e.message || e), { bad:true });
+    if (DB.on === false && DB.tried && await FS.exists(FS.root, ".bridge.json")){
+      dbSayStopped(e.message || String(e));
+    } else {
+      toast(L("CouldNotWriteToTheFolder") + (e.message || e), { bad:true });
+    }
     return false;
   } finally { S.saving = false; }
 }
@@ -6413,14 +6446,42 @@ async function openWorkspace(handle, quiet){
   if (!(await FS.perm(handle))) { toast(L("PermissionToThatFolderWasNot"), { bad:true }); return false; }
   await FS.attach(handle);
   let loaded = false;
-  try {
-    const txt = await FS.readText(FS.root, "dossier.json");
-    hydrate(JSON.parse(txt));
-    loaded = true;
-  } catch(e){
-    // fresh folder — start a new record set
-    S.tasks = []; S.routines = []; S.seq = 0;
-    buildModel();
+
+  /* ── where this workspace lives ───────────────────────────────────────
+     A folder that has ever had the bridge run in it is a database-backed
+     workspace, and stays one. If the bridge is not answering, nothing is
+     opened and nothing is written: the records are in SQL Server and this
+     is not the moment to start a second copy of them in a file. */
+  const everDb = await FS.exists(FS.root, ".bridge.json");
+  await dbFind();
+  DB.required = everDb || DB.on;
+  if (everDb && !DB.on){
+    paintFolderName();
+    dbSayStopped();
+    return false;
+  }
+
+  if (DB.on){
+    DB.required = true;      /* this workspace lives in SQL from here on */
+    try {
+      const doc = await dbGet();
+      if (doc){ hydrate(doc); loaded = true; }
+      else { S.tasks = []; S.routines = []; S.seq = 0; buildModel(); }
+    } catch(e){
+      paintFolderName();
+      dbSayStopped(e.message || String(e));
+      return false;
+    }
+  } else {
+    try {
+      const txt = await FS.readText(FS.root, "dossier.json");
+      hydrate(JSON.parse(txt));
+      loaded = true;
+    } catch(e){
+      // fresh folder — start a new record set
+      S.tasks = []; S.routines = []; S.seq = 0;
+      buildModel();
+    }
   }
   paintFolderName();
   S.dirty = false; S.lastSaved = loaded ? new Date().toISOString() : null;
@@ -6456,6 +6517,121 @@ async function openWorkspace(handle, quiet){
   const asked = await vaultCheck(loaded);
   if (!loaded && !asked) await saveNow(true);
   return true;
+}
+
+/* ═══ THE DATABASE, WHEN THERE IS ONE ════════════════════════════════════
+   With the bridge running, this is where the workspace lives: every save is
+   a transaction in SQL Server LocalDB on this PC, and dossier.json becomes
+   an export written alongside rather than the thing being read.
+
+   Dossier cannot talk to SQL Server itself and never will - a browser has no
+   SQL client - so scripts\dossier-bridge.bat runs one small process that
+   does, listening on 127.0.0.1. It writes its port and a token, generated
+   fresh each time it starts, into the workspace folder as .bridge.json.
+   Dossier already holds a handle on that folder, so that file is the whole
+   of the configuration: no address to type, no password to keep, and
+   nothing else on the machine can drive the bridge without first being able
+   to read your records.
+
+   The content security policy at the top of this file opens to exactly one
+   thing for this: http://127.0.0.1:*. Not the internet, not localhost by
+   name, not any other port on the machine.
+
+   When the bridge is not running Dossier says so and opens nothing. That is
+   the point of moving the data here - there is one copy and this is it -
+   and the export written on every save is what makes that survivable. */
+const DB = { on:false, required:false, port:0, token:"", info:null, tried:false };
+
+function dbUrl(path){ return "http://127.0.0.1:" + DB.port + path; }
+
+/* Look for the handshake the bridge leaves in the workspace folder, then ask
+   it whether it is actually alive. Both have to be true. */
+async function dbFind(){
+  DB.on = false; DB.info = null; DB.tried = true;
+  if (!FS.ok || !FS.root) return false;
+  let hand;
+  try { hand = JSON.parse(await FS.readText(FS.root, ".bridge.json")); }
+  catch(e){ return false; }               /* no bridge has run here */
+  if (!hand || !hand.port || !hand.token) return false;
+  DB.port = +hand.port; DB.token = String(hand.token);
+  try {
+    const r = await fetch(dbUrl("/health"), { headers:{ "X-Dossier-Token":DB.token } });
+    if (!r.ok) return false;
+    DB.info = await r.json();
+    DB.on = !!DB.info.ok;
+  } catch(e){
+    /* the handshake is stale: the bridge wrote it and then stopped */
+    DB.on = false;
+  }
+  return DB.on;
+}
+
+async function dbGet(){
+  const r = await fetch(dbUrl("/workspace"), { headers:{ "X-Dossier-Token":DB.token } });
+  if (!r.ok) throw new Error("the bridge answered " + r.status);
+  const d = await r.json();
+  return d && d.empty ? null : d;
+}
+
+/* One call, one transaction, the whole workspace. The bridge hands it to
+   dbo.LoadWorkspace, which writes the canonical row and every table derived
+   from it or none of them. */
+async function dbPut(doc){
+  const r = await fetch(dbUrl("/workspace"), {
+    method:"PUT",
+    headers:{ "X-Dossier-Token":DB.token, "Content-Type":"application/json" },
+    body: JSON.stringify(doc)
+  });
+  if (!r.ok){
+    let why = "the bridge answered " + r.status;
+    try { const e = await r.json(); if (e && e.error) why = e.error; } catch(x){}
+    throw new Error(why);
+  }
+  return r.json();
+}
+
+/* Attachments are rows too, so that "everything is in the database" is
+   literally true and a copy of the database is a copy of the work. The name
+   and type travel as percent-escaped headers because a file name can hold
+   anything, including a newline. */
+async function dbAttach(file, recordId){
+  const r = await fetch(dbUrl("/attachment"), {
+    method:"POST",
+    headers:{
+      "X-Dossier-Token":DB.token,
+      "Content-Type":"application/octet-stream",
+      "X-Name": encodeURIComponent(file.name || "attachment"),
+      "X-Type": encodeURIComponent(file.type || ""),
+      "X-Record": encodeURIComponent(recordId || "")
+    },
+    body: file
+  });
+  if (!r.ok) throw new Error("the bridge answered " + r.status);
+  return r.json();
+}
+async function dbAttachUrl(id){
+  const r = await fetch(dbUrl("/attachment?id=" + encodeURIComponent(id)),
+                        { headers:{ "X-Dossier-Token":DB.token } });
+  if (!r.ok) throw new Error("the bridge answered " + r.status);
+  return URL.createObjectURL(await r.blob());
+}
+async function dbAttachDrop(id){
+  try {
+    await fetch(dbUrl("/attachment?id=" + encodeURIComponent(id)),
+                { method:"DELETE", headers:{ "X-Dossier-Token":DB.token } });
+  } catch(e){ /* the row outliving the record is not worth a failed delete */ }
+}
+
+/* The banner that stands in for the whole application when the database is
+   the store and the way to it is shut. */
+function dbSayStopped(why){
+  showBanner(L("DbStopped", { p0: esc(why || L("DbStoppedPlain")) }), [
+    { label:L("DbRetry"), run: async () => {
+        if (await dbFind()){ hideBanner(); await openWorkspace(FS.root, true); }
+        else toast(L("DbStillStopped"), { bad:true });
+      } },
+    { label:L("DbHowTo"), run: () => toast(L("DbHowToSay"), { action:L("Ok") }) }
+  ]);
 }
 
 /* ═══ THE LOCAL DATABASE ═════════════════════════════════════════════════
@@ -6644,6 +6820,31 @@ async function attachFiles(t, fileList){
   if (!FS.ok){ toast(L("PickAWorkspaceFolderBeforeAttaching"), { bad:true }); return 0; }
   const files = Array.prototype.slice.call(fileList);
   if (!files.length) return 0;
+
+  /* With the bridge on, the bytes go into the database and the record keeps
+     the id of the row rather than a file name. The tasks\ folder is then
+     only what older workspaces have in it, and still opens. */
+  if (DB.on){
+    let n = 0;
+    for (const f of files){
+      if (f.size > CHAT_READ_MAX){ toast(L("ThatFileIsTooBig", { p0: f.name }), { bad:true }); continue; }
+      try {
+        const put = await dbAttach(f, t.id);
+        (t.files = t.files || []).push({ name:f.name, size:f.size, type:f.type,
+                                         added:new Date().toISOString(), row:put.id });
+        n++;
+      } catch(e){ toast(L("CouldNotFileThatDocument") + (e.message || e), { bad:true }); }
+    }
+    if (n){
+      t.log.push({ at:new Date().toISOString(), text:L("FiledNDocuments", { n:n }) });
+      touch(); renderDrawer(); renderAll();
+    }
+    return n;
+  }
+
+  /* only now, and only when the bytes are going to a folder: asking for the
+     record's directory first meant a database-backed workspace failed here
+     before it ever reached the branch below */
   let dir;
   try { dir = await taskDir(t, true); }
   catch(e){ toast(L("CouldNotCreateTheRecordFolder") + e.message, { bad:true }); return 0; }
@@ -6685,10 +6886,11 @@ async function attachFiles(t, fileList){
 }
 async function openAttachment(t, name){
   try {
-    const dir = await taskDir(t, false);
-    const fh = await dir.getFileHandle(name);
-    const file = await fh.getFile();
-    const url = URL.createObjectURL(file);
+    /* a document filed since the bridge arrived is a row, not a file */
+    const row = ((t.files || []).find(f => f.name === name) || {}).row;
+    const url = row && DB.on ? await dbAttachUrl(row)
+                             : URL.createObjectURL(await (await (await taskDir(t, false))
+                                                    .getFileHandle(name)).getFile());
     const w = window.open(url, "_blank");
     if (!w){
       const a = document.createElement("a");
@@ -6699,9 +6901,13 @@ async function openAttachment(t, name){
   } catch(e){ toast(L("CouldNotOpenIsItStill", { p0: name }), { bad:true }); }
 }
 async function removeAttachment(t, name, deleteFile){
+  const row = ((t.files || []).find(f => f.name === name) || {}).row;
   if (deleteFile){
-    try { const dir = await taskDir(t, false); await dir.removeEntry(name); }
-    catch(e){ toast(L("RemovedFromTheRecordButThe"), { bad:true }); }
+    if (row && DB.on) await dbAttachDrop(row);
+    else {
+      try { const dir = await taskDir(t, false); await dir.removeEntry(name); }
+      catch(e){ toast(L("RemovedFromTheRecordButThe"), { bad:true }); }
+    }
   }
   t.files = t.files.filter(f => f.name !== name);
   t.log.push({ at:new Date().toISOString(), text:(deleteFile ? L("Deleted") : L("Unlinked")) + name });

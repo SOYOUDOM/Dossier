@@ -413,6 +413,57 @@ BEGIN
 END
 GO
 
+/* -- 5 -- the database as the store, not the copy -----------------------------
+   Up to here the file was the record and this was a queryable copy of it.
+   With the bridge running it is the other way round: every change Dossier
+   makes is written here, in a transaction, and the JSON beside your records
+   is an export.
+
+   Two tables make that possible. Workspace holds the current state whole -
+   what a read returns, so nothing has to be reassembled from the columns and
+   no field can be lost by a shred that forgot it. Attachment holds the bytes
+   of every document, because "everything is in the database" should mean the
+   screenshots too. */
+IF (SELECT Version FROM dbo.SchemaVersion WHERE Id = 1) < 5
+BEGIN
+    PRINT 'migrating to 5: the workspace itself, and attachment bytes';
+    BEGIN TRY
+    BEGIN TRAN;
+
+    IF OBJECT_ID('dbo.Workspace') IS NULL
+    CREATE TABLE dbo.Workspace (
+        Id         tinyint       NOT NULL CONSTRAINT PK_Workspace PRIMARY KEY DEFAULT (1),
+        Doc        nvarchar(max) NOT NULL,
+        Records    int           NULL,
+        UpdatedAt  datetime2(0)  NOT NULL CONSTRAINT DF_Workspace_At DEFAULT (SYSUTCDATETIME()),
+        CONSTRAINT CK_Workspace_One CHECK (Id = 1)
+    );
+
+    IF OBJECT_ID('dbo.Attachment') IS NULL
+    CREATE TABLE dbo.Attachment (
+        AttachmentId nvarchar(40)   NOT NULL CONSTRAINT PK_Attachment PRIMARY KEY,
+        RecordId     nvarchar(40)   NULL,
+        Name         nvarchar(400)  NULL,
+        Type         nvarchar(160)  NULL,
+        Bytes        int            NULL,
+        Added        datetime2(0)   NULL CONSTRAINT DF_Attachment_At DEFAULT (SYSUTCDATETIME()),
+        Content      varbinary(max) NULL
+    );
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_Attachment_Record'
+                   AND object_id = OBJECT_ID('dbo.Attachment'))
+    CREATE INDEX IX_Attachment_Record ON dbo.Attachment (RecordId);
+
+    UPDATE dbo.SchemaVersion SET Version = 5, AppliedAt = SYSUTCDATETIME() WHERE Id = 1;
+    COMMIT;
+    END TRY
+    BEGIN CATCH
+        IF XACT_STATE() <> 0 ROLLBACK;
+        PRINT 'migration 5 rolled back; the database is as it was';
+        THROW;
+    END CATCH
+END
+GO
+
 /* what the database looks like now */
 SELECT  SchemaVersion = (SELECT Version FROM dbo.SchemaVersion WHERE Id = 1),
         Tables        = (SELECT COUNT(*) FROM sys.tables WHERE schema_id = SCHEMA_ID('dbo')),
