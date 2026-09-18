@@ -2665,6 +2665,7 @@ body.chatting .pet[data-corner="br"],body.chatting .pet[data-corner="tr"]{
     <span><b id="sbF">0</b> <span data-i18n="Foot_Documents">documents</span></span>
     <span><b id="sbH">0h</b> <span data-i18n="Foot_Tracked">tracked</span></span>
     <span id="sbSave">—</span>
+    <span id="sbStore" title=""></span>
     <span id="sbRun" hidden></span>
     <span class="sp"></span>
     <span><kbd>Ctrl</kbd><kbd>K</kbd> <span data-i18n="Foot_Commands">commands</span></span>
@@ -3986,6 +3987,11 @@ const STRINGS = {
   GitFolderWrote: "Added {n} line(s) to .gitignore. Anything git already tracks still needs git rm --cached.",
   GitFolderAlready: ".gitignore already covers every path Dossier writes.",
   GitFolderFailed: "Could not write .gitignore: ",
+  Store: "Records kept in",
+  StoreSql: "SQL Server",
+  StoreSqlWhy: "database {p0} on {p1}, through the bridge. dossier.json is written as an export.",
+  StoreFile: "dossier.json",
+  StoreFileWhy: "the file in this folder. To keep them in SQL Server instead, start scripts\\dossier-bridge.bat WITH THIS FOLDER \u2014 it writes .bridge.json here, and Dossier picks it up when you reopen the workspace.",
   DbStopped: "<b>The bridge is not running</b>, and this workspace keeps its records in SQL Server rather than in a file. Nothing has been opened and nothing will be written. Start it with <b>scripts\\dossier-bridge.bat</b> and press Try again. {p0}",
   DbStoppedPlain: "",
   DbRetry: "Try again",
@@ -4719,6 +4725,24 @@ function setLang(code){
 function paintFolderName(){
   const el = $("wsName");
   if (el) el.textContent = FS.ok && FS.name ? FS.name : L("NoFolder");
+  paintStore();
+}
+
+/* Which store this workspace is using, in the footer, always. A person who
+   has just started the bridge and sees "file" knows instantly that it is
+   watching a different folder - which is the failure this mode has, and it
+   used to be completely silent: no error, no data, no clue. */
+function paintStore(){
+  const el = $("sbStore"); if (!el) return;
+  if (!FS.ok){ el.textContent = ""; el.title = ""; return; }
+  if (DB.on){
+    el.innerHTML = '<b style="color:var(--ok,#5bbf8a)">' + LE("StoreSql") + "</b>";
+    el.title = L("StoreSqlWhy", { p0:(DB.info && DB.info.database) || "Dossier",
+                                  p1:(DB.info && DB.info.server) || "" });
+  } else {
+    el.innerHTML = '<b style="color:var(--p2)">' + LE("StoreFile") + "</b>";
+    el.title = L("StoreFileWhy");
+  }
 }
 
 function applyI18n(){
@@ -4995,7 +5019,7 @@ const STATUSES = [
    the status bar, and clicking it copies a line you can paste into a bug
    report — build date and flow protocol included, because those are the two
    things that actually differ between copies. */
-const APP_VERSION = "4.0.0";
+const APP_VERSION = "4.0.1";
 const APP_BUILT = "2026-09-18";
 function buildLine(){
   return "Dossier v" + APP_VERSION + " \u00b7 built " + APP_BUILT +
@@ -6397,6 +6421,7 @@ async function saveNow(silent){
     await dailyBackup();
     S.dirty = false; S.lastSaved = new Date().toISOString();
     setSaveState("saved");
+    paintStore();
     vaultWrite();            /* and the copy this PC keeps of it */
     return true;
   } catch(e){
@@ -6510,8 +6535,9 @@ async function openWorkspace(handle, quiet){
   });
   renderAll();
   hideBanner();
-  if (!quiet) toast(loaded ? S.tasks.length + L("RecordsLoadedFrom") + FS.name
-                           : L("NewWorkspaceStartedIn") + FS.name);
+  if (!quiet) toast((loaded ? S.tasks.length + L("RecordsLoadedFrom") + FS.name
+                            : L("NewWorkspaceStartedIn") + FS.name) +
+                    (DB.on ? " \u00b7 " + L("StoreSql") : " \u00b7 " + L("StoreFile")));
   /* Before the first write of this session, and before the line below turns
      an unreadable folder into an empty one. */
   const asked = await vaultCheck(loaded);
@@ -14593,6 +14619,11 @@ async function renderModal(){
       "<dt>" + L("Records") + "</dt><dd>" + S.tasks.length + L("NextRef") + ("D-" + String((S.seq||0)+1).padStart(4,"0")) + "</dd>" +
       "<dt>" + L("Kpi_Documents") + "</dt><dd>" + S.tasks.reduce((s,t)=>s+(t.files||[]).length,0) + "</dd>" +
       "<dt>" + L("LastSaved") + "</dt><dd>" + (S.lastSaved ? stamp(S.lastSaved) : "—") + "</dd>" +
+      "<dt>" + LE("Store") + "</dt><dd>" + (DB.on
+        ? "<b>" + LE("StoreSql") + "</b> \u2014 " + esc(L("StoreSqlWhy",
+            { p0:(DB.info && DB.info.database) || "Dossier",
+              p1:(DB.info && DB.info.server) || "" }))
+        : "<b>" + LE("StoreFile") + "</b> \u2014 " + esc(L("StoreFileWhy"))) + "</dd>" +
       "<dt>" + L("FolderAccess") + "</dt><dd>" + (HAS_FS ? L("SupportedByThisBrowser") :
         "<span style=\"color:var(--p2)\">" + L("KeptInThisBrowserInstead") + "</span>") + "</dd>" +
     "</dl>" +

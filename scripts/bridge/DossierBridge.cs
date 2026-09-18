@@ -59,6 +59,31 @@ public class DossierBridge
             return 3;
         }
 
+        // The folder has to be the one you pick in Dossier's "Choose
+        // workspace folder", and the commonest mistake is to start this in
+        // the clone instead - where it writes a handshake nothing will ever
+        // read, and Dossier goes on quietly using a file. Refuse rather than
+        // succeed somewhere useless.
+        bool looksLikeClone = File.Exists(Path.Combine(folder, "dossier.html")) ||
+                              Directory.Exists(Path.Combine(folder, ".git"));
+        bool looksLikeWorkspace = File.Exists(Path.Combine(folder, "dossier.json")) ||
+                                  File.Exists(Path.Combine(folder, ".bridge.json")) ||
+                                  Directory.Exists(Path.Combine(folder, "tasks"));
+        if (looksLikeClone && !looksLikeWorkspace)
+        {
+            Console.Error.WriteLine();
+            Console.Error.WriteLine("  That folder looks like the Dossier repository, not a workspace:");
+            Console.Error.WriteLine("    " + folder);
+            Console.Error.WriteLine();
+            Console.Error.WriteLine("  A workspace is the folder you pick in Dossier's");
+            Console.Error.WriteLine("  \"Choose workspace folder\" - the one with your dossier.json in it.");
+            Console.Error.WriteLine("  Start the bridge on that one:");
+            Console.Error.WriteLine();
+            Console.Error.WriteLine("    dossier-bridge.bat \"C:\\path\\to\\your\\workspace\"");
+            Console.Error.WriteLine();
+            return 5;
+        }
+
         ConnectionString = "Server=" + Server + ";Database=" + Database +
                            ";Integrated Security=true;MultipleActiveResultSets=true;" +
                            "Connect Timeout=30;Application Name=DossierBridge";
@@ -96,8 +121,13 @@ public class DossierBridge
         string handshakePath = Path.Combine(folder, ".bridge.json");
         File.WriteAllText(handshakePath, handshake, new UTF8Encoding(false));
 
+        Console.WriteLine("  workspace " + folder);
         Console.WriteLine("  listening 127.0.0.1:" + Port);
         Console.WriteLine("  handshake " + handshakePath);
+        Console.WriteLine();
+        Console.WriteLine("  Dossier's footer will say SQL Server once you reopen this");
+        Console.WriteLine("  folder. If it still says dossier.json, the folder above is");
+        Console.WriteLine("  not the one you picked in Dossier.");
         Console.WriteLine();
         Console.WriteLine("  Dossier will find it by itself. Leave this window open;");
         Console.WriteLine("  closing it stops the bridge and Dossier will say so.");
@@ -242,6 +272,10 @@ public class DossierBridge
         h.Append("Access-Control-Allow-Headers: content-type, x-dossier-token, x-name, x-type, x-record\r\n");
         h.Append("Access-Control-Allow-Methods: GET, PUT, POST, DELETE, OPTIONS\r\n");
         h.Append("Access-Control-Max-Age: 600\r\n");
+        // Chrome's private network access checks ask for this by name when a
+        // page reaches a loopback address; without it the preflight fails and
+        // the page sees a network error it cannot explain.
+        h.Append("Access-Control-Allow-Private-Network: true\r\n");
         h.Append("Cache-Control: no-store\r\n");
         if (type != null) h.Append("Content-Type: ").Append(type).Append("\r\n");
         h.Append("Content-Length: ").Append(payload.Length).Append("\r\n");

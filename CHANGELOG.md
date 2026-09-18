@@ -6,6 +6,41 @@ holds — which is what to paste into a bug report.
 
 ---
 
+## 4.0.1 - 2026-09-18
+
+**"No error, and nothing in the tables" was the bug.**
+
+A workspace whose folder has no `.bridge.json` in it opens in file mode -
+correctly, and until now completely silently. So a bridge started on the
+wrong folder looked exactly like a bridge working: records saved, no error,
+and an empty database. The fix is to stop it being invisible.
+
+- **The footer says which store this workspace uses**, at all times:
+  **SQL Server** or **dossier.json**. Hover it for the database and server,
+  or for what to do about it
+- The line after opening a workspace says it too, and Menu -> Workspace
+  spells it out with the reason
+- **The bridge refuses to start in the repository clone.** A folder with
+  `dossier.html` or `.git` in it and no `dossier.json` is not a workspace,
+  and starting there writes a handshake nothing will ever read. It says so
+  and exits instead of appearing to work
+- The bridge prints the folder it is serving above everything else, and says
+  in as many words that if Dossier's footer still reads `dossier.json`, that
+  folder is not the one you picked
+- `Access-Control-Allow-Private-Network: true` on every response, which
+  Chrome asks for by name when a page reaches a loopback address. Without it
+  the preflight fails and the page sees a network error with nothing behind it
+
+### Tested
+
+Both modes driven in headless Chromium against the stub bridge: a folder
+without the handshake reports **dossier.json** and `DB.on` false; the same
+folder with it reports **SQL Server**, and a record created afterwards is
+read back out of the database. The bridge still compiles under
+`mcs -langversion:5`.
+
+---
+
 ## 4.0.0 - 2026-09-18
 
 **The database is the store. The file is the export.**
