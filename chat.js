@@ -3827,7 +3827,7 @@ const GUIDE = [
     how:["Press the bell in the top right to switch reminders on.",
          "The browser then asks for permission — allow it, and reminders appear as Windows notifications even when the tab is behind Outlook.",
          "Opening dossier.html straight from the folder blocks them: Chrome and Edge refuse notification permission on file:// with no way to allow it.",
-         "Run dossier-serve.bat instead, which serves the same file from 127.0.0.1 where permission can be granted."],
+         "Run dossier-bridge.bat instead, which hands the same page out from 127.0.0.1 where permission can be granted."],
     tip:"I can turn them on for you — just say \"turn on notifications\"." },
 
   { id:"workspace", name:"the workspace folder",
@@ -4762,7 +4762,7 @@ intent("notify", {
       say: off ? "Switch reminders off?" : "Switch reminders on?",
       note: off ? "Nothing will nudge you until you turn them back on."
                 : "The browser will ask for permission the first time. If it refuses, you are " +
-                  "opening dossier.html straight from the folder — run dossier-serve.bat and " +
+                  "opening dossier.html straight from the folder — run dossier-bridge.bat and " +
                   "use 127.0.0.1 instead, where permission can be granted.",
       act:{ kind:"notify", on:!off,
             confirm: off ? "Turn reminders off?" : "Turn reminders on?" }

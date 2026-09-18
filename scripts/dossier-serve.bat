@@ -3,12 +3,19 @@ setlocal EnableExtensions
 title Dossier - local server
 
 rem ===========================================================================
-rem  Dossier local server
+rem  Dossier local server - the page on its own, no database
 rem
-rem  Opening dossier.html straight from the folder (file://) works for
-rem  everything except Windows notifications - Chrome and Edge refuse those on
-rem  file:// with no way to allow them. Serving the same file from
-rem  http://127.0.0.1 fixes that, and nothing else changes.
+rem  IF YOU USE THE DATABASE, RUN scripts\dossier-bridge.bat INSTEAD.
+rem  That serves this same page at this same address and talks to SQL Server
+rem  as well, so it is one window rather than two. You do not need both, and
+rem  running both puts them on different ports, which the browser treats as
+rem  two different sites.
+rem
+rem  This one is for anyone who wants nothing but the page. Opening
+rem  dossier.html straight from the folder (file://) works for everything
+rem  except Windows notifications - Chrome and Edge refuse those on file://
+rem  with no way to allow them. Serving the same file from http://127.0.0.1
+rem  fixes that, and nothing else changes.
 rem
 rem  Double-click this file. It starts a small web server, waits for it to
 rem  answer, and opens Dossier in the browser. Closing this window stops it.
@@ -19,8 +26,10 @@ rem ===========================================================================
 rem ---- SETTINGS -------------------------------------------------------------
 
 rem The folder holding dossier.html, assist.js and chat.js. Default: this
-rem .bat's folder. Best kept as a folder holding only those three.
+rem .bat's folder, or the folder above it - which is where dossier.html sits
+rem in a clone, this .bat being in scripts\.
 set "FOLDER=%~dp0"
+if not exist "%FOLDER%dossier.html" for %%I in ("%~dp0..") do set "FOLDER=%%~fI\"
 
 rem Port to serve on. Change it if something else already uses 5500.
 set "PORT=5500"
@@ -46,6 +55,10 @@ echo   Dossier local server
 echo   --------------------
 echo   Folder : %FOLDER%
 echo   Address: %URL%
+echo.
+echo   This serves the page and nothing else. If you keep your records in
+echo   SQL Server, close this and run dossier-bridge.bat instead: it serves
+echo   the same page at the same address and saves to the database too.
 echo.
 
 if not exist "%FOLDER%\dossier.html" (

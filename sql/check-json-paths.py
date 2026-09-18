@@ -2,7 +2,7 @@
 
 A wrong path in OPENJSON is not an error - it loads nothing, quietly, which
 is worse than a crash. This builds a workspace holding one of everything and
-walks the paths sql/push.sql actually asks for."""
+walks the paths the loader actually asks for."""
 import json, re, sys, os
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -38,7 +38,11 @@ def walk(doc, path):
         cur = cur[part]
     return cur, True
 
-sql = open(os.path.join(HERE, "push.sql")).read()
+# The loader moved out of push.sql and into load-proc.sql in 4.0.0, and this
+# went on reading push.sql, so it checked nothing and said so in a number
+# nobody read. Every file that shreds the document, every time.
+sql = "".join(open(os.path.join(HERE, n)).read()
+              for n in ("push.sql", "load-proc.sql"))
 bad, checked = [], 0
 
 # OPENJSON(@doc, '$.x') WITH ( col type '$.field', ... )

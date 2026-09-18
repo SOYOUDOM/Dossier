@@ -4012,7 +4012,7 @@ const STRINGS = {
   DbStoppedPlain: "",
   DbRetry: "Try again",
   DbHowTo: "What is this?",
-  DbHowToSay: "Dossier is a page in a browser and cannot talk to SQL Server itself. dossier-bridge.bat runs one small process on this PC that can. Leave its window open while you work.",
+  DbHowToSay: "Dossier is a page in a browser and cannot talk to SQL Server itself. dossier-bridge.bat runs one small process on this PC that can \u2014 the same one that hands out this page. Leave its window open while you work. To have it there every morning: dossier-bridge.bat startup \"<your folder>\".",
   DbStillStopped: "Still nothing on 127.0.0.1. Is the bridge window open?",
   DbOn: "records in {p0} on {p1}",
   Ok: "Right",
@@ -4220,7 +4220,7 @@ const STRINGS = {
   RemindersOffHint: "Nothing will remind you. Turn this on, or press the bell in the top right.",
   RemindersGrantedHint: "Reminders appear in Dossier and as Windows notifications, even when the tab is behind Outlook.",
   RemindersNoneHint: "This browser cannot raise Windows notifications, so reminders appear inside Dossier only.",
-  RemindersBlockedHint: "Windows notifications are blocked for this page, so reminders only appear inside Dossier. Click the padlock beside the address and set Notifications to Allow. Opening dossier.html straight from the folder blocks them too \u2014 run <b>dossier-serve.bat</b> to open it from 127.0.0.1 instead.",
+  RemindersBlockedHint: "Windows notifications are blocked for this page, so reminders only appear inside Dossier. Click the padlock beside the address and set Notifications to Allow. Opening dossier.html straight from the folder blocks them too \u2014 run <b>dossier-bridge.bat</b>, which hands the page out from 127.0.0.1 where permission can be given.",
   ScheduleDoesNothingElse: "It will raise a record on the sheet and nothing more \u2014 no notification, no script. Set <b>Remind me</b> to be told each time, or attach a script under <b>What it does</b>.",
   Assist: "Assist",
   AiNoEngine: "assist.js is not in this folder. Put it next to dossier.html and reload — everything else works without it.",
@@ -5035,7 +5035,7 @@ const STATUSES = [
    the status bar, and clicking it copies a line you can paste into a bug
    report — build date and flow protocol included, because those are the two
    things that actually differ between copies. */
-const APP_VERSION = "4.0.3";
+const APP_VERSION = "4.1.0";
 const APP_BUILT = "2026-09-18";
 function buildLine(){
   return "Dossier v" + APP_VERSION + " \u00b7 built " + APP_BUILT +

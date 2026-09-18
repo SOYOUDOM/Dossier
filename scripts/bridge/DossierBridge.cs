@@ -7,12 +7,21 @@
 //  whole of its job. Every change you make in Dossier becomes a transaction
 //  in here.
 //
+//  IT ALSO HANDS OUT THE PAGE
+//  Chrome and Edge refuse notification permission to a page opened from
+//  file://, which is the only reason dossier-serve.bat ever existed. This
+//  already is an HTTP server on 127.0.0.1, so it serves the page too: one
+//  window instead of two, and the page ends up on the same origin as the
+//  API it calls, which retires the CORS preflight as well.
+//
 //  WHAT IT IS NOT
-//  It is not a web server. It binds to the loopback address only, it answers
-//  a handful of fixed routes, and every request must carry a token generated
-//  fresh each time it starts. That token is written into your workspace
-//  folder, which the page already has a handle on, and nowhere else - so
-//  the page can drive it and nothing else on the machine can.
+//  It is not a web server you would put anything on. It binds the loopback
+//  address only; it serves read-only GETs of a short list of file types out
+//  of the folder dossier.html sits in, and nothing from your workspace; and
+//  every route that touches the database carries a token generated fresh
+//  each time it starts. That token is written into your workspace folder,
+//  which the page already has a handle on, and nowhere else - so the page
+//  can drive it and nothing else on the machine can.
 //
 //  WRITTEN FOR THE COMPILER ALREADY ON THE MACHINE
 //  C# 5, because scripts\dossier-bridge.bat builds this with the csc.exe
@@ -27,6 +36,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
+using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
@@ -40,18 +50,40 @@ public class DossierBridge
     static string Database = "Dossier";
     static string Server = @"(localdb)\MSSQLLocalDB";
     static int Port;
+    static string AppRoot;              // the folder dossier.html sits in
+    static int Wanted = 5500;           // the port dossier-serve.bat used
 
     public static int Main(string[] args)
     {
-        // argv: <workspace folder> [server] [database]
+        // argv: <workspace folder> [server] [database] [folder holding dossier.html]
         if (args.Length < 1)
         {
-            Console.Error.WriteLine("usage: DossierBridge <workspace folder> [server] [database]");
+            Console.Error.WriteLine("usage: DossierBridge <workspace folder> [server] [database] [app folder]");
             return 2;
         }
         string folder = args[0];
         if (args.Length > 1 && args[1].Length > 0) Server = args[1];
         if (args.Length > 2 && args[2].Length > 0) Database = args[2];
+        if (args.Length > 3 && args[3].Length > 0) AppRoot = args[3];
+
+        // Where the page lives. The exe is built into scripts\bridge, so two
+        // folders up is the clone unless somebody says otherwise.
+        if (AppRoot == null)
+        {
+            string here = Path.GetDirectoryName(
+                System.Reflection.Assembly.GetExecutingAssembly().Location);
+            AppRoot = Path.GetFullPath(Path.Combine(here, ".." + Path.DirectorySeparatorChar + ".."));
+        }
+        AppRoot = Path.GetFullPath(AppRoot);
+        if (!File.Exists(Path.Combine(AppRoot, "dossier.html")))
+        {
+            Console.WriteLine("  note      no dossier.html in " + AppRoot);
+            Console.WriteLine("            so this will not hand out the page; open it yourself.");
+            AppRoot = null;
+        }
+
+        string wanted = Environment.GetEnvironmentVariable("DOSSIER_PORT");
+        if (wanted != null && wanted.Length > 0) int.TryParse(wanted, out Wanted);
 
         if (!Directory.Exists(folder))
         {
@@ -127,9 +159,12 @@ public class DossierBridge
         }
 
         Token = Guid.NewGuid().ToString("N");
-        TcpListener listener = new TcpListener(IPAddress.Loopback, 0);
-        listener.Start();
-        Port = ((IPEndPoint)listener.LocalEndpoint).Port;
+        // The page's address wants to stay the same between runs: a browser
+        // keeps the handle on your workspace folder per origin, and a new
+        // port is a new origin, so a port that moved means picking the folder
+        // again. 5500 is what dossier-serve.bat used, so anyone coming from
+        // that keeps their handle and notices nothing.
+        TcpListener listener = Bind(AppRoot == null ? 0 : Wanted, out Port);
 
         // How the page finds us. It holds a handle on this folder already, so
         // this is the one channel that needs no configuration - and a file
@@ -140,17 +175,44 @@ public class DossierBridge
         string handshakePath = Path.Combine(folder, ".bridge.json");
         File.WriteAllText(handshakePath, handshake, new UTF8Encoding(false));
 
+        string url = "http://127.0.0.1:" + Port + "/dossier.html";
         Console.WriteLine("  workspace " + folder);
         Console.WriteLine("  listening 127.0.0.1:" + Port);
         Console.WriteLine("  handshake " + handshakePath);
+        if (AppRoot != null)
+        {
+            Console.WriteLine("  serving   " + AppRoot);
+            Console.WriteLine();
+            Console.WriteLine("  Dossier is at " + url);
+            Console.WriteLine("  Bookmark that. There is nothing else to start - this window");
+            Console.WriteLine("  is the app and the database both.");
+            if (Port != Wanted)
+            {
+                Console.WriteLine();
+                Console.WriteLine("  Port " + Wanted + " was taken, so this is on " + Port + " instead. A browser");
+                Console.WriteLine("  counts that as a different address, so Dossier will ask for");
+                Console.WriteLine("  your workspace folder once more. If dossier-serve.bat is still");
+                Console.WriteLine("  running, close it - the bridge does that job now - and start");
+                Console.WriteLine("  this again to get " + Wanted + " back.");
+            }
+        }
         Console.WriteLine();
         Console.WriteLine("  Dossier's footer will say SQL Server once you reopen this");
         Console.WriteLine("  folder. If it still says dossier.json, the folder above is");
         Console.WriteLine("  not the one you picked in Dossier.");
         Console.WriteLine();
-        Console.WriteLine("  Dossier will find it by itself. Leave this window open;");
-        Console.WriteLine("  closing it stops the bridge and Dossier will say so.");
+        Console.WriteLine("  Leave this window open; closing it stops the bridge, and");
+        Console.WriteLine("  Dossier will say so rather than save somewhere else.");
         Console.WriteLine();
+
+        // Open it, unless something started us in the background on purpose -
+        // the login-time launcher sets this, because a browser window nobody
+        // asked for is a bad way to say good morning.
+        if (AppRoot != null && Environment.GetEnvironmentVariable("DOSSIER_OPEN") != "0")
+        {
+            try { Process.Start(url); }
+            catch (Exception) { Console.WriteLine("  Could not open a browser. Go to " + url); }
+        }
 
         AppDomain.CurrentDomain.ProcessExit += delegate { TryDelete(handshakePath); };
         Console.CancelKeyPress += delegate { TryDelete(handshakePath); };
@@ -195,8 +257,22 @@ public class DossierBridge
 
                 if (method == "OPTIONS") { Respond(net, 204, null, new byte[0]); return; }
 
-                // Every route but the preflight needs the token. A page that
-                // cannot read the workspace folder cannot have it.
+                // The page itself and the few files beside it. A browser
+                // fetching a page cannot be told to carry a token, so these
+                // are open - and they are read-only GETs of a short list of
+                // file types out of the folder dossier.html sits in, which is
+                // a checkout of a public repository. Your records are not in
+                // that folder, and nothing below will serve them if they are.
+                bool api = (path == "/health" || path == "/workspace" || path == "/attachment");
+                if (!api)
+                {
+                    if ((method == "GET" || method == "HEAD") && Static(net, path, method == "HEAD")) return;
+                    Respond(net, 404, "text/plain", Bytes("Dossier is at /dossier.html"));
+                    return;
+                }
+
+                // Everything that touches the database needs the token. A page
+                // that cannot read the workspace folder cannot have it.
                 string given = Header(headers, "x-dossier-token");
                 if (given != Token)
                 {
@@ -283,6 +359,11 @@ public class DossierBridge
 
     static void Respond(NetworkStream net, int status, string type, byte[] payload)
     {
+        Respond(net, status, type, payload, false);
+    }
+
+    static void Respond(NetworkStream net, int status, string type, byte[] payload, bool headOnly)
+    {
         StringBuilder h = new StringBuilder();
         h.Append("HTTP/1.1 ").Append(status).Append(" ").Append(StatusText(status)).Append("\r\n");
         // The page is opened from file://, whose origin is "null". Nothing
@@ -301,7 +382,7 @@ public class DossierBridge
         h.Append("Connection: close\r\n\r\n");
         byte[] head = Encoding.ASCII.GetBytes(h.ToString());
         net.Write(head, 0, head.Length);
-        if (payload.Length > 0) net.Write(payload, 0, payload.Length);
+        if (payload.Length > 0 && !headOnly) net.Write(payload, 0, payload.Length);
         net.Flush();
     }
 
@@ -333,6 +414,103 @@ public class DossierBridge
             else b.Append(c);
         }
         return b.Append("\"").ToString();
+    }
+
+    // ── handing out the page ────────────────────────────────────────────────
+    //  A browser keeps a folder handle per origin, and the port is part of the
+    //  origin, so a port that wanders means being asked for your workspace
+    //  folder again every morning. Ask for the same one each time; take a
+    //  neighbour if it is busy; fall back to whatever is free rather than
+    //  refusing to start.
+    static TcpListener Bind(int wanted, out int port)
+    {
+        port = 0;
+        for (int p = wanted; wanted > 0 && p < wanted + 10; p++)
+        {
+            try
+            {
+                TcpListener l = new TcpListener(IPAddress.Loopback, p);
+                l.Start();
+                port = p;
+                return l;
+            }
+            catch (SocketException) { }
+        }
+        TcpListener any = new TcpListener(IPAddress.Loopback, 0);
+        any.Start();
+        port = ((IPEndPoint)any.LocalEndpoint).Port;
+        return any;
+    }
+
+    //  Read-only, GET and HEAD, out of AppRoot, and only the kinds of file an
+    //  application is made of. Note what is not on that list: .json. So a
+    //  dossier.json, a .bridge.json or a backup cannot be served even by a
+    //  person who put their workspace inside the clone - on top of the rule
+    //  against ".." and against any name beginning with a dot.
+    static bool Static(NetworkStream net, string path, bool headOnly)
+    {
+        if (AppRoot == null) return false;
+
+        string rel;
+        try { rel = Uri.UnescapeDataString(path); }
+        catch (Exception) { return false; }
+        if (rel.Length == 0 || rel[0] != '/') return false;
+        if (rel == "/") rel = "/dossier.html";
+        if (rel.IndexOf('\\') >= 0 || rel.IndexOf('\0') >= 0) return false;
+
+        string[] seg = rel.Substring(1).Split('/');
+        for (int i = 0; i < seg.Length; i++)
+        {
+            if (seg[i].Length == 0) return false;           // "//" or a trailing slash
+            if (seg[i][0] == '.') return false;             // "..", ".git", ".bridge.json"
+            string low = seg[i].ToLowerInvariant();
+            if (low == "backups" || low == "tasks") return false;
+        }
+
+        string type = ContentType(seg[seg.Length - 1]);
+        if (type == null) return false;
+
+        string root = AppRoot;
+        if (!root.EndsWith(Path.DirectorySeparatorChar.ToString()))
+            root += Path.DirectorySeparatorChar;
+        string full;
+        try { full = Path.GetFullPath(Path.Combine(root, string.Join(Path.DirectorySeparatorChar.ToString(), seg))); }
+        catch (Exception) { return false; }
+        if (!full.StartsWith(root, StringComparison.OrdinalIgnoreCase)) return false;
+        if (!File.Exists(full)) return false;
+
+        byte[] payload;
+        try { payload = File.ReadAllBytes(full); }
+        catch (Exception) { return false; }
+        Respond(net, 200, type, payload, headOnly);
+        return true;
+    }
+
+    static string ContentType(string name)
+    {
+        int dot = name.LastIndexOf('.');
+        if (dot < 0) return null;
+        switch (name.Substring(dot + 1).ToLowerInvariant())
+        {
+            case "html": case "htm":  return "text/html; charset=utf-8";
+            case "js": case "mjs":    return "text/javascript; charset=utf-8";
+            case "css":               return "text/css; charset=utf-8";
+            case "txt":               return "text/plain; charset=utf-8";
+            case "md":                return "text/markdown; charset=utf-8";
+            case "svg":               return "image/svg+xml";
+            case "gif":               return "image/gif";
+            case "png":               return "image/png";
+            case "jpg": case "jpeg":  return "image/jpeg";
+            case "webp":              return "image/webp";
+            case "ico":               return "image/x-icon";
+            case "woff":              return "font/woff";
+            case "woff2":             return "font/woff2";
+            case "ttf":               return "font/ttf";
+            case "otf":               return "font/otf";
+            case "wasm":              return "application/wasm";
+            case "map":               return "application/octet-stream";
+            default:                  return null;
+        }
     }
 
     // ── the routes ──────────────────────────────────────────────────────────

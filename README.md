@@ -116,9 +116,11 @@ With the demo copied in you should immediately see:
 
 > **Windows notifications need `http://`.** Chrome and Edge refuse the
 > Notification API on `file://` with no way to allow it. Double-click
-> `scripts\dossier-serve.bat` to serve the same folder from
-> `http://127.0.0.1:5500` — nothing else changes. It uses whichever of Python,
-> Node or PHP it finds first.
+> `scripts\dossier-bridge.bat`: it hands the page out at
+> `http://127.0.0.1:5500/dossier.html`, and that is the same window that keeps
+> your records in the database, so there is only ever one to start. If you
+> want the page without a database, `scripts\dossier-serve.bat` still does
+> that on its own, using whichever of Python, Node or PHP it finds first.
 
 ---
 
@@ -140,7 +142,7 @@ With the demo copied in you should immediately see:
 | `lang/km.xml` | ~125 KB | optional | The same 1,343 keys, **values empty**: a translation template for Khmer. |
 | `fonts/NotoSansKhmer-*.woff2` | ~33 KB | optional | Bundled Khmer typeface, so Khmer renders without fetching a webfont. `OFL.txt` is its licence. |
 | `scripts/dossier-runner.bat` | 3.4 KB | optional | The runner. Executes what Dossier queues. No PowerShell anywhere. |
-| `scripts/dossier-serve.bat` | 6.5 KB | optional | Serves the folder over `http://127.0.0.1` so notifications work. |
+| `scripts/dossier-serve.bat` | 6.8 KB | optional | Serves the folder over `http://127.0.0.1` so notifications work — the page alone, no database. `dossier-bridge.bat` does this too, so you want one or the other, not both. |
 | `scripts/open-morning-tabs.bat` | 1.8 KB | demo | Opens the tabs you start the day with, once a day. |
 | `scripts/restart-app-pool.bat` | 1.4 KB | demo | A **parameter template** — the `{{server}}` / `{{pool}}` marks become boxes in Dossier. |
 | `scripts/queue/` | — | required for the runner | The mailbox between Dossier and the runner. |
@@ -158,8 +160,8 @@ With the demo copied in you should immediately see:
 | `sql/check-reserved-words.py` | ~4 KB | — | Checks every identifier in the SQL against the T-SQL reserved-word list. Written after three of them shipped. |
 | `sql/check-json-paths.py` | ~3 KB | — | Walks every JSON path the loader reads against a workspace holding one of everything. A wrong path loads nothing, quietly. |
 | `scripts/dossier-sql.bat` | ~7 KB | optional | The launcher: `init`, `push`, `pull`, `check`, `history`, `find`. Defaults to `(localdb)\MSSQLLocalDB`. |
-| `scripts/dossier-bridge.bat` | ~4 KB | optional | Starts the bridge, compiling it first with the C# compiler already on the machine. Leave its window open while you work. |
-| `scripts/bridge/DossierBridge.cs` | ~19 KB | optional | The bridge: a loopback socket, a token, six routes, and `System.Data.SqlClient`. C# 5, so `csc.exe` from the .NET Framework can build it with nothing installed. |
+| `scripts/dossier-bridge.bat` | ~6 KB | optional | **Starts Dossier**: hands out the page at `http://127.0.0.1:5500/dossier.html` and saves to the database, in one window. Compiles the bridge first with the C# compiler already on the machine. `startup "<folder>"` makes it happen at every login. |
+| `scripts/bridge/DossierBridge.cs` | ~24 KB | optional | The bridge: a loopback socket, a token, six routes, a read-only handler for the page beside it, and `System.Data.SqlClient`. C# 5, so `csc.exe` from the .NET Framework can build it with nothing installed. |
 | `sql/load-proc.sql` | ~14 KB | optional | `dbo.LoadWorkspace` — the only code that writes the tables, called by both the bridge and `push`. |
 
 Everything is a classic script or plain file. There is **no build step, no
@@ -614,19 +616,54 @@ and is not what Dossier reads.
 
 ```
 scripts\dossier-sql.bat init         once: create the database and tables
-scripts\dossier-bridge.bat           and leave this window open while you work
+scripts\dossier-bridge.bat           then this, and nothing else
 ```
 
+Leave that window open and go to **`http://127.0.0.1:5500/dossier.html`** —
+it opens a browser there for you the first time. Bookmark it.
+
+**One window, not two.** Until v4.1 this was two: `dossier-serve.bat` handed
+out the page, because Chrome and Edge refuse notifications to a page opened
+from `file://`, and `dossier-bridge.bat` talked to the database. The bridge
+was already an HTTP server on `127.0.0.1`, so it serves the page too, and the
+second window is gone. Three things fell out of that: the page and the API
+share an origin, so the CORS preflight went with it; the address is fixed
+rather than a port that moves every run, so the browser keeps your workspace
+folder between restarts; and `5500` is the port `dossier-serve.bat` used, so
+anybody coming from that keeps their handle and notices nothing. If something
+else holds `5500` the bridge takes the next free port and says so — that is a
+new address to the browser, so it will ask for your folder once.
+
+**Every morning, without starting anything.**
+
+```
+scripts\dossier-bridge.bat startup "D:\Work\Dossier"     do it at login
+scripts\dossier-bridge.bat startup off                    stop doing it
+```
+
+That writes one `.bat` into your Startup folder — no service, no scheduled
+task, no administrator, no PowerShell. It runs minimised and opens no browser;
+your bookmark does that.
+
 **Why there is a process at all.** A browser has no SQL client — no page can
-open a connection to SQL Server, and `dossier.html` runs from `file://`. So
-the bridge sits between them: JSON over `127.0.0.1` on one side, T-SQL on the
-other. It needs nothing installed: it compiles itself on first run with the
-C# compiler that ships in `C:\Windows\Microsoft.NET\Framework64`, binds a
-plain socket to the loopback address (no administrator, no URL reservation),
-and writes its port and a per-run token into your workspace folder as
-`.bridge.json`. Dossier already holds a handle on that folder, so that file
-is the whole of the configuration — and nothing else on the machine can drive
-the bridge without first being able to read your records.
+open a connection to SQL Server. So the bridge sits between them: JSON over
+`127.0.0.1` on one side, T-SQL on the other. It needs nothing installed: it
+compiles itself on first run with the C# compiler that ships in
+`C:\Windows\Microsoft.NET\Framework64`, binds a plain socket to the loopback
+address (no administrator, no URL reservation), and writes its port and a
+per-run token into your workspace folder as `.bridge.json`. Dossier already
+holds a handle on that folder, so that file is the whole of the configuration
+— and nothing else on the machine can drive the bridge without first being
+able to read your records.
+
+**Serving the page does not widen any of that.** The token still guards every
+route that touches the database. What is open is `GET` and `HEAD` of the
+folder `dossier.html` sits in — your clone — and only file types an
+application is made of: `.html`, `.js`, `.css`, fonts, images. `.json` is not
+on that list, which is what makes it impossible to serve a `dossier.json`, a
+`.bridge.json` or a backup even to somebody who kept their workspace inside
+the clone. Nor is anything whose name begins with a dot, nor `..`, nor
+`backups\` or `tasks\`.
 
 | | |
 |---|---|
@@ -655,9 +692,12 @@ stay as files in `tasks\` and still open.
 `(localdb)\MSSQLLocalDB` by default, database `Dossier`, no server to install
 and nothing to keep running.
 
-Dossier itself never talks to it, and cannot: it is a page in a browser, it
-has no SQL client, and [rule 1](#1-the-rules-that-never-bend) forbids it from
-opening a connection to anything at all. The file is the interface.
+This is the file route, and it predates [§4.1](#41-the-database-as-the-store):
+nothing is running, nobody is watching, a file goes in and a file comes out.
+It is what you want on a routine, or on a PC where the bridge is not welcome.
+With the bridge running you do not need it — the database already has every
+save — but `push` of an export from another machine and `pull` of a snapshot
+are still the way work moves between PCs.
 
 ```
 scripts\dossier-sql.bat init      create the database and the tables
@@ -1952,7 +1992,8 @@ model from scratch was tried, measured, and rejected on the numbers.
   Scripts cannot run from a browser store, since there is no folder for the
   runner to watch.
 - **Notifications need `http://`**, not `file://`. Use
-  `scripts\dossier-serve.bat`.
+  `scripts\dossier-bridge.bat`, which hands out the page as well as saving to
+  the database, or `scripts\dossier-serve.bat` for the page on its own.
 - **With the tab closed, nothing is queued.** Dossier schedules its own
   automatic runs, so a routine marked *runs itself* needs the tab open *and* a
   live runner. For something that must fire regardless of whether anyone is

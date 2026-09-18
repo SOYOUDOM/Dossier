@@ -6,6 +6,53 @@ holds — which is what to paste into a bug report.
 
 ---
 
+## 4.1.0 - 2026-09-18
+
+**One window.**
+
+You were starting two: `dossier-serve.bat`, because Chrome and Edge refuse
+notifications to a page opened from `file://`, and `dossier-bridge.bat`,
+because a browser has no SQL client. The bridge was already an HTTP server on
+`127.0.0.1`. It hands out the page now, and the other window is gone.
+
+```
+scripts\dossier-bridge.bat          then open http://127.0.0.1:5500/dossier.html
+```
+
+It opens that address for you the first time it runs. Bookmark it.
+
+- **The address stays the same between runs.** The bridge used to take
+  whatever port was free, which was fine for an API the page discovers
+  through `.bridge.json` and no good at all for the page itself: a browser
+  keeps your workspace folder handle per origin, and the port is part of the
+  origin, so a port that wanders means picking your folder again every
+  morning. It asks for `5500` now - the port `dossier-serve.bat` used, so
+  anyone coming from that keeps their handle and notices nothing - then the
+  next nine, then whatever is free, saying which and why
+- **The page and the API are on one origin**, which retires the CORS
+  preflight and the private-network check with it. Both are still answered,
+  because opening `dossier.html` from the folder still works
+- **Start it at login:** `dossier-bridge.bat startup "D:\Work\Dossier"`, and
+  `startup off` to undo. One `.bat` in the Startup folder - no service, no
+  scheduled task, no administrator, no PowerShell. It runs minimised and
+  opens no browser; your bookmark does that
+
+### What serving the page does not open
+
+The token still guards every route that touches the database. What is open is
+`GET` and `HEAD` of the folder `dossier.html` sits in - your clone - and only
+the file types an application is made of: `.html`, `.js`, `.css`, fonts,
+images. **`.json` is not on that list**, so a `dossier.json`, a `.bridge.json`
+or a backup cannot be served even to somebody who kept their workspace inside
+the clone. Nor can anything whose name begins with a dot, nor `..`, nor
+`backups\` or `tasks\`.
+
+`dossier-serve.bat` is still there for the page without a database, and says
+at the top that you want one window or the other rather than both. It also
+looks one folder up for `dossier.html` now, which is where it is in a clone.
+
+---
+
 ## 4.0.3 - 2026-09-18
 
 **`Could not find stored procedure 'dbo.LoadWorkspace'`.**
