@@ -3988,6 +3988,22 @@ const STRINGS = {
   GitFolderAlready: ".gitignore already covers every path Dossier writes.",
   GitFolderFailed: "Could not write .gitignore: ",
   Store: "Records kept in",
+  DiagRun: "Check the bridge",
+  DiagApp: "Dossier v{p0}",
+  DiagNoFolder: "No workspace folder is open.",
+  DiagFolder: "Folder: {p0}",
+  DiagNoHandshake: "No .bridge.json in this folder.",
+  DiagNoHandshakeFix: "The bridge has never run on THIS folder. Start it with the folder as its argument: dossier-bridge.bat \"<this folder>\"",
+  DiagBadHandshake: ".bridge.json is here but unreadable. Stop the bridge, delete it, start the bridge again.",
+  DiagHandshake: ".bridge.json says port {p0}, written {p1}",
+  DiagNoAnswer: "Nothing answered on 127.0.0.1:{p0}.",
+  DiagNoAnswerFix: "The bridge wrote that file and then stopped, or it is running on a different folder. Its window has to stay open.",
+  DiagRefused: "The bridge answered {p0} \u2014 a stale token. Reopen the workspace.",
+  DiagBridge: "Bridge is up: database {p0} on {p1}, schema {p2}",
+  DiagHolds: "The database holds {p0} record(s).",
+  DiagOldSchema: "That schema is older than this build needs \u2014 run dossier-sql.bat init.",
+  DiagUsingIt: "This workspace is reading and writing SQL Server.",
+  DiagNotUsingIt: "The bridge is up but this workspace was opened before it \u2014 reopen the folder (Menu \u2192 Workspace \u2192 Switch folder) and it will use it.",
   StoreSql: "SQL Server",
   StoreSqlWhy: "database {p0} on {p1}, through the bridge. dossier.json is written as an export.",
   StoreFile: "dossier.json",
@@ -5019,7 +5035,7 @@ const STATUSES = [
    the status bar, and clicking it copies a line you can paste into a bug
    report — build date and flow protocol included, because those are the two
    things that actually differ between copies. */
-const APP_VERSION = "4.0.1";
+const APP_VERSION = "4.0.2";
 const APP_BUILT = "2026-09-18";
 function buildLine(){
   return "Dossier v" + APP_VERSION + " \u00b7 built " + APP_BUILT +
@@ -6658,6 +6674,50 @@ function dbSayStopped(why){
       } },
     { label:L("DbHowTo"), run: () => toast(L("DbHowToSay"), { action:L("Ok") }) }
   ]);
+}
+
+/* ── why is this workspace not on SQL Server? ──────────────────────────
+   Every step of the chain, checked in order and reported by name. Written
+   because "no error and no data" is the worst thing a program can tell you,
+   and because guessing at it from a photograph of a terminal is no way to
+   find out. */
+async function dbDiagnose(){
+  const say = [];
+  const out = m => { say.push(m); };
+  out(L("DiagApp", { p0: APP_VERSION }));
+
+  if (!FS.ok || !FS.root){ out("\u2716 " + L("DiagNoFolder")); return say; }
+  out(L("DiagFolder", { p0: FS.name }));
+
+  let hand = null, raw = "";
+  try { raw = await FS.readText(FS.root, ".bridge.json"); }
+  catch(e){
+    out("\u2716 " + L("DiagNoHandshake"));
+    out("   " + L("DiagNoHandshakeFix"));
+    return say;
+  }
+  try { hand = JSON.parse(raw); }
+  catch(e){ out("\u2716 " + L("DiagBadHandshake")); return say; }
+  out("\u2713 " + L("DiagHandshake", { p0: hand.port, p1: (hand.started || "").slice(0, 19) }));
+
+  let r;
+  try {
+    r = await fetch("http://127.0.0.1:" + hand.port + "/health",
+                    { headers:{ "X-Dossier-Token": hand.token } });
+  } catch(e){
+    out("\u2716 " + L("DiagNoAnswer", { p0: hand.port }));
+    out("   " + L("DiagNoAnswerFix"));
+    out("   " + String(e && e.message || e));
+    return say;
+  }
+  if (!r.ok){ out("\u2716 " + L("DiagRefused", { p0: r.status })); return say; }
+
+  const h = await r.json();
+  out("\u2713 " + L("DiagBridge", { p0: h.database, p1: h.server, p2: h.schema }));
+  out("\u2713 " + L("DiagHolds", { p0: h.records }));
+  if (+h.schema < 5) out("\u2716 " + L("DiagOldSchema"));
+  out(DB.on ? "\u2713 " + L("DiagUsingIt") : "\u2716 " + L("DiagNotUsingIt"));
+  return say;
 }
 
 /* ═══ THE LOCAL DATABASE ═════════════════════════════════════════════════
@@ -14619,11 +14679,14 @@ async function renderModal(){
       "<dt>" + L("Records") + "</dt><dd>" + S.tasks.length + L("NextRef") + ("D-" + String((S.seq||0)+1).padStart(4,"0")) + "</dd>" +
       "<dt>" + L("Kpi_Documents") + "</dt><dd>" + S.tasks.reduce((s,t)=>s+(t.files||[]).length,0) + "</dd>" +
       "<dt>" + L("LastSaved") + "</dt><dd>" + (S.lastSaved ? stamp(S.lastSaved) : "—") + "</dd>" +
-      "<dt>" + LE("Store") + "</dt><dd>" + (DB.on
+      "<dt>" + LE("Store") + "</dt><dd>" +
+        '<button class="btn sm" id="wsDiag" style="float:right;margin-left:8px">' +
+          LE("DiagRun") + "</button>" + (DB.on
         ? "<b>" + LE("StoreSql") + "</b> \u2014 " + esc(L("StoreSqlWhy",
             { p0:(DB.info && DB.info.database) || "Dossier",
               p1:(DB.info && DB.info.server) || "" }))
-        : "<b>" + LE("StoreFile") + "</b> \u2014 " + esc(L("StoreFileWhy"))) + "</dd>" +
+        : "<b>" + LE("StoreFile") + "</b> \u2014 " + esc(L("StoreFileWhy"))) +
+        '<pre class="out" id="wsDiagOut" style="display:none;margin-top:9px"></pre></dd>' +
       "<dt>" + L("FolderAccess") + "</dt><dd>" + (HAS_FS ? L("SupportedByThisBrowser") :
         "<span style=\"color:var(--p2)\">" + L("KeptInThisBrowserInstead") + "</span>") + "</dd>" +
     "</dl>" +
@@ -15333,6 +15396,13 @@ function wireModal(){
   });
   on("wsSave", async () => { if (await saveNow()) toast(L("WrittenTo") + FS.name + "/dossier.json"); });
   on("wsReveal", () => $$("#mt button").forEach(b => { if (b.dataset.m === "help") b.click(); }));
+  on("wsDiag", async () => {
+    const box = $("wsDiagOut"); if (!box) return;
+    box.style.display = "block";
+    box.textContent = L("VaultLooking");
+    const lines = await dbDiagnose();
+    box.textContent = lines.join("\n");
+  });
   on("wsJson", () => {
     /* the same shape dossier.json has, so the machine you carry it to
        imports it without knowing it came from anywhere else */

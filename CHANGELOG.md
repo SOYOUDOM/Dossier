@@ -6,6 +6,41 @@ holds — which is what to paste into a bug report.
 
 ---
 
+## 4.0.2 - 2026-09-18
+
+**Check the bridge.**
+
+Menu -> Workspace has a button that walks the whole chain and names the step
+that failed, because "no error and no data" is the worst thing a program can
+say to somebody, and diagnosing it from a photograph of a terminal is no way
+to work.
+
+```
+Dossier v4.0.2
+Folder: Dossier V3.10.0
+x No .bridge.json in this folder.
+  The bridge has never run on THIS folder. Start it with the folder as
+  its argument: dossier-bridge.bat "<this folder>"
+```
+
+It reports, in order: which build of Dossier this is, which folder is open,
+whether the handshake is there and what it says, whether anything answers on
+that port, which database and schema version the bridge is on, how many
+records it holds, and whether this workspace is actually using it. Each
+failure carries the one thing to do about it.
+
+The three shapes it tells apart, all tested in headless Chromium against a
+stub bridge:
+
+- **no handshake** - the bridge has never run on this folder, which is what
+  happens when it is started in the clone
+- **handshake but nothing answering** - it ran here and then stopped, or it
+  is running on a different folder now
+- **bridge up, workspace not using it** - the folder was opened before the
+  bridge started; reopening it is all that is needed
+
+---
+
 ## 4.0.1 - 2026-09-18
 
 **"No error, and nothing in the tables" was the bug.**
