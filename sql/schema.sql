@@ -417,5 +417,18 @@ GO
 SELECT  SchemaVersion = (SELECT Version FROM dbo.SchemaVersion WHERE Id = 1),
         Tables        = (SELECT COUNT(*) FROM sys.tables WHERE schema_id = SCHEMA_ID('dbo')),
         Views         = (SELECT COUNT(*) FROM sys.views  WHERE schema_id = SCHEMA_ID('dbo')),
-        Snapshots     = (SELECT COUNT(*) FROM dbo.Snapshot);
+        Snapshots     = (SELECT COUNT(*) FROM dbo.Snapshot),
+        Records       = (SELECT COUNT(*) FROM dbo.Record);
+
+/* Empty tables look like a broken install and are not one: this file makes
+   the shape, and nothing else. Say so rather than leaving somebody to open
+   SSMS and wonder where their work went. */
+IF NOT EXISTS (SELECT 1 FROM dbo.Snapshot)
+BEGIN
+    PRINT '';
+    PRINT '  The tables are here and they are empty. Creating them loads nothing.';
+    PRINT '  To put your workspace in:';
+    PRINT '     dossier-sql.bat push "<the folder you keep records in>\dossier.json"';
+    PRINT '  Not sure which file that is?   dossier-sql.bat find';
+END
 GO

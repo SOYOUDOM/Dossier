@@ -55,6 +55,19 @@ BEGIN
     RETURN;
 END
 
+/* What the file holds, counted before anything is written. If this says 0
+   records, the loader is working and the file is empty - which is worth
+   knowing at a glance, because the two look identical from SSMS. */
+DECLARE @inFile int, @inBooks int, @inInc int;
+SELECT @inFile  = COUNT(*) FROM OPENJSON(@doc, '$.tasks');
+SELECT @inBooks = COUNT(*) FROM OPENJSON(@doc, '$.settings.runbooks');
+SELECT @inInc   = COUNT(*) FROM OPENJSON(@doc, '$.incidents');
+PRINT 'the file holds ' + CAST(@inFile AS varchar(10)) + ' record(s), '
+      + CAST(@inBooks AS varchar(10)) + ' runbook(s), '
+      + CAST(@inInc AS varchar(10)) + ' incident(s)';
+IF @inFile = 0
+    PRINT 'WARNING: no records in that file. Is it the workspace you meant?';
+
 BEGIN TRAN;
 
 INSERT dbo.Snapshot (SavedAt, Records, Bytes, Source, Doc)

@@ -18,6 +18,7 @@ rem    dossier-sql.bat pull [out]      newest snapshot back out as JSON
 rem    dossier-sql.bat pull --replace  ...and put it back as dossier.json
 rem    dossier-sql.bat check           what is in there
 rem    dossier-sql.bat history         every push, newest first
+rem    dossier-sql.bat find            where your dossier.json files are
 rem
 rem  With no argument it does: init, then push. That is the one you want on a
 rem  routine - Dossier can run this by itself every evening, and then the day
@@ -69,13 +70,14 @@ if not exist "%SQLDIR%\schema.sql" (
 echo   server   %SERVER%
 echo   database %DB%
 
+if /i "%CMD%"=="find"    goto :find
 if /i "%CMD%"=="check"   goto :check
 if /i "%CMD%"=="history" goto :history
 if /i "%CMD%"=="pull"    goto :pull
 if /i "%CMD%"=="init"    goto :init
 if /i "%CMD%"=="push"    goto :push
 if /i "%CMD%"=="all"     goto :push
-echo   Unknown command "%CMD%". Try: init, push, pull, check, history.
+echo   Unknown command "%CMD%". Try: init, push, pull, check, history, find.
 exit /b 2
 
 rem ---------------------------------------------------------------------------
@@ -101,6 +103,8 @@ sqlcmd -S "%SERVER%" -b -E -i "%SQLDIR%\schema.sql" -v db="%DB%"
 if errorlevel 1 goto :failed
 sqlcmd -S "%SERVER%" -d "%DB%" -b -E -i "%SQLDIR%\push.sql" -v file="%JSON%"
 if errorlevel 1 goto :failed
+echo.
+echo   Loaded. To see it:  dossier-sql.bat check
 exit /b 0
 
 rem ---------------------------------------------------------------------------
@@ -134,6 +138,21 @@ if exist "%ROOT%\dossier-before-pull.json" echo   kept     %ROOT%\dossier-before
 copy /y "%OUT%" "%JSON%" >nul
 echo   replaced %JSON%
 echo   Close and reopen Dossier to pick it up.
+exit /b 0
+
+rem ---------------------------------------------------------------------------
+rem  Which file to push is the question everybody has, and the answer is
+rem  never in the clone - the clone deliberately has no dossier.json in it.
+:find
+echo.
+echo   Looking for dossier.json under "%USERPROFILE%" ...
+echo.
+for /f "delims=" %%F in ('dir /s /b "%USERPROFILE%\dossier.json" 2^>nul') do @(
+  for %%S in ("%%F") do @echo   %%~zS bytes   %%F
+)
+echo.
+echo   Push the one in the folder you pick in Dossier's "Choose workspace folder":
+echo       dossier-sql.bat push "<that path>"
 exit /b 0
 
 rem ---------------------------------------------------------------------------

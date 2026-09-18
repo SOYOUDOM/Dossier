@@ -6,6 +6,32 @@ holds — which is what to paste into a bug report.
 
 ---
 
+## 3.14.1 - 2026-09-18
+
+**Empty tables now say why they are empty.**
+
+`init` builds the tables. `push` puts data in them. Nothing said so, which
+left the obvious conclusion - that a database full of empty tables is a
+broken one - standing unchallenged.
+
+- `init` ends by saying it in words when there is nothing loaded yet, and
+  names the command that loads it
+- `push` prints what it read out of the **file** before it writes anything:
+  records, runbooks, incidents. A zero is now visibly the file's, not the
+  loader's - from SSMS the two look identical
+- `push` ends with the next command rather than silence
+- **`dossier-sql.bat find`** lists every `dossier.json` under your user
+  profile with its size, because "which file do I push" is the question
+  everybody has and the answer is never the clone - the clone has no
+  `dossier.json` in it, on purpose, since 3.12.2
+
+The checker earned its place this round: the first cut of the "what the file
+holds" line had subqueries inside a `PRINT` - the identical mistake to the
+one in 3.13.2 - and `sql/check-reserved-words.py` caught it before it left
+the machine.
+
+---
+
 ## 3.14.0 - 2026-09-18
 
 **The whole workspace is in the database now, not just the records.**
