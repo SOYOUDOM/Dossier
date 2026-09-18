@@ -6,6 +6,29 @@ holds — which is what to paste into a bug report.
 
 ---
 
+## 3.13.1 - 2026-09-18
+
+**The LocalDB schema would not build.**
+
+`FILE` is a reserved word in T-SQL and `dbo.Script` had a column called
+`File`, so `dossier-sql.bat init` stopped at *Incorrect syntax near the
+keyword 'File'* - after creating eight of the ten tables, with the version
+number still at 0, which meant the next run collided with its own leftovers.
+
+- The column is `FileName` now, and the schema is checked against the
+  reserved-word list rather than against my memory of it
+- **Each migration is all-or-nothing**: wrapped in a transaction with a
+  rollback, so a step that fails leaves the database exactly as it was
+- **Each object is created only if it is missing**, so a database left
+  half-built by the broken version comes forward on the next run without
+  being dropped first
+- The compatibility level is lifted to 130 if it is lower, because `OPENJSON`
+  - which the whole load is built on - is refused below it
+
+Nothing else changed: if `init` worked for you, this does nothing.
+
+---
+
 ## 3.13.0 — 2026-09-18
 
 **Three copies of your work, and a database if you want one.**

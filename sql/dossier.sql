@@ -49,6 +49,18 @@ GO
 USE [$(db)];
 GO
 
+/* OPENJSON - which the whole load is built on - is refused below
+   compatibility level 130. A database created on any modern LocalDB
+   inherits 150 or 160 from model and this does nothing; one restored from
+   somewhere older would fail at the first shred without it. */
+IF (SELECT compatibility_level FROM sys.databases WHERE name = DB_NAME()) < 130
+BEGIN
+    PRINT 'raising compatibility level to 130 for OPENJSON';
+    DECLARE @lift nvarchar(200) = N'ALTER DATABASE [' + DB_NAME() + N'] SET COMPATIBILITY_LEVEL = 130';
+    EXEC (@lift);
+END
+GO
+
 /* -- migrations -------------------------------------------------------------
    One table with one number in it. Every step below is wrapped in a test of
    that number and bumps it, so this file is the whole migration history and
@@ -74,7 +86,17 @@ GO
 IF (SELECT Version FROM dbo.SchemaVersion WHERE Id = 1) < 1
 BEGIN
     PRINT 'migrating to 1: tables';
+    /* All of it or none of it. The first cut of this file had a column
+       called File - a reserved word - and fell over halfway through, leaving
+       eight tables behind and the version still at 0, so the next run
+       collided with its own leftovers. DDL is transactional here; use it.
+       The guards above each CREATE are the belt to that brace: they let a
+       database left in that state by the broken version come forward without
+       being dropped first. */
+    BEGIN TRY
+    BEGIN TRAN;
 
+    IF OBJECT_ID('dbo.Snapshot') IS NULL
     CREATE TABLE dbo.Snapshot (
         SnapshotId  int           IDENTITY(1,1) CONSTRAINT PK_Snapshot PRIMARY KEY,
         TakenAt     datetime2(0)  NOT NULL CONSTRAINT DF_Snapshot_At DEFAULT (SYSUTCDATETIME()),
@@ -85,6 +107,7 @@ BEGIN
         Doc         nvarchar(max) NOT NULL
     );
 
+    IF OBJECT_ID('dbo.Record') IS NULL
     CREATE TABLE dbo.Record (
         Id           nvarchar(40)  NOT NULL CONSTRAINT PK_Record PRIMARY KEY,
         Code         nvarchar(20)  NULL,
@@ -113,10 +136,17 @@ BEGIN
         FromRoutine  nvarchar(60)  NULL,
         ForDate      nvarchar(30)  NULL
     );
-    CREATE INDEX IX_Record_Status ON dbo.Record (Status) INCLUDE (Due, Priority);
-    CREATE INDEX IX_Record_Due    ON dbo.Record (Due)    INCLUDE (Status);
-    CREATE INDEX IX_Record_System ON dbo.Record (System);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_Record_Status'
+                   AND object_id = OBJECT_ID('dbo.Record'))
+    CREATE INDEX IX_Record_Status  ON dbo.Record (Status) INCLUDE (Due, Priority);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_Record_Due'
+                   AND object_id = OBJECT_ID('dbo.Record'))
+    CREATE INDEX IX_Record_Due     ON dbo.Record (Due)    INCLUDE (Status);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_Record_System'
+                   AND object_id = OBJECT_ID('dbo.Record'))
+    CREATE INDEX IX_Record_System  ON dbo.Record (System);
 
+    IF OBJECT_ID('dbo.RecordLog') IS NULL
     CREATE TABLE dbo.RecordLog (
         LogId     int           IDENTITY(1,1) CONSTRAINT PK_RecordLog PRIMARY KEY,
         RecordId  nvarchar(40)  NOT NULL,
@@ -124,8 +154,11 @@ BEGIN
         Kind      nvarchar(30)  NULL,
         Text      nvarchar(max) NULL
     );
-    CREATE INDEX IX_RecordLog_Record ON dbo.RecordLog (RecordId, At);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_RecordLog_Record'
+                   AND object_id = OBJECT_ID('dbo.RecordLog'))
+    CREATE INDEX IX_RecordLog_Record  ON dbo.RecordLog (RecordId, At);
 
+    IF OBJECT_ID('dbo.RecordFile') IS NULL
     CREATE TABLE dbo.RecordFile (
         FileId    int           IDENTITY(1,1) CONSTRAINT PK_RecordFile PRIMARY KEY,
         RecordId  nvarchar(40)  NOT NULL,
@@ -134,8 +167,11 @@ BEGIN
         Type      nvarchar(120) NULL,
         Added     datetime2(0)  NULL
     );
-    CREATE INDEX IX_RecordFile_Record ON dbo.RecordFile (RecordId);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_RecordFile_Record'
+                   AND object_id = OBJECT_ID('dbo.RecordFile'))
+    CREATE INDEX IX_RecordFile_Record  ON dbo.RecordFile (RecordId);
 
+    IF OBJECT_ID('dbo.RecordStep') IS NULL
     CREATE TABLE dbo.RecordStep (
         StepId    int           IDENTITY(1,1) CONSTRAINT PK_RecordStep PRIMARY KEY,
         RecordId  nvarchar(40)  NOT NULL,
@@ -143,20 +179,25 @@ BEGIN
         Text      nvarchar(max) NULL,
         Done      bit           NULL
     );
-    CREATE INDEX IX_RecordStep_Record ON dbo.RecordStep (RecordId, Ordinal);
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_RecordStep_Record'
+                   AND object_id = OBJECT_ID('dbo.RecordStep'))
+    CREATE INDEX IX_RecordStep_Record  ON dbo.RecordStep (RecordId, Ordinal);
 
+    IF OBJECT_ID('dbo.RecordTag') IS NULL
     CREATE TABLE dbo.RecordTag (
         RecordId  nvarchar(40)  NOT NULL,
         Tag       nvarchar(80)  NOT NULL,
         CONSTRAINT PK_RecordTag PRIMARY KEY (RecordId, Tag)
     );
 
+    IF OBJECT_ID('dbo.RecordBlocker') IS NULL
     CREATE TABLE dbo.RecordBlocker (
         RecordId   nvarchar(40) NOT NULL,
         BlockedBy  nvarchar(40) NOT NULL,
         CONSTRAINT PK_RecordBlocker PRIMARY KEY (RecordId, BlockedBy)
     );
 
+    IF OBJECT_ID('dbo.Routine') IS NULL
     CREATE TABLE dbo.Routine (
         Id        nvarchar(40)  NOT NULL CONSTRAINT PK_Routine PRIMARY KEY,
         Title     nvarchar(400) NULL,
@@ -165,19 +206,28 @@ BEGIN
         Doc       nvarchar(max) NULL          /* the rest of it, as it came */
     );
 
+    IF OBJECT_ID('dbo.Script') IS NULL
     CREATE TABLE dbo.Script (
         Id        nvarchar(40)  NOT NULL CONSTRAINT PK_Script PRIMARY KEY,
         Name      nvarchar(200) NULL,
-        File      nvarchar(400) NULL,
+        FileName  nvarchar(400) NULL,   /* not "File": FILE is a reserved word */
         Descr     nvarchar(max) NULL
     );
 
+    IF OBJECT_ID('dbo.Setting') IS NULL
     CREATE TABLE dbo.Setting (
         [Key]     nvarchar(120) NOT NULL CONSTRAINT PK_Setting PRIMARY KEY,
         Value     nvarchar(max) NULL
     );
 
     UPDATE dbo.SchemaVersion SET Version = 1, AppliedAt = SYSUTCDATETIME() WHERE Id = 1;
+    COMMIT;
+    END TRY
+    BEGIN CATCH
+        IF XACT_STATE() <> 0 ROLLBACK;
+        PRINT 'migration 1 rolled back; the database is as it was';
+        THROW;
+    END CATCH
 END
 GO
 
@@ -353,7 +403,7 @@ FROM OPENJSON(@doc, '$.routines') WITH (
         autoRun nvarchar(10) '$.autoRun', doc nvarchar(max) '$' AS JSON) AS x
 WHERE x.id IS NOT NULL;
 
-INSERT dbo.Script (Id, Name, File, Descr)
+INSERT dbo.Script (Id, Name, FileName, Descr)
 SELECT x.id, x.name, x.file, x.descr
 FROM OPENJSON(@doc, '$.scripts') WITH (
         id nvarchar(40) '$.id', name nvarchar(200) '$.name',
