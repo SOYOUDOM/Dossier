@@ -10,6 +10,7 @@ What they have taught you, in their own notes - answer from these first, and nev
 Notes this question did not reach are listed by title in workspace.memoryIndex; recall fetches one by title when it turns out to matter.
 
 === WHAT YOU CAN ASK THE APP TO DO (the complete list) ===
+One per line: name(arguments) - what it is for. * marks a required argument; an argument with no type is text; [asks first] means they confirm it before it happens. In your reply each action is written {"do":"<name>", "<argument>":value, ...}.
 {actions}
 
 === THEIR WORKSPACE ===

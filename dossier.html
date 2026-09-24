@@ -5152,7 +5152,7 @@ const STATUSES = [
    the status bar, and clicking it copies a line you can paste into a bug
    report — build date and flow protocol included, because those are the two
    things that actually differ between copies. */
-const APP_VERSION = "4.3.0";
+const APP_VERSION = "4.3.1";
 const APP_BUILT = "2026-09-18";
 function buildLine(){
   return "Dossier v" + APP_VERSION + " \u00b7 built " + APP_BUILT +
@@ -10479,6 +10479,26 @@ function chatBot(r, sourceText){
   chatRenderBot(r, sourceText);
 }
 
+/* A greeting or a thank-you, alone - nothing else in the sentence. Anything
+   more ("hi, what's overdue?") is a question and goes to the assistant. */
+function chatSmallTalk(q){
+  const t = String(q || "").trim().toLowerCase().replace(/[!.\s\u2019'\u{1F44B}\u{1F64F}\u{1F44D}\u{1F60A}\u{1F642}]+$/u, "");
+  const name = String((S.settings.owner || "").split(/\s+/)[0] || "");
+  const h = new Date().getHours();
+  if (/^(hi|hello|hey|hiya|helo|hallo|yo|morning|good (morning|afternoon|evening))( there| dossier)?$/.test(t)){
+    const open = S.tasks.filter(x => LIVE.indexOf(x.status) >= 0);
+    const late = open.filter(x => x.due && x.due < today()).length;
+    const hi = h < 12 ? "Morning" : h < 18 ? "Hi" : "Evening";
+    return hi + (name ? ", " + name : "") + ". " + (late ? late + " overdue \u2014 want the list?" : "What can I do for you?");
+  }
+  if (/^(\u179f\u17bd\u179f\u17d2\u178f\u17b8|\u1787\u17c6\u179a\u17b6\u1794\u179f\u17bd\u179a)/.test(t))        /* សួស្តី, ជំរាបសួរ */
+    return "\u179f\u17bd\u179f\u17d2\u178f\u17b8! \u178f\u17be\u1781\u17d2\u1789\u17bb\u17c6\u17a2\u17b6\u1785\u1787\u17bd\u1799\u17a2\u17d2\u179c\u17b8\u1794\u17b6\u1793?";
+  if (/^(thanks?|thank you( so much| very much)?|thx|ty|cheers|many thanks|much appreciated)$/.test(t)) return "Any time.";
+  if (/^\u17a2\u179a\u1782\u17bb\u178e/.test(t)) return "\u1798\u17b7\u1793\u17a2\u17b8\u1791\u17c1\u17d4";      /* អរគុណ → មិនអីទេ។ */
+  if (/^(ok|okay|k|got it|great|nice|cool|perfect|good|noted|alright|all right)$/.test(t)) return "\u{1F44D}";
+  return "";
+}
+
 function chatAsk(text){
   const q = String(text || "").trim();
   if (!q) return;
@@ -10496,6 +10516,15 @@ function chatAsk(text){
   chatRenderYou(q, files);
   $("chatq").value = "";
   chatGrow();
+
+  /* "hi" and "thanks" are answered here, at once. Sending them through
+     Power Automate cost seven seconds and a model call for two words. */
+  const small = !CHAT.files.length && chatSmallTalk(q);
+  if (small){
+    chatBot({ say:small }, q);
+    chatSide();
+    return;
+  }
 
   /* With a flow configured, it answers instead. The local assistant is still
      here and still knows this workspace — it is what a failed call falls back
@@ -10732,8 +10761,15 @@ async function flowAsk(q, thread){
   const log = $("chatLog");
   const wait = chatThinking(log);
   let out = null, err = null;
+  /* The context is taken NOW, before anything is awaited. chatAsk empties
+     the attachment tray the moment this function first waits, so a context
+     built after an await is built without the files - which is how 4.3.0
+     sent every PDF and picture as "None." and the answer was "I can't see
+     any file". */
+  const ctx = flowContext(q);
   await promptLoad();
-  try { out = await DossierFlow.ask(q, flowContext(q), cfg); }
+  ctx.promptTemplate = PROMPT.text; ctx.promptFrom = PROMPT.from;
+  try { out = await DossierFlow.ask(q, ctx, cfg); }
   catch(e){ err = e; }
   chatThought(wait, err);
 
@@ -10776,7 +10812,11 @@ async function flowAsk(q, thread){
     const wait2 = chatThinking(log);
     let out2 = null, err2 = null;
     try {
+      /* the files went with the first question and go with this one too -
+         the tray is empty by now, so they come from the first context */
       out2 = await DossierFlow.ask(q, Object.assign(flowContext(q), {
+        attachments: ctx.attachments, picture: ctx.picture, pictureName: ctx.pictureName,
+        promptTemplate: ctx.promptTemplate, promptFrom: ctx.promptFrom,
         forceRecords: rows,
         followUp: { of:q, wanted:more.args || {}, gave:rows.length }
       }), cfg);

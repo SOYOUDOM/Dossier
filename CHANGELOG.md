@@ -6,6 +6,28 @@ holds — which is what to paste into a bug report.
 
 ---
 
+## 4.3.1 - 2026-09-24
+
+**Attachments reached the model as "None." - fixed.** 4.3.0 read the prompt
+file at the start of every question, and that read waits a moment. The chat
+empties the attachment tray the moment the question starts waiting, so the
+request was built after the files were gone: every PDF and picture arrived
+as nothing, and the answer was "I can't see any file". The request is now
+built before anything is awaited, and the files go with the second look
+(needRecords) too - they had been missing from that one for longer.
+
+- **"hi", "hello", "thanks", "ok", សួស្តី, អរគុណ are answered at once, by
+  Dossier**, with no call to Power Automate - they were taking seven seconds.
+  A greeting says how many records are overdue. Anything more than the
+  greeting alone ("hi, what's overdue?") still goes to the assistant.
+- **The list of actions in the prompt is a third shorter**: one line per
+  action instead of the JSON, with the full description kept for the
+  actions whose details decide whether a reply is right. The filled-in
+  prompt for the sample request went from 41.5 KB to 36 KB; the prompt
+  explains the notation in one line.
+
+---
+
 ## 4.3.0 - 2026-09-24
 
 **The prompt is a file. Power Automate no longer holds it.**
