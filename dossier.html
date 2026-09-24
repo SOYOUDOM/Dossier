@@ -2555,6 +2555,43 @@ body.chatting .pet[data-corner="br"],body.chatting .pet[data-corner="tr"]{
 .aifoot{margin-top:14px;font-size:10.5px;color:var(--ink-3);line-height:1.6}
 .aifoot b{font-weight:600;color:var(--ink-2)}
 .schsum .warn2{ display:block;margin-top:5px;color:var(--p2);font-size:11px;line-height:1.55 }
+/* ── rich text: the long boxes, Telegram-style ──────────────────────────── */
+.rtw{position:relative}
+.rte{min-height:84px;max-height:62vh;overflow:auto;white-space:pre-wrap;word-break:break-word;
+  line-height:1.65;cursor:text}
+.rte.mono{font-family:var(--f-mono);font-size:11.5px}
+.rte:empty::before{content:attr(data-ph);color:var(--ink-3);pointer-events:none}
+.rte > div, .rtv > div{min-height:1.65em}
+.rte b, .rtv b{font-weight:700}
+.rte code, .rtv code{font-family:var(--f-mono);font-size:.92em;background:var(--paper-3);
+  border:1px solid var(--rule);border-radius:4px;padding:0 4px;color:var(--ink)}
+.rte pre, .rtv pre{font-family:var(--f-mono);font-size:11.5px;line-height:1.55;background:var(--paper-3);
+  border:1px solid var(--rule);border-left:3px solid var(--accent);border-radius:6px;
+  padding:8px 10px;margin:4px 0;white-space:pre-wrap;overflow-x:auto}
+.rte blockquote, .rtv blockquote{margin:4px 0;padding:2px 0 2px 10px;border-left:3px solid var(--accent);
+  color:var(--ink-2);background:var(--accent-soft);border-radius:0 6px 6px 0}
+.rte ul, .rte ol, .rtv ul, .rtv ol{margin:2px 0;padding-left:22px}
+.rte a, .rtv a{color:var(--accent);text-decoration:underline}
+.rte .spoiler{background:repeating-linear-gradient(135deg,var(--paper-3) 0 4px,var(--rule) 4px 8px);
+  border-radius:3px;padding:0 2px}
+.rtv .spoiler{background:var(--ink-2);color:transparent;border-radius:3px;cursor:pointer;
+  transition:color .15s,background .15s;user-select:none}
+.rtv .spoiler.shown{background:var(--paper-3);color:inherit;user-select:text}
+.rtv{white-space:pre-wrap;word-break:break-word;line-height:1.6}
+@media print{.rtv .spoiler{color:inherit;background:none;border-bottom:1px dotted currentColor}}
+.rtaa{position:absolute;right:6px;bottom:6px;border:1px solid var(--rule);background:var(--paper);
+  color:var(--ink-3);border-radius:6px;font:600 10.5px/1 var(--f-ui, inherit);padding:4px 6px;cursor:pointer;opacity:.55}
+.rtw:hover .rtaa, .rtw:focus-within .rtaa{opacity:1}
+.rtaa:hover{color:var(--accent);border-color:var(--accent)}
+.rtbar{position:fixed;z-index:9999;display:none;gap:2px;padding:4px;border-radius:10px;
+  background:var(--ink);color:var(--paper);box-shadow:0 8px 28px rgba(0,0,0,.28);align-items:center}
+.rtbar.on{display:flex}
+.rtbar button{all:unset;cursor:pointer;min-width:26px;height:26px;border-radius:6px;display:grid;place-items:center;
+  font:600 12.5px/1 var(--f-ui, system-ui);color:var(--paper);padding:0 5px}
+.rtbar button:hover, .rtbar button.on{background:rgba(255,255,255,.16)}
+.rtbar .sep{width:1px;height:18px;background:rgba(255,255,255,.22);margin:0 3px}
+.rtbar input{all:unset;width:220px;height:26px;padding:0 8px;border-radius:6px;background:rgba(255,255,255,.12);
+  color:var(--paper);font:12px/26px var(--f-ui, system-ui)}
 </style>
 </head>
 <body>
@@ -4051,6 +4088,8 @@ const STRINGS = {
   DbHistoryGo: "Restore it",
   DbHistoryDl: "Download",
   DbHistoryDone: "Restored {n} record(s) from {p0}.",
+  RtFormat: "Formatting \u2014 or select text. Ctrl+B, Ctrl+I, Ctrl+U; **bold**, _italic_, `code`, ``` for a block, > for a quote.",
+  RtBadLink: "That is not a web address. Links can be http, https or mailto.",
   Ok: "Right",
   ThatFileIsTooBig: "{p0} is too large to file.",
   CouldNotFileThatDocument: "That document could not be filed: ",
@@ -14481,7 +14520,7 @@ function renderDrawer(){
         const note = pt.notes || (pt.log.filter(l => l.kind !== "status").slice(-1)[0] || {}).text || L("NoNotesWereKept");
         return '<div class="prior" data-goto="' + pt.id + '"><div class="ph"><b>' + esc(pt.title) + "</b>" +
           "<em>" + Math.round(p.score*100) + "% · " + stMeta(pt.status).label + "</em></div>" +
-          '<div class="pn">' + esc(note) + "</div>" +
+          '<div class="pn rtv">' + mdHtml(note) + "</div>" +
           '<div style="margin-top:6px">' + chips(pt, true) + "</div></div>";
       }).join(""));
   }
@@ -17306,7 +17345,7 @@ function printRecord(t){
   h += "</dl>";
   if ((t.checklist||[]).length)
     h += "<h2>" + L("Steps") + "</h2><pre>" + esc(t.checklist.map(c => "[" + (c.done ? "x" : " ") + "] " + c.text).join("\n")) + "</pre>";
-  if (t.notes) h += "<h2>" + L("Label_Notes") + "</h2><pre>" + esc(t.notes) + "</pre>";
+  if (t.notes) h += "<h2>" + L("Label_Notes") + '</h2><div class="rtv">' + mdHtml(t.notes) + "</div>";
   if ((t.files||[]).length)
     h += "<h2>" + L("Kpi_Documents") + "</h2><pre>" + esc(t.files.map(f => f.name + "  " + bytes(f.size||0)).join("\n")) + "</pre>";
   if ((t.log||[]).length)
@@ -17399,6 +17438,602 @@ function showBanner(html, buttons, info){
   $$("#bannerAct [data-bb]").forEach(b => b.onclick = () => (buttons[+b.dataset.bb].run || function(){})());
 }
 function hideBanner(){ $("banner").classList.remove("on"); }
+
+/* ═══ RICH TEXT — the long boxes, formatted the way Telegram does it ═════
+   Notes, the message kept with a new record, what the assistant has been
+   taught, a system's facts and quirks, a runbook's steps and escalation.
+   Select some text and a bar appears over it: bold, italic, underline,
+   strike, code, a code block, a quote, a link, a spoiler, lists. The keys
+   work too - Ctrl+B, Ctrl+I, Ctrl+U, Ctrl+Shift+X strike, Ctrl+Shift+M
+   code, Ctrl+Shift+P spoiler, Ctrl+K link while text is selected - and so
+   does typing the marks themselves: **bold**, _italic_, __underline__,
+   ~~strike~~, ||spoiler||, `code`, ``` for a block, "> " for a quote,
+   "- " or "1. " for a list.
+
+   WHAT IS STORED IS TEXT. Markdown, in the same field as before - so rule 3
+   holds (open dossier.json in Notepad and a note still reads as a note), the
+   assistant reads it as it reads anything, the database keeps it in the
+   same column, and a workspace written by an older Dossier opens unchanged.
+
+   It is not a new control. It sits on top of the textarea that was always
+   there, keeps that textarea's value current, and fires the same input and
+   change events on it, so every piece of code that read a note before reads
+   it the same way now. Setting the textarea's value from code redraws it.
+
+   Nothing it renders is trusted. Every character is escaped before a tag is
+   made, links are drawn only for http, https and mailto, and the one thing
+   pasted in is plain text. */
+const RT = (() => {
+  const SAFE_URL = /^(https?:\/\/|mailto:)/i;
+  const WHERE = 'textarea[data-f="notes"], #inNotes, textarea.memb, textarea[data-pff="facts"], ' +
+                'textarea[data-pff="quirks"], textarea[data-rbf="steps"], textarea[data-rbf="escalation"]';
+  /* one line per item, parsed line by line elsewhere: inline marks only */
+  const LINES_ONLY = 'textarea[data-rbf="steps"]';
+  const VALUE = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, "value");
+
+  /* ── Markdown → HTML: the editor's content, and every note shown ────── */
+  function inline(src){
+    const codes = [], links = [];
+    let t = String(src)
+      .replace(/`([^`\n]+)`/g, (m, c) => { codes.push(c); return "\u0000" + (codes.length - 1) + "\u0000"; })
+      .replace(/\[([^\]\n]+)\]\(([^)\s]+)\)/g, (m, x, u) => { links.push([x, u]); return "\u0001" + (links.length - 1) + "\u0001"; });
+    t = esc(t)
+      .replace(/\*\*([^*\n]+?)\*\*/g, "<b>$1</b>")
+      .replace(/__([^_\n]+?)__/g, "<u>$1</u>")
+      .replace(/(^|[^\w])_([^_\n]+?)_(?![\w])/g, "$1<i>$2</i>")
+      .replace(/~~([^~\n]+?)~~/g, "<s>$1</s>")
+      .replace(/\|\|([^|\n]+?)\|\|/g, '<span class="spoiler">$1</span>');
+    t = t.replace(/\u0001(\d+)\u0001/g, (m, i) => {
+      const x = links[+i][0], u = links[+i][1];
+      return SAFE_URL.test(u)
+        ? '<a href="' + esc(u) + '" target="_blank" rel="noopener noreferrer">' + inline(x) + "</a>"
+        : inline(x) + " (" + esc(u) + ")";
+    });
+    return t.replace(/\u0000(\d+)\u0000/g, (m, i) => "<code>" + esc(codes[+i]) + "</code>");
+  }
+  function toHtml(md){
+    const lines = String(md == null ? "" : md).replace(/\r\n?/g, "\n").replace(/[\u0000\u0001]/g, "").split("\n");
+    let out = "", i = 0;
+    const run = (re) => { const a = []; while (i < lines.length && re.test(lines[i])) a.push(lines[i++]); return a; };
+    while (i < lines.length){
+      const l = lines[i], fence = l.match(/^```\s*([\w#+.-]*)\s*$/);
+      if (fence){
+        const body = []; i++;
+        while (i < lines.length && !/^```\s*$/.test(lines[i])) body.push(lines[i++]);
+        i++;
+        out += '<pre data-lang="' + esc(fence[1]) + '">' + esc(body.join("\n")) + "</pre>";
+      } else if (/^>/.test(l)){
+        out += "<blockquote>" + run(/^>/).map(x => x.replace(/^>\s?/, ""))
+          .map(x => "<div>" + (x ? inline(x) : "<br>") + "</div>").join("") + "</blockquote>";
+      } else if (/^\s*[-*•]\s+/.test(l)){
+        out += "<ul>" + run(/^\s*[-*•]\s+/).map(x => "<li>" + inline(x.replace(/^\s*[-*•]\s+/, "")) + "</li>").join("") + "</ul>";
+      } else if (/^\s*\d+[.)]\s+/.test(l)){
+        out += "<ol>" + run(/^\s*\d+[.)]\s+/).map(x => "<li>" + inline(x.replace(/^\s*\d+[.)]\s+/, "")) + "</li>").join("") + "</ol>";
+      } else {
+        out += "<div>" + (l ? inline(l) : "<br>") + "</div>";
+        i++;
+      }
+    }
+    return out;
+  }
+
+  /* ── the editor's DOM → Markdown ───────────────────────────────────── */
+  const BLOCK = /^(DIV|P|PRE|BLOCKQUOTE|UL|OL|LI|H[1-6])$/;
+  function wrap(mark, s){
+    if (!s.trim()) return s;
+    const m = s.match(/^(\s*)([\s\S]*?)(\s*)$/);
+    return m[1] + mark + m[2] + mark + m[3];
+  }
+  function inl(n){
+    if (n.nodeType === 3) return n.nodeValue.replace(/ /g, " ").replace(/​/g, "");
+    if (n.nodeType !== 1) return "";
+    const kids = () => Array.from(n.childNodes).map(inl).join("");
+    switch (n.nodeName){
+      case "BR": return "\n";
+      case "B": case "STRONG": return wrap("**", kids());
+      case "I": case "EM": return wrap("_", kids());
+      case "U": return wrap("__", kids());
+      case "S": case "STRIKE": case "DEL": return wrap("~~", kids());
+      case "CODE": return wrap("`", n.textContent.replace(/`/g, "'"));
+      case "A": {
+        const h = n.getAttribute("href") || "", x = kids();
+        return SAFE_URL.test(h) && x.trim() ? "[" + x + "](" + h + ")" : x;
+      }
+      case "SPAN": case "FONT": {
+        let s = kids();
+        if (n.classList && n.classList.contains("spoiler")) return wrap("||", s);
+        const st = n.style || {};
+        if (/bold|[6-9]00/.test(st.fontWeight || "")) s = wrap("**", s);
+        if (st.fontStyle === "italic") s = wrap("_", s);
+        const deco = (st.textDecorationLine || st.textDecoration || "");
+        if (/underline/.test(deco)) s = wrap("__", s);
+        if (/line-through/.test(deco)) s = wrap("~~", s);
+        return s;
+      }
+      default: return kids();
+    }
+  }
+  function linesOf(el){
+    const lines = []; let cur = "", started = false;
+    const kids = Array.from(el.childNodes).filter(k => !(k.nodeType === 3 && !k.nodeValue.length));
+    kids.forEach(k => {
+      if (k.nodeType === 1 && BLOCK.test(k.nodeName)){
+        if (started){ lines.push(cur); cur = ""; started = false; }
+        lines.push.apply(lines, blockLines(k));
+      } else if (k.nodeName === "BR"){
+        /* a <br> ends the line it is on. One that ends its block is the
+           browser's placeholder, and adds no line of its own - which falls
+           out of pushing only what came before it */
+        lines.push(cur);
+        cur = ""; started = false;
+      } else {
+        const s = inl(k);
+        if (s.indexOf("\n") >= 0){
+          const parts = (cur + s).split("\n");
+          cur = parts.pop();
+          lines.push.apply(lines, parts);
+        } else cur += s;
+        started = true;
+      }
+    });
+    if (started || !lines.length) lines.push(cur);
+    return lines;
+  }
+  function blockLines(el){
+    switch (el.nodeName){
+      case "PRE": {
+        const lang = (el.getAttribute("data-lang") || "").replace(/[^\w#+.-]/g, "");
+        return ["```" + lang].concat(el.textContent.replace(/​/g, "").replace(/\n$/, "").split("\n"), ["```"]);
+      }
+      case "BLOCKQUOTE": return linesOf(el).map(x => x ? "> " + x : ">");
+      case "UL": case "OL": {
+        const out = [];
+        Array.from(el.children).forEach((li, i) => {
+          const ls = linesOf(li), mark = el.nodeName === "UL" ? "- " : (i + 1) + ". ";
+          ls.forEach((x, j) => out.push(j ? "   " + x : mark + x));
+        });
+        return out;
+      }
+      default: return linesOf(el);
+    }
+  }
+  function toMd(ed){
+    const lines = linesOf(ed);
+    while (lines.length && !lines[lines.length - 1].trim()) lines.pop();
+    return lines.map(x => x.replace(/\s+$/, "")).join("\n");
+  }
+
+  /* ── the bar over a selection ──────────────────────────────────────── */
+  const TOOLS = [
+    ["b", "B", "Bold (Ctrl+B)", "font-weight:800"],
+    ["i", "I", "Italic (Ctrl+I)", "font-style:italic;font-family:Georgia,serif"],
+    ["u", "U", "Underline (Ctrl+U)", "text-decoration:underline"],
+    ["s", "S", "Strikethrough (Ctrl+Shift+X)", "text-decoration:line-through"],
+    ["|"],
+    ["code", "</>", "Monospace (Ctrl+Shift+M)", "font-family:var(--f-mono);font-size:11px"],
+    ["pre", "{ }", "Code block", "font-family:var(--f-mono);font-size:11px"],
+    ["quote", "❝", "Quote", "font-size:15px"],
+    ["spoiler", "▓", "Spoiler (Ctrl+Shift+P)", ""],
+    ["link", "🔗", "Link (Ctrl+K)", "font-size:12px"],
+    ["|"],
+    ["ul", "•", "Bulleted list", "font-size:16px"],
+    ["ol", "1.", "Numbered list", ""],
+    ["clear", "⊘", "Clear formatting", "font-size:14px"]
+  ];
+  let bar = null, active = null, savedRange = null, pinned = false;
+  function makeBar(){
+    bar = document.createElement("div");
+    bar.className = "rtbar"; bar.setAttribute("role", "toolbar");
+    bar.innerHTML = TOOLS.map(t => t[0] === "|" ? '<span class="sep"></span>'
+      : '<button type="button" data-rt="' + t[0] + '" title="' + esc(t[2]) + '" aria-label="' + esc(t[2]) +
+        '" style="' + t[3] + '">' + esc(t[1]) + "</button>").join("");
+    /* mousedown, not click: a click would take the selection away first */
+    bar.addEventListener("mousedown", e => {
+      const b = e.target.closest("button"); if (!b) return;
+      e.preventDefault();
+      apply(b.dataset.rt);
+    });
+    document.body.appendChild(bar);
+  }
+  function lineOnly(ed){ return ed && ed.dataset.lines === "1"; }
+  function showBar(ed, pin){
+    if (!bar) makeBar();
+    active = ed;
+    if (pin) pinned = true;
+    const sel = getSelection();
+    if (!sel.rangeCount) return hideBar();
+    const r = sel.getRangeAt(0);
+    let rect = r.getBoundingClientRect();
+    if (!rect.width && !rect.height){
+      const box = ed.getBoundingClientRect();
+      rect = { left:box.right - 40, top:box.bottom - 10, width:0 };
+    }
+    bar.querySelectorAll("[data-rt]").forEach(b => {
+      const k = b.dataset.rt;
+      b.style.display = lineOnly(ed) && /^(pre|quote|ul|ol)$/.test(k) ? "none" : "";
+      b.classList.toggle("on", isOn(k));
+    });
+    bar.classList.add("on");
+    const w = bar.offsetWidth, h = bar.offsetHeight;
+    let x = rect.left + (rect.width || 0) / 2 - w / 2, y = rect.top - h - 8;
+    if (y < 6) y = (rect.bottom || rect.top) + 8;
+    x = Math.max(6, Math.min(x, innerWidth - w - 6));
+    bar.style.left = x + "px"; bar.style.top = y + "px";
+  }
+  function hideBar(){
+    pinned = false;
+    if (bar){ bar.classList.remove("on"); if (bar.querySelector("input")) restoreBar(); }
+    active = null;
+  }
+  function restoreBar(){ bar.remove(); bar = null; }
+  function within(tag){
+    const sel = getSelection(); if (!sel.rangeCount) return null;
+    let n = sel.anchorNode;
+    while (n && n !== active){
+      if (n.nodeType === 1 && (tag === "spoiler" ? n.classList.contains("spoiler") : n.nodeName === tag)) return n;
+      n = n.parentNode;
+    }
+    return null;
+  }
+  function isOn(k){
+    try {
+      if (k === "b") return document.queryCommandState("bold");
+      if (k === "i") return document.queryCommandState("italic");
+      if (k === "u") return document.queryCommandState("underline");
+      if (k === "s") return document.queryCommandState("strikeThrough");
+    } catch(e){}
+    if (k === "code") return !!within("CODE");
+    if (k === "pre") return !!within("PRE");
+    if (k === "quote") return !!within("BLOCKQUOTE");
+    if (k === "spoiler") return !!within("spoiler");
+    if (k === "link") return !!within("A");
+    if (k === "ul") return !!within("UL");
+    if (k === "ol") return !!within("OL");
+    return false;
+  }
+  function unwrap(el){
+    const p = el.parentNode;
+    while (el.firstChild) p.insertBefore(el.firstChild, el);
+    p.removeChild(el);
+  }
+  function selText(){ const s = getSelection(); return s.rangeCount ? s.toString() : ""; }
+  function apply(k){
+    const ed = active; if (!ed) return;
+    ed.focus();
+    const x = (c, v) => document.execCommand(c, false, v);
+    switch (k){
+      case "b": x("bold"); break;
+      case "i": x("italic"); break;
+      case "u": x("underline"); break;
+      case "s": x("strikeThrough"); break;
+      case "code": {
+        const c = within("CODE");
+        if (c) unwrap(c);
+        else { const t = selText(); if (t) x("insertHTML", "<code>" + esc(t.replace(/\n/g, " ")) + "</code>​"); }
+        break;
+      }
+      case "spoiler": {
+        const c = within("spoiler");
+        if (c) unwrap(c);
+        else { const t = selText(); if (t) x("insertHTML", '<span class="spoiler">' + esc(t) + "</span>​"); }
+        break;
+      }
+      case "pre": {
+        const c = within("PRE");
+        if (c){
+          const html = c.textContent.split("\n").map(l => "<div>" + (l ? esc(l) : "<br>") + "</div>").join("");
+          const sel = getSelection(), r = document.createRange();
+          r.selectNode(c); sel.removeAllRanges(); sel.addRange(r);
+          x("insertHTML", html);
+        } else x("insertHTML", "<pre>" + (esc(selText()) || "​") + "</pre><div><br></div>");
+        break;
+      }
+      case "quote": x("formatBlock", within("BLOCKQUOTE") ? "div" : "blockquote"); break;
+      case "ul": x("insertUnorderedList"); break;
+      case "ol": x("insertOrderedList"); break;
+      case "clear": {
+        x("removeFormat"); x("unlink");
+        ["CODE", "spoiler"].forEach(t => { const c = within(t); if (c) unwrap(c); });
+        break;
+      }
+      case "link": return askLink(ed);
+    }
+    sync(ed);
+    setTimeout(() => { if (active === ed) showBar(ed); }, 0);
+  }
+  /* the link box is part of the bar, not a browser prompt */
+  function askLink(ed){
+    const sel = getSelection();
+    savedRange = sel.rangeCount ? sel.getRangeAt(0).cloneRange() : null;
+    const had = within("A");
+    bar.innerHTML = '<input type="url" placeholder="https://…" value="' + esc(had ? had.getAttribute("href") || "" : "") + '">' +
+                    '<button type="button" data-ok="1" title="OK">✓</button>';
+    const inp = bar.querySelector("input");
+    const done = ok => {
+      const url = inp.value.trim();
+      restoreBar();
+      ed.focus();
+      if (savedRange){ const s = getSelection(); s.removeAllRanges(); s.addRange(savedRange); }
+      if (ok){
+        if (!url){ document.execCommand("unlink"); }
+        else if (SAFE_URL.test(url) || /^[\w.-]+\.[a-z]{2,}(\/|$)/i.test(url)){
+          const href = SAFE_URL.test(url) ? url : "https://" + url;
+          if (selText()) document.execCommand("createLink", false, href);
+          else document.execCommand("insertHTML", false, '<a href="' + esc(href) + '">' + esc(href) + "</a>");
+        } else toast(L("RtBadLink"), { bad:true });
+        sync(ed);
+      }
+    };
+    inp.addEventListener("keydown", e => {
+      if (e.key === "Enter"){ e.preventDefault(); done(true); }
+      if (e.key === "Escape"){ e.preventDefault(); done(false); }
+      e.stopPropagation();
+    });
+    bar.querySelector("[data-ok]").addEventListener("mousedown", e => { e.preventDefault(); done(true); });
+    inp.addEventListener("blur", () => setTimeout(() => { if (bar && document.activeElement !== inp) done(false); }, 120));
+    setTimeout(() => inp.focus(), 0);
+  }
+
+  /* ── typing the marks ──────────────────────────────────────────────── */
+  const INLINE_MD = [
+    [/\*\*([^*\n]+)\*\*$/, "b"], [/__([^_\n]+)__$/, "u"], [/~~([^~\n]+)~~$/, "s"],
+    [/\|\|([^|\n]+)\|\|$/, "spoiler"], [/`([^`\n]+)`$/, "code"], [/(?:^|[\s(])_([^_\n]+)_$/, "i"]
+  ];
+  const TAG = { b:"b", u:"u", s:"s", i:"i", code:"code", spoiler:"span" };
+  function liveInline(ed){
+    const sel = getSelection();
+    if (!sel.rangeCount || !sel.isCollapsed) return false;
+    const node = sel.anchorNode, off = sel.anchorOffset;
+    if (!node || node.nodeType !== 3) return false;
+    for (let p = node.parentNode; p && p !== ed; p = p.parentNode) if (p.nodeName === "PRE" || p.nodeName === "CODE") return false;
+    const before = node.nodeValue.slice(0, off);
+    for (const pair of INLINE_MD){
+      const m = before.match(pair[0]); if (!m) continue;
+      const whole = m[0].replace(/^[\s(]/, ""), start = off - whole.length;
+      const r = document.createRange();
+      r.setStart(node, start); r.setEnd(node, off);
+      r.deleteContents();
+      const el = document.createElement(TAG[pair[1]]);
+      if (pair[1] === "spoiler") el.className = "spoiler";
+      el.textContent = m[1];
+      r.insertNode(el);
+      const gap = document.createTextNode("​");
+      el.after(gap);
+      const after = document.createRange();
+      after.setStart(gap, 1); after.collapse(true);
+      sel.removeAllRanges(); sel.addRange(after);
+      return true;
+    }
+    return false;
+  }
+  /* the block the caret is in, as an element - the first line of a box the
+     browser has not wrapped yet is a bare text node, so it is wrapped here */
+  function currentLine(ed){
+    const sel = getSelection(); if (!sel.rangeCount) return null;
+    let n = sel.anchorNode;
+    if (n === ed) n = ed.childNodes[Math.max(0, sel.anchorOffset - 1)] || null;
+    while (n && n.parentNode !== ed) n = n.parentNode;
+    if (!n) return null;
+    if (n.nodeType === 3 || !BLOCK.test(n.nodeName)){
+      /* the whole run of inline nodes the caret is in, back to the last
+         block or <br> and on to the next - not just the piece it is in */
+      const inlineish = x => x && x.nodeName !== "BR" && (x.nodeType === 3 || !BLOCK.test(x.nodeName));
+      let first = n;
+      while (inlineish(first.previousSibling)) first = first.previousSibling;
+      const keep = sel.getRangeAt(0).cloneRange();
+      const div = document.createElement("div");
+      ed.insertBefore(div, first);
+      while (inlineish(div.nextSibling)) div.appendChild(div.nextSibling);
+      if (div.nextSibling && div.nextSibling.nodeName === "BR") div.nextSibling.remove();
+      sel.removeAllRanges(); sel.addRange(keep);
+      return div;
+    }
+    return n;
+  }
+  function liveBlock(ed, key){
+    const line = currentLine(ed); if (!line) return false;
+    const text = (line.textContent || "").replace(/​/g, "");
+    const sel = getSelection();
+    /* an emptied line keeps a <br>, or it has no height and nowhere for the caret to be */
+    const setText = t => {
+      if (t) line.textContent = t; else line.innerHTML = "<br>";
+      const r = document.createRange();
+      if (t){ r.selectNodeContents(line); r.collapse(false); } else r.setStart(line, 0);
+      sel.removeAllRanges(); sel.addRange(r);
+    };
+    if (lineOnly(ed)) return false;
+    if (key === " " && /^[-*]$/.test(text)){ setText(""); document.execCommand("insertUnorderedList"); return true; }
+    if (key === " " && /^1[.)]$/.test(text)){ setText(""); document.execCommand("insertOrderedList"); return true; }
+    if (key === " " && text === ">"){ setText(""); document.execCommand("formatBlock", false, "blockquote"); return true; }
+    if (key === "Enter" && /^```[\w#+.-]*$/.test(text)){
+      const lang = text.slice(3);
+      const pre = document.createElement("pre");
+      if (lang) pre.setAttribute("data-lang", lang);
+      pre.textContent = "​";
+      line.replaceWith(pre);
+      const after = document.createElement("div"); after.innerHTML = "<br>";
+      pre.after(after);
+      const r = document.createRange(); r.setStart(pre.firstChild, 1); r.collapse(true);
+      sel.removeAllRanges(); sel.addRange(r);
+      return true;
+    }
+    return false;
+  }
+
+  /* ── wiring one textarea ───────────────────────────────────────────── */
+  function sync(ed){
+    const ta = ed._ta; if (!ta) return;
+    const md = toMd(ed);
+    if (md === VALUE.get.call(ta)) return;
+    ta._rtSyncing = true;
+    VALUE.set.call(ta, md);
+    ta._rtSyncing = false;
+    ta.dispatchEvent(new Event("input", { bubbles:true }));
+  }
+  function draw(ed, md){ ed.innerHTML = String(md || "") ? toHtml(md) : ""; }
+
+  function enhance(ta){
+    if (ta._rt || !ta.isConnected) return;
+    const wrapBox = document.createElement("div");
+    wrapBox.className = "rtw";
+    const ed = document.createElement("div");
+    ed.className = "in rte" + (ta.classList.contains("mono") ? " mono" : "");
+    ed.contentEditable = "true";
+    ed.spellcheck = ta.spellcheck;
+    ed.setAttribute("role", "textbox");
+    ed.setAttribute("aria-multiline", "true");
+    ed.dataset.ph = ta.getAttribute("placeholder") || "";
+    if (ta.matches(LINES_ONLY)) ed.dataset.lines = "1";
+    if (ed.dataset.ph) ed.setAttribute("aria-label", ed.dataset.ph);
+    const rows = +ta.getAttribute("rows") || 0;
+    const minH = ta.style.minHeight || (rows ? (rows * 1.65 + 1) + "em" : "");
+    if (minH) ed.style.minHeight = minH;
+    if (ta.style.fontSize) ed.style.fontSize = ta.style.fontSize;
+    ed._ta = ta; ta._rt = ed;
+
+    const aa = document.createElement("button");
+    aa.type = "button"; aa.className = "rtaa"; aa.textContent = "Aa";
+    aa.title = L("RtFormat");
+    aa.addEventListener("mousedown", e => { e.preventDefault(); ed.focus(); showBar(ed, true); });
+
+    ta.parentNode.insertBefore(wrapBox, ta);
+    wrapBox.appendChild(ed); wrapBox.appendChild(aa); wrapBox.appendChild(ta);
+    ta.hidden = true;
+    draw(ed, VALUE.get.call(ta));
+
+    /* code that sets the value - a re-render, an undo, the assistant filling
+       a note in - redraws the editor */
+    Object.defineProperty(ta, "value", {
+      configurable:true,
+      get(){ return VALUE.get.call(this); },
+      set(v){ VALUE.set.call(this, v); if (!this._rtSyncing && this._rt && document.activeElement !== this._rt) draw(this._rt, v); }
+    });
+
+    let atFocus = "";
+    ed.addEventListener("focus", () => { atFocus = VALUE.get.call(ta); });
+    ed.addEventListener("input", () => sync(ed));
+    ed.addEventListener("blur", () => {
+      sync(ed);
+      if (VALUE.get.call(ta) !== atFocus) ta.dispatchEvent(new Event("change", { bubbles:true }));
+      setTimeout(() => { if (bar && !bar.contains(document.activeElement) && active === ed && document.activeElement !== ed) hideBar(); }, 150);
+    });
+    ed.addEventListener("keydown", e => {
+      const mod = e.ctrlKey || e.metaKey, k = e.key.toLowerCase();
+      if (mod && !e.shiftKey && (k === "b" || k === "i" || k === "u")){ e.preventDefault(); e.stopPropagation(); active = ed; apply(k); return; }
+      if (mod && e.shiftKey && (k === "x" || k === "m" || k === "p")){
+        e.preventDefault(); e.stopPropagation(); active = ed; apply({ x:"s", m:"code", p:"spoiler" }[k]); return;
+      }
+      /* Ctrl+K is the command palette everywhere else; here, with text
+         selected, it is a link - the way it is in Telegram */
+      if (mod && k === "k" && !getSelection().isCollapsed){ e.preventDefault(); e.stopPropagation(); active = ed; showBar(ed); askLink(ed); return; }
+      if (e.key === "Escape" && bar && bar.classList.contains("on")){ e.stopPropagation(); hideBar(); return; }
+      if ((e.key === " " || e.key === "Enter") && !mod && !e.shiftKey && liveBlock(ed, e.key)){ e.preventDefault(); sync(ed); return; }
+      if (e.key === "Enter" && !e.shiftKey){
+        /* Enter on an empty line of a quote leaves the quote, as it does a list */
+        let q = getSelection().anchorNode;
+        while (q && q !== ed && q.nodeName !== "BLOCKQUOTE") q = q.parentNode;
+        if (q && q.nodeName === "BLOCKQUOTE"){
+          const sel = getSelection();
+          let line = sel.anchorNode;
+          if (line === q) line = q.childNodes[sel.anchorOffset] || q.childNodes[sel.anchorOffset - 1] || null;
+          while (line && line.parentNode !== q) line = line.parentNode;
+          const empty = !line || !(line.textContent || "").replace(/\u200b/g, "").trim();
+          if (empty){
+            e.preventDefault();
+            if (line) line.remove();
+            /* and the <br> the browser left to end the line before it */
+            while (q.lastChild && (q.lastChild.nodeName === "BR" ||
+                   (q.lastChild.nodeType === 3 && !q.lastChild.nodeValue.replace(/\u200b/g, "").trim()))) q.lastChild.remove();
+            const div = document.createElement("div"); div.innerHTML = "<br>";
+            q.after(div);
+            if (!q.textContent.trim() && !q.querySelector("br")) q.remove();
+            const a = document.createRange(); a.setStart(div, 0);
+            getSelection().removeAllRanges(); getSelection().addRange(a);
+            sync(ed); return;
+          }
+        }
+      }
+      if (e.key === "Enter"){
+        /* a new line inside a code block, not a new block */
+        let n = getSelection().anchorNode;
+        while (n && n !== ed && n.nodeName !== "PRE") n = n.parentNode;
+        if (n && n.nodeName === "PRE"){
+          /* Enter in a code block is a new line in it. insertText("\n")
+             would split the block in two, so the line break goes in by hand;
+             a zero-width space after a final one gives the caret a line to
+             sit on. Enter on an empty last line leaves the block. */
+          e.preventDefault();
+          const sel = getSelection(), r = sel.getRangeAt(0);
+          const txt = n.textContent.replace(/\u200b/g, "");
+          const atEnd = (() => { const t = document.createRange(); t.selectNodeContents(n); t.setStart(r.endContainer, r.endOffset);
+                                 return !t.toString().replace(/\u200b/g, "").length; })();
+          if (atEnd && /\n$/.test(txt)){
+            n.textContent = txt.replace(/\n$/, "");
+            const div = document.createElement("div"); div.innerHTML = "<br>";
+            n.after(div);
+            const a = document.createRange(); a.setStart(div, 0); sel.removeAllRanges(); sel.addRange(a);
+            sync(ed); return;
+          }
+          r.deleteContents();
+          const nl = document.createTextNode("\n");
+          r.insertNode(nl);
+          if (atEnd) nl.after(document.createTextNode("\u200b"));
+          const a = document.createRange(); a.setStartAfter(nl); a.collapse(true);
+          sel.removeAllRanges(); sel.addRange(a);
+          sync(ed); return;
+        }
+      }
+      if (!mod && e.key.length === 1) pinned = false;
+    });
+    ed.addEventListener("keyup", e => {
+      if (e.key.length === 1 && /[*_~|`]/.test(e.key) && liveInline(ed)) sync(ed);
+    });
+    ed.addEventListener("paste", e => {
+      const cd = e.clipboardData;
+      /* a screenshot is for the attachment handler, which is further up */
+      if (!cd || (cd.files && cd.files.length)) return;
+      const text = cd.getData("text/plain");
+      if (text == null) return;
+      e.preventDefault(); e.stopPropagation();
+      document.execCommand("insertText", false, text);
+    });
+    ed.addEventListener("dragstart", e => e.stopPropagation());
+    ed.addEventListener("click", e => {
+      const a = e.target.closest("a[href]");
+      if (a && (e.ctrlKey || e.metaKey) && SAFE_URL.test(a.getAttribute("href"))) window.open(a.href, "_blank", "noopener");
+    });
+  }
+
+  document.addEventListener("selectionchange", () => {
+    const sel = getSelection();
+    if (!sel.rangeCount){ return; }
+    let n = sel.anchorNode;
+    while (n && !(n.nodeType === 1 && n.classList.contains("rte"))) n = n.parentNode;
+    if (bar && bar.contains(document.activeElement)) return;
+    if (n && !sel.isCollapsed) showBar(n);
+    else if (bar && bar.classList.contains("on") && !(pinned && n && n === active)) hideBar();
+  });
+  addEventListener("scroll", () => { if (active && bar && bar.classList.contains("on") && !getSelection().isCollapsed) showBar(active); }, true);
+
+  /* whatever renders a matching textarea, whenever it does it */
+  let queued = false;
+  function scan(){
+    queued = false;
+    document.querySelectorAll(WHERE).forEach(enhance);
+  }
+  new MutationObserver(() => { if (!queued){ queued = true; queueMicrotask(scan); } })
+    .observe(document.documentElement, { childList:true, subtree:true });
+
+  /* read-only views: a spoiler opens on a click */
+  document.addEventListener("click", e => {
+    const sp = e.target.closest && e.target.closest(".rtv .spoiler");
+    if (sp) sp.classList.toggle("shown");
+  });
+
+  return { toHtml, toMd, enhance, scan, inline };
+})();
+/* a note, drawn wherever a note is shown and not edited */
+function mdHtml(text){ return RT.toHtml(text); }
 
 /* ═══ WIRING ═════════════════════════════════════════════════════════════ */
 function setView(v){
