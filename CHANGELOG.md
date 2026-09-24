@@ -6,6 +6,109 @@ holds — which is what to paste into a bug report.
 
 ---
 
+## 4.2.0 - 2026-09-24
+
+### Your work can no longer be emptied by opening a database
+
+This is what lost work. Opening a workspace against an **empty** database -
+a fresh `init`, a LocalDB instance that had been recreated - started an
+empty workspace and saved it: into the database, **and out over
+`dossier.json`**, in the same save. The day's backup was rewritten on every
+save, so it went too. And the **Restore** buttons on backups compared the
+dialog's answer - `{ choice: 0 }` - with the number 0, so they asked their
+question and then did nothing, every time since they were added.
+
+- An empty database is filled **from** `dossier.json`, never the other way
+  round; if that file is empty too, from the newest backup with records in
+  it, after asking.
+- Whichever copy is newer wins on open. Edits made while the database was off
+  are brought in, not overwritten.
+- A save that would leave no records where there were some is refused, with
+  a button for "I really did delete them". One that would more than halve ten
+  or more asks first, with both numbers - in the page, and again in the
+  bridge, which answers 409.
+- **Database history**: the bridge keeps the workspace it replaces,
+  compressed, in `dbo.WorkspaceHistory` (migration 6) - before every restore,
+  import and shrinking save, and every ten minutes. Menu -> Workspace ->
+  Database history lists those and every push ever made, and restores or
+  downloads any of them. **If your records went missing before this update,
+  look there first**: every file you ever pushed is in that list.
+- A day's backup is never replaced by a smaller one. A shrinking save and an
+  unreadable `dossier.json` are copied into `backups/` first.
+- Both Restore buttons work.
+- One database, one folder: `.dossier-store.json` binds a folder to the
+  database with the workspace's id, so a second folder cannot open or
+  overwrite the first one's records.
+- Import merges newest-wins, and brings runbooks, notes, profiles,
+  conversations and incidents along.
+- `dossier-sql.bat push` refuses a database with records in it unless
+  `--replace`, and keeps what was there first. With no argument it only
+  checks.
+
+### One double-click, no windows
+
+**`Dossier.bat`**, at the top of the clone. It builds Dossier as a Windows
+program with no console, starts it, and closes. Dossier is then an **icon by
+the clock**: Open Dossier, Show log, Start with Windows, Workspace folder...,
+Quit.
+
+- It **creates and migrates the database itself** at every start - no `init`.
+  The page opens immediately and waits through "Starting the database..."
+  rather than deciding there is none.
+- It **starts the script runner hidden** and stops it on Quit.
+- **Start with Windows** is the per-user Run key: no console window at login.
+  The 4.1 Startup-folder `.bat` is removed and replaced automatically.
+- Only ever one copy; a second double-click opens the page.
+- No LocalDB? It still serves the page, and the icon says why there is no
+  database.
+- `dossier-bridge.bat` and `dossier-serve.bat` pass through to it.
+
+### Notes, Telegram-style
+
+The long boxes - notes, the intake message, what you teach the assistant,
+system facts and quirks, runbook steps and escalation - are formatted
+editors. Select text for a bar: bold, italic, underline, strike, code, code
+block, quote, spoiler, link, lists. Ctrl+B/I/U, Ctrl+Shift+X/M/P, Ctrl+K on a
+selection; or type the marks - `**`, `_`, `__`, `~~`, `||`, backticks,
+```` ``` ````, `> `, `- `, `1. `. Stored as Markdown in the same field, so
+Notepad, the assistant and an older Dossier all still read it.
+
+### A faster flow
+
+- **The prompt is 15 KB, not 40.** About six thousand fewer tokens read
+  before every answer. Same nine inputs, same Parse JSON - paste it and
+  nothing else changes. `flow/check-prompt.js` runs every example in it
+  through Dossier's own validator.
+- **Pictures go at the size the model reads.** GPT-4o-class models scale
+  every image to 768 pixels on the short side before looking; anything
+  bigger was carried through the flow for nothing. A 1920x1080 screenshot now
+  goes as 1365x768. The words are still read on the PC from the original.
+- **A picture the app has read travels once**, as `picture`, not also in
+  `attachments[].data`.
+- POWER-AUTOMATE.md s4d: what to change in the flow for the rest - a fast
+  model, `ocr.js` beside the app so the per-line loops never run, the probe
+  answered first.
+
+### It learns
+
+- **Lessons** about you - how you like answers, how you work, who asks for
+  what - travel with every question (`workspace.lessons`) and are written by
+  the new `learn` action. Setup -> What I have learned about you.
+- **The daily look back** at noon: the morning's closed records and how they
+  were resolved, raised records and by whom, the conversations, and answers
+  marked "not what I meant" go to the flow; lessons, notes and draft runbooks
+  come back and are kept, reported in a conversation called "What I learned".
+  Anything touching a profile or a record waits as a button.
+- **Runbooks that teach back**: "Interview me" on a runbook, and "Learn from
+  a BAU document..." in the library.
+- **It reasons instead of reciting**: the prompt has it explain your case and
+  give the one next check with your values, ask you for what a guideline
+  leaves out, and keep the answer.
+- The confirmation for a runbook or profile change says what it is, instead
+  of "saveProfile".
+
+---
+
 ## 4.1.1 - 2026-09-18
 
 **`startup` kept a quarter of the folder you gave it.**

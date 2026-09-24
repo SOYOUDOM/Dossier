@@ -170,6 +170,40 @@ back in your own `say` (or return `recall` to show it verbatim) rather than
 inventing a method. And when someone explains how something is done, return
 `remember` — that is the action that makes the app worth teaching.
 
+### Lessons — what it has learned about the person
+
+`workspace.lessons` is a list of short lines, newest first, thirty at most:
+
+```jsonc
+"lessons": [
+  "[style] Wants the query first and the explanation after",
+  "[people] Sokha from Branch Ops raises most portal password resets",
+  "[gap] Does not know who owns POLICY_MASTER yet - ask when it comes up"
+]
+```
+
+They are about **the person**, not about a system or a procedure — how they
+like to be answered, how they work, who asks them for what, what the
+assistant should ask about. Read them before answering; write them with
+`learn`. A method still belongs in `remember`, a procedure in `saveRunbook`.
+
+### The mode — what kind of question this is
+
+`workspace.mode` is `"chat"` for a question typed in the panel, and one of
+three others, each also the first word of `message` in brackets:
+
+| mode | sent | `attached` holds |
+|---|---|---|
+| `reflect` | once a day, at the time set (noon by default), while the person is away | everything since the last look: records closed with how they were resolved, records raised with who raised them, the conversations, answers marked *not what I meant* |
+| `teach` | from a runbook's **Interview me** | whatever they attached, usually nothing — the runbook is in `runbooksMatched` |
+| `study` | from **Learn from a BAU document…** | the guideline, read as text |
+
+A `reflect` reply is applied without a dialog, because nobody is there to
+answer one: `learn` and `remember` are kept, `saveRunbook` is kept **as a
+draft whatever status it asks for**, and anything else is offered to the
+person later as a button. Nothing that touches a record is ever applied from
+a `reflect` reply.
+
 ### The BAU library — runbooks and system profiles
 
 Two blocks, shaped differently on purpose.
@@ -1009,6 +1043,16 @@ Delete a record. Its folder and documents stay on disk. Prefer setStatus to canc
 | argument | shape | required |
 |---|---|---|
 | `record` | ref | **yes** |
+
+#### `learn`
+
+Keep one short thing learned about THIS PERSON - how they like to be answered, how they work, who usually asks them for what, a gap in what you know that you should ask them about. One sentence. The kept ones are in workspace.lessons; pass replaces with one of those exactly to correct it rather than add another. Not for procedures - a method is remember, a procedure is saveRunbook.
+
+| argument | shape | required |
+|---|---|---|
+| `lesson` | text | **yes** |
+| `kind` | string — style, preference, habit, people, system or gap | no |
+| `replaces` | string | no |
 
 #### `remember`
 

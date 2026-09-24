@@ -92,9 +92,14 @@ git clone https://github.com/SOYOUDOM/Dossier
 1. **Make a folder for your records**, anywhere but the clone —
    `Documents\Dossier` will do. To start with the demo rather than an empty
    sheet, copy `demo\dossier.json` into it as `dossier.json`.
-2. **Open `dossier.html`** in your browser — double-click it. Edge or Chrome
-   can keep everything in a folder you choose; any other browser keeps it
-   inside the browser instead.
+2. **Double-click `Dossier.bat`** in the clone. The first time it takes a
+   few seconds to set itself up; after that it opens
+   `http://127.0.0.1:5500/dossier.html` in your browser and sits as an icon
+   by the clock — no window. It asks once which folder holds your records
+   (the one from step 1), and creates the database for you if SQL Server
+   LocalDB is on the PC. Without LocalDB it still works, and your records
+   stay in `dossier.json`. (You can also just open `dossier.html` directly —
+   everything works except Windows notifications and the database.)
 3. Click **Choose workspace folder…** in the banner and pick **the folder you
    made**. Allow "Edit files" when asked.
 
@@ -115,12 +120,11 @@ With the demo copied in you should immediately see:
 > Setup → export now and then, and prefer a folder where one is possible.
 
 > **Windows notifications need `http://`.** Chrome and Edge refuse the
-> Notification API on `file://` with no way to allow it. Double-click
-> `scripts\dossier-bridge.bat`: it hands the page out at
-> `http://127.0.0.1:5500/dossier.html`, and that is the same window that keeps
-> your records in the database, so there is only ever one to start. If you
-> want the page without a database, `scripts\dossier-serve.bat` still does
-> that on its own, using whichever of Python, Node or PHP it finds first.
+> Notification API on `file://` with no way to allow it. `Dossier.bat` hands
+> the page out at `http://127.0.0.1:5500/dossier.html` - the same program that
+> keeps your records in the database, with no window of its own - so there is
+> only ever one thing to start. With no SQL Server on the PC it serves the
+> page on its own.
 
 ---
 
@@ -142,7 +146,8 @@ With the demo copied in you should immediately see:
 | `lang/km.xml` | ~125 KB | optional | The same 1,343 keys, **values empty**: a translation template for Khmer. |
 | `fonts/NotoSansKhmer-*.woff2` | ~33 KB | optional | Bundled Khmer typeface, so Khmer renders without fetching a webfont. `OFL.txt` is its licence. |
 | `scripts/dossier-runner.bat` | 3.4 KB | optional | The runner. Executes what Dossier queues. No PowerShell anywhere. |
-| `scripts/dossier-serve.bat` | 6.8 KB | optional | Serves the folder over `http://127.0.0.1` so notifications work — the page alone, no database. `dossier-bridge.bat` does this too, so you want one or the other, not both. |
+| `Dossier.bat` | ~6 KB | **start here** | **The one thing to double-click.** Builds and starts Dossier as an icon by the clock — the page at `http://127.0.0.1:5500/dossier.html`, the database created and migrated by itself, your scripts' runner hidden. `startup` / `startup off` for starting with Windows. |
+| `scripts/dossier-serve.bat` | ~1 KB | — | Kept so nothing that points at it breaks: passes through to `Dossier.bat`. |
 | `scripts/open-morning-tabs.bat` | 1.8 KB | demo | Opens the tabs you start the day with, once a day. |
 | `scripts/restart-app-pool.bat` | 1.4 KB | demo | A **parameter template** — the `{{server}}` / `{{pool}}` marks become boxes in Dossier. |
 | `scripts/queue/` | — | required for the runner | The mailbox between Dossier and the runner. |
@@ -161,8 +166,9 @@ With the demo copied in you should immediately see:
 | `sql/check-json-paths.py` | ~3 KB | — | Walks every JSON path the loader reads against a workspace holding one of everything. A wrong path loads nothing, quietly. |
 | `scripts/check-bat.py` | ~4 KB | — | The five things that have actually gone wrong in a `.bat`: an argument used as a path (`%1` stops at the first space, and a work folder is `OneDrive - Contoso Ltd`), a redirect on an `if` line (cmd performs it whether the condition holds or not), LF line endings, a byte over 7 bits, a call to PowerShell. |
 | `scripts/dossier-sql.bat` | ~7 KB | optional | The launcher: `init`, `push`, `pull`, `check`, `history`, `find`. Defaults to `(localdb)\MSSQLLocalDB`. |
-| `scripts/dossier-bridge.bat` | ~6 KB | optional | **Starts Dossier**: hands out the page at `http://127.0.0.1:5500/dossier.html` and saves to the database, in one window. Compiles the bridge first with the C# compiler already on the machine. `startup "<folder>"` makes it happen at every login, and starts one there and then. |
-| `scripts/bridge/DossierBridge.cs` | ~24 KB | optional | The bridge: a loopback socket, a token, six routes, a read-only handler for the page beside it, and `System.Data.SqlClient`. C# 5, so `csc.exe` from the .NET Framework can build it with nothing installed. |
+| `scripts/dossier-bridge.bat` | ~1 KB | — | Kept so nothing that points at it breaks: passes through to `Dossier.bat`, arguments and all. |
+| `scripts/bridge/DossierBridge.cs` | ~45 KB | optional | Dossier, running: the tray icon and its menu, the page, the database (created, migrated, written, and its history kept), the hidden runner. C# 5 and Windows Forms, so `csc.exe` from the .NET Framework builds it with nothing installed. |
+| `flow/check-prompt.js` | ~2 KB | — | Runs every example reply in the Power Automate prompt through the validator Dossier uses on real replies. A model copies its examples; one Dossier would refuse teaches it to be refused. |
 | `sql/load-proc.sql` | ~14 KB | optional | `dbo.LoadWorkspace` — the only code that writes the tables, called by both the bridge and `push`. |
 
 Everything is a classic script or plain file. There is **no build step, no
@@ -578,6 +584,24 @@ to `chases`; `waitLog` keeps the whole hand-over history. The assistant learns
 each party's *usual* response time from your own closed records and uses that
 instead of the default once it has enough to go on.
 
+
+### Notes are formatted, Telegram-style
+
+A record's notes, the message kept with a new record, what you teach the
+assistant, a system's facts and quirks, a runbook's steps and escalation:
+select text and a bar appears over it — **bold**, *italic*, underline, strike,
+`code`, a code block, a quote, a spoiler, a link, lists. The keys work
+(Ctrl+B, Ctrl+I, Ctrl+U, Ctrl+Shift+X strike, Ctrl+Shift+M code, Ctrl+Shift+P
+spoiler, Ctrl+K link with text selected), and so does typing the marks:
+`**bold**`, `_italic_`, `__underline__`, `~~strike~~`, `||spoiler||`,
+`` `code` ``, ```` ``` ```` then Enter for a code block, `> ` for a quote,
+`- ` or `1. ` for a list. **Aa** in the corner opens the bar without a
+selection.
+
+What is saved is Markdown text in the same field as always — readable in
+Notepad, read by the assistant like anything else, and a workspace from an
+older Dossier opens unchanged.
+
 ### Three copies, and what each is for
 
 | | Where | Survives | Read it with |
@@ -610,70 +634,89 @@ are files in `tasks/`; copy the folder for those.
 
 ### 4.1 The database as the store
 
-With `scripts\dossier-bridge.bat` running, this is where your work lives.
-Every record you create, change or delete is a transaction in **SQL Server
-LocalDB** on your own PC; `dossier.json` is written alongside as an export
-and is not what Dossier reads.
+**Double-click `Dossier.bat`.** That is the whole of it. There is no window
+afterwards: Dossier is the icon beside the clock, and its menu is how you
+open it, see what it is doing, make it start with Windows, and quit it.
 
-```
-scripts\dossier-sql.bat init         once: create the database and tables
-scripts\dossier-bridge.bat           then this, and nothing else
-```
+| On the icon's menu | |
+|---|---|
+| **Open Dossier** (or double-click the icon) | `http://127.0.0.1:5500/dossier.html` — bookmark it |
+| **Show log** | what it did and why, including why there is no database if there is none |
+| **Start with Windows** | the per-user Run key: no console at login, no administrator, and it shows in Task Manager's Startup tab |
+| **Workspace folder…** | the folder your records are in — used to run your scripts |
+| **Quit Dossier** | stops everything it started, the script runner included |
 
-Leave that window open and go to **`http://127.0.0.1:5500/dossier.html`** —
-it opens a browser there for you the first time. Bookmark it.
+What that one program does:
 
-Tell it your workspace folder once — `scripts\dossier-bridge.bat "D:\Work\Dossier"`
-— and it keeps that beside the `.exe`. From the second run on it is a file you
-double-click. Pass a folder any time to change it.
+- **hands out the page.** Chrome and Edge refuse notifications to a page opened
+  from `file://`, which is the only reason `dossier-serve.bat` ever existed.
+  The address is fixed at port 5500, because a browser keeps your folder
+  permission per address and a moving port would ask for it every morning.
+- **makes the database and keeps it up to date.** It runs `sql\schema.sql`
+  and `sql\load-proc.sql` itself every time it starts — creating the
+  database if there is none, migrating the tables if they are old, and never
+  touching a row of data. There is no `init` to remember. LocalDB takes a few
+  seconds to wake from cold, so the page opens straight away and says
+  *Starting the database…* until it is ready, rather than deciding there is no
+  database and writing to a file.
+- **writes every change to SQL Server LocalDB**, one transaction per save;
+  `dossier.json` beside your records is an export written on every save.
+- **runs your scripts, hidden.** The runner for your workspace's `scripts\`
+  folder starts with no window and stops when Dossier quits.
+- **is only ever one.** A second double-click opens the page the first one is
+  serving.
 
-**One window, not two.** Until v4.1 this was two: `dossier-serve.bat` handed
-out the page, because Chrome and Edge refuse notifications to a page opened
-from `file://`, and `dossier-bridge.bat` talked to the database. The bridge
-was already an HTTP server on `127.0.0.1`, so it serves the page too, and the
-second window is gone. Three things fell out of that: the page and the API
-share an origin, so the CORS preflight went with it; the address is fixed
-rather than a port that moves every run, so the browser keeps your workspace
-folder between restarts; and `5500` is the port `dossier-serve.bat` used, so
-anybody coming from that keeps their handle and notices nothing. If something
-else holds `5500` the bridge takes the next free port and says so — that is a
-new address to the browser, so it will ask for your folder once.
+`dossier-bridge.bat` and `dossier-serve.bat` still exist, so nothing that
+points at them breaks; both pass straight through to `Dossier.bat`.
 
-**Every morning, without starting anything.**
+### Your work cannot be emptied by accident
 
-```
-scripts\dossier-bridge.bat startup "D:\Work\Dossier"     do it at login
-scripts\dossier-bridge.bat startup off                    stop doing it
-```
+4.1 had a way to lose everything, and it was ordinary: open a workspace
+against a database that was empty — a fresh `init`, a LocalDB that had been
+recreated — and it started a new empty workspace and saved it, into the
+database **and out over `dossier.json`**, in one save. The day's backup was
+rewritten on every save, so it went too. None of that can happen now:
 
-That writes one `.bat` into your Startup folder — no service, no scheduled
-task, no administrator, no PowerShell. It runs minimised and opens no browser;
-your bookmark does that. It also starts one straight away, so the address
-works now rather than after you next sign in.
-
-**Quote a path with spaces in it**, here and everywhere else. `%1` in a `.bat`
-stops at the first space, so `startup C:\Users\you\OneDrive - Contoso\Dossier`
-without quotes arrives as `C:\Users\you\OneDrive` — which exists, so nothing
-objects. It takes the whole line now, quoted or not, and prints the folder it
-settled on. Read that line.
+- **An empty database is filled from your `dossier.json`**, never the other way
+  round — or, if that file has nothing in it, from the newest backup that
+  does, after asking.
+- **Whichever copy is newer wins.** The database and the file are written
+  together and carry the same time; if the file is newer, it was changed while
+  the database was off, and those changes are brought in, not overwritten.
+- **A save that would leave no records, where there were some, is refused**,
+  and says so, with a button for the case where you really did delete them
+  all. A save that would more than halve ten or more records asks first, with
+  both numbers.
+- **The database keeps what it replaces.** `dbo.WorkspaceHistory` holds a
+  compressed copy of the workspace before each restore, import and shrinking
+  save, and every ten minutes while you work — a fortnight of it, then one a
+  day. **Menu → Workspace → Database history** lists those and every file ever
+  pushed, and restores or downloads any of them.
+- **A day's backup is never replaced by a smaller one**, and an unreadable
+  `dossier.json` is copied into `backups\` before anything could write over it.
+- **One database, one folder.** `.dossier-store.json` binds a folder to the
+  database, with the workspace's id; a different folder cannot open or
+  overwrite the first one's records.
+- `dossier-sql.bat push` refuses a database that already has records unless
+  you say `--replace`, and keeps what was there first. With no argument,
+  `dossier-sql.bat` only checks.
 
 **Why there is a process at all.** A browser has no SQL client — no page can
 open a connection to SQL Server. So the bridge sits between them: JSON over
 `127.0.0.1` on one side, T-SQL on the other. It needs nothing installed: it
 compiles itself on first run with the C# compiler that ships in
 `C:\Windows\Microsoft.NET\Framework64`, binds a plain socket to the loopback
-address (no administrator, no URL reservation), and writes its port and a
-per-run token into your workspace folder as `.bridge.json`. Dossier already
-holds a handle on that folder, so that file is the whole of the configuration
-— and nothing else on the machine can drive the bridge without first being
-able to read your records.
+address (no administrator, no URL reservation), and every route that touches
+the database needs a token made fresh each time it starts. The page gets that
+token from `/hello`, which answers only a page the bridge served itself (right
+`Host`, `Sec-Fetch-Site: same-origin`, no CORS on the answer), or from
+`.bridge.json` in your workspace folder, for a page opened from the folder.
 
-**Serving the page does not widen any of that.** The token still guards every
-route that touches the database. What is open is `GET` and `HEAD` of the
-folder `dossier.html` sits in — your clone — and only file types an
-application is made of: `.html`, `.js`, `.css`, fonts, images. `.json` is not
-on that list, which is what makes it impossible to serve a `dossier.json`, a
-`.bridge.json` or a backup even to somebody who kept their workspace inside
+**Serving the page does not widen any of that.** What is open is `GET` and
+`HEAD` of the folder `dossier.html` sits in — your clone — and only file types
+an application is made of: `.html`, `.js`, `.css`, fonts, images. `.json` is
+not on that list, which is what makes it impossible to serve a `dossier.json`,
+a `.bridge.json` or a backup even to somebody who kept their workspace inside
 the clone. Nor is anything whose name begins with a dot, nor `..`, nor
 `backups\` or `tasks\`.
 
@@ -681,17 +724,19 @@ the clone. Nor is anything whose name begins with a dot, nor `..`, nor
 |---|---|
 | `GET /health` | is it there, which database, which schema version |
 | `GET /workspace` | the current workspace, whole |
-| `PUT /workspace` | one transaction: the canonical row and every table derived from it, or none of them |
+| `PUT /workspace` | one transaction: the canonical row and every table derived from it, or none of them; 409 if it would empty or more than halve the workspace |
+| `GET /history` | every earlier state kept, and every push; `?id=` for one of them whole |
+| `GET /hello` | the token, to a page the bridge served itself and nothing else |
 | `POST`/`GET`/`DELETE /attachment` | document bytes, as rows |
 
 **What it costs you.** Dossier will not open a database-backed workspace when
-the bridge is not running, and will not write one either — not even the
+Dossier's database is not answering, and will not write one either — not even the
 export, because a file ahead of the database is two versions of the truth.
 It says so and offers to try again. That is the trade for having one copy of
 your work instead of two that can disagree.
 
-**A folder is database-backed once the bridge has run in it**, marked by
-`.bridge.json`. A folder that has never seen the bridge keeps working exactly
+**A folder is database-backed once it has been opened against the database**,
+marked by `.dossier-store.json`. A folder that never has keeps working exactly
 as it always did, reading and writing `dossier.json`.
 
 **Attachments are rows** — `dbo.Attachment`, bytes and all — so a backup of
@@ -1395,6 +1440,38 @@ back from what you wrote in September. `recall` reads one out verbatim,
 `forget` removes one, and **Menu → Setup → What you have taught it** lists
 them all — editable in place, with how often each has been asked for.
 
+### Learning — how it gets better at you
+
+Three things, all through the flow you already have (the prompt in
+[`flow/POWER-AUTOMATE.md`](flow/POWER-AUTOMATE.md) covers them; nothing else
+in the flow changes):
+
+- **Lessons.** Short lines about *you* — how you like to be answered, how you
+  work, who asks you for what, what it still needs to ask. They go with every
+  question as `workspace.lessons`, so the next answer is already shaped by
+  them, and the flow writes them with the `learn` action. **Setup → What I
+  have learned about you** lists them; ✕ forgets one.
+- **The daily look back.** At noon (the time is yours to set), while you are at
+  lunch, Dossier sends the flow everything since the last look: records closed
+  and how they were resolved, records raised and by whom, the conversations,
+  and every answer you marked *not what I meant*. What comes back — lessons,
+  resolutions worth keeping, draft runbooks for problems that keep recurring —
+  is kept, and reported in a conversation called **What I learned** with one
+  question it would like you to answer. Anything that would change a system
+  profile or a record waits there as a button; nothing like that happens by
+  itself. Missed noon because Dossier was closed? It runs the next time it is
+  open. A morning with nothing in it costs no call.
+- **Runbooks that teach back.** **Interview me** on a runbook has it read the
+  procedure and ask you, one question at a time, for what it leaves out — the
+  real table names, how to tell the causes apart, who to escalate to — then
+  save the improved draft. **Learn from a BAU document…** hands it a guideline
+  to turn into runbooks, and it asks about what the document does not say.
+
+The prompt also changes how it answers support questions: it works out what
+is going on in *your* case and gives the one next check with your values in
+it, rather than reading the runbook back to you — and when the runbook is
+thin, it asks you and keeps the answer.
+
 ### Asking with a file, and answers with code
 
 The Ask box takes **more than one line** (Enter sends, Shift+Enter breaks) and
@@ -2003,9 +2080,11 @@ model from scratch was tried, measured, and rejected on the numbers.
   inside the browser, which is theirs to clear; export a copy now and then.
   Scripts cannot run from a browser store, since there is no folder for the
   runner to watch.
-- **Notifications need `http://`**, not `file://`. Use
-  `scripts\dossier-bridge.bat`, which hands out the page as well as saving to
-  the database, or `scripts\dossier-serve.bat` for the page on its own.
+- **Notifications need `http://`**, not `file://`. Start Dossier with
+  `Dossier.bat`, which hands the page out from `127.0.0.1`.
+- **The daily look back needs Dossier open** at some point after the time set.
+  It is the page that sends it; with every tab closed all day, it waits for
+  the next time Dossier is open after that time.
 - **With the tab closed, nothing is queued.** Dossier schedules its own
   automatic runs, so a routine marked *runs itself* needs the tab open *and* a
   live runner. For something that must fire regardless of whether anyone is

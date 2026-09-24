@@ -1,5 +1,13 @@
 # Making it fast again
 
+> **4.2:** the prompt itself is now 15 KB instead of 40 (about six thousand
+> fewer tokens on every question), pictures go at the 768-pixel size the
+> model actually reads, and a picture that was read on the PC travels once
+> instead of twice. What to change in the flow for the rest - a fast model,
+> `ocr.js` beside the app, the probe answered first - is in
+> [POWER-AUTOMATE.md s4d](POWER-AUTOMATE.md#4d-making-it-fast). The rest of
+> this page is the 3.x round, which is all still true.
+
 *What was slow, why, what changed in the app, and the one thing to change in
 Power Automate. Read §1 and §4; the rest is there when you want to check it.*
 

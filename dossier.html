@@ -4088,6 +4088,35 @@ const STRINGS = {
   DbHistoryGo: "Restore it",
   DbHistoryDl: "Download",
   DbHistoryDone: "Restored {n} record(s) from {p0}.",
+  ReflectThread: "What I learned",
+  ReflectNeedsFlow: "Learning needs the flow \u2014 set it up in Setup \u2192 Power Automate.",
+  ReflectAsk: "It is my break. Look back over my work since {p0} \u2014 {n1} closed, {n2} raised \u2014 and our conversations, in the attached file. Tell me in a few lines what you learned about how I work and how things get fixed here, keep what is worth keeping, and ask me one thing you still do not know.",
+  ReflectFailed: "The look back did not reach the flow: ",
+  ReflectDefault: "I went back over the morning.",
+  ReflectKept: "Kept {n}:",
+  ReflectKeptNote: "a note \u2014 {p0}",
+  ReflectKeptBook: "a draft runbook \u2014 {p0}",
+  ReflectNote: "The daily look back, over everything since {p0}. Lessons and notes are in Setup, where any of them can be forgotten; draft runbooks wait for your approval; the buttons below are changes I would like to make, and nothing happens unless you press one.",
+  ReflectToast: "While you were away I learned {n} thing(s).",
+  ReflectToastNone: "I looked back over the morning \u2014 nothing new worth keeping.",
+  ReflectOpen: "Show me",
+  LearnHead: "What I have learned about you",
+  LearnHint: "One line each, written as we work together and read before every answer \u2014 how you like to be answered, how you work, who asks you for what. Forget anything that is wrong.",
+  ReflectDaily: "Look back over the day's work at",
+  ReflectNow: "Look back now",
+  ReflectRunning: "Looking back\u2026",
+  ReflectLast: "Last look back {p0} \u2014 kept {n}.",
+  ReflectLastError: "The last look back failed: {p0}",
+  ReflectNever: "No look back yet \u2014 the first is at the time above.",
+  LearnEmpty: "Nothing yet. It fills up from our conversations and from the daily look back.",
+  LearnForgot: "Forgotten.",
+  LearnKept: "I will remember that:",
+  LearnUpdated: "Updated what I know:",
+  RbInterview: "Interview me",
+  RbStudy: "Learn from a BAU document\u2026",
+  RbInterviewAsk: "Interview me about the runbook \u201c{p0}\u201d ({p1}). Read it and find what it leaves out or leaves vague \u2014 the symptoms people actually report, how to tell the causes apart, the real table and screen names, what not to do, when and to whom to escalate \u2014 and ask me ONE question at a time. After each answer, say what you will change. When we are done, save the improved version as a draft.",
+  RbStudyAsk: "Here is a BAU support guideline. Learn it: turn each procedure in it into a runbook \u2014 the symptoms people report, how to tell the causes apart, the checks with the real names, the fix in plain steps, what not to do, when to escalate. Save each as a draft, then ask me about the most important thing the document does not say.",
+  RbStudyHint: "Pick the guideline \u2014 a PDF (save a Word document as PDF first) or a text file \u2014 then press send.",
   RtFormat: "Formatting \u2014 or select text. Ctrl+B, Ctrl+I, Ctrl+U; **bold**, _italic_, `code`, ``` for a block, > for a quote.",
   RtBadLink: "That is not a web address. Links can be http, https or mailto.",
   Ok: "Right",
@@ -6440,7 +6469,7 @@ function hydrate(d){
     uses:+x.uses || 0, lastUsed:x.lastUsed || ""
   })).filter(x => x.file) : [];
   S.chats = Array.isArray(d.chats) ? d.chats.filter(c => c && c.id).map(c => ({
-    id:c.id, title:String(c.title || "").slice(0, 80),
+    id:c.id, title:String(c.title || "").slice(0, 80), reflect:!!c.reflect,
     created:c.created || "", updated:c.updated || "",
     msgs:Array.isArray(c.msgs) ? c.msgs.slice(-80) : [],
     convo:(c.convo && typeof c.convo === "object") ? c.convo : {}
@@ -8462,13 +8491,21 @@ const CHAT = { acts:{}, code:{}, files:[], n:0, last:"", gif:CHAT_GIF_DATA };
    dialog does not need four megabytes to be readable; it needs about eighty
    kilobytes. */
 const CHAT_FILES_MAX = 5;
-/* Tried in order until one fits: longest edge, then JPEG quality. A
-   screenshot of a dialog is done at the first rung; a photograph of a screen
-   taken on a phone might take three. The last rung is the floor — whatever
-   it produces is what goes, because something legible is better than a
-   question that silently fails. */
-const CHAT_STEPS = [[1600, 0.85], [1280, 0.78], [1000, 0.7], [800, 0.6]];
-const CHAT_WANT = 700 * 1024;      /* aim for this much base64 or less */
+/* Tried in order until one fits: shortest edge, longest edge, JPEG quality.
+
+   The first rung is the size the model actually looks at. GPT-4o and its
+   relatives - what AI Builder and Azure OpenAI run - fit a picture inside
+   2048 x 2048 and then scale it so its short side is 768 pixels before a
+   single token is spent on it. Anything sent bigger than that is carried
+   through Power Automate, base64'd, parsed, and thrown away. A 1920 x 1080
+   screenshot is therefore sent as 1365 x 768: exactly what the model would
+   have made of it, at about a quarter of the bytes 1600-wide used to cost.
+
+   The words in a picture are read on this PC from the original, before any
+   of this, so shrinking what travels costs the reading nothing. The last
+   rung is the floor - something legible beats a question that fails. */
+const CHAT_STEPS = [[768, 2048, 0.82], [768, 1600, 0.72], [640, 1280, 0.65], [512, 1024, 0.6]];
+const CHAT_WANT = 320 * 1024;      /* aim for this much base64 or less */
 const CHAT_ONE_MAX = 2 * 1024 * 1024;   /* one file, after shrinking */
 const CHAT_ALL_MAX = 3.5 * 1024 * 1024; /* everything on one question */
 const CHAT_READ_MAX = 25 * 1024 * 1024; /* refuse to even open one bigger */
@@ -9770,6 +9807,7 @@ function chatNew(quiet){
 }
 function chatPush(m){
   const c = chatThread() || chatNew(true);
+  if (!m.at) m.at = new Date().toISOString();
   c.msgs.push(m);
   while (c.msgs.length > CHAT_MAX_MSGS) c.msgs.shift();
   if (!c.title && m.who === "you") c.title = m.text.slice(0, 60);
@@ -10559,6 +10597,8 @@ function flowContext(q){
     holidays: hols.map(h => ({ d:h.d, n:h.n, k:h.k })),
     holidaysTotal: holidays().length,
     memory: memoryForFlow(q),
+    lessons: lessonsForFlow(),
+    mode: (String(q || "").match(/^\[(teach|study|reflect)\]/) || [0, "chat"])[1],
     memoryIndex: memoryIndexForFlow(q),
     memoryTotal: memoryStore().length,
     runbooks: runbooksForFlow(q),
@@ -10854,6 +10894,8 @@ function flowDescribe(a){
       return { say:"Add \u201c" + g.name + "\u201d as a " +
                    (g.kind === "system" ? "system" : g.kind === "type" ? "work type" : "party"),
                confirm:"Add it?" };
+    case "learn":
+      return { say:"\u201c" + g.lesson + "\u201d", note:g.kind || "", confirm:L("LearnKept").replace(/:$/, "?") };
     case "remember": {
       const had = memoryFind(g.replaces || g.title);
       return { say:(had ? "Update what I know about \u201c" + had.title + "\u201d"
@@ -10883,6 +10925,21 @@ function flowDescribe(a){
                      " work-log entries go with it" : "") + ". Cancelling keeps the history.",
                confirm:"Delete it for good?" };
     }
+    /* these used to fall through to the bare action name - "saveProfile" -
+       as the whole of what the person was asked to agree to */
+    case "saveRunbook":
+      return { say:(rbFind(g.title) ? "Update the runbook \u201c" : "Write a runbook \u201c") + g.title + "\u201d" +
+                   (g.system ? " \u00b7 " + g.system : "") + " \u00b7 " + (g.status === "approved" ? "approved" : "draft"),
+               note:(g.steps || []).slice(0, 4).map((x, i) => (i + 1) + ". " + x).join("\n"),
+               confirm:"Save it?" };
+    case "saveProfile":
+      return { say:"Update what I know about " + g.system,
+               note:[g.facts, g.quirks].filter(Boolean).join("\n").slice(0, 400),
+               confirm:"Save it?" };
+    case "verifyRunbook":
+      return { say:"Mark \u201c" + g.title + "\u201d as checked today", confirm:"Stamp it?" };
+    case "deleteRunbook":
+      return { say:"Delete the runbook \u201c" + g.title + "\u201d", confirm:"Delete it?" };
   }
   return { say:a.do, confirm:"Do that?" };
 }
@@ -11149,6 +11206,12 @@ function flowRun(a, quiet){
         ((n.tags || []).length ? "\n\n\u2014 " + n.tags.join(", ") : "")).join("\n\n\u2500\u2500\u2500\n\n") };
     }
 
+    case "learn": {
+      const r = lessonSave(g.lesson, g.kind, g.replaces, REFLECT.applying ? "look back" : "conversation");
+      if (!r) return null;
+      touch(); paintReflect();
+      return done((r.replaced ? L("LearnUpdated") : L("LearnKept")) + " \u201c" + r.lesson.text + "\u201d");
+    }
     case "remember": {
       pushUndo("remember", true);
       const r = memorySave({ title:g.title, body:g.body, tags:g.tags,
@@ -12403,6 +12466,7 @@ function renderRunbooks(){
         '<button class="btn sm" id="rbAdd">' + esc(L("RunbookAdd")) + "</button>" +
         '<button class="btn sm" id="rbExp">' + esc(L("RunbookExport")) + "</button>" +
         '<button class="btn sm" id="rbImp">' + esc(L("RunbookImport")) + "</button>" +
+        '<button class="btn sm" id="rbStudy">' + esc(L("RbStudy")) + "</button>" +
       "</div>" +
       (list.length
         ? '<div class="memlist">' + list.map((r, i) =>
@@ -12438,11 +12502,15 @@ function renderRunbooks(){
               esc(r.escalation || "") + "</textarea>" +
             '<div class="memf"><span class="mm">' +
               esc(r.uses ? L("MemoryUsed", { n:r.uses }) : L("MemoryNever")) + "</span>" +
+              '<span style="display:flex;gap:6px">' +
+              '<button class="btn sm" data-rbask="' + i + '">' + esc(L("RbInterview")) + "</button>" +
               '<button class="btn sm" data-rbdel="' + i + '">' + esc(L("RunbookForget")) +
-            "</button></div></details>").join("") + "</div>"
+            "</button></span></div></details>").join("") + "</div>"
         : '<p class="hint2" style="margin-top:8px;color:var(--ink-3)">' +
           esc(L("RunbookEmpty")) + "</p>");
 
+    const study = $("rbStudy"); if (study) study.onclick = rbStudy;
+    box.querySelectorAll("[data-rbask]").forEach(b => b.onclick = () => rbInterview(runbookStore()[+b.dataset.rbask]));
     box.querySelectorAll("[data-rb]").forEach(el => {
       el.onchange = () => {
         const r = runbookStore()[+el.dataset.rb];
@@ -12870,7 +12938,7 @@ function chatDo(act){
       if (c && r.context) c.convo = r.context;
       return chatBot(r, null);
     }
-    case "teach":  return openTeach(act.text);
+    case "teach":  learnSignal(act.text); touch(); return openTeach(act.text);
     case "taught": return openTaught();
     case "alias": {
       /* a word you gave it joins the lexicon beside the systems and the
@@ -15543,6 +15611,9 @@ async function renderModal(){
     '<div style="display:flex;gap:6px;margin-top:8px"><input class="in mono" id="tplNew" style="font-size:11px" ' +
       "placeholder=\"Restart app pool @&quot;Infra / IIS&quot; :admin 15m today\"><button class=\"btn sm\" id=\"tplAdd\">" + L("Add") + "</button></div>" +
 
+    "<h5 class=\"eyebrow\" style=\"margin:22px 0 8px\">" + L("LearnHead") + "</h5>" +
+    '<div id="learnBox"></div>' +
+
     "<h5 class=\"eyebrow\" style=\"margin:22px 0 8px\">" + L("MemoryHead") + "</h5>" +
     '<div id="memBox"></div>' +
 
@@ -15560,6 +15631,7 @@ async function renderModal(){
 
     "<h5 class=\"eyebrow\" style=\"margin:22px 0 8px\">" + L("FlowHead") + "</h5>" +
     '<div id="flowBox"></div>';
+  paintReflect();
   renderMemory();
   renderIncidents();
   renderRunbooks();
@@ -17438,6 +17510,284 @@ function showBanner(html, buttons, info){
   $$("#bannerAct [data-bb]").forEach(b => b.onclick = () => (buttons[+b.dataset.bb].run || function(){})());
 }
 function hideBanner(){ $("banner").classList.remove("on"); }
+
+/* ═══ LEARNING — getting better at this person, day by day ═══════════════
+   Three things, all through the flow you already have - no new input, no new
+   action in Power Automate, only the prompt.
+
+   LESSONS. Short, one line each: how this person likes to be answered, how
+   they work, who asks them for what, what the assistant should ask about
+   because it does not know. They travel with every question as
+   workspace.lessons, so the next answer is already shaped by them. The flow
+   writes them with "learn"; they are listed in Setup, where any one can be
+   forgotten.
+
+   THE DAILY LOOK BACK. At the time set (noon, by default - the lunch break)
+   Dossier gathers the work since the last look: every record closed, with
+   how it was resolved; every record raised, with who raised it and against
+   what; every conversation, and every answer marked "not what I meant". It
+   sends that to the flow as one question, "[reflect]", and the flow answers
+   with what it learned: lessons, methods to keep, draft runbooks. If the tab
+   was shut at noon it happens the next time Dossier is open after noon; a
+   day with nothing in it costs no call at all.
+
+   What comes back is kept without a dialog in anybody's face at lunchtime,
+   because each thing it can keep is either about the assistant itself (a
+   lesson), a note in its own notebook (remember), or a draft nobody relies
+   on until a person approves it (saveRunbook, forced to draft). Everything
+   else - changing a system profile, anything that touches records - waits
+   in the report as a button. The report is a conversation of its own,
+   "What I learned", and every line of it can be undone from Setup.
+
+   RUNBOOKS THAT TEACH BACK. "Interview me" on a runbook opens the chat with
+   the assistant asking the questions that would make it usable - one at a
+   time - and "Learn from a BAU document" hands it a guideline to turn into
+   runbooks, asking about what the document leaves out. */
+const LESSON_KINDS = ["style", "preference", "habit", "people", "system", "gap"];
+function lessonStore(){
+  if (!Array.isArray(S.settings.lessons)) S.settings.lessons = [];
+  return S.settings.lessons;
+}
+function lessonKey(t){ return String(t || "").toLowerCase().replace(/[^\p{L}\p{N}]+/gu, " ").trim(); }
+function lessonSave(text, kind, replaces, source){
+  text = String(text || "").replace(/\s+/g, " ").trim().slice(0, 300);
+  if (!text) return null;
+  kind = String(kind || "").toLowerCase();
+  if (LESSON_KINDS.indexOf(kind) < 0) kind = "habit";
+  const list = lessonStore(), now = new Date().toISOString();
+  let hit = replaces ? list.find(l => lessonKey(l.text) === lessonKey(String(replaces).replace(/^\[\w+\]\s*/, ""))) : null;
+  if (!hit) hit = list.find(l => lessonKey(l.text) === lessonKey(text));
+  if (hit){
+    Object.assign(hit, { text, kind, at:now, source:source || hit.source });
+    S.settings.lessons = [hit].concat(list.filter(l => l !== hit));
+    return { lesson:hit, replaced:true };
+  }
+  const l = { id:"L" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5),
+              text, kind, at:now, source:source || "chat" };
+  list.unshift(l);
+  if (list.length > 80) list.length = 80;
+  return { lesson:l, replaced:false };
+}
+/* newest first, thirty at most, one line each: a few hundred tokens */
+function lessonsForFlow(){
+  return lessonStore().slice(0, 30).map(l => "[" + l.kind + "] " + l.text);
+}
+
+/* what "not what I meant" was pressed on, for the look back */
+function learnSignal(text){
+  if (!Array.isArray(S.settings.learnSignals)) S.settings.learnSignals = [];
+  S.settings.learnSignals.unshift({ at:new Date().toISOString(), text:String(text || "").slice(0, 300) });
+  S.settings.learnSignals.length = Math.min(S.settings.learnSignals.length, 40);
+}
+
+/* ── the daily look back ──────────────────────────────────────────────── */
+const REFLECT = { running:false };
+function reflectCfg(){
+  S.settings.reflect = Object.assign({ on:true, at:"12:00", last:"", lastAt:"", error:"", log:[] },
+                                     S.settings.reflect || {});
+  return S.settings.reflect;
+}
+function reflectDue(){
+  const r = reflectCfg();
+  if (!r.on || REFLECT.running || !FS.ok || typeof flowOn !== "function" || !flowOn()) return false;
+  if (r.last === today()) return false;
+  const m = String(r.at || "12:00").match(/^(\d{1,2}):(\d{2})/) || [0, 12, 0];
+  const now = new Date();
+  return now.getHours() * 60 + now.getMinutes() >= (+m[1]) * 60 + (+m[2]);
+}
+
+/* Everything since the last look, as text the prompt can read whole. Closed
+   records carry how they were resolved - that is the part worth learning -
+   and raised ones carry who raised them, against what, and how it was put. */
+function reflectMaterial(since){
+  const out = [], clip = (s, n) => { s = String(s || "").trim(); return s.length > n ? s.slice(0, n) + "…" : s; };
+  const closed = S.tasks.filter(t => t.completed && t.completed >= since && t.status === "done");
+  const raised = S.tasks.filter(t => t.created && t.created >= since);
+  if (closed.length){
+    out.push("== CLOSED since " + since.slice(0, 16).replace("T", " ") + " (" + closed.length + ") ==");
+    closed.slice(0, 25).forEach(t => {
+      const took = t.created && t.completed ? Math.round((new Date(t.completed) - new Date(t.created)) / 60000) : 0;
+      out.push("", t.code + " · " + t.title,
+        [t.system, t.type, t.priority, t.ticket, t.requester ? "raised by " + t.requester : "",
+         took ? "open " + (took >= 1440 ? Math.round(took / 1440) + "d" : took >= 60 ? Math.round(took / 60) + "h" : took + "m") : "",
+         t.spent ? t.spent + " min worked" : ""].filter(Boolean).join(" · "));
+      if (t.notes) out.push("Notes: " + clip(t.notes, 1500));
+      const logs = (t.log || []).filter(l => l.kind !== "status" && l.text && !/^notes →/.test(l.text)).slice(-6);
+      if (logs.length) out.push("Log: " + logs.map(l => clip(l.text, 220)).join(" | "));
+      const done = (t.checklist || []).filter(c => c.done).map(c => c.text);
+      if (done.length) out.push("Steps done: " + clip(done.join("; "), 400));
+      if (t.waitOn) out.push("Waited on: " + t.waitOn + (t.waitNote ? " (" + clip(t.waitNote, 120) + ")" : ""));
+    });
+  }
+  if (raised.length){
+    out.push("", "== RAISED since then (" + raised.length + ") ==");
+    raised.slice(0, 40).forEach(t => out.push(t.code + " · " + t.title + " · " +
+      [t.system, t.type, t.priority, t.ticket, t.requester ? "by " + t.requester : ""].filter(Boolean).join(" · ") +
+      (t.notes ? " — " + clip(t.notes.replace(/\s+/g, " "), 240) : "")));
+  }
+  const talk = [];
+  (S.chats || []).filter(c => c.updated >= since && !c.reflect).slice(0, 8).forEach(c => {
+    const msgs = (c.msgs || []).filter(m => !m.at || m.at >= since).slice(-14);
+    if (!msgs.length) return;
+    talk.push("", "-- " + (c.title || "conversation") + " --");
+    msgs.forEach(m => {
+      if (m.who === "you") talk.push("THEM: " + clip(m.text, 400));
+      else if (m.who === "bot" && m.reply && m.reply.say) talk.push("YOU: " + clip(m.reply.say.replace(/\s+/g, " "), 300));
+      else if (m.who === "receipt") talk.push((m.no ? "DECLINED: " : "DONE: ") + clip(m.text, 160));
+    });
+  });
+  if (talk.length) out.push("", "== CONVERSATIONS ==", ...talk);
+  const wrong = (S.settings.learnSignals || []).filter(x => x.at >= since);
+  if (wrong.length){
+    out.push("", "== ANSWERS THEY MARKED “NOT WHAT I MEANT” ==");
+    wrong.forEach(x => out.push("- to: " + x.text));
+  }
+  const books = runbookStore().filter(r => r.updated && r.updated >= since);
+  if (books.length) out.push("", "== RUNBOOKS CHANGED ==", ...books.map(r => "- " + r.title + " (" + (r.system || "?") + ")"));
+  let text = out.join("\n");
+  if (text.length > 40000) text = text.slice(0, 40000) + "\n[cut here: more than fits]";
+  return { text, count: closed.length + raised.length + talk.length + wrong.length + books.length,
+           closed: closed.length, raised: raised.length };
+}
+
+function reflectThread(){
+  if (!Array.isArray(S.chats)) S.chats = [];
+  let c = S.chats.find(x => x.reflect);
+  if (!c){
+    c = { id:"K" + Date.now().toString(36) + "r", title:L("ReflectThread"), reflect:true,
+          created:new Date().toISOString(), updated:new Date().toISOString(), msgs:[], convo:{} };
+    S.chats.unshift(c);
+  }
+  return c;
+}
+
+async function reflectNow(byHand){
+  const r = reflectCfg();
+  if (REFLECT.running) return;
+  if (!flowOn()){ if (byHand) toast(L("ReflectNeedsFlow"), { bad:true }); return; }
+  const since = r.lastAt || new Date(Date.now() - 36 * 3600 * 1000).toISOString();
+  const mat = reflectMaterial(since);
+  if (!mat.count && !byHand){
+    /* a quiet morning is not worth a call */
+    r.last = today(); touch(); return;
+  }
+  REFLECT.running = true;
+  paintReflect();
+  const q = "[reflect] " + L("ReflectAsk", { p0:stamp(since), n1:mat.closed, n2:mat.raised });
+  const ctx = Object.assign(flowContext(q), {
+    mode:"reflect", conversation:[],
+    attachments:[{ name:"work-since-" + since.slice(0, 10) + ".txt", type:"text/plain", size:mat.text.length,
+                   data:"", kind:"text", text:mat.text || "(nothing since the last look)", pages:0, note:"" }],
+    picture:CHAT_BLANK_PNG, pictureName:""
+  });
+  let out = null, err = null;
+  try { out = await DossierFlow.ask(q, ctx, flowCfg()); }
+  catch(e){ err = e; }
+  REFLECT.running = false;
+  if (err){
+    r.error = String(err.message || err);
+    touch(); paintReflect();
+    if (byHand) toast(L("ReflectFailed") + r.error, { bad:true });
+    return;
+  }
+
+  const kept = [], waiting = [];
+  REFLECT.applying = true;
+  (out.actions || []).forEach(a => {
+    if (a.do === "learn" || a.do === "remember"){ flowRun(a, true); kept.push(a); }
+    else if (a.do === "saveRunbook"){ a.args.status = "draft"; flowRun(a, true); kept.push(a); }
+    else if (a.write) waiting.push(a);
+    else if (a.do !== "say") flowRun(a, true);
+  });
+  REFLECT.applying = false;
+  const line = a => a.do === "learn" ? "• " + a.args.lesson
+    : a.do === "remember" ? "• " + L("ReflectKeptNote", { p0:a.args.title })
+    : "• " + L("ReflectKeptBook", { p0:a.args.title });
+  const say = (out.say || L("ReflectDefault")) +
+    (kept.length ? "\n\n**" + L("ReflectKept", { n:kept.length }) + "**\n" + kept.map(line).join("\n") : "") +
+    (out.ask ? "\n\n" + out.ask : "");
+  const c = reflectThread();
+  c.msgs.push({ who:"bot", at:new Date().toISOString(), src:"",
+    reply:{ say, note:L("ReflectNote", { p0:stamp(since) }),
+            chips:waiting.slice(0, 6).map(a => ({ label:flowDescribe(a).say.slice(0, 70), act:{ kind:"flow", a } })),
+            seeds:(out.choices || []).slice(0, 4) } });
+  while (c.msgs.length > CHAT_MAX_MSGS) c.msgs.shift();
+  c.updated = new Date().toISOString();
+  r.last = today(); r.lastAt = new Date().toISOString(); r.error = "";
+  r.log = [{ at:r.lastAt, kept:kept.length, waiting:waiting.length }].concat(r.log || []).slice(0, 14);
+  touch();
+  if ($("chat").classList.contains("on") && S.chatId === c.id) chatReplay();
+  chatSide();
+  paintReflect();
+  const n = kept.length + waiting.length;
+  toast(n ? L("ReflectToast", { n }) : L("ReflectToastNone"), {
+    action:L("ReflectOpen"), onAction:() => { S.chatId = c.id; openChat(); chatPaint(); } });
+  if (typeof Notification !== "undefined" && Notification.permission === "granted" && document.hidden && n){
+    try { new Notification("Dossier", { body:L("ReflectToast", { n }) }); } catch(e){}
+  }
+}
+
+/* the Setup section: what it knows about you, and when it looks back */
+function paintReflect(){
+  const box = $("learnBox");
+  if (!box) return;
+  const r = reflectCfg(), list = lessonStore();
+  box.innerHTML =
+    '<p class="hint2">' + esc(L("LearnHint")) + "</p>" +
+    '<div class="brow" style="align-items:center;gap:8px;flex-wrap:wrap;margin:8px 0">' +
+      '<label style="display:flex;gap:6px;align-items:center;font-size:12px"><input type="checkbox" id="rfOn"' +
+        (r.on ? " checked" : "") + "> " + esc(L("ReflectDaily")) + "</label>" +
+      '<input class="in mono" id="rfAt" type="time" value="' + esc(r.at || "12:00") + '" style="max-width:110px">' +
+      '<button class="btn sm" id="rfNow"' + (REFLECT.running ? " disabled" : "") + ">" +
+        esc(REFLECT.running ? L("ReflectRunning") : L("ReflectNow")) + "</button>" +
+    "</div>" +
+    '<p class="hint2" style="margin:0 0 10px">' + esc(
+      r.error ? L("ReflectLastError", { p0:r.error })
+      : r.lastAt ? L("ReflectLast", { p0:stamp(r.lastAt), n:((r.log || [])[0] || {}).kept || 0 })
+      : L("ReflectNever")) +
+      (flowOn() ? "" : " " + L("ReflectNeedsFlow")) + "</p>" +
+    (list.length
+      ? '<div class="memlist">' + list.map((l, i) =>
+          '<div class="tagx" style="display:flex;width:100%;margin-bottom:5px;border-radius:var(--r-sm);padding:7px 10px;gap:8px;align-items:flex-start">' +
+          '<span class="mm" style="min-width:74px">' + esc(l.kind) + "</span>" +
+          '<span style="flex:1;font-size:12px;line-height:1.5">' + esc(l.text) +
+          '<small style="display:block;color:var(--ink-3);font-size:10px">' + esc(stamp(l.at)) + " · " + esc(l.source || "") + "</small></span>" +
+          '<button class="btn sm" data-lsdel="' + i + '" title="' + esc(L("MemoryForget")) + '">✕</button></div>').join("") + "</div>"
+      : '<p class="hint2" style="color:var(--ink-3)">' + esc(L("LearnEmpty")) + "</p>");
+  const on = (id, ev, fn) => { const el = $(id); if (el) el[ev] = fn; };
+  on("rfOn", "onchange", e => { reflectCfg().on = e.target.checked; touch(); });
+  on("rfAt", "onchange", e => { if (/^\d{2}:\d{2}$/.test(e.target.value)){ reflectCfg().at = e.target.value; touch(); } });
+  on("rfNow", "onclick", () => reflectNow(true));
+  box.querySelectorAll("[data-lsdel]").forEach(b => b.onclick = () => {
+    const l = lessonStore()[+b.dataset.lsdel]; if (!l) return;
+    S.settings.lessons = lessonStore().filter(x => x !== l);
+    touch(); paintReflect();
+    toast(L("LearnForgot"));
+  });
+}
+
+/* ── runbooks that teach back ─────────────────────────────────────────── */
+function rbInterview(r){
+  if (!r) return;
+  if (!flowOn()) return toast(L("ReflectNeedsFlow"), { bad:true });
+  closeModal();
+  openChat();
+  chatNew(true); chatPaint();
+  chatAsk("[teach] " + L("RbInterviewAsk", { p0:r.title, p1:r.system || "?" }));
+}
+function rbStudy(){
+  if (!flowOn()) return toast(L("ReflectNeedsFlow"), { bad:true });
+  closeModal();
+  openChat();
+  chatNew(true); chatPaint();
+  $("chatq").value = "[study] " + L("RbStudyAsk");
+  chatGrow();
+  toast(L("RbStudyHint"), { action:L("Ok") });
+  $("chatFile").click();
+}
+
+setInterval(() => { if (reflectDue()) reflectNow(false); }, 60000);
+setTimeout(() => { if (reflectDue()) reflectNow(false); }, 45000);
 
 /* ═══ RICH TEXT — the long boxes, formatted the way Telegram does it ═════
    Notes, the message kept with a new record, what the assistant has been
@@ -19491,8 +19841,9 @@ function chatShrinkImage(file){
     img.onload = () => {
       let best = null;
       try {
-        for (const [edge, q] of CHAT_STEPS){
-          const scale = Math.min(1, edge / Math.max(img.width, img.height));
+        for (const [short, long, q] of CHAT_STEPS){
+          const scale = Math.min(1, short / Math.min(img.width, img.height),
+                                    long / Math.max(img.width, img.height));
           const w = Math.max(1, Math.round(img.width * scale));
           const h = Math.max(1, Math.round(img.height * scale));
           const c = document.createElement("canvas");

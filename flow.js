@@ -318,6 +318,15 @@ const ACTIONS = {
     what:"Delete a record. Its folder and documents stay on disk. Prefer " +
          "setStatus to cancelled, which keeps the history." },
 
+  learn: { write:true, needs:["lesson"],
+    args:{ lesson:TXT, kind:STR, replaces:STR },
+    what:"Keep one short thing learned about THIS PERSON - how they like to be " +
+         "answered, how they work, who usually asks them for what, a gap in " +
+         "what you know that you should ask them about. One sentence. The " +
+         "kept ones are in workspace.lessons; pass replaces with one of those " +
+         "exactly to correct it rather than add another. Not for procedures - " +
+         "a method is remember, a procedure is saveRunbook." },
+
   remember: { write:true, needs:["title","body"],
     args:{ title:STR, body:TXT, tags:LIST, system:STR, replaces:STR },
     what:"Keep what you were just told, so it can be recalled in any later " +
@@ -835,8 +844,15 @@ function buildRequest(text, ctx, cfg){
     /* Files the person attached to this question. A PDF or a screenshot is
        often the whole of what they are asking about, and typing out what an
        error dialog says is how detail gets lost. */
+    /* A picture the app has already read travels ONCE, as picture, and not
+       again here. It used to go twice - here and as picture - which doubled
+       the heaviest thing in the request for nothing: a flow that reads text
+       skips anything with text (4b), and a flow that looks at pixels looks
+       at picture. A picture with no text read off it keeps its bytes here,
+       for the recogniser. */
     attachments: (ctx.attachments || []).map(a => ({
-      name: a.name, type: a.type, size: a.size, data: a.data || "",
+      name: a.name, type: a.type, size: a.size,
+      data: (a.text && /^image\//.test(a.type || "")) ? "" : (a.data || ""),
       kind: a.kind || (/^image\//.test(a.type || "") ? "image"
                        : a.type === "application/pdf" ? "pdf" : "text"),
       /* what the app read out of the file before sending - the whole text of
@@ -865,6 +881,17 @@ function buildRequest(text, ctx, cfg){
     conversation: (ctx.conversation || []).slice(-12),
     owner: st.owner || "",
     workspace: {
+      /* what kind of question this is: "chat" for one typed in the panel;
+         "reflect" for the daily look back over the morning's work;
+         "teach" when the person has asked to be interviewed about a
+         runbook; "study" when a BAU guideline has been handed over to be
+         turned into runbooks. The message starts with the same word in
+         brackets, so a prompt can see it either way. */
+      mode: ctx.mode || "chat",
+      /* What has been learned about THIS PERSON - how they like answers,
+         how they work, who asks them for what. Short, one line each, the
+         newest first; read before answering and written by "learn". */
+      lessons: ctx.lessons || [],
       scope: scope,
       systems: (st.systems || []).map(s => s.name),
       types: (st.types || []).slice(),

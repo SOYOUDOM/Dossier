@@ -23,6 +23,11 @@
   "conversation": [],
   "owner": "",
   "workspace": {
+    "mode": "chat",
+    "lessons": [
+      "[style] Wants the query first and the explanation after",
+      "[people] Sokha from Branch Ops raises most portal password resets"
+    ],
     "scope": "live",
     "systems": [
       "Imaging",
