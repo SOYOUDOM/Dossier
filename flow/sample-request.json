@@ -1323,5 +1323,7 @@
     "say": "a sentence for the person, in their own language",
     "ask": "a question back, if you need one thing before you can act",
     "actions": "a list of { do: …, …arguments… } drawn only from can[]"
-  }
+  },
+  "prompt": "(the whole prompt, filled in by Dossier from flow/prompt.txt - the one input the prompt action needs)",
+  "promptFrom": "flow/prompt.txt"
 }

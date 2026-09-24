@@ -6,6 +6,42 @@ holds — which is what to paste into a bug report.
 
 ---
 
+## 4.3.0 - 2026-09-24
+
+**The prompt is a file. Power Automate no longer holds it.**
+
+Changing how the assistant behaved meant opening the flow, editing the
+prompt action, and saving - every time. Now the instructions are
+`flow/prompt.txt`. Before every question Dossier reads it, fills in its nine
+places (`{message}`, `{today}`, `{weekday}`, `{calendar}`, `{workspace}`,
+`{actions}`, `{history}`, `{memory}`, `{attached}`) and sends the finished
+text as one field, `prompt`.
+
+**In Power Automate, one last change:** clear the prompt action's text, give
+it one input, `prompt`, set to `body('Parse_JSON')?['prompt']`, and save.
+After that it is never opened again for a prompt change.
+
+- Where the text comes from, first found wins: `dossier-prompt.txt` in your
+  records folder (your own version; updates never touch it), then
+  `flow/prompt.txt`, then a copy inside `flow.js` for a page opened straight
+  from the folder.
+- Read fresh for every question: save the file, ask, and that answer already
+  uses it.
+- A file without `{message}` is passed over, and Setup says why. Setup shows
+  which file is in use, with **Read it again** and **Copy the template**;
+  **Preview the request** shows the filled-in prompt the model reads.
+- Filled in one pass, so a message containing the letters `{workspace}`
+  stays as those letters.
+- Your notes go once, in `{memory}` - no longer again inside the workspace.
+- Every older field still travels: a flow with nine inputs keeps working.
+- `flow/check-prompt.js` now checks `flow/prompt.txt`, and that the copy in
+  `flow.js` matches it (`python flow/embed-prompt.py` refreshes it).
+- The prompt now tells the model about `workspace.memoryIndex` and `recall`
+  for notes a question did not reach.
+- Protocol 1.2.
+
+---
+
 ## 4.2.0 - 2026-09-24
 
 ### Your work can no longer be emptied by opening a database

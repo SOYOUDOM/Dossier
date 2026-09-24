@@ -168,7 +168,9 @@ With the demo copied in you should immediately see:
 | `scripts/dossier-sql.bat` | ~7 KB | optional | The launcher: `init`, `push`, `pull`, `check`, `history`, `find`. Defaults to `(localdb)\MSSQLLocalDB`. |
 | `scripts/dossier-bridge.bat` | ~1 KB | — | Kept so nothing that points at it breaks: passes through to `Dossier.bat`, arguments and all. |
 | `scripts/bridge/DossierBridge.cs` | ~45 KB | optional | Dossier, running: the tray icon and its menu, the page, the database (created, migrated, written, and its history kept), the hidden runner. C# 5 and Windows Forms, so `csc.exe` from the .NET Framework builds it with nothing installed. |
-| `flow/check-prompt.js` | ~2 KB | — | Runs every example reply in the Power Automate prompt through the validator Dossier uses on real replies. A model copies its examples; one Dossier would refuse teaches it to be refused. |
+| `flow/prompt.txt` | ~15 KB | **the assistant's instructions** | What the model reads, with nine places Dossier fills in before every question. Edit it in Notepad and the next question uses it — nothing to change in Power Automate. Your own version goes in your records folder as `dossier-prompt.txt`, where updates never touch it. |
+| `flow/embed-prompt.py` | ~1 KB | — | Copies `flow/prompt.txt` into `flow.js`, for a page opened straight from the folder, which cannot read the file beside it. |
+| `flow/check-prompt.js` | ~3 KB | — | Checks `flow/prompt.txt`: every example reply against the validator Dossier uses on real replies, all nine places present, the copy in `flow.js` the same. |
 | `sql/load-proc.sql` | ~14 KB | optional | `dbo.LoadWorkspace` — the only code that writes the tables, called by both the bridge and `push`. |
 
 Everything is a classic script or plain file. There is **no build step, no
@@ -1439,6 +1441,21 @@ for as long as the workspace exists. Ask again in March and the answer comes
 back from what you wrote in September. `recall` reads one out verbatim,
 `forget` removes one, and **Menu → Setup → What you have taught it** lists
 them all — editable in place, with how often each has been asked for.
+
+### The prompt is a file, not a Power Automate setting
+
+The assistant's instructions are **`flow/prompt.txt`**. Before every question
+Dossier reads it, fills in the workspace, the conversation, your notes and
+what you attached, and sends the finished text as one field, `prompt`. The
+prompt action in your flow holds nothing but that one input
+(`body('Parse_JSON')?['prompt']`), so **changing how the assistant behaves is
+editing a text file** — save it, ask again, done.
+
+To keep a version of your own, put it in your records folder as
+`dossier-prompt.txt` (Setup → Ask through Power Automate → **Copy the
+template** gives you the current text). It wins over the shipped one, and
+updates never touch that folder. Setup shows which one is in use, and
+**Preview the request** shows exactly what the model reads.
 
 ### Learning — how it gets better at you
 

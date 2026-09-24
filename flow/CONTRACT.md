@@ -76,10 +76,27 @@ generate schema**.
 
 One JSON object, POSTed as the body.
 
+### `prompt` — the one field a flow needs
+
+Since protocol 1.2 the request carries **`prompt`**: the whole prompt,
+instructions and all, already filled in with everything below — ready to hand
+to the model as it is. It is built from `flow/prompt.txt` (or your own
+`dossier-prompt.txt`, see POWER-AUTOMATE.md §4), so the prompt action in the
+flow needs exactly one input:
+
+```
+body('Parse_JSON')?['prompt']
+```
+
+`promptFrom` says which file it came from. Every other field still travels,
+so a flow that wires its own inputs to them keeps working.
+
 ```jsonc
 {
   "dossier": 1,
-  "protocol": "1.0",
+  "protocol": "1.2",
+  "prompt": "You are the assistant inside Dossier … (the whole prompt, filled in)",
+  "promptFrom": "flow/prompt.txt",
   "askedAt": "2026-09-03T04:12:00.000Z",
   "today": "2026-09-03",
   "weekday": "Thursday",

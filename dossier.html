@@ -4088,6 +4088,19 @@ const STRINGS = {
   DbHistoryGo: "Restore it",
   DbHistoryDl: "Download",
   DbHistoryDone: "Restored {n} record(s) from {p0}.",
+  PromptLabel: "The prompt",
+  PromptHint: "Sent from here with every question, filled in, as one field: the prompt action in your flow holds only {prompt}. To change how the assistant behaves, edit flow/prompt.txt \u2014 or, to keep your own version that updates never touch, put a copy called dossier-prompt.txt in your records folder and edit that. The next question uses it; there is nothing to reload.",
+  PromptReload: "Read it again",
+  PromptCopyTemplate: "Copy the template",
+  PromptCopied: "Copied. Save it as dossier-prompt.txt in your records folder to make it your own.",
+  PromptReloaded: "Using {p0}.",
+  PromptNotRead: "not read yet",
+  PromptBuiltIn: "the copy inside flow.js",
+  PromptNoMessage: "{p0} has no {message} in it, so it could not answer anything \u2014 using the next one instead.",
+  PromptGaps: "{p0} does not use {p1}. It works, but the model will not see that part.",
+  PromptSent: "prompt {n}, from {p0}",
+  PromptWhatModelReads: "What the model reads \u2014 the prompt, filled in:",
+  PromptWholeRequest: "The whole request:",
   ReflectThread: "What I learned",
   ReflectNeedsFlow: "Learning needs the flow \u2014 set it up in Setup \u2192 Power Automate.",
   ReflectAsk: "It is my break. Look back over my work since {p0} \u2014 {n1} closed, {n2} raised \u2014 and our conversations, in the attached file. Tell me in a few lines what you learned about how I work and how things get fixed here, keep what is worth keeping, and ask me one thing you still do not know.",
@@ -5139,7 +5152,7 @@ const STATUSES = [
    the status bar, and clicking it copies a line you can paste into a bug
    report — build date and flow protocol included, because those are the two
    things that actually differ between copies. */
-const APP_VERSION = "4.2.0";
+const APP_VERSION = "4.3.0";
 const APP_BUILT = "2026-09-18";
 function buildLine(){
   return "Dossier v" + APP_VERSION + " \u00b7 built " + APP_BUILT +
@@ -10536,6 +10549,53 @@ function flowCfg(){
   return st.flow;
 }
 const FLOW_CAP = 60;
+
+/* ── the prompt, read from a file before every question ─────────────────
+   So changing how the assistant behaves is editing a text file, not
+   opening Power Automate. First found wins:
+
+     dossier-prompt.txt in your records folder   your own version - git
+                                                 never touches that folder
+     flow/prompt.txt beside dossier.html          the one that ships with
+                                                 Dossier, read when Dossier.bat
+                                                 serves the page
+     the copy inside flow.js                      always there, even opened
+                                                 from the folder
+
+   Read fresh each time: save the file, ask the next question, and that
+   question already uses it. A file missing {message} would answer nothing,
+   so it is passed over, and Setup says why. */
+const PROMPT = { text:"", from:"", at:"", note:"" };
+const PROMPT_OWN = "dossier-prompt.txt";
+async function promptLoad(){
+  const take = (t, from) => {
+    t = String(t || "").replace(/\r\n/g, "\n");
+    if (!t.trim()) return false;
+    const gaps = DossierFlow.promptGaps(t);
+    if (gaps.indexOf("message") >= 0){
+      PROMPT.note = L("PromptNoMessage", { p0:from });
+      return false;
+    }
+    PROMPT.text = t; PROMPT.from = from; PROMPT.at = new Date().toISOString();
+    if (gaps.length) PROMPT.note = L("PromptGaps", { p0:from, p1:gaps.map(g => "{" + g + "}").join(" ") });
+    return true;
+  };
+  PROMPT.note = "";
+  if (!flowHere()) return PROMPT;
+  if (FS.ok && FS.root){
+    try { if (take(await FS.readText(FS.root, PROMPT_OWN), PROMPT_OWN + " \u00b7 " + FS.name)) return PROMPT; }
+    catch(e){ /* no own version: the usual case */ }
+  }
+  if (location.protocol === "http:" || location.protocol === "https:"){
+    try {
+      const r = await fetch("flow/prompt.txt", { cache:"no-store" });
+      if (r.ok && take(await r.text(), "flow/prompt.txt")) return PROMPT;
+    } catch(e){}
+  }
+  PROMPT.text = DossierFlow.PROMPT; PROMPT.from = L("PromptBuiltIn"); PROMPT.at = new Date().toISOString();
+  return PROMPT;
+}
+
 function flowHere(){ return typeof window !== "undefined" && !!window.DossierFlow; }
 function flowOn(){
   const c = flowCfg();
@@ -10597,6 +10657,8 @@ function flowContext(q){
     holidays: hols.map(h => ({ d:h.d, n:h.n, k:h.k })),
     holidaysTotal: holidays().length,
     memory: memoryForFlow(q),
+    promptTemplate: PROMPT.text || "",
+    promptFrom: PROMPT.from || "",
     lessons: lessonsForFlow(),
     mode: (String(q || "").match(/^\[(teach|study|reflect)\]/) || [0, "chat"])[1],
     memoryIndex: memoryIndexForFlow(q),
@@ -10670,6 +10732,7 @@ async function flowAsk(q, thread){
   const log = $("chatLog");
   const wait = chatThinking(log);
   let out = null, err = null;
+  await promptLoad();
   try { out = await DossierFlow.ask(q, flowContext(q), cfg); }
   catch(e){ err = e; }
   chatThought(wait, err);
@@ -12813,9 +12876,18 @@ function renderFlow(){
          esc(DossierFlow.shown() ? L("FlowHide") : L("FlowShow")) + "</button>" +
        '<button class="btn sm" id="flCopy">' + esc(L("FlowContract")) + "</button></div>";
 
+  h += '<div class="fr" style="margin-top:12px"><label>' + esc(L("PromptLabel")) + "</label>" +
+       '<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">' +
+       '<span class="mono" id="flPromptFrom" style="font-size:11.5px">' + esc(PROMPT.from || L("PromptNotRead")) +
+         (PROMPT.text ? " \u00b7 " + esc(bytes(PROMPT.text.length)) : "") + "</span>" +
+       '<button class="btn sm" id="flPromptReload">' + esc(L("PromptReload")) + "</button>" +
+       '<button class="btn sm" id="flPromptCopy">' + esc(L("PromptCopyTemplate")) + "</button></div></div>" +
+       '<p class="hint2">' + esc(L("PromptHint")) + "</p>" +
+       (PROMPT.note ? '<p class="hint2" style="color:var(--p2)">' + esc(PROMPT.note) + "</p>" : "");
   h += '<p class="hint2" style="margin-top:8px">' + esc(flowVersions()) + "</p>";
   h += '<div id="flowOut"></div>';
   box.innerHTML = h;
+  if (!PROMPT.text) promptLoad().then(() => { if (PROMPT.text) renderFlow(); });
 
   const on = (id, fn, ev) => { const el = $(id); if (el) el[ev || "onclick"] = fn; };
   const save = () => { touch(); renderFlow(); };
@@ -12831,6 +12903,12 @@ function renderFlow(){
   on("flPrev", flowPreview);
   on("flCopy", flowCopyContract);
   on("flShow", () => { DossierFlow.show(!DossierFlow.shown()); renderFlow(); });
+  on("flPromptReload", async () => { await promptLoad(); renderFlow(); toast(L("PromptReloaded", { p0:PROMPT.from })); });
+  on("flPromptCopy", async () => {
+    await promptLoad();
+    try { await navigator.clipboard.writeText(PROMPT.text); toast(L("PromptCopied")); }
+    catch(e){ download(PROMPT_OWN, PROMPT.text, "text/plain"); }
+  });
 
   if (FLOW.last) flowShowResult(FLOW.last);
 }
@@ -12858,6 +12936,7 @@ function flowShowResult(res){
 async function flowTest(){
   if (FLOW.testing) return;
   FLOW.testing = true; FLOW.last = null; renderFlow();
+  await promptLoad();
   let res;
   try { res = await DossierFlow.test(flowCfg(), flowContext()); }
   catch(e){ res = { steps:[{ name:"The test itself ran", ok:false, detail:String(e.message || e) }],
@@ -12869,15 +12948,20 @@ async function flowTest(){
 }
 
 /* Before you trust it with anything real, look at the bytes. */
-function flowPreview(){
+async function flowPreview(){
+  await promptLoad();
   const cfg = flowCfg();
   const req = DossierFlow.buildRequest("(your question would be here)", flowContext(), cfg);
   const txt = JSON.stringify(req, null, 1);
   const out = $("flowOut");
   out.innerHTML = '<p class="hint2" style="margin-top:10px">' +
     esc(L("FlowBytes", { n: bytes(txt.length) })) + " · " +
-    esc(req.workspace.recordsSent + " of " + req.workspace.recordsTotal + " records") +
-    "</p><pre class=\"out\" style=\"margin-top:6px;max-height:320px;overflow:auto\">" +
+    esc(req.workspace.recordsSent + " of " + req.workspace.recordsTotal + " records") + " · " +
+    esc(L("PromptSent", { n: bytes(req.prompt.length), p0: req.promptFrom })) +
+    "</p><p class=\"hint2\" style=\"margin-top:6px\"><b>" + esc(L("PromptWhatModelReads")) + "</b></p>" +
+    "<pre class=\"out\" style=\"margin-top:4px;max-height:320px;overflow:auto\">" + esc(req.prompt) + "</pre>" +
+    "<p class=\"hint2\" style=\"margin-top:8px\"><b>" + esc(L("PromptWholeRequest")) + "</b></p>" +
+    "<pre class=\"out\" style=\"margin-top:4px;max-height:320px;overflow:auto\">" +
     esc(txt) + "</pre>";
 }
 
@@ -17673,6 +17757,7 @@ async function reflectNow(byHand){
   }
   REFLECT.running = true;
   paintReflect();
+  await promptLoad();
   const q = "[reflect] " + L("ReflectAsk", { p0:stamp(since), n1:mat.closed, n2:mat.raised });
   const ctx = Object.assign(flowContext(q), {
     mode:"reflect", conversation:[],
