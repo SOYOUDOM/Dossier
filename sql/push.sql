@@ -9,7 +9,15 @@
    both, in that order.
 
        sqlcmd -S "(localdb)\MSSQLLocalDB" -d Dossier -b -i sql\push.sql ^
-              -v file="C:\path\to\dossier.json"
+              -v file="C:\path\to\dossier.json" replace="0"
+
+   IT WILL NOT REPLACE A DATABASE THAT HAS RECORDS IN IT unless replace="1".
+   A push used to be a photograph of the file, full stop: whatever the
+   database held was swapped for whatever the file held. With the bridge
+   the database is the store and the file is an export, usually older - so
+   "push" was the command that put last week over this week. Now it refuses
+   and says why, and even with replace="1" the database's own state is kept
+   in dbo.WorkspaceHistory before it is replaced.
    =========================================================================== */
 
 SET NOCOUNT ON;
@@ -68,7 +76,29 @@ PRINT 'the file holds ' + CAST(@inFile AS varchar(10)) + ' record(s), '
 IF @inFile = 0
     PRINT 'WARNING: no records in that file. Is it the workspace you meant?';
 
+/* the database's side of the same question */
+DECLARE @have int = (SELECT Records FROM dbo.Workspace WHERE Id = 1);
+IF ISNULL(@have, 0) > 0 AND '$(replace)' <> '1'
+BEGIN
+    PRINT '';
+    PRINT 'The database already holds ' + CAST(@have AS varchar(10)) + ' record(s).';
+    PRINT 'Pushing would replace them with the file''s ' + CAST(@inFile AS varchar(10)) + '. Nothing was written.';
+    PRINT '';
+    PRINT 'To ADD the file''s records to what is there, use Dossier itself:';
+    PRINT '    Menu -> Workspace -> Import a JSON export -> Merge';
+    PRINT 'To replace anyway (the current contents are kept in history first):';
+    PRINT '    dossier-sql.bat push --replace "<file>"';
+    RAISERROR('push refused: the database is not empty', 16, 1);
+    RETURN;
+END
+
 BEGIN TRAN;
+
+/* whatever is there now, kept before it is replaced */
+IF @have IS NOT NULL AND OBJECT_ID('dbo.WorkspaceHistory') IS NOT NULL
+    INSERT dbo.WorkspaceHistory (Records, Bytes, Reason, Doc)
+    SELECT Records, DATALENGTH(Doc), N'before push', COMPRESS(Doc)
+    FROM dbo.Workspace WHERE Id = 1;
 
 INSERT dbo.Snapshot (SavedAt, Records, Bytes, Source, Doc)
 SELECT TRY_CONVERT(datetime2(0), JSON_VALUE(@doc, '$.savedAt')),

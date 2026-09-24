@@ -4,8 +4,10 @@ rem  dossier-runner.bat
 rem
 rem  Runs the scripts Dossier asks for. No PowerShell anywhere.
 rem
-rem  Put this in   <your workspace>\scripts\   and double-click it.
-rem  Leave the window open. Closing it stops the runner.
+rem  You do not need to start this. Dossier.bat starts it for your workspace,
+rem  hidden, and stops it when Dossier quits. By hand it still works as it
+rem  always did: put it in <your workspace>\scripts\ and double-click it, and
+rem  the window stays open until you close it.
 rem
 rem  HOW IT TALKS TO DOSSIER
 rem  Dossier cannot start a program, so it leaves a note in scripts\queue\ and
@@ -25,6 +27,8 @@ rem ===========================================================================
 setlocal enabledelayedexpansion
 
 set "SCRIPTS=%~dp0"
+rem  started by Dossier: the workspace's scripts folder, wherever this file is
+if defined DOSSIER_SCRIPTS set "SCRIPTS=%DOSSIER_SCRIPTS%\"
 if "%SCRIPTS:~-1%"=="\" set "SCRIPTS=%SCRIPTS:~0,-1%"
 set "QUEUE=%SCRIPTS%\queue"
 if not exist "%QUEUE%" mkdir "%QUEUE%"

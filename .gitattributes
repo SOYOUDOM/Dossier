@@ -1,1 +1,2 @@
-scripts/*.bat text eol=crlf
+# a .bat with LF line endings breaks cmd's label parsing - every one, anywhere
+*.bat text eol=crlf

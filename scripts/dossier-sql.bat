@@ -11,18 +11,28 @@ rem  going to change. So the file is the interface. Dossier writes
 rem  dossier.json; this reads it and loads it into LocalDB, and can write it
 rem  back out again.
 rem
+rem  You do not need this to use Dossier. Dossier.bat starts the bridge, and
+rem  the bridge creates and migrates the database itself. This is for looking
+rem  inside, and for moving a file in or out by hand.
+rem
 rem  USE
-rem    dossier-sql.bat init            create the database and the tables
-rem    dossier-sql.bat push [file]     load dossier.json into LocalDB
+rem    dossier-sql.bat init            create the database and the tables.
+rem                                    Never touches a row of yours.
+rem    dossier-sql.bat push [file]     load a dossier.json into an EMPTY
+rem                                    database. Refuses one with records in.
+rem    dossier-sql.bat push --replace [file]
+rem                                    replace what is there. What was there
+rem                                    is kept in dbo.WorkspaceHistory first.
 rem    dossier-sql.bat pull [out]      newest snapshot back out as JSON
 rem    dossier-sql.bat pull --replace  ...and put it back as dossier.json
 rem    dossier-sql.bat check           what is in there
 rem    dossier-sql.bat history         every push, newest first
 rem    dossier-sql.bat find            where your dossier.json files are
 rem
-rem  With no argument it does: init, then push. That is the one you want on a
-rem  routine - Dossier can run this by itself every evening, and then the day
-rem  is in a database as well as in a file.
+rem  With no argument it does: check. It used to do init-then-push, which was
+rem  the one command that could put an old file over a newer database without
+rem  a word. To add a file's records to what is there, use Dossier's own
+rem  Menu -> Workspace -> Import a JSON export -> Merge.
 rem
 rem  DEFAULTS, all overridable by environment variable
 rem    server   (localdb)\MSSQLLocalDB       set DOSSIER_SQL=...
@@ -37,7 +47,7 @@ rem ===========================================================================
 setlocal
 
 set "CMD=%~1"
-if "%CMD%"=="" set "CMD=all"
+if "%CMD%"=="" set "CMD=check"
 
 rem  Whatever came after the command, whole. %%2 stops at the first space, and
 rem  a workspace under OneDrive has spaces in it as a matter of course -
@@ -115,6 +125,16 @@ exit /b %ERRORLEVEL%
 
 rem ---------------------------------------------------------------------------
 :push
+rem  --replace first, then the file, in either order of mind
+set "REPLACE=0"
+if /i "%ARG%"=="--replace" (
+  set "REPLACE=1"
+  set "ARG="
+)
+if /i "%ARG:~0,10%"=="--replace " (
+  set "REPLACE=1"
+  set "ARG=%ARG:~10%"
+)
 if defined ARG for %%I in ("%ARG%") do set "JSON=%%~fI"
 if not exist "%JSON%" (
   echo   No workspace file at "%JSON%".
@@ -128,7 +148,7 @@ sqlcmd -S "%SERVER%" -b -E -i "%SQLDIR%\schema.sql" -v db="%DB%"
 if errorlevel 1 goto :failed
 call :proc
 if errorlevel 1 goto :failed
-sqlcmd -S "%SERVER%" -d "%DB%" -b -E -i "%SQLDIR%\push.sql" -v file="%JSON%"
+sqlcmd -S "%SERVER%" -d "%DB%" -b -E -i "%SQLDIR%\push.sql" -v file="%JSON%" replace="%REPLACE%"
 if errorlevel 1 goto :failed
 echo.
 echo   Loaded. To see it:  dossier-sql.bat check

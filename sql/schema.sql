@@ -4,7 +4,8 @@
    Creates the database and brings the tables up to date. Nothing else.
    Idempotent: running it twice does nothing the second time.
 
-   Driven by scripts\dossier-sql.bat init; by hand:
+   Run by the bridge itself every time it starts, so there is nothing to
+   remember to do. Also by scripts\dossier-sql.bat init; by hand:
 
        sqlcmd -S "(localdb)\MSSQLLocalDB" -b -i sql\schema.sql -v db="Dossier"
 
@@ -464,6 +465,45 @@ BEGIN
 END
 GO
 
+/* -- 6 -- nothing written here is ever the only copy ---------------------------
+   Up to 5, every save replaced dbo.Workspace in place and the version before
+   it was gone. That is how a workspace opened against an empty database -
+   a fresh init, a LocalDB instance that had been recreated - saved its empty
+   self over everything: one write, and no way back from inside SQL Server.
+
+   So the row is kept before it is replaced: at most every ten minutes in
+   ordinary use, always when a save would leave fewer records than it found,
+   and always for a restore, an import or a push. COMPRESS makes a copy about
+   a tenth the size of the JSON. Read one back with
+       SELECT CAST(DECOMPRESS(Doc) AS nvarchar(max)) FROM dbo.WorkspaceHistory
+   or from Dossier: Menu -> Workspace -> Database history. */
+IF (SELECT Version FROM dbo.SchemaVersion WHERE Id = 1) < 6
+BEGIN
+    PRINT 'migrating to 6: every earlier state of the workspace, kept';
+    BEGIN TRY
+    BEGIN TRAN;
+
+    IF OBJECT_ID('dbo.WorkspaceHistory') IS NULL
+    CREATE TABLE dbo.WorkspaceHistory (
+        HistoryId  int            IDENTITY(1,1) NOT NULL CONSTRAINT PK_WorkspaceHistory PRIMARY KEY,
+        TakenAt    datetime2(0)   NOT NULL CONSTRAINT DF_WorkspaceHistory_At DEFAULT (SYSUTCDATETIME()),
+        Records    int            NULL,
+        Bytes      int            NULL,
+        Reason     nvarchar(40)   NULL,
+        Doc        varbinary(max) NOT NULL          /* COMPRESS()ed JSON */
+    );
+
+    UPDATE dbo.SchemaVersion SET Version = 6, AppliedAt = SYSUTCDATETIME() WHERE Id = 1;
+    COMMIT;
+    END TRY
+    BEGIN CATCH
+        IF XACT_STATE() <> 0 ROLLBACK;
+        PRINT 'migration 6 rolled back; the database is as it was';
+        THROW;
+    END CATCH
+END
+GO
+
 /* what the database looks like now */
 SELECT  SchemaVersion = (SELECT Version FROM dbo.SchemaVersion WHERE Id = 1),
         Tables        = (SELECT COUNT(*) FROM sys.tables WHERE schema_id = SCHEMA_ID('dbo')),
@@ -474,12 +514,12 @@ SELECT  SchemaVersion = (SELECT Version FROM dbo.SchemaVersion WHERE Id = 1),
 /* Empty tables look like a broken install and are not one: this file makes
    the shape, and nothing else. Say so rather than leaving somebody to open
    SSMS and wonder where their work went. */
-IF NOT EXISTS (SELECT 1 FROM dbo.Snapshot)
+IF NOT EXISTS (SELECT 1 FROM dbo.Snapshot) AND NOT EXISTS (SELECT 1 FROM dbo.Workspace)
 BEGIN
     PRINT '';
-    PRINT '  The tables are here and they are empty. Creating them loads nothing.';
-    PRINT '  To put your workspace in:';
-    PRINT '     dossier-sql.bat push "<the folder you keep records in>\dossier.json"';
-    PRINT '  Not sure which file that is?   dossier-sql.bat find';
+    PRINT '  The tables are here and they are empty. Creating them loads nothing,';
+    PRINT '  and deletes nothing either - this file never touches a row of yours.';
+    PRINT '  Open Dossier on your workspace folder and it fills them itself, from';
+    PRINT '  the dossier.json it finds there.';
 END
 GO

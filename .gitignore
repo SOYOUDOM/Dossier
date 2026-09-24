@@ -30,8 +30,15 @@ art/__pycache__/
 /scripts/bridge/DossierBridge.exe
 /scripts/bridge/DossierBridge.pdb
 /scripts/bridge/.workspace.txt
+/scripts/bridge/.workspace.txt.skip
+/scripts/bridge/.port
+/scripts/bridge/dossier.log
 
 # the bridge's handshake - a port and a token, new every run. It belongs to
 # the workspace, and shows up here only for anyone whose workspace is this
 # folder, which it should not be.
 .bridge.json
+
+# which store a workspace folder uses - written by Dossier into the folder
+# that holds your records, never into this one
+.dossier-store.json

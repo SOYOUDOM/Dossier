@@ -18,16 +18,18 @@ and somebody had to photograph their screen to tell me.
                                the condition is tested, so
                                `if <false> >file echo x` empties the file
                                anyway. Put the redirect inside the block.
+  6. ")" in an echo in a block the first unescaped ")" ends the block, and the
+                               rest of the line runs as a command. Write ^).
 """
 import os, re, sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+ROOT = os.path.dirname(HERE)
 bad = 0
 
-for name in sorted(os.listdir(HERE)):
-    if not name.lower().endswith(".bat"):
-        continue
-    path = os.path.join(HERE, name)
+bats = [os.path.join(HERE, n) for n in os.listdir(HERE)] + [os.path.join(ROOT, n) for n in os.listdir(ROOT)]
+for path in sorted(p for p in bats if p.lower().endswith(".bat")):
+    name = os.path.relpath(path, ROOT)
     raw = open(path, "rb").read()
     say = []
 
@@ -57,6 +59,20 @@ for name in sorted(os.listdir(HERE)):
             continue                                   # nothing to truncate
         say.append("line %-4d redirects on the `if` line itself - that "
                    "happens whether the condition holds or not" % (i + 1))
+
+    depth = 0
+    for i, text in enumerate(raw.split(b"\n")):
+        line = text.decode("ascii", "replace").strip()
+        if re.match(r"(?i)(rem\b|::)", line):
+            continue
+        if depth > 0 and re.match(r"(?i)echo\b", line):
+            body = re.sub(r'"[^"]*"', "", line[4:]).replace("^)", "")
+            if ")" in body:
+                say.append("line %-4d an echo inside ( ) has a bare ) - it ends the block" % (i + 1))
+        depth += len(re.findall(r"\(\s*$", line))
+        if re.match(r"^\)", line):
+            depth -= 1
+        depth = max(depth, 0)
 
     for m in re.finditer(rb"(?im)^[^\r\n]*?\bpowershell\b[^\r\n]*$", raw):
         text = m.group(0).decode("ascii", "replace").strip()
