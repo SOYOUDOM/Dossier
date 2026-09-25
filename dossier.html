@@ -2263,13 +2263,16 @@ body.chatting .pet[data-corner="br"],body.chatting .pet[data-corner="tr"]{
   text-overflow:ellipsis;white-space:nowrap}
 .chbody{flex:1;min-height:0;display:flex;position:relative}
 /* In a 450px dock there is no room to squeeze a rail beside the thread, so it
-   slides over the top of it instead and slides back out of the way. */
+   slides over the top of it instead and slides back out of the way. The
+   class is "convos", not "rail": .rail is the filter bar's, and on the panel
+   it brought that bar's padding and wrapping with it - which pushed the whole
+   panel's contents right, the close button off the edge of the screen. */
 .chside{position:absolute;top:0;left:0;bottom:0;width:210px;z-index:3;
   transform:translateX(-101%);overflow-y:auto;padding:9px 8px;
   border-right:1px solid var(--rule);background:var(--paper-2);
   box-shadow:16px 0 34px rgba(0,0,0,.16);
   transition:transform .2s var(--ease)}
-.chat.rail .chside{transform:none}
+.chat.convos .chside{transform:none}
 .chmain{flex:1;min-width:0;display:flex;flex-direction:column}
 .chsi{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:5px;align-items:center;
   padding:7px 9px;border-radius:var(--r-xs);cursor:pointer;margin-bottom:3px}
@@ -5173,7 +5176,7 @@ const STATUSES = [
    the status bar, and clicking it copies a line you can paste into a bug
    report — build date and flow protocol included, because those are the two
    things that actually differ between copies. */
-const APP_VERSION = "4.4.1";
+const APP_VERSION = "4.4.2";
 const APP_BUILT = "2026-09-18";
 function buildLine(){
   return "Dossier v" + APP_VERSION + " \u00b7 built " + APP_BUILT +
@@ -18721,12 +18724,12 @@ $("tabs").addEventListener("click", e => { const b = e.target.closest("button");
 $("chatBtn").addEventListener("click", openChat);
 $("chatX").addEventListener("click", closeChat);
 $("chatMenu").addEventListener("click", () => {
-  $("chat").classList.toggle("rail");
-  if ($("chat").classList.contains("rail")) chatSide();
+  $("chat").classList.toggle("convos");
+  if ($("chat").classList.contains("convos")) chatSide();
 });
 $("chatNew").addEventListener("click", () => {
   chatNew();
-  $("chat").classList.remove("rail");
+  $("chat").classList.remove("convos");
   $("chatq").focus();
 });
 $("chatSide").addEventListener("click", e => {

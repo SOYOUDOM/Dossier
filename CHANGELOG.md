@@ -6,6 +6,17 @@ holds — which is what to paste into a bug report.
 
 ---
 
+## 4.4.2 - 2026-09-25
+
+**The Ask panel stays where it is when you open the conversation list.**
+
+Pressing the list button in the panel's top-left pushed everything in the
+panel to the right - the header, the answers, the box you type in - and
+the close button went off the edge of the screen. The panel was borrowing
+the look of the filter bar under the capture box, because both used the
+class name `rail`. The panel's now has a name of its own, and the list
+slides in over the thread as it was meant to.
+
 ## 4.4.1 - 2026-09-25
 
 **Saving is real time again: no button to press, and no change left behind.**
