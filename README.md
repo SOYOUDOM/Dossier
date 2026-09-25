@@ -1518,6 +1518,55 @@ is going on in *your* case and gives the one next check with your values in
 it, rather than reading the runbook back to you — and when the runbook is
 thin, it asks you and keeps the answer.
 
+### Working faster with the assistant
+
+Four things, all switchable in **Menu → Setup → Ask through Power Automate**.
+
+**Simple questions are answered on this PC, instantly.** *What's overdue?*,
+*what should I do next?*, *what did I close today?*, *who is holding what?*,
+*how many are open?* — the app counts those from your records in a few
+milliseconds instead of a 5–10 second round trip. Under each one:
+*Answered here on this PC, instantly* and a button, **Ask the assistant
+instead**, that sends the same question to the flow. What stays with the
+flow: anything with a problem word in it (*why*, *error*, *failing*, *fix*…),
+anything asking it to write or explain, anything longer than a quick
+question, and your reply to a question the assistant has just asked you
+(*"no row"*, one of the buttons it offered). Setting: **Simple questions**.
+
+**Four buttons on every record.** Open a record: under its status, **Ask the
+assistant**:
+
+| button | what it does |
+|---|---|
+| **✦ Diagnose** | sends the record whole — notes, log, steps — with the question *what is most likely going on, and what is the one next check?* It uses your runbooks and how you fixed the same thing before |
+| **✉ Reply to Sokha** | drafts a short status update to whoever raised it, ready to copy into Outlook or Teams (it asks before opening the draft) |
+| **✎ Write the fix note** | opens *How was it fixed?* for this record, with the assistant's line in it — even if it is still open, or already has one |
+| **📘 Make a runbook** | turns the record into a draft runbook — triggers from how it was reported, steps from how it was fixed — and asks before saving it |
+
+Each answer opens in a conversation of its own, named after the record, so
+it does not get mixed into whatever you were talking about.
+
+**Pasted messages are filled in for you.** **Paste a message** (or Ctrl+Shift+V)
+still reads what the message states at once — a ticket number, the Subject
+line, a name it knows. Then the assistant reads it too, and a box at the top
+right says what it changed: a proper title instead of *"RE: FW: urgent!!"*,
+the system, the type, how urgent it really is, who is asking — marked with a
+violet dot — and **First steps**, two to four of them, from your runbooks and
+past fixes (*"Looks like D-0142 — the SSO cache again"*). Anything you have
+already changed is never touched. Keep **Put these on the record as its
+steps** ticked and they become the record's checklist. Nothing is saved until
+**Log it**. Setting: **Pasted messages**.
+
+**Two models: fast for chat, strong for hard jobs.** Once your flow has a
+second prompt action (step by step in
+[`flow/POWER-AUTOMATE.md` §4e](flow/POWER-AUTOMATE.md) — about fifteen
+minutes), set **Models in your flow** to *Two*. Everyday questions stay on
+the quick model; the daily look back, learning a BAU document, runbook
+interviews and **Diagnose** go to the stronger one, and every answer gets a
+**✦ Think harder** button that asks the same question again there. The time
+under an answer says *strong model* when it was. Which jobs go where is
+ticked in the same place.
+
 ### Asking with a file, and answers with code
 
 The Ask box takes **more than one line** (Enter sends, Shift+Enter breaks) and

@@ -47,6 +47,12 @@ Three details worth knowing before you rely on it:
 
 Six actions. ⑥ is the one everybody skips and then spends an evening on.
 
+**Optional, later: two models.** ③ can become a Condition with two prompt
+actions — a fast model for everyday chat and a stronger one for the jobs
+that need thinking (the daily look back, learning a BAU document,
+**Diagnose** on a record). That is §4e, and it is worth doing once the flow
+works with one.
+
 ---
 
 ## 2. The trigger
@@ -408,6 +414,8 @@ attached — and sends it ready to run as `prompt`, with the picture beside it.
      "type": "object",
      "properties": {
        "probe":       { "type": "boolean" },
+       "mode":        { "type": "string" },
+       "tier":        { "type": "string" },
        "message":     { "type": "string" },
        "prompt":      { "type": "string" },
        "picture":     { "type": "string" },
@@ -415,6 +423,11 @@ attached — and sends it ready to run as `prompt`, with the picture beside it.
      }
    }
    ```
+
+   `mode` says what kind of question it is (`chat`, `reflect`, `fix`,
+   `intake`, …) and `tier` which model it wants (`fast` or `deep`). Nothing
+   needs them until §4e; they are in the schema so they show up in the
+   dynamic-content picker when you get there.
 
 2. Open the prompt action's editor and **delete all the text in it**.
 3. Add an input, type **Text**, named `prompt`. Add a second input, type
@@ -881,6 +894,13 @@ Two more modes use the same flow:
 |---|---|---|
 | `[teach]` | a runbook's **Interview me** button | reads the runbook, asks you one question at a time about what it leaves out, and saves the improved draft |
 | `[study]` | **Learn from a BAU document…** in the runbook library | turns each procedure in the attached guideline into a draft runbook — triggers, steps in plain words, checks, escalation — then asks about what the document does not say |
+| `[fix]` | closing a record by hand (**How was it fixed?**), or **Write the fix note** on a record | reads the record and writes one line: what fixed it |
+| `[check]` | **Setup → Checks → Run checks** | judges whether a new answer agrees with a correction you once gave: PASS or FAIL, and why |
+| `[intake]` | **Paste a message** | reads the pasted email or chat and fills in the new record — title, system, type, priority, who asked — with two to four first steps |
+
+The kind of question also travels on its own, as `mode` at the top of the
+request, beside `tier` (`fast` or `deep`) — §4e uses `tier` to send the hard
+jobs to a stronger model.
 
 ---
 
@@ -907,6 +927,208 @@ that before looking), and a picture the app has already read travels once, as
    failed question is not followed by a second full AI call.
 5. **Nothing between Parse JSON and the prompt** that is not needed. Every
    action in the chain adds its own start-up time, even a Compose.
+
+---
+
+## 4e. Two models: a fast one for chat, a strong one for hard jobs
+
+**What it gets you.** Everyday questions stay quick on a *mini* model. The
+jobs where a better model makes a real difference — the daily look back,
+learning a BAU document, runbook interviews, **Diagnose** on a record, and
+**✦ Think harder** under any answer — go to a stronger one. You pay the
+stronger model's price and wait only where it earns it.
+
+**What changes.** One new prompt (a copy of the one you have, with a
+different model), one Condition, one variable. About fifteen minutes. Your
+existing flow keeps working the whole time: until Dossier is switched to
+*Two*, every request says `tier: "fast"`.
+
+```
+① When an HTTP request is received
+② Parse JSON
+   Initialize variable  answer                              ← new
+   Condition  "Deep?"  tier is equal to deep                ← new
+     If yes:  Run a prompt  (Dossier deep)   → Set variable answer   ← new
+     If no:   Run a prompt  (your prompt)    → Set variable answer   ← moved in
+④ Compose — "Clean"        now reads variables('answer')    ← one edit
+⑤ Response                 unchanged
+⑥ Response — "Fallback"    run after Clean                  ← check it
+```
+
+### Step 1 — Make the strong prompt
+
+The model is a setting **of the prompt**, not of the flow action, so the
+strong model needs its own prompt.
+
+1. Open where your prompts live. In Power Automate: **AI hub → Prompts**
+   (in some tenants it is under **More → AI hub**, or **AI models**; in
+   Copilot Studio it is **Tools → Prompts**). You can also get there from
+   the flow: open your **Run a prompt** action and use the prompt picker's
+   **+ New custom prompt**.
+2. **+ New prompt** (or **Build your own prompt**). Name it `Dossier deep`.
+3. Delete any text it starts with. Add the **same two inputs** as your
+   existing prompt, with **exactly the same names**:
+   - **Text** input named `prompt`
+   - **Image** input named `picture` (only if your flow uses the picture
+     setup from §4 — if your existing prompt has only `prompt`, do the same
+     here)
+
+   Insert both into the empty instruction box — `prompt` first, then
+   `picture` — and nothing else. It should look exactly like your first one.
+4. **Pick the model.** In the prompt editor it is the model name at the top
+   right, or under **⚙ Settings → Model**. The list differs by tenant and
+   changes over time; choose by these rules rather than by a name:
+
+   | | pick | avoid |
+   |---|---|---|
+   | your existing (fast) prompt | the default *mini* model — e.g. *GPT-4.1 mini* | anything called *reasoning*, *o1*, *o3* |
+   | `Dossier deep` | the standard full-size model — e.g. *GPT-4.1*, or a *GPT-5 chat* model if offered | a reasoning model, unless you have tested it answers in well under 100 seconds |
+
+   If you use the picture setup, the model you pick **must accept images**
+   (the GPT-4o / GPT-4.1 / GPT-5 families do). If a model has no image
+   support the editor will not let you add the Image input, which tells you.
+5. **Temperature** (if the editor shows it): 0 to 0.3. **Output**: *Text* —
+   the same as your first prompt, not JSON; the Clean step handles the JSON.
+6. **Test it** in the editor: type `Reply with exactly {"say":"deep ok"}` into
+   the `prompt` test box and run it. You should get that line back.
+7. **Save.**
+
+> **Answering the probe already?** If your flow has the `probe` Condition
+> from *The second run* (§4), everything below goes inside its **If no**
+> branch, except **Initialize variable**, which must stay at the top level —
+> put it directly under Parse JSON, above the probe Condition.
+
+### Step 2 — The variable that will hold the answer
+
+Both branches write their answer into one place, so everything after the
+Condition reads one thing whichever model ran. (Variables have to be
+declared at the top level of a flow, which is why this is not inside the
+Condition.)
+
+1. Directly under **Parse JSON**: **+ New step → Variables → Initialize
+   variable**.
+2. **Name** `answer` · **Type** *String* · **Value** leave empty.
+
+### Step 3 — The Condition
+
+1. Under **Initialize variable**: **+ New step → Control → Condition**.
+   Rename it `Deep?` (⋯ → Rename).
+2. Left box: switch to the **Expression** tab and enter
+
+   ```
+   body('Parse_JSON')?['tier']
+   ```
+
+   (or pick **tier** from Parse JSON's dynamic content — it is there if you
+   added it to the schema in §4).
+3. Operator: **is equal to**. Right box: `deep` — lower case, no quotes.
+
+### Step 4 — Put a prompt in each branch
+
+**If no** (the fast one — what you have today):
+
+1. Drag your existing **Run a prompt** action into **If no**. (New designer:
+   drag it by its title onto the *+* inside the branch. If dragging does not
+   work in your designer, add a fresh **Run a prompt** there instead, pick
+   your existing prompt, set its two inputs as in §4 step 4, and delete the
+   old one afterwards.)
+2. Under it, inside **If no**: **+ → Variables → Set variable**. **Name**
+   `answer`, **Value**: from the dynamic content of *that* Run a prompt
+   action, the token called **Text** (sometimes *Predicted text* or
+   *Response text*). Pick it from the list rather than typing a path — the
+   path differs between versions of the action.
+
+**If yes** (the strong one):
+
+1. **+ → AI Builder → Run a prompt**. Rename it `Run a prompt deep`.
+2. **Prompt**: `Dossier deep`.
+3. Its inputs, on the **Expression** tab, exactly as the fast one:
+
+   | input | value |
+   |---|---|
+   | `prompt` | `body('Parse_JSON')?['prompt']` |
+   | `picture` | `base64ToBinary(body('Parse_JSON')?['picture'])` |
+
+4. Under it: **Set variable** · `answer` · the **Text** token of *Run a
+   prompt deep*.
+
+### Step 5 — Clean reads the variable
+
+Open **Compose — "Clean"** and replace its expression with
+
+```
+json(replace(replace(trim(variables('answer')), '```json', ''), '```', ''))
+```
+
+That is the only edit to the rest of the flow. **Response** is unchanged
+(`outputs('Clean')`).
+
+> Would rather not have a variable? Clean can pick whichever ran directly:
+> `coalesce(<Text token of Run a prompt deep>, <Text token of Run a prompt>)`
+> in place of `variables('answer')`, inserting both tokens from the picker.
+> The variable is easier to read back in the run history, which is why it is
+> the recommended way.
+
+### Step 6 — Make sure the safety net still catches everything
+
+Open **Response — "Fallback"** → **⋯ → Configure run after**. It must run
+after **Clean** with **has failed**, **is skipped** and **has timed out**
+ticked. (If it used to run after *Run a prompt*, that action is inside the
+Condition now and cannot be pointed at from outside — point it at **Clean**.
+A failure inside either branch makes Clean *skipped*, so *is skipped* is the
+tick that catches it.)
+
+**Save** the flow.
+
+### Step 7 — Switch Dossier to two models
+
+**Menu → Setup → Ask through Power Automate**:
+
+1. **Models in your flow** → *Two: a fast one for chat, a stronger one for
+   hard jobs*.
+2. **Strong model for** — tick what should go to it. The defaults: the daily
+   look back, learning a BAU document (and **Make a runbook**), runbook
+   interviews, and **Diagnose**. *Reading a pasted message* is off by
+   default (the fast model does it well and you are waiting on it); *every
+   chat question* is there if you want it, and costs what you would expect.
+3. **Wait for the strong model** — 110 seconds by default. **Power Automate
+   itself gives up on an HTTP request after two minutes** — the flow keeps
+   running, but the answer can no longer be returned — so do not go above
+   115, and pick a model that answers well inside that.
+
+### Step 8 — Check it works
+
+1. In the assistant, ask anything ordinary. Under the answer: a time like
+   `1.9 s` — the fast one.
+2. Under that answer press **✦ Think harder**. The same question goes again;
+   under the new answer: `8.4 s · strong model`.
+3. In Power Automate, open **Run history** → the latest run → **Deep?**. The
+   **If yes** branch has the green ticks; the run before it went through
+   **If no**.
+4. **Setup → What I have learned about you → Look back now** — that run goes
+   through **If yes** too.
+
+### When it goes wrong
+
+| what you see | what it is | fix |
+|---|---|---|
+| Everything still says `1.x s`, never *strong model* | Dossier is still on *One model*, or the Condition never matches | Setup → Models in your flow → *Two*. In the Condition the right box must be `deep` exactly — no quotes, lower case |
+| `InvalidTemplate` mentioning `variables('answer')` | the variable is not initialized, or initialized inside the Condition | Initialize variable must be at the top level, **before** the Condition |
+| A strong-model question ends in "went quiet" / timeout | the strong model took longer than the wait, or than Power Automate's two minutes | Pick a non-reasoning model for `Dossier deep`; open the run and look at how long *Run a prompt deep* took |
+| The strong model's answer ignores the picture | `Dossier deep` has no Image input, or its model cannot see images | Add the `picture` input (step 1.3) and a model that takes images |
+| `The template language expression … Run_a_prompt_deep` | an expression refers to an action by an old name | Use the **Text** token from the picker instead of typing the name; names use `_` for spaces |
+| Fallback runs on every question | its run-after points at something that is skipped on one branch | Point it at **Clean** only (step 6) |
+
+### What it costs
+
+AI Builder charges per call by the model's rate: the *mini* models are the
+cheapest, full-size ones cost several times more per call, reasoning ones
+more again. With the defaults the strong model is used by one look back a
+day, the BAU documents you hand it, and the **Diagnose** / **Think harder**
+presses you make — a handful of calls a day. Everyday chat, "How was it
+fixed?", checks and pasted messages stay on the fast one. Your admin centre
+(Power Platform admin center → Capacity → AI Builder credits) shows what
+is being used.
 
 ---
 

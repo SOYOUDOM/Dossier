@@ -188,6 +188,9 @@ body.chatting .find{max-width:190px}
 .chrate > button:hover{opacity:1;filter:none;background:var(--ch-panel,var(--paper-2))}
 .chrate > button.on{opacity:1;filter:none;border-color:var(--ch-line,var(--rule));background:var(--ch-panel,var(--paper-2))}
 .chrate .rs{font-size:11px;color:var(--ch-dim,var(--ink-3));margin-left:4px;min-width:0}
+.chrate > button.deeper{font-size:10.5px;filter:none;opacity:.7;color:var(--ch-dim,var(--ink-3));padding:4px 9px}
+.chrate > button.deeper:hover{opacity:1;color:var(--ch-acc,var(--accent))}
+.recai .brow{display:flex;gap:6px;flex-wrap:wrap}
 .chrate .rs i{font-style:normal;color:var(--ch-ink,var(--ink))}
 .chrate.asking{display:block}
 .chfix{display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
@@ -975,6 +978,16 @@ table.reg td.ttd span{display:block;white-space:normal;overflow-wrap:anywhere;fo
 .plegend i{width:7px;height:7px;border-radius:50%;background:var(--rule-hi)}
 .plegend i.text{background:var(--accent)} .plegend i.learned{background:var(--teal)}
 .plegend i.sla{background:var(--st-proc)}
+.prov .p.ai i,.plegend i.ai{background:#7C5CFF}
+.iai{border:1px solid var(--rule);border-radius:var(--r-sm);padding:10px 11px;margin:0 0 14px;background:var(--paper-2);font-size:12px}
+.iai > b{display:block;font-weight:650;margin-bottom:6px}
+.iai > b .t{font-weight:400;color:var(--ink-3);font-size:10.5px;margin-left:4px}
+.iai.busy > b::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:#7C5CFF;
+  margin-right:6px;vertical-align:1px;animation:dotbusy .8s ease-in-out infinite alternate}
+.iai small{display:block;color:var(--ink-3);font-size:11px;overflow-wrap:anywhere}
+.iai .isay{margin-top:8px;font-size:12px;line-height:1.55}
+.iai .isteps{margin:0;padding-left:18px;line-height:1.55}
+.iai .ikeep{display:flex;gap:6px;align-items:center;margin-top:8px;font-size:11.5px}
 .idupe{border:1px solid var(--p2);border-radius:var(--r-sm);padding:9px 11px;margin-bottom:14px;
   font-size:11.5px;line-height:1.6;color:var(--ink-2)}
 .idupe b{color:var(--accent);cursor:pointer;text-decoration:underline}
@@ -3690,6 +3703,53 @@ const STRINGS = {
   ChecksEmpty: "None yet. Press 👎 under an answer and say what it should have said — it lands here.",
   ChecksDone: "Checked {n}: {p0} pass, {p1} fail.",
   ChecksSee: "See checks",
+  TierLabel: "Models in your flow",
+  TierOne: "One model answers everything",
+  TierTwo: "Two: a fast one for chat, a stronger one for hard jobs",
+  TierHint: "Every request says tier \"fast\" or \"deep\". Choose Two only after your flow has its second prompt action (flow/POWER-AUTOMATE.md, section 4e) - a flow without it simply answers everything with its one model.",
+  TierWait: "Wait for the strong model (seconds)",
+  TierWhich: "Strong model for",
+  TierModeReflect: "the daily look back",
+  TierModeStudy: "learning a BAU document, and Make a runbook",
+  TierModeTeach: "runbook interviews",
+  TierModeDiagnose: "Diagnose on a record",
+  TierModeIntake: "reading a pasted message",
+  TierModeChat: "every chat question",
+  TierDeepShort: "strong model",
+  TierAgain: "Think harder",
+  TierAgainHint: "Ask this again with the strong model",
+  LocalFirstLabel: "Simple questions",
+  LocalFirstOn: "Answer them on this PC, instantly",
+  LocalFirstOff: "Send everything to the flow",
+  LocalFirstHint: "What is overdue, what to do next, what was closed today, who is holding what - counts over your own records, answered at once with no call. Anything that needs thinking still goes to the flow, and every such answer has a button to ask the flow instead.",
+  LocalNote: "Answered here on this PC, instantly.",
+  LocalAskAi: "Ask the assistant instead",
+  IntakeAiLabel: "Pasted messages",
+  IntakeAiOn: "The assistant reads them too",
+  IntakeAiOff: "Only the app's own read",
+  IntakeAiHint: "Paste a message: the app fills what the message states at once, then the assistant fills what it means - the system, how urgent it really is, who is asking - and suggests first steps. What you have already changed is never touched.",
+  RecAiHead: "Ask the assistant",
+  RecAiDiagnose: "Diagnose",
+  RecAiDiagnoseHint: "What is most likely going on, and the one next check - from this record's notes, your runbooks and past fixes",
+  RecAiReply: "Draft a reply",
+  RecAiReplyTo: "Reply to {p0}",
+  RecAiReplyHint: "A short status update to whoever raised it, ready to send",
+  RecAiFix: "Write the fix note",
+  RecAiFixHint: "One line: what fixed it - drafted by the assistant from the notes and log",
+  RecAiRunbook: "Make a runbook",
+  RecAiRunbookHint: "Turn this record into a draft runbook: how it was reported, what fixed it, the checks",
+  RecAiDiagnoseQ: "Diagnose {p0}: from its notes and log, what is most likely going on, and what is the one next check?",
+  RecAiReplyQ: "Draft a short update on {p0} to {p1}: where it stands and what happens next. Use draftEmail.",
+  RecAiReplyQNone: "Draft a short update on {p0} to whoever raised it: where it stands and what happens next. Use draftEmail.",
+  RecAiRunbookQ: "Turn {p0} into a runbook: triggers from how it was reported, steps from how it was fixed, checks from the notes. Save it with saveRunbook as a draft.",
+  IntakeAsk: "Read this message and fill in the new record.",
+  IntakeReading: "The assistant is reading it too…",
+  IntakeFailed: "The assistant could not read it - the fields are the app's own read.",
+  IntakeDone: "The assistant read it",
+  IntakeByAi: "the assistant",
+  IntakeNothingNew: "Nothing to change in what was already filled in.",
+  IntakeSteps: "First steps",
+  IntakeKeepSteps: "Put these on the record as its steps",
   CheckJudge: "QUESTION:\n{p0}\n\nTHE RIGHT ANSWER, in their words:\n{p1}\n\nTHE NEW ANSWER:\n{p2}",
   ScheduledRunSFiledIntoTodays: " scheduled run(s) filed into today's records",
   ScreenshotFiledUnder: "Screenshot filed under ",
@@ -5252,7 +5312,7 @@ const STATUSES = [
    the status bar, and clicking it copies a line you can paste into a bug
    report — build date and flow protocol included, because those are the two
    things that actually differ between copies. */
-const APP_VERSION = "4.5.0";
+const APP_VERSION = "4.6.0";
 const APP_BUILT = "2026-09-18";
 function buildLine(){
   return "Dossier v" + APP_VERSION + " \u00b7 built " + APP_BUILT +
@@ -10598,7 +10658,8 @@ function chatRenderBot(r, sourceText, replaying){
     h += '<div class="say">' + chatSay(r.say || "") + "</div>";
   }
   if (r.note) h += '<div class="note">' + esc(r.note) + "</div>";
-  if (r.took) h += '<div class="took" title="' + esc(L("FlowTookHint")) + '">' + (r.took / 1000).toFixed(1) + " s</div>";
+  if (r.took) h += '<div class="took" title="' + esc(L("FlowTookHint")) + '">' + (r.took / 1000).toFixed(1) + " s" +
+    (r.tier === "deep" ? " \u00b7 " + esc(L("TierDeepShort")) : "") + "</div>";
 
   /* the conditions it read out of the question, said back so a misread one is
      visible rather than silently changing the answer */
@@ -10750,7 +10811,9 @@ function chatRateInner(r){
   const up = r.rate === "up", down = r.rate === "down";
   const b = (v, on, face, tip) => '<button data-rv="' + v + '" class="' + (on ? "on" : "") + '" aria-pressed="' + on +
     '" title="' + LE(tip) + '">' + face + "</button>";
-  return b("up", up, "\u{1F44D}", "RateUp") + b("down", down, "\u{1F44E}", "RateDown") +
+  const harder = r.tier !== "deep" && flowCfg().tiers.on
+    ? '<button data-deeper="1" class="deeper" title="' + LE("TierAgainHint") + '">\u2726 ' + LE("TierAgain") + "</button>" : "";
+  return b("up", up, "\u{1F44D}", "RateUp") + b("down", down, "\u{1F44E}", "RateDown") + harder +
     (down && r.fixText ? '<span class="rs">' + LE("RateFixed") + " <i>" + esc(r.fixText) + "</i></span>"
      : down ? '<span class="rs">' + LE("RateNoted") + "</span>"
      : up ? '<span class="rs">' + LE("RateThanks") + "</span>" : "");
@@ -10793,6 +10856,11 @@ function chatRateSet(id, v, fixText){
   else if (!v && was) toast(L("RateTakenBack"));
 }
 $("chatLog").addEventListener("click", e => {
+  const dp = e.target.closest("[data-deeper]");
+  if (dp){
+    const o = CHAT.rates[dp.closest(".chrate").dataset.rate]; if (!o) return;
+    return chatAsk(o.src, { tier:"deep", flow:true });
+  }
   const rv = e.target.closest("[data-rv]");
   if (rv){
     const id = rv.closest(".chrate").dataset.rate, o = CHAT.rates[id]; if (!o) return;
@@ -10898,6 +10966,48 @@ function chatBot(r, sourceText){
   chatRenderBot(r, sourceText);
 }
 
+/* ── answered here: what the app can count for itself ──────────────────
+   The local assistant has always been able to say what is overdue, what to
+   do next, what was closed today, who is holding what. Those answers are
+   counts over your own records - exact, and instant - so with a flow set up
+   they still come from here, and the model is kept for what needs
+   thinking. Deliberately narrow: only questions that read clearly as one of
+   the counting kinds, only short ones, never one with a problem word in it,
+   and never the reply to a question the assistant has just asked. Every
+   such answer has "Ask the assistant instead" under it. */
+const LOCAL_FIRST = new Set(["next", "overdue", "dueToday", "dueWeek", "waiting", "closed", "opened",
+  "count", "brief", "workload", "timeSpent", "standup", "blocked", "oldest", "neverChased", "undated",
+  "stalled", "quietest", "clock", "dateToday"]);
+function chatLocalFirst(q, c){
+  if (!flowCfg().localFirst || !window.DossierChat) return null;
+  const t = String(q || "").trim();
+  if (!t || t.length > 90 || /^\[/.test(t)) return null;
+  /* a problem, or a request to write or explain something, is the model's */
+  if (/\b(why|how (do|can|should|would|to)|fix|error|errors|fail\w*|broken|issue|problem|explain|write|draft|email|mail|script|query|sql|help me|what does|what is (a|an|the) (?!overdue))\b/i.test(t)) return null;
+  /* the assistant just asked something, and this reads as the answer to
+     it - one of the choices it offered, or a few words that are not a
+     question of their own ("no row", "yes, same error") */
+  const last = ((c && c.msgs) || []).filter(m => m.who === "bot").pop();
+  if (last && last.reply && last.reply.via === "flow" &&
+      ((last.reply.seeds || []).length || /\?\s*$/.test(String(last.reply.say || ""))) &&
+      Date.now() - new Date(last.at || 0).getTime() < 30 * 60000){
+    const low = t.toLowerCase().replace(/[.!\s]+$/, "");
+    const picked = (last.reply.seeds || []).some(x => String(x).toLowerCase() === low);
+    const short = t.split(/\s+/).length <= 4 && !/\?\s*$/.test(t) &&
+                  !/^(what|what's|whats|which|who|when|where|how|show|list|anything|any)\b/i.test(t);
+    if (picked || short) return null;
+  }
+  let r;
+  try { r = DossierChat.ask(t, chatApi(Object.assign({}, (c && c.convo) || {}))); } catch(e){ return null; }
+  if (!r || !LOCAL_FIRST.has(r.intent) || r.unsure || r.trouble || (r.confidence || 0) < 0.7) return null;
+  if (r.act && r.act.confirm) return null;
+  if (c && r.context) c.convo = r.context;
+  r.local = true;
+  r.note = (r.note ? r.note + "\n" : "") + L("LocalNote");
+  r.chips = (r.chips || []).concat([{ label:L("LocalAskAi"), act:{ kind:"askflow", text:t } }]);
+  return r;
+}
+
 /* A greeting or a thank-you, alone - nothing else in the sentence. Anything
    more ("hi, what's overdue?") is a question and goes to the assistant. */
 function chatSmallTalk(q){
@@ -10918,7 +11028,8 @@ function chatSmallTalk(q){
   return "";
 }
 
-function chatAsk(text){
+function chatAsk(text, opts){
+  opts = opts || {};
   const q = String(text || "").trim();
   if (!q) return;
   /* While an answer is on its way the composer is inert: Enter pressed twice
@@ -10927,7 +11038,7 @@ function chatAsk(text){
      here cancels a request — there is no way to — so the only honest thing
      to do with the second one is not to make it. */
   if ($("chat").classList.contains("busy")) return;
-  if (CHAT.files.some(f => f.reading) || CHAT.gridBusy) return chatReadsDone().then(() => chatAsk(q));
+  if (CHAT.files.some(f => f.reading) || CHAT.gridBusy) return chatReadsDone().then(() => chatAsk(q, opts));
   CHAT.last = q;
   const c = chatThread() || chatNew(true);
   const files = CHAT.files.map(f => ({ name:f.name, type:f.type, size:f.size }));
@@ -10945,11 +11056,21 @@ function chatAsk(text){
     return;
   }
 
+  /* "What's overdue?", "what should I do next?", "how many did I close
+     today?" - questions the app can count for itself - are answered here,
+     at once, even with a flow set up. Anything that needs thinking still
+     goes to the flow, and every local answer carries a button that sends
+     the same question there instead. */
+  if (flowOn() && !CHAT.files.length && !opts.flow && !opts.force && !opts.tier){
+    const local = chatLocalFirst(q, c);
+    if (local){ chatBot(local, q); chatSide(); return; }
+  }
+
   /* With a flow configured, it answers instead. The local assistant is still
      here and still knows this workspace — it is what a failed call falls back
      to, and what answers when the flow is switched off. */
   if (flowOn()){
-    const p = flowAsk(q, c);
+    const p = flowAsk(q, c, opts);
     /* they went with the question; the tray starts empty for the next one */
     CHAT.files = []; renderChatFiles();
     return p;
@@ -10989,6 +11110,11 @@ function flowCfg(){
     st.flow = { on:false, url:"", scope:"live", deep:false, cap:FLOW_CAP,
                 timeout:30, fallback:true, shape:"classic" };
   if (!st.flow.shape) st.flow.shape = "classic";
+  /* two models in the flow, or one: off until the flow has been given its
+     second prompt action (POWER-AUTOMATE.md 4e) */
+  st.flow.tiers = Object.assign({ on:false, auto:["reflect", "study", "teach", "diagnose"], timeout:110 }, st.flow.tiers || {});
+  /* simple questions answered on this PC, instantly, instead of a round trip */
+  if (st.flow.localFirst === undefined) st.flow.localFirst = true;
   /* Four hundred was the right number when the four hundred were the newest
      records and nothing knew which of them mattered. They are ranked against
      the question now, so sixty of them carry more of the answer than four
@@ -11116,7 +11242,7 @@ function flowContext(q){
     promptTemplate: PROMPT.text || "",
     promptFrom: PROMPT.from || "",
     lessons: lessonsForFlow(q),
-    mode: (String(q || "").match(/^\[(teach|study|reflect|fix|check)\]/) || [0, "chat"])[1],
+    mode: (String(q || "").match(/^\[(teach|study|reflect|fix|check|intake)\]/) || [0, "chat"])[1],
     memoryIndex: memoryIndexForFlow(q),
     memoryTotal: memoryStore().length,
     runbooks: runbooksForFlow(q),
@@ -11181,8 +11307,9 @@ function flowContext(q){
 
 /* ── the question ─────────────────────────────────────────────────────── */
 
-async function flowAsk(q, thread){
-  const cfg = flowCfg();
+async function flowAsk(q, thread, opts){
+  opts = opts || {};
+  const cfg = opts.tier ? Object.assign({}, flowCfg(), { tier:opts.tier }) : flowCfg();
   /* remembered before the tray is emptied, so a failure can say whether the
      size of the question was likely to be the reason for it */
   const sentFiles = CHAT.files.length;
@@ -11196,6 +11323,7 @@ async function flowAsk(q, thread){
      sent every PDF and picture as "None." and the answer was "I can't see
      any file". */
   const ctx = flowContext(q);
+  if (opts.force) ctx.forceRecords = opts.force.slice();
   await promptLoad();
   ctx.promptTemplate = PROMPT.text; ctx.promptFrom = PROMPT.from;
   try { out = await DossierFlow.ask(q, ctx, cfg); }
@@ -11246,7 +11374,7 @@ async function flowAsk(q, thread){
       out2 = await DossierFlow.ask(q, Object.assign(flowContext(q), {
         attachments: ctx.attachments, picture: ctx.picture, pictureName: ctx.pictureName,
         promptTemplate: ctx.promptTemplate, promptFrom: ctx.promptFrom,
-        forceRecords: rows,
+        forceRecords: (opts.force || []).concat(rows),
         followUp: { of:q, wanted:more.args || {}, gave:rows.length }
       }), cfg);
     } catch(e){ err2 = e; }
@@ -11262,6 +11390,7 @@ async function flowAsk(q, thread){
   /* how long Power Automate took, under the answer: the number that says
      whether "slow" is the flow, the model, or neither */
   if (out && out.ms) reply.took = out.ms;
+  if (out && out.tier) reply.tier = out.tier;
   chatBot(reply, q);
   chatSide();
 }
@@ -13322,6 +13451,36 @@ function renderFlow(){
        "</select></div>" +
        '<p class="hint2">' + esc(L("FlowShapeHint")) + "</p>";
 
+  h += '<div class="fr" style="margin-top:10px"><label>' + esc(L("TierLabel")) + "</label>" +
+       '<select class="in" id="flTiers">' +
+       '<option value="0"' + (c.tiers.on ? "" : " selected") + ">" + esc(L("TierOne")) + "</option>" +
+       '<option value="1"' + (c.tiers.on ? " selected" : "") + ">" + esc(L("TierTwo")) + "</option>" +
+       "</select></div>" +
+       '<p class="hint2">' + esc(L("TierHint")) + "</p>" +
+       (c.tiers.on
+         ? '<div class="fr"><label>' + esc(L("TierWait")) + "</label>" +
+           '<input class="in" id="flTierTmo" type="number" min="30" max="115" value="' + (+c.tiers.timeout || 110) + '"></div>' +
+           '<div class="fr"><label>' + esc(L("TierWhich")) + "</label>" +
+           '<div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;font-size:12px">' +
+           [["reflect", "TierModeReflect"], ["study", "TierModeStudy"], ["teach", "TierModeTeach"],
+            ["diagnose", "TierModeDiagnose"], ["intake", "TierModeIntake"], ["chat", "TierModeChat"]].map(([m, k]) =>
+             '<label style="display:flex;gap:5px;align-items:center"><input type="checkbox" data-tier="' + m + '"' +
+             (c.tiers.auto.indexOf(m) >= 0 ? " checked" : "") + "> " + esc(L(k)) + "</label>").join("") +
+           "</div></div>"
+         : "");
+
+  h += '<div class="fr"><label>' + esc(L("IntakeAiLabel")) + "</label>" +
+       '<select class="in" id="flIntake"><option value="1"' + (c.intakeAi !== false ? " selected" : "") + ">" +
+       esc(L("IntakeAiOn")) + '</option><option value="0"' + (c.intakeAi === false ? " selected" : "") + ">" +
+       esc(L("IntakeAiOff")) + "</option></select></div>" +
+       '<p class="hint2">' + esc(L("IntakeAiHint")) + "</p>";
+
+  h += '<div class="fr"><label>' + esc(L("LocalFirstLabel")) + "</label>" +
+       '<select class="in" id="flLocal"><option value="1"' + (c.localFirst ? " selected" : "") + ">" +
+       esc(L("LocalFirstOn")) + '</option><option value="0"' + (c.localFirst ? "" : " selected") + ">" +
+       esc(L("LocalFirstOff")) + "</option></select></div>" +
+       '<p class="hint2">' + esc(L("LocalFirstHint")) + "</p>";
+
   h += '<div class="fr" style="margin-top:10px"><label>' + esc(L("FlowScope")) + "</label>" +
        '<select class="in" id="flScope">' +
        ['names', 'live', 'all'].map(v => '<option value="' + v + '"' +
@@ -13376,6 +13535,16 @@ function renderFlow(){
   on("flDeep", e => { c.deep = e.target.value === "1"; save(); }, "onchange");
   on("flFb", e => { c.fallback = e.target.value === "1"; save(); }, "onchange");
   on("flShape", e => { c.shape = e.target.value; CHAT.grid = null; save(); }, "onchange");
+  on("flTiers", e => { c.tiers.on = e.target.value === "1"; save(); }, "onchange");
+  on("flTierTmo", e => { c.tiers.timeout = Math.max(30, Math.min(115, +e.target.value || 110)); touch(); }, "onchange");
+  on("flLocal", e => { c.localFirst = e.target.value === "1"; save(); }, "onchange");
+  on("flIntake", e => { c.intakeAi = e.target.value === "1"; save(); }, "onchange");
+  box.querySelectorAll("[data-tier]").forEach(cb => cb.onchange = () => {
+    const m = cb.dataset.tier;
+    c.tiers.auto = c.tiers.auto.filter(x => x !== m);
+    if (cb.checked) c.tiers.auto.push(m);
+    touch();
+  });
   on("flCap", e => { c.cap = Math.max(0, Math.min(2000, +e.target.value || 0));
                      c.capPicked = true; touch(); }, "onchange");
   on("flTmo", e => { c.timeout = Math.max(5, Math.min(120, +e.target.value || 30)); touch(); }, "onchange");
@@ -13466,6 +13635,7 @@ function chatDo(act){
   if (act.confirm && !act.__ok) return chatBot({ say:"", act:act });
   switch (act.kind){
     case "say":      return chatAsk(act.text);
+    case "askflow":  return chatAsk(act.text, { flow:true });
     case "rerun": {
       const c = chatThread();
       let r;
@@ -14247,13 +14417,109 @@ function openIntake(raw){
   const r = readMessage(raw);
   if (!r.notes) return toast(L("NothingOnTheClipboardToRead"), { bad:true });
   S.intake = r;
+  INTAKE.ai = null; INTAKE.asking++;
   renderIntake();
   $("intake").classList.add("on");
   $("scrim").classList.add("on");
   setTimeout(() => { const el = $("inTitle"); if (el){ el.focus(); el.select(); } }, 60);
+  if (typeof flowOn === "function" && flowOn() && flowCfg().intakeAi !== false) intakeAi(r.notes);
+}
+
+/* ── the assistant reads it too ─────────────────────────────────────────
+   The read above is instant and good at the parts a message states - a
+   ticket number, a Subject line, a name it has seen before. The assistant
+   is good at the rest: what the message is actually about, which of your
+   systems, how urgent it really is, and what to do first - from your
+   runbooks and from how you fixed the same thing last time. It fills only
+   what you have not already touched, marks what it filled, and offers its
+   first steps as the record's checklist. Nothing is saved until Log it. */
+const INTAKE = { asking:0, ai:null, base:{} };
+const INTAKE_FIELDS = [["inTitle", "title"], ["inSys", "system"], ["inType", "type"], ["inPri", "priority"],
+  ["inTicket", "ticket"], ["inWho", "requester"], ["inDue", "due"], ["inTime", "dueTime"]];
+async function intakeAi(raw){
+  const my = ++INTAKE.asking;
+  INTAKE.ai = { state:"busy" };
+  paintIntakeAi();
+  let out = null, err = null;
+  try {
+    await promptLoad();
+    const q = "[intake] " + L("IntakeAsk") + "\n\n" + String(raw || "").slice(0, 6000);
+    const ctx = Object.assign(flowContext(q), { conversation:[], attachments:[],
+      picture:CHAT_BLANK_PNG, pictureName:"", promptTemplate:PROMPT.text, promptFrom:PROMPT.from });
+    out = await DossierFlow.ask(q, ctx, Object.assign({}, flowCfg(), { scope:"names", tier:flowTier("intake") }));
+  } catch(e){ err = e; }
+  if (my !== INTAKE.asking || !S.intake) return;          /* closed, or another message meanwhile */
+  if (err || !out){
+    INTAKE.ai = { state:"error", why:String((err && err.message) || err || "") };
+    return paintIntakeAi();
+  }
+  const cr = (out.actions || []).find(a => a.do === "createRecord");
+  const g = (cr && cr.args) || {};
+  const filled = [];
+  INTAKE_FIELDS.forEach(([id, k]) => {
+    const v = g[k] == null ? "" : String(g[k]).trim();
+    const el = $(id);
+    if (!v || !el) return;
+    /* what you typed or picked wins; only the first read is replaced */
+    if (el.value !== String(INTAKE.base[id] == null ? "" : INTAKE.base[id])) return;
+    if (el.tagName === "SELECT"){
+      const o = [...el.options].find(o => o.value.toLowerCase() === v.toLowerCase() || o.text.toLowerCase() === v.toLowerCase());
+      if (!o || o.value === el.value) return;
+      el.value = o.value;
+    } else {
+      if (el.value === v) return;
+      el.value = v;
+    }
+    INTAKE.base[id] = el.value;
+    filled.push({ id, k, v:el.value });
+  });
+  const steps = (Array.isArray(g.checklist) ? g.checklist : []).map(x => String(x || "").trim()).filter(Boolean).slice(0, 8);
+  INTAKE.ai = { state:"done", filled, steps, say:String(out.say || "").trim(), tier:out.tier, ms:out.ms,
+                keep:true };
+  paintIntakeAi();
+  /* a duplicate check against the better title */
+  if (filled.some(f => f.k === "title" || f.k === "ticket")){
+    const f = intakeFields(), dupe = findDuplicate(f.title, f.ticket), box = $("intakeDupe");
+    if (box) box.innerHTML = dupe ? L("AlreadyOpen") + " <b data-goto2=\"" + dupe.id + '">' + esc(clip(dupe.title, 46)) +
+      "</b> (" + esc(dupe.code) + intakeDupeTail() : "";
+    if (box) box.style.display = dupe ? "" : "none";
+  }
+}
+/* the sentence carries its own closing tag from when it was the whole box */
+function intakeDupeTail(){ return L("LogThisAnywayOrOpenThat").replace(/<\/div>\s*$/, ""); }
+function paintIntakeAi(){
+  const box = $("intakeAi"); if (!box) return;
+  const a = INTAKE.ai;
+  if (!a){ box.innerHTML = ""; return; }
+  if (a.state === "busy"){
+    box.innerHTML = '<div class="iai busy"><b>\u2726 ' + LE("IntakeReading") + "</b></div>";
+    return;
+  }
+  if (a.state === "error"){
+    box.innerHTML = '<div class="iai"><b>\u2726 ' + LE("IntakeFailed") + "</b><small>" + esc(a.why) + "</small></div>";
+    return;
+  }
+  const label = { title:L("Title"), system:L("System"), type:L("Type"), priority:L("Priority"), ticket:L("Ticket"),
+                  requester:L("RaisedBy"), due:L("Due"), dueTime:L("Due") };
+  box.innerHTML = '<div class="iai">' +
+    "<b>\u2726 " + LE("IntakeDone") + (a.ms ? ' <span class="t">' + (a.ms / 1000).toFixed(1) + " s</span>" : "") + "</b>" +
+    (a.filled.length
+      ? '<div class="prov">' + a.filled.map(f => '<div class="p ai"><i></i><div><b>' + esc(label[f.k] || f.k) + ": " +
+          esc(clip(f.v, 54)) + "</b><small>" + LE("IntakeByAi") + "</small></div></div>").join("") + "</div>"
+      : "<small>" + LE("IntakeNothingNew") + "</small>") +
+    (a.say ? '<div class="isay rtv">' + mdHtml(a.say) + "</div>" : "") +
+    (a.steps.length
+      ? '<h5 class="eyebrow" style="margin:10px 0 6px">' + LE("IntakeSteps") + "</h5>" +
+        '<ol class="isteps">' + a.steps.map(x => "<li>" + esc(x) + "</li>").join("") + "</ol>" +
+        '<label class="ikeep"><input type="checkbox" id="intakeKeep"' + (a.keep ? " checked" : "") + "> " +
+          LE("IntakeKeepSteps") + "</label>"
+      : "") +
+    "</div>";
+  const k = $("intakeKeep");
+  if (k) k.onchange = () => { a.keep = k.checked; };
 }
 function closeIntake(){
-  S.intake = null;
+  S.intake = null; INTAKE.asking++;
   $("intake").classList.remove("on");
   if (!$("drawer").classList.contains("on") && !$("modal").classList.contains("on") &&
       !$("ask").classList.contains("on")) $("scrim").classList.remove("on");
@@ -14291,8 +14557,10 @@ function renderIntake(){
 
   const dupe = findDuplicate(r.title, r.ticket);
   $("intakeS").innerHTML =
-    (dupe ? "<div class=\"idupe\">" + L("AlreadyOpen") + " <b data-goto2=\"" + dupe.id + '">' + esc(clip(dupe.title, 46)) +
-      "</b> (" + esc(dupe.code) + L("LogThisAnywayOrOpenThat") : "") +
+    '<div id="intakeAi"></div>' +
+    '<div class="idupe" id="intakeDupe"' + (dupe ? "" : ' style="display:none"') + ">" +
+      (dupe ? L("AlreadyOpen") + " <b data-goto2=\"" + dupe.id + '">' + esc(clip(dupe.title, 46)) +
+      "</b> (" + esc(dupe.code) + intakeDupeTail() : "") + "</div>" +
     "<h5 class=\"eyebrow\" style=\"margin:0 0 9px\">" + L("WhatItFound") + "</h5>" +
     (r.found.length
       ? '<div class="prov">' + r.found.map(f =>
@@ -14302,7 +14570,11 @@ function renderIntake(){
     '<div class="plegend">' +
       "<span><i class=\"text\"></i>" + L("InTheMessage") + "</span>" +
       "<span><i class=\"learned\"></i>" + L("FromYourRecords") + "</span>" +
-      "<span><i class=\"sla\"></i>" + L("FromThePriority") + "</span></div>";
+      "<span><i class=\"sla\"></i>" + L("FromThePriority") + "</span>" +
+      (typeof flowOn === "function" && flowOn() ? "<span><i class=\"ai\"></i>" + LE("IntakeByAi") + "</span>" : "") + "</div>";
+  INTAKE.base = {};
+  INTAKE_FIELDS.forEach(([id]) => { const el = $(id); if (el) INTAKE.base[id] = el.value; });
+  paintIntakeAi();
 }
 function commitIntake(){
   const f = intakeFields();
@@ -14311,6 +14583,12 @@ function commitIntake(){
     ticket:f.ticket, requester:f.requester, due:f.due, dueTime:f.dueTime,
     estimate:f.estimate, notes:f.notes });
   if (f.waitOn) setWait(t.id, f.waitOn, "");
+  const ai = INTAKE.ai;
+  if (ai && ai.state === "done" && ai.keep && ai.steps.length){
+    t.checklist = (t.checklist || []).concat(ai.steps.map(x => ({ text:x, done:false })));
+    touch();
+  }
+  INTAKE.asking++; INTAKE.ai = null;
   closeIntake();
   toast(L("LoggedFromTheMessage", { p0: t.code }),
     { action:L("Kpi_Open"), onAction:() => openDrawer(t.id) });
@@ -15090,6 +15368,47 @@ function moveCursor(n){
 function curTask(){ return S.rows[S.cursor] ? getTask(S.rows[S.cursor]) : null; }
 
 /* ═══ DRAWER ═════════════════════════════════════════════════════════════ */
+/* ── the assistant, one press from the record ───────────────────────────
+   The four things most often asked about a record, as buttons, each sent as
+   a well-formed question with this record attached whole - notes, log,
+   steps - so the answer is about THIS record and nobody has to type its
+   code or paste its notes. The answer lands in the assistant panel, in a
+   conversation of its own. */
+function recAiRow(t){
+  if (typeof flowOn !== "function" || !flowOn()) return "";
+  const who = peopleOf(t)[0] || "";
+  const b = (k, face, label, tip) => '<button class="btn sm" data-recai="' + k + '" title="' + esc(tip) + '">' +
+    face + " " + esc(label) + "</button>";
+  return '<div class="sec recai"><h5>' + LE("RecAiHead") + "</h5><div class=\"brow\">" +
+    b("diagnose", "\u2726", L("RecAiDiagnose"), L("RecAiDiagnoseHint")) +
+    b("reply", "\u2709", who ? L("RecAiReplyTo", { p0:who.split(/\s+/)[0] }) : L("RecAiReply"), L("RecAiReplyHint")) +
+    b("fix", "\u270e", L("RecAiFix"), L("RecAiFixHint")) +
+    b("runbook", "\u{1F4D8}", L("RecAiRunbook"), L("RecAiRunbookHint")) +
+    "</div></div>";
+}
+/* which model a job asks for, by the switches in Setup */
+function flowTier(kind){
+  const t = flowCfg().tiers;
+  return t.on && t.auto.indexOf(kind) >= 0 ? "deep" : "fast";
+}
+function recAi(kind, id){
+  const t = getTask(id); if (!t) return;
+  if (!flowOn()) return toast(L("ReflectNeedsFlow"), { bad:true });
+  if (kind === "fix") return fixAsk(t, { force:true });
+  const who = peopleOf(t).join(", ");
+  const ref = t.code + " \u201c" + t.title + "\u201d";
+  const q = kind === "diagnose" ? L("RecAiDiagnoseQ", { p0:ref })
+          : kind === "reply" ? (who ? L("RecAiReplyQ", { p0:ref, p1:who }) : L("RecAiReplyQNone", { p0:ref }))
+          : L("RecAiRunbookQ", { p0:ref });
+  openChat();
+  chatNew(true);
+  const c = chatThread(); if (c) c.title = t.code + " \u00b7 " + (kind === "diagnose" ? L("RecAiDiagnose")
+    : kind === "reply" ? L("RecAiReply") : L("RecAiRunbook"));
+  chatPaint();
+  chatAsk(q, { force:[t], flow:true,
+               tier: kind === "diagnose" ? flowTier("diagnose") : kind === "runbook" ? flowTier("study") : "fast" });
+}
+
 function openDrawer(id){
   const t = getTask(id); if (!t) return;
   S.open = id;
@@ -15273,7 +15592,7 @@ function renderDrawer(){
   $("dBody").innerHTML =
     "<div class=\"sec\"><h5>" + L("Label_Status") + "</h5>" + holdHtml + '<div class="stg">' +
       STATUSES.map(s => '<button class="sb' + (t.status === s.id ? " on" : "") + '" data-st="' + s.id + '" data-v="' + s.id + '">' + stNameE(s.label) + "</button>").join("") +
-    "</div></div>" + sug + priorHtml +
+    "</div></div>" + sug + priorHtml + recAiRow(t) +
 
     "<div class=\"sec\"><h5>" + L("Details") + "</h5>" +
       fr(L("Priority"), '<select class="in" data-f="priority">' + priOpt + "</select>") +
@@ -18238,13 +18557,17 @@ function fixState(text, busy, offer){
   st.innerHTML = esc(text || "") + (offer
     ? ' <button class="lnk" data-fixuse="' + esc(offer) + '" title="' + esc(offer) + '">' + LE("FixUseAi") + "</button>" : "");
 }
-function fixAsk(t){
+function fixAsk(t, opts){
+  opts = opts || {};
   const cfg = fixCfg();
-  if (!cfg.on || FIX.quiet || !t || S.hush) return;
-  if (String(t.resolution || "").trim()) return;      /* already said */
+  if (!t) return;
+  if (!opts.force){
+    if (!cfg.on || FIX.quiet || S.hush) return;
+    if (String(t.resolution || "").trim()) return;    /* already said */
+  }
   if (FIX.id && FIX.id !== t.id) fixLeave();          /* what was typed for the last one is kept */
   const el = fixEl();
-  FIX.id = t.id; FIX.edited = false; FIX.draft = fixDraft(t);
+  FIX.id = t.id; FIX.edited = false; FIX.draft = String(t.resolution || "").trim() || fixDraft(t);
   $("fixCode").textContent = t.code || "";
   $("fixTitle").textContent = t.title || "";
   const inp = $("fixIn");
@@ -18257,7 +18580,7 @@ function fixAsk(t){
     inp.focus(); inp.select();
   }
   fixTimer();
-  if (cfg.ai && typeof flowOn === "function" && flowOn()) fixSuggest(t);
+  if ((cfg.ai || opts.force) && typeof flowOn === "function" && flowOn()) fixSuggest(t);
 }
 /* the assistant reads the record and writes the line; it replaces the
    draft only if you have not started typing over it */
@@ -21935,6 +22258,10 @@ $("dTitle").addEventListener("blur", e => {
 });
 $("dTitle").addEventListener("keydown", e => { if (e.key === "Enter"){ e.preventDefault(); e.target.blur(); } });
 
+$("dBody").addEventListener("click", e => {
+  const b = e.target.closest("[data-recai]");
+  if (b && S.open) recAi(b.dataset.recai, S.open);
+});
 $("dBody").addEventListener("click", async e => {
   const t = getTask(S.open); if (!t) return;
   const st = e.target.dataset.st;

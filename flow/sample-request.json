@@ -1,7 +1,9 @@
 {
   "dossier": 1,
-  "protocol": "1.1",
+  "protocol": "1.3",
   "askedAt": "2026-09-16T04:11:17.100Z",
+  "mode": "chat",
+  "tier": "fast",
   "today": "2026-09-16",
   "weekday": "Wednesday",
   "calendar": {

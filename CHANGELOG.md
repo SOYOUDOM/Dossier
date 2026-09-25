@@ -6,6 +6,42 @@ holds — which is what to paste into a bug report.
 
 ---
 
+## 4.6.0 - 2026-09-25
+
+**Faster to use: instant answers, one-press record actions, pasted messages
+filled in, and a strong model for the hard jobs.**
+
+Reload the page. Everything except the two-model split works with the flow
+you already have; the split needs a Condition and a second prompt in Power
+Automate, set out step by step in `flow/POWER-AUTOMATE.md` 4e.
+
+- **Simple questions answered on this PC.** *What's overdue*, *what next*,
+  *closed today*, *who is holding what*, counts - the local assistant has
+  always known these; with a flow set up they now come from it again, in
+  milliseconds, with **Ask the assistant instead** under each. Problems,
+  requests to write or explain, longer questions and replies to the
+  assistant's own question still go to the flow. Setup -> *Simple questions*.
+- **Ask the assistant, on every record**: **Diagnose**, **Reply to <name>**,
+  **Write the fix note**, **Make a runbook**. The record goes whole - notes
+  and log included whatever *Include notes* is set to, because it is the
+  question - and each answer gets a conversation of its own.
+- **Paste a message: the assistant fills it in too** (`[intake]` mode): a real
+  title, system, type, priority and requester, marked in violet, never over
+  anything you changed; and two to four **First steps** that become the
+  record's checklist. Setup -> *Pasted messages*.
+- **Two models.** Every request now carries `mode` and `tier` ("fast" /
+  "deep") at the top, the short picture-setup request included. Setup ->
+  *Models in your flow* -> *Two* sends the daily look back, BAU study,
+  runbook interviews and Diagnose (each switchable, plus pasted messages and
+  all chat) as `deep`, and adds **Think harder** under every answer. The
+  strong model is waited for up to 110 s (Power Automate stops at 120), and
+  the time under an answer says *strong model*.
+- `flow/POWER-AUTOMATE.md` 4e: making the second prompt, the Condition, the
+  variable, the one edit to Clean, the Fallback's run-after, switching
+  Dossier over, checking it, what goes wrong, what it costs. The short
+  Parse JSON schema gains `mode` and `tier`.
+- Prompt: the `[intake]` mode (20.0 KB).
+
 ## 4.5.0 - 2026-09-25
 
 **The assistant learns from your corrections, from how you fix things, and

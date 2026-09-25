@@ -91,10 +91,16 @@ body('Parse_JSON')?['prompt']
 `promptFrom` says which file it came from. Every other field still travels,
 so a flow that wires its own inputs to them keeps working.
 
+Since protocol 1.3 it also carries **`mode`** and **`tier`** at the top (see
+*The mode*, below): what kind of question it is, and whether it wants the
+fast model or the strong one.
+
 ```jsonc
 {
   "dossier": 1,
-  "protocol": "1.2",
+  "protocol": "1.3",
+  "mode": "chat",
+  "tier": "fast",
   "prompt": "You are the assistant inside Dossier … (the whole prompt, filled in)",
   "promptFrom": "flow/prompt.txt",
   "askedAt": "2026-09-03T04:12:00.000Z",
@@ -237,7 +243,16 @@ record's notes when it is `"last note, not confirmed"`. A record in
 ### The mode — what kind of question this is
 
 `workspace.mode` is `"chat"` for a question typed in the panel, and one of
-five others, each also the first word of `message` in brackets:
+six others, each also the first word of `message` in brackets. The same word
+is at the top of the request as `mode`, beside `tier`, so a flow can branch
+on either without reaching into the workspace:
+
+| top-level field | values | |
+|---|---|---|
+| `mode` | `chat` `reflect` `teach` `study` `fix` `check` `intake` | as below |
+| `tier` | `fast` `deep` | which model the question wants. `deep` for the jobs ticked in **Setup → Models in your flow** (by default the look back, study, teach and **Diagnose**) and for **✦ Think harder**; everything else is `fast`. Always `fast` while that setting is *One model*. POWER-AUTOMATE.md §4e builds the branch |
+
+Both are in the short request (the picture setup) as well as the full one.
 
 | mode | sent | `attached` holds |
 |---|---|---|
@@ -246,6 +261,7 @@ five others, each also the first word of `message` in brackets:
 | `study` | from **Learn from a BAU document…** | the guideline, read as text |
 | `fix` | when a record is closed by hand and **How was it fixed?** comes up | the record: title, notes, log, steps done. The reply is one line in `say` — what fixed it — or exactly `unknown` |
 | `check` | from **Setup → Checks → Run checks**, after the question itself has been asked again | nothing; `message` holds the QUESTION, THE RIGHT ANSWER in their words and THE NEW ANSWER. `say` starts with `PASS` or `FAIL`, then one sentence why |
+| `intake` | **Paste a message** (unless switched off in Setup) | nothing; the pasted message is in `message` after its first line. The reply is ONE `createRecord` — title, system, type, priority, requester, ticket, a deadline only if stated, `checklist` with two to four first steps — and one sentence in `say`. It is **not** run: the app fills the fields you have not touched, marks them, and offers the steps; nothing is saved until **Log it** |
 
 A `reflect` reply is applied without a dialog, because nobody is there to
 answer one: `learn` and `remember` are kept, `saveRunbook` is kept **as a
