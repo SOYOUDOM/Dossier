@@ -3720,6 +3720,25 @@ const STRINGS = {
   FlowFallbackHit: "Your flow's safety net answered, not the model: an action in the flow failed, so its answer never came back - and it failed again when asked without your notes and records. In Power Automate open the flow \u2192 Run history \u2192 the latest run \u2192 the box with the red ! \u2192 the action inside it with the red !, and read its error. flow/POWER-AUTOMATE.md 4e, \u201cWhen it goes wrong\u201d, has the usual causes.",
   FlowFiltered: "Microsoft's content filter blocked this question before the model saw it (\u201cPrompt was filtered\u201d) - and again when it was asked without your notes and records, so it is the question itself, or the prompt file. Word it differently; if every question is blocked, check flow/prompt.txt or your dossier-prompt.txt for lines added recently.",
   FlowSaid: "The flow said: {p0}",
+  BriefHead: "About my work",
+  BriefHint: "One page about your world, in plain facts: your team and role, the systems you look after (what each does, where it runs, who owns it), servers and environments, the people and teams you deal with, and the words you use (COI = ...). It goes with every question, so the assistant knows what APP02 or POLICY_MASTER is without being told each time. Write facts, not orders.",
+  BriefPh: "## Team\n- Application support for ...\n\n## Systems\n- CX Portal - customer self-service; runs on WEB01; owned by ...\n\n## Servers\n- APP02 - Imaging app pool\n\n## People\n- Sokha (Branch Ops) - raises portal password resets\n\n## Words\n- COI = certificate of insurance",
+  BriefSave: "Save",
+  BriefDraftBtn: "Draft it from my records",
+  BriefRedraft: "Redraft it from my records",
+  BriefDrafting: "Drafting\u2026",
+  BriefSize: "{n} characters",
+  BriefEmpty: "Empty - the assistant knows only what each question happens to mention",
+  BriefUpdated: "updated {p0}",
+  BriefSaved: "Saved - it goes with every question from now on.",
+  BriefAskAi: "Draft my About my work brief from what the workspace knows.",
+  BriefDrafted: "Drafted from your records - read it, correct anything wrong, fill the gaps it lists, and press Save.",
+  BriefDraftFailed: "Could not draft it this time.",
+  BriefAddSay: "Add to About my work ({p1}): {p0}",
+  BriefAddConfirm: "Add it?",
+  BriefAdded: "Added to About my work: {p0}",
+  BriefAddAlready: "That is already in About my work.",
+  BriefOpen: "Open About my work",
   PlaceholderLost: "It answered the empty picture placeholder instead of your question, twice. Ask it again in other words.",
   FlowLeanAnswered: "Answered without your notes, lessons, runbooks and records: the full question failed in the flow, and this one went through. If that happens again and again, something in them is the reason - most often Microsoft's content filter reading a note or lesson as orders to the AI.",
   FlowLeanFiltered: "Answered without your notes, lessons, runbooks and records: Microsoft's content filter blocked the full question (\u201cPrompt was filtered\u201d). Something in them reads to the filter like instructions to the AI - look for a note or lesson written as rules (\u201cDo not\u2026\u201d, \u201cAlways\u2026\u201d, \u201cYou must\u2026\u201d) and reword it as plain facts.",
@@ -5326,7 +5345,7 @@ const STATUSES = [
    the status bar, and clicking it copies a line you can paste into a bug
    report — build date and flow protocol included, because those are the two
    things that actually differ between copies. */
-const APP_VERSION = "4.8.0";
+const APP_VERSION = "4.9.0";
 const APP_BUILT = "2026-09-18";
 function buildLine(){
   return "Resolv v" + APP_VERSION + " \u00b7 built " + APP_BUILT +
@@ -11014,6 +11033,13 @@ function chatLocalFirst(q, c){
   let r;
   try { r = DossierChat.ask(t, chatApi(Object.assign({}, (c && c.convo) || {}))); } catch(e){ return null; }
   if (!r || !LOCAL_FIRST.has(r.intent) || r.unsure || r.trouble || (r.confidence || 0) < 0.7) return null;
+  /* in the middle of a conversation with the assistant, "ok what next",
+     "more detail", "and that one?" carry on THAT conversation - they are
+     not a question about the workload - so they stay with it */
+  const lastFlow = ((c && c.msgs) || []).filter(m => m.who === "bot").slice(-1)
+    .find(m => m.reply && m.reply.via === "flow" && Date.now() - new Date(m.at || 0).getTime() < 20 * 60000);
+  if (lastFlow && (r.intent === "next" || r.intent === "brief" ||
+      /\b(it|this|that|these|those|them|then|more|else|again|also|detail|details|further|continue|so)\b/i.test(t))) return null;
   if (r.act && r.act.confirm) return null;
   if (c && r.context) c.convo = r.context;
   r.local = true;
@@ -11218,7 +11244,7 @@ function flowContext(q){
   /* Six turns back, and a turn is capped: what the last answer SAID matters,
      the whole of a two-thousand-word answer does not, and the history is
      otherwise the one part of a question that grows all afternoon. */
-  const msgs = ((c && c.msgs) || []).slice(-6).map(m => ({
+  const msgs = ((c && c.msgs) || []).slice(-8).map(m => ({
     who: m.who === "you" ? "person" : "dossier",
     text: (m.who === "you" ? String(m.text || "")
                            : String((m.reply && m.reply.say) || "")).slice(0, 1200)
@@ -11256,13 +11282,16 @@ function flowContext(q){
     promptTemplate: PROMPT.text || "",
     promptFrom: PROMPT.from || "",
     lessons: lessonsForFlow(q),
-    mode: (String(q || "").match(/^\[(teach|study|reflect|fix|check|intake)\]/) || [0, "chat"])[1],
+    mode: (String(q || "").match(/^\[(teach|study|reflect|fix|check|intake|brief)\]/) || [0, "chat"])[1],
     memoryIndex: memoryIndexForFlow(q),
     memoryTotal: memoryStore().length,
     runbooks: runbooksForFlow(q),
     runbookTotal: runbookStore().length,
     runbooksMatched: runbooksMatchedForFlow(q),
     pastFixes: pastFixesFor(q),
+    brief: briefForFlow(),
+    focus: flowFocus(),
+    thread: threadForFlow(c),
     mentioned: rbIdents(q),
     incidents: incidentsForFlow(30),
     profiles: profilesForFlow(q),
@@ -11473,6 +11502,7 @@ async function flowAsk(q, thread, opts){
   if (out && out.ms) reply.took = out.ms;
   if (out && out.tier) reply.tier = out.tier;
   if (out && out.ms && !sentFiles) flowTimed(out.tier || "fast", out.ms);
+  if (out && out.thread && thread){ thread.summary = out.thread; thread.summaryAt = new Date().toISOString(); }
   chatBot(reply, q);
   chatSide();
 }
@@ -11679,6 +11709,8 @@ function flowDescribe(a){
                confirm:"Add it?" };
     case "learn":
       return { say:"\u201c" + g.lesson + "\u201d", note:g.kind || "", confirm:L("LearnKept").replace(/:$/, "?") };
+    case "addToBrief":
+      return { say:L("BriefAddSay", { p0:g.line, p1:g.section || "Words" }), confirm:L("BriefAddConfirm") };
     case "remember": {
       const had = memoryFind(g.replaces || g.title);
       return { say:(had ? "Update what I know about \u201c" + had.title + "\u201d"
@@ -11989,6 +12021,11 @@ function flowRun(a, quiet){
         ((n.tags || []).length ? "\n\n\u2014 " + n.tags.join(", ") : "")).join("\n\n\u2500\u2500\u2500\n\n") };
     }
 
+    case "addToBrief": {
+      if (!briefAdd(g.line, g.section)) return done(L("BriefAddAlready"));
+      touch(); if (typeof paintBrief === "function") paintBrief();
+      return done(L("BriefAdded", { p0:g.line }), [{ label:L("BriefOpen"), act:{ kind:"panel", panel:"setup" } }]);
+    }
     case "learn": {
       const r = lessonSave(g.lesson, g.kind, g.replaces, REFLECT.applying ? "look back" : "conversation");
       if (!r) return null;
@@ -15555,6 +15592,7 @@ function recAi(kind, id){
 function openDrawer(id){
   const t = getTask(id); if (!t) return;
   S.open = id;
+  S.lastOpen = { id, at:Date.now() };
   $("dCode").textContent = t.code + (t.ticket ? " · " + t.ticket : "");
   $("dMade").textContent = L("OpenedOn", { p0: stamp(t.created) });
   $("dTitle").textContent = t.title;
@@ -16647,6 +16685,9 @@ async function renderModal(){
     '<div style="display:flex;gap:6px;margin-top:8px"><input class="in mono" id="tplNew" style="font-size:11px" ' +
       "placeholder=\"Restart app pool @&quot;Infra / IIS&quot; :admin 15m today\"><button class=\"btn sm\" id=\"tplAdd\">" + L("Add") + "</button></div>" +
 
+    "<h5 class=\"eyebrow\" style=\"margin:22px 0 8px\">" + LE("BriefHead") + "</h5>" +
+    '<div id="briefBox"></div>' +
+
     "<h5 class=\"eyebrow\" style=\"margin:22px 0 8px\">" + L("LearnHead") + "</h5>" +
     '<div id="learnBox"></div>' +
 
@@ -16668,6 +16709,7 @@ async function renderModal(){
     "<h5 class=\"eyebrow\" style=\"margin:22px 0 8px\">" + L("FlowHead") + "</h5>" +
     '<div id="flowBox"></div>';
   paintReflect();
+  paintBrief();
   renderMemory();
   renderIncidents();
   renderRunbooks();
@@ -18890,6 +18932,196 @@ function pastFixesFor(q, limit){
                  match:Math.round(Math.min(1, x.sc) * 100) }));
 }
 
+/* ── what they are doing, right now ─────────────────────────────────────
+   "Why is this failing?" asked with D-0005 open on the screen is a question
+   about D-0005 - and the model used to have no idea D-0005 was open. So
+   every question carries what is in front of them: the record open (or the
+   one closed a moment ago), in full; what is selected; a timer running; the
+   view; and what they have done today, newest first. */
+function focusRecord(t){
+  const clip = (x, n) => { x = String(x || "").trim(); return x.length > n ? x.slice(0, n) + "\u2026" : x; };
+  const o = { code:t.code, title:t.title, status:t.status, priority:t.priority, system:t.system || "",
+              type:t.type || "", requester:t.requester || "", ticket:t.ticket || "",
+              created:String(t.created || "").slice(0, 16), due:t.due || "" };
+  if (t.notes) o.notes = clip(t.notes, 2500);
+  if (t.resolution) o.fixed = clip(t.resolution, 300);
+  if (t.waitOn) o.waitingOn = t.waitOn + (t.waitNote ? " - " + clip(t.waitNote, 160) : "");
+  if ((t.checklist || []).length) o.steps = t.checklist.slice(0, 20).map(c => (c.done ? "[x] " : "[ ] ") + clip(c.text, 160));
+  const logs = (t.log || []).filter(l => l.text).slice(-10);
+  if (logs.length) o.log = logs.map(l => String(l.at || "").slice(5, 16).replace("T", " ") + " " + clip(l.text, 220));
+  if ((t.files || []).length) o.files = t.files.map(f => f.name).slice(0, 12);
+  if (t.timerStart) o.timerRunningMin = Math.round((Date.now() - t.timerStart) / 60000);
+  return o;
+}
+function flowFocus(){
+  const out = { view:S.view || "" };
+  let t = S.open ? getTask(S.open) : null, how = "open";
+  if (!t && S.lastOpen && Date.now() - S.lastOpen.at < 20 * 60000){ t = getTask(S.lastOpen.id); how = "closed a moment ago"; }
+  if (t){ out.record = focusRecord(t); out.record.onScreen = how; }
+  const sel = [...(S.sel || [])].map(getTask).filter(Boolean);
+  if (sel.length) out.selected = sel.slice(0, 12).map(x => x.code + " " + x.title);
+  const run = S.tasks.find(x => x.timerStart);
+  if (run && (!t || run.id !== t.id)) out.timer = run.code + " " + run.title + " - " + Math.round((Date.now() - run.timerStart) / 60000) + " min so far";
+  /* today, newest first: what was raised, moved, noted */
+  const k = today(), ev = [];
+  S.tasks.forEach(x => {
+    if (String(x.created || "").slice(0, 10) === k) ev.push({ at:x.created, text:x.code + " raised: " + x.title });
+    (x.log || []).forEach(l => {
+      if (String(l.at || "").slice(0, 10) !== k || !l.text) return;
+      ev.push({ at:l.at, text:x.code + " " + String(l.text).replace(/\s+/g, " ").slice(0, 140) });
+    });
+  });
+  ev.sort((a, b) => String(b.at).localeCompare(String(a.at)));
+  if (ev.length) out.today = ev.slice(0, 14).map(e => String(e.at).slice(11, 16) + " " + e.text);
+  return out.record || out.selected || out.timer || out.today ? out : undefined;
+}
+
+/* ── "About my work" ────────────────────────────────────────────────────
+   One short page in their own words - team, systems, servers, owners, the
+   words they use - sent with every question, so the model knows their world
+   instead of guessing at "COI" and "APP02". Drafted by the model from what
+   the workspace already holds, corrected by them, and added to a line at a
+   time (addToBrief, which asks first). Written as facts, never as orders:
+   that is what keeps Microsoft's content filter out of it. */
+const BRIEF_SECTIONS = ["Team", "Systems", "Servers", "People", "Words"];
+function briefStore(){
+  S.settings.brief = Object.assign({ text:"", updated:"", draftedAt:"" }, S.settings.brief || {});
+  return S.settings.brief;
+}
+function briefForFlow(){
+  const t = String(briefStore().text || "").trim();
+  return t.length > 4000 ? t.slice(0, 4000) + "\n[cut here]" : t;
+}
+/* one line, under its heading - a heading that is not there yet is made */
+function briefAdd(line, section){
+  const b = briefStore();
+  line = String(line || "").replace(/\s+/g, " ").trim().replace(/^[-*\u2022]\s*/, "");
+  if (!line) return false;
+  const sec = BRIEF_SECTIONS.find(x => x.toLowerCase() === String(section || "").trim().toLowerCase()) || "Words";
+  const lines = String(b.text || "").split("\n");
+  if (lines.some(l => l.replace(/^[-*\u2022]\s*/, "").trim().toLowerCase() === line.toLowerCase())) return false;
+  let at = lines.findIndex(l => new RegExp("^#{1,3}\\s*" + sec + "\\b", "i").test(l.trim()));
+  if (at < 0){
+    b.text = (String(b.text || "").trim() ? String(b.text).trim() + "\n\n" : "") + "## " + sec + "\n- " + line;
+  } else {
+    let end = at + 1;
+    while (end < lines.length && !/^#{1,3}\s/.test(lines[end].trim())) end++;
+    while (end > at + 1 && !lines[end - 1].trim()) end--;
+    lines.splice(end, 0, "- " + line);
+    b.text = lines.join("\n");
+  }
+  b.updated = new Date().toISOString();
+  return true;
+}
+/* what the workspace already knows about their work, for the first draft */
+function briefMaterial(){
+  const st = S.settings, out = [];
+  const clip = (x, n) => { x = String(x || ""); return x.length > n ? x.slice(0, n) + "\u2026" : x; };
+  out.push("OWNER: " + (st.owner || "(not set)"));
+  out.push("SYSTEMS: " + (st.systems || []).map(x => x.name).join(", "));
+  out.push("RECORD TYPES: " + (st.types || []).join(", "));
+  out.push("TEAMS AND PARTIES THEY WAIT ON: " + (st.parties || []).join(", "));
+  const people = (PEOPLE.list || []).slice(0, 20).map(p => p.name + " (" + p.n + (topOf(p.sys) ? ", mostly " + topOf(p.sys).value : "") + ")");
+  if (people.length) out.push("WHO ASKS THEM FOR THINGS: " + people.join("; "));
+  const profiles = (typeof profileStore === "function" ? profileStore() : []).slice(0, 20);
+  if (profiles.length) out.push("", "SYSTEM PROFILES:", ...profiles.map(p => "- " + p.system + ": " +
+    clip([p.facts, p.owner ? "owner " + p.owner : "", p.tables ? "tables " + p.tables : ""].filter(Boolean).join(" | "), 320)));
+  const books = runbookStore().slice(0, 40);
+  if (books.length) out.push("", "RUNBOOKS:", ...books.map(r => "- " + r.title + (r.system ? " (" + r.system + ")" : "")));
+  const notes = memoryStore().slice(0, 40);
+  if (notes.length) out.push("", "NOTES THEY WROTE (titles):", ...notes.map(m => "- " + m.title));
+  /* the words that recur: acronyms, table and server names */
+  const count = {}, text = S.tasks.slice(-400).map(t => t.title + " " + String(t.notes || "").slice(0, 600) + " " + (t.resolution || "")).join(" ");
+  (text.match(/\b[A-Z][A-Z0-9_]{1,24}\b/g) || []).forEach(w => {
+    if (/^(P[1-4]|INC\d*|REQ\d*|RITM\d*|CHG\d*|OK|AM|PM|ID|UI|IT|D)$/.test(w) || /^D\d/.test(w)) return;
+    count[w] = (count[w] || 0) + 1;
+  });
+  const terms = Object.keys(count).filter(w => count[w] > 1).sort((a, b) => count[b] - count[a]).slice(0, 50);
+  if (terms.length) out.push("", "WORDS THAT KEEP COMING UP (with how often): " + terms.map(w => w + " \u00d7" + count[w]).join(", "));
+  const recent = S.tasks.slice().sort((a, b) => String(b.created).localeCompare(String(a.created))).slice(0, 50);
+  if (recent.length) out.push("", "RECENT RECORDS:", ...recent.map(t => "- " + t.code + " " + clip(t.title, 90) + (t.system ? " [" + t.system + "]" : "") + (t.resolution ? " - fixed: " + clip(t.resolution, 120) : "")));
+  const les = lessonStore().filter(l => l.kind !== "correction").slice(0, 20);
+  if (les.length) out.push("", "WHAT HAS BEEN LEARNED ABOUT THEM:", ...les.map(l => "- " + l.text));
+  const cur = String(briefStore().text || "").trim();
+  if (cur) out.push("", "THE BRIEF AS IT STANDS (keep what is right, improve the rest):", cur);
+  let s = out.join("\n");
+  if (s.length > 24000) s = s.slice(0, 24000) + "\n[cut here]";
+  return s;
+}
+
+/* the Setup section: the brief, and the button that drafts it */
+const BRIEF = { drafting:false };
+function paintBrief(){
+  const box = $("briefBox"); if (!box) return;
+  const b = briefStore(), n = String(b.text || "").trim().length;
+  box.innerHTML =
+    '<p class="hint2">' + LE("BriefHint") + "</p>" +
+    '<textarea class="in" id="briefText" spellcheck="true" style="min-height:190px;font-size:12px" placeholder="' + LE("BriefPh") + '">' +
+      esc(b.text || "") + "</textarea>" +
+    '<div class="brow" style="align-items:center;gap:8px;flex-wrap:wrap;margin-top:8px">' +
+      '<button class="btn sm pri" id="briefSave">' + LE("BriefSave") + "</button>" +
+      '<button class="btn sm" id="briefDraft"' + (BRIEF.drafting || !flowOn() ? " disabled" : "") + ">" +
+        esc(BRIEF.drafting ? L("BriefDrafting") : n ? L("BriefRedraft") : L("BriefDraftBtn")) + "</button>" +
+      '<span class="hint2" style="margin:0">' + esc(
+        (n ? L("BriefSize", { n:n }) : L("BriefEmpty")) +
+        (b.updated ? " \u00b7 " + L("BriefUpdated", { p0:stamp(b.updated) }) : "") +
+        (flowOn() ? "" : " \u00b7 " + L("ReflectNeedsFlow"))) + "</span>" +
+    "</div>";
+  const save = () => {
+    const el = $("briefText"); if (!el) return;
+    const v = String(el.value || "");
+    if (v === (b.text || "")) return;
+    b.text = v; b.updated = new Date().toISOString(); touch();
+  };
+  const ta = $("briefText");
+  if (ta) ta.addEventListener("change", save);
+  const sv = $("briefSave"); if (sv) sv.onclick = () => { save(); paintBrief(); toast(L("BriefSaved")); };
+  const dr = $("briefDraft"); if (dr) dr.onclick = () => { save(); briefDraft(); };
+}
+/* The first draft, written by the model from what the workspace already
+   holds. It lands in the box for them to correct - nothing is kept until
+   they press Save, apart from the draft sitting in the box. */
+async function briefDraft(){
+  if (BRIEF.drafting || !flowOn()) return;
+  BRIEF.drafting = true; paintBrief();
+  let out = null, err = null;
+  try {
+    await promptLoad();
+    const q = "[brief] " + L("BriefAskAi");
+    const ctx = Object.assign(flowContext(q), { mode:"brief", conversation:[], focus:undefined, thread:undefined,
+      attachments:[{ name:"what-the-workspace-knows.txt", type:"text/plain", size:0, data:"", kind:"text",
+                     text:briefMaterial(), pages:0, note:"" }],
+      picture:CHAT_BLANK_PNG, pictureName:"", promptTemplate:PROMPT.text, promptFrom:PROMPT.from });
+    out = await DossierFlow.ask(q, ctx, Object.assign({}, flowCfg(), { scope:"names", tier:flowTier("study") }));
+  } catch(e){ err = e; }
+  BRIEF.drafting = false;
+  const text = out && !flowFellBack(out) ? phScrub(out.say || "").trim() : "";
+  if (!text){
+    paintBrief();
+    return toast(L("BriefDraftFailed") + (err ? " " + (err.message || err) : ""), { bad:true });
+  }
+  const b = briefStore();
+  b.text = text; b.draftedAt = new Date().toISOString(); b.updated = b.draftedAt;
+  touch(); paintBrief();
+  const ta = $("briefText"); if (ta){ ta.focus(); ta.scrollIntoView({ block:"center" }); }
+  toast(L("BriefDrafted"), { action:L("Ok") });
+}
+
+/* ── this conversation, remembered ──────────────────────────────────────
+   Eight messages travel with a question, and in a long investigation the
+   start of it - the symptom, the first thing checked - falls out of that
+   window. So from the second exchange on, the model writes a short summary
+   of the thread with each reply ("thread"), for itself, and gets it back
+   with the next question. */
+function threadForFlow(c){
+  if (!c || !Array.isArray(c.msgs)) return undefined;
+  const talk = c.msgs.filter(m => m.who === "you" || m.who === "bot");
+  const earlier = Math.max(0, talk.length - 8);
+  const wanted = talk.length >= 3;
+  if (!c.summary && !wanted) return undefined;
+  return { summary:c.summary || "", earlier, wanted };
+}
+
 /* what "not what I meant" was pressed on, for the look back */
 function learnSignal(text){
   if (!Array.isArray(S.settings.learnSignals)) S.settings.learnSignals = [];
@@ -19193,7 +19425,7 @@ setTimeout(() => { if (reflectDue()) reflectNow(false); }, 45000);
    pasted in is plain text. */
 const RT = (() => {
   const SAFE_URL = /^(https?:\/\/|mailto:)/i;
-  const WHERE = 'textarea[data-f="notes"], #inNotes, textarea.memb, textarea[data-pff="facts"], ' +
+  const WHERE = 'textarea[data-f="notes"], #inNotes, #briefText, textarea.memb, textarea[data-pff="facts"], ' +
                 'textarea[data-pff="quirks"], textarea[data-rbf="steps"], textarea[data-rbf="escalation"]';
   /* one line per item, parsed line by line elsewhere: inline marks only */
   const LINES_ONLY = 'textarea[data-rbf="steps"]';

@@ -6,6 +6,36 @@ holds — which is what to paste into a bug report.
 
 ---
 
+## 4.9.0 - 2026-09-25
+
+**The assistant understands what you are doing, your world, and the whole
+conversation.**
+
+- **What is on your screen goes with every question** (`workspace.focus`):
+  the open record - or the one closed in the last twenty minutes - in full,
+  with notes, steps and work log; what is selected; a timer running; the
+  view; and today's activity, newest first. "This", "it", "the ticket" mean
+  the open record.
+- **About my work** (Setup): one page of plain facts about your team,
+  systems, servers, people and words, sent with every question
+  (`workspace.brief`, up to 4,000 characters). **Draft it from my records**
+  writes the first version (`[brief]` mode, strong model when two are set
+  up) from your systems, requesters, runbooks, note titles, recurring
+  acronyms and recent records, marking guesses and ending with three
+  questions. New action `addToBrief` adds one line under its heading after
+  you say yes; the daily look back can suggest them.
+- **Conversation memory**: eight messages travel instead of six, and from
+  the second exchange on the model writes a short running summary with each
+  reply (`thread`), kept with the conversation and handed back as
+  `workspace.thread.summary` - never shown as the answer.
+- **Follow-ups stay with the assistant**: in the middle of a conversation
+  with it, "ok what next", "more detail", "and that one?" are no longer
+  answered by the instant local answers as though they were about your
+  workload.
+- Prompt: the three blocks, the reply's `thread` key, `[brief]` mode,
+  `addToBrief` in the look back, one example (27.6 KB). CONTRACT.md
+  documents them. Nothing changes in Power Automate.
+
 ## 4.8.0 - 2026-09-25
 
 **Dossier is now Resolv.**

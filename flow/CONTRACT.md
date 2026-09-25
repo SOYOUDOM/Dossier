@@ -221,6 +221,47 @@ It is the truth and beats everything else. Corrections do not all travel
 with every question: the ones that share words with this question do (up
 to six), plus the three newest.
 
+### What they are doing, their world, and this conversation
+
+Three blocks that make the model understand the situation rather than only
+the sentence:
+
+**`workspace.focus`** — what is in front of them. Absent when there is
+nothing to say.
+
+```jsonc
+"focus": {
+  "view": "day",
+  "record": { "code": "D-0217", "title": "Imaging sync job failed", "status": "processing",
+              "onScreen": "open",            // or "closed a moment ago" (within 20 minutes)
+              "notes": "…", "steps": ["[x] Recycle APP02 pool", "[ ] Re-run sync"],
+              "log": ["09-25 14:02 Recycled the pool on APP02 - no change"], "fixed": "…" },
+  "selected": ["D-0006 Portal login failing on WEB01"],
+  "timer": "D-0006 Portal login failing on WEB01 - 12 min so far",
+  "today": ["14:02 D-0217 Recycled the pool on APP02 - no change", "09:12 D-0217 raised: …"]
+}
+```
+
+"This", "it", "the ticket" with nothing else to go on mean `focus.record`.
+
+**`workspace.brief`** — their own "About my work" page (Setup → About my
+work): team, systems, servers and environments, people, the words they use.
+Markdown, at most 4,000 characters, sent with every question. The model can
+add to it with `addToBrief` (one line, a section of Team, Systems, Servers,
+People or Words — asks first), and drafts it in `[brief]` mode.
+
+**`workspace.thread`** — this conversation, remembered. `summary` is what the
+model wrote about it on the turns before; `earlier` is how many older
+messages are no longer in `conversation` (it carries the last eight);
+`wanted` is true from the second exchange on, and then the reply should carry
+**`thread`** — two to six lines: what they are working on, what was checked
+and what it showed, what was decided, what is still open. It is kept with
+the conversation and never shown as the answer.
+
+```jsonc
+{ "say": "…", "ask": "…", "thread": "Working on D-0217, Imaging sync 30s timeout since Monday.\nPool recycle did not help.\nNext: time the POLICY_MASTER query." }
+```
+
 ### Past fixes — "last time this happened, you did X"
 
 `workspace.pastFixes` holds up to three closed records most like the
@@ -243,13 +284,13 @@ record's notes when it is `"last note, not confirmed"`. A record in
 ### The mode — what kind of question this is
 
 `workspace.mode` is `"chat"` for a question typed in the panel, and one of
-six others, each also the first word of `message` in brackets. The same word
+seven others, each also the first word of `message` in brackets. The same word
 is at the top of the request as `mode`, beside `tier`, so a flow can branch
 on either without reaching into the workspace:
 
 | top-level field | values | |
 |---|---|---|
-| `mode` | `chat` `reflect` `teach` `study` `fix` `check` `intake` | as below |
+| `mode` | `chat` `reflect` `teach` `study` `fix` `check` `intake` `brief` | as below |
 | `tier` | `fast` `deep` | which model the question wants. `deep` for the jobs ticked in **Setup → Models in your flow** (by default the look back, study, teach and **Diagnose**) and for **✦ Think harder**; everything else is `fast`. Always `fast` while that setting is *One model*. POWER-AUTOMATE.md §4e builds the branch |
 
 Both are in the short request (the picture setup) as well as the full one.
@@ -261,6 +302,7 @@ Both are in the short request (the picture setup) as well as the full one.
 | `study` | from **Learn from a BAU document…** | the guideline, read as text |
 | `fix` | when a record is closed by hand and **How was it fixed?** comes up | the record: title, notes, log, steps done. The reply is one line in `say` — what fixed it — or exactly `unknown` |
 | `check` | from **Setup → Checks → Run checks**, after the question itself has been asked again | nothing; `message` holds the QUESTION, THE RIGHT ANSWER in their words and THE NEW ANSWER. `say` starts with `PASS` or `FAIL`, then one sentence why |
+| `brief` | **Setup → About my work → Draft it from my records** | what the app knows about their work: systems, teams, people, runbooks, note titles, recurring words, recent records, and the brief as it stands. The reply is the brief itself, in `say`, ending with three questions |
 | `intake` | **Paste a message** (unless switched off in Setup) | nothing; the pasted message is in `message` after its first line. The reply is ONE `createRecord` — title, system, type, priority, requester, ticket, a deadline only if stated, `checklist` with two to four first steps — and one sentence in `say`. It is **not** run: the app fills the fields you have not touched, marks them, and offers the steps; nothing is saved until **Log it** |
 
 A `reflect` reply is applied without a dialog, because nobody is there to

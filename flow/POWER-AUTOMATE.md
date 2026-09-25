@@ -898,6 +898,7 @@ Two more modes use the same flow:
 | `[study]` | **Learn from a BAU document…** in the runbook library | turns each procedure in the attached guideline into a draft runbook — triggers, steps in plain words, checks, escalation — then asks about what the document does not say |
 | `[fix]` | closing a record by hand (**How was it fixed?**), or **Write the fix note** on a record | reads the record and writes one line: what fixed it |
 | `[check]` | **Setup → Checks → Run checks** | judges whether a new answer agrees with a correction you once gave: PASS or FAIL, and why |
+| `[brief]` | **Setup → About my work → Draft it from my records** | writes a first "About my work" page from what the workspace knows, ending with the three questions that would fill the biggest gaps |
 | `[intake]` | **Paste a message** | reads the pasted email or chat and fills in the new record — title, system, type, priority, who asked — with two to four first steps |
 
 The kind of question also travels on its own, as `mode` at the top of the

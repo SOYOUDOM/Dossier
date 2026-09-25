@@ -1524,6 +1524,32 @@ is going on in *your* case and gives the one next check with your values in
 it, rather than reading the runbook back to you — and when the runbook is
 thin, it asks you and keeps the answer.
 
+### Helping the assistant understand what you are doing
+
+Three things go with every question now, so it answers about *your*
+situation rather than only the sentence you typed:
+
+- **What is on your screen.** The record you have open — or closed a moment
+  ago — in full (notes, steps, work log), anything selected, a timer running,
+  and what you did today. *"Why is this still failing?"* with D-0217 open is
+  a question about D-0217; nobody has to type the code.
+- **About my work** (**Setup → About my work**). One page in plain facts:
+  your team, the systems you look after (what, where, who owns it), servers
+  and environments, the people you deal with, and the words you use
+  (*COI = certificate of insurance*). **Draft it from my records** has the
+  assistant write the first version from your records, runbooks, notes and
+  the words that keep coming up — it marks guesses *(check)* and ends with
+  the three questions whose answers would help most. Correct it and press
+  **Save**. When you mention something it cannot place, it asks once and
+  offers to add the line (it always asks first), and the daily look back
+  suggests additions too. Keep it to facts, not orders to the AI — that is
+  also what keeps Microsoft's content filter happy.
+- **The whole conversation.** Only the last eight messages travel with a
+  question, so from the second exchange on the assistant keeps a short
+  running summary of the conversation — what you are working on, what was
+  checked and found, what is still open — and gets it back each time. A long
+  investigation no longer forgets how it started.
+
 ### Working faster with the assistant
 
 Four things, all switchable in **Menu → Setup → Ask through Power Automate**.
