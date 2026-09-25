@@ -2578,6 +2578,8 @@ body.chatting .pet[data-corner="br"],body.chatting .pet[data-corner="tr"]{
   transition:color .15s,background .15s;user-select:none}
 .rtv .spoiler.shown{background:var(--paper-3);color:inherit;user-select:text}
 .rtv{white-space:pre-wrap;word-break:break-word;line-height:1.6}
+.chb.bot .took{font:10.5px/1 var(--f-mono);color:var(--ink-3);opacity:.7;margin-top:6px}
+.chat .chb.bot .took{color:var(--ch-dim)}
 @media print{.rtv .spoiler{color:inherit;background:none;border-bottom:1px dotted currentColor}}
 .rtaa{position:absolute;right:6px;bottom:6px;border:1px solid var(--rule);background:var(--paper);
   color:var(--ink-3);border-radius:6px;font:600 10.5px/1 var(--f-ui, inherit);padding:4px 6px;cursor:pointer;opacity:.55}
@@ -4088,6 +4090,12 @@ const STRINGS = {
   DbHistoryGo: "Restore it",
   DbHistoryDl: "Download",
   DbHistoryDone: "Restored {n} record(s) from {p0}.",
+  FlowShape: "Your flow",
+  FlowShapeClassic: "Reads the prompt only",
+  FlowShapeVision: "Reads the prompt and SEES the picture (recommended)",
+  FlowShapeHint: "Set up as in POWER-AUTOMATE.md \u00a74: the prompt action has two inputs, prompt and picture, and Parse JSON has the short schema. Then a picture is looked at by the model instead of being read into words on this PC first \u2014 faster, and it talks about what the picture shows, not only its text. Several pictures go as one, numbered.",
+  FlowTookHint: "How long Power Automate took to answer, from sending to the reply arriving.",
+  AttachVision: "the model will look at it",
   PromptLabel: "The prompt",
   PromptHint: "Sent from here with every question, filled in, as one field: the prompt action in your flow holds only {prompt}. To change how the assistant behaves, edit flow/prompt.txt \u2014 or, to keep your own version that updates never touch, put a copy called dossier-prompt.txt in your records folder and edit that. The next question uses it; there is nothing to reload.",
   PromptReload: "Read it again",
@@ -5152,7 +5160,7 @@ const STATUSES = [
    the status bar, and clicking it copies a line you can paste into a bug
    report — build date and flow protocol included, because those are the two
    things that actually differ between copies. */
-const APP_VERSION = "4.3.1";
+const APP_VERSION = "4.4.0";
 const APP_BUILT = "2026-09-18";
 function buildLine(){
   return "Dossier v" + APP_VERSION + " \u00b7 built " + APP_BUILT +
@@ -10343,6 +10351,7 @@ function chatRenderBot(r, sourceText, replaying){
     h += '<div class="say">' + chatSay(r.say || "") + "</div>";
   }
   if (r.note) h += '<div class="note">' + esc(r.note) + "</div>";
+  if (r.took) h += '<div class="took" title="' + esc(L("FlowTookHint")) + '">' + (r.took / 1000).toFixed(1) + " s</div>";
 
   /* the conditions it read out of the question, said back so a misread one is
      visible rather than silently changing the answer */
@@ -10508,7 +10517,7 @@ function chatAsk(text){
      here cancels a request — there is no way to — so the only honest thing
      to do with the second one is not to make it. */
   if ($("chat").classList.contains("busy")) return;
-  if (CHAT.files.some(f => f.reading)) return chatReadsDone().then(() => chatAsk(q));
+  if (CHAT.files.some(f => f.reading) || CHAT.gridBusy) return chatReadsDone().then(() => chatAsk(q));
   CHAT.last = q;
   const c = chatThread() || chatNew(true);
   const files = CHAT.files.map(f => ({ name:f.name, type:f.type, size:f.size }));
@@ -10568,7 +10577,8 @@ function flowCfg(){
   const st = S.settings;
   if (!st.flow || typeof st.flow !== "object")
     st.flow = { on:false, url:"", scope:"live", deep:false, cap:FLOW_CAP,
-                timeout:30, fallback:true };
+                timeout:30, fallback:true, shape:"classic" };
+  if (!st.flow.shape) st.flow.shape = "classic";
   /* Four hundred was the right number when the four hundred were the newest
      records and nothing knew which of them mattered. They are ranked against
      the question now, so sixty of them carry more of the answer than four
@@ -10624,6 +10634,13 @@ async function promptLoad(){
   PROMPT.text = DossierFlow.PROMPT; PROMPT.from = L("PromptBuiltIn"); PROMPT.at = new Date().toISOString();
   return PROMPT;
 }
+
+/* "vision": the flow's prompt action has the picture input as well as the
+   prompt (POWER-AUTOMATE.md 4). Then a picture is LOOKED AT by the model,
+   so it is not read into words on this PC first - which took seconds and
+   made every answer about a picture an answer about its text - and the
+   request carries only what that flow uses. */
+function flowSees(){ return flowCfg().shape === "vision"; }
 
 function flowHere(){ return typeof window !== "undefined" && !!window.DossierFlow; }
 function flowOn(){
@@ -10700,6 +10717,7 @@ function flowContext(q){
     profiles: profilesForFlow(q),
     settable: flowSettable(),
     attachments: (CHAT.files || []).filter(f => !f.reading).map(f => ({
+      grid: (flowSees() && CHAT.grid && CHAT.grid.key === chatGridKey()) ? chatGridImages().indexOf(f) + 1 : 0,
       name:f.name, type:f.type, size:f.size, data:f.data || "",
       /* image | pdf | text — so a flow can branch on one word instead of
          parsing a media type */
@@ -10829,7 +10847,11 @@ async function flowAsk(q, thread){
     }
   }
 
-  chatBot(flowReply(out, q), q);
+  const reply = flowReply(out, q);
+  /* how long Power Automate took, under the answer: the number that says
+     whether "slow" is the flow, the model, or neither */
+  if (out && out.ms) reply.took = out.ms;
+  chatBot(reply, q);
   chatSide();
 }
 
@@ -12882,6 +12904,13 @@ function renderFlow(){
   if (origin)
     h += '<p class="hint2">Everything goes to <b>' + esc(origin) + "</b> and nowhere else.</p>";
 
+  h += '<div class="fr" style="margin-top:10px"><label>' + esc(L("FlowShape")) + "</label>" +
+       '<select class="in" id="flShape">' +
+       '<option value="classic"' + (c.shape === "vision" ? "" : " selected") + ">" + esc(L("FlowShapeClassic")) + "</option>" +
+       '<option value="vision"' + (c.shape === "vision" ? " selected" : "") + ">" + esc(L("FlowShapeVision")) + "</option>" +
+       "</select></div>" +
+       '<p class="hint2">' + esc(L("FlowShapeHint")) + "</p>";
+
   h += '<div class="fr" style="margin-top:10px"><label>' + esc(L("FlowScope")) + "</label>" +
        '<select class="in" id="flScope">' +
        ['names', 'live', 'all'].map(v => '<option value="' + v + '"' +
@@ -12935,6 +12964,7 @@ function renderFlow(){
   on("flScope", e => { c.scope = e.target.value; save(); }, "onchange");
   on("flDeep", e => { c.deep = e.target.value === "1"; save(); }, "onchange");
   on("flFb", e => { c.fallback = e.target.value === "1"; save(); }, "onchange");
+  on("flShape", e => { c.shape = e.target.value; CHAT.grid = null; save(); }, "onchange");
   on("flCap", e => { c.cap = Math.max(0, Math.min(2000, +e.target.value || 0));
                      c.capPicked = true; touch(); }, "onchange");
   on("flTmo", e => { c.timeout = Math.max(5, Math.min(120, +e.target.value || 30)); touch(); }, "onchange");
@@ -12992,7 +13022,7 @@ async function flowPreview(){
   await promptLoad();
   const cfg = flowCfg();
   const req = DossierFlow.buildRequest("(your question would be here)", flowContext(), cfg);
-  const txt = JSON.stringify(req, null, 1);
+  const txt = JSON.stringify(cfg.shape === "vision" ? DossierFlow.slimRequest(req) : req, null, 1);
   const out = $("flowOut");
   out.innerHTML = '<p class="hint2" style="margin-top:10px">' +
     esc(L("FlowBytes", { n: bytes(txt.length) })) + " · " +
@@ -20462,6 +20492,7 @@ function chatOcrClean(t){
     .replace(/[ \t]{2,}/g, " ").replace(/\n{3,}/g, "\n\n").trim();
 }
 async function chatReadImage(f, entry){
+  if (flowOn() && flowSees()) return { text:"", pages:0, note:"vision", keep:true };
   if (!chatOcrOn()) return null;
   const prep = await chatOcrBytes(f);
   if (!prep) return { text:"", pages:0, note:"unreadable", keep:true };
@@ -20580,6 +20611,7 @@ function chatFileNote(f){
                              (f.progress > 0 && f.progress < 100 ? " " + Math.round(f.progress) + "%" : ""), c:"" };
   const kind = chatKind(f.type);
   if (kind === "image"){
+    if (f.note === "vision") return { t:L("AttachVision"), c:"ok" };
     if (f.note === "ocrslow") return { t:L("AttachOcrSlow"), c:"warn" };
     if (f.text && f.words) return { t:L("AttachOcrRead"), c:"ok" };
     if (f.text) return { t:L("AttachSeen"), c:"ok" };
@@ -20621,6 +20653,7 @@ function renderChatFiles(){
   box.querySelectorAll("[data-unclip]").forEach(b => {
     b.onclick = () => { CHAT.files.splice(+b.dataset.unclip, 1); renderChatFiles(); };
   });
+  chatUpdateGrid();
 }
 /* The picture of the question, for a prompt with an image input: the first
    picture attached, or the first page of a scan, shrunk as it travels - and
@@ -20628,6 +20661,7 @@ function renderChatFiles(){
    nothing at all is never given nothing at all. One expression in the flow,
    no filter and no condition: base64ToBinary(body('Parse_JSON')?['picture']) */
 function chatPicture(){
+  if (flowSees() && CHAT.grid && CHAT.grid.key === chatGridKey()) return { data:CHAT.grid.data, name:CHAT.grid.name };
   for (const f of CHAT.files){
     if (f.reading) continue;
     if (chatKind(f.type) === "image" && f.data) return { data:f.data, name:f.name };
@@ -20635,11 +20669,63 @@ function chatPicture(){
   }
   return { data:CHAT_BLANK_PNG, name:"" };
 }
+/* Several pictures and one picture input: in "sees pictures" mode they go
+   as ONE picture, side by side, each under its number and name, so the model
+   sees every one of them and can talk about "picture 2". Sized to what the
+   model reads - 2048 on the long side. */
+function chatGridImages(){
+  return CHAT.files.filter(f => chatKind(f.type) === "image" && f.url && !f.reading).slice(0, 6);
+}
+function chatGridKey(){ return chatGridImages().map(f => f.name + ":" + f.size).join("|"); }
+function chatUpdateGrid(){
+  const imgs = chatGridImages(), key = chatGridKey();
+  if (imgs.length < 2 || !flowSees()){ CHAT.grid = null; return; }
+  if ((CHAT.grid && CHAT.grid.key === key) || CHAT.gridKeyBusy === key) return;
+  CHAT.gridBusy = true; CHAT.gridKeyBusy = key;
+  chatComposeGrid(imgs).then(g => {
+    if (chatGridKey() === key && g) CHAT.grid = { key, data:g, name:imgs.map((f, i) => (i + 1) + " " + f.name).join(", ") };
+  }).catch(() => {}).then(() => { CHAT.gridBusy = false; CHAT.gridKeyBusy = ""; });
+}
+function chatComposeGrid(imgs){
+  return Promise.all(imgs.map(f => new Promise(res => {
+    const i = new Image(); i.onload = () => res(i); i.onerror = () => res(null); i.src = f.url;
+  }))).then(els => {
+    const list = els.map((el, i) => el ? { el, name:imgs[i].name, n:i + 1 } : null).filter(Boolean);
+    if (list.length < 2) return "";
+    const cols = list.length <= 2 ? list.length : list.length <= 4 ? 2 : 3;
+    const rows = Math.ceil(list.length / cols);
+    const cw = 1024, ch = 768, lab = 40, gap = 10;
+    const W = cols * cw + (cols + 1) * gap, H = rows * (ch + lab) + (rows + 1) * gap;
+    const c = document.createElement("canvas"); c.width = W; c.height = H;
+    const x = c.getContext("2d");
+    x.fillStyle = "#ffffff"; x.fillRect(0, 0, W, H);
+    list.forEach((it, k) => {
+      const ox = gap + (k % cols) * (cw + gap), oy = gap + Math.floor(k / cols) * (ch + lab + gap);
+      x.fillStyle = "#1f2933"; x.fillRect(ox, oy, cw, lab);
+      x.fillStyle = "#ffffff"; x.font = "bold 24px sans-serif"; x.textBaseline = "middle";
+      x.fillText(it.n + "  \u00b7  " + it.name.slice(0, 64), ox + 14, oy + lab / 2);
+      const s = Math.min(cw / it.el.width, ch / it.el.height, 2);
+      const w = Math.round(it.el.width * s), h = Math.round(it.el.height * s);
+      x.drawImage(it.el, ox + Math.round((cw - w) / 2), oy + lab + Math.round((ch - h) / 2), w, h);
+    });
+    let out = c;
+    const k = Math.min(1, 2048 / Math.max(W, H));
+    if (k < 1){
+      out = document.createElement("canvas");
+      out.width = Math.round(W * k); out.height = Math.round(H * k);
+      const y = out.getContext("2d"); y.imageSmoothingQuality = "high";
+      y.drawImage(c, 0, 0, out.width, out.height);
+    }
+    const url = out.toDataURL("image/jpeg", 0.82);
+    return url.slice(url.indexOf(",") + 1);
+  });
+}
+
 /* a question sent while a file is still being read waits for it - the file
    is what the question is about */
 function chatReadsDone(){
   return new Promise(res => {
-    const tick = () => (CHAT.files.some(f => f.reading) ? setTimeout(tick, 60) : res());
+    const tick = () => (CHAT.files.some(f => f.reading) || CHAT.gridBusy ? setTimeout(tick, 60) : res());
     tick();
   });
 }

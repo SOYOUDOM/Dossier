@@ -6,6 +6,39 @@ holds — which is what to paste into a bug report.
 
 ---
 
+## 4.4.0 - 2026-09-25
+
+**The model looks at pictures now, instead of reading a description of them.**
+
+Until now a picture never reached the model as a picture. It was redrawn at
+up to 4000 pixels on this PC, run through the text recogniser, and turned
+into a written description - layout, colours, every word and where it sat, a
+map in letters - and that is what the model got. It took several seconds per
+picture before the question was even sent, and it is why every answer about
+a picture was an answer about its text.
+
+- **Setup -> Ask through Power Automate -> Your flow -> "Reads the prompt and
+  SEES the picture".** With the flow set up as POWER-AUTOMATE.md s4 now says
+  (a `picture` input beside `prompt`, and a five-line schema), a picture is
+  not read on the PC at all - attaching one takes a fraction of a second -
+  and the model looks at it.
+- **Several pictures go as one**, side by side, each under its number and
+  file name, so the model sees all of them and can talk about "picture 2".
+  Before, only the first one was ever visible.
+- **The prompt talks about pictures like a person**: what it is and what
+  stands out first, then the answer to the question; text quoted only where
+  it matters (an error message, a reference); a problem gets its usual cause
+  and one next check. With only a description to go on, it still speaks in
+  plain words and never recites positions, colours or the letter map.
+- **The request is about half the size** in that setup: only the prompt and
+  the picture, not everything a second time beside them.
+- **How long Power Automate took is shown under every answer**, so "slow"
+  can be pinned on the flow and model rather than guessed at.
+- Without the picture input, nothing changes: pictures are described on the
+  PC as before.
+
+---
+
 ## 4.3.1 - 2026-09-24
 
 **Attachments reached the model as "None." - fixed.** 4.3.0 read the prompt

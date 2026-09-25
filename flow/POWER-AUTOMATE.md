@@ -391,26 +391,64 @@ Everything downstream now has proper dynamic content:
 
 ## 4. The prompt
 
-Add your AI action — **AI Builder → Run a prompt**, *Create text with GPT
-using a prompt*, an Azure OpenAI action, whatever you have.
+Add your AI action — **AI Builder → Run a prompt**, or whatever you have. Pick
+a model that can see images (the GPT-4o / GPT-4.1 family can), and the
+fastest one offered — usually the one with *mini* in its name.
 
-**Its prompt is one input and nothing else.** Dossier writes the whole
-prompt — the instructions, your workspace, the conversation, your notes, what
-you attached — and sends it ready to run, as one field called `prompt`.
+**It has two inputs and no text of its own.** Dossier writes the whole prompt
+— instructions, your workspace, the conversation, your notes, what you
+attached — and sends it ready to run as `prompt`, with the picture beside it.
 
-1. Open the prompt action's editor and **delete all the text in it**.
-2. Add **one input**, type *Text*, named `prompt`. Insert it into the empty
-   prompt, so the entire prompt text is that one input and nothing around it.
-3. Back in the flow, set the input to:
+1. **Parse JSON → Schema**: replace it with this short one. Dossier sends
+   only these fields in this setup, so a long schema would only slow the step
+   down, and one generated from a sample would refuse the smaller request.
 
+   ```json
+   {
+     "type": "object",
+     "properties": {
+       "probe":       { "type": "boolean" },
+       "message":     { "type": "string" },
+       "prompt":      { "type": "string" },
+       "picture":     { "type": "string" },
+       "pictureName": { "type": "string" }
+     }
+   }
    ```
-   body('Parse_JSON')?['prompt']
-   ```
 
-4. If your prompt action also has the **picture** input (§ "Level 2" below),
-   keep it exactly as it is. That is the only other input there is.
+2. Open the prompt action's editor and **delete all the text in it**.
+3. Add an input, type **Text**, named `prompt`. Add a second input, type
+   **Image**, named `picture`. Insert both into the empty prompt text — the
+   `prompt` input first, then the `picture` input — and nothing else.
+4. Back in the flow, set the two inputs (Expression tab):
 
-Save. **You will not need to open this action again.**
+   | input | value |
+   |---|---|
+   | `prompt` | `body('Parse_JSON')?['prompt']` |
+   | `picture` | `base64ToBinary(body('Parse_JSON')?['picture'])` |
+
+5. Save, then in Dossier: **Setup → Ask through Power Automate → Your flow →
+   Reads the prompt and SEES the picture**.
+
+**You will not need to open the prompt action again.**
+
+What that last setting changes: a picture is looked at by the model instead
+of being read into words on your PC first — which took several seconds per
+picture and made every answer about a picture an answer about its text.
+Several pictures go as one, side by side, each numbered with its name. When
+nothing is attached, `picture` is a single white pixel, and the prompt tells
+the model to ignore it. The request also stops carrying everything a second
+time beside the prompt, which roughly halves it.
+
+> **Only the prompt, no picture input?** Leave **Your flow** on *Reads the
+> prompt only*, keep the one `prompt` input, and keep your old schema.
+> Pictures are then read into words on your PC and described to the model,
+> as before. It works; it is slower and it can only talk about what the
+> description says.
+
+The seconds under each answer in Dossier are how long Power Automate took.
+If that number is high for a plain question, the model is the thing to
+change: a *mini* model, never a *reasoning* one, for chat.
 
 ### Changing the prompt from now on
 
