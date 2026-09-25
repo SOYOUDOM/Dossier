@@ -449,8 +449,10 @@ What that last setting changes: a picture is looked at by the model instead
 of being read into words on your PC first — which took several seconds per
 picture and made every answer about a picture an answer about its text.
 Several pictures go as one, side by side, each numbered with its name. When
-nothing is attached, `picture` is a single white pixel, and the prompt tells
-the model to ignore it. The request also stops carrying everything a second
+nothing is attached, `picture` is a single white pixel — the input cannot be
+left empty — and the prompt then ends with a short *NO PICTURE THIS TIME*
+section saying so, right before the image, so a mini model does not start
+describing a blank square instead of answering. The request also stops carrying everything a second
 time beside the prompt, which roughly halves it.
 
 > **Only the prompt, no picture input?** Leave **Your flow** on *Reads the

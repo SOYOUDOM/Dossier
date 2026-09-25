@@ -3716,6 +3716,12 @@ const STRINGS = {
   TierModeIntake: "reading a pasted message",
   TierModeChat: "every chat question",
   TierDeepShort: "strong model",
+  TierMeasured: "Measured on your flow:",
+  TierFastTook: "fast model typically {p0} s (last {n})",
+  TierFastTookNone: "fast model not measured yet",
+  TierDeepTook: "strong model typically {p0} s (last {n})",
+  TierDeepTookNone: "strong model not measured yet",
+  TierSame: "About the same: most of the time is Power Automate itself, not the model. The strong model then costs AI Builder credits rather than time - tick \u201cevery chat question\u201d below if you would rather have its answers everywhere.",
   TierAgain: "Think harder",
   TierAgainHint: "Ask this again with the strong model",
   LocalFirstLabel: "Simple questions",
@@ -5312,7 +5318,7 @@ const STATUSES = [
    the status bar, and clicking it copies a line you can paste into a bug
    report — build date and flow protocol included, because those are the two
    things that actually differ between copies. */
-const APP_VERSION = "4.6.0";
+const APP_VERSION = "4.6.1";
 const APP_BUILT = "2026-09-18";
 function buildLine(){
   return "Dossier v" + APP_VERSION + " \u00b7 built " + APP_BUILT +
@@ -11391,6 +11397,7 @@ async function flowAsk(q, thread, opts){
      whether "slow" is the flow, the model, or neither */
   if (out && out.ms) reply.took = out.ms;
   if (out && out.tier) reply.tier = out.tier;
+  if (out && out.ms && !sentFiles) flowTimed(out.tier || "fast", out.ms);
   chatBot(reply, q);
   chatSide();
 }
@@ -13457,6 +13464,14 @@ function renderFlow(){
        '<option value="1"' + (c.tiers.on ? " selected" : "") + ">" + esc(L("TierTwo")) + "</option>" +
        "</select></div>" +
        '<p class="hint2">' + esc(L("TierHint")) + "</p>" +
+       (() => {
+         const f = flowTypical("fast"), d = flowTypical("deep");
+         if (!f && !d) return "";
+         const one = (x, k) => x ? L(k, { p0:(x.ms / 1000).toFixed(1), n:x.n }) : L(k + "None");
+         return '<p class="hint2" style="margin-top:-2px"><b>' + esc(L("TierMeasured")) + "</b> " +
+           esc(one(f, "TierFastTook")) + " \u00b7 " + esc(one(d, "TierDeepTook")) +
+           (f && d && d.ms < f.ms * 1.4 ? " " + esc(L("TierSame")) : "") + "</p>";
+       })() +
        (c.tiers.on
          ? '<div class="fr"><label>' + esc(L("TierWait")) + "</label>" +
            '<input class="in" id="flTierTmo" type="number" min="30" max="115" value="' + (+c.tiers.timeout || 110) + '"></div>' +
@@ -15386,6 +15401,23 @@ function recAiRow(t){
     b("runbook", "\u{1F4D8}", L("RecAiRunbook"), L("RecAiRunbookHint")) +
     "</div></div>";
 }
+/* How long each model has actually taken on your flow, for plain chat
+   questions without files - the last twenty of each. One slow answer says
+   nothing; the typical one says whether the "fast" model is fast. */
+function flowTimed(tier, ms){
+  const c = flowCfg();
+  c.took = c.took || {};
+  const l = c.took[tier] = (c.took[tier] || []);
+  l.push(Math.round(ms));
+  if (l.length > 20) l.splice(0, l.length - 20);
+}
+function flowTypical(tier){
+  const l = ((flowCfg().took || {})[tier] || []).slice().sort((a, b) => a - b);
+  if (!l.length) return null;
+  const m = l.length >> 1;
+  return { ms: l.length % 2 ? l[m] : Math.round((l[m - 1] + l[m]) / 2), n: l.length };
+}
+
 /* which model a job asks for, by the switches in Setup */
 function flowTier(kind){
   const t = flowCfg().tiers;

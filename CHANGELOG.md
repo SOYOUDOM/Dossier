@@ -6,6 +6,25 @@ holds — which is what to paste into a bug report.
 
 ---
 
+## 4.6.1 - 2026-09-25
+
+**The fast model stops talking about a blank picture, and Setup shows how
+fast each model really is on your flow.**
+
+- With nothing attached, the flow's picture input is handed one white pixel,
+  because it cannot be left empty. The prompt said to ignore it, in the
+  middle of twenty kilobytes of instructions; a strong model did, a mini
+  model answered the image instead - "that is a blank white square, try
+  attaching it again" to *what is love?*. The prompt now ENDS, right before
+  the image, with a short *NO PICTURE THIS TIME* section when there is no
+  picture, and never when there is one.
+- **Setup -> Models in your flow** shows the typical time of each model over
+  its last twenty plain chat answers. For short answers the two are usually
+  close: most of the three or four seconds is Power Automate itself (the run,
+  the actions, the AI Builder call) and reading the prompt, not the model
+  writing. When they are close it says so - the strong model then costs
+  credits rather than time, and *every chat question* can go to it.
+
 ## 4.6.0 - 2026-09-25
 
 **Faster to use: instant answers, one-press record actions, pasted messages
