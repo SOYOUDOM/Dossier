@@ -136,7 +136,7 @@ request.** It is fixed in size; it does not grow.
 ### The second look — your two-step idea, in the right place
 
 The endpoint can now answer with **`needRecords`** and nothing else: a filter
-instead of an answer. Dossier runs that filter **on your PC**, over every
+instead of an answer. Resolv runs that filter **on your PC**, over every
 record it has, and asks the same question again with what it found at the
 front of `workspace.records`.
 

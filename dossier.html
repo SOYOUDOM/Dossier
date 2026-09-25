@@ -11,7 +11,7 @@
      These are same-folder files, so nothing is fetched over the network. -->
 <link rel="icon" href="favicon.ico">
 <link rel="apple-touch-icon" href="logo.png">
-<title>Dossier — Support Operations Record</title>
+<title>Resolv — Support Operations Record</title>
 <style>
 /* ═══════════════════════════════════════════════════════════════════════════
    DOSSIER
@@ -2660,7 +2660,7 @@ body.chatting .pet[data-corner="br"],body.chatting .pet[data-corner="tr"]{
     <div class="brand">
       <span class="seal" id="seal"><img id="brandLogo" src="logo.png" alt=""
             onload="this.parentNode.classList.add('hasimg')" onerror="this.remove()"></span>
-      <span class="wm"><b data-i18n="AppName">Dossier</b><span data-i18n="AppTagline">Support operations record</span></span>
+      <span class="wm"><b data-i18n="AppName">Resolv</b><span data-i18n="AppTagline">Support operations record</span></span>
     </div>
 
     <button class="wsbtn" id="wsBtn" title="Workspace folder">
@@ -2806,7 +2806,7 @@ body.chatting .pet[data-corner="br"],body.chatting .pet[data-corner="tr"]{
     <button class="ib" id="chatMenu" data-i18n-title="ChatConversations" title="Conversations">☰</button>
     <span class="chorb" id="chatOrb" aria-hidden="true"><i></i></span>
     <span class="chid">
-      <span class="t" data-i18n="ChatTitle">Dossier Assistant</span>
+      <span class="t" data-i18n="ChatTitle">Resolv Assistant</span>
       <span class="sub" id="chatState" data-i18n="ChatSub">your workspace copilot · nothing leaves this folder</span>
     </span>
     <button class="ib" id="chatFx" data-i18n-title="ChatLook" title="Look and behaviour">◎</button>
@@ -2825,7 +2825,7 @@ body.chatting .pet[data-corner="br"],body.chatting .pet[data-corner="tr"]{
           <button class="ib chpin" id="chatPin" data-i18n-title="AttachAFile"
                   title="Attach a file">&#128206;</button>
           <textarea id="chatq" rows="1" data-i18n-ph="ChatPlaceholder"
-                    placeholder="Ask Dossier…" spellcheck="false"></textarea>
+                    placeholder="Ask Resolv…" spellcheck="false"></textarea>
           <button class="btn pri" id="chatGo" data-i18n="ChatAsk">Ask</button>
         </div>
         <div class="chhint" id="chatHint" aria-hidden="true"></div>
@@ -3055,7 +3055,7 @@ const STRINGS = {
   Week: "Week",
   Library: "Library",
   Insight: "Insight",
-  AppName: "Dossier",
+  AppName: "Resolv",
   AppTagline: "Support operations record",
   SearchEverything: "Search everything…",
   TodaysCompletion: "Today's completion",
@@ -3110,7 +3110,7 @@ const STRINGS = {
   Group_ComingUp: "Coming up",
   Group_ClosedToday: "Closed today",
   NothingOnTheSheet: "Nothing on the sheet",
-  NothingOnTheSheetHint: "Type what you're working on in the bar above. Try <b>check nightly job failures p2 @Imaging 30m today</b> — the pieces get pulled out automatically, and Dossier starts learning your patterns from the first record.",
+  NothingOnTheSheetHint: "Type what you're working on in the bar above. Try <b>check nightly job failures p2 @Imaging 30m today</b> — the pieces get pulled out automatically, and Resolv starts learning your patterns from the first record.",
   Foot_Records: "records",
   Foot_ClosedToday: "closed today",
   Foot_Documents: "documents",
@@ -3130,7 +3130,7 @@ const STRINGS = {
   Tab_Help: "Help",
   Language: "Language",
   LanguageHeading: "Language",
-  LanguageIntro: "Phrases live in <b>lang/</b> in your workspace, one XML file per language. Dossier reads every file it finds there when it opens.",
+  LanguageIntro: "Phrases live in <b>lang/</b> in your workspace, one XML file per language. Resolv reads every file it finds there when it opens.",
   LanguageAddHint: "Type a code and press <b>Write or top up a language file</b>. A new file lists every phrase with a blank value; an existing one keeps every translation you have already done and adds only what is new. Anything left blank stays English, so you can translate in passes.",
   WriteLanguageFile: "Write or top up a language file",
   RefreshLanguages: "Reload the language files",
@@ -3147,12 +3147,12 @@ const STRINGS = {
   ALaptopRebuild: "a laptop rebuild.</p>",
   ANameRunsUntilAWord: "A name runs until a word that cannot be part of one — <code>~Sok Dara today</code> is Sok Dara, due today. ",
   APageInABrowserCannot: "A page in a browser cannot start a program, and a browser that could would be one you ",
-  APageInABrowserCannot2: "A page in a browser cannot start a program. So Dossier writes the request to a file instead, ",
+  APageInABrowserCannot2: "A page in a browser cannot start a program. So Resolv writes the request to a file instead, ",
   APublicHolidayAnythingDueToday: " — a public holiday. Anything due today was scheduled onto a day off.",
   ARecordCannotWaitForItself: "A record cannot wait for itself",
   ARecordIsOneOccurrenceThe: "A record is one occurrence. The thing that keeps producing them is a <b>problem</b>, and six ",
   ARecordItWasWaitingFor: "A record it was waiting for was deleted",
-  ARecordWithNoDueDate: "A record with no due date never appears in Day and never counts as Slipping, so Dossier fills one ",
+  ARecordWithNoDueDate: "A record with no due date never appears in Day and never counts as Slipping, so Resolv fills one ",
   ARoutineCanNameAFile: "A routine can name a file from <b>scripts/</b>. The record it raises each morning then arrives ",
   ARoutineSetToRunOn: "A routine set to <b>run on its own</b> needs nobody at all. The runner reads the routines out ",
   ASetPickedFromInsight: "a set picked from Insight",
@@ -3224,7 +3224,7 @@ const STRINGS = {
   ChooseWorkspaceFolder: "Choose workspace folder…",
   ChooseWorkspaceFolder2: "Choose workspace folder",
   Cleared: "Cleared",
-  ClickOneAndDossierWritesThe: "Click one and Dossier writes the case: the dates, the cost, every occurrence, and what you did ",
+  ClickOneAndDossierWritesThe: "Click one and Resolv writes the case: the dates, the cost, every occurrence, and what you did ",
   ClickOneForTheCaseTo: " — click one for the case to fix it properly</div>",
   ClickToApplyIgnoreToDismiss: "Click to apply, ignore to dismiss.</div></div>",
   ClipboardAndRecordsTheChaseAgainst: "clipboard and records the chase against every record it covered, so the count stays honest.</p>",
@@ -3287,23 +3287,23 @@ const STRINGS = {
   DayOff: "day off",
   DaySLostWaitingOn: " day(s) lost waiting on ",
   DaySSoFar: " day(s) so far",
-  DaysARecordCanSitWith: "Days a record can sit with someone else before Dossier reminds you to chase them.</p>",
+  DaysARecordCanSitWith: "Days a record can sit with someone else before Resolv reminds you to chase them.</p>",
   DaysLostWaitingOnOthers: "Days lost waiting on others",
   DaysStillMoving: " days. Still moving?",
   DeleteTheFileToo: "Delete the file too",
   Deleted: "Deleted ",
   DeletedTheFoldersStayOnDisk: " deleted — the folders stay on disk",
   Dependencies: "Dependencies",
-  DeriveThemFromSoDossierAsks: "derive them from, so Dossier asks you for them rather than guessing and being quietly wrong. ",
+  DeriveThemFromSoDossierAsks: "derive them from, so Resolv asks you for them rather than guessing and being quietly wrong. ",
   DesktopAlertsUnavailableHereInApp: "Desktop alerts unavailable here — in-app reminders ",
   DidNotGiveTypeOneOr: "did not give — type one, or paste a message that names one, and yours wins. A record with ",
   DiscardsTheCurrentRecords: "discards the current records",
   DocumentsFiled: "| Documents filed | ",
   DocumentsTasks: "Documents (tasks/",
-  DossierIsFallingBackToThe: "Dossier is falling back to the system font.</p>",
+  DossierIsFallingBackToThe: "Resolv is falling back to the system font.</p>",
   DossierJsonEveryRecordNoteAnd: "  dossier.json              every record, note and work log\n",
-  DossierRemembersYourFolderBrowsersRequire: "Dossier remembers your folder <b>{p0}</b>. Browsers require one click before handing access back.",
-  DossierStillNeverExecutesAnythingA: "Dossier still never executes anything — a browser cannot, and this one does not try. It hands you ",
+  DossierRemembersYourFolderBrowsersRequire: "Resolv remembers your folder <b>{p0}</b>. Browsers require one click before handing access back.",
+  DossierStillNeverExecutesAnythingA: "Resolv still never executes anything — a browser cannot, and this one does not try. It hands you ",
   DotBad: "dot bad",
   DotWarn: "dot warn",
   DragAFileOntoAnyRecord: "Drag a file onto any record — a meeting deck, an incident email, a screenshot. It gets copied into ",
@@ -3315,7 +3315,7 @@ const STRINGS = {
   DueToday: "due today",
   EachOfTheseWasClosedOn: "Each of these was closed on its own, so the cause is still in place. At the rate above, the next {p0} will cost about the same again. Requesting time for a permanent fix.",
   EachTimeWhichIsUsuallyThe: "each time — which is usually the proof it was worked around rather than fixed. Copy it into a ",
-  EchoOffRemBuiltByDossier: "@echo off\r\nrem Built by Dossier for ",
+  EchoOffRemBuiltByDossier: "@echo off\r\nrem Built by Resolv for ",
   Enter: "Enter",
   Estimate: "Estimate",
   EvenTheOnesNotDueA: "Even the ones not due a chase yet",
@@ -3338,7 +3338,7 @@ const STRINGS = {
   FiltersCleared: "Filters cleared",
   FiltersResetOnEveryOpen: "Filters reset on every open",
   FiltersWillBeWaitingForYou: "Filters will be waiting for you next time",
-  FinishedAfterDossierStoppedWaiting: "— finished after Dossier stopped waiting",
+  FinishedAfterDossierStoppedWaiting: "— finished after Resolv stopped waiting",
   FixedDatesAddedFor: " fixed dates added for ",
   FixedDatesAddedForTheLunar: " fixed dates added for {p0} — the lunar ones are still yours to add",
   FocusTheComposeBar: "Focus the compose bar",
@@ -3385,8 +3385,8 @@ const STRINGS = {
   IncidentsThatEachTookNinetyMinutes: "incidents that each took ninety minutes look like six ordinary days until you add them up. ",
   InsightGroupsRecordsByHowAlike: "Insight groups records by how alike their titles are and shows the total — how many times, how ",
   InstructionTheBrowserEnforcesNoFetch: "instruction the browser enforces: no fetch, no XHR, no WebSocket, no form post. Open F12 → Network and you ",
-  IntoTheComposeBarAnythingWith: "into the compose bar — anything with a line break in it, or longer than a line — and Dossier reads ",
-  IsDossierForgetsWhichFolderIt: "is Dossier forgets which folder it was, and you point it back. Keep the folder in OneDrive and it survives ",
+  IntoTheComposeBarAnythingWith: "into the compose bar — anything with a line break in it, or longer than a line — and Resolv reads ",
+  IsDossierForgetsWhichFolderIt: "is Resolv forgets which folder it was, and you point it back. Keep the folder in OneDrive and it survives ",
   IsThereAnythingYouNeedFrom: "Is there anything you need from me to move {p0} along? If not, when can I expect ",
   IsUnblocked: " is unblocked — ",
   ItAddsNothingNewToA: "It adds nothing new to a record. A step is a work-log entry and a screenshot is an attachment, so a ",
@@ -3395,7 +3395,7 @@ const STRINGS = {
   ItHasBeenWithYouSince: "It has been with you since ",
   ItInsteadOfPastingItThe: "it instead of pasting it: the ticket number, which of your systems it names, who is asking, how ",
   ItIsPausedResumeItFirst: "It is paused — resume it first",
-  ItIsRaisedOnceForThe: "It is raised <b>once for the day it is due</b>. Close Dossier and open it again and nothing is ",
+  ItIsRaisedOnceForThe: "It is raised <b>once for the day it is due</b>. Close Resolv and open it again and nothing is ",
   ItLooksOnceASecondAt: "It looks once a second — at the queue and at your routines both — so <b>$</b> and ",
   ItOnlyEverRunsAFile: "It only ever runs a file that is <b>already in scripts/</b>. The request names a file, never a ",
   ItStands: "it stands",
@@ -3423,8 +3423,8 @@ const STRINGS = {
   LinkAWorkspaceFolderFirst: "Link a workspace folder first",
   LinkAWorkspaceFolderFirst2: "link a workspace folder first",
   LinkAWorkspaceFolderFirstThen: "Link a workspace folder first, then drag files onto a record.",
-  LinkItAndThisOneMoves: "Link it and this one moves to Blocked; when the other closes, Dossier reopens it and says so.</dd>",
-  LinkingARecordThatIsStill: "Linking a record that is still open moves this one to Blocked. When the last one closes, Dossier reopens this by itself and tells you.</div>",
+  LinkItAndThisOneMoves: "Link it and this one moves to Blocked; when the other closes, Resolv reopens it and says so.</dd>",
+  LinkingARecordThatIsStill: "Linking a record that is still open moves this one to Blocked. When the last one closes, Resolv reopens this by itself and tells you.</div>",
   ListeningTheDaySheetSaysSo: "listening, the Day sheet says so rather than leaving you to find out at 8:30.</p>",
   LogThisAnywayOrOpenThat: "). Log this anyway, or open that one.</div>",
   Logged: "Logged",
@@ -3509,7 +3509,7 @@ const STRINGS = {
   NothingDueToday: "Nothing due today",
   NothingHasComeBackOftenEnough: "Nothing has come back often enough to call a pattern yet.",
   NothingHasGoneQuietYetMenu: "Nothing has gone quiet yet — Menu → Chase everyone waiting to write anyway",
-  NothingIsBeingSavedYetPick: "Nothing is being saved yet. Pick a folder and Dossier keeps every record, note and document there — clearing your browser can never touch it.",
+  NothingIsBeingSavedYetPick: "Nothing is being saved yet. Pick a folder and Resolv keeps every record, note and document there — clearing your browser can never touch it.",
   NothingIsHoldingThisAnyMore: "\nNothing is holding this any more.",
   NothingIsRunningYourScriptsA: "Nothing is running your scripts. A routine set to <b>run itself</b> will raise its record on time and then do nothing, because the runner is not started.",
   NothingIsRunningYourScriptsMenu: "Nothing is running your scripts. Menu → Setup → Running a script.",
@@ -3525,7 +3525,7 @@ const STRINGS = {
   NothingSelectedToChase: "Nothing selected to chase",
   NowWaitsFor: " now waits for ",
   OccurrenceSPinnedResetClearsIt: " occurrence(s) pinned — Reset clears it",
-  OfDossierJsonAndAtThe: "of dossier.json, and at the routine's time it runs the script — <b>whether Dossier is open or ",
+  OfDossierJsonAndAtThe: "of dossier.json, and at the routine's time it runs the script — <b>whether Resolv is open or ",
   OfThemStillOpen: " of them {p0} still open.",
   OfTrackedTime: " of tracked time",
   OffersToMakeThoseIntoRoutines: "offers to make those into routines. A problem is the opposite: unplanned, irregular, and not ",
@@ -3550,7 +3550,7 @@ const STRINGS = {
   PartlyFromWhoRaisedItThat: "Partly from who raised it — that is the pattern in your own records. ",
   PastItsDueDate: "past its due date",
   PasteItIntoATerminalIt: "Paste it into a terminal — it starts the runner at every logon",
-  PasteItIntoTheComposeBar: "Paste it into the compose bar with Ctrl+V and Dossier will read it",
+  PasteItIntoTheComposeBar: "Paste it into the compose bar with Ctrl+V and Resolv will read it",
   PastedMessage: "Pasted message",
   Pause: "Pause",
   PausedItWillNotRaiseAnything: "Paused — it will not raise anything",
@@ -3638,7 +3638,7 @@ const STRINGS = {
   ResumedNextDue: "Resumed — next due ",
   ResumedTodaysRecordIsOnThe: "Resumed — today's record is on the sheet",
   ReuseThisWording: " · reuse this wording",
-  RightsDayPeaceDayThoseFall: "Rights Day, Peace Day. Those fall on the same date every year, so Dossier can work them out for ",
+  RightsDayPeaceDayThoseFall: "Rights Day, Peace Day. Those fall on the same date every year, so Resolv can work them out for ",
   RoughlyEvery: " — roughly every ",
   RoutineAddedNextDue: "Routine added — next due ",
   RoutineAddedTodaysRecordIsOn: "Routine added — today's record is on the sheet",
@@ -3660,7 +3660,7 @@ const STRINGS = {
   SavedAt: "saved",
   SaveClickHint: "Not written yet \u2014 click to save now",
   SaveRetryIn: "not saved yet \u00b7 trying again in {p0}s",
-  SaveKeepsTrying: "Dossier keeps trying by itself.",
+  SaveKeepsTrying: "Resolv keeps trying by itself.",
   SaveNoBridge: "the bridge is not answering",
   SaveBridgeSlow: "the bridge had not answered after a minute",
   SaveBridgeDown: "Not saved yet: {p0}. Your changes stay on screen and are written by themselves the moment the bridge answers \u2014 no need to click anything.",
@@ -3785,7 +3785,7 @@ const STRINGS = {
   SetATargetDate: "Set a target date",
   SetTo: " set to ",
   Settings: "Settings",
-  ShouldNotInstallSoDossierWrites: "should not install. So Dossier writes the request to a file instead, and a small batch file ",
+  ShouldNotInstallSoDossierWrites: "should not install. So Resolv writes the request to a file instead, and a small batch file ",
   ShowAll: "Show all ",
   ShowTheLastOnly: "Show the last 6 only",
   Signed: "Signed ",
@@ -3803,7 +3803,7 @@ const STRINGS = {
   Standup: "Standup",
   StandupNote: "Standup note",
   Start: "Start",
-  StartItDoubleClickScriptsDossier: "Start it: double-click <b>scripts\\dossier-runner.bat</b>. Its window must say it is watching <b>this</b> folder — if it names a different path, you have two copies of the workspace and Dossier is pointed at the other one.",
+  StartItDoubleClickScriptsDossier: "Start it: double-click <b>scripts\\dossier-runner.bat</b>. Its window must say it is watching <b>this</b> folder — if it names a different path, you have two copies of the workspace and Resolv is pointed at the other one.",
   StartTheClock: "Start the clock",
   Status: "Status    : ",
   Status2: "Status",
@@ -3820,7 +3820,7 @@ const STRINGS = {
   SwitchFolder: "Switch folder…",
   ThisBrowser: "this browser",
   KeepRecordsInThisBrowser: "Keep records in this browser",
-  NothingIsBeingKeptYetBrowser: "Nothing is being kept yet. This browser cannot open a folder on disk, so Dossier can keep every record, note and document inside the browser instead. Clearing the browser\u2019s data would remove them, so export a copy from Setup now and then \u2014 or open this file in Edge or Chrome to use a folder.",
+  NothingIsBeingKeptYetBrowser: "Nothing is being kept yet. This browser cannot open a folder on disk, so Resolv can keep every record, note and document inside the browser instead. Clearing the browser\u2019s data would remove them, so export a copy from Setup now and then \u2014 or open this file in Edge or Chrome to use a folder.",
   KeptInThisBrowserInstead: "no folder on disk in this browser \u2014 records are kept inside the browser; export a copy now and then",
   System: "System",
   System2: "System    : ",
@@ -3840,13 +3840,13 @@ const STRINGS = {
   ThatScriptIsAlreadyInThe: "That script is already in the folder",
   The: "The ",
   TheBrowserIsNeverToldThe: "The browser is never told the real path of the folder you picked — that is part of the sandbox. ",
-  TheBrowserIsNotAllowedTo: "The browser is not allowed to run anything on your machine, and Dossier does not try. It keeps the file in <b>scripts/</b>, fills in the blanks, and gives you the command or a ready copy in this record's own folder.</div>",
+  TheBrowserIsNotAllowedTo: "The browser is not allowed to run anything on your machine, and Resolv does not try. It keeps the file in <b>scripts/</b>, fills in the blanks, and gives you the command or a ready copy in this record's own folder.</div>",
   TheBrowserWouldNotHandOver: "The browser would not hand over the clipboard — paste into the box with Ctrl+V instead",
   TheCalendarReadsAtTwoZooms: "The calendar reads at two zooms. <b>Week</b> is for working — the whole record on the card, ",
   TheCaseIsOnTheClipboard: "The case is on the clipboard",
   TheClipboardStampsTheScriptAs: "the clipboard, stamps the script as used, and writes <i>Ran &lt;script&gt;</i> into the record's ",
   TheClosedRecordsThisAverageIs: "The {p0} closed records this average is built from",
-  TheCommandForSomethingThatMust: "the command. For something that must fire at a fixed hour whether or not Dossier is open, that is ",
+  TheCommandForSomethingThatMust: "the command. For something that must fire at a fixed hour whether or not Resolv is open, that is ",
   TheConsoleCouldNotOpenClick: "The console could not open — click the button again",
   TheFileIsLeftAlone: "the file is left alone",
   TheFileStaysInTheFolder: "the file stays in the folder",
@@ -3864,10 +3864,10 @@ const STRINGS = {
   TheSignOff: "the sign-off",
   TheSubjectLine: "the subject line",
   TheTeamsOutsideYourPermissionWhen: "The teams outside your permission. When the agency is not found and the data team has to sync first, ",
-  TheWaitClockIsEvidenceAnd: "The wait clock is evidence, and evidence on its own does not move work — so Dossier writes the ",
+  TheWaitClockIsEvidenceAnd: "The wait clock is evidence, and evidence on its own does not move work — so Resolv writes the ",
   TheWholeMessageIsKeptAs: "The whole message is kept as the notes, so the evidence stays with the record. ",
   TheWholePathAndSaysWhich: "the whole path and says which step stopped.</p>",
-  ThenYouPasteItDossierCannot: "Then you paste it. Dossier cannot execute anything — no page in a browser can, and a file that ",
+  ThenYouPasteItDossierCannot: "Then you paste it. Resolv cannot execute anything — no page in a browser can, and a file that ",
   ThereIsAlsoPasteAMessage: "There is also <b>Paste a message</b> beside the compose bar, and Ctrl+V anywhere on the page.</p>",
   TheseAreNotMovingBecauseSomeone: "These are not moving because someone else has to act first.",
   TheyAreAllThereAlready: "They are all there already",
@@ -3902,7 +3902,7 @@ const STRINGS = {
   TurnATeamsMessageOrA: "Turn a Teams message or a mail into a record",
   Turnaround: "Turnaround",
   Type: "Type",
-  TypeItOnceHereAndEvery: "Type it once here and every command Dossier copies becomes a full path you can paste straight into a ",
+  TypeItOnceHereAndEvery: "Type it once here and every command Resolv copies becomes a full path you can paste straight into a ",
   TypedInRoutinesRaisesTodaysAgain: "typed. In Routines, <b>↻</b> raises today's again for the round you have to do twice, and each ",
   Unassigned: "Unassigned",
   Unblocked: "Unblocked · ",
@@ -3930,11 +3930,11 @@ const STRINGS = {
   WaitsFor3: "Waits for : ",
   WaitsFor4: "Waits for",
   WarnBefore: "Warn before",
-  WatchesScriptsQueueRunsTheScript: "watches <b>scripts/queue/</b>, runs the script, and writes the output back. Dossier picks that ",
+  WatchesScriptsQueueRunsTheScript: "watches <b>scripts/queue/</b>, runs the script, and writes the output back. Resolv picks that ",
   WatchingPidRoutineSSetTo: "Watching {p0} (pid {p1}), {p2} routine(s) set to run themselves.",
   WaterFestivalAreSetAgainstThe: "Water Festival are set against the Khmer calendar and move every year — there is no formula to ",
   WayRunDoesInTaskScheduler: "way Run does in Task Scheduler. If nothing happens, <b>Setup → Test it end to end</b> walks ",
-  WebFontsWouldMeanDownloadingFrom: "A web font would mean fetching from someone else's server, which this app will never do. The Latin faces below are the ones Dossier found already installed on this machine — ",
+  WebFontsWouldMeanDownloadingFrom: "A web font would mean fetching from someone else's server, which this app will never do. The Latin faces below are the ones Resolv found already installed on this machine — ",
   Weekdays: "Weekdays",
   Weekly: "Weekly",
   WhatKeepsComingBackAndWhat: "What keeps coming back, and what it cost",
@@ -3944,7 +3944,7 @@ const STRINGS = {
   WhenTheTabIsClosedNothing: "When the tab is <b>closed</b>, nothing in it runs; no web page can wake itself up, and the ones that ",
   WhereEverythingIsStored: "Where everything is stored",
   WhereTheHoursActuallyGo: "Where the hours actually go",
-  WhileDossierIsOpenEvenHidden: "While Dossier is open — even hidden behind Outlook — it raises real Windows notifications. ",
+  WhileDossierIsOpenEvenHidden: "While Resolv is open — even hidden behind Outlook — it raises real Windows notifications. ",
   Who: "Who",
   WhoAsksTheMost: "Who asks the most",
   WhoRaisedIt: "Who raised it",
@@ -3952,7 +3952,7 @@ const STRINGS = {
   WillSeeNothingLeaveThereAre: "will see nothing leave. There are no fonts, scripts or images loaded from anywhere. The suggestions come ",
   WindowsKeepsAboveEverythingAndThat: "Windows keeps <b>above everything</b>, and that you drag and size like any other. Change status in ",
   WindowsTaskSchedulersJobGiveThe: "Windows Task Scheduler's job; give the script a stamp file so it does its work once a day and ",
-  WindowsToastRemindersWhileDossierIs: "Windows toast reminders while Dossier is closed",
+  WindowsToastRemindersWhileDossierIs: "Windows toast reminders while Resolv is closed",
   WithThatScriptAlreadyAttachedAnd: "with that script already attached and its command ready to copy — so the round is a click, not a ",
   WithYouSince: "With you since ",
   WorkByType: "Work by type",
@@ -4134,8 +4134,8 @@ const STRINGS = {
   VaultBackups: "Backups on disk",
   VaultBackupsIntro: "One snapshot a day, in backups/ beside your records. Restoring writes what is on the sheet now out to a file first, so a restore is never a one-way door.",
   VaultNoBackups: "None yet. The first one is written the next time this workspace saves.",
-  VaultEmpty: "<b>This folder has no records in it</b>, and this PC remembers <b>{p1}</b> from {p2}. Nothing has been written \u2014 choose before Dossier saves anything.",
-  VaultFewer: "<b>This folder has {p0} record(s)</b>; this PC remembers <b>{p1}</b>, saved {p2}. Nothing has been written \u2014 choose before Dossier saves anything.",
+  VaultEmpty: "<b>This folder has no records in it</b>, and this PC remembers <b>{p1}</b> from {p2}. Nothing has been written \u2014 choose before Resolv saves anything.",
+  VaultFewer: "<b>This folder has {p0} record(s)</b>; this PC remembers <b>{p1}</b>, saved {p2}. Nothing has been written \u2014 choose before Resolv saves anything.",
   VaultRestore: "Restore what this PC remembers",
   VaultRestoreTitle: "Restore from this PC?",
   VaultKeep: "Keep the folder as it is",
@@ -4164,10 +4164,10 @@ const STRINGS = {
   NoIWillPressRun: "No \u2014 I will press Run",
   YesTheRunnerFiresItAt: "Yes \u2014 the runner fires it at the time above",
   ScriptsDossierRunnerPs: "scripts/dossier-runner.bat",
-  FiresItAtThatTimeWhether: "fires it at that time whether Dossier is open or not \u2014",
+  FiresItAtThatTimeWhether: "fires it at that time whether Resolv is open or not \u2014",
   AddRoutine: "Add routine",
   CreateTodaysNow: "Create today's now",
-  DossierDoesNotRunThem: "Dossier does not run them.",
+  DossierDoesNotRunThem: "Resolv does not run them.",
   APageInABrowserIs: "A page in a browser is not allowed to start a program on your",
   AddScriptFiles: "Add script files\u2026",
   PickUpNewFilesInScripts: "Pick up new files in scripts/",
@@ -4177,64 +4177,64 @@ const STRINGS = {
   WhereTheCommandsPoint: "Where the commands point",
   BestAvailable: "Best available (",
   Detected: "detected",
-  DossierSupportOperationsRecord: "Dossier \u2014 Support Operations Record",
+  DossierSupportOperationsRecord: "Resolv \u2014 Support Operations Record",
   ImagingNightlySyncFailedSqlTimeout: "Imaging nightly sync failed; SQL timeout on GetPendingAsync. Escalated to the DBA team at 02:40.",
   DIncMs: "D-0042  INC0012345  02:14:07  \u2192  30,021 ms",
   NoExtraFacesWereDetected: "No extra faces were detected.",
   Palette: "Palette",
   Off: "Off",
   On: "On",
-  GitFolderWarning: "<b>{p0}</b> is a git checkout as well as your workspace. A <b>git pull</b> or <b>git checkout</b> replaces every file git tracks \u2014 which can take your records and your backups with it. Nothing in the Dossier repository tracks a workspace file any more; if yours was cloned before that, run <b>git rm --cached dossier.json</b> once, and keep the backups out too.",
+  GitFolderWarning: "<b>{p0}</b> is a git checkout as well as your workspace. A <b>git pull</b> or <b>git checkout</b> replaces every file git tracks \u2014 which can take your records and your backups with it. Nothing in the Resolv repository tracks a workspace file any more; if yours was cloned before that, run <b>git rm --cached dossier.json</b> once, and keep the backups out too.",
   GitFolderProtect: "Write a .gitignore for me",
   GitFolderUnderstood: "I understand",
   GitFolderWrote: "Added {n} line(s) to .gitignore. Anything git already tracks still needs git rm --cached.",
-  GitFolderAlready: ".gitignore already covers every path Dossier writes.",
+  GitFolderAlready: ".gitignore already covers every path Resolv writes.",
   GitFolderFailed: "Could not write .gitignore: ",
   Store: "Records kept in",
   DiagRun: "Check the bridge",
-  DiagApp: "Dossier v{p0}",
+  DiagApp: "Resolv v{p0}",
   DiagNoFolder: "No workspace folder is open.",
   DiagFolder: "Folder: {p0}",
-  DiagServed: "This page is served by Dossier on 127.0.0.1:{p0}.",
+  DiagServed: "This page is served by Resolv on 127.0.0.1:{p0}.",
   DiagStarting: "Its database is still starting.",
   DiagNoDb: "It has no database: {p0}",
   DiagBridgeFolder: "Its workspace folder (for scripts): {p0}",
   DiagMarked: "This folder keeps its records in the database (since {p0}).",
   DiagNoHandshake: "No .bridge.json in this folder.",
-  DiagNoHandshakeFix: "Dossier's database is not set to THIS folder. Icon by the clock \u2192 Workspace folder\u2026 \u2192 choose it.",
+  DiagNoHandshakeFix: "Resolv's database is not set to THIS folder. Icon by the clock \u2192 Workspace folder\u2026 \u2192 choose it.",
   DiagBadHandshake: ".bridge.json is here but unreadable. Stop the bridge, delete it, start the bridge again.",
   DiagHandshake: ".bridge.json says port {p0}, written {p1}",
   DiagNoAnswer: "Nothing answered on 127.0.0.1:{p0}.",
-  DiagNoAnswerFix: "Dossier wrote that file and then stopped. Start Dossier.bat again.",
+  DiagNoAnswerFix: "Resolv wrote that file and then stopped. Start Resolv.bat again.",
   DiagRefused: "The bridge answered {p0} \u2014 a stale token. Reopen the workspace.",
   DiagBridge: "Bridge is up: database {p0} on {p1}, schema {p2}",
   DiagHolds: "The database holds {p0} record(s).",
-  DiagOldSchema: "That schema is older than this build needs \u2014 quit Dossier from the icon by the clock and start it again; it brings the tables up to date itself.",
+  DiagOldSchema: "That schema is older than this build needs \u2014 quit Resolv from the icon by the clock and start it again; it brings the tables up to date itself.",
   DiagUsingIt: "This workspace is reading and writing SQL Server.",
   DiagNotUsingIt: "The bridge is up but this workspace was opened before it \u2014 reopen the folder (Menu \u2192 Workspace \u2192 Switch folder) and it will use it.",
   StoreSql: "SQL Server",
   StoreSqlWhy: "database {p0} on {p1}, through the bridge. dossier.json is written as an export.",
   StoreFile: "dossier.json",
-  StoreFileWhy: "the file in this folder. To keep them in SQL Server instead, start Dossier.bat and choose THIS folder from the icon by the clock \u2192 Workspace folder\u2026, then reopen the workspace.",
-  DbStopped: "<b>Dossier's database is not answering</b>, and this workspace keeps its records there rather than in a file. Nothing has been opened and nothing will be written. Start <b>Dossier.bat</b> (or the icon by the clock) and press Try again. {p0}",
+  StoreFileWhy: "the file in this folder. To keep them in SQL Server instead, start Resolv.bat and choose THIS folder from the icon by the clock \u2192 Workspace folder\u2026, then reopen the workspace.",
+  DbStopped: "<b>Resolv's database is not answering</b>, and this workspace keeps its records there rather than in a file. Nothing has been opened and nothing will be written. Start <b>Resolv.bat</b> (or the icon by the clock) and press Try again. {p0}",
   DbStoppedPlain: "",
   DbRetry: "Try again",
   DbHowTo: "What is this?",
-  DbHowToSay: "Dossier is a page in a browser and cannot talk to SQL Server itself. Dossier.bat starts one small program that can \u2014 the same one that hands out this page. It has no window: it is the Dossier icon by the clock, where Quit stops it and Start with Windows keeps it there every morning.",
-  DbStillStopped: "Still nothing on 127.0.0.1. Is the Dossier icon by the clock there?",
+  DbHowToSay: "Resolv is a page in a browser and cannot talk to SQL Server itself. Resolv.bat starts one small program that can \u2014 the same one that hands out this page. It has no window: it is the Resolv icon by the clock, where Quit stops it and Start with Windows keeps it there every morning.",
+  DbStillStopped: "Still nothing on 127.0.0.1. Is the Resolv icon by the clock there?",
   DbOn: "records in {p0} on {p1}",
   DbStarting: "<b>Starting the database\u2026</b> LocalDB takes a few seconds to wake. Nothing is opened, and nothing written, until it answers.",
   DbStartingSlow: "the database is still starting after two minutes \u2014 the log (icon by the clock \u2192 Show log) says why",
   DbSeeded: "The database was empty, so {n} record(s) were brought in from {p0}. That file is untouched.",
   DbCaughtUp: "dossier.json was newer than the database ({p0}, against {p1}) \u2014 changes made while the database was off. Opened those and wrote them to the database. What it held before is in Menu \u2192 Workspace \u2192 Database history.",
-  DbOther: "<b>The database already holds another workspace</b> \u2014 {n} record(s), last saved {p0}. This folder keeps its records in its own dossier.json, and nothing in the database was touched. To put THIS folder in the database, choose it from the Dossier icon by the clock \u2192 Workspace folder\u2026",
+  DbOther: "<b>The database already holds another workspace</b> \u2014 {n} record(s), last saved {p0}. This folder keeps its records in its own dossier.json, and nothing in the database was touched. To put THIS folder in the database, choose it from the Resolv icon by the clock \u2192 Workspace folder\u2026",
   DbWhose: "The database holds a workspace",
   DbWhoseAsk: "{n} record(s), last saved {p0}. This folder has no records of its own. Is that workspace this one?",
   DbWhoseYes: "Yes \u2014 open it here",
   DbWhoseYesHint: "Its records appear in this folder, and every save goes to the database.",
   DbWhoseNo: "No \u2014 keep this folder separate",
   DbWhoseNoHint: "This folder starts on its own dossier.json. The database is not touched.",
-  EmptyRefused: "<b>Nothing was saved.</b> This save would leave the workspace with no records, and it had {n}. That is exactly what a workspace that failed to load looks like, so Dossier stopped before writing anything.",
+  EmptyRefused: "<b>Nothing was saved.</b> This save would leave the workspace with no records, and it had {n}. That is exactly what a workspace that failed to load looks like, so Resolv stopped before writing anything.",
   EmptyReload: "Reload what is saved",
   EmptyMeantIt: "I deleted them \u2014 save it empty",
   ShrinkTitle: "Save {p1} record(s) over {p0}?",
@@ -4404,7 +4404,7 @@ const STRINGS = {
   Held: "Held",
   TimeLogged2: "Time logged",
   NothingMatchesTheCurrentFilters: "Nothing matches the current filters.",
-  DossierOfflineSupportOperationsRecord: "Dossier \u00b7 offline support operations record \u00b7",
+  DossierOfflineSupportOperationsRecord: "Resolv \u00b7 offline support operations record \u00b7",
   OpenedOn: "opened {p0}",
   HidingX: "hiding {p0}",
   NRecords: "{p0} records",
@@ -4413,7 +4413,7 @@ const STRINGS = {
   LastSeenX: "last {p0}",
   EstimatedAt: "estimated {p0}",
   KhmerText: "Khmer text",
-  BundledWithDossier: "bundled with Dossier",
+  BundledWithDossier: "bundled with Resolv",
   KhmerFontNote: "Khmer is the one exception. Windows ships only Khmer UI and DaunPenh, and a machine without them draws Khmer as empty boxes \u2014 so <b>Noto Sans Khmer</b> is carried inside this file. It is still not a download: nothing is fetched. Pick another below if you have a Khmer face you prefer.",
 
   /* cron scheduling */
@@ -4441,7 +4441,7 @@ const STRINGS = {
   AnnualLeaveOfficeClosed: "Annual leave, office closed\u2026",
   AddThesePastedDays: "Add these days",
   CopyWhatIsMarkedNow: "Copy what is marked now",
-  PasteHolidaysHelp: "JSON with <b>date</b>, <b>name</b> and <b>kind</b>, or one a line as <b>date, name, kind</b>. Dates may be <b>2027-01-01</b> or <b>01/01/2027</b>. <b>kind</b> is either <b>public</b> \u2014 a day off, tinted on the calendar and kept clear of target dates \u2014 or <b>observance</b>, marked on the day but still a working day. Leave it off and it counts as a day off. The short <b>d</b>/<b>n</b>/<b>k</b> spelling Dossier used to write is still read. Anything unreadable is listed rather than swallowed.",
+  PasteHolidaysHelp: "JSON with <b>date</b>, <b>name</b> and <b>kind</b>, or one a line as <b>date, name, kind</b>. Dates may be <b>2027-01-01</b> or <b>01/01/2027</b>. <b>kind</b> is either <b>public</b> \u2014 a day off, tinted on the calendar and kept clear of target dates \u2014 or <b>observance</b>, marked on the day but still a working day. Leave it off and it counts as a day off. The short <b>d</b>/<b>n</b>/<b>k</b> spelling Resolv used to write is still read. Anything unreadable is listed rather than swallowed.",
   HolidaysAdded: "{added} added, {replaced} replaced",
   HolidaysNothingRead: "Nothing could be read from that",
   HolidaysSomeBad: "{n} line(s) could not be read: {p0}",
@@ -4473,7 +4473,7 @@ const STRINGS = {
   DensityCompact: "Compact \u2014 more on screen",
   TextSize: "Text size",
   ResetToDefaults: "Reset to defaults",
-  FeelIntro: "How the app behaves, rather than how it is lettered. If your system asks for reduced motion, Dossier follows it unless you pick <b>Full</b> here on purpose.",
+  FeelIntro: "How the app behaves, rather than how it is lettered. If your system asks for reduced motion, Resolv follows it unless you pick <b>Full</b> here on purpose.",
   KeyboardShortcuts: "Keyboard shortcuts",
   PressQuestionAnyTime: "Press ? at any time to see this.",
   Typeface: "Typeface",
@@ -4498,18 +4498,18 @@ const STRINGS = {
   KeySearch: "Search everything",
   KeyNewRecord: "New record",
   KeyCommandPalette: "Command palette",
-  ClosedTabBatAdvice: "There is no way round that from a web page, and this machine has no PowerShell to fall back on. If something genuinely must happen while Dossier is shut, point <b>Windows Task Scheduler</b> straight at your <b>.bat</b> file \u2014 that is exactly what it is for, and it needs nothing from Dossier. Keep the tab open, even behind Outlook, and reminders work on their own.",
+  ClosedTabBatAdvice: "There is no way round that from a web page, and this machine has no PowerShell to fall back on. If something genuinely must happen while Resolv is shut, point <b>Windows Task Scheduler</b> straight at your <b>.bat</b> file \u2014 that is exactly what it is for, and it needs nothing from Resolv. Keep the tab open, even behind Outlook, and reminders work on their own.",
 
   /* why a reminder did or did not appear */
   RemindersAreOff: "Reminders are off",
   RemindersOnWindowsToo: "Reminders on \u2014 Windows will show them too",
-  RemindersOnInAppOnly: "Reminders on \u2014 this browser has no Windows notifications, so they appear in Dossier",
+  RemindersOnInAppOnly: "Reminders on \u2014 this browser has no Windows notifications, so they appear in Resolv",
   RemindersOnButBlocked: "Reminders on, but Windows notifications are blocked for this page",
   AllowThem: "Allow them",
   RemindersOffHint: "Nothing will remind you. Turn this on, or press the bell in the top right.",
-  RemindersGrantedHint: "Reminders appear in Dossier and as Windows notifications, even when the tab is behind Outlook.",
-  RemindersNoneHint: "This browser cannot raise Windows notifications, so reminders appear inside Dossier only.",
-  RemindersBlockedHint: "Windows notifications are blocked for this page, so reminders only appear inside Dossier. Click the padlock beside the address and set Notifications to Allow. Opening dossier.html straight from the folder blocks them too \u2014 run <b>dossier-bridge.bat</b>, which hands the page out from 127.0.0.1 where permission can be given.",
+  RemindersGrantedHint: "Reminders appear in Resolv and as Windows notifications, even when the tab is behind Outlook.",
+  RemindersNoneHint: "This browser cannot raise Windows notifications, so reminders appear inside Resolv only.",
+  RemindersBlockedHint: "Windows notifications are blocked for this page, so reminders only appear inside Resolv. Click the padlock beside the address and set Notifications to Allow. Opening dossier.html straight from the folder blocks them too \u2014 run <b>dossier-bridge.bat</b>, which hands the page out from 127.0.0.1 where permission can be given.",
   ScheduleDoesNothingElse: "It will raise a record on the sheet and nothing more \u2014 no notification, no script. Set <b>Remind me</b> to be told each time, or attach a script under <b>What it does</b>.",
   Assist: "Assist",
   AiNoEngine: "assist.js is not in this folder. Put it next to dossier.html and reload — everything else works without it.",
@@ -4574,13 +4574,13 @@ const STRINGS = {
   AiRoutineWhy: "{n} times, and regular enough to schedule",
   Ask: "Ask",
   KeyAskTheAssistant: "Ask the assistant",
-  ChatTitle: "Dossier Assistant",
+  ChatTitle: "Resolv Assistant",
   ChatSub: "your workspace copilot \u00b7 nothing leaves this folder",
-  ChatHeroTitle: "Dossier Assistant",
+  ChatHeroTitle: "Resolv Assistant",
   ChatHeroSub: "Your workspace copilot",
   ChatHeroCard1: "Turn tasks into progress.",
   ChatHeroCard2: "Ask. Analyze. Create. Get more done.",
-  ChatPlaceholder: "Ask Dossier\u2026",
+  ChatPlaceholder: "Ask Resolv\u2026",
   ChatAsk: "Ask",
   ChatYes: "Yes, do it",
   ChatNo: "No",
@@ -4743,7 +4743,7 @@ const STRINGS = {
   RunbookImport: "Import library",
   RunbookImported: "Imported {a} runbook(s) and {b} system profile(s).",
   RunbookExported: "Library exported.",
-  RunbookBadFile: "That file is not a Dossier runbook library.",
+  RunbookBadFile: "That file is not a Resolv runbook library.",
   RunbookNothing: "Nothing to export yet.",
   RunbookForget: "Delete",
   RunbookSaved: "Saved.",
@@ -4845,15 +4845,15 @@ const STRINGS = {
   MemorySaved: "Saved.",
   NoticeHushed: "Hidden. {what}",
   HiddenNotices: "Hidden notices",
-  HiddenNoticesHint: "Notices you told Dossier to stop showing. Bring one back and it will appear again the next time it is true.",
+  HiddenNoticesHint: "Notices you told Resolv to stop showing. Bring one back and it will appear again the next time it is true.",
   NothingHidden: "Nothing hidden \u2014 every notice still shows.",
   ShowAgain: "Show again",
   ShowAllAgain: "Show all of them again",
 
   FlowHead: "Ask through Power Automate",
-  FlowBlurb: "The assistant answers from your own records, with no network and no model, and it is right about 97 times in 100 on the questions it knows. This is the other route: your message and a description of your workspace go to an endpoint you own — a Power Automate flow with a “When an HTTP request is received” trigger — and whatever that flow decides comes back as a list of things to do. Dossier checks every one of them and does the ones it recognises.",
-  FlowWarn: "This is the only part of Dossier that sends anything anywhere. Your records leave this folder when you use it. Choose below how much goes, and press “Show me exactly what would be sent” before you trust it with anything real.",
-  FlowNetwork: "Dossier itself still cannot reach the network — the policy in its head forbids it and that does not change. The request is made by flow/relay.html in a hidden frame: a page that holds none of your records, is pinned to your endpoint’s address and no other, and can do nothing but post text there and hand the reply back.",
+  FlowBlurb: "The assistant answers from your own records, with no network and no model, and it is right about 97 times in 100 on the questions it knows. This is the other route: your message and a description of your workspace go to an endpoint you own — a Power Automate flow with a “When an HTTP request is received” trigger — and whatever that flow decides comes back as a list of things to do. Resolv checks every one of them and does the ones it recognises.",
+  FlowWarn: "This is the only part of Resolv that sends anything anywhere. Your records leave this folder when you use it. Choose below how much goes, and press “Show me exactly what would be sent” before you trust it with anything real.",
+  FlowNetwork: "Resolv itself still cannot reach the network — the policy in its head forbids it and that does not change. The request is made by flow/relay.html in a hidden frame: a page that holds none of your records, is pinned to your endpoint’s address and no other, and can do nothing but post text there and hand the reply back.",
   FlowUse: "Use a flow",
   FlowOff: "Off",
   FlowOn: "On",
@@ -4882,7 +4882,7 @@ const STRINGS = {
   FlowNoUrl: "No endpoint yet. Paste your flow’s URL above.",
   FlowBytes: "{n} would be sent",
   FlowAnswered: "answered in {ms} ms",
-  FlowRefused: "Dossier would not do this:",
+  FlowRefused: "Resolv would not do this:",
   FlowNothing: "Your flow answered, but with nothing to say and nothing to do.",
   FlowFellBack: "Your flow did not answer, so this was worked out here instead.",
   FlowFailed: "The flow could not be asked.",
@@ -4902,7 +4902,9 @@ const I18N = { code:"en", packs:{ en:{ name:"English", texts:{} } } };
    no English either comes back as its own name — visible, never blank. */
 function L(name, vars){
   const pack = I18N.packs[I18N.code];
-  let s = (pack && pack.texts[name]) || STRINGS[name] || name;
+  /* the app was called Dossier until 4.8; a language file written before
+     then still says so, and the name is not something a translation keeps */
+  let s = (pack && pack.texts[name] && String(pack.texts[name]).replace(/\bDossier\b/g, "Resolv")) || STRINGS[name] || name;
   if (vars) for (const k in vars) s = s.split("{" + k + "}").join(String(vars[k]));
   return s;
 }
@@ -4968,10 +4970,10 @@ function buildLangXml(code, name, texts){
     '" value="' + at(texts[k] || "") + '" />');
   return '<?xml version="1.0" encoding="utf-8"?>\n' +
     "<!--\n" +
-    "  Dossier language file.\n" +
+    "  Resolv language file.\n" +
     "  Fill in each value=\"\" using the source=\"\" beside it as the English.\n" +
     "  Leave a value empty and that phrase stays English — translating in\n" +
-    "  passes is fine. {name} in a phrase is a number or word Dossier drops\n" +
+    "  passes is fine. {name} in a phrase is a number or word Resolv drops\n" +
     "  in; keep it exactly as it is, but move it wherever the sentence needs.\n" +
     "  Save the file, then press Reload in Menu → Appearance.\n" +
     "-->\n" +
@@ -5324,10 +5326,10 @@ const STATUSES = [
    the status bar, and clicking it copies a line you can paste into a bug
    report — build date and flow protocol included, because those are the two
    things that actually differ between copies. */
-const APP_VERSION = "4.7.0";
+const APP_VERSION = "4.8.0";
 const APP_BUILT = "2026-09-18";
 function buildLine(){
-  return "Dossier v" + APP_VERSION + " \u00b7 built " + APP_BUILT +
+  return "Resolv v" + APP_VERSION + " \u00b7 built " + APP_BUILT +
          " \u00b7 flow protocol " + (window.DossierFlow ? DossierFlow.version : "\u2014") +
          " \u00b7 " + S.tasks.length + " records, " +
          runbookStore().length + " runbooks, " + memoryStore().length + " notes";
@@ -7295,7 +7297,7 @@ async function markStore(){
       store:"sql", wsId:S.wsId,
       database:(DB.info && DB.info.database) || "", server:(DB.info && DB.info.server) || "",
       since:(was && was.since) || new Date().toISOString(),
-      note:"This folder's records are kept in SQL Server by Dossier. dossier.json beside it is an export, written on every save."
+      note:"This folder's records are kept in SQL Server by Resolv. dossier.json beside it is an export, written on every save."
     }, null, 2));
   } catch(e){}
 }
@@ -13118,7 +13120,7 @@ function flowGetSetting(k){
 /* one value, coerced to the shape the setting actually is */
 function flowSetSetting(k, raw){
   const d = FLOW_SET[k];
-  if (!d) return { bad:"“" + k + "” is not a setting Dossier will change from here. " +
+  if (!d) return { bad:"“" + k + "” is not a setting Resolv will change from here. " +
                         "It accepts: " + Object.keys(FLOW_SET).join(", ") };
   const st = S.settings;
   let v = raw;
@@ -16369,7 +16371,7 @@ async function renderModal(){
       : "<div style=\"font-size:12.5px;color:var(--ink-3);margin-bottom:14px\">" + L("NothingInTheLibraryYet") + "</div>") +
     "<h5 class=\"eyebrow\" style=\"margin:18px 0 8px\">" + L("WhereTheCommandsPoint") + "</h5>" +
     fr(L("FolderPath"), '<input class="in mono" id="scRoot" style="font-size:11px" value="' + esc(S.settings.rootPath || "") +
-      '" placeholder="D:\\Work\\Dossier">') +
+      '" placeholder="D:\\Work\\Resolv">') +
     '<p style="font-size:11.5px;color:var(--ink-2);line-height:1.7;margin-top:8px">' +
       L("TheBrowserIsNeverToldThe") +
       L("TypeItOnceHereAndEvery") +
@@ -17877,20 +17879,20 @@ function runnerScript(){
     "rem ===========================================================================",
     "rem  dossier-runner.bat",
     "rem",
-    "rem  Runs the scripts Dossier asks for. No PowerShell anywhere.",
+    "rem  Runs the scripts Resolv asks for. No PowerShell anywhere.",
     "rem",
     "rem  Put this in   <your workspace>\\scripts\\   and double-click it.",
     "rem  Leave the window open. Closing it stops the runner.",
     "rem",
     "rem  HOW IT TALKS TO DOSSIER",
-    "rem  Dossier cannot start a program, so it leaves a note in scripts\\queue\\ and",
+    "rem  Resolv cannot start a program, so it leaves a note in scripts\\queue\\ and",
     "rem  this reads it. Everything passed between them is plain text, one value a",
     "rem  line - no JSON parsing in batch, which is where these things go wrong.",
     "rem",
     "rem    <id>.run.txt    line 1: the script to run.  line 2: its arguments.",
     "rem    <id>.done.txt   line 1: the exit code it finished with.",
     "rem    <id>.out.txt    everything the script printed.",
-    "rem    .runner.txt     written every few seconds so Dossier knows this is alive.",
+    "rem    .runner.txt     written every few seconds so Resolv knows this is alive.",
     "rem",
     "rem  SAFETY",
     "rem  It will only run a file that is already sitting in this scripts\\ folder.",
@@ -17904,7 +17906,7 @@ function runnerScript(){
     "set \"QUEUE=%SCRIPTS%\\queue\"",
     "if not exist \"%QUEUE%\" mkdir \"%QUEUE%\"",
     "",
-    "echo  Dossier runner",
+    "echo  Resolv runner",
     "echo  watching \"%QUEUE%\"",
     "echo  Leave this window open. Close it to stop.",
     "echo.",
@@ -18260,7 +18262,7 @@ async function writeLauncher(t, sc, vals){
   const out = "run-" + splitExt(sc.file)[0] + ".cmd";
   const body = [
     "@echo off",
-    "rem Written by Dossier for " + t.code + " - " + t.title.replace(/[\r\n]/g, " "),
+    "rem Written by Resolv for " + t.code + " - " + t.title.replace(/[\r\n]/g, " "),
     "rem Double-click this file to run the script. The transcript is kept beside it.",
     "setlocal",
     'set "LOG=%~dp0' + splitExt(out)[0] + '.log"',
@@ -18490,7 +18492,7 @@ window.addEventListener("afterprint", () => { printMode = null; });
    it, say so once, and offer to write the .gitignore that keeps every path
    the app owns out of git's reach. */
 const GIT_IGNORE_LINES = [
-  "# Written by Dossier. These are the paths the app owns; git must never",
+  "# Written by Resolv. These are the paths the app owns; git must never",
   "# create, replace or delete one of them.",
   "/dossier.json",
   "/backups/",
@@ -19058,7 +19060,7 @@ async function reflectNow(byHand){
   toast(n ? L("ReflectToast", { n }) : L("ReflectToastNone"), {
     action:L("ReflectOpen"), onAction:() => { S.chatId = c.id; openChat(); chatPaint(); } });
   if (typeof Notification !== "undefined" && Notification.permission === "granted" && document.hidden && n){
-    try { new Notification("Dossier", { body:L("ReflectToast", { n }) }); } catch(e){}
+    try { new Notification("Resolv", { body:L("ReflectToast", { n }) }); } catch(e){}
   }
 }
 

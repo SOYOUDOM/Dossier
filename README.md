@@ -1,4 +1,9 @@
-# Dossier
+# Resolv
+
+> **Resolv was called Dossier until 4.8.** Only the name you see changed. The
+> files keep their names — `dossier.html`, `dossier.json`, `.dossier-store.json`
+> — as does the SQL Server database (`Dossier`), so nothing has to move.
+> `Resolv.bat` starts it; `Dossier.bat` still works and passes straight through.
 
 **A support-operations record that runs as one HTML file, with no install, no
 server and no network.** Everything it knows lives in a folder you choose, as
@@ -9,10 +14,10 @@ service requests, changes, the scripts you run against them, the people you
 are waiting on, and the question *what should I be doing right now*.
 
 This README is the complete reference. It is written to be read end to end by
-a person **or by an automation agent** that has to drive Dossier's files from
+a person **or by an automation agent** that has to drive Resolv's files from
 outside — every schema, every enumeration, every on-disk protocol and every
 invariant is stated in full, with no "see the code" hand-waving.
-[Automating Dossier from outside](#15-automating-dossier-from-outside) is the
+[Automating Resolv from outside](#15-automating-dossier-from-outside) is the
 section to start from if you are wiring this into Power Automate, a scheduled
 job, or a script.
 
@@ -36,7 +41,7 @@ job, or a script.
 | 12 | [Asking through a Power Automate flow](#12-asking-through-a-power-automate-flow) |
 | 13 | [Languages](#13-languages) |
 | 14 | [Privacy and safety](#14-privacy-and-safety) |
-| 15 | [Automating Dossier from outside](#15-automating-dossier-from-outside) |
+| 15 | [Automating Resolv from outside](#15-automating-dossier-from-outside) |
 | 16 | [Testing and measured numbers](#16-testing-and-measured-numbers) |
 | 17 | [Known limits](#17-known-limits) |
 | 18 | [Glossary](#18-glossary) |
@@ -45,19 +50,19 @@ job, or a script.
 
 ## 1. The rules that never bend
 
-These are design invariants, not preferences. Anything built on top of Dossier
+These are design invariants, not preferences. Anything built on top of Resolv
 — including an automation agent — should preserve them.
 
 | # | Rule | Enforced by |
 |---|---|---|
 | 1 | **`dossier.html` can reach exactly one thing: `http://127.0.0.1`.** Not the internet, not `localhost` by name, not any other origin, and no form post anywhere. | A `Content-Security-Policy` meta tag: `connect-src http://127.0.0.1:*; form-action 'none'`. The browser enforces it; you can verify it in F12 → Network. **This was `connect-src 'none'` until v4.0**, when the database bridge arrived — it is the one loosening in the file's history, it is a loopback address, and nothing on the far side of it leaves the machine. |
 | 2 | **Your records never leave the folder** unless you configure an endpoint and switch it on. No telemetry, no sync, no account, no cloud, and nothing at all by default. | Rule 1, plus there is no server component. The one exception is [§12](#12-asking-through-a-power-automate-flow), which is off until you paste in a URL, states what it sends, and shows you the bytes first. |
-| 3 | **The data outlives the app.** Every save writes `dossier.json` — human-readable, indented, openable in Notepad on a machine with no SQL Server and no Dossier on it. In database mode that file is an export rather than the store, and it is still written on every single save, for exactly this reason. | `saveNow()` writes the export after the transaction commits, or writes nothing at all. |
+| 3 | **The data outlives the app.** Every save writes `dossier.json` — human-readable, indented, openable in Notepad on a machine with no SQL Server and no Resolv on it. In database mode that file is an export rather than the store, and it is still written on every single save, for exactly this reason. | `saveNow()` writes the export after the transaction commits, or writes nothing at all. |
 | 4 | **Nothing is written while you ask a question.** Reading is read-only, down to not creating an empty object in settings. | `chatApi()` builds its view without mutating state. |
 | 5 | **Anything that writes asks first.** Log, close, hand over, chase, run, remind — each is proposed and confirmed, whether it arrived as a sentence or a button. | `chatDo()` refuses `act.confirm` unless the action carries `__ok`. |
 | 6 | **Nothing an endpoint returns is trusted.** A reply is data to be validated, never a command. An unknown action, a wrong-shaped argument, or a record reference that resolves to nothing is refused by name. | `flow.js` `validate()` and `checkAction()`. |
 | 7 | **The runner only ever runs a file already in `scripts\`.** A name containing `\`, `/`, `:` or `..` is refused. | `dossier-runner.bat`, before it executes anything. |
-| 8 | **A promise Dossier cannot keep is said out loud.** If a routine is set to run itself and no runner is listening, the Day sheet says so rather than failing silently. | The runner heartbeat, `.runner.txt`. |
+| 8 | **A promise Resolv cannot keep is said out loud.** If a routine is set to run itself and no runner is listening, the Day sheet says so rather than failing silently. | The runner heartbeat, `.runner.txt`. |
 
 ---
 
@@ -82,17 +87,17 @@ These are design invariants, not preferences. Anything built on top of Dossier
 > git rm -r --cached backups
 > ```
 >
-> Dossier also notices for itself: open a workspace with a `.git` in it and it
+> Resolv also notices for itself: open a workspace with a `.git` in it and it
 > says so, once, and offers to write the `.gitignore` for you.
 
 ```
-git clone https://github.com/SOYOUDOM/Dossier
+git clone https://github.com/SOYOUDOM/Resolv
 ```
 
 1. **Make a folder for your records**, anywhere but the clone —
    `Documents\Dossier` will do. To start with the demo rather than an empty
    sheet, copy `demo\dossier.json` into it as `dossier.json`.
-2. **Double-click `Dossier.bat`** in the clone. The first time it takes a
+2. **Double-click `Resolv.bat`** in the clone. The first time it takes a
    few seconds to set itself up; after that it opens
    `http://127.0.0.1:5500/dossier.html` in your browser and sits as an icon
    by the clock — no window. It asks once which folder holds your records
@@ -111,16 +116,16 @@ With the demo copied in you should immediately see:
 - **Menu → Scripts** — the scripts, already registered
 - **Insight** — a recurring problem, with the case already written
 
-> **Browser support.** In **Edge or Chrome on desktop** Dossier keeps every
+> **Browser support.** In **Edge or Chrome on desktop** Resolv keeps every
 > record, note and document in a folder you choose, as ordinary files. In
 > **Firefox, Safari, or anything else** there is no way for a page to open a
-> folder, so Dossier keeps the same files inside the browser's own store
+> folder, so Resolv keeps the same files inside the browser's own store
 > (IndexedDB) — records, backups and attachments alike, surviving reloads and
 > restarts. Clearing that browser's site data would remove them, so use
 > Setup → export now and then, and prefer a folder where one is possible.
 
 > **Windows notifications need `http://`.** Chrome and Edge refuse the
-> Notification API on `file://` with no way to allow it. `Dossier.bat` hands
+> Notification API on `file://` with no way to allow it. `Resolv.bat` hands
 > the page out at `http://127.0.0.1:5500/dossier.html` - the same program that
 > keeps your records in the database, with no window of its own - so there is
 > only ever one thing to start. With no SQL Server on the PC it serves the
@@ -145,14 +150,15 @@ With the demo copied in you should immediately see:
 | `lang/en.xml` | ~175 KB | optional | Every interface phrase in English — 1,343 entries. |
 | `lang/km.xml` | ~125 KB | optional | The same 1,343 keys, **values empty**: a translation template for Khmer. |
 | `fonts/NotoSansKhmer-*.woff2` | ~33 KB | optional | Bundled Khmer typeface, so Khmer renders without fetching a webfont. `OFL.txt` is its licence. |
-| `scripts/dossier-runner.bat` | 3.4 KB | optional | The runner. Executes what Dossier queues. No PowerShell anywhere. |
-| `Dossier.bat` | ~6 KB | **start here** | **The one thing to double-click.** Builds and starts Dossier as an icon by the clock — the page at `http://127.0.0.1:5500/dossier.html`, the database created and migrated by itself, your scripts' runner hidden. `startup` / `startup off` for starting with Windows. |
-| `scripts/dossier-serve.bat` | ~1 KB | — | Kept so nothing that points at it breaks: passes through to `Dossier.bat`. |
+| `scripts/dossier-runner.bat` | 3.4 KB | optional | The runner. Executes what Resolv queues. No PowerShell anywhere. |
+| `Resolv.bat` | ~6 KB | **start here** | **The one thing to double-click.** Builds and starts Resolv as an icon by the clock — the page at `http://127.0.0.1:5500/dossier.html`, the database created and migrated by itself, your scripts' runner hidden. `startup` / `startup off` for starting with Windows. |
+| `Dossier.bat` | ~1 KB | — | The old name, kept so shortcuts and habits keep working: passes straight through to `Resolv.bat`. |
+| `scripts/dossier-serve.bat` | ~1 KB | — | Kept so nothing that points at it breaks: passes through to `Resolv.bat`. |
 | `scripts/open-morning-tabs.bat` | 1.8 KB | demo | Opens the tabs you start the day with, once a day. |
-| `scripts/restart-app-pool.bat` | 1.4 KB | demo | A **parameter template** — the `{{server}}` / `{{pool}}` marks become boxes in Dossier. |
-| `scripts/queue/` | — | required for the runner | The mailbox between Dossier and the runner. |
+| `scripts/restart-app-pool.bat` | 1.4 KB | demo | A **parameter template** — the `{{server}}` / `{{pool}}` marks become boxes in Resolv. |
+| `scripts/queue/` | — | required for the runner | The mailbox between Resolv and the runner. |
 | `backups/` | — | auto | One snapshot per day, 30 kept, **in your workspace folder**. Git-ignored, and never in this repository. `demo/backup-2026-08-28.json` is a sample of the shape. |
-| `favicon.ico`, `logo.png` | — | optional | Your own branding; both fall back to a built-in seal if missing. |
+| `favicon.ico`, `logo.png` | — | optional | The Resolv mark (an R in glossy blue, its stem made of the old D's squares); both fall back to a built-in seal if missing. Replace them with your own and they are picked up. The sources are `art/resolv-logo.svg` (full) and `art/resolv-icon.svg` (for small sizes); the Dossier D is kept as `art/dossier-logo.png` and `art/dossier-favicon.ico`. |
 | `assets/assistant-logo.png`, `assets/assistant-bg.jpg` | — | optional | The assistant's own mark and the picture behind its panel. Each is asked for once when the panel opens and used only if it answers. |
 | `assets/thinking.gif` | 1.5 KB | optional | The animation shown while an answer is on its way, when the pixel set is off. The same file travels inside `dossier.html` as two kilobytes of base64, so a copy on its own still has it; a file here overrides that. |
 | `assets/pixel/*.gif` | 9.7 KB | optional | The pixel set — nine sprites the assistant panel wears when **Pixel art** is on, and seven the desk pet wears. All sixteen also travel inside `dossier.html` as thirteen kilobytes of base64; a file here overrides its copy, one sprite at a time. |
@@ -166,11 +172,11 @@ With the demo copied in you should immediately see:
 | `sql/check-json-paths.py` | ~3 KB | — | Walks every JSON path the loader reads against a workspace holding one of everything. A wrong path loads nothing, quietly. |
 | `scripts/check-bat.py` | ~4 KB | — | The five things that have actually gone wrong in a `.bat`: an argument used as a path (`%1` stops at the first space, and a work folder is `OneDrive - Contoso Ltd`), a redirect on an `if` line (cmd performs it whether the condition holds or not), LF line endings, a byte over 7 bits, a call to PowerShell. |
 | `scripts/dossier-sql.bat` | ~7 KB | optional | The launcher: `init`, `push`, `pull`, `check`, `history`, `find`. Defaults to `(localdb)\MSSQLLocalDB`. |
-| `scripts/dossier-bridge.bat` | ~1 KB | — | Kept so nothing that points at it breaks: passes through to `Dossier.bat`, arguments and all. |
-| `scripts/bridge/DossierBridge.cs` | ~45 KB | optional | Dossier, running: the tray icon and its menu, the page, the database (created, migrated, written, and its history kept), the hidden runner. C# 5 and Windows Forms, so `csc.exe` from the .NET Framework builds it with nothing installed. |
-| `flow/prompt.txt` | ~15 KB | **the assistant's instructions** | What the model reads, with nine places Dossier fills in before every question. Edit it in Notepad and the next question uses it — nothing to change in Power Automate. Your own version goes in your records folder as `dossier-prompt.txt`, where updates never touch it. |
+| `scripts/dossier-bridge.bat` | ~1 KB | — | Kept so nothing that points at it breaks: passes through to `Resolv.bat`, arguments and all. |
+| `scripts/bridge/DossierBridge.cs` | ~45 KB | optional | Resolv, running: the tray icon and its menu, the page, the database (created, migrated, written, and its history kept), the hidden runner. C# 5 and Windows Forms, so `csc.exe` from the .NET Framework builds it with nothing installed. |
+| `flow/prompt.txt` | ~15 KB | **the assistant's instructions** | What the model reads, with nine places Resolv fills in before every question. Edit it in Notepad and the next question uses it — nothing to change in Power Automate. Your own version goes in your records folder as `dossier-prompt.txt`, where updates never touch it. |
 | `flow/embed-prompt.py` | ~1 KB | — | Copies `flow/prompt.txt` into `flow.js`, for a page opened straight from the folder, which cannot read the file beside it. |
-| `flow/check-prompt.js` | ~3 KB | — | Checks `flow/prompt.txt`: every example reply against the validator Dossier uses on real replies, all nine places present, the copy in `flow.js` the same. |
+| `flow/check-prompt.js` | ~3 KB | — | Checks `flow/prompt.txt`: every example reply against the validator Resolv uses on real replies, all nine places present, the copy in `flow.js` the same. |
 | `sql/load-proc.sql` | ~14 KB | optional | `dbo.LoadWorkspace` — the only code that writes the tables, called by both the bridge and `push`. |
 
 Everything is a classic script or plain file. There is **no build step, no
@@ -180,8 +186,8 @@ bundler, no package manager and no `node_modules`**.
 
 ## 4. The workspace on disk
 
-A *workspace* is any folder you point Dossier at — and it should be a folder
-of its own, not a git checkout. **Only Dossier writes these files.** Nothing
+A *workspace* is any folder you point Resolv at — and it should be a folder
+of its own, not a git checkout. **Only Resolv writes these files.** Nothing
 else should create, replace or delete one of them, which is exactly what a
 `git pull` into the folder does if the folder is a clone (see
 [§2](#2-quick-start)).
@@ -241,7 +247,7 @@ Rules that matter if anything else writes here:
 }
 ```
 
-`seq` is advisory. On load Dossier recomputes it as
+`seq` is advisory. On load Resolv recomputes it as
 `max(seq, highest numeric part of any task.code)`, so an outside writer that
 adds `D-0099` without touching `seq` will not cause a collision.
 
@@ -277,7 +283,7 @@ adds `D-0099` without touching `seq` will not cause a collision.
 
 ### 5.3 `tasks` — a record
 
-Every field, in the order Dossier writes them:
+Every field, in the order Resolv writes them:
 
 | Field | Type | Meaning |
 |---|---|---|
@@ -336,7 +342,7 @@ Every field, in the order Dossier writes them:
 | `notes` | string | Copied onto the raised record. |
 | `message` | string | If set, the routine only *nudges* you at its time instead of raising a record. |
 | `scripts` | array of string | Script ids to attach — and, with `autoRun`, to execute. |
-| `autoRun` | boolean | `true` = "runs itself": Dossier queues `scripts[0]` at the scheduled minute. Requires a live runner. |
+| `autoRun` | boolean | `true` = "runs itself": Resolv queues `scripts[0]` at the scheduled minute. Requires a live runner. |
 | `paused` | boolean | Skipped entirely while true. |
 
 ### 5.5 `scripts` — a registered script
@@ -602,18 +608,18 @@ selection.
 
 What is saved is Markdown text in the same field as always — readable in
 Notepad, read by the assistant like anything else, and a workspace from an
-older Dossier opens unchanged.
+older Resolv opens unchanged.
 
 ### Three copies, and what each is for
 
 | | Where | Survives | Read it with |
 |---|---|---|---|
 | **The folder** | `dossier.json` beside your records | anything but the file being replaced or deleted | any text editor — this is the record |
-| **This PC remembers** | the browser's own database, on this machine | the folder being wiped, replaced, or pulled over | Dossier, which compares it on every open |
-| **A JSON export** | wherever you put it | a new PC, a new browser, a rebuild | Dossier on the other machine — Import |
+| **This PC remembers** | the browser's own database, on this machine | the folder being wiped, replaced, or pulled over | Resolv, which compares it on every open |
+| **A JSON export** | wherever you put it | a new PC, a new browser, a rebuild | Resolv on the other machine — Import |
 
 **What this PC remembers** is written on every save and read on every open. If
-the folder comes back with fewer records than this machine remembers, Dossier
+the folder comes back with fewer records than this machine remembers, Resolv
 **writes nothing** and puts the difference to you — both numbers, both dates —
 with three ways out: restore what the PC remembers, keep the folder as it is,
 or download the remembered copy as a file and decide later. That check is the
@@ -636,17 +642,17 @@ are files in `tasks/`; copy the folder for those.
 
 ### 4.1 The database as the store
 
-**Double-click `Dossier.bat`.** That is the whole of it. There is no window
-afterwards: Dossier is the icon beside the clock, and its menu is how you
+**Double-click `Resolv.bat`.** That is the whole of it. There is no window
+afterwards: Resolv is the icon beside the clock, and its menu is how you
 open it, see what it is doing, make it start with Windows, and quit it.
 
 | On the icon's menu | |
 |---|---|
-| **Open Dossier** (or double-click the icon) | `http://127.0.0.1:5500/dossier.html` — bookmark it |
+| **Open Resolv** (or double-click the icon) | `http://127.0.0.1:5500/dossier.html` — bookmark it |
 | **Show log** | what it did and why, including why there is no database if there is none |
 | **Start with Windows** | the per-user Run key: no console at login, no administrator, and it shows in Task Manager's Startup tab |
 | **Workspace folder…** | the folder your records are in — used to run your scripts |
-| **Quit Dossier** | stops everything it started, the script runner included |
+| **Quit Resolv** | stops everything it started, the script runner included |
 
 What that one program does:
 
@@ -667,16 +673,16 @@ What that one program does:
   name pulses yellow while a save is on its way and turns green the moment
   SQL Server has it. If a save cannot go through — the bridge restarting,
   the database waking up — your changes stay on screen, the status bar says
-  *not saved yet · trying again in 4s*, and Dossier keeps trying on its own
+  *not saved yet · trying again in 4s*, and Resolv keeps trying on its own
   (2 s, 4 s, 8 s … up to a minute) until it is green again. Click that text
   to try straight away.
 - **runs your scripts, hidden.** The runner for your workspace's `scripts\`
-  folder starts with no window and stops when Dossier quits.
+  folder starts with no window and stops when Resolv quits.
 - **is only ever one.** A second double-click opens the page the first one is
   serving.
 
 `dossier-bridge.bat` and `dossier-serve.bat` still exist, so nothing that
-points at them breaks; both pass straight through to `Dossier.bat`.
+points at them breaks; both pass straight through to `Resolv.bat`.
 
 ### Your work cannot be emptied by accident
 
@@ -738,8 +744,8 @@ the clone. Nor is anything whose name begins with a dot, nor `..`, nor
 | `GET /hello` | the token, to a page the bridge served itself and nothing else |
 | `POST`/`GET`/`DELETE /attachment` | document bytes, as rows |
 
-**What it costs you.** Dossier will not open a database-backed workspace when
-Dossier's database is not answering, and will not write one either — not even the
+**What it costs you.** Resolv will not open a database-backed workspace when
+Resolv's database is not answering, and will not write one either — not even the
 export, because a file ahead of the database is two versions of the truth.
 It says so and offers to try again. That is the trade for having one copy of
 your work instead of two that can disagree.
@@ -839,10 +845,10 @@ At its scheduled minute a routine either:
 - **nudges you** — if `message` is set, no record is created.
 
 With `autoRun:true` it also **queues `scripts[0]`** for the runner. That is the
-one promise Dossier cannot keep by itself, so:
+one promise Resolv cannot keep by itself, so:
 
 > A routine marked *runs itself* while no runner is listening will raise its
-> record on time and then do nothing. Dossier detects this and says so on the
+> record on time and then do nothing. Resolv detects this and says so on the
 > Day sheet rather than letting it look like a broken app.
 
 ### 8.2 Cron
@@ -871,7 +877,7 @@ than surprising.
 
 Two differences from a server cron, both deliberate:
 
-- Dossier raises **one record per day**, timed at that day's first occurrence —
+- Resolv raises **one record per day**, timed at that day's first occurrence —
   a sheet with 96 copies of the same check would be unreadable.
 - The **runner fires the script at every occurrence**, which is where the extra
   precision is actually useful.
@@ -886,12 +892,12 @@ An invalid expression is rejected with the reason, before it is saved.
 ### 9.1 Why there is a runner at all
 
 A page in a browser cannot start a program, and nothing here should need
-installing. So Dossier writes a request into a folder, and a small process of
+installing. So Resolv writes a request into a folder, and a small process of
 yours picks it up, runs the script, and writes the result back — which lands
 in that record's work log.
 
 **No PowerShell.** The runner is `scripts\dossier-runner.bat`. Everything
-passed between Dossier and it is plain text, one value per line: a batch file
+passed between Resolv and it is plain text, one value per line: a batch file
 reads that with `set /p` and writes it with `echo`, and never has to parse or
 escape JSON — which is exactly where these arrangements normally break.
 
@@ -901,11 +907,11 @@ Everything lives in `<workspace>\scripts\queue\`.
 
 | File | Written by | Contents |
 |---|---|---|
-| `<id>.run.txt` | Dossier | Line 1: the script's **file name**. Line 2: its arguments, already quoted. CRLF endings. |
+| `<id>.run.txt` | Resolv | Line 1: the script's **file name**. Line 2: its arguments, already quoted. CRLF endings. |
 | `<id>.out.txt` | the runner | Everything the script printed, stdout and stderr merged. |
 | `<id>.done.txt` | the runner | Line 1: the exit code. Its *existence* is the completion signal. |
 | `.runner.txt` | the runner | Line 1: the `scripts` folder it is watching. Line 2: the local date and time. Rewritten about every 10 seconds. |
-| `.<id>.txt` | Dossier | A marker meaning "this scheduled slot has already been queued", so a routine cannot double-fire. |
+| `.<id>.txt` | Resolv | A marker meaning "this scheduled slot has already been queued", so a routine cannot double-fire. |
 
 Request ids:
 
@@ -914,14 +920,14 @@ Request ids:
 
 The sequence:
 
-1. Dossier writes `<id>.run.txt`.
+1. Resolv writes `<id>.run.txt`.
 2. The runner sees it on its next pass — it loops about once a second.
 3. **It deletes the request before running it** — so killing the window
    mid-script cannot make the job run again on restart.
 4. It validates the name (see below), runs it from inside `scripts\` with
    output redirected to `<id>.out.txt`.
 5. It writes the exit code to `<id>.done.txt`.
-6. Dossier polls every 250 ms for up to 60 seconds, then appends the first
+6. Resolv polls every 250 ms for up to 60 seconds, then appends the first
    4,000 characters of output to the record's work log and stamps `started` if
    it was not already set.
 
@@ -945,7 +951,7 @@ To start it at every logon: put the workspace's full path into
 **Menu → Scripts → Folder path**, then **Menu → Setup → Running a script →
 Copy the schtasks line** and run that once.
 
-Dossier tells you the truth about it at all times. The footer reads `runner on`
+Resolv tells you the truth about it at all times. The footer reads `runner on`
 or `runner off`, and three states are told apart because the fix differs:
 
 | State | Meaning |
@@ -1114,7 +1120,7 @@ always proposes and waits, `nav` moves the app, `social` is conversation.
 | `clock` | The time | *the time* |
 | `dateToday` | The date | *what is the date* |
 | `howTo` | How to do something | *how do i* |
-| `about` | About Dossier | *what is this* |
+| `about` | About Resolv | *what is this* |
 | `steps` | What is left to do | *what is left* |
 | `why` | Why it is stuck | *why is* |
 | `history` | What happened on it | *what happened* |
@@ -1376,7 +1382,7 @@ testable on its own.
 
 The local assistant ([§10](#10-the-assistant-chatjs)) answers from your own
 records with no network and no model. This is the other route, and it is the
-only feature in Dossier that sends anything anywhere. It is **off until you
+only feature in Resolv that sends anything anywhere. It is **off until you
 paste in an endpoint URL and switch it on**, in
 **Menu → Setup → Ask through Power Automate**.
 
@@ -1395,7 +1401,7 @@ redirects rather than following one to a host you did not choose.
 
 ### The exchange
 
-Dossier posts one JSON object — your message, the date, the last few turns,
+Resolv posts one JSON object — your message, the date, the last few turns,
 your workspace's vocabulary, a slice of your records, and `can`: the full list
 of actions the flow may ask for, generated from the running code. The flow
 returns `say`, `ask`, and `actions`.
@@ -1452,7 +1458,7 @@ them all — editable in place, with how often each has been asked for.
 ### The prompt is a file, not a Power Automate setting
 
 The assistant's instructions are **`flow/prompt.txt`**. Before every question
-Dossier reads it, fills in the workspace, the conversation, your notes and
+Resolv reads it, fills in the workspace, the conversation, your notes and
 what you attached, and sends the finished text as one field, `prompt`. The
 prompt action in your flow holds nothing but that one input
 (`body('Parse_JSON')?['prompt']`), so **changing how the assistant behaves is
@@ -1475,14 +1481,14 @@ on this PC, so nothing in Power Automate changes:
   them, and the flow writes them with the `learn` action. **Setup → What I
   have learned about you** lists them; ✕ forgets one.
 - **The daily look back.** At noon (the time is yours to set), while you are at
-  lunch, Dossier sends the flow everything since the last look: records closed
+  lunch, Resolv sends the flow everything since the last look: records closed
   and how they were resolved, records raised and by whom, the conversations,
   and every answer you marked *not what I meant*. What comes back — lessons,
   resolutions worth keeping, draft runbooks for problems that keep recurring —
   is kept, and reported in a conversation called **What I learned** with one
   question it would like you to answer. Anything that would change a system
   profile or a record waits there as a button; nothing like that happens by
-  itself. Missed noon because Dossier was closed? It runs the next time it is
+  itself. Missed noon because Resolv was closed? It runs the next time it is
   open. A morning with nothing in it costs no call.
 - **👍 / 👎 under every answer.** A thumb down asks for one line — what it
   should have said. That line is kept as a `[correction]` lesson, so the next
@@ -1728,7 +1734,7 @@ will actually honour:
 purpose:
 
 - **`settings.flow` — the endpoint URL.** A flow that could rewrite the address
-  Dossier posts to could point it somewhere else of its own choosing, and
+  Resolv posts to could point it somewhere else of its own choosing, and
   nothing downstream would notice. It is a credential — see *Switching it on*,
   below — so no action reaches it. This holds *even with confirmation turned
   off*: the refusal is in the executor, not in the dialogue.
@@ -1754,7 +1760,7 @@ is the normal case, because you are the one who knows who it goes to, and a
 line that silently is not there reads as a bug rather than as a blank to fill
 in.
 
-**Nothing is sent.** Dossier has no mail credentials, no outbound connection
+**Nothing is sent.** Resolv has no mail credentials, no outbound connection
 and no CSP permission to make one, and it does not pretend otherwise — the
 draft is text until you send it yourself. That is also why `draftEmail` counts
 as a read and does not sit behind a confirmation: writing you a draft changes
@@ -1774,9 +1780,9 @@ you do.
 1. **No Response action** in the flow, so it never answers.
 2. **No `Access-Control-Allow-Origin: *`** header on that Response — the flow
    runs perfectly, the run history says success, and the browser still refuses
-   to let Dossier read the reply.
+   to let Resolv read the reply.
 
-Both look identical from the outside ("Failed to fetch"), so Dossier tells
+Both look identical from the outside ("Failed to fetch"), so Resolv tells
 them apart: after a failure it retries opaquely, and if the host answered
 that way it reports the missing header **by name** instead of guessing.
 
@@ -1840,7 +1846,7 @@ Every phrase in the interface is a key, resolved through `lang/<culture>.xml`:
 - `name` is the key, `source` is the English, `value` is the translation.
 - **Leave a `value` empty and that phrase stays English** — translating in
   passes is fine, and a half-finished file is never a broken interface.
-- `{p0}`, `{name}` are values Dossier drops in. Keep them exactly, but move
+- `{p0}`, `{name}` are values Resolv drops in. Keep them exactly, but move
   them wherever the sentence needs.
 - Save the file, then **Menu → Appearance → Reload**.
 
@@ -1874,9 +1880,9 @@ To add a language: copy `en.xml` to `lang/<culture>.xml`, change `culture` and
 
 ---
 
-## 15. Automating Dossier from outside
+## 15. Automating Resolv from outside
 
-Dossier has **no API and no server** — on purpose. The integration surface is
+Resolv has **no API and no server** — on purpose. The integration surface is
 the folder: a JSON file you can read and write, and a queue directory that
 already accepts requests from anything that can write a text file.
 
@@ -1886,7 +1892,7 @@ run scripts without corrupting anything.
 
 ### 15.1 The one rule that matters
 
-> **Dossier rewrites the whole of `dossier.json` when it saves.** It saves 700 ms
+> **Resolv rewrites the whole of `dossier.json` when it saves.** It saves 700 ms
 > after any change, and on `Ctrl`+`S`. It reads the file **once**, when the
 > folder is attached.
 
@@ -1894,12 +1900,12 @@ So there is no merge and no file locking. Two safe patterns, one unsafe one:
 
 | Pattern | Safe? |
 |---|---|
-| Write `dossier.json` **while the Dossier tab is closed** | ✅ yes — it is read fresh on next attach |
-| Write only into `scripts/queue/` and `tasks/<folder>/` | ✅ yes — Dossier never rewrites those wholesale |
+| Write `dossier.json` **while the Resolv tab is closed** | ✅ yes — it is read fresh on next attach |
+| Write only into `scripts/queue/` and `tasks/<folder>/` | ✅ yes — Resolv never rewrites those wholesale |
 | Read `dossier.json` at any time | ✅ yes |
 | Write `dossier.json` **while the tab is open** | ❌ your write is lost at the next save |
 
-If an automation must add records while someone might have Dossier open, prefer
+If an automation must add records while someone might have Resolv open, prefer
 a **drop folder** of your own that a person imports, or write at a time the tab
 is known to be closed (overnight, a logon task).
 
@@ -1942,7 +1948,7 @@ Notes for whoever writes the queries:
 ### 15.3 Writing work in
 
 If you add a record, produce **every** field in [§5.3](#53-tasks--a-record).
-Dossier normalises what it loads, but an automation that omits `log`, `files`
+Resolv normalises what it loads, but an automation that omits `log`, `files`
 or `tags` produces records that behave subtly differently from hand-made ones.
 
 ```powershell
@@ -1997,7 +2003,7 @@ Rules for a writer:
 
 ### 15.4 Running a script from outside
 
-You do not need Dossier for this at all. The runner takes requests from
+You do not need Resolv for this at all. The runner takes requests from
 anything that can write two lines of text.
 
 ```powershell
@@ -2059,7 +2065,7 @@ committing to an answer.
 
 ```
 BEFORE WRITING dossier.json
-  [ ] the Dossier tab is closed
+  [ ] the Resolv tab is closed
   [ ] a dated copy exists in backups/
   [ ] the file parses as JSON and app == "dossier"
 
@@ -2163,7 +2169,7 @@ away, because 93% of the test half contained a phrase that had been added to
 the vocabulary verbatim. A benchmark you tuned against stops being a benchmark.
 
 The from-scratch model experiment is also worth stating plainly: training a
-classifier on Dossier's own generated corpus reached **38.8%** on unseen
+classifier on Resolv's own generated corpus reached **38.8%** on unseen
 phrasing families, against `chat.js`'s **97.1%** on the same split. Writing a
 model from scratch was tried, measured, and rejected on the numbers.
 
@@ -2175,16 +2181,16 @@ model from scratch was tried, measured, and rejected on the numbers.
   inside the browser, which is theirs to clear; export a copy now and then.
   Scripts cannot run from a browser store, since there is no folder for the
   runner to watch.
-- **Notifications need `http://`**, not `file://`. Start Dossier with
-  `Dossier.bat`, which hands the page out from `127.0.0.1`.
-- **The daily look back needs Dossier open** at some point after the time set.
+- **Notifications need `http://`**, not `file://`. Start Resolv with
+  `Resolv.bat`, which hands the page out from `127.0.0.1`.
+- **The daily look back needs Resolv open** at some point after the time set.
   It is the page that sends it; with every tab closed all day, it waits for
-  the next time Dossier is open after that time.
-- **With the tab closed, nothing is queued.** Dossier schedules its own
+  the next time Resolv is open after that time.
+- **With the tab closed, nothing is queued.** Resolv schedules its own
   automatic runs, so a routine marked *runs itself* needs the tab open *and* a
   live runner. For something that must fire regardless of whether anyone is
   looking, point Windows Task Scheduler straight at your `.bat` — it needs
-  nothing from Dossier.
+  nothing from Resolv.
 - **The batch runner has no single-instance guard and no per-script timeout.**
   Two runner windows open on the same folder will both claim requests, and a
   script that hangs blocks the queue behind it until you close the window.
@@ -2207,7 +2213,7 @@ model from scratch was tried, measured, and rejected on the numbers.
 
 | Term | Meaning |
 |---|---|
-| **Workspace** | The folder Dossier is pointed at. Holds `dossier.json` and everything else. |
+| **Workspace** | The folder Resolv is pointed at. Holds `dossier.json` and everything else. |
 | **Record** | One piece of work. Called `tasks` in the JSON, *record* everywhere a person can see. |
 | **Code** | A record's human reference, `D-0001`. |
 | **Live** | Status `open`, `processing` or `blocked` — anything not finished. |
@@ -2216,8 +2222,8 @@ model from scratch was tried, measured, and rejected on the numbers.
 | **Script** | A `.bat` registered in `dossier.json` and living in `scripts\`. |
 | **Parameter** | A `{{mark}}` in a script, which becomes a box on any record it is attached to. |
 | **The runner** | `dossier-runner.bat`, watching `scripts\queue\`. |
-| **Queue** | `scripts\queue\` — the plain-text mailbox between Dossier and the runner. |
-| **Heartbeat** | `.runner.txt`, rewritten every ~10 seconds so Dossier knows the runner is alive. |
+| **Queue** | `scripts\queue\` — the plain-text mailbox between Resolv and the runner. |
+| **Heartbeat** | `.runner.txt`, rewritten every ~10 seconds so Resolv knows the runner is alive. |
 | **Intent** | One of the 79 questions the assistant can answer. |
 | **Slot** | A value read out of a sentence — a system, a person, a date range. |
 | **Modifier** | A condition hung off a question — *except*, *only*, *more than*. |
@@ -2230,6 +2236,6 @@ model from scratch was tried, measured, and rejected on the numbers.
 
 ---
 
-*Dossier is one HTML file, some sidecar scripts, and a folder. That is the
+*Resolv is one HTML file, some sidecar scripts, and a folder. That is the
 whole architecture, and it is the point: in ten years the folder will still
 open, whatever happened to this app.*

@@ -3456,9 +3456,9 @@ intent("identity", {
     const api = A.api;
     const n = api.tasks.length;
     return {
-      say: say(["I'm the assistant built into Dossier. Not a person, and not a language model either.",
-                "I'm part of Dossier — no model behind me, and no connection to anything.",
-                "I'm Dossier's assistant. Nothing clever: arithmetic over your own records."],
+      say: say(["I'm the assistant built into Resolv. Not a person, and not a language model either.",
+                "I'm part of Resolv — no model behind me, and no connection to anything.",
+                "I'm Resolv's assistant. Nothing clever: arithmetic over your own records."],
                {}, A.norm),
       note: "Everything I say comes from counting what's in this workspace" +
             (n ? " — " + qty(n, "record") + " at the moment" : "") + ", plus a set of " +
@@ -3468,7 +3468,7 @@ intent("identity", {
             "cannot hold a conversation about anything outside your work.\n\n" +
             "That also means I can't invent an answer. If I don't know, I say so.",
       chips:[{ label:"What can you do", act:{ kind:"say", text:"what can you do" } },
-             { label:"What is Dossier", act:{ kind:"say", text:"what is dossier" } }]
+             { label:"What is Resolv", act:{ kind:"say", text:"what is resolv" } }]
     };
   }
 });
@@ -3807,7 +3807,7 @@ const GUIDE = [
     words:"script scripts bat batch automation automate runner execute run powershell",
     where:"the scripts folder in your workspace",
     how:["Drop the .bat file into the scripts folder inside your workspace folder.",
-         "Open Menu → Scripts and press Rescan; Dossier picks up anything new.",
+         "Open Menu → Scripts and press Rescan; Resolv picks up anything new.",
          "Attach it to a record from that record's Scripts section, then press Run.",
          "For it to actually execute rather than just hand you the command line, dossier-runner.bat has to be running."],
     tip:"Ask me \"what scripts do I have\" to see the ones it already knows about." },
@@ -3836,14 +3836,14 @@ const GUIDE = [
     how:["Press Choose workspace folder and pick a folder on your PC.",
          "Everything lives there as ordinary files: dossier.json for the records, tasks/ for attachments, scripts/, lang/ and backups/.",
          "It saves as you work, and keeps 30 daily backups in backups/.",
-         "Nothing is uploaded anywhere — Dossier makes no network calls at all."],
+         "Nothing is uploaded anywhere — Resolv makes no network calls at all."],
     tip:"Until you pick a folder, records only exist in the browser tab." },
 
   { id:"chase", name:"chasing someone",
     words:"chase chasing chased waiting wait vendor party follow followup nudge remind them",
     where:"a record's Waiting on someone else section",
     how:["On the record, open Waiting on someone else and set who has it and why.",
-         "Dossier then counts the days and tells you when they have gone quiet for longer than that person usually takes.",
+         "Resolv then counts the days and tells you when they have gone quiet for longer than that person usually takes.",
          "Press Chase them to log a chase; press They came back to clear it."],
     tip:"Ask me \"who has gone quiet\" and I will tell you who to chase first." },
 
@@ -3860,7 +3860,7 @@ const GUIDE = [
     where:"Menu → Setup → Holidays and festivals",
     how:["Open Menu → Setup → Holidays and festivals.",
          "Paste a whole year as JSON, or add a date range in one go rather than one day at a time.",
-         "Dossier then skips them when it works out target dates."],
+         "Resolv then skips them when it works out target dates."],
     tip:"" },
 
   { id:"language", name:"the language",
@@ -3958,13 +3958,13 @@ intent("howTo", {
 });
 
 intent("about", {
-  kind:"read", label:"About Dossier",
+  kind:"read", label:"About Resolv",
   /* "this application" is this application; "which application gets raised
      most" is one of the systems you look after. The determiner tells them
      apart, and nothing else does. */
   probe(mw, norm){
     return /\b(?:this|the) (?:app|application|thing|tool|program|software|system)\b/.test(norm)
-        || /\bdossier\b/.test(norm) ? 14 : 0;
+        || /\b(?:dossier|resolv)\b/.test(norm) ? 14 : 0;
   },
   /* nothing in a workspace is called "dossier" except the application */
   /* "this application" is Dossier; "applications" are the systems you look
@@ -3986,9 +3986,9 @@ intent("about", {
     api.tasks.forEach(x => { if (x.system) sys[x.system] = (sys[x.system] || 0) + 1; });
     const top = Object.keys(sys).sort((a, b) => sys[b] - sys[a]).slice(0, 3);
     return {
-      say: say(["Dossier is a record of your support work — everything you are asked to do, what you did about it, and what is still owed.",
+      say: say(["Resolv is a record of your support work — everything you are asked to do, what you did about it, and what is still owed.",
                 "It is where your support work is written down: what came in, what you did, and what is still outstanding.",
-                "Dossier keeps track of application-support work — the jobs, who asked, what you ran, and what is still open."],
+                "Resolv keeps track of application-support work — the jobs, who asked, what you ran, and what is still open."],
                {}, A.norm),
       note: (n
         ? "Right now it holds " + qty(n, "record") + ", " + live + " of them still live" +

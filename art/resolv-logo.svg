@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" width="1000" height="1000">
+  <defs>
+    <linearGradient id="face" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#F4F8FF"/>
+      <stop offset="0.35" stop-color="#B9D3FF"/>
+      <stop offset="0.7" stop-color="#3F86F5"/>
+      <stop offset="1" stop-color="#0B3FB0"/>
+    </linearGradient>
+    <linearGradient id="deep" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#DCE9FF"/>
+      <stop offset="0.45" stop-color="#4A8EF7"/>
+      <stop offset="1" stop-color="#0A2F8F"/>
+    </linearGradient>
+    <linearGradient id="pix" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#9FD0FF"/>
+      <stop offset="0.5" stop-color="#1E7BFF"/>
+      <stop offset="1" stop-color="#0A45C8"/>
+    </linearGradient>
+    <linearGradient id="shine" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.85"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </linearGradient>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="9" result="b"/>
+      <feFlood flood-color="#2F8BFF" flood-opacity="0.95"/>
+      <feComposite in2="b" operator="in" result="g"/>
+      <feMerge><feMergeNode in="g"/><feMergeNode in="g"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <g filter="url(#glow)">
+    <!-- the top bar and the bowl: one ribbon, cut on the slant at the left like the D -->
+    <path d="M150 160 L585 160 C745 160 835 250 835 380 C835 505 750 590 610 598
+             L470 600 L470 478 L598 476 C665 474 705 438 705 382 C705 322 662 288 590 288
+             L262 288 Z"
+          fill="url(#face)" stroke="#E8F2FF" stroke-width="5" stroke-linejoin="round"/>
+    <!-- a highlight along the top edge of the ribbon -->
+    <path d="M190 172 L585 172 C700 172 790 225 815 318" fill="none" stroke="url(#shine)" stroke-width="10" stroke-linecap="round" opacity="0.8"/>
+
+    <!-- the leg: a slanted blade, the D's bottom bar turned down and out -->
+    <path d="M520 598 L668 598 L880 850 L728 850 Z" fill="url(#deep)" stroke="#E8F2FF" stroke-width="5" stroke-linejoin="round"/>
+
+    <!-- the stem, made of the D's squares: solid at the top, breaking up towards the bottom -->
+    <rect x="300" y="330" width="130" height="270" rx="26" fill="url(#deep)" stroke="#E8F2FF" stroke-width="5"/>
+    <rect x="300" y="628" width="130" height="92" rx="18" fill="url(#pix)" stroke="#CFE4FF" stroke-width="4"/>
+    <rect x="318" y="746" width="94" height="94" rx="14" fill="url(#pix)" stroke="#CFE4FF" stroke-width="4"/>
+    <rect x="160" y="330" width="96" height="120" rx="16" fill="url(#face)" stroke="#E8F2FF" stroke-width="4"/>
+    <rect x="160" y="484" width="96" height="96" rx="14" fill="url(#pix)" stroke="#CFE4FF" stroke-width="4"/>
+    <rect x="186" y="620" width="70" height="70" rx="12" fill="url(#pix)" stroke="#CFE4FF" stroke-width="4" opacity="0.9"/>
+  </g>
+</svg>

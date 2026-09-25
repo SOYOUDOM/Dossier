@@ -1,4 +1,4 @@
-# ServiceNow and Dossier
+# ServiceNow and Resolv
 
 For an incident manager: getting your incident history in, what the app works
 out from it, and how to connect the API when you have access.
@@ -11,7 +11,7 @@ idea before you spend political capital on a service account.
 
 ## The one rule
 
-**Dossier never calls ServiceNow.** Its content-security policy is
+**Resolv never calls ServiceNow.** Its content-security policy is
 `connect-src 'none'` — it cannot open a network connection, by design, and that
 is not being changed. Everything from ServiceNow arrives one of two ways:
 
@@ -137,17 +137,17 @@ what gets flagged.
 
 ## Step 4 — A daily or weekly report
 
-Dossier cannot run itself. It is a file on your machine with no scheduler, and
+Resolv cannot run itself. It is a file on your machine with no scheduler, and
 it only speaks when you ask it something.
 
 **Power Automate is where "every morning" lives.** A scheduled flow that mails
-you the review needs no Dossier involvement at all:
+you the review needs no Resolv involvement at all:
 
 1. **Recurrence** — daily at 08:00, or Monday at 08:00
 2. **ServiceNow → List Records** (or the HTTP call in step 6), incidents
    opened in the period
 3. Your AI prompt action, with the incident rows and the same instruction you
-   use in Dossier
+   use in Resolv
 4. **Send an email**
 
 For the review to be worth reading, give that prompt the same rules as §9f2 of
@@ -207,7 +207,7 @@ Three things that catch people out:
   limit is your gateway timeout. Page with `sysparm_offset` for large ranges
 
 Put the credentials in a **Power Automate connection**, not in the URL, and
-never in Dossier: the app has no business holding a ServiceNow password, and
+never in Resolv: the app has no business holding a ServiceNow password, and
 its settings file is exactly the kind of thing that gets mailed around.
 
 ### Where the result goes
@@ -219,7 +219,7 @@ matched runbook. The identifiers in the question already arrive as
 That is the highest-value use of the API, and it needs one record, not a
 thousand.
 
-For **the history**, keep using the import. A flow that hands Dossier a
+For **the history**, keep using the import. A flow that hands Resolv a
 thousand incidents to store has to get them through the same message channel
 as everything else, and there is no gain over a file you export once a month.
 
@@ -233,7 +233,7 @@ In rough order of value for the effort:
    and it is what turns "here is the procedure" into "INC0012301 says they
    tried three group policies — that is the group-policy variant".
 2. **Write a work note back to ServiceNow** when you close a record in
-   Dossier. Needs write access, which is a longer conversation.
+   Resolv. Needs write access, which is a longer conversation.
 3. **Mine `kb_knowledge` into runbooks.** Your KB articles are already
    one-topic-per-article, which is the shape a runbook wants — a better
    decomposition source than Word files. See

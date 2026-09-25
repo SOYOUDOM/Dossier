@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>Dossier flow relay</title>
+<title>Resolv flow relay</title>
 
 <!-- ══════════════════════════════════════════════════════════════════════
      THE ONE PAGE ALLOWED OUT
@@ -48,7 +48,7 @@
 </style>
 </head>
 <body>
-<h1>Dossier flow relay</h1>
+<h1>Resolv flow relay</h1>
 <div id="say">idle</div>
 <div id="log"></div>
 
@@ -207,7 +207,7 @@ async function send(opts){
 const PROBE_BODY = JSON.stringify({
   dossier: 1,
   probe: true,
-  why: "Reachability check from Dossier, not a question. Answer 200 and stop."
+  why: "Reachability check from Resolv, not a question. Answer 200 and stop."
 });
 
 async function probe(url, ms){

@@ -6,6 +6,32 @@ holds — which is what to paste into a bug report.
 
 ---
 
+## 4.8.0 - 2026-09-25
+
+**Dossier is now Resolv.**
+
+- **Everything you see says Resolv**: the title and the header, the assistant
+  ("Resolv Assistant", "Ask Resolv..."), every message and hint, the build
+  line, Windows notifications, the tray icon's menu, tooltip and messages
+  ("Open Resolv", "Quit Resolv"), the log window, the prompt ("the assistant
+  inside Resolv"), the flow relay, and the docs.
+- **A new mark**: an R in the same glossy blue as the D, its stem built from
+  the D's squares - `logo.png`, and a `favicon.ico` with 16, 24, 32, 48 and
+  256 px sizes, so the browser tab and the tray icon are sharp. Drawn as SVG
+  (`art/resolv-logo.svg`, `art/resolv-icon.svg`); the D is kept in `art/`.
+- **Resolv.bat starts it.** `Dossier.bat` is still there and passes straight
+  through, so shortcuts keep working. The first start after updating rebuilds
+  the tray program (it says so); quit the running one from its icon first.
+- **Nothing that holds your work was renamed**: `dossier.html`, `dossier.json`,
+  `.dossier-store.json`, `dossier-prompt.txt`, the SQL Server database
+  `Dossier`, the Windows start-up entry and the runner's scheduled task keep
+  their names, so no data moves and nothing is registered twice. The Power
+  Automate flow is untouched.
+- A language file written before the rename still says "Dossier" in places;
+  the app shows "Resolv" there anyway. "what is Resolv" is understood by the
+  built-in assistant (and "what was resolved today" still means your closed
+  records).
+
 ## 4.7.0 - 2026-09-25
 
 **Answers that explain, not just state.**

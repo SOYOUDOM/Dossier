@@ -1,6 +1,6 @@
 # The BAU library
 
-How Dossier holds your support guidelines, how the assistant uses them, and
+How Resolv holds your support guidelines, how the assistant uses them, and
 how a team shares them when there is no shared drive.
 
 This is the companion to [`POWER-AUTOMATE.md`](POWER-AUTOMATE.md) (the flow

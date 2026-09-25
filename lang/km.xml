@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  Dossier language file.
+  Resolv language file.
   Fill in each value="" using the source="" beside it as the English.
   Leave a value empty and that phrase stays English — translating in
-  passes is fine. {name} in a phrase is a number or word Dossier drops
+  passes is fine. {name} in a phrase is a number or word Resolv drops
   in; keep it exactly as it is, but move it wherever the sentence needs.
   Save the file, then press Reload in Menu → Appearance.
 -->
@@ -15,7 +15,7 @@
     <text name="Week" source="Week" value="" />
     <text name="Library" source="Library" value="" />
     <text name="Insight" source="Insight" value="" />
-    <text name="AppName" source="Dossier" value="" />
+    <text name="AppName" source="Resolv" value="" />
     <text name="AppTagline" source="Support operations record" value="" />
     <text name="SearchEverything" source="Search everything…" value="" />
     <text name="TodaysCompletion" source="Today's completion" value="" />
@@ -70,7 +70,7 @@
     <text name="Group_ComingUp" source="Coming up" value="" />
     <text name="Group_ClosedToday" source="Closed today" value="" />
     <text name="NothingOnTheSheet" source="Nothing on the sheet" value="" />
-    <text name="NothingOnTheSheetHint" source="Type what you're working on in the bar above. Try &lt;b&gt;check nightly job failures p2 @Imaging 30m today&lt;/b&gt; — the pieces get pulled out automatically, and Dossier starts learning your patterns from the first record." value="" />
+    <text name="NothingOnTheSheetHint" source="Type what you're working on in the bar above. Try &lt;b&gt;check nightly job failures p2 @Imaging 30m today&lt;/b&gt; — the pieces get pulled out automatically, and Resolv starts learning your patterns from the first record." value="" />
     <text name="Foot_Records" source="records" value="" />
     <text name="Foot_ClosedToday" source="closed today" value="" />
     <text name="Foot_Documents" source="documents" value="" />
@@ -90,7 +90,7 @@
     <text name="Tab_Help" source="Help" value="" />
     <text name="Language" source="Language" value="" />
     <text name="LanguageHeading" source="Language" value="" />
-    <text name="LanguageIntro" source="Phrases live in &lt;b&gt;lang/&lt;/b&gt; in your workspace, one XML file per language. Dossier reads every file it finds there when it opens." value="" />
+    <text name="LanguageIntro" source="Phrases live in &lt;b&gt;lang/&lt;/b&gt; in your workspace, one XML file per language. Resolv reads every file it finds there when it opens." value="" />
     <text name="LanguageAddHint" source="Type a code and press &lt;b&gt;Write or top up a language file&lt;/b&gt;. A new file lists every phrase with a blank value; an existing one keeps every translation you have already done and adds only what is new. Anything left blank stays English, so you can translate in passes." value="" />
     <text name="WriteLanguageFile" source="Write or top up a language file" value="" />
     <text name="RefreshLanguages" source="Reload the language files" value="" />
@@ -107,12 +107,12 @@
     <text name="ALaptopRebuild" source="a laptop rebuild.&lt;/p&gt;" value="" />
     <text name="ANameRunsUntilAWord" source="A name runs until a word that cannot be part of one — &lt;code&gt;~Sok Dara today&lt;/code&gt; is Sok Dara, due today. " value="" />
     <text name="APageInABrowserCannot" source="A page in a browser cannot start a program, and a browser that could would be one you " value="" />
-    <text name="APageInABrowserCannot2" source="A page in a browser cannot start a program. So Dossier writes the request to a file instead, " value="" />
+    <text name="APageInABrowserCannot2" source="A page in a browser cannot start a program. So Resolv writes the request to a file instead, " value="" />
     <text name="APublicHolidayAnythingDueToday" source=" — a public holiday. Anything due today was scheduled onto a day off." value="" />
     <text name="ARecordCannotWaitForItself" source="A record cannot wait for itself" value="" />
     <text name="ARecordIsOneOccurrenceThe" source="A record is one occurrence. The thing that keeps producing them is a &lt;b&gt;problem&lt;/b&gt;, and six " value="" />
     <text name="ARecordItWasWaitingFor" source="A record it was waiting for was deleted" value="" />
-    <text name="ARecordWithNoDueDate" source="A record with no due date never appears in Day and never counts as Slipping, so Dossier fills one " value="" />
+    <text name="ARecordWithNoDueDate" source="A record with no due date never appears in Day and never counts as Slipping, so Resolv fills one " value="" />
     <text name="ARoutineCanNameAFile" source="A routine can name a file from &lt;b&gt;scripts/&lt;/b&gt;. The record it raises each morning then arrives " value="" />
     <text name="ARoutineSetToRunOn" source="A routine set to &lt;b&gt;run on its own&lt;/b&gt; needs nobody at all. The runner reads the routines out " value="" />
     <text name="ASetPickedFromInsight" source="a set picked from Insight" value="" />
@@ -185,7 +185,7 @@
     <text name="ChooseWorkspaceFolder" source="Choose workspace folder…" value="" />
     <text name="ChooseWorkspaceFolder2" source="Choose workspace folder" value="" />
     <text name="Cleared" source="Cleared" value="" />
-    <text name="ClickOneAndDossierWritesThe" source="Click one and Dossier writes the case: the dates, the cost, every occurrence, and what you did " value="" />
+    <text name="ClickOneAndDossierWritesThe" source="Click one and Resolv writes the case: the dates, the cost, every occurrence, and what you did " value="" />
     <text name="ClickOneForTheCaseTo" source=" — click one for the case to fix it properly&lt;/div&gt;" value="" />
     <text name="ClickToApplyIgnoreToDismiss" source="Click to apply, ignore to dismiss.&lt;/div&gt;&lt;/div&gt;" value="" />
     <text name="ClipboardAndRecordsTheChaseAgainst" source="clipboard and records the chase against every record it covered, so the count stays honest.&lt;/p&gt;" value="" />
@@ -250,24 +250,24 @@
     <text name="DayOff" source="day off" value="" />
     <text name="DaySLostWaitingOn" source=" day(s) lost waiting on " value="" />
     <text name="DaySSoFar" source=" day(s) so far" value="" />
-    <text name="DaysARecordCanSitWith" source="Days a record can sit with someone else before Dossier reminds you to chase them.&lt;/p&gt;" value="" />
+    <text name="DaysARecordCanSitWith" source="Days a record can sit with someone else before Resolv reminds you to chase them.&lt;/p&gt;" value="" />
     <text name="DaysLostWaitingOnOthers" source="Days lost waiting on others" value="" />
     <text name="DaysStillMoving" source=" days. Still moving?" value="" />
     <text name="DeleteTheFileToo" source="Delete the file too" value="" />
     <text name="Deleted" source="Deleted " value="" />
     <text name="DeletedTheFoldersStayOnDisk" source=" deleted — the folders stay on disk" value="" />
     <text name="Dependencies" source="Dependencies" value="" />
-    <text name="DeriveThemFromSoDossierAsks" source="derive them from, so Dossier asks you for them rather than guessing and being quietly wrong. " value="" />
+    <text name="DeriveThemFromSoDossierAsks" source="derive them from, so Resolv asks you for them rather than guessing and being quietly wrong. " value="" />
     <text name="DesktopAlertsUnavailableHereInApp" source="Desktop alerts unavailable here — in-app reminders " value="" />
     <text name="DidNotGiveTypeOneOr" source="did not give — type one, or paste a message that names one, and yours wins. A record with " value="" />
     <text name="DiscardsTheCurrentRecords" source="discards the current records" value="" />
     <text name="DocumentsFiled" source="| Documents filed | " value="" />
     <text name="DocumentsTasks" source="Documents (tasks/" value="" />
-    <text name="DossierIsFallingBackToThe" source="Dossier is falling back to the system font.&lt;/p&gt;" value="" />
+    <text name="DossierIsFallingBackToThe" source="Resolv is falling back to the system font.&lt;/p&gt;" value="" />
     <text name="DossierJsonEveryRecordNoteAnd" source="  dossier.json              every record, note and work log
 " value="" />
-    <text name="DossierRemembersYourFolderBrowsersRequire" source="Dossier remembers your folder &lt;b&gt;{p0}&lt;/b&gt;. Browsers require one click before handing access back." value="" />
-    <text name="DossierStillNeverExecutesAnythingA" source="Dossier still never executes anything — a browser cannot, and this one does not try. It hands you " value="" />
+    <text name="DossierRemembersYourFolderBrowsersRequire" source="Resolv remembers your folder &lt;b&gt;{p0}&lt;/b&gt;. Browsers require one click before handing access back." value="" />
+    <text name="DossierStillNeverExecutesAnythingA" source="Resolv still never executes anything — a browser cannot, and this one does not try. It hands you " value="" />
     <text name="DotBad" source="dot bad" value="" />
     <text name="DotWarn" source="dot warn" value="" />
     <text name="DragAFileOntoAnyRecord" source="Drag a file onto any record — a meeting deck, an incident email, a screenshot. It gets copied into " value="" />
@@ -280,7 +280,7 @@
     <text name="EachOfTheseWasClosedOn" source="Each of these was closed on its own, so the cause is still in place. At the rate above, the next {p0} will cost about the same again. Requesting time for a permanent fix." value="" />
     <text name="EachTimeWhichIsUsuallyThe" source="each time — which is usually the proof it was worked around rather than fixed. Copy it into a " value="" />
     <text name="EchoOffRemBuiltByDossier" source="@echo off
-rem Built by Dossier for " value="" />
+rem Built by Resolv for " value="" />
     <text name="Enter" source="Enter" value="" />
     <text name="Estimate" source="Estimate" value="" />
     <text name="EvenTheOnesNotDueA" source="Even the ones not due a chase yet" value="" />
@@ -303,7 +303,7 @@ rem Built by Dossier for " value="" />
     <text name="FiltersCleared" source="Filters cleared" value="" />
     <text name="FiltersResetOnEveryOpen" source="Filters reset on every open" value="" />
     <text name="FiltersWillBeWaitingForYou" source="Filters will be waiting for you next time" value="" />
-    <text name="FinishedAfterDossierStoppedWaiting" source="— finished after Dossier stopped waiting" value="" />
+    <text name="FinishedAfterDossierStoppedWaiting" source="— finished after Resolv stopped waiting" value="" />
     <text name="FixedDatesAddedFor" source=" fixed dates added for " value="" />
     <text name="FixedDatesAddedForTheLunar" source=" fixed dates added for {p0} — the lunar ones are still yours to add" value="" />
     <text name="FocusTheComposeBar" source="Focus the compose bar" value="" />
@@ -350,8 +350,8 @@ rem Built by Dossier for " value="" />
     <text name="IncidentsThatEachTookNinetyMinutes" source="incidents that each took ninety minutes look like six ordinary days until you add them up. " value="" />
     <text name="InsightGroupsRecordsByHowAlike" source="Insight groups records by how alike their titles are and shows the total — how many times, how " value="" />
     <text name="InstructionTheBrowserEnforcesNoFetch" source="instruction the browser enforces: no fetch, no XHR, no WebSocket, no form post. Open F12 → Network and you " value="" />
-    <text name="IntoTheComposeBarAnythingWith" source="into the compose bar — anything with a line break in it, or longer than a line — and Dossier reads " value="" />
-    <text name="IsDossierForgetsWhichFolderIt" source="is Dossier forgets which folder it was, and you point it back. Keep the folder in OneDrive and it survives " value="" />
+    <text name="IntoTheComposeBarAnythingWith" source="into the compose bar — anything with a line break in it, or longer than a line — and Resolv reads " value="" />
+    <text name="IsDossierForgetsWhichFolderIt" source="is Resolv forgets which folder it was, and you point it back. Keep the folder in OneDrive and it survives " value="" />
     <text name="IsThereAnythingYouNeedFrom" source="Is there anything you need from me to move {p0} along? If not, when can I expect " value="" />
     <text name="IsUnblocked" source=" is unblocked — " value="" />
     <text name="ItAddsNothingNewToA" source="It adds nothing new to a record. A step is a work-log entry and a screenshot is an attachment, so a " value="" />
@@ -362,7 +362,7 @@ It already exists in " value="" />
     <text name="ItHasBeenWithYouSince" source="It has been with you since " value="" />
     <text name="ItInsteadOfPastingItThe" source="it instead of pasting it: the ticket number, which of your systems it names, who is asking, how " value="" />
     <text name="ItIsPausedResumeItFirst" source="It is paused — resume it first" value="" />
-    <text name="ItIsRaisedOnceForThe" source="It is raised &lt;b&gt;once for the day it is due&lt;/b&gt;. Close Dossier and open it again and nothing is " value="" />
+    <text name="ItIsRaisedOnceForThe" source="It is raised &lt;b&gt;once for the day it is due&lt;/b&gt;. Close Resolv and open it again and nothing is " value="" />
     <text name="ItLooksOnceASecondAt" source="It looks once a second — at the queue and at your routines both — so &lt;b&gt;$&lt;/b&gt; and " value="" />
     <text name="ItOnlyEverRunsAFile" source="It only ever runs a file that is &lt;b&gt;already in scripts/&lt;/b&gt;. The request names a file, never a " value="" />
     <text name="ItStands" source="it stands" value="" />
@@ -390,8 +390,8 @@ It already exists in " value="" />
     <text name="LinkAWorkspaceFolderFirst" source="Link a workspace folder first" value="" />
     <text name="LinkAWorkspaceFolderFirst2" source="link a workspace folder first" value="" />
     <text name="LinkAWorkspaceFolderFirstThen" source="Link a workspace folder first, then drag files onto a record." value="" />
-    <text name="LinkItAndThisOneMoves" source="Link it and this one moves to Blocked; when the other closes, Dossier reopens it and says so.&lt;/dd&gt;" value="" />
-    <text name="LinkingARecordThatIsStill" source="Linking a record that is still open moves this one to Blocked. When the last one closes, Dossier reopens this by itself and tells you.&lt;/div&gt;" value="" />
+    <text name="LinkItAndThisOneMoves" source="Link it and this one moves to Blocked; when the other closes, Resolv reopens it and says so.&lt;/dd&gt;" value="" />
+    <text name="LinkingARecordThatIsStill" source="Linking a record that is still open moves this one to Blocked. When the last one closes, Resolv reopens this by itself and tells you.&lt;/div&gt;" value="" />
     <text name="ListeningTheDaySheetSaysSo" source="listening, the Day sheet says so rather than leaving you to find out at 8:30.&lt;/p&gt;" value="" />
     <text name="LogThisAnywayOrOpenThat" source="). Log this anyway, or open that one.&lt;/div&gt;" value="" />
     <text name="Logged" source="Logged" value="" />
@@ -476,7 +476,7 @@ It already exists in " value="" />
     <text name="NothingDueToday" source="Nothing due today" value="" />
     <text name="NothingHasComeBackOftenEnough" source="Nothing has come back often enough to call a pattern yet." value="" />
     <text name="NothingHasGoneQuietYetMenu" source="Nothing has gone quiet yet — Menu → Chase everyone waiting to write anyway" value="" />
-    <text name="NothingIsBeingSavedYetPick" source="Nothing is being saved yet. Pick a folder and Dossier keeps every record, note and document there — clearing your browser can never touch it." value="" />
+    <text name="NothingIsBeingSavedYetPick" source="Nothing is being saved yet. Pick a folder and Resolv keeps every record, note and document there — clearing your browser can never touch it." value="" />
     <text name="NothingIsHoldingThisAnyMore" source="
 Nothing is holding this any more." value="" />
     <text name="NothingIsRunningYourScriptsA" source="Nothing is running your scripts. A routine set to &lt;b&gt;run itself&lt;/b&gt; will raise its record on time and then do nothing, because the runner is not started." value="" />
@@ -493,7 +493,7 @@ Nothing is holding this any more." value="" />
     <text name="NothingSelectedToChase" source="Nothing selected to chase" value="" />
     <text name="NowWaitsFor" source=" now waits for " value="" />
     <text name="OccurrenceSPinnedResetClearsIt" source=" occurrence(s) pinned — Reset clears it" value="" />
-    <text name="OfDossierJsonAndAtThe" source="of dossier.json, and at the routine's time it runs the script — &lt;b&gt;whether Dossier is open or " value="" />
+    <text name="OfDossierJsonAndAtThe" source="of dossier.json, and at the routine's time it runs the script — &lt;b&gt;whether Resolv is open or " value="" />
     <text name="OfThemStillOpen" source=" of them {p0} still open." value="" />
     <text name="OfTrackedTime" source=" of tracked time" value="" />
     <text name="OffersToMakeThoseIntoRoutines" source="offers to make those into routines. A problem is the opposite: unplanned, irregular, and not " value="" />
@@ -518,7 +518,7 @@ Nothing is holding this any more." value="" />
     <text name="PartlyFromWhoRaisedItThat" source="Partly from who raised it — that is the pattern in your own records. " value="" />
     <text name="PastItsDueDate" source="past its due date" value="" />
     <text name="PasteItIntoATerminalIt" source="Paste it into a terminal — it starts the runner at every logon" value="" />
-    <text name="PasteItIntoTheComposeBar" source="Paste it into the compose bar with Ctrl+V and Dossier will read it" value="" />
+    <text name="PasteItIntoTheComposeBar" source="Paste it into the compose bar with Ctrl+V and Resolv will read it" value="" />
     <text name="PastedMessage" source="Pasted message" value="" />
     <text name="Pause" source="Pause" value="" />
     <text name="PausedItWillNotRaiseAnything" source="Paused — it will not raise anything" value="" />
@@ -607,7 +607,7 @@ Nothing is holding this any more." value="" />
     <text name="ResumedNextDue" source="Resumed — next due " value="" />
     <text name="ResumedTodaysRecordIsOnThe" source="Resumed — today's record is on the sheet" value="" />
     <text name="ReuseThisWording" source=" · reuse this wording" value="" />
-    <text name="RightsDayPeaceDayThoseFall" source="Rights Day, Peace Day. Those fall on the same date every year, so Dossier can work them out for " value="" />
+    <text name="RightsDayPeaceDayThoseFall" source="Rights Day, Peace Day. Those fall on the same date every year, so Resolv can work them out for " value="" />
     <text name="RoughlyEvery" source=" — roughly every " value="" />
     <text name="RoutineAddedNextDue" source="Routine added — next due " value="" />
     <text name="RoutineAddedTodaysRecordIsOn" source="Routine added — today's record is on the sheet" value="" />
@@ -647,7 +647,7 @@ Nothing is holding this any more." value="" />
     <text name="SetATargetDate" source="Set a target date" value="" />
     <text name="SetTo" source=" set to " value="" />
     <text name="Settings" source="Settings" value="" />
-    <text name="ShouldNotInstallSoDossierWrites" source="should not install. So Dossier writes the request to a file instead, and a small batch file " value="" />
+    <text name="ShouldNotInstallSoDossierWrites" source="should not install. So Resolv writes the request to a file instead, and a small batch file " value="" />
     <text name="ShowAll" source="Show all " value="" />
     <text name="ShowTheLastOnly" source="Show the last 6 only" value="" />
     <text name="Signed" source="Signed " value="" />
@@ -665,7 +665,7 @@ Nothing is holding this any more." value="" />
     <text name="Standup" source="Standup" value="" />
     <text name="StandupNote" source="Standup note" value="" />
     <text name="Start" source="Start" value="" />
-    <text name="StartItDoubleClickScriptsDossier" source="Start it: double-click &lt;b&gt;scripts\dossier-runner.bat&lt;/b&gt;. Its window must say it is watching &lt;b&gt;this&lt;/b&gt; folder — if it names a different path, you have two copies of the workspace and Dossier is pointed at the other one." value="" />
+    <text name="StartItDoubleClickScriptsDossier" source="Start it: double-click &lt;b&gt;scripts\dossier-runner.bat&lt;/b&gt;. Its window must say it is watching &lt;b&gt;this&lt;/b&gt; folder — if it names a different path, you have two copies of the workspace and Resolv is pointed at the other one." value="" />
     <text name="StartTheClock" source="Start the clock" value="" />
     <text name="Status" source="Status    : " value="" />
     <text name="Status2" source="Status" value="" />
@@ -698,13 +698,13 @@ Nothing is holding this any more." value="" />
     <text name="ThatScriptIsAlreadyInThe" source="That script is already in the folder" value="" />
     <text name="The" source="The " value="" />
     <text name="TheBrowserIsNeverToldThe" source="The browser is never told the real path of the folder you picked — that is part of the sandbox. " value="" />
-    <text name="TheBrowserIsNotAllowedTo" source="The browser is not allowed to run anything on your machine, and Dossier does not try. It keeps the file in &lt;b&gt;scripts/&lt;/b&gt;, fills in the blanks, and gives you the command or a ready copy in this record's own folder.&lt;/div&gt;" value="" />
+    <text name="TheBrowserIsNotAllowedTo" source="The browser is not allowed to run anything on your machine, and Resolv does not try. It keeps the file in &lt;b&gt;scripts/&lt;/b&gt;, fills in the blanks, and gives you the command or a ready copy in this record's own folder.&lt;/div&gt;" value="" />
     <text name="TheBrowserWouldNotHandOver" source="The browser would not hand over the clipboard — paste into the box with Ctrl+V instead" value="" />
     <text name="TheCalendarReadsAtTwoZooms" source="The calendar reads at two zooms. &lt;b&gt;Week&lt;/b&gt; is for working — the whole record on the card, " value="" />
     <text name="TheCaseIsOnTheClipboard" source="The case is on the clipboard" value="" />
     <text name="TheClipboardStampsTheScriptAs" source="the clipboard, stamps the script as used, and writes &lt;i&gt;Ran &amp;lt;script&amp;gt;&lt;/i&gt; into the record's " value="" />
     <text name="TheClosedRecordsThisAverageIs" source="The {p0} closed records this average is built from" value="" />
-    <text name="TheCommandForSomethingThatMust" source="the command. For something that must fire at a fixed hour whether or not Dossier is open, that is " value="" />
+    <text name="TheCommandForSomethingThatMust" source="the command. For something that must fire at a fixed hour whether or not Resolv is open, that is " value="" />
     <text name="TheConsoleCouldNotOpenClick" source="The console could not open — click the button again" value="" />
     <text name="TheFileIsLeftAlone" source="the file is left alone" value="" />
     <text name="TheFileStaysInTheFolder" source="the file stays in the folder" value="" />
@@ -722,10 +722,10 @@ Nothing is holding this any more." value="" />
     <text name="TheSignOff" source="the sign-off" value="" />
     <text name="TheSubjectLine" source="the subject line" value="" />
     <text name="TheTeamsOutsideYourPermissionWhen" source="The teams outside your permission. When the agency is not found and the data team has to sync first, " value="" />
-    <text name="TheWaitClockIsEvidenceAnd" source="The wait clock is evidence, and evidence on its own does not move work — so Dossier writes the " value="" />
+    <text name="TheWaitClockIsEvidenceAnd" source="The wait clock is evidence, and evidence on its own does not move work — so Resolv writes the " value="" />
     <text name="TheWholeMessageIsKeptAs" source="The whole message is kept as the notes, so the evidence stays with the record. " value="" />
     <text name="TheWholePathAndSaysWhich" source="the whole path and says which step stopped.&lt;/p&gt;" value="" />
-    <text name="ThenYouPasteItDossierCannot" source="Then you paste it. Dossier cannot execute anything — no page in a browser can, and a file that " value="" />
+    <text name="ThenYouPasteItDossierCannot" source="Then you paste it. Resolv cannot execute anything — no page in a browser can, and a file that " value="" />
     <text name="ThereIsAlsoPasteAMessage" source="There is also &lt;b&gt;Paste a message&lt;/b&gt; beside the compose bar, and Ctrl+V anywhere on the page.&lt;/p&gt;" value="" />
     <text name="TheseAreNotMovingBecauseSomeone" source="These are not moving because someone else has to act first." value="" />
     <text name="TheyAreAllThereAlready" source="They are all there already" value="" />
@@ -760,7 +760,7 @@ Nothing is holding this any more." value="" />
     <text name="TurnATeamsMessageOrA" source="Turn a Teams message or a mail into a record" value="" />
     <text name="Turnaround" source="Turnaround" value="" />
     <text name="Type" source="Type" value="" />
-    <text name="TypeItOnceHereAndEvery" source="Type it once here and every command Dossier copies becomes a full path you can paste straight into a " value="" />
+    <text name="TypeItOnceHereAndEvery" source="Type it once here and every command Resolv copies becomes a full path you can paste straight into a " value="" />
     <text name="TypedInRoutinesRaisesTodaysAgain" source="typed. In Routines, &lt;b&gt;↻&lt;/b&gt; raises today's again for the round you have to do twice, and each " value="" />
     <text name="Unassigned" source="Unassigned" value="" />
     <text name="Unblocked" source="Unblocked · " value="" />
@@ -788,11 +788,11 @@ Nothing is holding this any more." value="" />
     <text name="WaitsFor3" source="Waits for : " value="" />
     <text name="WaitsFor4" source="Waits for" value="" />
     <text name="WarnBefore" source="Warn before" value="" />
-    <text name="WatchesScriptsQueueRunsTheScript" source="watches &lt;b&gt;scripts/queue/&lt;/b&gt;, runs the script, and writes the output back. Dossier picks that " value="" />
+    <text name="WatchesScriptsQueueRunsTheScript" source="watches &lt;b&gt;scripts/queue/&lt;/b&gt;, runs the script, and writes the output back. Resolv picks that " value="" />
     <text name="WatchingPidRoutineSSetTo" source="Watching {p0} (pid {p1}), {p2} routine(s) set to run themselves." value="" />
     <text name="WaterFestivalAreSetAgainstThe" source="Water Festival are set against the Khmer calendar and move every year — there is no formula to " value="" />
     <text name="WayRunDoesInTaskScheduler" source="way Run does in Task Scheduler. If nothing happens, &lt;b&gt;Setup → Test it end to end&lt;/b&gt; walks " value="" />
-    <text name="WebFontsWouldMeanDownloadingFrom" source="A web font would mean fetching from someone else's server, which this app will never do. The Latin faces below are the ones Dossier found already installed on this machine — " value="" />
+    <text name="WebFontsWouldMeanDownloadingFrom" source="A web font would mean fetching from someone else's server, which this app will never do. The Latin faces below are the ones Resolv found already installed on this machine — " value="" />
     <text name="Weekdays" source="Weekdays" value="" />
     <text name="Weekly" source="Weekly" value="" />
     <text name="WhatKeepsComingBackAndWhat" source="What keeps coming back, and what it cost" value="" />
@@ -802,7 +802,7 @@ Nothing is holding this any more." value="" />
     <text name="WhenTheTabIsClosedNothing" source="When the tab is &lt;b&gt;closed&lt;/b&gt;, nothing in it runs; no web page can wake itself up, and the ones that " value="" />
     <text name="WhereEverythingIsStored" source="Where everything is stored" value="" />
     <text name="WhereTheHoursActuallyGo" source="Where the hours actually go" value="" />
-    <text name="WhileDossierIsOpenEvenHidden" source="While Dossier is open — even hidden behind Outlook — it raises real Windows notifications. " value="" />
+    <text name="WhileDossierIsOpenEvenHidden" source="While Resolv is open — even hidden behind Outlook — it raises real Windows notifications. " value="" />
     <text name="Who" source="Who" value="" />
     <text name="WhoAsksTheMost" source="Who asks the most" value="" />
     <text name="WhoRaisedIt" source="Who raised it" value="" />
@@ -810,7 +810,7 @@ Nothing is holding this any more." value="" />
     <text name="WillSeeNothingLeaveThereAre" source="will see nothing leave. There are no fonts, scripts or images loaded from anywhere. The suggestions come " value="" />
     <text name="WindowsKeepsAboveEverythingAndThat" source="Windows keeps &lt;b&gt;above everything&lt;/b&gt;, and that you drag and size like any other. Change status in " value="" />
     <text name="WindowsTaskSchedulersJobGiveThe" source="Windows Task Scheduler's job; give the script a stamp file so it does its work once a day and " value="" />
-    <text name="WindowsToastRemindersWhileDossierIs" source="Windows toast reminders while Dossier is closed" value="" />
+    <text name="WindowsToastRemindersWhileDossierIs" source="Windows toast reminders while Resolv is closed" value="" />
     <text name="WithThatScriptAlreadyAttachedAnd" source="with that script already attached and its command ready to copy — so the round is a click, not a " value="" />
     <text name="WithYouSince" source="With you since " value="" />
     <text name="WorkByType" source="Work by type" value="" />
@@ -991,10 +991,10 @@ Nothing is holding this any more." value="" />
     <text name="NoIWillPressRun" source="No — I will press Run" value="" />
     <text name="YesTheRunnerFiresItAt" source="Yes — the runner fires it at the time above" value="" />
     <text name="ScriptsDossierRunnerPs" source="scripts/dossier-runner.bat" value="" />
-    <text name="FiresItAtThatTimeWhether" source="fires it at that time whether Dossier is open or not —" value="" />
+    <text name="FiresItAtThatTimeWhether" source="fires it at that time whether Resolv is open or not —" value="" />
     <text name="AddRoutine" source="Add routine" value="" />
     <text name="CreateTodaysNow" source="Create today's now" value="" />
-    <text name="DossierDoesNotRunThem" source="Dossier does not run them." value="" />
+    <text name="DossierDoesNotRunThem" source="Resolv does not run them." value="" />
     <text name="APageInABrowserIs" source="A page in a browser is not allowed to start a program on your" value="" />
     <text name="AddScriptFiles" source="Add script files…" value="" />
     <text name="PickUpNewFilesInScripts" source="Pick up new files in scripts/" value="" />
@@ -1004,7 +1004,7 @@ Nothing is holding this any more." value="" />
     <text name="WhereTheCommandsPoint" source="Where the commands point" value="" />
     <text name="BestAvailable" source="Best available (" value="" />
     <text name="Detected" source="detected" value="" />
-    <text name="DossierSupportOperationsRecord" source="Dossier — Support Operations Record" value="" />
+    <text name="DossierSupportOperationsRecord" source="Resolv — Support Operations Record" value="" />
     <text name="ImagingNightlySyncFailedSqlTimeout" source="Imaging nightly sync failed; SQL timeout on GetPendingAsync. Escalated to the DBA team at 02:40." value="" />
     <text name="DIncMs" source="D-0042  INC0012345  02:14:07  →  30,021 ms" value="" />
     <text name="NoExtraFacesWereDetected" source="No extra faces were detected." value="" />
@@ -1102,7 +1102,7 @@ Nothing is holding this any more." value="" />
     <text name="Held" source="Held" value="" />
     <text name="TimeLogged2" source="Time logged" value="" />
     <text name="NothingMatchesTheCurrentFilters" source="Nothing matches the current filters." value="" />
-    <text name="DossierOfflineSupportOperationsRecord" source="Dossier · offline support operations record ·" value="" />
+    <text name="DossierOfflineSupportOperationsRecord" source="Resolv · offline support operations record ·" value="" />
     <text name="OpenedOn" source="opened {p0}" value="" />
     <text name="HidingX" source="hiding {p0}" value="" />
     <text name="NRecords" source="{p0} records" value="" />
@@ -1111,7 +1111,7 @@ Nothing is holding this any more." value="" />
     <text name="LastSeenX" source="last {p0}" value="" />
     <text name="EstimatedAt" source="estimated {p0}" value="" />
     <text name="KhmerText" source="Khmer text" value="" />
-    <text name="BundledWithDossier" source="bundled with Dossier" value="" />
+    <text name="BundledWithDossier" source="bundled with Resolv" value="" />
     <text name="KhmerFontNote" source="Khmer is the one exception. Windows ships only Khmer UI and DaunPenh, and a machine without them draws Khmer as empty boxes — so &lt;b&gt;Noto Sans Khmer&lt;/b&gt; is carried inside this file. It is still not a download: nothing is fetched. Pick another below if you have a Khmer face you prefer." value="" />
     <text name="OnACronSchedule" source="On a cron schedule" value="" />
     <text name="CronExpression" source="Cron expression" value="" />
@@ -1133,7 +1133,7 @@ Nothing is holding this any more." value="" />
     <text name="AnnualLeaveOfficeClosed" source="Annual leave, office closed…" value="" />
     <text name="AddThesePastedDays" source="Add these days" value="" />
     <text name="CopyWhatIsMarkedNow" source="Copy what is marked now" value="" />
-    <text name="PasteHolidaysHelp" source="JSON with &lt;b&gt;date&lt;/b&gt;, &lt;b&gt;name&lt;/b&gt; and &lt;b&gt;kind&lt;/b&gt;, or one a line as &lt;b&gt;date, name, kind&lt;/b&gt;. Dates may be &lt;b&gt;2027-01-01&lt;/b&gt; or &lt;b&gt;01/01/2027&lt;/b&gt;. &lt;b&gt;kind&lt;/b&gt; is either &lt;b&gt;public&lt;/b&gt; — a day off, tinted on the calendar and kept clear of target dates — or &lt;b&gt;observance&lt;/b&gt;, marked on the day but still a working day. Leave it off and it counts as a day off. The short &lt;b&gt;d&lt;/b&gt;/&lt;b&gt;n&lt;/b&gt;/&lt;b&gt;k&lt;/b&gt; spelling Dossier used to write is still read. Anything unreadable is listed rather than swallowed." value="" />
+    <text name="PasteHolidaysHelp" source="JSON with &lt;b&gt;date&lt;/b&gt;, &lt;b&gt;name&lt;/b&gt; and &lt;b&gt;kind&lt;/b&gt;, or one a line as &lt;b&gt;date, name, kind&lt;/b&gt;. Dates may be &lt;b&gt;2027-01-01&lt;/b&gt; or &lt;b&gt;01/01/2027&lt;/b&gt;. &lt;b&gt;kind&lt;/b&gt; is either &lt;b&gt;public&lt;/b&gt; — a day off, tinted on the calendar and kept clear of target dates — or &lt;b&gt;observance&lt;/b&gt;, marked on the day but still a working day. Leave it off and it counts as a day off. The short &lt;b&gt;d&lt;/b&gt;/&lt;b&gt;n&lt;/b&gt;/&lt;b&gt;k&lt;/b&gt; spelling Resolv used to write is still read. Anything unreadable is listed rather than swallowed." value="" />
     <text name="HolidaysAdded" source="{added} added, {replaced} replaced" value="" />
     <text name="HolidaysNothingRead" source="Nothing could be read from that" value="" />
     <text name="HolidaysSomeBad" source="{n} line(s) could not be read: {p0}" value="" />
@@ -1161,7 +1161,7 @@ Nothing is holding this any more." value="" />
     <text name="DensityCompact" source="Compact — more on screen" value="" />
     <text name="TextSize" source="Text size" value="" />
     <text name="ResetToDefaults" source="Reset to defaults" value="" />
-    <text name="FeelIntro" source="How the app behaves, rather than how it is lettered. If your system asks for reduced motion, Dossier follows it unless you pick &lt;b&gt;Full&lt;/b&gt; here on purpose." value="" />
+    <text name="FeelIntro" source="How the app behaves, rather than how it is lettered. If your system asks for reduced motion, Resolv follows it unless you pick &lt;b&gt;Full&lt;/b&gt; here on purpose." value="" />
     <text name="KeyboardShortcuts" source="Keyboard shortcuts" value="" />
     <text name="PressQuestionAnyTime" source="Press ? at any time to see this." value="" />
     <text name="Typeface" source="Typeface" value="" />
@@ -1184,16 +1184,16 @@ Nothing is holding this any more." value="" />
     <text name="KeySearch" source="Search everything" value="" />
     <text name="KeyNewRecord" source="New record" value="" />
     <text name="KeyCommandPalette" source="Command palette" value="" />
-    <text name="ClosedTabBatAdvice" source="There is no way round that from a web page, and this machine has no PowerShell to fall back on. If something genuinely must happen while Dossier is shut, point &lt;b&gt;Windows Task Scheduler&lt;/b&gt; straight at your &lt;b&gt;.bat&lt;/b&gt; file — that is exactly what it is for, and it needs nothing from Dossier. Keep the tab open, even behind Outlook, and reminders work on their own." value="" />
+    <text name="ClosedTabBatAdvice" source="There is no way round that from a web page, and this machine has no PowerShell to fall back on. If something genuinely must happen while Resolv is shut, point &lt;b&gt;Windows Task Scheduler&lt;/b&gt; straight at your &lt;b&gt;.bat&lt;/b&gt; file — that is exactly what it is for, and it needs nothing from Resolv. Keep the tab open, even behind Outlook, and reminders work on their own." value="" />
     <text name="RemindersAreOff" source="Reminders are off" value="" />
     <text name="RemindersOnWindowsToo" source="Reminders on — Windows will show them too" value="" />
-    <text name="RemindersOnInAppOnly" source="Reminders on — this browser has no Windows notifications, so they appear in Dossier" value="" />
+    <text name="RemindersOnInAppOnly" source="Reminders on — this browser has no Windows notifications, so they appear in Resolv" value="" />
     <text name="RemindersOnButBlocked" source="Reminders on, but Windows notifications are blocked for this page" value="" />
     <text name="AllowThem" source="Allow them" value="" />
     <text name="RemindersOffHint" source="Nothing will remind you. Turn this on, or press the bell in the top right." value="" />
-    <text name="RemindersGrantedHint" source="Reminders appear in Dossier and as Windows notifications, even when the tab is behind Outlook." value="" />
-    <text name="RemindersNoneHint" source="This browser cannot raise Windows notifications, so reminders appear inside Dossier only." value="" />
-    <text name="RemindersBlockedHint" source="Windows notifications are blocked for this page, so reminders only appear inside Dossier. Click the padlock beside the address and set Notifications to Allow. Opening dossier.html straight from the folder blocks them too — run &lt;b&gt;dossier-serve.bat&lt;/b&gt; to open it from 127.0.0.1 instead." value="" />
+    <text name="RemindersGrantedHint" source="Reminders appear in Resolv and as Windows notifications, even when the tab is behind Outlook." value="" />
+    <text name="RemindersNoneHint" source="This browser cannot raise Windows notifications, so reminders appear inside Resolv only." value="" />
+    <text name="RemindersBlockedHint" source="Windows notifications are blocked for this page, so reminders only appear inside Resolv. Click the padlock beside the address and set Notifications to Allow. Opening dossier.html straight from the folder blocks them too — run &lt;b&gt;dossier-serve.bat&lt;/b&gt; to open it from 127.0.0.1 instead." value="" />
     <text name="ScheduleDoesNothingElse" source="It will raise a record on the sheet and nothing more — no notification, no script. Set &lt;b&gt;Remind me&lt;/b&gt; to be told each time, or attach a script under &lt;b&gt;What it does&lt;/b&gt;." value="" />
     <text name="Assist" source="Assist" value="" />
     <text name="AiNoEngine" source="assist.js is not in this folder. Put it next to dossier.html and reload — everything else works without it." value="" />
@@ -1327,7 +1327,7 @@ Nothing is holding this any more." value="" />
     <text name="ChatAliasSaved" source="Noted. “{from}” means {to} from now on." value="" />
     <text name="BrainHead" source="Understanding harder questions" value="" />
     <text name="BrainBlurb" source="The assistant reads your questions by matching them against the shapes it knows, and it is right about 97 times in 100. For the rest, a small language model can run on this PC’s graphics chip and pick which of its own candidates you probably meant. It never writes an answer — it only chooses from a list the assistant already knows how to answer, and its choice is offered to you rather than acted on." value="" />
-    <text name="BrainNetwork" source="Dossier itself cannot reach the network at all — it carries a policy that forbids it, and that stays true whether this is on or off. So the model does not run in here. Switching it on opens model/run.html in a hidden frame: a page of its own, allowed to reach the model CDN and nowhere else, holding none of your records. It downloads the runtime and the weights once — the size is shown below — and caches them. Everything after that is offline, and the only thing that ever crosses between the two is your sentence going out and a number coming back." value="" />
+    <text name="BrainNetwork" source="Resolv itself cannot reach the network at all — it carries a policy that forbids it, and that stays true whether this is on or off. So the model does not run in here. Switching it on opens model/run.html in a hidden frame: a page of its own, allowed to reach the model CDN and nowhere else, holding none of your records. It downloads the runtime and the weights once — the size is shown below — and caches them. Everything after that is offline, and the only thing that ever crosses between the two is your sentence going out and a number coming back." value="" />
     <text name="BrainUse" source="Use a local model" value="" />
     <text name="BrainOff" source="Off" value="" />
     <text name="BrainOn" source="On" value="" />

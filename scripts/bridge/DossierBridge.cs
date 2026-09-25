@@ -162,7 +162,7 @@ public class DossierBridge
         }
 
         Log("");
-        Log("  Dossier   " + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+        Log("  Resolv   " + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
 
         ChooseWorkspace();
 
@@ -181,11 +181,11 @@ public class DossierBridge
 
         Log("  workspace " + (Workspace ?? "(not chosen - scripts will not run by themselves)"));
         Log("  listening 127.0.0.1:" + Port);
-        if (AppRoot != null) Log("  Dossier   " + Url());
+        if (AppRoot != null) Log("  Resolv   " + Url());
         if (Port != Wanted && AppRoot != null)
         {
             Log("  Port " + Wanted + " was taken, so this is on " + Port + ". A browser counts that as a");
-            Log("  different address, so Dossier will ask for your workspace folder once more.");
+            Log("  different address, so Resolv will ask for your workspace folder once more.");
         }
 
         Thread serve = new Thread(delegate()
@@ -275,7 +275,7 @@ public class DossierBridge
         Log("  ! " + message.Replace("\n", " "));
         if (!Headless)
         {
-            try { MessageBox.Show(message, "Dossier", MessageBoxButtons.OK, MessageBoxIcon.Warning); }
+            try { MessageBox.Show(message, "Resolv", MessageBoxButtons.OK, MessageBoxIcon.Warning); }
             catch (Exception) { }
         }
     }
@@ -298,11 +298,11 @@ public class DossierBridge
         {
             MessageBox.Show(
                 "Which folder holds your records?\n\n" +
-                "Pick the same folder you pick in Dossier - the one with your dossier.json in it. " +
+                "Pick the same folder you pick in Resolv - the one with your dossier.json in it. " +
                 "It is remembered, so this is asked once.\n\n" +
                 "It is used to run your scripts in the background. Cancel if you do not use scripts; " +
-                "Dossier works without it.",
-                "Dossier", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                "Resolv works without it.",
+                "Resolv", MessageBoxButtons.OK, MessageBoxIcon.Information);
             using (FolderBrowserDialog pick = new FolderBrowserDialog())
             {
                 pick.Description = "The folder that holds your records (dossier.json)";
@@ -331,8 +331,8 @@ public class DossierBridge
                                   Directory.Exists(Path.Combine(Workspace, "backups"));
         if (looksLikeClone && !looksLikeWorkspace)
         {
-            Fail("That folder is the Dossier program, not a folder of records:\n\n    " + Workspace +
-                 "\n\nKeep your records in a folder of their own - Documents\\Dossier will do - " +
+            Fail("That folder is the Resolv program, not a folder of records:\n\n    " + Workspace +
+                 "\n\nKeep your records in a folder of their own - Documents\\Resolv will do - " +
                  "and choose that one from the icon by the clock: Workspace folder...");
             Workspace = null;
             try { File.Delete(remembered); } catch (Exception) { }
@@ -417,7 +417,7 @@ public class DossierBridge
             DbOk = false;
             DbError = e.Message;
             Log("  ! database: " + e.Message);
-            Log("    Dossier will keep its records in dossier.json until this is fixed.");
+            Log("    Resolv will keep its records in dossier.json until this is fixed.");
             Log("    Is LocalDB installed?  sqllocaldb info   should list MSSQLLocalDB.");
         }
     }
@@ -521,7 +521,7 @@ public class DossierBridge
         Tray.Text = TrayText();
 
         ContextMenuStrip menu = new ContextMenuStrip();
-        ToolStripItem open = menu.Items.Add("Open Dossier", null, delegate { OpenBrowser(Port); });
+        ToolStripItem open = menu.Items.Add("Open Resolv", null, delegate { OpenBrowser(Port); });
         open.Font = new Font(open.Font, FontStyle.Bold);
         menu.Items.Add("Show log", null, delegate { ShowLog(); });
         menu.Items.Add(new ToolStripSeparator());
@@ -549,14 +549,14 @@ public class DossierBridge
             }
         });
         menu.Items.Add(new ToolStripSeparator());
-        menu.Items.Add("Quit Dossier", null, delegate
+        menu.Items.Add("Quit Resolv", null, delegate
         {
             Tray.Visible = false;
             Application.Exit();
         });
         Tray.ContextMenuStrip = menu;
         Tray.DoubleClick += delegate { OpenBrowser(Port); };
-        Tray.Text = "Dossier - starting the database";
+        Tray.Text = "Resolv - starting the database";
         Tray.Visible = true;
 
         // said from this thread, once the database attempt has finished
@@ -568,10 +568,10 @@ public class DossierBridge
             settle.Stop();
             Tray.Text = TrayText();
             if (!DbOk)
-                Tray.ShowBalloonTip(8000, "Dossier - no database",
+                Tray.ShowBalloonTip(8000, "Resolv - no database",
                     "Records stay in dossier.json. Show log says why.", ToolTipIcon.Warning);
             else if (Quiet)
-                Tray.ShowBalloonTip(4000, "Dossier is running", "Double-click this icon to open it.", ToolTipIcon.Info);
+                Tray.ShowBalloonTip(4000, "Resolv is running", "Double-click this icon to open it.", ToolTipIcon.Info);
         };
         settle.Start();
 
@@ -582,7 +582,7 @@ public class DossierBridge
 
     static string TrayText()
     {
-        string t = "Dossier - 127.0.0.1:" + Port + (DbOk ? " - SQL Server" : " - no database");
+        string t = "Resolv - 127.0.0.1:" + Port + (DbOk ? " - SQL Server" : " - no database");
         return t.Length > 63 ? t.Substring(0, 63) : t;
     }
 
@@ -605,7 +605,7 @@ public class DossierBridge
     {
         if (LogForm != null && !LogForm.IsDisposed) { LogForm.Activate(); return; }
         LogForm = new Form();
-        LogForm.Text = "Dossier - log";
+        LogForm.Text = "Resolv - log";
         LogForm.Width = 760; LogForm.Height = 460;
         LogForm.StartPosition = FormStartPosition.CenterScreen;
         LogForm.Icon = LoadIcon();
@@ -706,7 +706,7 @@ public class DossierBridge
                 if (!api)
                 {
                     if ((method == "GET" || method == "HEAD") && Static(net, path, method == "HEAD")) return;
-                    Respond(net, 404, "text/plain", Bytes("Dossier is at /dossier.html"));
+                    Respond(net, 404, "text/plain", Bytes("Resolv is at /dossier.html"));
                     return;
                 }
 

@@ -1,6 +1,6 @@
-# The contract between Dossier and your flow
+# The contract between Resolv and your flow
 
-This is what Dossier sends, what it expects back, and what it will refuse.
+This is what Resolv sends, what it expects back, and what it will refuse.
 It is generated from `flow.js`, which is the code that actually enforces it,
 so the two cannot drift apart.
 
@@ -14,7 +14,7 @@ connection**, and it will tell you which rung is broken. You need it to
 ## 1. The shape of it
 
 ```
-Dossier                    flow/relay.html              your flow
+Resolv                    flow/relay.html              your flow
    │  message + workspace        │                           │
    ├────────────────────────────>│  POST text/plain          │
    │                             ├──────────────────────────>│
@@ -38,14 +38,14 @@ endpoint's origin and no other, and refuses redirects.
 
 ### 2.1 Return a **Response** action
 
-A flow with no Response action never answers. Dossier waits, times out, and
+A flow with no Response action never answers. Resolv waits, times out, and
 says so. Add **Response** as the last step.
 
 ### 2.2 Put `Access-Control-Allow-Origin: *` on that Response
 
 This is the one that catches everybody. Without it your flow **runs
 perfectly** — you will see it succeed in the run history — and the browser
-still refuses to let Dossier read the reply. It looks like a network failure
+still refuses to let Resolv read the reply. It looks like a network failure
 and it is not.
 
 In the Response action's **Headers**:
@@ -55,12 +55,12 @@ In the Response action's **Headers**:
 | `Content-Type` | `application/json` |
 | `Access-Control-Allow-Origin` | `*` |
 
-Dossier's connection test names this case specifically rather than reporting
+Resolv's connection test names this case specifically rather than reporting
 "failed to fetch", because the difference is not guessable from the outside.
 
 ### 2.3 A note on the request's content type
 
-Dossier posts with `Content-Type: text/plain`, deliberately. A POST of
+Resolv posts with `Content-Type: text/plain`, deliberately. A POST of
 `application/json` is not a "simple" cross-origin request, so the browser
 sends an `OPTIONS` preflight first, and the Power Automate request trigger
 does not answer `OPTIONS` — the call dies before your flow ever runs, with
@@ -72,7 +72,7 @@ generate schema**.
 
 ---
 
-## 3. What Dossier sends
+## 3. What Resolv sends
 
 One JSON object, POSTed as the body.
 
@@ -101,7 +101,7 @@ fast model or the strong one.
   "protocol": "1.3",
   "mode": "chat",
   "tier": "fast",
-  "prompt": "You are the assistant inside Dossier … (the whole prompt, filled in)",
+  "prompt": "You are the assistant inside Resolv … (the whole prompt, filled in)",
   "promptFrom": "flow/prompt.txt",
   "askedAt": "2026-09-03T04:12:00.000Z",
   "today": "2026-09-03",
@@ -175,7 +175,7 @@ fast model or the strong one.
 
 **`can` is the important one.** It is the full list of what your flow may ask
 for, generated from the running code, with every argument and its shape. Feed
-it to your model rather than hard-coding a list — when Dossier gains an action
+it to your model rather than hard-coding a list — when Resolv gains an action
 your flow gets it for free, and it can never ask for one that does not exist.
 
 ### Memory — what the person taught it
@@ -399,7 +399,7 @@ nothing was clipped. Capped at 80,000 characters, with the cut marked.
 ### The probe
 
 A second, tiny request may follow a failed one, with `"probe": true` in its
-body. It is Dossier telling a blocked host apart from a missing CORS header —
+body. It is Resolv telling a blocked host apart from a missing CORS header —
 both of which reach the browser as the same error. It **only ever follows a
 failure**, so the request before it is the real one. Answer it with a 200 and
 stop; see `POWER-AUTOMATE.md` §4.
@@ -443,7 +443,7 @@ line. `runbooksMatched` is unchanged.
 ### Asking for records you were not sent
 
 `needRecords` is a read action with the same filter vocabulary as `find`.
-Return it **alone** — no `say`, no other action — and Dossier runs the filter
+Return it **alone** — no `say`, no other action — and Resolv runs the filter
 over every record it has, then asks the same question again with what it found
 at the front of `records`. The second request carries `followUp`:
 
@@ -482,7 +482,7 @@ answer, and pressing one sends that text as the next message — so a guided
 check (*is there a row? — A row with a file_path / No row / Cannot run it*)
 moves at the speed of a click.
 
-Dossier is forgiving about the wrapper, because Power Automate's Response
+Resolv is forgiving about the wrapper, because Power Automate's Response
 action produces several shapes depending on how it was built. All of these
 work:
 
@@ -495,7 +495,7 @@ work:
 
 ---
 
-## 5. What Dossier will refuse
+## 5. What Resolv will refuse
 
 Nothing coming back is trusted. This matters more than it sounds: the moment
 your flow's prompt reads a mail, a ticket, or an attachment, the text driving
@@ -503,7 +503,7 @@ it is written by somebody else.
 
 | Refused | What happens |
 |---|---|
-| an action not in `can` | dropped, named on screen: *"dropDatabase" is not something Dossier can do* |
+| an action not in `can` | dropped, named on screen: *"dropDatabase" is not something Resolv can do* |
 | a missing required argument | dropped: *setStatus needs status, and it was not there* |
 | an argument of the wrong shape | dropped: *status must be one of open, processing, … — got "finished"* |
 | a record reference that resolves to nothing | refused at the moment of running: *there is no record "D-9999" here* |
@@ -524,7 +524,7 @@ are at the moment). The list is built in the app, so it cannot drift from what
 the app will actually take.
 
 **`settings.flow` is deliberately not in it.** A flow that could rewrite the
-endpoint URL could point Dossier at a different address, and nothing
+endpoint URL could point Resolv at a different address, and nothing
 downstream would notice. `memory`, `chatLearn`, `hushed`, `chatUI` and
 `palettes` are excluded too — the first two have their own actions with their
 own confirmations, and a generic setter would walk straight past them.
@@ -532,7 +532,7 @@ own confirmations, and a generic setter would walk straight past them.
 ### Email
 
 `draftEmail` writes a message and shows it as a draft with **Copy** and **Open
-in my mail app**. Nothing is sent: Dossier has no way to send mail and should
+in my mail app**. Nothing is sent: Resolv has no way to send mail and should
 not grow one, since that would be a second thing in the application allowed to
 reach the outside, for a job a mail client already does. It counts as a read —
 it changes nothing, so it is not confirmed.
@@ -803,7 +803,7 @@ Write what is known about a system. facts is what it does; quirks is what it doe
 
 #### `draftEmail`
 
-Write an email and show it as a draft they can copy or open in their mail app. Nothing is sent — Dossier cannot send mail and does not try. Put the whole message in body, with real line breaks. Use this for a chase, a hand-over, an incident summary, anything they ask you to write to somebody.
+Write an email and show it as a draft they can copy or open in their mail app. Nothing is sent — Resolv cannot send mail and does not try. Put the whole message in body, with real line breaks. Use this for a chase, a hand-over, an incident summary, anything they ask you to write to somebody.
 
 | argument | shape | required |
 |---|---|---|
@@ -1194,7 +1194,7 @@ Two things worth doing on day one:
   **Test the connection** to go green. Every other problem is easier to find
   once the plumbing is proved.
 - Then add one action — `{"do":"view","view":"day"}` is harmless — and watch
-  Dossier switch tabs. Now the contract is proved too.
+  Resolv switch tabs. Now the contract is proved too.
 
 ---
 
@@ -1212,7 +1212,7 @@ rungs and names the one that broke:
 | The relay frame loaded | `flow/relay.html` is not next to `dossier.html` |
 | Something answers at that address | blocked by this network, wrong URL, or the flow is off |
 | The reply can be read | almost always the missing CORS header — §2.2 |
-| The reply is the shape Dossier expects | it answered, but with nothing usable |
+| The reply is the shape Resolv expects | it answered, but with nothing usable |
 
 **Show the relay** puts the frame on screen with its transcript, timed to a
 tenth of a second. The signature in the URL is masked there, so it is safe to
