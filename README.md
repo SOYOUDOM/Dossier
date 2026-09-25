@@ -663,6 +663,13 @@ What that one program does:
   database and writing to a file.
 - **writes every change to SQL Server LocalDB**, one transaction per save;
   `dossier.json` beside your records is an export written on every save.
+  Saving is automatic and there is nothing to press: the dot by the folder
+  name pulses yellow while a save is on its way and turns green the moment
+  SQL Server has it. If a save cannot go through — the bridge restarting,
+  the database waking up — your changes stay on screen, the status bar says
+  *not saved yet · trying again in 4s*, and Dossier keeps trying on its own
+  (2 s, 4 s, 8 s … up to a minute) until it is green again. Click that text
+  to try straight away.
 - **runs your scripts, hidden.** The runner for your workspace's `scripts\`
   folder starts with no window and stops when Dossier quits.
 - **is only ever one.** A second double-click opens the page the first one is

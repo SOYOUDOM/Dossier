@@ -178,6 +178,9 @@ body.chatting .find{max-width:190px}
 .wsbtn .dot{width:7px;height:7px;border-radius:50%;background:var(--st-done);flex:0 0 auto}
 .wsbtn .dot.warn{background:var(--st-proc)}
 .wsbtn .dot.bad{background:var(--p1)}
+.wsbtn .dot.busy{animation:dotbusy .8s ease-in-out infinite alternate}
+@keyframes dotbusy{to{opacity:.3}}
+#sbSave.act{cursor:pointer;text-decoration:underline dotted;text-underline-offset:3px}
 
 .tabs{display:flex;gap:1px;flex:0 1 auto;min-width:0;overflow:hidden}
 .tabs button{
@@ -2703,7 +2706,7 @@ body.chatting .pet[data-corner="br"],body.chatting .pet[data-corner="tr"]{
     <span><b id="sbD">0</b> <span data-i18n="Foot_ClosedToday">closed today</span></span>
     <span><b id="sbF">0</b> <span data-i18n="Foot_Documents">documents</span></span>
     <span><b id="sbH">0h</b> <span data-i18n="Foot_Tracked">tracked</span></span>
-    <span id="sbSave">—</span>
+    <span id="sbSave" role="button" tabindex="0">—</span>
     <span id="sbStore" title=""></span>
     <span id="sbRun" hidden></span>
     <span class="sp"></span>
@@ -3599,6 +3602,16 @@ const STRINGS = {
   SavedTo: "Saved to ",
   SavesItAs: "saves it as ",
   Saving: "saving…",
+  Unsaved: "unsaved",
+  SavedAt: "saved",
+  SaveClickHint: "Not written yet \u2014 click to save now",
+  SaveRetryIn: "not saved yet \u00b7 trying again in {p0}s",
+  SaveKeepsTrying: "Dossier keeps trying by itself.",
+  SaveNoBridge: "the bridge is not answering",
+  SaveBridgeSlow: "the bridge had not answered after a minute",
+  SaveBridgeDown: "Not saved yet: {p0}. Your changes stay on screen and are written by themselves the moment the bridge answers \u2014 no need to click anything.",
+  SaveBackNow: "Saved \u2014 everything that was waiting is written.",
+  SaveExportLate: "Saved to SQL Server. The dossier.json export beside it could not be written ({p0}); the next save writes it.",
   ScheduledRunSFiledIntoTodays: " scheduled run(s) filed into today's records",
   ScreenshotFiledUnder: "Screenshot filed under ",
   Script: "Script",
@@ -5160,7 +5173,7 @@ const STATUSES = [
    the status bar, and clicking it copies a line you can paste into a bug
    report — build date and flow protocol included, because those are the two
    things that actually differ between copies. */
-const APP_VERSION = "4.4.0";
+const APP_VERSION = "4.4.1";
 const APP_BUILT = "2026-09-18";
 function buildLine(){
   return "Dossier v" + APP_VERSION + " \u00b7 built " + APP_BUILT +
@@ -5215,7 +5228,7 @@ const S = {
             sys:"", pri:"", type:"", who:"", range:"", q:"", day:"", hideRoutine:false,
             ids:null, idsLabel:"" },
   sel:new Set(), open:null, drill:null, intake:null, chase:null, problem:null, folds:{}, editRoutine:null, sort:{ by:"due", dir:1 },
-  weekStart:null, undo:[], dirty:false, saving:false, lastSaved:null,
+  weekStart:null, undo:[], dirty:false, rev:0, saving:false, lastSaved:null,
   rows:[], cursor:-1, reminded:{}, blobCache:{},
   chats:[], chatId:"",
   incidents:[]
@@ -6520,19 +6533,78 @@ function hydrate(d){
   buildModel();
 }
 function touch(){
-  S.dirty = true;
+  S.dirty = true; S.rev++;
   setSaveState("dirty");
   scheduleSave();
 }
+/* The dot by the folder name and the words in the status bar. Yellow and
+   pulsing while a save is on its way, yellow while there is something not
+   written yet, green once it is. When a save did not go through, the
+   status bar says when the next try is - and clicking it tries now. */
 function setSaveState(mode){
   const dot = $("wsDot"), sb = $("sbSave");
+  sb.classList.toggle("act", FS.ok && mode !== "saving" && mode !== "saved");
+  sb.title = FS.ok && mode !== "saving" && mode !== "saved"
+    ? L("SaveClickHint") + (SAVE.why ? "\n" + SAVE.why : "") : "";
   if (!FS.ok){ dot.className = L("DotBad"); sb.textContent = L("NotLinkedToAFolder"); return; }
-  if (mode === "saving"){ dot.className = L("DotWarn"); sb.textContent = L("Saving"); return; }
-  if (mode === "dirty"){ dot.className = L("DotWarn"); sb.textContent = "unsaved"; return; }
+  if (mode === "saving"){ dot.className = L("DotWarn") + " busy"; sb.textContent = L("Saving"); return; }
+  if (mode === "dirty" && SAVE.at && SAVE.fails) mode = "retry";
+  if (mode === "retry"){
+    dot.className = L("DotWarn");
+    sb.textContent = L("SaveRetryIn", { p0: Math.max(1, Math.ceil((SAVE.at - Date.now()) / 1000)) });
+    return;
+  }
+  if (mode === "dirty"){ dot.className = L("DotWarn"); sb.textContent = L("Unsaved"); return; }
   dot.className = "dot";
-  sb.textContent = "saved " + (S.lastSaved ? stamp(S.lastSaved) : "");
+  sb.textContent = L("SavedAt") + " " + (S.lastSaved ? stamp(S.lastSaved) : "");
 }
-const scheduleSave = debounce(function(){ saveNow(); }, 700);
+const scheduleSave = debounce(function(){ saveNow(false, { auto:true }); }, 700);
+
+/* ── saving: one at a time, none lost, none left waiting on a click ──────
+   Every change moves S.rev on. A save writes what is there when it starts
+   and remembers which rev that was; anything changed while it was on its
+   way is written by another save that follows the moment it lands. (A
+   change made during a save used to be dropped - and the dot went green
+   over it.) A save that does not go through - the bridge restarting, the
+   database busy, the folder locked for a moment - is tried again by
+   itself, after 2 seconds, then 4, 8 ... up to a minute, so the dot turns
+   green on its own when the way is clear again. */
+const SAVE = { running:null, again:false, rev:0, fails:0, timer:0, at:0, told:false, why:"", bridgeErr:false, exportTold:false, wait:60000 };
+function saveSoon(ms){
+  clearTimeout(SAVE.timer);
+  SAVE.at = Date.now() + ms;
+  SAVE.timer = setTimeout(() => { SAVE.timer = 0; SAVE.at = 0; saveNow(false, { auto:true }); }, ms);
+}
+function saveStop(){ clearTimeout(SAVE.timer); SAVE.timer = 0; SAVE.at = 0; }
+/* what a finished save leaves behind: nothing, the next save, or a retry */
+function saveAfter(res){
+  SAVE.again = false;
+  if (res === true){
+    if (SAVE.fails && SAVE.told) toast(L("SaveBackNow"));
+    SAVE.fails = 0; SAVE.told = false; SAVE.why = ""; SAVE.bridgeErr = false;
+    if (S.dirty) saveSoon(120);          /* more came in while it was on its way */
+    else setSaveState("saved");
+    return;
+  }
+  if (res === "retry"){
+    SAVE.fails++;
+    saveSoon(Math.min(60000, 2000 * Math.pow(2, SAVE.fails - 1)));
+    setSaveState("retry");
+  }
+  /* false: a question is on the screen, or its answer was no. Nothing is
+     tried again by itself; the next change, or the answer, saves. */
+}
+/* the countdown in the status bar */
+setInterval(() => { if (SAVE.at && SAVE.fails && S.dirty && !SAVE.running) setSaveState("retry"); }, 1000);
+/* back at the desk, back online: try now rather than at the end of the wait */
+function saveNudge(){
+  if (!S.dirty || SAVE.running || !FS.ok) return;
+  SAVE.fails = Math.min(SAVE.fails, 1);
+  saveNow(false, { auto:true });
+}
+window.addEventListener("online", saveNudge);
+window.addEventListener("focus", () => { if (SAVE.fails) saveNudge(); });
+document.addEventListener("visibilitychange", () => { if (!document.hidden && SAVE.fails) saveNudge(); });
 
 /* ── the guards on every write ─────────────────────────────────────────
    base is how many records the workspace had when it was opened or last
@@ -6556,7 +6628,25 @@ async function keepFileCopy(tag, text){
 async function saveNow(silent, opts){
   opts = opts || {};
   if (!FS.ok || !FS.root){ if (!silent) toast(L("LanguageNeedsWorkspace"), { bad:true }); return false; }
-  if (S.saving) return false;
+  /* one at a time: an autosave asked for while another is on its way
+     leaves a note for it, and a save somebody asked for waits its turn */
+  while (SAVE.running){
+    SAVE.again = true;
+    if (opts.auto) return false;
+    try { await SAVE.running; } catch(e){}
+  }
+  if (opts.auto && !S.dirty) return true;
+  saveStop();
+  const run = saveOnce(silent, opts);
+  SAVE.running = run;
+  let res = false;
+  try { res = await run; } finally { SAVE.running = null; }
+  saveAfter(res);
+  return res === true;
+}
+/* true when it is written, "retry" when it could not be and is worth
+   trying again, false when it is waiting on somebody */
+async function saveOnce(silent, opts){
   /* Nothing at all, where there were records a moment ago. That is how an
      empty workspace used to land on top of a full one, and it is the one
      write that is never made without asking. */
@@ -6578,15 +6668,22 @@ async function saveNow(silent, opts){
   /* The database is the store for this workspace and it is not answering.
      Writing the export on its own would leave a file ahead of the database,
      which is two versions of the truth and the beginning of the next bad
-     afternoon. So: nothing is written, and it says so. */
-  if (DB.required && !DB.on){
+     afternoon. So nothing is written - the change stays on screen, and this
+     is tried again until the bridge answers. */
+  if (DB.required && !DB.on && !(await dbRehello())){
+    SAVE.why = DB.why || L("SaveNoBridge"); SAVE.bridgeErr = true;
     setSaveState("dirty");
-    if (!silent) dbSayStopped();
-    return false;
+    if (!silent && !SAVE.told){ SAVE.told = true; toast(L("SaveBridgeDown", { p0:SAVE.why }), { bad:true }); }
+    return "retry";
   }
   S.saving = true; setSaveState("saving");
   petMood("work", 1700);          /* it carries the record out to the folder */
+  let stored = false;
   try {
+    /* after a save the bridge did not take: it may have been restarted,
+       with a new token and perhaps a new port - ask again first */
+    if (DB.on && SAVE.bridgeErr) await dbRehello();
+    const rev = S.rev;
     const doc = payload();
     /* The database is the write. If it refuses, the save has not happened -
        so nothing is marked saved and the file is not touched either, because
@@ -6607,30 +6704,52 @@ async function saveNow(silent, opts){
         }
         await dbPut(doc, { reason:opts.reason, confirm:true });
       }
+      /* In the database is saved. The dot says so now, not after the
+         export below - which on Windows can take a second or two while the
+         virus scanner reads the file. */
+      stored = true; savedRev(rev);
     }
     /* and then the export: the same JSON, beside your records, readable in
        Notepad on a machine with no SQL Server on it. It is not what Dossier
        reads any more, which is exactly why it is worth writing - and when
        this save leaves far fewer records than the file has, the file as it
        was goes into backups/ first. */
-    if (shrinks(GUARD.base, doc.tasks.length)) await keepFileCopy("before-" + (opts.reason || "save").replace(/\W+/g, "-"));
-    await FS.writeText(FS.root, "dossier.json", JSON.stringify(doc, null, 2));
-    await dailyBackup(doc);
-    GUARD.base = doc.tasks.length; GUARD.emptyOk = false;
-    S.dirty = false; S.lastSaved = new Date().toISOString();
-    setSaveState("saved");
+    const oldBase = GUARD.base;
+    if (stored){ GUARD.base = doc.tasks.length; GUARD.emptyOk = false; }
+    try {
+      if (shrinks(oldBase, doc.tasks.length)) await keepFileCopy("before-" + (opts.reason || "save").replace(/\W+/g, "-"));
+      await FS.writeText(FS.root, "dossier.json", JSON.stringify(doc, null, 2));
+      await dailyBackup(doc);
+      SAVE.exportTold = false;
+    } catch(e){
+      if (!stored) throw e;
+      /* the records are in the database; only the copy beside them is
+         late, and the next save writes it */
+      if (!SAVE.exportTold){ SAVE.exportTold = true; toast(L("SaveExportLate", { p0:e.message || String(e) }), { bad:true }); }
+    }
+    if (!stored){ GUARD.base = doc.tasks.length; GUARD.emptyOk = false; savedRev(rev); }
     paintStore();
     vaultWrite();            /* and the copy this PC keeps of it */
     return true;
   } catch(e){
+    SAVE.why = e.message || String(e);
+    SAVE.bridgeErr = !!e.bridge;
     setSaveState("dirty");
-    if (DB.on === false && DB.tried && await FS.exists(FS.root, ".bridge.json")){
-      dbSayStopped(e.message || String(e));
-    } else {
-      toast(L("CouldNotWriteToTheFolder") + (e.message || e), { bad:true });
+    if (!silent && !SAVE.told){
+      SAVE.told = true;
+      toast(e.bridge ? L("SaveBridgeDown", { p0:SAVE.why })
+                     : L("CouldNotWriteToTheFolder") + SAVE.why + " \u2014 " + L("SaveKeepsTrying"), { bad:true });
     }
-    return false;
+    return "retry";
   } finally { S.saving = false; }
+}
+/* written up to rev: green if nothing has changed since, yellow if it has
+   (and the save that follows will write that) */
+function savedRev(rev){
+  SAVE.rev = rev;
+  S.lastSaved = new Date().toISOString();
+  S.dirty = S.rev !== rev;
+  setSaveState(S.dirty ? "dirty" : "saved");
 }
 async function dailyBackup(doc){
   doc = doc || payload();
@@ -6780,6 +6899,7 @@ async function openWorkspace(handle, quiet){
   if (DB.on) markStore();
   paintFolderName();
   S.dirty = false; S.lastSaved = loaded ? new Date().toISOString() : null;
+  saveStop(); SAVE.rev = S.rev; SAVE.fails = 0; SAVE.told = false; SAVE.why = ""; SAVE.bridgeErr = false;
   setSaveState("saved");
   makeRoutines(); rollOver(); syncHolds();
   sweepAutoRuns();
@@ -6945,7 +7065,15 @@ async function dbPut(doc, opts){
   const headers = { "X-Dossier-Token":DB.token, "Content-Type":"application/json" };
   if (opts.confirm) headers["X-Dossier-Confirm"] = "shrink";
   if (opts.reason) headers["X-Dossier-Reason"] = opts.reason;
-  const r = await fetch(dbUrl("/workspace"), { method:"PUT", headers, body: JSON.stringify(doc) });
+  let r;
+  /* a save that has had no answer in a minute is not going to get one;
+     giving up lets it be tried again rather than sit on "saving" */
+  try { r = await fetchIn(dbUrl("/workspace"), { method:"PUT", headers, body: JSON.stringify(doc) }, SAVE.wait); }
+  catch(e){
+    const err = new Error(e && e.name === "AbortError" ? L("SaveBridgeSlow") : L("SaveNoBridge"));
+    err.bridge = true;
+    throw err;
+  }
   if (!r.ok){
     let why = "the bridge answered " + r.status, body = null;
     try { body = await r.json(); if (body && body.error) why = body.error; } catch(x){}
@@ -6953,9 +7081,43 @@ async function dbPut(doc, opts){
     if (r.status === 409 && body && body.shrink){
       err.shrink = true; err.current = body.current; err.incoming = body.incoming;
     }
+    else err.bridge = true;     /* a new token after a restart, the database waking, a lock */
     throw err;
   }
   return r.json();
+}
+function fetchIn(url, init, ms){
+  const ac = new AbortController(), t = setTimeout(() => ac.abort(), ms);
+  return fetch(url, Object.assign({}, init, { signal:ac.signal })).finally(() => clearTimeout(t));
+}
+/* The bridge again, quietly, after a save it did not take. It may have
+   been restarted - Quit and Dossier.bat again, or the PC - which means a
+   new token and perhaps a new port; or the database may be waking. The
+   same two ways dbFind asks, without its banner and without its wait. */
+async function dbRehello(){
+  if (!DB.required && !DB.on) return false;
+  let hand = null;
+  if (location.protocol === "http:" && location.hostname === "127.0.0.1"){
+    try {
+      const r = await fetchIn("/hello", { cache:"no-store" }, 4000);
+      if (r.ok){
+        const h = await r.json();
+        if (h && h.token) hand = { port:+h.port || +location.port, token:h.token };
+      }
+    } catch(e){}
+  }
+  if (!hand && FS.ok && FS.root){
+    try { hand = JSON.parse(await FS.readText(FS.root, ".bridge.json")); } catch(e){}
+  }
+  if (!hand || !hand.port || !hand.token){ DB.why = L("SaveNoBridge"); return false; }
+  DB.port = +hand.port; DB.token = String(hand.token);
+  try {
+    const r = await fetchIn(dbUrl("/health"), { headers:{ "X-Dossier-Token":DB.token } }, 5000);
+    const info = r.ok ? await r.json() : null;
+    if (info && info.ok && !info.starting){ DB.info = info; DB.on = true; DB.bridge = true; return true; }
+    DB.why = info && info.starting ? L("DiagStarting") : (info && info.error) || ("the bridge answered " + r.status);
+  } catch(e){ DB.why = L("SaveNoBridge"); }
+  return false;
 }
 
 /* ── which folder the database belongs to ──────────────────────────────
@@ -7195,6 +7357,7 @@ async function vaultCheck(loaded){
         await vaultWrite();          /* the folder is the truth from now on */
         hideBanner();
         toast(L("VaultKept"));
+        if (S.dirty) saveNow(false, { auto:true });   /* what changed while it asked */
       } },
     { label:L("VaultDownload"), run: () => {
         download("dossier-remembered-" + today() + ".json",
@@ -16034,6 +16197,7 @@ function wireModal(){
     box.textContent = L("VaultLooking");
     const lines = await dbDiagnose();
     box.textContent = lines.join("\n");
+    saveNudge();          /* and anything waiting to be written goes now */
   });
   on("wsJson", () => {
     /* the same shape dossier.json has, so the machine you carry it to
@@ -20844,6 +21008,10 @@ $("themeBtn").addEventListener("click", () => {
 $("bellBtn").addEventListener("click", askNotify);
 $("menuBtn").addEventListener("click", () => openModal("ws"));
 $("wsBtn").addEventListener("click", () => openModal("ws"));
+/* "unsaved" in the status bar: click it and it tries now */
+function sbSaveKick(){ if (S.dirty && FS.ok){ SAVE.fails = 0; saveNow(); } }
+$("sbSave").addEventListener("click", sbSaveKick);
+$("sbSave").addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " "){ e.preventDefault(); sbSaveKick(); } });
 
 $("qa").addEventListener("input", preview);
 $("qa").addEventListener("focus", preview);

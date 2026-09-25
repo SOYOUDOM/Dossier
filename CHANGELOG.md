@@ -6,6 +6,41 @@ holds — which is what to paste into a bug report.
 
 ---
 
+## 4.4.1 - 2026-09-25
+
+**Saving is real time again: no button to press, and no change left behind.**
+
+Closing tasks could leave the dot by the folder name yellow until something
+else happened - opening the Workspace panel to press *Check the bridge*, for
+instance, which is why that looked like the cure. It was not doing anything;
+the next save was. Two things were wrong underneath:
+
+- **A change made while a save was on its way was dropped.** Saves with SQL
+  Server take a second or two (the database write, then the `dossier.json`
+  export, which Windows scans). Close a second task inside that window and
+  its save was skipped - and when the first save landed the dot went
+  **green over a change that had never been written**. Now a change made
+  during a save is written by another save that starts the moment the first
+  lands, and the dot stays yellow until the last one is in.
+- **A save that failed was never tried again.** A busy or restarting bridge,
+  a deadlock, the database waking - the dot went yellow and stayed there
+  until you changed something else. Now it tries again by itself after 2 s,
+  4 s, 8 s ... up to a minute, and on the first try after you come back to
+  the window. The status bar says *not saved yet · trying again in 4s*;
+  clicking it tries now. You get one message when it starts failing and one
+  when everything is written, not one per try.
+- **A restarted bridge is found again.** Quitting the bridge and starting it
+  again gives it a new key, and every save from an open page was refused
+  until you reloaded. The page now asks the bridge again and carries on.
+- **A save that hangs gives up after a minute** and is tried again, instead
+  of sitting on *saving...* for ever.
+- **Green when SQL Server has it.** The dot turns green as soon as the
+  database confirms the write; the `dossier.json` export follows a moment
+  later. If only the export fails, your records are already safe in SQL
+  Server and the next save writes it.
+- The dot pulses while a save is on its way, so *saving* and *not saved*
+  no longer look the same.
+
 ## 4.4.0 - 2026-09-25
 
 **The model looks at pictures now, instead of reading a description of them.**
