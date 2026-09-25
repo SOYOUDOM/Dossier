@@ -6,6 +6,35 @@ holds — which is what to paste into a bug report.
 
 ---
 
+## 4.7.0 - 2026-09-25
+
+**Answers that explain, not just state.**
+
+The prompt asked for "one to three sentences", "a one-line verdict", "two
+sentences to a paragraph" - and the answers read like status lines. It now
+asks for what a good senior colleague does:
+
+- **Depth matched to the question.** A count, a greeting or a done action is
+  still one or two friendly sentences (with the one detail that helps). A
+  why, a how, a problem, a request for advice gets a real answer: the answer
+  or read of the situation first, then WHY - what is happening underneath and
+  what usually causes it - then numbered steps with what each achieves, then
+  what to watch out for, then the one question that moves things on.
+- **Explained like a teacher**: plain words before the technical term, a
+  concrete example when an idea is abstract, their own systems, records and
+  values throughout; honest about what is uncertain and what would confirm it.
+- **Readable**: short paragraphs, headings only for answers with separate
+  parts, bullets for causes, a table for "what each result means", bold for
+  the one thing not to miss; natural, warm phrasing.
+- Troubleshooting explains the mechanism, not just the name of the cause.
+- The examples show it: a full explanation (month-end deadlocks), the portal
+  login case with why the cache breaks logins and a result table, and the
+  quick answers with their one useful detail. Prompt 20.0 -> 23.9 KB.
+
+Nothing is appended after the content and nothing tells the model to
+disregard anything, so it stays clear of the content filter that 4.6.1 ran
+into. `flow/prompt.txt` is still the one place to change it.
+
 ## 4.6.4 - 2026-09-25
 
 **The fast model answering the blank picture is caught before you see it.**
