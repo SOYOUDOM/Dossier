@@ -3720,6 +3720,7 @@ const STRINGS = {
   FlowFallbackHit: "Your flow's safety net answered, not the model: an action in the flow failed, so its answer never came back - and it failed again when asked without your notes and records. In Power Automate open the flow \u2192 Run history \u2192 the latest run \u2192 the box with the red ! \u2192 the action inside it with the red !, and read its error. flow/POWER-AUTOMATE.md 4e, \u201cWhen it goes wrong\u201d, has the usual causes.",
   FlowFiltered: "Microsoft's content filter blocked this question before the model saw it (\u201cPrompt was filtered\u201d) - and again when it was asked without your notes and records, so it is the question itself, or the prompt file. Word it differently; if every question is blocked, check flow/prompt.txt or your dossier-prompt.txt for lines added recently.",
   FlowSaid: "The flow said: {p0}",
+  PlaceholderLost: "It answered the empty picture placeholder instead of your question, twice. Ask it again in other words.",
   FlowLeanAnswered: "Answered without your notes, lessons, runbooks and records: the full question failed in the flow, and this one went through. If that happens again and again, something in them is the reason - most often Microsoft's content filter reading a note or lesson as orders to the AI.",
   FlowLeanFiltered: "Answered without your notes, lessons, runbooks and records: Microsoft's content filter blocked the full question (\u201cPrompt was filtered\u201d). Something in them reads to the filter like instructions to the AI - look for a note or lesson written as rules (\u201cDo not\u2026\u201d, \u201cAlways\u2026\u201d, \u201cYou must\u2026\u201d) and reword it as plain facts.",
   TierFastTook: "fast model typically {p0} s (last {n})",
@@ -5323,7 +5324,7 @@ const STATUSES = [
    the status bar, and clicking it copies a line you can paste into a bug
    report — build date and flow protocol included, because those are the two
    things that actually differ between copies. */
-const APP_VERSION = "4.6.3";
+const APP_VERSION = "4.6.4";
 const APP_BUILT = "2026-09-18";
 function buildLine(){
   return "Dossier v" + APP_VERSION + " \u00b7 built " + APP_BUILT +
@@ -10953,7 +10954,7 @@ async function checksRun(){
         const ctx = Object.assign(flowContext(c.q), { conversation:[], attachments:[],
           picture:CHAT_BLANK_PNG, pictureName:"", promptTemplate:PROMPT.text, promptFrom:PROMPT.from });
         const out = await DossierFlow.ask(c.q, ctx, cfg);
-        ans = [out.say, out.ask].filter(Boolean).join("\n\n") ||
+        ans = [phAsked(c.q) ? out.say : phScrub(out.say), phTalks(out.ask) ? "" : out.ask].filter(Boolean).join("\n\n") ||
               (out.actions || []).map(a => a.do).join(", ") || "(nothing)";
         const jq = "[check] " + L("CheckJudge", { p0:c.q, p1:c.want, p2:ans.slice(0, 3000) });
         const jctx = Object.assign(flowContext(jq), { mode:"check", conversation:[], attachments:[], pastFixes:[],
@@ -11423,6 +11424,38 @@ async function flowAsk(q, thread, opts){
     }
   }
 
+  /* ── the blank placeholder, answered instead of the question ──────────
+     Nothing attached still sends one white pixel (the flow's picture input
+     cannot be empty), and a mini model will now and then answer THAT -
+     "that image is just a blank white square, try attaching it again" -
+     instead of what was asked. Telling it not to, in the prompt, is what
+     Microsoft's content filter blocked in 4.6.1, so it is caught here
+     instead, where no filter can object: the answer is read before it is
+     shown. Around a real answer, the sentences about the picture are taken
+     out. Instead of one, the question is asked once more - of the strong
+     model when there is one, which reads past the placeholder. Only when
+     nothing was attached and the question itself is not about pictures. */
+  if (out && !fell && !ctx.pictureName && !phAsked(q) && phTalks([out.say, out.ask].join(" "))){
+    const kept = phScrub(out.say);
+    if (kept.length >= 80 && !phTalks(out.ask)) out.say = kept;
+    else {
+      const wait4 = chatThinking(log);
+      let out4 = null;
+      try {
+        out4 = await DossierFlow.ask(q, ctx, flowCfg().tiers.on ? Object.assign({}, cfg, { tier:"deep" }) : cfg);
+      } catch(e){ out4 = null; }
+      chatThought(wait4, null);
+      if (out4 && !flowFellBack(out4) && !phTalks([out4.say, out4.ask].join(" "))) out = out4;
+      else {
+        const best = out4 && !flowFellBack(out4) ? out4 : out;
+        best.say = phScrub(best.say) || kept || L("PlaceholderLost");
+        out = best;
+      }
+    }
+    if (phTalks(out.ask)){ out.ask = ""; out.choices = []; }
+    out.choices = (out.choices || []).filter(c => !phTalks(c));
+  }
+
   const reply = flowReply(out, q);
   if (fell){
     /* even the lean question failed: it is the flow, or the question itself */
@@ -11440,6 +11473,31 @@ async function flowAsk(q, thread, opts){
   if (out && out.ms && !sentFiles) flowTimed(out.tier || "fast", out.ms);
   chatBot(reply, q);
   chatSide();
+}
+
+/* What an answer about the placeholder pixel looks like. Read only when
+   nothing was attached, so any of these is about a picture that was never
+   there. Kept to the picture words on purpose: "send the reminder again"
+   is an answer, "try attaching it again" is not. */
+const PH_TALK = [
+  /\b(blank|white|empty|plain|transparent)\b[^.!?\n]{0,40}\b(image|picture|square|pixel|screenshot|photo|attachment)s?\b/i,
+  /\b(image|picture|screenshot|photo|attachment)s?\b[^.!?\n]{0,60}\b(blank|white|empty|no (visible )?content|nothing (visible|to see|in it|there|to comment)|appears to be|seems to be)\b/i,
+  /\b(attach|attaching|re-?attach|re-?attaching|upload|uploading|re-?upload)\b[^.!?\n]{0,40}\bagain\b/i,
+  /\b(the|that|this|your) (attached|uploaded|shared) (image|picture|screenshot|photo|file)\b/i,
+  /\b(that|this|your|the) (image|picture|screenshot|photo)\b/i,
+  /\bno (image|picture|screenshot|photo)\b[^.!?\n]{0,30}\b(attached|visible|came through|was (attached|sent|shared))\b/i
+];
+function phTalks(s){ const t = String(s || ""); return !!t && PH_TALK.some(re => re.test(t)); }
+/* a question that is itself about pictures is left alone */
+function phAsked(q){
+  return /\b(image|images|picture|pictures|photo|photos|screenshot|screenshots|screen shot|pic|pics|attach\w*)\b/i.test(String(q || ""));
+}
+/* the sentences about the placeholder, taken out; what is left */
+function phScrub(text){
+  const s = String(text || "");
+  if (/```/.test(s)) return s;
+  return s.split("\n").map(line => line.split(/(?<=[.!?])\s+/).filter(p => !phTalks(p)).join(" "))
+    .join("\n").replace(/\n{3,}/g, "\n\n").trim();
 }
 
 /* The Fallback response's sentence (POWER-AUTOMATE.md 6), with whatever
@@ -14540,7 +14598,7 @@ async function intakeAi(raw){
     filled.push({ id, k, v:el.value });
   });
   const steps = (Array.isArray(g.checklist) ? g.checklist : []).map(x => String(x || "").trim()).filter(Boolean).slice(0, 8);
-  INTAKE.ai = { state:"done", filled, steps, say:String(out.say || "").trim(), tier:out.tier, ms:out.ms,
+  INTAKE.ai = { state:"done", filled, steps, say:phScrub(out.say || ""), tier:out.tier, ms:out.ms,
                 keep:true };
   paintIntakeAi();
   /* a duplicate check against the better title */
@@ -18682,7 +18740,7 @@ async function fixSuggest(t){
     out = await DossierFlow.ask(q, ctx, Object.assign({}, flowCfg(), { scope:"names" }));
   } catch(e){ out = null; }
   if (my !== FIX.asking || FIX.id !== t.id) return;   /* moved on meanwhile */
-  const first = String((out && out.say) || "").split(/\n+/)
+  const first = phScrub((out && out.say) || "").split(/\n+/)
     .map(x => fixPlain(x).replace(/^[\s\-\u2022"\u201c]+|["\u201d\s]+$/g, "")).filter(Boolean)[0] || "";
   const line = first.slice(0, 260);
   if (!line || /^unknown\.?$/i.test(line)){ fixState(FIX.draft ? L("FixFromNotes") : L("FixAiNothing")); return; }
@@ -18980,7 +19038,7 @@ async function reflectNow(byHand){
   const line = a => a.do === "learn" ? "• " + a.args.lesson
     : a.do === "remember" ? "• " + L("ReflectKeptNote", { p0:a.args.title })
     : "• " + L("ReflectKeptBook", { p0:a.args.title });
-  const say = (out.say || L("ReflectDefault")) +
+  const say = (phScrub(out.say) || L("ReflectDefault")) +
     (kept.length ? "\n\n**" + L("ReflectKept", { n:kept.length }) + "**\n" + kept.map(line).join("\n") : "") +
     (out.ask ? "\n\n" + out.ask : "");
   const c = reflectThread();

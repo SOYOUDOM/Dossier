@@ -6,6 +6,30 @@ holds — which is what to paste into a bug report.
 
 ---
 
+## 4.6.4 - 2026-09-25
+
+**The fast model answering the blank picture is caught before you see it.**
+
+Describing the placeholder in the prompt (4.6.3) was not enough for the mini
+model, and ordering it not to (4.6.1) is what the content filter blocked. So
+the prompt is left exactly as it is - it passes the filter - and the answer
+is checked instead, before it is shown, whenever nothing was attached and
+the question is not itself about pictures:
+
+- an answer about a blank / white / empty image, or asking you to attach
+  it again, around a real answer: those sentences are taken out;
+- an answer that is only about the picture: the question is asked once
+  more, of the strong model when *Two models* is on (it reads past the
+  placeholder), and that answer is shown instead;
+- a question back ("could you attach it again?") and choice buttons about
+  the picture are dropped.
+
+Checked against both answers from the screenshots, a mixed answer, one
+model only, questions that are about pictures, a real attached picture, and
+answers that only look alike ("send the reminder again", "the white page is
+the error page"), which are left alone. The same clean-up applies to the
+daily look back, "How was it fixed?", pasted messages and checks.
+
 ## 4.6.3 - 2026-09-25
 
 **Every question failed with "Prompt was filtered" - fixed.**
