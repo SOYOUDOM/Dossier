@@ -3717,6 +3717,7 @@ const STRINGS = {
   TierModeChat: "every chat question",
   TierDeepShort: "strong model",
   TierMeasured: "Measured on your flow:",
+  FlowFallbackHit: "That sentence is your flow's safety net, not the model: an action in the flow failed, so its answer never came back. In Power Automate open the flow \u2192 Run history \u2192 the latest run \u2192 the box with the red ! \u2192 the action inside it with the red !, and read its error. flow/POWER-AUTOMATE.md 4e, \u201cWhen it goes wrong\u201d, has the usual causes.",
   TierFastTook: "fast model typically {p0} s (last {n})",
   TierFastTookNone: "fast model not measured yet",
   TierDeepTook: "strong model typically {p0} s (last {n})",
@@ -5318,7 +5319,7 @@ const STATUSES = [
    the status bar, and clicking it copies a line you can paste into a bug
    report — build date and flow protocol included, because those are the two
    things that actually differ between copies. */
-const APP_VERSION = "4.6.1";
+const APP_VERSION = "4.6.2";
 const APP_BUILT = "2026-09-18";
 function buildLine(){
   return "Dossier v" + APP_VERSION + " \u00b7 built " + APP_BUILT +
@@ -11393,6 +11394,13 @@ async function flowAsk(q, thread, opts){
   }
 
   const reply = flowReply(out, q);
+  /* The Fallback response's sentence (POWER-AUTOMATE.md 6) is not the model
+     talking: an action in the flow failed and nothing it produced came back.
+     Said as that, with where to look, rather than left to read as an answer. */
+  if (/^\s*I could not work that one out\.?\s*$/i.test(String(out && out.say || "")) && !(out.actions || []).length){
+    reply.trouble = true;
+    reply.note = L("FlowFallbackHit");
+  }
   /* how long Power Automate took, under the answer: the number that says
      whether "slow" is the flow, the model, or neither */
   if (out && out.ms) reply.took = out.ms;

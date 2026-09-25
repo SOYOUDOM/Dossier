@@ -6,6 +6,18 @@ holds — which is what to paste into a bug report.
 
 ---
 
+## 4.6.2 - 2026-09-25
+
+- When the flow's **Fallback** answers (*I could not work that one out.*),
+  Dossier now says what that means - an action in the flow failed, so the
+  model's answer never came back - and where to read the error, instead of
+  showing it as though the model had said it.
+- `flow/POWER-AUTOMATE.md` 4e: how to find the failing action behind
+  "Deep? - ActionFailed. An action failed. No dependent actions succeeded",
+  and the fix for each usual cause - above all a **Set variable copied from
+  the True branch into the False one**, which keeps reading the deep prompt
+  that never runs on an ordinary question.
+
 ## 4.6.1 - 2026-09-25
 
 **The fast model stops talking about a blank picture, and Setup shows how

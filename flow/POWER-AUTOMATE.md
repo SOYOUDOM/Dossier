@@ -1054,6 +1054,12 @@ Condition.)
 4. Under it: **Set variable** · `answer` · the **Text** token of *Run a
    prompt deep*.
 
+> **Do not copy a Set variable from one branch to the other.** A copy keeps
+> reading the action it was made for — the deep prompt — and on every
+> ordinary question that action is skipped, so the copy fails, the Condition
+> fails, and every answer becomes the Fallback's. Add each Set variable
+> fresh and pick the **Text** token of the Run a prompt *in its own branch*.
+
 ### Step 5 — Clean reads the variable
 
 Open **Compose — "Clean"** and replace its expression with
@@ -1111,6 +1117,27 @@ tick that catches it.)
    through **If yes** too.
 
 ### When it goes wrong
+
+**Every question comes back as *I could not work that one out*, and the run
+shows `Deep?` with a red ! — "ActionFailed. An action failed. No dependent
+actions succeeded".** That message is the Condition saying *something inside
+me failed*; it never says what. To see what:
+
+1. Open the run. On the Condition, the branch that ran is the one **not**
+   greyed out — **False** for an ordinary question.
+2. Click that branch's box (it may be collapsed to "2 Actions") so its
+   actions show.
+3. Click the action with the red **!** and read **Error** on the left (or the
+   red text under *Outputs*). Then:
+
+| the action with the red ! | its error says | fix |
+|---|---|---|
+| **Set variable** in the **False** branch | `… 'Run_a_prompt_deep' … skipped` / `… not executed` / `InvalidTemplate` | It was copied from the True branch and still reads the **deep** prompt's answer — which never runs on a False question. Open it, delete the value, and insert the **Text** token of the **Run a prompt in the same (False) branch**. Check in **Code view**: the value must name that action (e.g. `Run_a_prompt`), not `Run_a_prompt_deep` |
+| **Set variable** in either branch | `… of type 'String' cannot be … with value of type 'Object'` (or `'Null'`) | The wrong token was picked (*Response*, *body*…). Delete it and pick **Text** from that branch's Run a prompt |
+| **Run a prompt** in the False branch | `… required …` / `… input …` / `BadRequest` | Moving it cleared its inputs, or it points at the wrong prompt. Open it: **Prompt** = your original prompt; `prompt` = `body('Parse_JSON')?['prompt']`; `picture` = `base64ToBinary(body('Parse_JSON')?['picture'])` |
+| **Run a prompt deep** in the True branch | any | The same three checks on the deep side: prompt `Dossier deep`, the two inputs as above, and a model that takes images |
+
+Fix, **Save**, and ask Dossier something again — no need to reload it.
 
 | what you see | what it is | fix |
 |---|---|---|
