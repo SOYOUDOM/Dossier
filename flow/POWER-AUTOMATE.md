@@ -1136,8 +1136,23 @@ me failed*; it never says what. To see what:
 | **Set variable** in either branch | `… of type 'String' cannot be … with value of type 'Object'` (or `'Null'`) | The wrong token was picked (*Response*, *body*…). Delete it and pick **Text** from that branch's Run a prompt |
 | **Run a prompt** in the False branch | `… required …` / `… input …` / `BadRequest` | Moving it cleared its inputs, or it points at the wrong prompt. Open it: **Prompt** = your original prompt; `prompt` = `body('Parse_JSON')?['prompt']`; `picture` = `base64ToBinary(body('Parse_JSON')?['picture'])` |
 | **Run a prompt deep** in the True branch | any | The same three checks on the deep side: prompt `Dossier deep`, the two inputs as above, and a model that takes images |
+| **Run a prompt** (either) | `InputContentFiltered` · *Prompt was filtered. [105]* · `DependencyHttpStatusCode 400` | Nothing is wrong with the flow: Microsoft's content filter refused the prompt before the model read it. It blocks text that looks like an attempt to give the model orders — rules appended after the content, "ignore…", "do not look at…", "you must…". Dossier 4.6.1 appended exactly such a block to every question without a picture; **4.6.3 removed it** — reload Dossier. Dossier also asks a blocked question once more without your notes, lessons, runbooks and records, and says so under the answer if that one got through: then a note or lesson written as rules for the AI is the trigger — reword it as plain facts |
 
 Fix, **Save**, and ask Dossier something again — no need to reload it.
+
+**Let Dossier show the error itself.** Give the Fallback response's **Body**
+this expression instead of the plain sentence, and Dossier puts the failing
+prompt action's error under the answer (and recognises a content-filter
+block by name):
+
+```
+concat('I could not work that one out. ', coalesce(actions('Run_a_prompt')?['outputs']?['body']?['error']?['message'], actions('Run_a_prompt_deep')?['outputs']?['body']?['error']?['message'], ''))
+```
+
+With only one prompt action, leave out the `Run_a_prompt_deep` part:
+`concat('I could not work that one out. ', coalesce(actions('Run_a_prompt')?['outputs']?['body']?['error']?['message'], ''))`.
+Use your actions' own names, spaces as `_`. If it will not save, keep the
+plain sentence — Dossier still recognises it.
 
 | what you see | what it is | fix |
 |---|---|---|

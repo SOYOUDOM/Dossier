@@ -3717,7 +3717,11 @@ const STRINGS = {
   TierModeChat: "every chat question",
   TierDeepShort: "strong model",
   TierMeasured: "Measured on your flow:",
-  FlowFallbackHit: "That sentence is your flow's safety net, not the model: an action in the flow failed, so its answer never came back. In Power Automate open the flow \u2192 Run history \u2192 the latest run \u2192 the box with the red ! \u2192 the action inside it with the red !, and read its error. flow/POWER-AUTOMATE.md 4e, \u201cWhen it goes wrong\u201d, has the usual causes.",
+  FlowFallbackHit: "Your flow's safety net answered, not the model: an action in the flow failed, so its answer never came back - and it failed again when asked without your notes and records. In Power Automate open the flow \u2192 Run history \u2192 the latest run \u2192 the box with the red ! \u2192 the action inside it with the red !, and read its error. flow/POWER-AUTOMATE.md 4e, \u201cWhen it goes wrong\u201d, has the usual causes.",
+  FlowFiltered: "Microsoft's content filter blocked this question before the model saw it (\u201cPrompt was filtered\u201d) - and again when it was asked without your notes and records, so it is the question itself, or the prompt file. Word it differently; if every question is blocked, check flow/prompt.txt or your dossier-prompt.txt for lines added recently.",
+  FlowSaid: "The flow said: {p0}",
+  FlowLeanAnswered: "Answered without your notes, lessons, runbooks and records: the full question failed in the flow, and this one went through. If that happens again and again, something in them is the reason - most often Microsoft's content filter reading a note or lesson as orders to the AI.",
+  FlowLeanFiltered: "Answered without your notes, lessons, runbooks and records: Microsoft's content filter blocked the full question (\u201cPrompt was filtered\u201d). Something in them reads to the filter like instructions to the AI - look for a note or lesson written as rules (\u201cDo not\u2026\u201d, \u201cAlways\u2026\u201d, \u201cYou must\u2026\u201d) and reword it as plain facts.",
   TierFastTook: "fast model typically {p0} s (last {n})",
   TierFastTookNone: "fast model not measured yet",
   TierDeepTook: "strong model typically {p0} s (last {n})",
@@ -5319,7 +5323,7 @@ const STATUSES = [
    the status bar, and clicking it copies a line you can paste into a bug
    report — build date and flow protocol included, because those are the two
    things that actually differ between copies. */
-const APP_VERSION = "4.6.2";
+const APP_VERSION = "4.6.3";
 const APP_BUILT = "2026-09-18";
 function buildLine(){
   return "Dossier v" + APP_VERSION + " \u00b7 built " + APP_BUILT +
@@ -11358,6 +11362,32 @@ async function flowAsk(q, thread, opts){
                      chips:[{ label:L("FlowTest"), act:{ kind:"panel", panel:"setup" } }] }, q);
   }
 
+  /* ── the flow's safety net answered ──────────────────────────────────────
+     Its Fallback sentence means an action failed and the model's answer
+     never came back. The commonest reason is Microsoft's content filter
+     refusing the prompt (InputContentFiltered, "Prompt was filtered") -
+     and what trips it is nearly always something that READS like orders to
+     the model: a note or lesson written as rules for an AI. So the question
+     is asked once more with none of that - no notes, lessons, runbooks,
+     profiles, past fixes or records, only the instructions and what they
+     said. If that one gets through, the answer is shown with a line saying
+     what it was answered without; if not, what to look at in the flow. */
+  let fell = !err && flowFellBack(out);
+  if (fell && !opts.lean){
+    const wait3 = chatThinking(log);
+    let out3 = null;
+    try {
+      out3 = await DossierFlow.ask(q, Object.assign(flowContext(q), {
+        memory:[], memoryIndex:[], memoryTotal:0, lessons:[], runbooks:[], runbookTotal:0,
+        runbooksMatched:[], profiles:[], pastFixes:[], incidents:undefined, conversation:[], forceRecords:[],
+        attachments:ctx.attachments, picture:ctx.picture, pictureName:ctx.pictureName,
+        promptTemplate:ctx.promptTemplate, promptFrom:ctx.promptFrom
+      }), Object.assign({}, cfg, { scope:"names" }));
+    } catch(e){ out3 = null; }
+    chatThought(wait3, null);
+    if (out3 && !flowFellBack(out3)){ out = out3; out.lean = fell; fell = null; }
+  }
+
   /* ── the second look ───────────────────────────────────────────────────
      workspace.records is a selection now, so there is one question it can
      miss: about records nobody named and no word in the sentence reaches.
@@ -11394,12 +11424,14 @@ async function flowAsk(q, thread, opts){
   }
 
   const reply = flowReply(out, q);
-  /* The Fallback response's sentence (POWER-AUTOMATE.md 6) is not the model
-     talking: an action in the flow failed and nothing it produced came back.
-     Said as that, with where to look, rather than left to read as an answer. */
-  if (/^\s*I could not work that one out\.?\s*$/i.test(String(out && out.say || "")) && !(out.actions || []).length){
+  if (fell){
+    /* even the lean question failed: it is the flow, or the question itself */
     reply.trouble = true;
-    reply.note = L("FlowFallbackHit");
+    reply.note = (fell.filtered ? L("FlowFiltered") : L("FlowFallbackHit")) +
+                 (fell.detail ? "\n\n" + L("FlowSaid", { p0:fell.detail }) : "");
+  } else if (out && out.lean){
+    reply.note = (reply.note ? reply.note + "\n" : "") +
+                 (out.lean.filtered ? L("FlowLeanFiltered") : L("FlowLeanAnswered"));
   }
   /* how long Power Automate took, under the answer: the number that says
      whether "slow" is the flow, the model, or neither */
@@ -11408,6 +11440,17 @@ async function flowAsk(q, thread, opts){
   if (out && out.ms && !sentFiles) flowTimed(out.tier || "fast", out.ms);
   chatBot(reply, q);
   chatSide();
+}
+
+/* The Fallback response's sentence (POWER-AUTOMATE.md 6), with whatever
+   the flow adds after it - the failing action's error, when the Fallback is
+   set up to pass it on (4e). Not the model talking. */
+function flowFellBack(out){
+  const s = String((out && out.say) || "");
+  const m = s.match(/^\s*I could not work that one out\.?\s*([\s\S]*)$/i);
+  if (!m || (out.actions || []).length) return null;
+  const detail = m[1].trim().slice(0, 400);
+  return { detail, filtered:/filter|InputContentFiltered|\[105\]/i.test(detail) };
 }
 
 /* One needRecords and nothing else is a request for more records. Anything

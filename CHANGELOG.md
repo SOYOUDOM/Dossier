@@ -6,6 +6,32 @@ holds — which is what to paste into a bug report.
 
 ---
 
+## 4.6.3 - 2026-09-25
+
+**Every question failed with "Prompt was filtered" - fixed.**
+
+4.6.1 appended a block to the end of every question without a picture: "===
+NO PICTURE THIS TIME === ... Do not look at it, describe it, mention it ...
+answer only what they said". Orders tacked on after the content, telling the
+model to disregard one of its inputs, are the shape of a prompt-injection
+attack, and Microsoft's content filter refused every such prompt before the
+model read it: `InputContentFiltered`, "Prompt was filtered. [105]". The
+flow's Condition then failed and its Fallback answered.
+
+- Nothing is appended any more. When nothing is attached, **WHAT THEY
+  ATTACHED** says so in plain words - no file, no picture, the image input
+  holds only a blank placeholder - which is where the model looks for
+  attachments, and which keeps the mini model from describing the blank
+  square.
+- **When the flow's safety net answers, Dossier asks once more, lean** - the
+  instructions and the question, without notes, lessons, runbooks, profiles,
+  past fixes or records. If that gets through, the answer is shown with a
+  line saying what it was answered without, and why (a note or lesson that
+  reads like orders to the AI is the usual trigger). If it fails too, the
+  answer says it is the flow or the question, and what to look at.
+- `flow/POWER-AUTOMATE.md` 4e: the `InputContentFiltered` row, and an
+  optional Fallback body that passes the failing action's error to Dossier.
+
 ## 4.6.2 - 2026-09-25
 
 - When the flow's **Fallback** answers (*I could not work that one out.*),
