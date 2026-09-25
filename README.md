@@ -1466,9 +1466,8 @@ updates never touch that folder. Setup shows which one is in use, and
 
 ### Learning — how it gets better at you
 
-Three things, all through the flow you already have (the prompt in
-[`flow/POWER-AUTOMATE.md`](flow/POWER-AUTOMATE.md) covers them; nothing else
-in the flow changes):
+All of it through the flow you already have — the prompt is `flow/prompt.txt`
+on this PC, so nothing in Power Automate changes:
 
 - **Lessons.** Short lines about *you* — how you like to be answered, how you
   work, who asks you for what, what it still needs to ask. They go with every
@@ -1485,6 +1484,29 @@ in the flow changes):
   profile or a record waits there as a button; nothing like that happens by
   itself. Missed noon because Dossier was closed? It runs the next time it is
   open. A morning with nothing in it costs no call.
+- **👍 / 👎 under every answer.** A thumb down asks for one line — what it
+  should have said. That line is kept as a `[correction]` lesson, so the next
+  answer to that kind of question uses it, and as a **check**: **Setup →
+  Checks → Run checks** asks every corrected question again and has the
+  assistant judge whether the new answer agrees with your line — PASS or FAIL,
+  and why — so a correction that stopped working, or a prompt edit that broke
+  one, shows up there first. The daily look back reads every thumb, and turns
+  several corrections with the same cause into one lesson.
+- **"How was it fixed?"** When you close a record by hand, a small bar asks for
+  one line, with a draft already in it — from your notes first, then from the
+  assistant, which reads the record and writes the line (it never overwrites
+  what you have started typing). Enter keeps it, Esc skips, and ignoring it
+  costs nothing; closing many at once asks nothing. The line is on the record
+  sheet under Notes as **How it was fixed**, and both switches are in **Setup →
+  What I have learned about you**.
+- **"Last time this happened, you did X."** With every question the assistant
+  gets the three closed records most like it and how each was fixed
+  (`workspace.pastFixes`) — your line where you wrote one, the last note where
+  you did not. Words that mean the same in support work are matched together:
+  *can't log in*, *sign-in fails* and *authentication error* are one problem,
+  and a 503 is *down*. When one is plainly the same problem it leads with it —
+  "This looks like D-0142 on 10 Sep, that was the SSO cache" — and gives the
+  one check that shows whether it is the same cause this time.
 - **Runbooks that teach back.** **Interview me** on a runbook has it read the
   procedure and ask you, one question at a time, for what it leaves out — the
   real table names, how to tell the causes apart, who to escalate to — then

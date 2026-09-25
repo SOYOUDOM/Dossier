@@ -6,6 +6,46 @@ holds — which is what to paste into a bug report.
 
 ---
 
+## 4.5.0 - 2026-09-25
+
+**The assistant learns from your corrections, from how you fix things, and
+brings your past fixes back when the same problem returns.**
+
+Nothing changes in Power Automate - the prompt is `flow/prompt.txt` on this
+PC. Reload the page.
+
+- **👍 / 👎 under every answer from the assistant.** A thumb down asks for one
+  line: what it should have said. That line is kept as a `[correction]`
+  lesson - the next question about the same thing carries it, and the prompt
+  treats it as the truth - and as a **check**. Press either thumb again to
+  take the rating back, with what it left behind.
+- **Checks** (Setup -> What I have learned about you -> Checks): every
+  corrected question, asked again with **Run checks**, and judged by the
+  assistant against your line - PASS or FAIL and why. A correction that has
+  stopped working, or a prompt edit that broke one, shows up here.
+- **"How was it fixed?"** comes up when you close a record by hand: one line,
+  already drafted from your notes and then by the assistant, which reads the
+  record (it never overwrites what you have started typing). Enter keeps it,
+  Esc skips, two minutes untouched and it goes; closing several at once asks
+  nothing. The line is on the record sheet as **How it was fixed**, counts as
+  a note for *closed with no note*, and can be switched off - or kept without
+  the assistant's suggestion - in Setup.
+- **Past fixes with every question.** The three closed records most like it,
+  and how each was fixed, go with the question as `workspace.pastFixes`; the
+  assistant leads with one when it is plainly the same problem - "This looks
+  like D-0142 on 10 Sep, that was the SSO cache" - and gives the check that
+  confirms it. The matching folds support synonyms together (log in / sign-in
+  / authentication / SSO; 503 / down / outage; timeout / hang / slow) and
+  needs the record's title to share something with the question, so a word
+  that only appears in somebody's notes is not taken for a precedent.
+- **The daily look back** now reads the thumbs (every thumb down with its
+  correction, the questions under the thumbs up) and each closed record's
+  own "how it was fixed" line, and is told to turn several corrections with
+  one cause into one lesson.
+- The prompt gains two modes, `[fix]` and `[check]`, a `[correction]` rule, a
+  "last time" rule and one example: 17.0 KB -> 19.2 KB. `flow/CONTRACT.md`
+  documents `pastFixes`, `records[].fixed` and the new modes.
+
 ## 4.4.2 - 2026-09-25
 
 **The Ask panel stays where it is when you open the conversation list.**

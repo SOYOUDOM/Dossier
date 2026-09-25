@@ -181,6 +181,44 @@ body.chatting .find{max-width:190px}
 .wsbtn .dot.busy{animation:dotbusy .8s ease-in-out infinite alternate}
 @keyframes dotbusy{to{opacity:.3}}
 #sbSave.act{cursor:pointer;text-decoration:underline dotted;text-underline-offset:3px}
+/* rating an answer: small, quiet, and only loud once pressed */
+.chrate{display:flex;align-items:center;gap:4px;margin-top:8px;min-height:24px;flex-wrap:wrap}
+.chrate > button{border:1px solid transparent;background:none;border-radius:999px;cursor:pointer;
+  font-size:13px;line-height:1;padding:4px 7px;opacity:.55;filter:grayscale(1);transition:opacity .15s,filter .15s,background .15s}
+.chrate > button:hover{opacity:1;filter:none;background:var(--ch-panel,var(--paper-2))}
+.chrate > button.on{opacity:1;filter:none;border-color:var(--ch-line,var(--rule));background:var(--ch-panel,var(--paper-2))}
+.chrate .rs{font-size:11px;color:var(--ch-dim,var(--ink-3));margin-left:4px;min-width:0}
+.chrate .rs i{font-style:normal;color:var(--ch-ink,var(--ink))}
+.chrate.asking{display:block}
+.chfix{display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+.chfix .in{flex:1 1 100%;min-width:0;font-size:12px}
+.ckrow{display:flex;width:100%;margin-bottom:5px;border-radius:var(--r-sm);padding:7px 10px;gap:9px;align-items:flex-start}
+.ckrow .ckt{flex:1;min-width:0;font-size:12px;line-height:1.5}
+.tagx.ckrow .ckt b{width:auto;height:auto;border-radius:0;font-weight:600;display:block;overflow-wrap:anywhere}
+.ckrow .ckt small{display:block;color:var(--ink-3);font-size:10.5px;overflow-wrap:anywhere}
+.ckv{flex:0 0 18px;height:18px;border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:700;
+  background:var(--paper-3);color:var(--ink-3);margin-top:1px}
+.ckv.pass{background:var(--st-done);color:#fff}
+.ckv.fail{background:var(--p1);color:#fff}
+/* "How was it fixed?" - under the work, above the status bar, out of the way */
+.fixbar{position:fixed;left:50%;bottom:22px;z-index:76;width:min(620px,calc(100vw - 32px));
+  transform:translate(-50%,14px);opacity:0;visibility:hidden;pointer-events:none;
+  background:var(--paper);color:var(--ink);border:1px solid var(--rule-hi);border-radius:var(--r);
+  box-shadow:0 18px 50px rgba(0,0,0,.22);padding:10px 12px;
+  transition:transform .2s var(--ease),opacity .2s,visibility 0s .2s}
+.fixbar.on{opacity:1;visibility:visible;pointer-events:auto;transform:translate(-50%,0);transition-delay:0s}
+body.chatting .fixbar{left:calc((100vw - min(452px,96vw)) / 2)}
+body.fixing .toasts{bottom:112px}
+.fixbar .fxh{display:flex;gap:8px;align-items:baseline;font-size:12px;margin-bottom:8px;min-width:0}
+.fixbar .fxq{font-weight:650;white-space:nowrap}
+.fixbar .fxh b{font-family:var(--f-mono);font-size:11px;color:var(--accent);white-space:nowrap}
+.fixbar .tt{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--ink-2)}
+.fixbar .fxs{font-size:10.5px;color:var(--ink-3);white-space:nowrap;max-width:45%;overflow:hidden;text-overflow:ellipsis}
+.fixbar .fxs.busy::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;
+  background:var(--accent);margin-right:5px;vertical-align:1px;animation:dotbusy .8s ease-in-out infinite alternate}
+.fixbar .fxs .lnk{border:0;background:none;color:var(--accent);cursor:pointer;font:inherit;text-decoration:underline;padding:0}
+.fixbar .fxr{display:flex;gap:6px;align-items:center}
+.fixbar .fxr .in{flex:1;min-width:0}
 
 .tabs{display:flex;gap:1px;flex:0 1 auto;min-width:0;overflow:hidden}
 .tabs button{
@@ -3615,6 +3653,44 @@ const STRINGS = {
   SaveBridgeDown: "Not saved yet: {p0}. Your changes stay on screen and are written by themselves the moment the bridge answers \u2014 no need to click anything.",
   SaveBackNow: "Saved \u2014 everything that was waiting is written.",
   SaveExportLate: "Saved to SQL Server. The dossier.json export beside it could not be written ({p0}); the next save writes it.",
+  FixQ: "How was it fixed?",
+  FixLabel: "How it was fixed",
+  FixPh: "One line: the cause and what fixed it. Enter keeps it, Esc skips",
+  FixHint: "One line in your words. The assistant brings it up the next time the same thing breaks.",
+  FixSave: "Keep",
+  FixSkip: "Skip",
+  FixFromNotes: "draft from your notes",
+  FixFromAi: "✦ the assistant's suggestion — check it",
+  FixThinking: "the assistant is reading it…",
+  FixAiNothing: "the notes don't say — in your words?",
+  FixAiLater: "the assistant suggests:",
+  FixUseAi: "use it",
+  FixAskAi: "{p0} “{p1}” was just closed. In one line, what fixed it?",
+  FixKept: "Kept on {p0} — it comes up the next time something like it breaks.",
+  FixSettingOn: "Ask “How was it fixed?” when I close a record",
+  FixSettingAi: "with the assistant's suggestion filled in",
+  RateUp: "Good answer",
+  RateDown: "Wrong or not useful — say what it should have said",
+  RateThanks: "Thanks — noted.",
+  RateNoted: "Marked wrong.",
+  RateFixed: "Corrected:",
+  RateFixPh: "What should it have said? One line — Enter keeps it",
+  RateFixSave: "Keep",
+  RateJustWrong: "Just mark it wrong",
+  RateJustWrongHint: "No correction — the daily look back still sees it",
+  RateLesson: "When asked “{p0}”, the right answer is: {p1}",
+  RateKept: "Got it — it answers that way from now on, and it's saved as a check.",
+  RateTakenBack: "Rating taken back.",
+  ChecksTitle: "Checks ({n})",
+  ChecksHint: "Every answer you corrected with 👎. Run them to ask each question again and see that it still answers the way you said.",
+  ChecksRun: "Run checks",
+  ChecksRunning: "Checking {p0} of {p1}…",
+  ChecksSummary: "last run: {p0} pass, {p1} fail · {p2}",
+  ChecksShouldSay: "should say:",
+  ChecksEmpty: "None yet. Press 👎 under an answer and say what it should have said — it lands here.",
+  ChecksDone: "Checked {n}: {p0} pass, {p1} fail.",
+  ChecksSee: "See checks",
+  CheckJudge: "QUESTION:\n{p0}\n\nTHE RIGHT ANSWER, in their words:\n{p1}\n\nTHE NEW ANSWER:\n{p2}",
   ScheduledRunSFiledIntoTodays: " scheduled run(s) filed into today's records",
   ScreenshotFiledUnder: "Screenshot filed under ",
   Script: "Script",
@@ -5176,7 +5252,7 @@ const STATUSES = [
    the status bar, and clicking it copies a line you can paste into a bug
    report — build date and flow protocol included, because those are the two
    things that actually differ between copies. */
-const APP_VERSION = "4.4.2";
+const APP_VERSION = "4.5.0";
 const APP_BUILT = "2026-09-18";
 function buildLine(){
   return "Dossier v" + APP_VERSION + " \u00b7 built " + APP_BUILT +
@@ -6008,7 +6084,10 @@ function normalise(t){
     log: Array.isArray(t.log) ? t.log : [],
     files: Array.isArray(t.files) ? t.files : [],
     carried: +t.carried || 0,
-    fromRoutine: t.fromRoutine || "", forDate: t.forDate || ""
+    fromRoutine: t.fromRoutine || "", forDate: t.forDate || "",
+    /* how it was fixed, in one line - asked for when it is closed, and
+       what the assistant reaches for the next time the same thing breaks */
+    resolution: t.resolution || ""
   };
 }
 function getTask(id){ return S.tasks.find(t => t.id === id); }
@@ -6059,6 +6138,7 @@ function updateTask(id, patch, note){
 }
 function setStatus(id, status){
   const t = getTask(id); if (!t || t.status === status) return;
+  if (FIX.id === id && status !== "done") fixClose();
   pushUndo("status");
   const from = t.status, now = new Date().toISOString();
   t.status = status;
@@ -6075,6 +6155,7 @@ function setStatus(id, status){
   /* the one moment in a support day worth celebrating */
   if (status === "done") petMood("cheer", 2600);
   announceFreed(freed);
+  if (status === "done") fixAsk(t);
 }
 function cycleStatus(id){
   const t = getTask(id); if (!t) return;
@@ -8182,7 +8263,7 @@ function dayHints(){
           Math.round((Date.now()-new Date(stale[0].started))/86400000) + L("DaysStillMoving") });
 
   const noNote = S.tasks.filter(t => t.status === "done" && dayOf(t.completed) === k &&
-    !t.notes && t.log.filter(l => l.kind !== "status").length === 0);
+    !t.notes && !t.resolution && t.log.filter(l => l.kind !== "status").length === 0);
   if (noNote.length) out.push({ key:"nonote", icon:"✎", id:noNote[0].id,
     html: noNote.length + L("RecordSClosedTodayWithNo") });
 
@@ -8664,7 +8745,7 @@ function dr(label, sub, list){
    this file so that a copy of dossier.html on its own still has it. Two
    kilobytes. assets/thinking.gif overrides it when there is one. */
 const CHAT_GIF_DATA = "data:image/gif;base64,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";
-const CHAT = { acts:{}, code:{}, files:[], n:0, last:"", gif:CHAT_GIF_DATA };
+const CHAT = { acts:{}, code:{}, rates:{}, files:[], n:0, last:"", gif:CHAT_GIF_DATA };
 /* ── how big a question is allowed to get ──────────────────────────────────
    Base64 is a third bigger than the file it encodes, so a 4 MB screenshot
    arrives at the endpoint as 5.2 MB of JSON, and five of them as 27 MB. A
@@ -10031,7 +10112,7 @@ function chatReplay(){
   const log = $("chatLog");
   if (!log) return;
   log.innerHTML = "";
-  CHAT.acts = {};
+  CHAT.acts = {}; CHAT.rates = {};
   const c = chatThread();
   if (!c || !c.msgs.length){
     chatRenderBot({ hero:true, say:L("ChatGreeting"), seeds:[
@@ -10612,7 +10693,17 @@ function chatRenderBot(r, sourceText, replaying){
      teaching loop from the outside: get it wrong, press this, pick the right
      one, and it has learned the shape of the question for good. */
   const src = sourceText || CHAT.last || "";
-  if (src && (r.say || r.intent) && !r.examples){
+  /* An answer from the model is rated instead: a thumb either way, and a
+     thumb down asks for one line - what it should have said - which it
+     then keeps as a correction and asks itself again later as a check.
+     The pick-the-intent teacher below is for the app's own reading of a
+     question, which the model's answers never go through. */
+  const rated = r.via === "flow" && src && !r.examples;
+  if (rated){
+    CHAT.rates[id] = { r, src };
+    h += '<div class="chrate" data-rate="' + id + '">' + chatRateInner(r) + "</div>";
+  }
+  if (src && (r.say || r.intent) && !r.examples && !rated){
     CHAT.acts[id + "wrong"] = { kind:"teach", text:src };
     h += '<div class="wrong"><button data-act="' + id + 'wrong">' +
          esc(L("ChatWrong")) + "</button></div>";
@@ -10623,7 +10714,7 @@ function chatRenderBot(r, sourceText, replaying){
     CHAT.code[id + "say"] = r.say;
     h += '<div class="chtools" aria-label="' + esc(L("ChatTools")) + '">' +
          '<button data-copysay="' + id + 'say" title="' + esc(L("ChatCopyAnswer")) + '">\u2398</button>' +
-         (src ? '<button data-act="' + id + 'wrong" title="' + esc(L("ChatWrong")) + '">\u21BA</button>' : "") +
+         (src && !rated ? '<button data-act="' + id + 'wrong" title="' + esc(L("ChatWrong")) + '">\u21BA</button>' : "") +
          "</div>";
   }
 
@@ -10649,6 +10740,159 @@ function chatRenderBot(r, sourceText, replaying){
 }
 
 /* say something and keep it */
+/* ── rating an answer ───────────────────────────────────────────────────
+   Up is thanks. Down asks for the one line it should have said, and that
+   line goes two places: into what it has learned about you, as a
+   correction (so the next answer uses it), and into the checks (so the
+   same question can be put again later, to see that it stayed fixed).
+   Either press again takes the rating back, and what it left behind. */
+function chatRateInner(r){
+  const up = r.rate === "up", down = r.rate === "down";
+  const b = (v, on, face, tip) => '<button data-rv="' + v + '" class="' + (on ? "on" : "") + '" aria-pressed="' + on +
+    '" title="' + LE(tip) + '">' + face + "</button>";
+  return b("up", up, "\u{1F44D}", "RateUp") + b("down", down, "\u{1F44E}", "RateDown") +
+    (down && r.fixText ? '<span class="rs">' + LE("RateFixed") + " <i>" + esc(r.fixText) + "</i></span>"
+     : down ? '<span class="rs">' + LE("RateNoted") + "</span>"
+     : up ? '<span class="rs">' + LE("RateThanks") + "</span>" : "");
+}
+function chatRatePaint(id){
+  const row = document.querySelector('.chrate[data-rate="' + id + '"]'), o = CHAT.rates[id];
+  if (row && o){ row.classList.remove("asking"); row.innerHTML = chatRateInner(o.r); }
+}
+function chatRateAsk(id){
+  const row = document.querySelector('.chrate[data-rate="' + id + '"]'); if (!row) return;
+  row.classList.add("asking");
+  row.innerHTML = '<div class="chfix"><input class="in" data-rfin="' + id + '" autocomplete="off" placeholder="' + LE("RateFixPh") + '">' +
+    '<button class="btn sm pri" data-rfix="save">' + LE("RateFixSave") + "</button>" +
+    '<button class="btn sm" data-rfix="skip" title="' + LE("RateJustWrongHint") + '">' + LE("RateJustWrong") + "</button>" +
+    '<button class="btn sm" data-rfix="cancel">' + LE("Cancel") + "</button></div>";
+  const inp = row.querySelector("input");
+  inp.focus();
+  chatScroll();
+}
+function chatRateSet(id, v, fixText){
+  const o = CHAT.rates[id]; if (!o) return;
+  const r = o.r, was = r.rate || "";
+  /* whatever the last rating left behind goes first */
+  if (r.lessonId){ S.settings.lessons = lessonStore().filter(l => l.id !== r.lessonId); r.lessonId = ""; }
+  if (r.checkId){ S.settings.checks = checkStore().filter(c => c.id !== r.checkId); r.checkId = ""; }
+  r.rate = v || ""; r.fixText = ""; r.rateAt = v ? new Date().toISOString() : "";
+  r.rateQ = v ? String(o.src).slice(0, 400) : "";
+  if (v === "down" && fixText){
+    r.fixText = String(fixText).replace(/\s+/g, " ").trim().slice(0, 400);
+    const q = String(o.src).replace(/\s+/g, " ").trim();
+    const res = lessonSave(L("RateLesson", { p0:q.length > 160 ? q.slice(0, 160) + "\u2026" : q, p1:r.fixText }),
+                           "correction", null, "\u{1F44E}");
+    if (res && res.lesson) r.lessonId = res.lesson.id;
+    r.checkId = checkAdd(o.src, r.say || "", r.fixText).id;
+  }
+  touch();
+  chatRatePaint(id);
+  if (typeof paintReflect === "function") paintReflect();
+  if (v === "down" && r.fixText) toast(L("RateKept"), { action:L("ChecksSee"), onAction:openLearn });
+  else if (!v && was) toast(L("RateTakenBack"));
+}
+$("chatLog").addEventListener("click", e => {
+  const rv = e.target.closest("[data-rv]");
+  if (rv){
+    const id = rv.closest(".chrate").dataset.rate, o = CHAT.rates[id]; if (!o) return;
+    const v = rv.dataset.rv;
+    if (o.r.rate === v) return chatRateSet(id, "");          /* pressed again: taken back */
+    if (v === "up") return chatRateSet(id, "up");
+    return chatRateAsk(id);
+  }
+  const fx = e.target.closest("[data-rfix]");
+  if (fx){
+    const row = fx.closest(".chrate"), id = row.dataset.rate;
+    const inp = row.querySelector("input");
+    if (fx.dataset.rfix === "cancel") return chatRatePaint(id);
+    if (fx.dataset.rfix === "skip") return chatRateSet(id, "down");
+    const txt = inp ? inp.value.trim() : "";
+    if (!txt){ if (inp) inp.focus(); return; }
+    return chatRateSet(id, "down", txt);
+  }
+}, true);
+$("chatLog").addEventListener("keydown", e => {
+  const inp = e.target.closest && e.target.closest("[data-rfin]");
+  if (!inp) return;
+  const id = inp.dataset.rfin;
+  if (e.key === "Enter"){ e.preventDefault(); if (inp.value.trim()) chatRateSet(id, "down", inp.value.trim()); }
+  else if (e.key === "Escape"){ e.preventDefault(); e.stopPropagation(); chatRatePaint(id); }
+});
+
+/* ── checks: corrections, asked again ──────────────────────────────────
+   Every answer corrected with a thumb down is kept as a check: the
+   question, the answer that was wrong, and the line it should have said.
+   Run them and each question goes to the assistant again exactly as you
+   asked it, with everything it has learned since; then a second, short
+   question asks it whether the new answer agrees with your line. PASS or
+   FAIL, and why - so a correction that has stopped working, or a prompt
+   change that broke one, shows up here rather than in front of somebody. */
+const CHECKS = { running:false, at:0, of:0 };
+/* Setup, opened at what it has learned and the checks - which sit in a
+   folded section further down, and are no use to anybody folded */
+function openLearn(){
+  openModal("setup");
+  let n = 0;
+  const go = () => {
+    const box = $("learnBox");
+    if (!box){ if (++n < 20) setTimeout(go, 60); return; }
+    const d = box.closest("details"); if (d) d.open = true;
+    box.scrollIntoView({ block:"start", behavior:"smooth" });
+  };
+  setTimeout(go, 60);
+}
+function checkStore(){
+  if (!Array.isArray(S.settings.checks)) S.settings.checks = [];
+  return S.settings.checks;
+}
+function checkAdd(q, bad, want){
+  const list = checkStore(), key = lessonKey(q);
+  const old = list.find(c => lessonKey(c.q) === key);
+  const c = old || { id:"C" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5) };
+  Object.assign(c, { q:String(q || "").slice(0, 800), bad:String(bad || "").slice(0, 1500),
+                     want:String(want || "").slice(0, 500), at:new Date().toISOString(), last:null });
+  if (!old) list.unshift(c);
+  if (list.length > 60) list.length = 60;
+  return c;
+}
+async function checksRun(){
+  if (CHECKS.running) return;
+  if (!flowOn()) return toast(L("ReflectNeedsFlow"), { bad:true });
+  const list = checkStore().slice();
+  if (!list.length) return;
+  CHECKS.running = true; CHECKS.of = list.length; CHECKS.at = 0;
+  paintReflect();
+  let pass = 0, fail = 0;
+  try {
+    await promptLoad();
+    const cfg = flowCfg();
+    for (const c of list){
+      CHECKS.at++; paintReflect();
+      let ans = "", verdict = "unclear", why = "";
+      try {
+        const ctx = Object.assign(flowContext(c.q), { conversation:[], attachments:[],
+          picture:CHAT_BLANK_PNG, pictureName:"", promptTemplate:PROMPT.text, promptFrom:PROMPT.from });
+        const out = await DossierFlow.ask(c.q, ctx, cfg);
+        ans = [out.say, out.ask].filter(Boolean).join("\n\n") ||
+              (out.actions || []).map(a => a.do).join(", ") || "(nothing)";
+        const jq = "[check] " + L("CheckJudge", { p0:c.q, p1:c.want, p2:ans.slice(0, 3000) });
+        const jctx = Object.assign(flowContext(jq), { mode:"check", conversation:[], attachments:[], pastFixes:[],
+          picture:CHAT_BLANK_PNG, pictureName:"", promptTemplate:PROMPT.text, promptFrom:PROMPT.from });
+        const j = await DossierFlow.ask(jq, jctx, Object.assign({}, cfg, { scope:"names" }));
+        const say = String(j.say || "").trim();
+        const m = say.match(/^[\W_]*(PASS|FAIL)\b[\s:.\-\u2013\u2014]*/i);
+        if (m){ verdict = m[1].toLowerCase(); why = say.slice(m[0].length); } else why = say;
+      } catch(e){ verdict = "error"; why = String(e.message || e); }
+      const cur = checkStore().find(x => x.id === c.id);      /* it may have been deleted meanwhile */
+      if (cur) cur.last = { at:new Date().toISOString(), verdict, say:ans.slice(0, 800), why:why.slice(0, 300) };
+      if (verdict === "pass") pass++; else if (verdict === "fail") fail++;
+      touch(); paintReflect();
+    }
+  } finally { CHECKS.running = false; paintReflect(); }
+  toast(L("ChecksDone", { n:list.length, p0:pass, p1:fail }), fail ? { bad:true } : {});
+}
+
 function chatBot(r, sourceText){
   chatPush({ who:"bot", reply:r, src:sourceText || "" });
   chatRenderBot(r, sourceText);
@@ -10871,13 +11115,14 @@ function flowContext(q){
     memory: memoryForFlow(q),
     promptTemplate: PROMPT.text || "",
     promptFrom: PROMPT.from || "",
-    lessons: lessonsForFlow(),
-    mode: (String(q || "").match(/^\[(teach|study|reflect)\]/) || [0, "chat"])[1],
+    lessons: lessonsForFlow(q),
+    mode: (String(q || "").match(/^\[(teach|study|reflect|fix|check)\]/) || [0, "chat"])[1],
     memoryIndex: memoryIndexForFlow(q),
     memoryTotal: memoryStore().length,
     runbooks: runbooksForFlow(q),
     runbookTotal: runbookStore().length,
     runbooksMatched: runbooksMatchedForFlow(q),
+    pastFixes: pastFixesFor(q),
     mentioned: rbIdents(q),
     incidents: incidentsForFlow(30),
     profiles: profilesForFlow(q),
@@ -11036,7 +11281,7 @@ function flowNeeds(out){
    the "not what I meant" button underneath still works. */
 function flowReply(out, asked){
   const r = { say:out.say || "", note:"", rows:[], steps:[], chips:[],
-              idents: rbIdents(asked || "") };
+              idents: rbIdents(asked || ""), via:"flow" };
 
   if (out.ask) r.say = (r.say ? r.say + "\n\n" : "") + out.ask;
   /* the answers it offered with the question: one press sends one */
@@ -14905,7 +15150,8 @@ function renderDrawer(){
       prior.map(x => x.task.title).join(" · "), false,
       prior.map(p => {
         const pt = p.task;
-        const note = pt.notes || (pt.log.filter(l => l.kind !== "status").slice(-1)[0] || {}).text || L("NoNotesWereKept");
+        const note = (pt.resolution ? "**" + L("FixLabel") + ":** " + pt.resolution + (pt.notes ? "\n\n" : "") : "") +
+                     (pt.notes || (pt.resolution ? "" : (pt.log.filter(l => l.kind !== "status").slice(-1)[0] || {}).text || L("NoNotesWereKept")));
         return '<div class="prior" data-goto="' + pt.id + '"><div class="ph"><b>' + esc(pt.title) + "</b>" +
           "<em>" + Math.round(p.score*100) + "% · " + stMeta(pt.status).label + "</em></div>" +
           '<div class="pn rtv">' + mdHtml(note) + "</div>" +
@@ -15065,6 +15311,14 @@ function renderDrawer(){
 
     "<div class=\"sec\"><h5>" + L("Label_Notes") + "</h5>" +
       '<textarea class="in" data-f="notes" placeholder="What you found, what you changed, what to watch. This is what shows up next time a similar record appears.">' + esc(t.notes) + "</textarea></div>" +
+
+    /* one line, and the line the assistant quotes back the next time this
+       breaks - so it is asked for when a record is closed, and kept here */
+    ((t.status === "done" || t.status === "cancelled" || t.resolution)
+      ? "<div class=\"sec\"><h5>" + LE("FixLabel") + "</h5>" +
+        '<input class="in" data-f="resolution" value="' + esc(t.resolution) + '" placeholder="' + esc(L("FixPh")) + '">' +
+        '<div class="hint2" style="margin-top:5px">' + esc(L("FixHint")) + "</div></div>"
+      : "") +
 
     "<div class=\"sec\"><h5>" + L("WorkLog2") + ((t.log||[]).length ? '<span class="n">' + t.log.length + "</span>" : "") +
       "</h5>" +
@@ -17864,16 +18118,17 @@ function hideBanner(){ $("banner").classList.remove("on"); }
    the assistant asking the questions that would make it usable - one at a
    time - and "Learn from a BAU document" hands it a guideline to turn into
    runbooks, asking about what the document leaves out. */
-const LESSON_KINDS = ["style", "preference", "habit", "people", "system", "gap"];
+const LESSON_KINDS = ["style", "preference", "habit", "people", "system", "gap", "correction"];
 function lessonStore(){
   if (!Array.isArray(S.settings.lessons)) S.settings.lessons = [];
   return S.settings.lessons;
 }
 function lessonKey(t){ return String(t || "").toLowerCase().replace(/[^\p{L}\p{N}]+/gu, " ").trim(); }
 function lessonSave(text, kind, replaces, source){
-  text = String(text || "").replace(/\s+/g, " ").trim().slice(0, 300);
-  if (!text) return null;
   kind = String(kind || "").toLowerCase();
+  /* a correction carries the question it corrects as well as the answer */
+  text = String(text || "").replace(/\s+/g, " ").trim().slice(0, kind === "correction" ? 600 : 300);
+  if (!text) return null;
   if (LESSON_KINDS.indexOf(kind) < 0) kind = "habit";
   const list = lessonStore(), now = new Date().toISOString();
   let hit = replaces ? list.find(l => lessonKey(l.text) === lessonKey(String(replaces).replace(/^\[\w+\]\s*/, ""))) : null;
@@ -17890,8 +18145,283 @@ function lessonSave(text, kind, replaces, source){
   return { lesson:l, replaced:false };
 }
 /* newest first, thirty at most, one line each: a few hundred tokens */
-function lessonsForFlow(){
-  return lessonStore().slice(0, 30).map(l => "[" + l.kind + "] " + l.text);
+function lessonsForFlow(q){
+  const all = lessonStore();
+  const plain = all.filter(l => l.kind !== "correction").slice(0, 30);
+  /* Corrections could fill the list by themselves, so they travel by
+     relevance: the ones that share words with this question, plus the
+     three newest. The rest are still kept - and still asked about by the
+     checks - they just do not ride along with every question. */
+  const fixes = all.filter(l => l.kind === "correction");
+  let pick = [];
+  if (fixes.length){
+    const w = new Set(fixWords(q));
+    pick = fixes.map((l, i) => ({ l, i, s:fixWords(l.text).filter(x => w.has(x)).length }))
+      .filter(x => x.s > 1).sort((a, b) => (b.s - a.s) || (a.i - b.i)).slice(0, 6).map(x => x.l);
+    fixes.slice(0, 3).forEach(l => { if (pick.indexOf(l) < 0) pick.push(l); });
+  }
+  return pick.concat(plain).map(l => "[" + l.kind + "] " + l.text);
+}
+
+/* ── "How was it fixed?" ────────────────────────────────────────────────
+   Asked once, when a record is closed by hand: one line, the cause and the
+   fix. It is the richest thing the assistant can learn from you and the
+   one most often never written down - the notes say what was tried, the
+   close says it worked, and what actually did it lives in your head. So
+   the question comes up at the moment you know the answer, with a draft
+   already in it: first from your notes, then from the assistant, which
+   reads the record and writes the line. Enter keeps it, Esc lets it go,
+   and ignoring it costs nothing. */
+const FIX = { id:"", quiet:0, timer:0, draft:"", edited:false, asking:0 };
+function fixCfg(){
+  S.settings.fixAsk = Object.assign({ on:true, ai:true }, S.settings.fixAsk || {});
+  return S.settings.fixAsk;
+}
+function fixPlain(s){
+  return String(s || "").replace(/```[\s\S]*?```/g, " ").replace(/[*_`>#|]/g, "")
+    .replace(/\s+/g, " ").trim();
+}
+/* the last thing written on it - usually what was done last, which is
+   usually what fixed it; a draft to correct, not an answer */
+function fixDraft(t){
+  const logs = (t.log || []).filter(l => l.kind !== "status" && l.text && !/^\w+ \u2192/.test(l.text));
+  const last = logs.length ? fixPlain(logs[logs.length - 1].text) : "";
+  if (last) return last.slice(0, 220);
+  const lines = String(t.notes || "").split(/\n+/).map(fixPlain).filter(x => x.length > 3);
+  return lines.length ? lines[lines.length - 1].slice(0, 220) : "";
+}
+/* the record as the assistant reads it to write the line */
+function fixMaterial(t){
+  const clip = (x, n) => { x = String(x || "").trim(); return x.length > n ? x.slice(0, n) + "\u2026" : x; };
+  const out = [t.code + " \u00b7 " + t.title,
+    [t.system, t.type, t.priority, t.ticket, t.requester ? "raised by " + t.requester : ""].filter(Boolean).join(" \u00b7 ")];
+  if (t.notes) out.push("", "NOTES:", clip(t.notes, 3000));
+  const logs = (t.log || []).filter(l => l.kind !== "status" && l.text && !/^\w+ \u2192/.test(l.text)).slice(-12);
+  if (logs.length) out.push("", "LOG:", ...logs.map(l => "- " + String(l.at || "").slice(0, 16).replace("T", " ") + " " + clip(l.text, 400)));
+  const steps = (t.checklist || []).filter(c => c.done).map(c => "- " + c.text);
+  if (steps.length) out.push("", "STEPS DONE:", ...steps.slice(0, 20));
+  if ((t.waitLog || []).length) out.push("", "WAITED ON: " + t.waitLog.map(w => w.party ? w.party + (w.days ? " (" + w.days + "d)" : "") : "").filter(Boolean).join(", "));
+  return out.join("\n");
+}
+function fixEl(){
+  let el = $("fixBar");
+  if (el) return el;
+  el = document.createElement("div");
+  el.className = "fixbar"; el.id = "fixBar";
+  el.setAttribute("role", "dialog"); el.setAttribute("aria-label", L("FixQ"));
+  el.innerHTML =
+    '<div class="fxh"><span class="fxq">' + LE("FixQ") + '</span><b id="fixCode"></b>' +
+      '<span class="tt" id="fixTitle"></span><span class="fxs" id="fixState"></span></div>' +
+    '<div class="fxr"><input class="in" id="fixIn" autocomplete="off" spellcheck="true" placeholder="' + LE("FixPh") + '">' +
+      '<button class="btn pri sm" id="fixSave">' + LE("FixSave") + "</button>" +
+      '<button class="btn sm" id="fixSkip" title="Esc">' + LE("FixSkip") + "</button></div>";
+  document.body.appendChild(el);
+  const inp = $("fixIn");
+  inp.addEventListener("input", () => { FIX.edited = true; fixTimer(); });
+  inp.addEventListener("keydown", e => {
+    if (e.key === "Enter"){ e.preventDefault(); fixSave(); }
+    else if (e.key === "Escape"){ e.preventDefault(); e.stopPropagation(); fixClose(); }
+  });
+  $("fixSave").addEventListener("click", fixSave);
+  $("fixSkip").addEventListener("click", fixClose);
+  $("fixState").addEventListener("click", e => {
+    const use = e.target.closest("[data-fixuse]");
+    if (!use) return;
+    inp.value = use.dataset.fixuse; FIX.draft = inp.value; FIX.edited = false;
+    fixState(L("FixFromAi")); inp.focus();
+  });
+  return el;
+}
+function fixState(text, busy, offer){
+  const st = $("fixState"); if (!st) return;
+  st.classList.toggle("busy", !!busy);
+  st.innerHTML = esc(text || "") + (offer
+    ? ' <button class="lnk" data-fixuse="' + esc(offer) + '" title="' + esc(offer) + '">' + LE("FixUseAi") + "</button>" : "");
+}
+function fixAsk(t){
+  const cfg = fixCfg();
+  if (!cfg.on || FIX.quiet || !t || S.hush) return;
+  if (String(t.resolution || "").trim()) return;      /* already said */
+  if (FIX.id && FIX.id !== t.id) fixLeave();          /* what was typed for the last one is kept */
+  const el = fixEl();
+  FIX.id = t.id; FIX.edited = false; FIX.draft = fixDraft(t);
+  $("fixCode").textContent = t.code || "";
+  $("fixTitle").textContent = t.title || "";
+  const inp = $("fixIn");
+  inp.value = FIX.draft;
+  fixState(FIX.draft ? L("FixFromNotes") : "");
+  el.classList.add("on"); document.body.classList.add("fixing");
+  /* into the box - unless something else is being typed in right now */
+  const a = document.activeElement;
+  if (!a || a === document.body || !(/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName) || a.isContentEditable)){
+    inp.focus(); inp.select();
+  }
+  fixTimer();
+  if (cfg.ai && typeof flowOn === "function" && flowOn()) fixSuggest(t);
+}
+/* the assistant reads the record and writes the line; it replaces the
+   draft only if you have not started typing over it */
+async function fixSuggest(t){
+  const my = ++FIX.asking;
+  fixState(L("FixThinking"), true);
+  let out = null;
+  try {
+    await promptLoad();
+    const q = "[fix] " + L("FixAskAi", { p0:t.code, p1:t.title });
+    const ctx = Object.assign(flowContext(q), {
+      mode:"fix", conversation:[], pastFixes:[],
+      attachments:[{ name:t.code + ".txt", type:"text/plain", size:0, data:"", kind:"text",
+                     text:fixMaterial(t), pages:0, note:"" }],
+      picture:CHAT_BLANK_PNG, pictureName:"", promptTemplate:PROMPT.text, promptFrom:PROMPT.from });
+    out = await DossierFlow.ask(q, ctx, Object.assign({}, flowCfg(), { scope:"names" }));
+  } catch(e){ out = null; }
+  if (my !== FIX.asking || FIX.id !== t.id) return;   /* moved on meanwhile */
+  const first = String((out && out.say) || "").split(/\n+/)
+    .map(x => fixPlain(x).replace(/^[\s\-\u2022"\u201c]+|["\u201d\s]+$/g, "")).filter(Boolean)[0] || "";
+  const line = first.slice(0, 260);
+  if (!line || /^unknown\.?$/i.test(line)){ fixState(FIX.draft ? L("FixFromNotes") : L("FixAiNothing")); return; }
+  if (FIX.edited && $("fixIn").value.trim()){ fixState(L("FixAiLater"), false, line); return; }
+  const inp = $("fixIn");
+  inp.value = line; FIX.draft = line; FIX.edited = false;
+  if (document.activeElement === inp) inp.select();
+  fixState(L("FixFromAi"));
+}
+function fixSave(){
+  const t = getTask(FIX.id), inp = $("fixIn");
+  const v = inp ? inp.value.replace(/\s+/g, " ").trim() : "";
+  fixClose();
+  if (!t || !v) return;
+  t.resolution = v.slice(0, 500);
+  t.log.push({ at:new Date().toISOString(), kind:"status", text:L("FixLabel") + ": " + t.resolution });
+  buildModel(); touch(); renderAll();
+  if (S.open === t.id && typeof renderDrawer === "function") renderDrawer();
+  toast(L("FixKept", { p0:t.code }));
+}
+/* another record closed while this one was still being asked about:
+   anything typed is kept, an untouched draft is not */
+function fixLeave(){
+  const inp = $("fixIn");
+  if (FIX.edited && inp && inp.value.trim()) fixSave(); else fixClose();
+}
+function fixClose(){
+  clearTimeout(FIX.timer); FIX.asking++; FIX.id = ""; FIX.edited = false;
+  const el = $("fixBar"); if (el) el.classList.remove("on");
+  document.body.classList.remove("fixing");
+}
+/* two minutes untouched and it goes - it is a question, not a gate */
+function fixTimer(){
+  clearTimeout(FIX.timer);
+  FIX.timer = setTimeout(() => {
+    if (document.activeElement === $("fixIn") || FIX.edited) return fixTimer();
+    fixClose();
+  }, 120000);
+}
+
+/* ── past fixes: "last time this happened, you did X" ──────────────────
+   With every question, the closed records most like it and how each one
+   was fixed - your line from "How was it fixed?" where there is one, the
+   last thing in the notes where there is not. Matched on words, like the
+   rest of the app, but words that mean the same thing in support work are
+   folded together first: "can't log in", "sign-in fails" and
+   "authentication error" are one problem, and a 503 is "down". The title
+   has to share something with the question - a word that only appears in
+   somebody's notes is a coincidence, not a precedent. */
+const FIX_SAME = [
+  ["login", "logon", "signin", "authentication", "authenticate", "auth", "password", "passwd",
+   "credential", "credentials", "sso", "lockout", "locked"],
+  ["error", "errors", "exception", "fail", "failed", "fails", "failing", "failure", "crash",
+   "crashed", "crashes", "broken", "breaks"],
+  ["slow", "timeout", "timeouts", "latency", "hang", "hangs", "hanging", "freeze", "frozen",
+   "stuck", "sluggish", "lag"],
+  ["notfound", "404", "missing"],
+  ["denied", "403", "401", "forbidden", "unauthorized", "unauthorised", "permission", "permissions"],
+  ["down", "outage", "unavailable", "503", "502", "500", "unreachable", "offline"],
+  ["email", "mail", "smtp", "mailbox", "inbox"],
+  ["payment", "payments", "epayment", "transaction", "transactions", "txn"],
+  ["print", "printer", "printing", "printed"],
+  ["upload", "uploads", "uploading", "attachment", "attachments"],
+  ["deploy", "deployment", "deployed", "release", "released"],
+  ["certificate", "cert", "ssl", "tls", "expired"],
+  ["restart", "reboot", "recycle", "recycled", "bounce", "iisreset"],
+  ["disk", "storage", "drive"],
+  ["report", "reports", "reporting"],
+  ["sync", "synchronise", "synchronize", "replication"]
+];
+const FIX_MAP = (() => { const m = {}; FIX_SAME.forEach(g => g.forEach(w => { m[w] = g[0]; })); return m; })();
+function fixWords(s){
+  const t = " " + String(s == null ? "" : s).toLowerCase()
+    .replace(/\b(log|sign)[\s-]?(in|on)\b/g, " login ")
+    .replace(/\bnot[\s-]found\b/g, " notfound ")
+    .replace(/\btim(e|ed)[\s-]?out\b/g, " timeout ")
+    .replace(/\be-?mail\b/g, " email ")
+    .replace(/\be-?payment\b/g, " payment ") + " ";
+  const out = [];
+  t.replace(/[^a-z0-9\s._-]/g, " ").split(/[\s/]+/).forEach(w => {
+    w = w.replace(/^[._-]+|[._-]+$/g, "");
+    if (!w || w.length > 24) return;
+    if (FIX_MAP[w]){ out.push(FIX_MAP[w]); return; }
+    if (w.length < 3 || STOP.has(w) || /^\d+$/.test(w)) return;
+    const stem = w.length > 5 ? w.replace(/(ing|ed|es|s)$/, "") : w;
+    out.push(FIX_MAP[stem] || stem);
+  });
+  return out;
+}
+/* what fixed it: their line, or failing that the last thing written */
+function fixOf(t){ return String(t.resolution || "").trim() || fixDraft(t); }
+const FIXIDX = { key:"", docs:[], df:{} };
+function fixIndex(){
+  const pool = S.tasks.filter(t => t.status === "done");
+  const key = S.rev + ":" + S.tasks.length + ":" + pool.length + ":" + (FS.name || "");
+  if (FIXIDX.key === key) return FIXIDX;
+  const docs = [], df = {};
+  pool.forEach(t => {
+    const fixed = fixOf(t);
+    if (!fixed) return;
+    const title = new Set(fixWords(t.title + " " + (t.tags || []).join(" ") + " " + (t.system || "")));
+    const body = new Set(fixWords(fixed + " " + String(t.notes || "").slice(0, 1500)));
+    docs.push({ t, title, body, fixed });
+    new Set([...title, ...body]).forEach(w => { df[w] = (df[w] || 0) + 1; });
+  });
+  return Object.assign(FIXIDX, { key, docs, df });
+}
+function pastFixesFor(q, limit){
+  const text = String(q || "").replace(/^\[\w+\]\s*/, "");
+  if (!text.trim()) return [];
+  const lower = text.toLowerCase();
+  /* a record they name is what they are asking ABOUT - its words join the
+     question, and it is not its own precedent */
+  const named = S.tasks.filter(t => (t.code && lower.indexOf(t.code.toLowerCase()) >= 0) ||
+                                    (t.ticket && t.ticket.length > 3 && lower.indexOf(t.ticket.toLowerCase()) >= 0));
+  const want = [...new Set(fixWords(text + " " + named.map(t => t.title + " " + (t.system || "")).join(" ")))];
+  if (!want.length) return [];
+  const ix = fixIndex(), N = ix.docs.length;
+  if (!N) return [];
+  const idfw = w => Math.log(1 + (N + 1) / (1 + (ix.df[w] || 0)));
+  /* a long pasted error is not a vaguer question: measure against the eight
+     words that say the most */
+  const norm = want.map(idfw).sort((a, b) => b - a).slice(0, 8).reduce((a, b) => a + b, 0);
+  if (!norm) return [];
+  const out = [];
+  ix.docs.forEach(d => {
+    if (named.indexOf(d.t) >= 0) return;
+    let got = 0, inTitle = 0;
+    want.forEach(w => {
+      if (d.title.has(w)){ got += idfw(w); inTitle++; }
+      else if (d.body.has(w)) got += 0.55 * idfw(w);
+    });
+    if (!inTitle) return;
+    let sc = got / norm;
+    if (d.t.resolution) sc *= 1.15;       /* their own words beat a guess from the notes */
+    if (sc >= 0.34) out.push({ d, sc });
+  });
+  const clip = (x, n) => x.length > n ? x.slice(0, n) + "\u2026" : x;
+  return out.sort((a, b) => (b.sc - a.sc) || String(b.d.t.completed).localeCompare(String(a.d.t.completed)))
+    .slice(0, limit || 3)
+    .map(x => ({ code:x.d.t.code, title:x.d.t.title, system:x.d.t.system || "",
+                 closed:String(x.d.t.completed || "").slice(0, 10),
+                 fixed:clip(x.d.fixed, 320),
+                 said:x.d.t.resolution ? "their words" : "last note, not confirmed",
+                 match:Math.round(Math.min(1, x.sc) * 100) }));
 }
 
 /* what "not what I meant" was pressed on, for the look back */
@@ -17932,8 +18462,9 @@ function reflectMaterial(since){
         [t.system, t.type, t.priority, t.ticket, t.requester ? "raised by " + t.requester : "",
          took ? "open " + (took >= 1440 ? Math.round(took / 1440) + "d" : took >= 60 ? Math.round(took / 60) + "h" : took + "m") : "",
          t.spent ? t.spent + " min worked" : ""].filter(Boolean).join(" · "));
+      if (t.resolution) out.push("How it was fixed (their words): " + clip(t.resolution, 500));
       if (t.notes) out.push("Notes: " + clip(t.notes, 1500));
-      const logs = (t.log || []).filter(l => l.kind !== "status" && l.text && !/^notes →/.test(l.text)).slice(-6);
+      const logs = (t.log || []).filter(l => l.kind !== "status" && l.text && !/^(notes|resolution) →/.test(l.text)).slice(-6);
       if (logs.length) out.push("Log: " + logs.map(l => clip(l.text, 220)).join(" | "));
       const done = (t.checklist || []).filter(c => c.done).map(c => c.text);
       if (done.length) out.push("Steps done: " + clip(done.join("; "), 400));
@@ -17958,6 +18489,24 @@ function reflectMaterial(since){
     });
   });
   if (talk.length) out.push("", "== CONVERSATIONS ==", ...talk);
+  /* answers rated since the last look: every thumb down with what it
+     should have said, and the questions the thumbs up were on */
+  const rated = [];
+  (S.chats || []).forEach(c => (c.msgs || []).forEach(m => {
+    if (m.who === "bot" && m.reply && m.reply.rate && m.reply.rateAt >= since) rated.push(m.reply);
+  }));
+  const downs = rated.filter(r => r.rate === "down"), ups = rated.filter(r => r.rate === "up");
+  if (downs.length){
+    out.push("", "== ANSWERS THEY RATED DOWN (" + downs.length + ") ==");
+    downs.slice(0, 15).forEach(r => {
+      out.push("", "Asked: " + clip(r.rateQ, 300), "You said: " + clip(String(r.say || "").replace(/\s+/g, " "), 500));
+      out.push(r.fixText ? "It should have said: " + clip(r.fixText, 400) : "(no correction given)");
+    });
+  }
+  if (ups.length){
+    out.push("", "== ANSWERS THEY RATED UP (" + ups.length + ") ==");
+    ups.slice(0, 10).forEach(r => out.push("- " + clip(r.rateQ, 200)));
+  }
   const wrong = (S.settings.learnSignals || []).filter(x => x.at >= since);
   if (wrong.length){
     out.push("", "== ANSWERS THEY MARKED “NOT WHAT I MEANT” ==");
@@ -17967,7 +18516,7 @@ function reflectMaterial(since){
   if (books.length) out.push("", "== RUNBOOKS CHANGED ==", ...books.map(r => "- " + r.title + " (" + (r.system || "?") + ")"));
   let text = out.join("\n");
   if (text.length > 40000) text = text.slice(0, 40000) + "\n[cut here: more than fits]";
-  return { text, count: closed.length + raised.length + talk.length + wrong.length + books.length,
+  return { text, count: closed.length + raised.length + talk.length + wrong.length + books.length + rated.length,
            closed: closed.length, raised: raised.length };
 }
 
@@ -18053,9 +18602,21 @@ async function reflectNow(byHand){
 function paintReflect(){
   const box = $("learnBox");
   if (!box) return;
-  const r = reflectCfg(), list = lessonStore();
+  const r = reflectCfg(), list = lessonStore(), fx = fixCfg(), checks = checkStore();
+  const ckMark = c => !c.last ? '<span class="ckv">\u00b7</span>'
+    : c.last.verdict === "pass" ? '<span class="ckv pass" title="PASS">\u2713</span>'
+    : c.last.verdict === "fail" ? '<span class="ckv fail" title="FAIL">\u2717</span>'
+    : '<span class="ckv" title="' + esc(c.last.verdict) + '">?</span>';
+  const ckLast = checks.filter(c => c.last);
   box.innerHTML =
     '<p class="hint2">' + esc(L("LearnHint")) + "</p>" +
+    /* the question asked when a record is closed */
+    '<div class="brow" style="align-items:center;gap:14px;flex-wrap:wrap;margin:8px 0 4px">' +
+      '<label style="display:flex;gap:6px;align-items:center;font-size:12px"><input type="checkbox" id="fxOn"' +
+        (fx.on ? " checked" : "") + "> " + esc(L("FixSettingOn")) + "</label>" +
+      '<label style="display:flex;gap:6px;align-items:center;font-size:12px"><input type="checkbox" id="fxAi"' +
+        (fx.ai ? " checked" : "") + (fx.on ? "" : " disabled") + "> " + esc(L("FixSettingAi")) + "</label>" +
+    "</div>" +
     '<div class="brow" style="align-items:center;gap:8px;flex-wrap:wrap;margin:8px 0">' +
       '<label style="display:flex;gap:6px;align-items:center;font-size:12px"><input type="checkbox" id="rfOn"' +
         (r.on ? " checked" : "") + "> " + esc(L("ReflectDaily")) + "</label>" +
@@ -18075,8 +18636,37 @@ function paintReflect(){
           '<span style="flex:1;font-size:12px;line-height:1.5">' + esc(l.text) +
           '<small style="display:block;color:var(--ink-3);font-size:10px">' + esc(stamp(l.at)) + " · " + esc(l.source || "") + "</small></span>" +
           '<button class="btn sm" data-lsdel="' + i + '" title="' + esc(L("MemoryForget")) + '">✕</button></div>').join("") + "</div>"
-      : '<p class="hint2" style="color:var(--ink-3)">' + esc(L("LearnEmpty")) + "</p>");
+      : '<p class="hint2" style="color:var(--ink-3)">' + esc(L("LearnEmpty")) + "</p>") +
+
+    /* the corrections, asked again */
+    '<h5 class="eyebrow" style="margin:18px 0 6px">' + esc(L("ChecksTitle", { n:checks.length })) + "</h5>" +
+    '<p class="hint2" style="margin:0 0 8px">' + esc(L("ChecksHint")) + "</p>" +
+    (checks.length
+      ? '<div class="brow" style="align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 8px">' +
+          '<button class="btn sm" id="ckRun"' + (CHECKS.running || !flowOn() ? " disabled" : "") + ">" +
+            esc(CHECKS.running ? L("ChecksRunning", { p0:CHECKS.at, p1:CHECKS.of }) : L("ChecksRun")) + "</button>" +
+          (ckLast.length ? '<span class="hint2" style="margin:0">' + esc(L("ChecksSummary", {
+             p0:ckLast.filter(c => c.last.verdict === "pass").length,
+             p1:ckLast.filter(c => c.last.verdict === "fail").length,
+             p2:stamp(ckLast.map(c => c.last.at).sort().pop()) })) + "</span>" : "") +
+        "</div>" +
+        '<div class="memlist">' + checks.map((c, i) =>
+          '<div class="tagx ckrow">' + ckMark(c) +
+          '<span class="ckt"><b>' + esc(c.q.length > 140 ? c.q.slice(0, 140) + "\u2026" : c.q) + "</b>" +
+          "<small>" + esc(L("ChecksShouldSay")) + " " + esc(c.want) + "</small>" +
+          (c.last ? "<small>" + esc(stamp(c.last.at)) + " \u00b7 " + esc(c.last.why || c.last.verdict) + "</small>" : "") +
+          "</span>" +
+          '<button class="btn sm" data-ckdel="' + i + '" title="' + esc(L("MemoryForget")) + '">✕</button></div>').join("") + "</div>"
+      : '<p class="hint2" style="color:var(--ink-3)">' + esc(L("ChecksEmpty")) + "</p>");
   const on = (id, ev, fn) => { const el = $(id); if (el) el[ev] = fn; };
+  on("fxOn", "onchange", e => { fixCfg().on = e.target.checked; touch(); paintReflect(); });
+  on("fxAi", "onchange", e => { fixCfg().ai = e.target.checked; touch(); });
+  on("ckRun", "onclick", () => checksRun());
+  box.querySelectorAll("[data-ckdel]").forEach(b => b.onclick = () => {
+    const c = checkStore()[+b.dataset.ckdel]; if (!c) return;
+    S.settings.checks = checkStore().filter(x => x !== c);
+    touch(); paintReflect();
+  });
   on("rfOn", "onchange", e => { reflectCfg().on = e.target.checked; touch(); });
   on("rfAt", "onchange", e => { if (/^\d{2}:\d{2}$/.test(e.target.value)){ reflectCfg().at = e.target.value; touch(); } });
   on("rfNow", "onclick", () => reflectNow(true));
@@ -21321,7 +21911,8 @@ $("bulk").addEventListener("click", e => {
     return toast(ids.length + L("MovedToToday"));
   }
   pushUndo(L("BulkStatus"));
-  ids.forEach(id => setStatus(id, b));
+  FIX.quiet++;             /* ten closed at once is not ten questions */
+  try { ids.forEach(id => setStatus(id, b)); } finally { FIX.quiet--; }
   S.sel.clear(); renderAll();
   toast(ids.length + L("SetTo") + stMeta(b).label);
 });

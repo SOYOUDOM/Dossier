@@ -26,7 +26,8 @@
     "mode": "chat",
     "lessons": [
       "[style] Wants the query first and the explanation after",
-      "[people] Sokha from Branch Ops raises most portal password resets"
+      "[people] Sokha from Branch Ops raises most portal password resets",
+      "[correction] When asked “why is the portal login failing?”, the right answer is: clear the SSO session cache on WEB01 first - IIS restarts don't fix it"
     ],
     "scope": "live",
     "systems": [
@@ -401,6 +402,17 @@
           "team that owns policy data",
           "Imaging owner"
         ]
+      }
+    ],
+    "pastFixes": [
+      {
+        "code": "D-0142",
+        "title": "CX Portal SSO failure for branch users",
+        "system": "CX Portal",
+        "closed": "2026-09-10",
+        "fixed": "Stale SSO session cache on WEB01 - cleared it and recycled the portal pool",
+        "said": "their words",
+        "match": 82
       }
     ],
     "mentioned": [

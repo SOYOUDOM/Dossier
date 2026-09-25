@@ -204,16 +204,48 @@ like to be answered, how they work, who asks them for what, what the
 assistant should ask about. Read them before answering; write them with
 `learn`. A method still belongs in `remember`, a procedure in `saveRunbook`.
 
+A `[correction]` line is an answer the person rated 👎 with what it should
+have said:
+
+```jsonc
+"[correction] When asked “why is the portal login failing for branch D?”, the right answer is: Clear the SSO session cache on WEB01 first - IIS restarts don't fix it"
+```
+
+It is the truth and beats everything else. Corrections do not all travel
+with every question: the ones that share words with this question do (up
+to six), plus the three newest.
+
+### Past fixes — "last time this happened, you did X"
+
+`workspace.pastFixes` holds up to three closed records most like the
+question, best first, only when the words genuinely overlap (words that mean
+the same in support work — *log in*, *sign-in*, *authentication*; *503*,
+*down* — count as one):
+
+```json
+{ "code": "D-0142", "title": "CX Portal SSO failure for branch users",
+  "system": "CX Portal", "closed": "2026-09-10",
+  "fixed": "Stale SSO session cache on WEB01 - cleared it and recycled the portal pool",
+  "said": "their words", "match": 82 }
+```
+
+`fixed` is the person's own line from **How was it fixed?** (asked when a
+record is closed) when `said` is `"their words"`, or the last thing in the
+record's notes when it is `"last note, not confirmed"`. A record in
+`workspace.records` carries the same line as `fixed`.
+
 ### The mode — what kind of question this is
 
 `workspace.mode` is `"chat"` for a question typed in the panel, and one of
-three others, each also the first word of `message` in brackets:
+five others, each also the first word of `message` in brackets:
 
 | mode | sent | `attached` holds |
 |---|---|---|
-| `reflect` | once a day, at the time set (noon by default), while the person is away | everything since the last look: records closed with how they were resolved, records raised with who raised them, the conversations, answers marked *not what I meant* |
+| `reflect` | once a day, at the time set (noon by default), while the person is away | everything since the last look: records closed with how they were fixed, records raised with who raised them, the conversations, answers rated 👎 with what they should have said, answers rated 👍, answers marked *not what I meant* |
 | `teach` | from a runbook's **Interview me** | whatever they attached, usually nothing — the runbook is in `runbooksMatched` |
 | `study` | from **Learn from a BAU document…** | the guideline, read as text |
+| `fix` | when a record is closed by hand and **How was it fixed?** comes up | the record: title, notes, log, steps done. The reply is one line in `say` — what fixed it — or exactly `unknown` |
+| `check` | from **Setup → Checks → Run checks**, after the question itself has been asked again | nothing; `message` holds the QUESTION, THE RIGHT ANSWER in their words and THE NEW ANSWER. `say` starts with `PASS` or `FAIL`, then one sentence why |
 
 A `reflect` reply is applied without a dialog, because nobody is there to
 answer one: `learn` and `remember` are kept, `saveRunbook` is kept **as a
