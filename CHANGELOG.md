@@ -6,6 +6,42 @@ holds — which is what to paste into a bug report.
 
 ---
 
+## 5.1.0 - 2026-09-27
+
+**The assistant reads Word documents, and the pictures inside PDFs and Word
+documents.**
+
+- **Word (.docx, .docm, .dotx)** can be attached to a question like a PDF, and
+  is read on the PC - nothing is uploaded but the words. It comes through with
+  its headings (`#`), bulleted and numbered lists (numbering kept), tables
+  (`| cell | cell |`), a link's address after its words, text boxes, charts as
+  their title and numbers, SmartArt as its words, then the page header and
+  footer, footnotes and margin comments, each labelled. Tracked deletions are
+  left out. The page count is the one Word saved.
+- **Pictures inside a PDF or a Word document** are taken out - up to twelve a
+  document, in order - and handled like a picture attached on its own: with
+  `ocr.js` (shipped beside the app) each is described and its words read;
+  with a flow whose model sees pictures, up to six go into the image the
+  question carries, and any after that are read on the PC instead. The text
+  keeps a mark where each sat, so the model reads the step, then what its
+  screenshot shows, then the next step. A picture in a table row is described
+  just after the table, so the table stays a table.
+- Skipped on purpose: icons and bullets (under about 1.1-1.4 cm a side), and a
+  logo or watermark that is on most pages of a PDF. Named rather than guessed
+  at: Windows metafiles (EMF/WMF), JPEG 2000, fax-coded and JBIG2 pictures.
+- The PDF reader now also takes palette-colour pictures (how many
+  screenshots are stored inside a PDF), 16-bit pictures and transparency
+  (drawn over white, as the page shows it).
+- A Word 97-2003 `.doc` is refused with the fix (File → Save As → .docx); a
+  `.docx` behind a password says it could not be opened.
+- The tray says what became of the pictures ("2 of 3 pictures read",
+  "3 pictures go to the model") and shows progress picture by picture.
+- Requests: `attachments[].kind` can be `docx`; new `attachments[].pictures`;
+  notes `pictures` and `legacy`; `attachmentsText` names a Word document as
+  one and says how its pictures are marked. Nothing changes in Power
+  Automate.
+- *Learn from a BAU document* (Setup → Runbooks) takes a Word document directly, screenshots included.
+
 ## 5.0.0 - 2026-09-27
 
 **Nova: a new design, as a fourth look. Studio, Quiet and Classic are

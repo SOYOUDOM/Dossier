@@ -400,11 +400,22 @@ unless the person explicitly says they are approving it.
 ### Attachments
 
 `attachments` carries what the person clipped to the question. Each one has
-`name`, `type`, `size`, `kind` (`image`, `pdf` or `text`) and:
+`name`, `type`, `size`, `kind` (`image`, `pdf`, `docx` or `text`) and:
 
 - `text` — what the app read out of the file on the person's PC before
-  sending: the whole text of a PDF, page by page with `[page N]` marks, or of
-  a text file, up to 60,000 characters. With the optional `ocr.js` beside the
+  sending: the whole text of a PDF, page by page with `[page N]` marks, of a
+  Word document (`.docx`) — headings as `#`, lists as `-` or `1.`, tables as
+  `| cell | cell |`, a link's address after its words, text boxes, charts as
+  their title and numbers, SmartArt as its words, then the page header and
+  footer, footnotes and comments, each labelled — or of a text file, up to
+  60,000 characters. **Pictures inside a PDF or a Word document** are marked
+  where they sit: `[picture N - what the app saw in it:]` followed by the
+  same kind of description a picture gets (below) and `[end of picture N]`;
+  or `[picture N - it is picture K of the image attached to this question;
+  look at it]` when the flow's model sees pictures; or `[picture N - not
+  read: …]` saying why (a format like EMF that nothing here opens, past the
+  first 12, no recogniser). Icons, bullets and a logo repeated on most pages
+  are left out. With the optional `ocr.js` beside the
   app: for a picture, a description — its kind, size and colours, whether it
   looks like a photo of a person, how it is laid out (bands, panels, rows, a
   dialog over the page), every piece of text with where it sits and on what,
@@ -412,13 +423,17 @@ unless the person explicitly says they are approving it.
   square looks like it holds text — and for a scanned PDF, the words read off each page. Empty
   for a fax-coded scan, a file that needs a password, or a picture the
   recogniser gave up on.
-- `pages` — the PDF's page count.
+- `pages` — the PDF's page count, or the one Word saved in a `.docx`.
+- `pictures` — how many pictures inside a PDF or Word document are marked in
+  `text`; `0` otherwise.
 - `note` — `""` when it read cleanly; `ocr` (words read off a picture or a
   scanned page, a stray character possible), `seen` (a picture described,
   with no words in it), `cut` (past the cap), `partial` (some characters
   could not be decoded), `scanned` (pictures of pages the app could not
   read), `encrypted` (needs a password), `ocrslow` (a picture the
-  recogniser gave up on), `empty`, `unreadable`.
+  recogniser gave up on), `pictures` (a Word document with pictures and no
+  text), `legacy` (a Word document the app cannot open: Word 97-2003, or
+  protected by a password), `empty`, `unreadable`.
 - `data` — the file as base64 **without** the `data:` prefix. A document that
   arrived as text carries no bytes; its words are the file. A picture always
   carries its pixels, read or not, so a flow that looks at pictures still
@@ -426,8 +441,10 @@ unless the person explicitly says they are approving it.
   to send.
 
 `picture` is the picture of the question, for a prompt that has an image
-input: the first picture attached, or the first page of a scanned PDF shrunk
-to travel, as base64 without a `data:` prefix — and a blank white 1×1 PNG when
+input: the first picture attached, or the first page of a scanned PDF, or the
+first picture inside a PDF or Word document, shrunk to travel — and with a
+flow whose model sees pictures (shape `vision`), up to six of all of those side
+by side in one image, each under its number and name — as base64 without a `data:` prefix — and a blank white 1×1 PNG when
 there is none, so the input is never handed `null`. `pictureName` names it,
 or is `""`. One expression wires it: `base64ToBinary(body('Parse_JSON')?['picture'])`.
 

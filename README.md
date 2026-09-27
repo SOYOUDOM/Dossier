@@ -1611,7 +1611,8 @@ ticked in the same place.
 
 The Ask box takes **more than one line** (Enter sends, Shift+Enter breaks) and
 **attachments** — drop them on the panel, paste a screenshot straight in, or
-use the clip. A PDF or a text file is **read here, on your PC**, and its words
+use the clip. A PDF, a **Word document (.docx)** or a text file is **read here,
+on your PC**, and its words
 go with the question in the input the prompt already has — so the assistant
 answers from the report's pages, and nothing in the flow changes. The bytes of
 a document with text in it never leave the machine. With the optional `ocr.js`
@@ -1623,6 +1624,19 @@ dialog sitting over the page), every piece of text with where it sits, and a
 map of the picture in letters that a model can read the shape off; and a scanned PDF goes as its pages, read
 one by one. A file that needs a password, a fax-coded scan, or a picture in a
 copy without `ocr.js` still goes as base64 to your endpoint, and nowhere else.
+**Pictures inside a document are read too.** A runbook is half screenshots,
+so every picture in a PDF or a Word document (up to twelve, in order) is taken
+out and treated like a picture attached on its own — described and its words
+read by `ocr.js`, or, with a flow whose model sees pictures, put into the image
+the question carries (up to six) — and the text says where each one sat:
+"step 3", then what the screenshot of step 3 shows, then step 4. A picture in a
+table row is described just after the table. Icons, bullets and a logo on
+every page are skipped; a Windows metafile (EMF/WMF) or a JPEG 2000 picture is
+named as unreadable rather than guessed at. A Word document comes through with
+its headings, numbered and bulleted lists, tables, links, text boxes, charts
+(title and numbers), SmartArt, page header and footer, footnotes and margin
+comments; tracked deletions are left out. A Word 97-2003 `.doc` is a different
+format: the app says so and asks for it saved as `.docx` (File → Save As).
 A picture keeps its pixels in any case, and the request carries the first one
 as `picture`, so a prompt with an image input — the only thing that lets the
 model *see* a face or a chart — is one expression away

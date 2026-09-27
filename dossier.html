@@ -3502,7 +3502,7 @@ body.chatting .pet[data-corner="br"],body.chatting .pet[data-corner="tr"]{
           <button class="btn pri" id="chatGo" data-i18n="ChatAsk">Ask</button>
         </div>
         <div class="chhint" id="chatHint" aria-hidden="true"></div>
-        <input type="file" id="chatFile" accept="image/*,application/pdf,.txt,.log,.csv,.json,.xml"
+        <input type="file" id="chatFile" accept="image/*,application/pdf,.docx,.docm,.dotx,application/vnd.openxmlformats-officedocument.wordprocessingml.document,.txt,.log,.csv,.json,.xml"
                multiple hidden>
       </div>
     </div>
@@ -5023,7 +5023,7 @@ const STRINGS = {
   RbStudy: "Learn from a BAU document\u2026",
   RbInterviewAsk: "Interview me about the runbook \u201c{p0}\u201d ({p1}). Read it and find what it leaves out or leaves vague \u2014 the symptoms people actually report, how to tell the causes apart, the real table and screen names, what not to do, when and to whom to escalate \u2014 and ask me ONE question at a time. After each answer, say what you will change. When we are done, save the improved version as a draft.",
   RbStudyAsk: "Here is a BAU support guideline. Learn it: turn each procedure in it into a runbook \u2014 the symptoms people report, how to tell the causes apart, the checks with the real names, the fix in plain steps, what not to do, when to escalate. Save each as a draft, then ask me about the most important thing the document does not say.",
-  RbStudyHint: "Pick the guideline \u2014 a PDF (save a Word document as PDF first) or a text file \u2014 then press send.",
+  RbStudyHint: "Pick the guideline \u2014 a Word document, a PDF or a text file; screenshots inside it are read too \u2014 then press send.",
   RtFormat: "Formatting \u2014 or select text. Ctrl+B, Ctrl+I, Ctrl+U; **bold**, _italic_, `code`, ``` for a block, > for a quote.",
   RtBadLink: "That is not a web address. Links can be http, https or mailto.",
   Ok: "Right",
@@ -5532,14 +5532,24 @@ const STRINGS = {
   FxRanDirect: "done without asking",
 
   DontShowThisAgain: "Don\u2019t show this again",
-  AttachAFile: "Attach a file \u2014 a screenshot, a PDF, a log",
+  AttachAFile: "Attach a file \u2014 a screenshot, a PDF, a Word document, a log",
   AttachTooBig: "{name} is {size} \u2014 too big to send. The limit is {max} a file.",
   AttachStillTooBig: "{name} is still {size} after shrinking. Send a smaller one.",
   AttachOverBudget: "That would take this question over {max} of attachments. Remove one first.",
   AttachShrunk: "Shrunk from {from} to {to} before sending",
   AttachTotal: "{size} of files with this question",
   AttachTooMany: "Five files at a time is the limit.",
-  AttachUnsupported: "{name} is a {type}. Attach an image, a PDF, or a text file.",
+  AttachUnsupported: "{name} is a {type}. Attach an image, a PDF, a Word document (.docx) or a text file.",
+  AttachOldWord: "{name} is a Word 97-2003 document, a format this app cannot read. In Word: File \u2192 Save As \u2192 Word Document (.docx), then attach that.",
+  AttachLegacyWord: "could not open \u2014 a password, or an old Word format",
+  AttachOnlyPics: "no text, only pictures",
+  AttachPicStage: "picture {p}",
+  AttachPicRead1: "its picture read",
+  AttachPicsRead: "{n} pictures read",
+  AttachPicsSome: "{n} of {of} pictures read",
+  AttachPicSeen1: "its picture goes to the model",
+  AttachPicsSeen: "{n} pictures go to the model",
+  AttachPicsSeenSome: "{n} of {of} pictures go to the model",
   AttachReading: "reading\u2026",
   AttachReadPage: "1 page of text read",
   AttachReadPages: "{n} pages of text read",
@@ -6061,7 +6071,7 @@ const STATUSES = [
    the status bar, and clicking it copies a line you can paste into a bug
    report — build date and flow protocol included, because those are the two
    things that actually differ between copies. */
-const APP_VERSION = "5.0.0";
+const APP_VERSION = "5.1.0";
 const APP_BUILT = "2026-09-27";
 function buildLine(){
   return "Resolv v" + APP_VERSION + " \u00b7 built " + APP_BUILT +
@@ -12119,7 +12129,9 @@ function flowContext(q){
       /* what was read out of it here — the words the endpoint answers
          from — with the page count, and a note when something got in the
          way: scanned, encrypted, cut, partial, empty, unreadable */
-      text:f.text || "", pages:f.pages || 0, note:f.note || "" })),
+      text:chatDocText(f), pages:f.pages || 0, note:f.note || "",
+      /* pictures inside a document: how many, each marked in text where it sits */
+      pictures:(f.pics || []).filter(p => p.why !== "tiny").length })),
     picture: chatPicture().data,
     pictureName: chatPicture().name,
     /* the rules the app applies by itself, so an endpoint does not propose
@@ -21958,34 +21970,86 @@ class PdfDoc {
     }
     cands.sort((a, b) => b.w * b.h - a.w * a.h);
     for (const c of cands.slice(0, max || 3)){
-      const x = c.x;
-      let u; try { u = await this.bytes(x); } catch(e){ continue; }
-      const codec = x.codec || "";
-      const bpc = (this.resolve(x.dict.ImageMask) === true) ? 1 : (pdfNum(this.resolve(x.dict.BitsPerComponent)) | 0);
-      let cs = this.resolve(x.dict.ColorSpace), comps = 0;
-      if (Array.isArray(cs)){
-        const fam = pdfNm(this.resolve(cs[0]));
-        if (fam === "ICCBased"){ const st = this.resolve(cs[1]); comps = st instanceof PStream ? pdfNum(this.resolve(st.dict.N)) | 0 : 0; }
-        else if (fam === "CalRGB" || fam === "Lab") comps = 3;
-        else if (fam === "CalGray") comps = 1;
-        else if (fam === "Indexed") comps = -1;
-        else if (fam === "DeviceN") comps = 0;
-      } else {
-        const n = pdfNm(cs);
-        comps = n === "DeviceRGB" ? 3 : n === "DeviceGray" ? 1 : n === "DeviceCMYK" ? 4 : 0;
-      }
-      if (this.resolve(x.dict.ImageMask) === true) comps = 1;
-      const decode = this.resolve(x.dict.Decode);
-      const inverted = Array.isArray(decode) && pdfNum(this.resolve(decode[0])) === 1;
-      if (codec === "DCTDecode" || codec === "DCT") out.push({ kind:"jpeg", data:u, w:c.w, h:c.h });
-      else if (!codec && (bpc === 8 || bpc === 1) && (comps === 1 || comps === 3 || comps === 4) &&
-               u.length >= Math.ceil(c.w * bpc * comps / 8) * c.h)
-        out.push({ kind:"raw", data:u, w:c.w, h:c.h, bpc:bpc, comps:comps, inverted:inverted });
-      else out.push({ kind:codec || "unknown", w:c.w, h:c.h });
+      const im = await this.imageOf(c.x);
+      if (im) out.push(im);
     }
     return out;
   }
-  async pageText(pg){
+  /* how many colour components a colour space has: 1, 3 or 4; for an
+     indexed one, the table turned into its base's samples; 0 when it is
+     something nothing here draws (DeviceN, separations) */
+  colours(cs){
+    cs = this.resolve(cs);
+    if (Array.isArray(cs)){
+      const fam = pdfNm(this.resolve(cs[0]));
+      if (fam === "ICCBased"){ const st = this.resolve(cs[1]); const n = st instanceof PStream ? pdfNum(this.resolve(st.dict.N)) | 0 : 0; return { n:n }; }
+      if (fam === "CalRGB" || fam === "Lab") return { n:3 };
+      if (fam === "CalGray") return { n:1 };
+      if (fam === "Indexed") return { n:-1, base:this.colours(cs[1]), hival:pdfNum(this.resolve(cs[2])) | 0, lookup:this.resolve(cs[3]) };
+      return { n:0 };
+    }
+    const n = pdfNm(cs);
+    return { n:n === "DeviceRGB" ? 3 : n === "DeviceGray" ? 1 : n === "DeviceCMYK" ? 4 : 0 };
+  }
+  /* One picture's pixels. A JPEG comes out as its own bytes; everything
+     Flate (or unfiltered) comes out as 8-bit samples with their shape, for
+     a canvas to take - including palette pictures, which is how most
+     screenshots end up inside a PDF, and 16-bit ones. A soft mask comes
+     along as alpha, so a transparent PNG does not come out on black.
+     CCITT, JBIG2 and JPEG 2000 are named and left: nothing here decodes
+     them. */
+  async imageOf(x){
+    const w = pdfNum(this.resolve(x.dict.Width)) | 0, h = pdfNum(this.resolve(x.dict.Height)) | 0;
+    if (w <= 0 || h <= 0 || w * h > 40000000) return null;
+    let u; try { u = await this.bytes(x); } catch(e){ return null; }
+    const codec = x.codec || "";
+    const mask = this.resolve(x.dict.ImageMask) === true;
+    let bpc = mask ? 1 : (pdfNum(this.resolve(x.dict.BitsPerComponent)) | 0) || 8;
+    const cs = mask ? { n:1 } : this.colours(x.dict.ColorSpace);
+    const decode = this.resolve(x.dict.Decode);
+    const inverted = Array.isArray(decode) && pdfNum(this.resolve(decode[0])) === 1;
+    let alpha = null;
+    const sm = this.resolve(x.dict.SMask);
+    if (sm instanceof PStream){
+      try {
+        const aw = pdfNum(this.resolve(sm.dict.Width)) | 0, ah = pdfNum(this.resolve(sm.dict.Height)) | 0;
+        const ab = pdfNum(this.resolve(sm.dict.BitsPerComponent)) | 0;
+        const a = await this.bytes(sm);
+        if (!sm.codec && ab === 8 && a.length >= aw * ah) alpha = { data:a, w:aw, h:ah };
+      } catch(e){ alpha = null; }
+    }
+    if (codec === "DCTDecode" || codec === "DCT") return { kind:"jpeg", data:u, w:w, h:h, alpha:alpha };
+    if (codec) return { kind:codec, w:w, h:h };
+    /* palette: each index looked up in the table, into the base's samples */
+    if (cs.n === -1){
+      const bn = cs.base && cs.base.n; if (bn !== 1 && bn !== 3 && bn !== 4) return { kind:"unknown", w:w, h:h };
+      let lut = cs.lookup;
+      if (lut instanceof PStream){ try { lut = await this.bytes(lut); } catch(e){ return null; } }
+      else if (typeof lut === "string") lut = pdfBytesOf(lut);
+      if (!(lut instanceof Uint8Array)) return { kind:"unknown", w:w, h:h };
+      if ([1, 2, 4, 8].indexOf(bpc) < 0) return { kind:"unknown", w:w, h:h };
+      const row = Math.ceil(w * bpc / 8); if (u.length < row * h) return null;
+      const outp = new Uint8Array(w * h * bn), top = cs.hival, per = 8 / bpc, mx = (1 << bpc) - 1;
+      for (let y = 0, o = 0; y < h; y++) for (let i = 0; i < w; i++){
+        const byte = u[y * row + ((i / per) | 0)];
+        const idx = Math.min(top, bpc === 8 ? byte : (byte >> ((per - 1 - (i % per)) * bpc)) & mx);
+        for (let k = 0; k < bn; k++) outp[o++] = lut[idx * bn + k] || 0;
+      }
+      return { kind:"raw", data:outp, w:w, h:h, bpc:8, comps:bn, inverted:false, alpha:alpha };
+    }
+    const comps = cs.n;
+    if (comps !== 1 && comps !== 3 && comps !== 4) return { kind:"unknown", w:w, h:h };
+    if (bpc === 16){
+      const need = w * h * comps * 2; if (u.length < need) return null;
+      const outp = new Uint8Array(w * h * comps);
+      for (let i = 0; i < outp.length; i++) outp[i] = u[i * 2];
+      u = outp; bpc = 8;
+    }
+    if ((bpc === 8 || bpc === 1) && u.length >= Math.ceil(w * bpc * comps / 8) * h)
+      return { kind:"raw", data:u, w:w, h:h, bpc:bpc, comps:comps, inverted:inverted, alpha:alpha };
+    return { kind:"unknown", w:w, h:h };
+  }
+  async pageText(pg, reg, pageNo){
     const contents = this.resolve(pg.dict.Contents);
     const parts = Array.isArray(contents) ? contents : (contents ? [contents] : []);
     let src = "";
@@ -21994,6 +22058,7 @@ class PdfDoc {
       if (stm instanceof PStream){ try { src += pdfBinStr(await this.bytes(stm)) + "\n"; } catch(e){} }
     }
     const tx = new PdfText(this);
+    if (reg){ tx.reg = reg; tx.pageNo = pageNo || 0; }
     await tx.run(src, pg.res, [1, 0, 0, 1, 0, 0], 0, null);
     await tx.annots(pg.dict);
     return tx;
@@ -22002,7 +22067,9 @@ class PdfDoc {
 
 /* -- the content stream: from operators to words in order -- */
 class PdfText {
-  constructor(doc){ this.doc = doc; this.out = ""; this.prev = null; this.br = false; this.images = 0; this.glyphs = 0; this.lost = 0; this.forms = []; }
+  constructor(doc){ this.doc = doc; this.out = ""; this.prev = null; this.br = false; this.images = 0; this.glyphs = 0; this.lost = 0; this.forms = [];
+                    /* with a register, every picture drawn leaves a mark in the text where it sits */
+                    this.reg = null; this.pageNo = 0; }
   async run(src, res, ctm, depth, inherit){
     const I = [1, 0, 0, 1, 0, 0];
     const st = { ctm:ctm, tm:I.slice(), tlm:I.slice(), font:inherit ? inherit.font : null, size:inherit ? inherit.size : 0,
@@ -22096,9 +22163,24 @@ class PdfText {
     const x = pdfIsDict(xd) ? this.doc.resolve(xd[pdfNm(nameObj)]) : null;
     if (!(x instanceof PStream)) return;
     const sub = pdfNm(this.doc.resolve(x.dict.Subtype));
-    if (sub === "Image"){ this.images++; return; }
+    if (sub === "Image"){ this.images++; this.picture(x, st); return; }
     if (sub !== "Form") return;
     await this.form(x, res, st, depth);
+  }
+  /* A picture on the page: its size as drawn, in points, from the matrix
+     it is drawn through - the image is a unit square in its own space -
+     and a mark in the text, on a line of its own, so whatever reads the
+     text later knows there was a figure here and which one. The same
+     picture drawn again (a logo on every page) is one entry, counted. */
+  picture(x, st){
+    const reg = this.reg; if (!reg) return;
+    const w = Math.hypot(st.ctm[0], st.ctm[1]), h = Math.hypot(st.ctm[2], st.ctm[3]);
+    let e = reg.map.get(x);
+    if (!e){ e = { id:reg.list.length, x:x, w:0, h:0, pages:[] }; reg.list.push(e); reg.map.set(x, e); }
+    e.w = Math.max(e.w, w); e.h = Math.max(e.h, h);
+    if (e.pages.indexOf(this.pageNo) < 0) e.pages.push(this.pageNo);
+    this.out += (this.out && !/\n$/.test(this.out) ? "\n" : "") + "\uE000" + e.id + "\uE001";
+    this.br = true;
   }
   async form(x, res, st, depth){
     if (depth >= PDF_FORM_DEPTH || this.forms.indexOf(x) >= 0) return;
@@ -22188,48 +22270,421 @@ async function pdfText(buffer, opts){
   const u8 = buffer instanceof Uint8Array ? buffer : new Uint8Array(buffer);
   const doc = new PdfDoc(u8);
   await doc.init();
-  if (doc.locked) return { text:"", pages:0, note:"encrypted", scans:[] };
+  if (doc.locked) return { text:"", pages:0, note:"encrypted", scans:[], pics:[] };
   const pages = doc.pages();
   const out = [], scans = []; let total = 0, images = 0, glyphs = 0, lost = 0, failed = 0, note = "";
   /* scans: with opts.scans = N, a page with pictures and no words hands
      its largest picture out, for up to N pages, so a recogniser can read
      what the scanner did not */
   const wantScans = opts && opts.scans > 0 ? opts.scans : 0;
+  /* opts.pics = N: the pictures in the text as well - up to N of them, in
+     the order they come, each left as a mark where it sits */
+  const wantPics = opts && opts.pics > 0 ? opts.pics : 0;
+  const reg = wantPics ? { list:[], map:new Map() } : null, scanned = [];
   for (let i = 0; i < pages.length; i++){
     if (i >= PDF_MAX_PAGES || total >= PDF_MAX_CHARS){ note = "cut"; break; }
     let tx;
-    try { tx = await doc.pageText(pages[i]); } catch(e){ failed++; continue; }
+    try { tx = await doc.pageText(pages[i], reg, i + 1); } catch(e){ failed++; continue; }
     images += tx.images; glyphs += tx.glyphs; lost += tx.lost;
     let t = tx.text();
+    const words = t.replace(/\uE000\d+\uE001/g, "").trim().length;
+    if (words < 40 && tx.images) scanned.push(i + 1);
     if (t){
       if (total + t.length > PDF_MAX_CHARS){ t = t.slice(0, PDF_MAX_CHARS - total); note = "cut"; }
       out.push((pages.length > 1 ? "[page " + (i + 1) + "]\n" : "") + t); total += t.length;
     }
-    if (wantScans && tx.images && t.length < 40 && scans.length < wantScans){
+    if (wantScans && tx.images && words < 40 && scans.length < wantScans){
       try {
         const im = await doc.pageImages(pages[i], 1);
         if (im.length) scans.push(Object.assign({ page:i + 1 }, im[0]));
       } catch(e){}
     }
   }
-  const text = out.join("\n\n");
+  let text = out.join("\n\n");
+  /* Which pictures are worth a look. Not an icon or a bullet (under about
+     1.4 cm a side as drawn); not a logo or a watermark that is on most of
+     the pages; not a scanned page, which the scan reader has already. */
+  const pics = [];
+  if (reg && reg.list.length){
+    const many = pages.length > 2;
+    const keep = reg.list.filter(e => !(Math.min(e.w, e.h) < 40 || e.w * e.h < 6000) &&
+                                      !(many && e.pages.length > 2 && e.pages.length >= pages.length * 0.5) &&
+                                      !e.pages.every(pn => scanned.indexOf(pn) >= 0))
+      .map(e => ({ e:e, at:text.indexOf("\uE000" + e.id + "\uE001") })).filter(k => k.at >= 0)
+      .sort((a, b) => a.at - b.at);
+    for (let k = 0; k < keep.length; k++){
+      const e = keep[k].e;
+      let im = null;
+      if (k < wantPics){ try { im = await doc.imageOf(e.x); } catch(err){ im = null; } }
+      pics.push(Object.assign({ id:e.id, page:e.pages[0], w:0, h:0 },
+        k >= wantPics ? { kind:"over" } : (im || { kind:"unknown" })));
+    }
+  }
+  const marked = {}; pics.forEach(pc => { marked[pc.id] = 1; });
+  text = text.replace(/\uE000(\d+)\uE001\n?/g, (m, id) => marked[id] ? m : "");
   if (!note){
-    const bare = text.replace(/\[page \d+\]/g, "").trim();
+    const bare = text.replace(/\[page \d+\]/g, "").replace(/\uE000\d+\uE001/g, "").trim();
     /* a scanner's stamp - a page number, a date - is not the page */
     if (!bare.length) note = images ? "scanned" : "empty";
     else if (images >= pages.length && bare.length < 40 * pages.length) note = "scanned";
     else if (lost > glyphs * 0.2 || failed) note = "partial";
   }
-  return { text:text, pages:pages.length, note:note, scans:scans };
+  return { text:text, pages:pages.length, note:note, scans:scans, pics:pics };
 }
 /* -- end of the PDF reader -- */
+
+/* -- reading a Word document ------------------------------------------------
+   A .docx is a zip of XML, and everything in it that a person reads is in
+   word/document.xml: paragraphs, their style (so a heading can say it is
+   one), lists, tables, text boxes, links, and where each picture sits. So
+   the zip is opened here - the central directory at the back, then each
+   member inflated with the browser's own DecompressionStream, the same one
+   the PDF reader uses - and the document walked in order.
+
+   What comes out is plain text the way a person would type it back:
+   "# Heading", "- item", "1. step", "| cell | cell |", a link's address
+   after its words, the text in a text box after the paragraph it floats
+   by, a chart as its title and numbers, SmartArt as its words. Page
+   headers and footers, footnotes and comments come after the body, each
+   labelled. A picture is a mark where it sits, and the picture itself is
+   handed out, for the recogniser or for a model that can see.
+
+   A Word 97-2003 .doc is a different format altogether (and a password
+   makes a .docx one of those too); it is named, not guessed at. */
+const DOCX_MAX_PART = 64 * 1024 * 1024, DOCX_EMU = 914400;
+function zipU16(u, o){ return u[o] | (u[o + 1] << 8); }
+function zipU32(u, o){ return (u[o] | (u[o + 1] << 8) | (u[o + 2] << 16) | (u[o + 3] << 24)) >>> 0; }
+function zipOpen(u8){
+  let e = -1;
+  for (let i = u8.length - 22; i >= Math.max(0, u8.length - 65557); i--){
+    if (u8[i] === 0x50 && u8[i + 1] === 0x4b && u8[i + 2] === 5 && u8[i + 3] === 6){ e = i; break; }
+  }
+  if (e < 0) return null;
+  const n = zipU16(u8, e + 10); let o = zipU32(u8, e + 16);
+  const files = new Map(), dec = new TextDecoder();
+  for (let k = 0; k < n && o + 46 <= u8.length; k++){
+    if (zipU32(u8, o) !== 0x02014b50) break;
+    const nl = zipU16(u8, o + 28), xl = zipU16(u8, o + 30), cl = zipU16(u8, o + 32);
+    const name = dec.decode(u8.subarray(o + 46, o + 46 + nl)).replace(/\\/g, "/");
+    files.set(name.toLowerCase(), { name:name, enc:!!(zipU16(u8, o + 8) & 1), method:zipU16(u8, o + 10),
+      csize:zipU32(u8, o + 20), usize:zipU32(u8, o + 24), at:zipU32(u8, o + 42) });
+    o += 46 + nl + xl + cl;
+  }
+  return files.size ? { u8:u8, files:files } : null;
+}
+async function zipRead(z, name){
+  const f = z.files.get(String(name || "").replace(/^\//, "").toLowerCase());
+  if (!f || f.enc || f.usize > DOCX_MAX_PART) return null;
+  const u = z.u8, o = f.at;
+  if (o + 30 > u.length || zipU32(u, o) !== 0x04034b50) return null;
+  const start = o + 30 + zipU16(u, o + 26) + zipU16(u, o + 28);
+  const raw = u.subarray(start, start + f.csize);
+  if (f.method === 0) return raw;
+  if (f.method === 8) return pdfPump(raw, "deflate-raw");
+  return null;
+}
+async function zipXml(z, name){
+  const b = await zipRead(z, name); if (!b || !b.length) return null;
+  const doc = new DOMParser().parseFromString(new TextDecoder().decode(b), "application/xml");
+  return doc.getElementsByTagName("parsererror").length ? null : doc;
+}
+/* a part's relationships: id -> where it points, relative to the part */
+async function docxRels(z, part){
+  const dir = part.replace(/[^/]*$/, ""), base = part.slice(dir.length);
+  const doc = await zipXml(z, dir + "_rels/" + base + ".rels"), out = {};
+  if (!doc) return out;
+  for (const r of doc.getElementsByTagName("*")){
+    if (r.localName !== "Relationship") continue;
+    const t = r.getAttribute("Target") || "", ext = r.getAttribute("TargetMode") === "External";
+    out[r.getAttribute("Id")] = { type:(r.getAttribute("Type") || "").replace(/^.*\//, ""), ext:ext,
+      target:ext ? t : docxJoin(dir, t) };
+  }
+  return out;
+}
+function docxJoin(dir, t){
+  const parts = (t.charAt(0) === "/" ? t.slice(1) : dir + t).split("/"), out = [];
+  for (const p of parts){ if (p === "..") out.pop(); else if (p && p !== ".") out.push(p); }
+  return out.join("/");
+}
+/* the one attribute, whatever prefix the file gave its namespace */
+function docxAttr(el, name){
+  if (!el || !el.attributes) return null;
+  for (const a of el.attributes) if (a.localName === name) return a.value;
+  return null;
+}
+function docxKids(el, name){ return Array.prototype.filter.call(el ? el.children : [], c => c.localName === name); }
+function docxKid(el, name){ return docxKids(el, name)[0] || null; }
+function docxAll(el, name){ return Array.prototype.filter.call(el ? el.getElementsByTagName("*") : [], c => c.localName === name); }
+
+class DocxReader {
+  constructor(z){ this.z = z; this.pics = []; this.picBy = {}; this.counters = {}; this.charts = 0; }
+  async load(){
+    const root = await docxRels(this.z, "");
+    const main = Object.values(root).find(r => r.type === "officeDocument");
+    this.part = main ? main.target : "word/document.xml";
+    this.doc = await zipXml(this.z, this.part);
+    if (!this.doc) return false;
+    this.rels = await docxRels(this.z, this.part);
+    /* heading levels by style name, which is the same in every language
+       ("heading 1") even where the id is not ("Titre1") */
+    this.styles = {};
+    const st = await zipXml(this.z, this.part.replace(/[^/]*$/, "") + "styles.xml");
+    if (st) for (const s of docxAll(st, "style")){
+      const nm = (docxAttr(docxKid(s, "name"), "val") || "").toLowerCase();
+      const m = /^heading (\d)$/.exec(nm);
+      const ol = docxAttr(docxKid(docxKid(s, "pPr"), "outlineLvl"), "val");
+      this.styles[docxAttr(s, "styleId")] = m ? +m[1] : nm === "title" ? 1 : nm === "subtitle" ? 2
+        : (ol !== null && +ol < 9 ? +ol + 1 : 0);
+    }
+    /* list formats: which numbering is bullets and which counts */
+    this.nums = {};
+    const nb = await zipXml(this.z, this.part.replace(/[^/]*$/, "") + "numbering.xml");
+    if (nb){
+      const abs = {};
+      for (const a of docxAll(nb, "abstractNum")){
+        const lv = {};
+        for (const l of docxKids(a, "lvl")) lv[docxAttr(l, "ilvl")] =
+          { fmt:docxAttr(docxKid(l, "numFmt"), "val") || "bullet", start:+(docxAttr(docxKid(l, "start"), "val") || 1) };
+        abs[docxAttr(a, "abstractNumId")] = lv;
+      }
+      for (const n of docxAll(nb, "num"))
+        this.nums[docxAttr(n, "numId")] = abs[docxAttr(docxKid(n, "abstractNumId"), "val")] || {};
+    }
+    return true;
+  }
+  async body(){
+    const b = docxAll(this.doc, "body")[0]; if (!b) return "";
+    return (await this.blocks(b.children, this.rels)).join("\n");
+  }
+  async blocks(list, rels){
+    const out = [];
+    for (const el of Array.from(list)){
+      const n = el.localName;
+      if (n === "p") out.push(...(await this.para(el, rels)));
+      else if (n === "tbl") out.push(await this.table(el, rels));
+      else if (n === "sdt") out.push(...(await this.blocks((docxKid(el, "sdtContent") || el).children, rels)));
+      else if (n === "customXml" || n === "ins" || n === "moveTo") out.push(...(await this.blocks(el.children, rels)));
+      else if (n === "AlternateContent"){
+        const c = docxKid(el, "Choice") || docxKid(el, "Fallback");
+        if (c) out.push(...(await this.blocks(c.children, rels)));
+      }
+    }
+    return out.filter(x => x !== null);
+  }
+  /* one paragraph: its words, with its heading or list mark in front, and
+     the text of any text box anchored in it after it */
+  async para(p, rels){
+    const boxes = []; let text = "";
+    const walk = async node => {
+      for (const c of Array.from(node.children)){
+        const n = c.localName;
+        if (n === "pPr" || n === "rPr" || n === "del" || n === "moveFrom" || n === "instrText" ||
+            n === "delText" || n === "fldChar" || n === "proofErr" || n === "bookmarkStart" || n === "bookmarkEnd") continue;
+        if (n === "t") text += c.textContent;
+        else if (n === "tab" || n === "ptab") text += "\t";
+        else if (n === "br" || n === "cr") text += "\n";
+        else if (n === "noBreakHyphen") text += "-";
+        else if (n === "footnoteReference" || n === "endnoteReference") text += "[^" + (docxAttr(c, "id") || "") + "]";
+        else if (n === "drawing" || n === "pict" || n === "object"){
+          text += await this.figure(c, rels);
+          for (const tb of docxAll(c, "txbxContent")) boxes.push(tb);
+        }
+        else if (n === "AlternateContent"){
+          const ch = docxKid(c, "Choice") || docxKid(c, "Fallback"); if (ch) await walk(ch);
+        }
+        else if (n === "hyperlink"){
+          const before = text.length; await walk(c);
+          const r = rels[docxAttr(c, "id")];
+          const said = text.slice(before).trim();
+          if (r && r.ext && /^(https?|mailto|file):/i.test(r.target) && said && said.indexOf(r.target) < 0 &&
+              said !== r.target.replace(/^mailto:/i, "")) text += " (" + r.target + ")";
+        }
+        else await walk(c);
+      }
+    };
+    await walk(p);
+    const pPr = docxKid(p, "pPr");
+    const sid = docxAttr(docxKid(pPr, "pStyle"), "val");
+    let lvl = (sid && this.styles[sid]) || 0;
+    const ol = docxAttr(docxKid(pPr, "outlineLvl"), "val");
+    if (!lvl && ol !== null && +ol < 6) lvl = +ol + 1;
+    const numPr = docxKid(pPr, "numPr");
+    text = text.replace(/[ \t]+$/g, "");
+    let line = text;
+    if (text.trim() && lvl) line = "#".repeat(Math.min(6, lvl)) + " " + text.trim();
+    else if (text.trim() && numPr){
+      const id = docxAttr(docxKid(numPr, "numId"), "val"), il = +(docxAttr(docxKid(numPr, "ilvl"), "val") || 0);
+      if (id && id !== "0"){
+        const lv = (this.nums[id] || {})[il] || { fmt:"bullet", start:1 };
+        const cn = this.counters[id] = this.counters[id] || [];
+        cn[il] = (cn[il] === undefined ? lv.start : cn[il] + 1); cn.length = il + 1;
+        line = "  ".repeat(il) + docxMark(lv.fmt, cn[il]) + " " + text.trim();
+      }
+    }
+    const out = [line];
+    for (const b of boxes){
+      const inner = (await this.blocks(b.children, rels)).join("\n").trim();
+      if (inner) out.push("[text box]\n" + inner + "\n[end of text box]");
+    }
+    return out;
+  }
+  async table(t, rels){
+    const rows = [];
+    for (const tr of docxKids(t, "tr")){
+      const cells = [];
+      for (const tc of docxKids(tr, "tc")){
+        const inner = (await this.blocks(tc.children, rels)).join("\n").replace(/\|/g, "/");
+        /* a cell's lines, one after another, with a slash between */
+        cells.push(inner.split(/\n+/).map(x => x.replace(/\s+/g, " ").trim()).filter(Boolean).join(" / "));
+      }
+      if (cells.some(c => c)) rows.push("| " + cells.join(" | ") + " |");
+      if (rows.length === 1) rows.push("|" + cells.map(() => " --- ").join("|") + "|");
+    }
+    return rows.length > 1 ? rows.join("\n") : "";
+  }
+  /* a drawing: a picture, a chart, SmartArt - or only a text box */
+  async figure(el, rels){
+    let out = "";
+    const ext = docxAll(el, "extent")[0];
+    const cx = +(docxAttr(ext, "cx") || 0), cy = +(docxAttr(ext, "cy") || 0);
+    for (const b of docxAll(el, "blip").concat(docxAll(el, "imagedata"))){
+      const rid = docxAttr(b, "embed") || docxAttr(b, "id");
+      const r = rid && rels[rid];
+      if (!r || r.ext) continue;
+      /* an icon, a bullet, a signature squiggle: under ~1.1 cm a side */
+      if (cx && cy && Math.min(cx, cy) < DOCX_EMU * 0.45) continue;
+      let e = this.picBy[r.target];
+      if (!e){ e = this.picBy[r.target] = { id:this.pics.length, target:r.target, cx:cx, cy:cy }; this.pics.push(e); }
+      if (out.indexOf("\uE000" + e.id + "\uE001") < 0) out += "\n\uE000" + e.id + "\uE001\n";
+    }
+    for (const c of docxAll(el, "chart")){
+      const r = rels[docxAttr(c, "id")];
+      if (r && !r.ext) out += "\n" + await this.chart(r.target) + "\n";
+    }
+    for (const d of docxAll(el, "relIds")){
+      const r = rels[docxAttr(d, "dm")];
+      if (!r || r.ext) continue;
+      const dm = await zipXml(this.z, r.target);
+      const words = dm ? docxAll(dm, "t").map(t => t.textContent.trim()).filter(Boolean) : [];
+      if (words.length) out += "\n[diagram: " + words.join(" / ") + "]\n";
+    }
+    return out;
+  }
+  /* a chart as what it says: its title, and each series' numbers by category */
+  async chart(part){
+    const c = await zipXml(this.z, part);
+    if (!c) return "[a chart]";
+    this.charts++;
+    const title = docxAll(docxAll(c, "title")[0], "t").map(t => t.textContent).join("").trim();
+    const pts = el => docxAll(el, "pt").map(p => ({ i:+(docxAttr(p, "idx") || 0), v:(docxKid(p, "v") || {}).textContent || "" }));
+    const lines = [];
+    for (const s of docxAll(c, "ser").slice(0, 12)){
+      const name = docxAll(docxKid(s, "tx"), "v").map(v => v.textContent).join(" ").trim();
+      const cats = pts(docxKid(s, "cat") || docxKid(s, "xVal"));
+      const vals = pts(docxKid(s, "val") || docxKid(s, "yVal"));
+      const byIdx = {}; cats.forEach(p => { byIdx[p.i] = p.v; });
+      const pairs = vals.slice(0, 40).map(p => (byIdx[p.i] !== undefined ? byIdx[p.i] + " " : "") + p.v);
+      if (pairs.length) lines.push("  " + (name || "series") + ": " + pairs.join(", "));
+    }
+    return "[chart" + (title ? ": " + title : "") + "]" + (lines.length ? "\n" + lines.join("\n") : "");
+  }
+  /* headers, footers, footnotes, endnotes and comments, each labelled */
+  async extras(){
+    const out = [], seen = {};
+    for (const kind of ["header", "footer"]){
+      for (const r of Object.values(this.rels).filter(r => r.type === kind && !r.ext)){
+        const d = await zipXml(this.z, r.target); if (!d) continue;
+        const rels = await docxRels(this.z, r.target);
+        const root = d.documentElement;
+        const t = (await this.blocks(root.children, rels)).join("\n").replace(/\uE000\d+\uE001/g, "").trim();
+        if (t && !seen[t]){ seen[t] = 1; out.push("[page " + kind + "]\n" + t); }
+      }
+    }
+    for (const [kind, tag] of [["footnotes", "footnote"], ["endnotes", "endnote"]]){
+      const r = Object.values(this.rels).find(r => r.type === kind && !r.ext); if (!r) continue;
+      const d = await zipXml(this.z, r.target); if (!d) continue;
+      const rels = await docxRels(this.z, r.target), lines = [];
+      for (const n of docxKids(d.documentElement, tag)){
+        if (docxAttr(n, "type")) continue;      /* the separator lines */
+        const t = (await this.blocks(n.children, rels)).join(" ").trim();
+        if (t) lines.push("[^" + docxAttr(n, "id") + "] " + t);
+      }
+      if (lines.length) out.push("[" + kind + "]\n" + lines.join("\n"));
+    }
+    const cr = Object.values(this.rels).find(r => r.type === "comments" && !r.ext);
+    if (cr){
+      const d = await zipXml(this.z, cr.target);
+      if (d){
+        const lines = [];
+        for (const n of docxKids(d.documentElement, "comment")){
+          const t = (await this.blocks(n.children, {})).join(" ").trim();
+          if (t) lines.push("- " + (docxAttr(n, "author") || "someone") + ": " + t);
+        }
+        if (lines.length) out.push("[comments in the margin]\n" + lines.join("\n"));
+      }
+    }
+    return out.join("\n\n");
+  }
+}
+function docxMark(fmt, n){
+  if (fmt === "bullet" || fmt === "none") return "-";
+  if (fmt === "lowerLetter") return String.fromCharCode(96 + ((n - 1) % 26 + 1)) + ".";
+  if (fmt === "upperLetter") return String.fromCharCode(64 + ((n - 1) % 26 + 1)) + ".";
+  if (fmt === "lowerRoman" || fmt === "upperRoman"){
+    const r = [["m",1000],["cm",900],["d",500],["cd",400],["c",100],["xc",90],["l",50],["xl",40],["x",10],["ix",9],["v",5],["iv",4],["i",1]];
+    let v = n, s = ""; for (const [k, q] of r) while (v >= q){ s += k; v -= q; }
+    return (fmt === "upperRoman" ? s.toUpperCase() : s) + ".";
+  }
+  return n + ".";
+}
+const DOCX_PIC_TYPES = { png:"image/png", jpg:"image/jpeg", jpeg:"image/jpeg", jpe:"image/jpeg", gif:"image/gif",
+                         bmp:"image/bmp", webp:"image/webp", svg:"image/svg+xml" };
+async function docxText(buffer, opts){
+  const u8 = buffer instanceof Uint8Array ? buffer : new Uint8Array(buffer);
+  /* an OLE compound file: Word 97-2003, or a .docx behind a password */
+  if (u8[0] === 0xD0 && u8[1] === 0xCF && u8[2] === 0x11 && u8[3] === 0xE0)
+    return { text:"", pages:0, note:"legacy", pics:[] };
+  const z = zipOpen(u8);
+  if (!z) return { text:"", pages:0, note:"unreadable", pics:[] };
+  const rd = new DocxReader(z);
+  if (!(await rd.load())) return { text:"", pages:0, note:"unreadable", pics:[] };
+  let text = (await rd.body()).replace(/[ \t]+\n/g, "\n").replace(/\n{3,}/g, "\n\n").trim();
+  const extra = await rd.extras();
+  if (extra) text += (text ? "\n\n" : "") + extra;
+  let note = "";
+  if (text.length > PDF_MAX_CHARS){ text = text.slice(0, PDF_MAX_CHARS).replace(/\uE000\d*$/, ""); note = "cut"; }
+  /* the page count Word saved last time, when it did */
+  let pages = 0;
+  const app = await zipXml(z, "docProps/app.xml");
+  if (app){ const pg = docxAll(app, "Pages")[0]; pages = pg ? (+pg.textContent || 0) : 0; }
+  /* the pictures, in the order they come, as bytes with their type */
+  const want = opts && opts.pics > 0 ? opts.pics : 0, pics = [];
+  const order = rd.pics.map(e => ({ e:e, at:text.indexOf("\uE000" + e.id + "\uE001") })).filter(k => k.at >= 0)
+    .sort((a, b) => a.at - b.at);
+  for (let k = 0; k < order.length; k++){
+    const e = order[k].e, name = e.target.replace(/^.*\//, "");
+    const ext = (/\.([a-z0-9]+)$/i.exec(name) || [0, ""])[1].toLowerCase();
+    if (k >= want){ pics.push({ id:e.id, name:name, kind:"over" }); continue; }
+    const type = DOCX_PIC_TYPES[ext];
+    if (!type || ext === "svg"){ pics.push({ id:e.id, name:name, kind:ext || "unknown" }); continue; }
+    let data = null; try { data = await zipRead(z, e.target); } catch(err){ data = null; }
+    pics.push(data ? { id:e.id, name:name, kind:"file", data:data, type:type } : { id:e.id, name:name, kind:"unknown" });
+  }
+  const marked = {}; pics.forEach(pc => { marked[pc.id] = 1; });
+  text = text.replace(/\uE000(\d+)\uE001/g, (m, id) => marked[id] ? m : "")
+    .replace(/ \/ (?= \|)/g, " ").replace(/(\| )\/ /g, "$1").replace(/\n{3,}/g, "\n\n").trim();
+  if (!note && !text.replace(/\uE000\d+\uE001/g, "").trim()) note = pics.length ? "pictures" : "empty";
+  return { text:text, pages:pages, note:note, pics:pics, charts:rd.charts };
+}
+/* -- end of the Word reader -- */
 
 /* ── files that come with the question ─────────────────────────────────
    An error dialog, a page of a specification, the log line that matters.
    Typing out what a screenshot says is how the detail gets lost, so the
    screenshot goes instead — read here, carried in the request, never
    uploaded anywhere except the endpoint you configured. */
-const CHAT_KIND = { "application/pdf":"\u25a4" };
+const DOCX_TYPE = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+const CHAT_KIND = { "application/pdf":"\u25a4", [DOCX_TYPE]:"\u00b6" };
 function chatFileIcon(t){
   if (/^image\//.test(t)) return "\u25a3";
   return CHAT_KIND[t] || "\u2261";
@@ -22238,26 +22693,34 @@ function chatFileIcon(t){
    says nothing at all - a .log off a server usually has none */
 function chatFileType(f){
   const t = f.type || "";
+  if (/^application\/vnd\.(ms-word\.(document|template)\.macroenabled\.12|openxmlformats-officedocument\.wordprocessingml\.(document|template))$/i.test(t))
+    return DOCX_TYPE;
   if (t && t !== "application/octet-stream") return t;
   if (/\.pdf$/i.test(f.name)) return "application/pdf";
+  if (/\.(docx|docm|dotx|dotm)$/i.test(f.name)) return DOCX_TYPE;
+  if (/\.(doc|dot)$/i.test(f.name)) return "application/msword";
   if (/\.(txt|log|csv|json|xml|md|ini|cfg|conf|yaml|yml|sql|ps1|bat|cmd|sh)$/i.test(f.name)) return "text/plain";
   return t || "application/octet-stream";
 }
 function chatKind(type){
-  return /^image\//.test(type || "") ? "image" : type === "application/pdf" ? "pdf" : "text";
+  return /^image\//.test(type || "") ? "image" : type === "application/pdf" ? "pdf" : type === DOCX_TYPE ? "docx" : "text";
 }
 /* what will actually travel: the bytes still going as bytes, plus the words
    read out of everything else */
+function chatPicsText(f){ return (f.pics || []).reduce((n, p) => n + (p.desc || "").length, 0); }
 function chatSentBytes(){
-  return CHAT.files.reduce((n, f) => n + (f.data || "").length + (f.text || "").length, 0);
+  return CHAT.files.reduce((n, f) => n + (f.data || "").length + (f.text || "").length + chatPicsText(f), 0);
 }
 function chatSentSize(){
-  return CHAT.files.reduce((n, f) => n + (f.data || "").length * 3 / 4 + (f.text || "").length, 0);
+  return CHAT.files.reduce((n, f) => n + (f.data || "").length * 3 / 4 + (f.text || "").length + chatPicsText(f), 0);
 }
 function chatFileOk(f){
   if (CHAT.files.length >= CHAT_FILES_MAX){ toast(L("AttachTooMany"), { bad:true }); return false; }
   const t = chatFileType(f);
-  if (!/^image\//.test(t) && t !== "application/pdf" && !/^text\//.test(t) && !/(json|xml|csv)$/.test(t)){
+  /* Word 97-2003 is a different format from .docx; saying so beats a
+     page of nothing */
+  if (t === "application/msword"){ toast(L("AttachOldWord", { name:f.name }), { bad:true, life:9000 }); return false; }
+  if (!/^image\//.test(t) && t !== "application/pdf" && t !== DOCX_TYPE && !/^text\//.test(t) && !/(json|xml|csv)$/.test(t)){
     toast(L("AttachUnsupported", { name:f.name, type:t || "file" }), { bad:true }); return false;
   }
   /* an image is about to be shrunk and a document is about to be read
@@ -22396,10 +22859,41 @@ function chatRawToBlob(sc){
           d[o] = r; d[o + 1] = g; d[o + 2] = b; d[o + 3] = 255;
         }
       }
+      chatAlphaOnWhite(d, w, h, sc.alpha);
       x.putImageData(id, 0, 0);
       c.toBlob(bl => resolve(bl), "image/jpeg", 0.9);
     } catch(e){ resolve(null); }
   });
+}
+
+/* a soft mask out of a PDF, applied the way a page would show it: over
+   white. Only when it is the picture's own size - a mask drawn at another
+   resolution is left, and the picture shows as it is. */
+function chatAlphaOnWhite(d, w, h, a){
+  if (!a || a.w !== w || a.h !== h || a.data.length < w * h) return;
+  for (let i = 0, o = 0; i < w * h; i++, o += 4){
+    const k = a.data[i] / 255;
+    if (k >= 1) continue;
+    d[o] = Math.round(d[o] * k + 255 * (1 - k)); d[o + 1] = Math.round(d[o + 1] * k + 255 * (1 - k));
+    d[o + 2] = Math.round(d[o + 2] * k + 255 * (1 - k));
+  }
+}
+/* a picture out of a document as a Blob a browser can draw: a JPEG as its
+   bytes (through a canvas when it has a mask), raw samples through one */
+async function chatPicBlob(pc){
+  if (pc.kind === "raw") return chatRawToBlob(pc);
+  if (pc.kind !== "jpeg") return null;
+  const jb = new Blob([pc.data], { type:"image/jpeg" });
+  if (!pc.alpha) return jb;
+  try {
+    const bm = await createImageBitmap(jb);
+    const c = document.createElement("canvas"); c.width = bm.width; c.height = bm.height;
+    const x = c.getContext("2d"); x.drawImage(bm, 0, 0);
+    const id = x.getImageData(0, 0, c.width, c.height);
+    chatAlphaOnWhite(id.data, c.width, c.height, pc.alpha);
+    x.putImageData(id, 0, 0);
+    return await new Promise(res => c.toBlob(b => res(b || jb), "image/jpeg", 0.9));
+  } catch(e){ return jb; }
 }
 
 /* -- seeing a picture in words ------------------------------------------
@@ -22731,7 +23225,7 @@ function chatBackdrop(canvas, p){
   } catch(e){ return ""; }
 }
 /* the description itself - what the endpoint gets in place of pixels */
-async function chatDescribeImage(prep, ocr){
+async function chatDescribeImage(prep, ocr, opts){
   const sum = chatImageSummary(prep.canvas);
   const paras = chatOcrParagraphs(ocr && ocr.tsv);
   const words = paras.reduce((n, p) => n + p.words, 0);
@@ -22760,7 +23254,7 @@ async function chatDescribeImage(prep, ocr){
   /* two maps in one question is already a lot of prompt; after that the
      sentences carry it */
   const mapped = (CHAT.files || []).filter(f => (f.text || "").indexOf("A map of the picture") >= 0).length;
-  if (vis && words < 120 && mapped < 2){
+  if (vis && words < 120 && mapped < 2 && !(opts && opts.noMap)){
     const key = Object.keys(vis.used).sort((a, b) => vis.used[b] - vis.used[a])
       .map(k => k + "=" + (VIS_NAME[k] || k)).join(" ");
     parts.push("A map of the picture, " + vis.mw + " squares across by " + vis.mh + " down, one letter a square" +
@@ -22829,23 +23323,143 @@ async function chatReadScans(r, entry){
    (note), and whether the bytes still have to travel (keep) - they do when
    there was nothing to read, and always for a picture, so a flow that looks
    at pictures still can. */
+/* -- the pictures inside a document -----------------------------------------
+   A runbook is half screenshots: "click here", "this is what the error
+   looks like". Reading only its words loses the half that shows. So every
+   picture a document holds (up to DOC_PICS_MAX, in the order they come) is
+   taken out and, like a picture attached on its own, either read here -
+   its words by the recogniser, its layout by the description - or, with a
+   flow whose model can see, put into the one image the question carries
+   (up to CHAT_GRID_MAX pictures, the ones after that read here instead).
+   Where each sat in the text stays marked, so the model reads "step 3",
+   then what the screenshot of step 3 shows, then step 4. */
+const DOC_PICS_MAX = 12, CHAT_GRID_MAX = 6, DOC_DESC_MAX = 4000;
+async function chatDocPictures(pics, docName, entry){
+  const vision = flowOn() && flowSees(), ocr = chatOcrOn();
+  const own = CHAT.files.filter(f => chatKind(f.type) === "image").length;
+  const list = [];
+  let page1 = "", slow = false;
+  for (let i = 0; i < pics.length; i++){
+    const pc = pics[i], n = i + 1;
+    const p = { id:pc.id, n:n, page:pc.page || 0, name:docName + " \u00b7 picture " + n + (pc.page ? " (page " + pc.page + ")" : ""),
+                url:"", b64:"", size:0, desc:"", why:"", fmt:"" };
+    list.push(p);
+    if (pc.kind === "over"){ p.why = "over"; continue; }
+    if (entry){ entry.stage = n + "/" + pics.length; entry.stagePic = true; entry.progress = 0; renderChatFiles(); }
+    let blob = null;
+    try { blob = pc.kind === "file" ? new Blob([pc.data], { type:pc.type }) : await chatPicBlob(pc); } catch(e){ blob = null; }
+    let bm = null;
+    if (blob){ try { bm = await createImageBitmap(blob); } catch(e){ bm = null; } }
+    if (!bm){
+      p.why = "format";
+      p.fmt = { JPXDecode:"JPEG 2000", JPX:"JPEG 2000", CCITTFaxDecode:"fax (CCITT)", CCF:"fax (CCITT)", JBIG2Decode:"JBIG2",
+                unknown:"", over:"" }[pc.kind] ?? String(pc.kind === "file" ? (pc.type || "").replace(/^image\//, "") : pc.kind).toUpperCase();
+      continue;
+    }
+    const w = bm.width, h = bm.height; try { bm.close(); } catch(e){}
+    /* an icon that slipped past the size it was drawn at */
+    if (w < 48 || h < 32){ p.why = "tiny"; continue; }
+    try {
+      const small = await chatShrinkImage(blob);
+      p.url = small ? small.url : await chatReadAsUrl(blob);
+    } catch(e){ p.url = ""; }
+    p.b64 = p.url.slice(p.url.indexOf(",") + 1); p.size = p.b64.length;
+    if (!page1) page1 = p.b64;
+    const seen = vision && own + n <= CHAT_GRID_MAX;
+    if (seen || !ocr || slow) continue;
+    const prep = await chatOcrBytes(blob);
+    if (!prep) continue;
+    let out = null;
+    try {
+      out = await window.DossierOCR.read(prep.bytes, { psm:OCR_PSM, layout:true, onProgress:v => {
+        if (entry){ entry.progress = v; renderChatFiles(); } } });
+      if (out.conf < OCR_MIN_CONF) out = null;
+    } catch(e){ out = null; if (/timeout/.test(String(e && e.message))){ slow = true; p.why = "ocrslow"; } }
+    try {
+      const d = await chatDescribeImage(prep, out, { noMap:true });
+      p.desc = d.text.length > DOC_DESC_MAX ? d.text.slice(0, DOC_DESC_MAX) + "\n[cut]" : d.text;
+      p.words = d.words;
+    } catch(e){}
+  }
+  if (entry){ entry.stage = ""; entry.stagePic = false; entry.progress = 0; }
+  return { list:list, page1:page1 };
+}
+/* A document's text as it goes to the model: each picture's mark turned
+   into what became of that picture - which one to look at in the image
+   attached, what the app saw in it, or why it could not be read. Done when
+   the question is sent, not when the file is read, because which pictures
+   make it into the one image depends on everything else on the tray. A
+   picture inside a table row gets a pointer, and its description comes
+   after the table, so the table stays a table. */
+function chatDocText(f){
+  const t = f.text || "";
+  if (t.indexOf("\uE000") < 0) return t;
+  const byId = {}; (f.pics || []).forEach(p => { byId[p.id] = p; });
+  const vision = flowOn() && flowSees();
+  const grid = vision && CHAT.grid && CHAT.grid.key === chatGridKey() ? chatGridImages() : null;
+  const single = vision && !grid ? chatPicture().data : "";
+  const say = (p, inTable) => {
+    if (p.why === "tiny") return null;
+    const where = "picture " + p.n + (p.page ? " (page " + p.page + ")" : "");
+    const k = grid ? grid.indexOf(p) + 1 : 0;
+    if (k) return "[" + where + " - it is picture " + k + " of the image attached to this question; look at it]";
+    if (single && p.b64 && single === p.b64) return "[" + where + " - it is the picture attached to this question; look at it]";
+    if (p.desc) return inTable ? "[" + where + " - described below the table]"
+      : "[" + where + " - what the app saw in it:]\n" + p.desc + "\n[end of " + where + "]";
+    const why = p.why === "over" ? "only the first " + DOC_PICS_MAX + " pictures in a document are read"
+      : p.why === "format" ? (p.fmt ? "its format (" + p.fmt + ") is not one this PC can open" : "this PC could not open it")
+      : p.why === "ocrslow" ? "reading its words took too long"
+      : vision ? "more pictures than fit in the one image a question carries"
+      : "the app has no recogniser here for the words in pictures";
+    return "[" + where + " - not read: " + why + "]";
+  };
+  const out = [], later = [];
+  for (const line of t.split("\n")){
+    const inTable = /^\|/.test(line);
+    if (!inTable && later.length){ out.push(...later); later.length = 0; }
+    out.push(line.replace(/\uE000(\d+)\uE001/g, (m, id) => {
+      const p = byId[id]; if (!p) return "";
+      const said = say(p, inTable); if (said === null) return "";
+      if (inTable && p.desc && said.indexOf("described below") >= 0) later.push(say(p, false));
+      return said;
+    }));
+  }
+  out.push(...later);
+  return out.join("\n").replace(/\n{3,}/g, "\n\n").trim();
+}
 async function chatReadText(f, type, entry){
   const kind = chatKind(type);
   if (kind === "image") return chatReadImage(f, entry);
+  if (kind === "docx"){
+    try {
+      const r = await docxText(await f.arrayBuffer(), { pics:DOC_PICS_MAX });
+      if (r.note === "legacy" || r.note === "unreadable") return { text:"", pages:0, note:r.note, keep:false };
+      const pp = await chatDocPictures(r.pics, f.name, entry);
+      return { text:r.text, pages:r.pages, note:r.note, keep:false, pics:pp.list, page1:pp.page1, page1Name:" \u00b7 picture 1" };
+    } catch(e){
+      return { text:"", pages:0, note:"unreadable", keep:false };
+    }
+  }
   if (kind === "text"){
     const t = String(await chatReadAsText(f) || "").replace(/\r\n?/g, "\n");
     const cut = t.length > PDF_MAX_CHARS;
     return { text:cut ? t.slice(0, PDF_MAX_CHARS) : t, pages:0, note:cut ? "cut" : "", keep:false };
   }
   try {
-    const r = await pdfText(await f.arrayBuffer(), { scans:PDF_SCAN_MAX });
+    const r = await pdfText(await f.arrayBuffer(), { scans:PDF_SCAN_MAX, pics:DOC_PICS_MAX });
+    /* the pictures in among the text: screenshots, diagrams */
+    const pp = r.pics.length ? await chatDocPictures(r.pics, f.name, entry) : { list:[], page1:"" };
     /* pictures of pages: read them here when the recogniser is there */
     if (r.scans.length && chatOcrOn()){
       const sc = await chatReadScans(r, entry);
-      if (sc.text) return { text:r.text ? r.text + "\n\n" + sc.text : sc.text, pages:r.pages, note:"ocr", keep:false, scanned:sc.n, page1:sc.page1 };
-      return { text:r.text, pages:r.pages, note:r.note, keep:!r.text || r.note === "scanned", page1:sc.page1 };
+      const p1 = sc.page1 ? "" : pp.page1 ? " \u00b7 picture 1" : "";
+      if (sc.text) return { text:r.text ? r.text + "\n\n" + sc.text : sc.text, pages:r.pages, note:"ocr", keep:false, scanned:sc.n,
+                            page1:sc.page1 || pp.page1, page1Name:p1, pics:pp.list };
+      return { text:r.text, pages:r.pages, note:r.note, keep:!r.text || r.note === "scanned", page1:sc.page1 || pp.page1,
+               page1Name:p1, pics:pp.list };
     }
-    return { text:r.text, pages:r.pages, note:r.note, keep:!r.text || r.note === "scanned" };
+    return { text:r.text, pages:r.pages, note:r.note, keep:!r.text || r.note === "scanned", page1:pp.page1, pics:pp.list,
+             page1Name:pp.page1 ? " \u00b7 picture 1" : "" };
   } catch(e){
     return { text:"", pages:0, note:"unreadable", keep:true };
   }
@@ -22875,7 +23489,7 @@ async function chatAttach(files){
       toast(L("AttachStillTooBig", { name:f.name, size:bytes(data.length * 3 / 4) }), { bad:true });
       continue;
     }
-    if (chatSentBytes() + data.length + text.length > CHAT_ALL_MAX){
+    if (chatSentBytes() + data.length + text.length + chatPicsText(read || {}) > CHAT_ALL_MAX){
       drop();
       toast(L("AttachOverBudget", { max:bytes(CHAT_ALL_MAX * 3 / 4) }), { bad:true });
       continue;
@@ -22885,14 +23499,15 @@ async function chatAttach(files){
          every prompt action expects - and no bytes at all once the words
          have been read out of them, because then the words are the file */
       data:data, text:text, pages:read ? read.pages : 0, note:read ? read.note : "", reading:false,
-      words:read ? read.words || 0 : 0, scanned:read ? read.scanned || 0 : 0, page1:read ? read.page1 || "" : "" });
+      words:read ? read.words || 0 : 0, scanned:read ? read.scanned || 0 : 0, page1:read ? read.page1 || "" : "",
+      pics:read ? read.pics || [] : [], page1Name:read ? read.page1Name || "" : "" });
     renderChatFiles();
   }
   renderChatFiles();
 }
 /* the line under a file's name that says what became of it */
 function chatFileNote(f){
-  if (f.reading) return { t:L("AttachReading") + (f.stage ? " " + L("AttachPage", { p:f.stage }) : "") +
+  if (f.reading) return { t:L("AttachReading") + (f.stage ? " " + L(f.stagePic ? "AttachPicStage" : "AttachPage", { p:f.stage }) : "") +
                              (f.progress > 0 && f.progress < 100 ? " " + Math.round(f.progress) + "%" : ""), c:"" };
   const kind = chatKind(f.type);
   if (kind === "image"){
@@ -22903,11 +23518,31 @@ function chatFileNote(f){
     if (f.note === "nowords") return { t:L("AttachOcrNone"), c:"warn" };
     return null;
   }
+  const base = chatDocNote(f), pics = chatPicsNote(f);
+  if (!base) return null;
+  return pics ? { t:base.t + " \u00b7 " + pics, c:base.c } : base;
+}
+/* what became of the pictures inside a document, in a few words */
+function chatPicsNote(f){
+  const ps = (f.pics || []).filter(p => p.why !== "tiny");
+  if (!ps.length) return "";
+  const read = ps.filter(p => p.desc).length, seen = ps.filter(p => !p.desc && !p.why && p.url).length;
+  if (flowOn() && flowSees() && seen){
+    if (seen + read === ps.length) return L(ps.length === 1 ? "AttachPicSeen1" : "AttachPicsSeen", { n:ps.length });
+    return L("AttachPicsSeenSome", { n:seen + read, of:ps.length });
+  }
+  if (read === ps.length) return L(read === 1 ? "AttachPicRead1" : "AttachPicsRead", { n:read });
+  return L("AttachPicsSome", { n:read, of:ps.length });
+}
+function chatDocNote(f){
+  const kind = chatKind(f.type);
+  if (f.note === "legacy") return { t:L("AttachLegacyWord"), c:"warn" };
+  if (f.note === "pictures") return { t:L("AttachOnlyPics"), c:"ok" };
   if (f.text && f.scanned) return { t:f.scanned === 1 ? L("AttachScanRead1") : L("AttachScanRead", { n:f.scanned }), c:"ok" };
   if (f.text){
     if (f.note === "cut") return { t:L("AttachCut", { n:PDF_MAX_CHARS.toLocaleString() }), c:"ok" };
     if (f.note === "partial") return { t:L("AttachPartial"), c:"ok" };
-    if (kind === "pdf") return { t:f.pages === 1 ? L("AttachReadPage") : L("AttachReadPages", { n:f.pages }), c:"ok" };
+    if (kind === "pdf" || (kind === "docx" && f.pages)) return { t:f.pages === 1 ? L("AttachReadPage") : L("AttachReadPages", { n:f.pages }), c:"ok" };
     return { t:L("AttachReadText"), c:"ok" };
   }
   if (f.note === "scanned") return { t:L("AttachScanned"), c:"warn" };
@@ -22950,7 +23585,7 @@ function chatPicture(){
   for (const f of CHAT.files){
     if (f.reading) continue;
     if (chatKind(f.type) === "image" && f.data) return { data:f.data, name:f.name };
-    if (f.page1) return { data:f.page1, name:f.name + " (page 1)" };
+    if (f.page1) return { data:f.page1, name:f.name + (f.page1Name || " (page 1)") };
   }
   return { data:CHAT_BLANK_PNG, name:"" };
 }
@@ -22959,7 +23594,10 @@ function chatPicture(){
    sees every one of them and can talk about "picture 2". Sized to what the
    model reads - 2048 on the long side. */
 function chatGridImages(){
-  return CHAT.files.filter(f => chatKind(f.type) === "image" && f.url && !f.reading).slice(0, 6);
+  const own = CHAT.files.filter(f => chatKind(f.type) === "image" && f.url && !f.reading);
+  const inDocs = [];
+  CHAT.files.forEach(f => { if (!f.reading) (f.pics || []).forEach(p => { if (p.url && !p.why && !p.desc) inDocs.push(p); }); });
+  return own.concat(inDocs).slice(0, CHAT_GRID_MAX);
 }
 function chatGridKey(){ return chatGridImages().map(f => f.name + ":" + f.size).join("|"); }
 function chatUpdateGrid(){

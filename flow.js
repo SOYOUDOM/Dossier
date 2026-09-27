@@ -793,7 +793,7 @@ function attachmentsAsText(list){
   const parts = []; let used = 0;
   for (const x of list){
     const kb = x.size ? Math.max(1, Math.round(x.size / 1024)) + " KB" : "";
-    const head = "=== " + x.name + " (" + (x.kind || x.type || "file") + (kb ? ", " + kb : "") +
+    const head = "=== " + x.name + " (" + (x.kind === "docx" ? "Word document" : (x.kind || x.type || "file")) + (kb ? ", " + kb : "") +
                  (x.pages ? ", " + x.pages + " page" + (x.pages === 1 ? "" : "s") : "") + ") ===";
     let body;
     if (x.text){
@@ -803,7 +803,13 @@ function attachmentsAsText(list){
       else if (x.note === "ocr" && x.kind === "pdf") body += "\n[read off the scanned pages by the app's recogniser; a stray character is possible; the first page is in picture]";
       else if (x.note === "ocr" || x.note === "seen") body += "\n[the picture was looked at by the app on the PC: the line in brackets, the layout, any words read off it, and the map of letters above are what it found. A stray character is possible - an l for an I. Answer from it rather than saying you cannot see the picture; the pixels themselves are in attachments[].data and in picture.]";
       else if (x.note === "ocrslow") body += "\n[the description above was read off the picture by the app on the PC; its text took too long to read and was left; the pixels are in attachments[].data and in picture]";
+      /* pictures inside a PDF or a Word document: each is marked where it
+         sits - "[picture 2 - what the app saw in it:]" and its words, or
+         which picture in the attached image it is */
+      if (x.pictures) body += "\n[this document has " + x.pictures + " picture" + (x.pictures === 1 ? "" : "s") +
+        " in it, each marked where it sits: what the app read off it, or which picture of the attached image it is. Treat them as part of the document - a screenshot of a step shows that step]";
     }
+    else if (x.note === "legacy") body = "[a Word document the app could not open: an old Word 97-2003 file, or one with a password. It can be saved again as .docx or PDF]";
     else if (x.note === "vision") body = x.grid
       ? "[picture " + x.grid + " of the image attached to this question - look at it]"
       : "[the picture itself is attached to this question - look at it]";
@@ -972,7 +978,8 @@ function buildRequest(text, ctx, cfg){
       name: a.name, type: a.type, size: a.size,
       data: (a.text && /^image\//.test(a.type || "")) ? "" : (a.data || ""),
       kind: a.kind || (/^image\//.test(a.type || "") ? "image"
-                       : a.type === "application/pdf" ? "pdf" : "text"),
+                       : a.type === "application/pdf" ? "pdf"
+                       : /wordprocessingml/.test(a.type || "") ? "docx" : "text"),
       /* what the app read out of the file before sending - the whole text of
          a PDF or a text file, or the words read off a picture (note "ocr")
          when ocr.js is beside the app - with its page count, and a note when
@@ -980,7 +987,9 @@ function buildRequest(text, ctx, cfg){
          unreadable, nowords. A document with text here carries no data: the
          words travel, the bytes stay on the PC. A picture always carries its
          pixels as well, for a flow that looks at them. */
-      text: a.text || "", pages: a.pages || 0, note: a.note || "", grid: a.grid || 0 })),
+      text: a.text || "", pages: a.pages || 0, note: a.note || "", grid: a.grid || 0,
+      /* pictures inside a PDF or a Word document, marked in text where each sits */
+      pictures: a.pictures || 0 })),
     /* The same files as one piece of plain text a prompt can take whole -
        each one's name, then what it says. This is the input the prompt
        already reads, so a PDF that used to arrive as a name now arrives as
