@@ -2651,6 +2651,657 @@ body.chatting .pet[data-corner="br"],body.chatting .pet[data-corner="tr"]{
 .rtbar .sep{width:1px;height:18px;background:rgba(255,255,255,.22);margin:0 3px}
 .rtbar input{all:unset;width:220px;height:26px;padding:0 8px;border-radius:6px;background:rgba(255,255,255,.12);
   color:var(--paper);font:12px/26px var(--f-ui, system-ui)}
+/* ═══ NOVA ════════════════════════════════════════════════════════════════
+   The fourth look, and the first one designed rather than subtracted.
+   Studio's shell underneath — the sidebar grid, the rail it folds to when
+   the assistant is open, the top bar it goes back to on a small screen —
+   with everything on top of it drawn again:
+
+   A PAGE, NOT A PANEL. Every view opens with a header that says where you
+   are and what is on it — the date and a count of the day on Day, a line
+   about what the view is for everywhere else — and holds the four things
+   reached for most: search and commands, light or dark, the assistant, a
+   new record.
+
+   NAVIGATION THAT READS. The seven views are grouped (work, knowledge, the
+   assistant), drawn with line icons instead of Unicode glyphs, and carry a
+   live count, so the sidebar answers "is anything waiting?" before a click.
+
+   ACTIONS WHERE THE EYE ALREADY IS. Each row grows done and ask-the-
+   assistant buttons on hover, next to the timer — the two things most rows
+   are opened for.
+
+   DEPTH BY SHADOW, NOT BY LINES. Surfaces are white cards on a cool canvas
+   with soft layered shadows; hairlines are the ink at 8%, so they work on
+   any palette. Radii are 8/12/16/20. One gradient, taken from the accent,
+   marks the primary action and the day's progress, and nothing else.
+
+   Everything is scoped to data-look="nova", which only this look sets, so
+   Studio, Quiet and Classic are byte-for-byte what they were.               */
+
+/* markup only Nova shows */
+.nxg,.nxb,.nxhead,.cmdf,.mb.nxq{display:none}
+.nxi{display:inline-block;width:16px;height:16px;flex:0 0 auto;background:currentColor;
+  -webkit-mask:var(--ic) center/contain no-repeat;mask:var(--ic) center/contain no-repeat}
+
+:root[data-look="nova"]{
+  --nxi-day:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='4'/%3E%3Cpath d='M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4'/%3E%3C/svg%3E");
+  --nxi-board:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='3' width='18' height='18' rx='3'/%3E%3Cpath d='M8 7v8M12 7v4M16 7v10'/%3E%3C/svg%3E");
+  --nxi-register:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 6h11M9 12h11M9 18h11'/%3E%3Cpath d='M4 6h.01M4 12h.01M4 18h.01' stroke-width='3'/%3E%3C/svg%3E");
+  --nxi-week:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4.5' width='18' height='16.5' rx='3'/%3E%3Cpath d='M8 2.5v4M16 2.5v4M3 10h18'/%3E%3Cpath d='M8 14h.01M12 14h.01M16 14h.01M8 17.5h.01M12 17.5h.01' stroke-width='2.6'/%3E%3C/svg%3E");
+  --nxi-library:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 7.5A2.5 2.5 0 0 1 5.5 5H9l2 2.5h7.5A2.5 2.5 0 0 1 21 10v7.5a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 17.5z'/%3E%3C/svg%3E");
+  --nxi-insight:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 20V10M10 20V4M16 20v-7M21 20H3'/%3E%3C/svg%3E");
+  --nxi-assist:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 3l1.8 4.9L18.7 9.7l-4.9 1.8L12 16.4l-1.8-4.9L5.3 9.7l4.9-1.8z'/%3E%3Cpath d='M19 15v5M16.5 17.5h5'/%3E%3C/svg%3E");
+  --nxi-search:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='M20.5 20.5l-4.2-4.2'/%3E%3C/svg%3E");
+  --nxi-plus:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 5v14M5 12h14'/%3E%3C/svg%3E");
+  --nxi-moon:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20.5 14.2A8.5 8.5 0 1 1 9.8 3.5a6.8 6.8 0 0 0 10.7 10.7z'/%3E%3C/svg%3E");
+  --nxi-sun:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='4'/%3E%3Cpath d='M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4'/%3E%3C/svg%3E");
+  --nxi-spark:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 3l1.8 4.9L18.7 9.7l-4.9 1.8L12 16.4l-1.8-4.9L5.3 9.7l4.9-1.8z'/%3E%3Cpath d='M19 15v5M16.5 17.5h5'/%3E%3C/svg%3E");
+  --nxi-bell:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9a6 6 0 0 1 12 0c0 6 2.5 8 2.5 8h-17S6 15 6 9z'/%3E%3Cpath d='M10.3 20.5a2 2 0 0 0 3.4 0'/%3E%3C/svg%3E");
+  --nxi-chat:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20.5 12a8.5 8.5 0 0 1-12.4 7.5L3.5 21l1.5-4.6A8.5 8.5 0 1 1 20.5 12z'/%3E%3C/svg%3E");
+  --nxi-more:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12h.01M12 12h.01M19 12h.01' stroke-width='3.2'/%3E%3C/svg%3E");
+  --nxi-check:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6.5L9.5 17 4 11.5'/%3E%3C/svg%3E");
+  --nxi-play:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7 4.5v15l12.5-7.5z'/%3E%3C/svg%3E");
+  --nxi-stop:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='6' y='6' width='12' height='12' rx='2'/%3E%3C/svg%3E");
+  --nxi-chev:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 5.5l6.5 6.5L9 18.5'/%3E%3C/svg%3E");
+  --nxi-folder:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 7.5A2.5 2.5 0 0 1 5.5 5H9l2 2.5h7.5A2.5 2.5 0 0 1 21 10v7.5a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 17.5z'/%3E%3C/svg%3E");
+  --nxi-circle:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='8.5'/%3E%3C/svg%3E");
+  --nxi-clock:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='8.5'/%3E%3Cpath d='M12 7.5V12l3 2'/%3E%3C/svg%3E");
+  --nxi-file:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M14 3H7.5A2.5 2.5 0 0 0 5 5.5v13A2.5 2.5 0 0 0 7.5 21h9a2.5 2.5 0 0 0 2.5-2.5V8z'/%3E%3Cpath d='M14 3v5h5'/%3E%3C/svg%3E");
+  --nxi-activity:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 12h4l3-7 4 14 3-7h4'/%3E%3C/svg%3E");
+  --nxi-done:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='8.5'/%3E%3Cpath d='M8.2 12.3l2.6 2.6 5-5.4'/%3E%3C/svg%3E");
+  --nxi-term:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 7l5 5-5 5M12.5 17H19'/%3E%3C/svg%3E");
+  --r-xs:6px; --r-sm:10px; --r:14px; --r-lg:18px;
+  --nx-line:color-mix(in srgb,var(--ink) 8%,transparent);
+  --nx-line-2:color-mix(in srgb,var(--ink) 14%,transparent);
+  --nx-hover:color-mix(in srgb,var(--ink) 4.5%,transparent);
+  --nx-side:color-mix(in srgb,var(--paper) 62%,var(--canvas));
+  --nx-soft:color-mix(in srgb,var(--accent) 9%,var(--paper));
+  --nx-soft-2:color-mix(in srgb,var(--accent) 16%,var(--paper));
+  --nx-sh1:0 1px 2px rgba(15,23,42,.05);
+  --nx-sh2:0 1px 2px rgba(15,23,42,.04),0 6px 18px -6px rgba(15,23,42,.10);
+  --nx-sh3:0 28px 56px -16px rgba(15,23,42,.28),0 6px 16px rgba(15,23,42,.08);
+  --nx-grad:linear-gradient(135deg,color-mix(in srgb,var(--accent) 72%,#fff) 0%,var(--accent) 46%,
+            color-mix(in srgb,var(--accent) 58%,#7C3AED) 100%);
+  --nx-ring:0 0 0 4px color-mix(in srgb,var(--accent) 16%,transparent);
+  --nx-pad:28px;
+}
+:root[data-look="nova"][data-mode="dark"]{
+  --nx-line:color-mix(in srgb,var(--ink) 9%,transparent);
+  --nx-line-2:color-mix(in srgb,var(--ink) 16%,transparent);
+  --nx-hover:color-mix(in srgb,var(--ink) 6%,transparent);
+  --nx-side:color-mix(in srgb,var(--paper) 45%,var(--canvas));
+  --nx-soft:color-mix(in srgb,var(--accent) 14%,var(--paper));
+  --nx-soft-2:color-mix(in srgb,var(--accent) 24%,var(--paper));
+  --nx-sh1:0 1px 2px rgba(0,0,0,.35);
+  --nx-sh2:0 1px 2px rgba(0,0,0,.3),0 10px 28px -10px rgba(0,0,0,.55);
+  --nx-sh3:0 32px 70px -14px rgba(0,0,0,.75),0 0 0 1px var(--nx-line-2);
+  --nx-ring:0 0 0 4px color-mix(in srgb,var(--accent) 24%,transparent);
+  /* a dark palette's accent is a light one; white text needs it deepened */
+  --nx-grad:linear-gradient(135deg,color-mix(in srgb,var(--accent) 78%,#2563EB) 0%,
+            color-mix(in srgb,var(--accent) 58%,#1D4ED8) 50%,color-mix(in srgb,var(--accent) 50%,#6D28D9) 100%);
+}
+
+/* ── canvas: one soft light from the accent, top right ─────────────────── */
+:root[data-look="nova"] body{background:var(--canvas);font-size:13.5px;letter-spacing:-.003em}
+:root[data-look="nova"] .app{background:
+  radial-gradient(1100px 420px at 88% -160px,color-mix(in srgb,var(--accent) 10%,transparent),transparent 70%),
+  radial-gradient(700px 300px at 30% -200px,color-mix(in srgb,var(--teal) 7%,transparent),transparent 70%),
+  var(--canvas)}
+:root[data-look="nova"] main{background:transparent}
+:root[data-look="nova"] ::selection{background:color-mix(in srgb,var(--accent) 22%,transparent)}
+:root[data-look="nova"] :focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
+:root[data-look="nova"] kbd{font-family:var(--f-ui);font-size:10.5px;font-weight:600;border:1px solid var(--nx-line-2);
+  border-bottom-width:2px;border-radius:5px;padding:0 5px;background:var(--paper);color:var(--ink-2);line-height:16px;
+  display:inline-block;min-width:18px;text-align:center}
+
+/* ── page header ───────────────────────────────────────────────────────── */
+:root[data-look="nova"] .nxhead{display:flex;align-items:flex-end;gap:16px 20px;flex-wrap:wrap;
+  padding:24px var(--nx-pad) 2px;min-width:0;flex:0 0 auto;position:relative;z-index:23}
+:root[data-look="nova"] .nxt{flex:1 1 300px;min-width:0}
+:root[data-look="nova"] .nxe{font-size:12px;font-weight:600;color:var(--accent);letter-spacing:.01em;
+  margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+:root[data-look="nova"] .nxhead h1{margin:0;font-family:var(--f-display);font-size:27px;font-weight:700;
+  letter-spacing:-.028em;line-height:1.15;color:var(--ink)}
+:root[data-look="nova"] .nxhead p{margin:5px 0 0;font-size:13px;color:var(--ink-2);line-height:1.5;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+:root[data-look="nova"] .nxhead p.alarm::before{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;
+  background:var(--p1);margin-right:8px;vertical-align:1px;box-shadow:0 0 0 3px color-mix(in srgb,var(--p1) 18%,transparent)}
+:root[data-look="nova"] .nxa{display:flex;align-items:center;gap:8px;flex:0 1 auto;min-width:0;margin-left:auto}
+:root[data-look="nova"] .nxsearch,
+:root[data-look="nova"] .nxbtn{height:38px;display:inline-flex;align-items:center;gap:8px;border-radius:11px;
+  border:1px solid var(--nx-line-2);background:var(--paper);color:var(--ink);font-size:13px;font-weight:600;
+  cursor:pointer;box-shadow:var(--nx-sh1);transition:transform .15s var(--ease),box-shadow .15s,background .15s,border-color .15s;
+  white-space:nowrap;flex:0 0 auto}
+:root[data-look="nova"] .nxsearch{min-width:250px;padding:0 8px 0 12px;color:var(--ink-3);font-weight:500;flex:0 1 auto}
+:root[data-look="nova"] .nxsearch > span{flex:1;text-align:left;overflow:hidden;text-overflow:ellipsis}
+:root[data-look="nova"] .nxsearch kbd{margin-left:0}
+:root[data-look="nova"] .nxbtn{padding:0 14px}
+:root[data-look="nova"] .nxbtn.sq{width:38px;padding:0;justify-content:center;color:var(--ink-2)}
+:root[data-look="nova"] .nxsearch:hover,
+:root[data-look="nova"] .nxbtn:hover{border-color:color-mix(in srgb,var(--ink) 24%,transparent);box-shadow:var(--nx-sh2);color:var(--ink)}
+:root[data-look="nova"] .nxbtn:active{transform:translateY(1px)}
+:root[data-look="nova"] .nxbtn.ai{color:var(--accent)}
+:root[data-look="nova"] .nxbtn.ai:hover{background:var(--nx-soft);border-color:color-mix(in srgb,var(--accent) 35%,transparent);color:var(--accent)}
+:root[data-look="nova"] .nxbtn.pri{background:var(--nx-grad);color:#fff;border-color:transparent;
+  box-shadow:0 1px 2px rgba(15,23,42,.12),0 8px 20px -8px color-mix(in srgb,var(--accent) 70%,transparent),
+    inset 0 1px 0 rgba(255,255,255,.22)}
+:root[data-look="nova"] .nxbtn.pri:hover{color:#fff;filter:brightness(1.06);transform:translateY(-1px);
+  box-shadow:0 2px 4px rgba(15,23,42,.14),0 12px 26px -8px color-mix(in srgb,var(--accent) 75%,transparent),
+    inset 0 1px 0 rgba(255,255,255,.22)}
+:root[data-look="nova"] .i-search{--ic:var(--nxi-search)}
+:root[data-look="nova"] .i-plus{--ic:var(--nxi-plus)}
+:root[data-look="nova"] .i-moon{--ic:var(--nxi-moon)}
+:root[data-look="nova"] .i-sun{--ic:var(--nxi-sun)}
+:root[data-look="nova"] .i-spark{--ic:var(--nxi-spark)}
+
+/* ── banner: a card, not a stripe ──────────────────────────────────────── */
+:root[data-look="nova"] .banner{margin:14px var(--nx-pad) 0;border-radius:12px;border:1px solid
+  color-mix(in srgb,var(--accent) 30%,transparent);background:var(--nx-soft);color:var(--ink);box-shadow:var(--nx-sh1);
+  padding:10px 14px}
+:root[data-look="nova"] .banner.info{background:var(--paper);border-color:var(--nx-line-2);color:var(--ink-2)}
+
+/* ── compose ───────────────────────────────────────────────────────────── */
+:root[data-look="nova"] .compose{padding:16px var(--nx-pad) 0;background:transparent;border:0}
+:root[data-look="nova"] .cbar{height:54px;border-radius:15px;border:1px solid var(--nx-line-2);background:var(--paper);
+  box-shadow:var(--nx-sh2);padding:0 8px 0 11px;gap:10px}
+:root[data-look="nova"] .cbar:focus-within{border-color:color-mix(in srgb,var(--accent) 55%,transparent);
+  box-shadow:var(--nx-sh2),var(--nx-ring)}
+:root[data-look="nova"] .cbar .n{font-size:0;width:32px;height:32px;border-radius:10px;background:var(--nx-grad);
+  display:grid;place-items:center;flex:0 0 auto;box-shadow:inset 0 1px 0 rgba(255,255,255,.22),0 4px 10px -4px
+  color-mix(in srgb,var(--accent) 70%,transparent)}
+:root[data-look="nova"] .cbar .n::before{content:"";width:17px;height:17px;background:#fff;
+  -webkit-mask:var(--nxi-plus) center/contain no-repeat;mask:var(--nxi-plus) center/contain no-repeat}
+:root[data-look="nova"] .cbar input{font-size:14.5px;color:var(--ink)}
+:root[data-look="nova"] .cbar input::placeholder{color:color-mix(in srgb,var(--ink-3) 90%,transparent)}
+:root[data-look="nova"] .cbar .paste{height:36px;border-radius:10px;border:1px solid var(--nx-line-2);
+  background:transparent;color:var(--ink-2);font-weight:600;padding:0 13px;box-shadow:none}
+:root[data-look="nova"] .cbar .paste:hover{background:var(--nx-hover);color:var(--ink);border-color:var(--nx-line-2)}
+:root[data-look="nova"] .cbar .go{height:36px;border-radius:10px;border:0;background:var(--ink);color:var(--paper);
+  font-size:12.5px;font-weight:650;padding:0 14px;display:inline-flex;align-items:center;gap:8px}
+:root[data-look="nova"] .cbar .go:hover{background:var(--accent);color:#fff}
+:root[data-look="nova"] .cbar .go kbd{background:transparent;border-color:color-mix(in srgb,var(--paper) 35%,transparent);
+  color:inherit;opacity:.75}
+/* the syntax line is for when you are typing; the rest of the time it is
+   noise. Its space stays, so focusing the box never moves the page. */
+:root[data-look="nova"] .readout{padding:8px 6px 2px;min-height:31px}
+:root[data-look="nova"] .readout:empty::after{font-family:var(--f-mono);font-size:10.5px;opacity:0;transition:opacity .2s}
+:root[data-look="nova"] .compose:focus-within .readout:empty::after{opacity:1}
+:root[data-look="nova"] .rc{border-color:var(--nx-line-2);background:var(--paper);font-size:11.5px;padding:3px 10px}
+:root[data-look="nova"] .rc.guess{border-color:var(--teal)}
+:root[data-look="nova"] .sugg{left:var(--nx-pad);right:var(--nx-pad);top:76px;border-radius:14px;border:1px solid var(--nx-line-2);
+  box-shadow:var(--nx-sh3);padding:6px}
+:root[data-look="nova"] .sugg .si{border-radius:9px;padding:9px 10px}
+:root[data-look="nova"] .sugg .si:hover,:root[data-look="nova"] .sugg .si.cur{background:var(--nx-soft)}
+
+/* ── filters: one row of soft chips ────────────────────────────────────── */
+:root[data-look="nova"] .rail{padding:4px var(--nx-pad) 10px;gap:6px;background:transparent;border:0}
+:root[data-look="nova"] .pill{height:30px;padding:0 11px;border-radius:999px;border:1px solid transparent;background:transparent;
+  color:var(--ink-3);font-size:12.5px;font-weight:550;gap:7px;box-shadow:none;transition:.15s var(--ease)}
+:root[data-look="nova"] .pill .sw{width:8px;height:8px;border-radius:50%;opacity:.4;transition:opacity .15s}
+:root[data-look="nova"] .pill .n{font-family:var(--f-ui);font-size:11px;font-weight:650;opacity:1;color:var(--ink-3);
+  background:var(--nx-hover);border-radius:999px;padding:0 6px;min-width:19px;text-align:center;line-height:17px}
+:root[data-look="nova"] .pill:hover{background:var(--nx-hover);color:var(--ink);border-color:transparent}
+:root[data-look="nova"] .pill.on{background:var(--paper);color:var(--ink);border-color:var(--nx-line-2);box-shadow:var(--nx-sh1)}
+:root[data-look="nova"] .pill.on[data-st]{color:var(--ink)}
+:root[data-look="nova"] .pill.on .sw{opacity:1}
+:root[data-look="nova"] .pill.on .n{color:var(--ink-2)}
+:root[data-look="nova"] .pill.flag.on{background:var(--nx-soft);border-color:color-mix(in srgb,var(--accent) 35%,transparent);color:var(--accent)}
+:root[data-look="nova"] .rail select{max-width:156px;height:30px;border-radius:999px;border:1px solid var(--nx-line-2);background-color:var(--paper);
+  color:var(--ink-2);font-size:12.5px;font-weight:550;padding:0 28px 0 12px;box-shadow:var(--nx-sh1)}
+:root[data-look="nova"] .rail select:hover{border-color:color-mix(in srgb,var(--ink) 24%,transparent);background-color:var(--paper);color:var(--ink)}
+:root[data-look="nova"] .rail .ct{font-family:var(--f-ui);font-size:12px;color:var(--ink-3)}
+:root[data-look="nova"] #clearF{border-radius:999px;height:30px;padding:0 12px}
+
+/* ── buttons and fields everywhere ─────────────────────────────────────── */
+:root[data-look="nova"] .btn{border-radius:10px;border:1px solid var(--nx-line-2);background:var(--paper);color:var(--ink);
+  padding:7px 13px;font-size:12.5px;font-weight:600;box-shadow:var(--nx-sh1);transition:.15s var(--ease)}
+:root[data-look="nova"] .btn:hover{background:color-mix(in srgb,var(--ink) 3%,var(--paper));border-color:color-mix(in srgb,var(--ink) 24%,transparent)}
+:root[data-look="nova"] .btn.pri{background:var(--nx-grad);color:#fff;border-color:transparent;
+  box-shadow:0 1px 2px rgba(15,23,42,.1),0 6px 16px -8px color-mix(in srgb,var(--accent) 70%,transparent),inset 0 1px 0 rgba(255,255,255,.2)}
+:root[data-look="nova"] .btn.pri:hover{filter:brightness(1.07);background:var(--nx-grad);border-color:transparent}
+:root[data-look="nova"] .btn.danger:hover{color:var(--p1);border-color:color-mix(in srgb,var(--p1) 45%,transparent);
+  background:color-mix(in srgb,var(--p1) 7%,var(--paper))}
+:root[data-look="nova"] .btn.sm{padding:5px 10px;font-size:11.5px;border-radius:8px}
+:root[data-look="nova"] .in{border-radius:10px;border:1px solid var(--nx-line-2);background:var(--paper);transition:.15s}
+:root[data-look="nova"] .in:hover{border-color:color-mix(in srgb,var(--ink) 24%,transparent)}
+:root[data-look="nova"] .in:focus{border-color:color-mix(in srgb,var(--accent) 60%,transparent);box-shadow:var(--nx-ring);background:var(--paper)}
+:root[data-look="nova"] .cb{border-radius:5px;border-color:var(--nx-line-2);width:16px;height:16px}
+:root[data-look="nova"] .cb:checked{background:var(--accent);border-color:var(--accent)}
+
+/* ── content column ────────────────────────────────────────────────────── */
+:root[data-look="nova"] .pad{padding:12px var(--nx-pad) 56px}
+:root[data-look="nova"] .view.on{animation:nxIn .28s var(--ease) both}
+@keyframes nxIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+:root[data-motion="none"][data-look="nova"] .view.on{animation:none}
+
+/* KPI cards: an icon, a number, one line — the first one carries the day */
+:root[data-look="nova"] .cards{gap:14px;grid-template-columns:repeat(auto-fit,minmax(172px,1fr));margin-bottom:10px;
+  border:0;background:transparent;overflow:visible}
+:root[data-look="nova"] .kpi{position:relative;border:1px solid var(--nx-line);border-left:1px solid var(--nx-line);border-radius:16px;
+  background:var(--paper);padding:16px 18px;box-shadow:var(--nx-sh2);overflow:hidden;
+  transition:transform .18s var(--ease),box-shadow .18s}
+:root[data-look="nova"] .kpi[data-dr]:not(.nil){cursor:pointer}
+:root[data-look="nova"] .kpi[data-dr]:not(.nil):hover{transform:translateY(-2px);box-shadow:var(--nx-sh3)}
+:root[data-look="nova"] .kpi .k{font-family:var(--f-ui);font-size:12.5px;font-weight:600;letter-spacing:0;text-transform:none;
+  color:var(--ink-2);display:flex;align-items:center;gap:9px;min-width:0}
+:root[data-look="nova"] .kpi .v{font-family:var(--f-display);font-size:31px;font-weight:700;letter-spacing:-.035em;
+  margin-top:12px;color:var(--ink);line-height:1}
+:root[data-look="nova"] .kpi.good .v,:root[data-look="nova"] .kpi.warn .v,:root[data-look="nova"] .kpi.bad .v{color:var(--ink)}
+:root[data-look="nova"] .kpi .d{font-size:12px;color:var(--ink-3);margin-top:6px}
+:root[data-look="nova"] .kpi.bad .d{color:var(--p1);font-weight:600}
+:root[data-look="nova"] .kpi .tr{height:6px;border-radius:99px;background:var(--nx-hover);margin-top:14px}
+:root[data-look="nova"] .kpi .tr i,:root[data-look="nova"] .kpi.good .tr i,
+:root[data-look="nova"] .kpi.warn .tr i,:root[data-look="nova"] .kpi.bad .tr i{background:var(--nx-grad);border-radius:99px}
+:root[data-look="nova"] #vDay .cards .kpi .k::before{content:"";width:28px;height:28px;border-radius:9px;flex:0 0 auto;
+  background:var(--nx-soft) no-repeat center/16px;position:relative}
+:root[data-look="nova"] #vDay .cards .kpi .k::after{content:"";position:absolute;left:24px;top:22px;width:16px;height:16px;
+  background:var(--accent);-webkit-mask:var(--ic) center/contain no-repeat;mask:var(--ic) center/contain no-repeat}
+:root[data-look="nova"] #vDay .cards .kpi:nth-child(1){--ic:var(--nxi-done)}
+:root[data-look="nova"] #vDay .cards .kpi:nth-child(2){--ic:var(--nxi-circle)}
+:root[data-look="nova"] #vDay .cards .kpi:nth-child(3){--ic:var(--nxi-activity)}
+:root[data-look="nova"] #vDay .cards .kpi:nth-child(4){--ic:var(--nxi-clock)}
+:root[data-look="nova"] #vDay .cards .kpi:nth-child(5){--ic:var(--nxi-file)}
+:root[data-look="nova"] #vDay .cards .kpi.bad .k::before{background-color:color-mix(in srgb,var(--p1) 12%,var(--paper))}
+:root[data-look="nova"] #vDay .cards .kpi.bad .k::after{background:var(--p1)}
+/* the day's progress: the one card in colour */
+:root[data-look="nova"] #vDay .cards .kpi:first-child{background:var(--nx-grad);border-color:transparent;
+  box-shadow:0 1px 2px rgba(15,23,42,.12),0 14px 30px -12px color-mix(in srgb,var(--accent) 75%,transparent)}
+:root[data-look="nova"] #vDay .cards .kpi:first-child::before{content:"";position:absolute;right:-40px;top:-50px;width:160px;height:160px;
+  border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.22),transparent 65%);pointer-events:none}
+:root[data-look="nova"] #vDay .cards .kpi:first-child .k,
+:root[data-look="nova"] #vDay .cards .kpi:first-child .d{color:rgba(255,255,255,.86)}
+:root[data-look="nova"] #vDay .cards .kpi:first-child .v{color:#fff}
+:root[data-look="nova"] #vDay .cards .kpi:first-child .k::before{background-color:rgba(255,255,255,.2)}
+:root[data-look="nova"] #vDay .cards .kpi:first-child .k::after{background:#fff}
+:root[data-look="nova"] #vDay .cards .kpi:first-child .tr{background:rgba(255,255,255,.24)}
+:root[data-look="nova"] #vDay .cards .kpi:first-child .tr i{background:#fff}
+
+/* group headings */
+:root[data-look="nova"] .hd{margin:28px 2px 10px;gap:10px}
+:root[data-look="nova"] .hd .t{font-family:var(--f-ui);font-size:13.5px;font-weight:650;letter-spacing:-.005em;
+  text-transform:none;color:var(--ink)}
+:root[data-look="nova"] .hd .n{font-family:var(--f-ui);font-size:11px;font-weight:650;color:var(--ink-2);background:var(--nx-hover);
+  border:0;padding:0 8px;border-radius:999px;line-height:19px}
+:root[data-look="nova"] .hd.alarm .t{color:var(--p1)}
+:root[data-look="nova"] .hd.alarm .n{color:var(--p1);background:color-mix(in srgb,var(--p1) 12%,transparent)}
+:root[data-look="nova"] .hd .ln{background:var(--nx-line);opacity:1}
+
+/* rows: one card per group, hairlines between, actions on hover */
+:root[data-look="nova"] .rows{background:var(--paper);border:1px solid var(--nx-line);border-radius:16px;
+  box-shadow:var(--nx-sh2);overflow:hidden;gap:0;margin-bottom:6px}
+:root[data-look="nova"] .row{padding:13px 12px 13px 16px;gap:12px;align-items:center;border:0;border-radius:0;
+  border-bottom:1px solid var(--nx-line);background:transparent;transition:background .12s}
+:root[data-look="nova"] .row:last-child{border-bottom:0}
+:root[data-look="nova"] .row:hover{background:color-mix(in srgb,var(--ink) 2.5%,var(--paper));box-shadow:none}
+:root[data-look="nova"] .row::before{width:3px;top:12px;bottom:12px;border-radius:0 3px 3px 0}
+:root[data-look="nova"] .row.p2::before{background:transparent}
+:root[data-look="nova"] .row.cur{outline:0;background:var(--nx-soft);box-shadow:inset 3px 0 0 var(--accent)}
+:root[data-look="nova"] .row.done,:root[data-look="nova"] .row.cancelled{opacity:1}
+:root[data-look="nova"] .row.done .tt,:root[data-look="nova"] .row.cancelled .tt{color:var(--ink-3)}
+:root[data-look="nova"] .row.done .meta,:root[data-look="nova"] .row.cancelled .meta{opacity:.7}
+:root[data-look="nova"] .tt{font-size:14px;font-weight:600;letter-spacing:-.01em;color:var(--ink);margin-bottom:5px}
+:root[data-look="nova"] .meta{gap:5px;column-gap:5px;row-gap:5px;font-size:11.5px}
+:root[data-look="nova"] .meta .chip:not(:last-child)::after{display:none}
+:root[data-look="nova"] .chip{font-family:var(--f-ui);font-size:11.5px;font-weight:550;padding:1px 8px;line-height:18px;border-radius:999px;
+  background:var(--nx-hover);color:var(--ink-2);border:0;gap:5px;letter-spacing:0}
+:root[data-look="nova"] .chip.code{font-family:var(--f-mono);font-size:10.5px;background:transparent;color:var(--ink-3);padding:1px 4px 1px 0}
+:root[data-look="nova"] .chip.sys{color:var(--ink-2)}
+:root[data-look="nova"] .chip.sys::before{width:7px;height:7px;border-radius:50%;background:var(--sc,var(--ink-3))}
+:root[data-look="nova"] .chip.st{background:color-mix(in srgb,currentColor 11%,transparent);font-weight:600}
+:root[data-look="nova"] .chip.st::before{width:6px;height:6px;border-radius:50%;background:currentColor}
+:root[data-look="nova"] .chip.pri{font-family:var(--f-ui);font-size:11px;font-weight:700;letter-spacing:.02em}
+:root[data-look="nova"] .chip.pri.P1{color:var(--p1);background:color-mix(in srgb,var(--p1) 12%,transparent)}
+:root[data-look="nova"] .chip.pri.P2{color:var(--p2);background:color-mix(in srgb,var(--p2) 12%,transparent)}
+:root[data-look="nova"] .chip.pri.P3,:root[data-look="nova"] .chip.pri.P4{color:var(--ink-3);background:var(--nx-hover);font-weight:600}
+:root[data-look="nova"] .chip.due{color:var(--ink-2);background:var(--nx-hover);font-weight:550}
+:root[data-look="nova"] .chip.due.soon{color:var(--ink);font-weight:650}
+:root[data-look="nova"] .chip.due.over{color:var(--p1);background:color-mix(in srgb,var(--p1) 12%,transparent);font-weight:650}
+:root[data-look="nova"] .chip.clip,:root[data-look="nova"] .chip.slip{font-family:var(--f-ui);font-size:11px;background:var(--nx-hover)}
+:root[data-look="nova"] .chip.slip{color:var(--p2)}
+:root[data-look="nova"] .chip.clip{color:var(--teal)}
+:root[data-look="nova"] .mark{width:20px;height:20px;border:1.8px solid color-mix(in srgb,var(--ink) 26%,transparent);margin-top:0}
+:root[data-look="nova"] .mark:hover{border-color:var(--st-done);background:color-mix(in srgb,var(--st-done) 10%,transparent)}
+:root[data-look="nova"] .mark.on{background:var(--st-done);border-color:var(--st-done)}
+:root[data-look="nova"] .mark.on::after{left:5.8px;top:2.2px}
+:root[data-look="nova"] .mark.proc{border-color:var(--st-proc);border-style:solid;
+  background:conic-gradient(var(--st-proc) 0 50%,transparent 50% 100%);background-clip:content-box;padding:2.5px}
+:root[data-look="nova"] .side{gap:3px}
+:root[data-look="nova"] .tm{font-family:var(--f-ui);font-size:12px;font-weight:600;color:var(--ink-3);min-width:40px}
+:root[data-look="nova"] .tm.run{color:var(--st-proc)}
+:root[data-look="nova"] .mb{width:30px;height:30px;border-radius:9px;border:1px solid transparent;color:var(--ink-3);
+  font-size:0;opacity:0;transition:opacity .12s,background .12s,color .12s,border-color .12s}
+:root[data-look="nova"] .mb::before{content:"";width:16px;height:16px;background:currentColor;
+  -webkit-mask:var(--ic) center/contain no-repeat;mask:var(--ic) center/contain no-repeat}
+:root[data-look="nova"] .mb[data-act="timer"]{--ic:var(--nxi-play)}
+:root[data-look="nova"] .mb[data-act="timer"].on{--ic:var(--nxi-stop)}
+:root[data-look="nova"] .mb[data-act="open"]{--ic:var(--nxi-chev)}
+:root[data-look="nova"] .mb[data-act="done"]{--ic:var(--nxi-check)}
+:root[data-look="nova"] .mb[data-act="ask"]{--ic:var(--nxi-spark)}
+:root[data-look="nova"] .mb[data-act="run"]{--ic:var(--nxi-term)}
+:root[data-look="nova"] .mb.nxq{display:grid}
+:root[data-look="nova"] .row:hover .mb,:root[data-look="nova"] .row.cur .mb,:root[data-look="nova"] .row:focus-within .mb{opacity:1}
+:root[data-look="nova"] .mb:hover{background:var(--paper);border-color:var(--nx-line-2);color:var(--ink);box-shadow:var(--nx-sh1)}
+:root[data-look="nova"] .mb[data-act="done"]:hover{color:var(--st-done);border-color:color-mix(in srgb,var(--st-done) 40%,transparent);
+  background:color-mix(in srgb,var(--st-done) 8%,var(--paper))}
+:root[data-look="nova"] .mb[data-act="ask"]:hover{color:var(--accent);border-color:color-mix(in srgb,var(--accent) 40%,transparent);
+  background:var(--nx-soft)}
+:root[data-look="nova"] .mb.on{opacity:1;color:var(--st-proc);border-color:color-mix(in srgb,var(--st-proc) 45%,transparent);
+  background:color-mix(in srgb,var(--st-proc) 9%,var(--paper))}
+:root[data-look="nova"] .row.noti{align-items:center}
+:root[data-look="nova"] .row.noti .tt{font-size:13.5px;letter-spacing:0}
+:root[data-look="nova"] .askx,:root[data-look="nova"] .hushx{width:28px;height:28px;border-radius:8px}
+
+/* empty states */
+:root[data-look="nova"] .blank{padding:64px 24px}
+:root[data-look="nova"] .blank .g{width:60px;height:60px;border-radius:18px;border:0;background:var(--nx-soft);color:var(--accent);
+  font-size:24px;box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--accent) 18%,transparent)}
+:root[data-look="nova"] .blank h4{font-size:16px;font-weight:700;color:var(--ink);letter-spacing:-.01em}
+:root[data-look="nova"] .blank p{font-size:13px;color:var(--ink-2)}
+
+/* ── board ─────────────────────────────────────────────────────────────── */
+:root[data-look="nova"] .board{padding:12px var(--nx-pad) 28px;gap:14px}
+:root[data-look="nova"] .col{background:color-mix(in srgb,var(--ink) 2.5%,transparent);border:1px solid var(--nx-line);border-radius:18px}
+:root[data-look="nova"] .col.over{border-color:var(--accent);background:var(--nx-soft);box-shadow:var(--nx-ring)}
+:root[data-look="nova"] .colh{padding:13px 14px 9px;border-bottom:0;gap:9px}
+:root[data-look="nova"] .colh .sw{width:9px;height:9px;border-radius:50%}
+:root[data-look="nova"] .colh b{font-family:var(--f-ui);font-size:13px;font-weight:650;letter-spacing:-.005em;text-transform:none}
+:root[data-look="nova"] .colh .n{font-family:var(--f-ui);font-size:11px;font-weight:650;color:var(--ink-2);background:var(--paper);
+  border:1px solid var(--nx-line);border-radius:999px;padding:0 7px;line-height:18px}
+:root[data-look="nova"] .colb{padding:2px 10px 12px;gap:8px}
+:root[data-look="nova"] .kc{border:1px solid var(--nx-line);border-radius:13px;background:var(--paper);padding:12px 13px;
+  box-shadow:var(--nx-sh1);transition:transform .15s var(--ease),box-shadow .15s,border-color .15s}
+:root[data-look="nova"] .kc:hover{border-color:var(--nx-line-2);box-shadow:var(--nx-sh2);transform:translateY(-1px)}
+:root[data-look="nova"] .kc.cur{outline:2px solid var(--accent);outline-offset:1px}
+:root[data-look="nova"] .kc .kt{font-size:13px;font-weight:600;letter-spacing:-.005em;line-height:1.4;margin-bottom:9px}
+:root[data-look="nova"] .kc .km{gap:5px}
+
+/* ── register ──────────────────────────────────────────────────────────── */
+:root[data-look="nova"] #vReg{padding:12px var(--nx-pad) 48px}
+:root[data-look="nova"] table.reg{font-size:13px;background:var(--paper);border:1px solid var(--nx-line);border-radius:16px;
+  box-shadow:var(--nx-sh2);overflow:clip}
+:root[data-look="nova"] table.reg th{background:color-mix(in srgb,var(--ink) 2.5%,var(--paper));font-family:var(--f-ui);font-size:11.5px;
+  font-weight:650;letter-spacing:.01em;text-transform:none;color:var(--ink-2);border-bottom:1px solid var(--nx-line);padding:11px 12px}
+:root[data-look="nova"] table.reg th:first-child{border-top-left-radius:16px}
+:root[data-look="nova"] table.reg th:last-child{border-top-right-radius:16px}
+:root[data-look="nova"] table.reg td{padding:11px 12px;border-bottom:1px solid var(--nx-line)}
+:root[data-look="nova"] table.reg tbody tr:last-child td{border-bottom:0}
+:root[data-look="nova"] table.reg tbody tr:hover td{background:color-mix(in srgb,var(--ink) 2.5%,var(--paper))}
+:root[data-look="nova"] table.reg tbody tr.cur td{background:var(--nx-soft);box-shadow:none}
+:root[data-look="nova"] table.reg tbody tr.cur td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
+:root[data-look="nova"] table.reg td.m{font-family:var(--f-ui);font-size:12px}
+:root[data-look="nova"] table.reg td.ttd span{font-weight:600;letter-spacing:-.005em}
+:root[data-look="nova"] .bulk{border-radius:16px;border:1px solid var(--nx-line-2);box-shadow:var(--nx-sh3);padding:9px 10px 9px 14px;gap:6px}
+
+/* ── week and month ────────────────────────────────────────────────────── */
+:root[data-look="nova"] .wkh{padding:12px var(--nx-pad) 12px}
+:root[data-look="nova"] .wkh h3{font-size:18px;font-weight:700;letter-spacing:-.02em}
+:root[data-look="nova"] .wsum{font-family:var(--f-ui);font-size:12.5px}
+:root[data-look="nova"] .calsw{border:1px solid var(--nx-line-2);border-radius:11px;background:var(--paper);padding:3px;gap:2px;box-shadow:var(--nx-sh1)}
+:root[data-look="nova"] .calsw button{background:transparent;border-radius:8px;padding:5px 13px;font-size:12px}
+:root[data-look="nova"] .calsw button.on{background:var(--ink);color:var(--paper)}
+:root[data-look="nova"] .backlog{margin:0 var(--nx-pad) 14px;border-radius:14px;border-color:var(--nx-line-2);padding:11px 13px;background:var(--paper)}
+:root[data-look="nova"] .calwarn{margin:14px var(--nx-pad) 0;border-radius:12px}
+:root[data-look="nova"] .week{padding:0 var(--nx-pad) 36px;gap:10px}
+:root[data-look="nova"] .mdow,:root[data-look="nova"] .month{padding-left:var(--nx-pad);padding-right:var(--nx-pad);gap:8px}
+:root[data-look="nova"] .wc{background:var(--paper);border:1px solid var(--nx-line);border-radius:15px;box-shadow:var(--nx-sh1);overflow:hidden}
+:root[data-look="nova"] .wc.weekend{opacity:1;background:color-mix(in srgb,var(--ink) 2%,var(--paper))}
+:root[data-look="nova"] .wc.past{opacity:.62}
+:root[data-look="nova"] .wc.today{border-color:color-mix(in srgb,var(--accent) 60%,transparent);box-shadow:var(--nx-sh2),var(--nx-ring)}
+:root[data-look="nova"] .wc.over{border-color:var(--accent);background:var(--nx-soft)}
+:root[data-look="nova"] .wch{padding:10px 12px;border-bottom:1px solid var(--nx-line)}
+:root[data-look="nova"] .wch b{font-family:var(--f-ui);font-size:12.5px;font-weight:650;letter-spacing:0;text-transform:none}
+:root[data-look="nova"] .wc.today .wch b{color:var(--accent)}
+:root[data-look="nova"] .wch em,:root[data-look="nova"] .wch .n{font-family:var(--f-ui);font-size:11.5px}
+:root[data-look="nova"] .wcb{padding:8px;gap:6px}
+:root[data-look="nova"] .wk{border:1px solid var(--nx-line);border-radius:10px;padding:8px 10px;font-size:12px;box-shadow:var(--nx-sh1);
+  transition:transform .15s var(--ease),box-shadow .15s}
+:root[data-look="nova"] .wk:hover{border-color:var(--nx-line-2);box-shadow:var(--nx-sh2);transform:translateY(-1px)}
+:root[data-look="nova"] .wkm{border-radius:6px;font-size:11px}
+:root[data-look="nova"] .mch b{font-family:var(--f-ui)}
+
+/* ── library ───────────────────────────────────────────────────────────── */
+:root[data-look="nova"] .lib{padding:12px var(--nx-pad) 48px;gap:16px;grid-template-columns:repeat(auto-fill,minmax(220px,1fr))}
+:root[data-look="nova"] .doc{border:1px solid var(--nx-line);border-radius:16px;box-shadow:var(--nx-sh1);
+  transition:transform .18s var(--ease),box-shadow .18s,border-color .18s}
+:root[data-look="nova"] .doc:hover{border-color:var(--nx-line-2);box-shadow:var(--nx-sh3);transform:translateY(-3px)}
+:root[data-look="nova"] .doc .thumb{height:124px;background:linear-gradient(135deg,var(--nx-soft),var(--nx-soft-2))}
+:root[data-look="nova"] .doc .ext{color:var(--accent);font-family:var(--f-display);font-size:18px}
+:root[data-look="nova"] .doc .info{padding:11px 13px;border-top:1px solid var(--nx-line)}
+:root[data-look="nova"] .doc .fn{font-size:12.5px;font-weight:600}
+:root[data-look="nova"] .doc .sub{font-family:var(--f-ui);font-size:11px}
+
+/* ── insight ───────────────────────────────────────────────────────────── */
+:root[data-look="nova"] .inshead .ttl{font-family:var(--f-ui);font-size:14px;font-weight:650;letter-spacing:-.01em}
+:root[data-look="nova"] .panels{gap:14px}
+:root[data-look="nova"] .panel{border:1px solid var(--nx-line);border-radius:16px;background:var(--paper);padding:18px 20px;box-shadow:var(--nx-sh2)}
+:root[data-look="nova"] .panel h4{font-family:var(--f-ui);font-size:14px;font-weight:650;letter-spacing:-.01em}
+:root[data-look="nova"] .panel .sub{font-size:12px}
+:root[data-look="nova"] .hb .tr{height:8px;border-radius:99px;background:var(--nx-hover)}
+:root[data-look="nova"] .hb .tr i{border-radius:99px;background:var(--nx-grad)}
+:root[data-look="nova"] .hb .vv{font-family:var(--f-ui);font-size:12px;font-weight:600}
+:root[data-look="nova"] .vb{gap:4px}
+:root[data-look="nova"] .vb .c .a{background:var(--accent);border-radius:5px 5px 2px 2px}
+:root[data-look="nova"] .vb .c .b{background:color-mix(in srgb,var(--ink) 10%,transparent);border-radius:5px 5px 2px 2px}
+:root[data-look="nova"] .vax{font-family:var(--f-ui);font-size:10.5px}
+
+/* ── assist ────────────────────────────────────────────────────────────── */
+:root[data-look="nova"] .aiwrap{gap:22px}
+:root[data-look="nova"] .aihd .t{font-family:var(--f-ui);font-size:14px;font-weight:650;letter-spacing:-.01em}
+:root[data-look="nova"] .aihd .n{font-family:var(--f-ui);font-size:12px}
+:root[data-look="nova"] .aiq{border:1px solid var(--nx-line);border-radius:16px;box-shadow:var(--nx-sh2)}
+:root[data-look="nova"] .airow{padding-top:13px;padding-bottom:13px;border-bottom-color:var(--nx-line)}
+:root[data-look="nova"] .airow:hover{background:color-mix(in srgb,var(--ink) 2.5%,var(--paper))}
+:root[data-look="nova"] .airow .tt{font-size:13.5px;font-weight:600}
+:root[data-look="nova"] .aiwhy span{border:0;background:var(--nx-hover);border-radius:999px;padding:1px 8px;font-size:11px;color:var(--ink-2)}
+:root[data-look="nova"] .aic{border:1px solid var(--nx-line);border-left-width:3px;border-radius:14px;box-shadow:var(--nx-sh1)}
+
+/* ── drawer: a sheet that floats, not a wall ───────────────────────────── */
+:root[data-look="nova"] .scrim{background:color-mix(in srgb,#0B1020 34%,transparent);backdrop-filter:blur(3px)}
+:root[data-look="nova"][data-mode="dark"] .scrim{background:rgba(0,0,0,.55)}
+:root[data-look="nova"] .drawer{top:10px;left:10px;bottom:10px;width:min(620px,calc(100vw - 20px));border-radius:20px;
+  border:1px solid var(--nx-line-2);box-shadow:var(--nx-sh3);overflow:hidden;transform:translateX(calc(-100% - 24px))}
+:root[data-look="nova"] .drawer.on{transform:none}
+:root[data-look="nova"] .dh{background:var(--paper);padding:18px 18px 14px 22px;border-bottom:1px solid var(--nx-line);gap:12px}
+:root[data-look="nova"] .dh .idl{font-size:11px;margin-bottom:6px}
+:root[data-look="nova"] .dh .idl #dCode{color:var(--accent);font-weight:600}
+:root[data-look="nova"] .dh h3{font-family:var(--f-display);font-size:20px;font-weight:700;letter-spacing:-.02em;border-radius:8px}
+:root[data-look="nova"] .sec{padding:16px 22px;border-bottom:1px solid var(--nx-line)}
+:root[data-look="nova"] .sec.acc{padding:0}
+:root[data-look="nova"] .sec h5{font-family:var(--f-ui);font-size:12px;font-weight:650;letter-spacing:0;text-transform:none;color:var(--ink)}
+:root[data-look="nova"] .sec h5 .n,:root[data-look="nova"] .sec.acc>summary .n{font-family:var(--f-ui);border:0;background:var(--nx-hover);
+  font-size:11px;font-weight:650;line-height:18px}
+:root[data-look="nova"] .sec.acc>summary{padding:13px 22px;font-family:var(--f-ui);font-size:12px;font-weight:650;letter-spacing:0;
+  text-transform:none;color:var(--ink-2)}
+:root[data-look="nova"] .sec.acc>summary:hover{background:var(--nx-hover)}
+:root[data-look="nova"] .accb{padding:2px 22px 16px}
+:root[data-look="nova"] .fr label{font-size:12px;font-weight:550}
+:root[data-look="nova"] .recai{background:linear-gradient(180deg,var(--nx-soft),transparent)}
+:root[data-look="nova"] .recai h5{color:var(--accent)}
+
+/* ── modal, dialog, command palette ────────────────────────────────────── */
+:root[data-look="nova"] .modal{border-radius:20px;border:1px solid var(--nx-line-2);box-shadow:var(--nx-sh3)}
+:root[data-look="nova"] .mh{background:var(--paper);padding:18px 20px;border-bottom:1px solid var(--nx-line)}
+:root[data-look="nova"] .mh h3{font-size:17px;font-weight:700;letter-spacing:-.015em}
+:root[data-look="nova"] .mt{padding:6px 14px 0;gap:4px;border-bottom:1px solid var(--nx-line)}
+:root[data-look="nova"] .mt button{border-radius:8px 8px 0 0;padding:9px 12px;font-size:13px}
+:root[data-look="nova"] .mt button:hover{background:var(--nx-hover)}
+:root[data-look="nova"] .mt button.on{color:var(--ink);border-bottom-color:var(--accent)}
+:root[data-look="nova"] .mp{padding:20px 22px}
+:root[data-look="nova"] .ask{border-radius:18px;border:1px solid var(--nx-line-2);box-shadow:var(--nx-sh3)}
+:root[data-look="nova"] .ask .ah{padding:20px 22px 6px}
+:root[data-look="nova"] .ask .ah h4{font-size:16px;font-weight:700;letter-spacing:-.01em}
+:root[data-look="nova"] .ask .ab{padding:14px 22px 20px}
+:root[data-look="nova"] .ask .opt{border-radius:12px;border-color:var(--nx-line-2);background:var(--paper);padding:11px 13px}
+:root[data-look="nova"] .ask .opt:hover{border-color:color-mix(in srgb,var(--accent) 50%,transparent);background:var(--nx-soft)}
+:root[data-look="nova"] .cmd{top:calc(12vh / var(--z, 1));width:min(640px,94vw);border-radius:18px;border:1px solid var(--nx-line-2);box-shadow:var(--nx-sh3)}
+:root[data-look="nova"] .cmd::before{content:"";position:absolute;left:20px;top:20px;width:18px;height:18px;background:var(--ink-3);
+  -webkit-mask:var(--nxi-search) center/contain no-repeat;mask:var(--nxi-search) center/contain no-repeat;pointer-events:none}
+:root[data-look="nova"] .cmd input{padding:17px 20px 17px 50px;font-size:16px;border-bottom:1px solid var(--nx-line)}
+:root[data-look="nova"] .cmdl{padding:8px}
+:root[data-look="nova"] .ci{border-radius:10px;padding:9px 11px;gap:12px}
+:root[data-look="nova"] .ci .ic{width:28px;height:28px;border-radius:8px;background:var(--nx-hover);color:var(--ink-2);font-size:12px}
+:root[data-look="nova"] .ci.cur{background:var(--nx-soft)}
+:root[data-look="nova"] .ci.cur .ic{background:var(--nx-grad);color:#fff}
+:root[data-look="nova"] .ci .kb{font-family:var(--f-ui);border-radius:5px;border-bottom-width:2px}
+:root[data-look="nova"] .cs{font-family:var(--f-ui);font-size:11px;letter-spacing:.02em;text-transform:none;font-weight:650;padding:10px 11px 5px}
+:root[data-look="nova"] .cmdf{display:flex;gap:18px;padding:10px 16px;border-top:1px solid var(--nx-line);font-size:11.5px;
+  color:var(--ink-3);background:color-mix(in srgb,var(--ink) 2%,var(--paper))}
+:root[data-look="nova"] .cmdf > span{display:inline-flex;align-items:center;gap:4px}
+
+/* ── toasts, the fix bar, the status line ──────────────────────────────── */
+:root[data-look="nova"] .toast{background:var(--ink);color:var(--paper);border:0;border-radius:13px;box-shadow:var(--nx-sh3);
+  padding:11px 12px 11px 16px;font-size:13px;font-weight:500;gap:12px}
+:root[data-look="nova"] .toast.bad{box-shadow:var(--nx-sh3),inset 4px 0 0 var(--p1)}
+:root[data-look="nova"] .toast button{background:color-mix(in srgb,var(--paper) 16%,transparent);color:var(--paper);border:0;
+  border-radius:8px;padding:5px 11px;font-size:12px;font-weight:650}
+:root[data-look="nova"] .toast button:hover{background:color-mix(in srgb,var(--paper) 26%,transparent)}
+:root[data-look="nova"] .fixbar{border-radius:16px;border:1px solid var(--nx-line-2);box-shadow:var(--nx-sh3);padding:12px 14px}
+:root[data-look="nova"] .status{height:30px;background:transparent;border-top:1px solid var(--nx-line);font-family:var(--f-ui);
+  font-size:11.5px;padding:0 var(--nx-pad);gap:16px}
+:root[data-look="nova"] .status b{color:var(--ink);font-weight:650}
+:root[data-look="nova"] .status .ver{font-family:var(--f-ui);border-radius:6px}
+
+/* ── the masthead, as it is on a small screen ──────────────────────────── */
+:root[data-look="nova"] .mast{background:color-mix(in srgb,var(--paper) 88%,transparent);border-bottom:1px solid var(--nx-line);
+  backdrop-filter:blur(8px)}
+:root[data-look="nova"] .mast::after{display:none}
+:root[data-look="nova"] .brand .wm b{text-transform:none;letter-spacing:-.02em;font-weight:700;font-size:17px}
+:root[data-look="nova"] .brand .wm span{font-size:11px;letter-spacing:0}
+:root[data-look="nova"] .brand .seal{border-radius:10px}
+:root[data-look="nova"] .tabs button{border-radius:9px;font-weight:600}
+:root[data-look="nova"] .tabs button:hover{background:var(--nx-hover)}
+:root[data-look="nova"] .tabs button.on{background:var(--nx-soft);color:var(--accent)}
+:root[data-look="nova"] .wsbtn{border-radius:10px;border-color:var(--nx-line-2);background:var(--paper)}
+:root[data-look="nova"] .find input{border-radius:10px;border-color:var(--nx-line-2);background:var(--paper)}
+:root[data-look="nova"] .find input:focus{box-shadow:var(--nx-ring);border-color:color-mix(in srgb,var(--accent) 60%,transparent)}
+:root[data-look="nova"] .find .k{font-family:var(--f-ui);border-radius:5px;border-color:var(--nx-line-2)}
+:root[data-look="nova"] :is(.mast,.dh,.mh) .ib{border-radius:10px;border-color:transparent;background:transparent;color:var(--ink-2)}
+:root[data-look="nova"] :is(.mast,.dh,.mh) .ib:hover{background:var(--nx-hover);border-color:transparent;color:var(--ink)}
+:root[data-look="nova"] .mast .ib{font-size:0}
+:root[data-look="nova"] .mast .ib.hot{background:var(--nx-soft);color:var(--accent)}
+:root[data-look="nova"] .mast .ib::before{content:"";width:17px;height:17px;background:currentColor;
+  -webkit-mask:var(--ic) center/contain no-repeat;mask:var(--ic) center/contain no-repeat}
+:root[data-look="nova"] #bellBtn{--ic:var(--nxi-bell)}
+:root[data-look="nova"] #themeBtn{--ic:var(--nxi-moon)}
+:root[data-look="nova"][data-mode="dark"] #themeBtn{--ic:var(--nxi-sun)}
+:root[data-look="nova"] #chatBtn{--ic:var(--nxi-chat)}
+:root[data-look="nova"] #menuBtn{--ic:var(--nxi-more)}
+:root[data-look="nova"] .dial .trk{stroke:var(--nx-hover)}
+:root[data-look="nova"] .dial b{font-family:var(--f-ui);font-size:10px}
+
+/* a line icon per view, at every width: in the sidebar beside the word, in
+   the small-screen top bar instead of the shortcut number */
+:root[data-look="nova"] .tabs button::before{content:"";width:18px;height:18px;flex:0 0 auto;background:currentColor;color:var(--ink-3);
+  -webkit-mask:var(--ic) center/contain no-repeat;mask:var(--ic) center/contain no-repeat}
+:root[data-look="nova"] .tabs button.on::before{color:var(--accent)}
+:root[data-look="nova"] .tabs button[data-v="day"]::before{content:"";--ic:var(--nxi-day)}
+:root[data-look="nova"] .tabs button[data-v="board"]::before{content:"";--ic:var(--nxi-board)}
+:root[data-look="nova"] .tabs button[data-v="register"]::before{content:"";--ic:var(--nxi-register)}
+:root[data-look="nova"] .tabs button[data-v="week"]::before{content:"";--ic:var(--nxi-week)}
+:root[data-look="nova"] .tabs button[data-v="library"]::before{content:"";--ic:var(--nxi-library)}
+:root[data-look="nova"] .tabs button[data-v="insight"]::before{content:"";--ic:var(--nxi-insight)}
+:root[data-look="nova"] .tabs button[data-v="assist"]::before{content:"";--ic:var(--nxi-assist)}
+:root[data-look="nova"] .tabs button .kb,
+:root[data-look="nova"] body.chatting .tabs button .kb{display:none}
+/* the status line keeps to one line; the shortcut hints are the first to go */
+:root[data-look="nova"] .status{white-space:nowrap;overflow:hidden}
+:root[data-look="nova"] .status > span{flex:0 0 auto}
+@media (max-width:1360px){ :root[data-look="nova"] .status > span:has(kbd){display:none} }
+:root[data-look="nova"] body.chatting .status > span:has(kbd),
+:root[data-look="nova"] body.chatting #sbStore{display:none}
+/* with the assistant docked, Ask AI is already open and the header only
+   needs its icons */
+:root[data-look="nova"] body.chatting .nxbtn.ai{display:none}
+:root[data-look="nova"] body.chatting .nxbtn.pri span,
+:root[data-look="nova"] body.chatting .nxsearch > span,
+:root[data-look="nova"] body.chatting .nxsearch kbd{display:none}
+:root[data-look="nova"] body.chatting .nxbtn.pri{width:38px;padding:0;justify-content:center}
+:root[data-look="nova"] body.chatting .nxsearch{min-width:0;width:38px;padding:0;justify-content:center;color:var(--ink-2)}
+:root[data-look="nova"] body.chatting .nxt{flex-basis:200px}
+
+/* ── the sidebar (desk widths) ─────────────────────────────────────────── */
+@media (min-width:901px){
+  :root[data-look="nova"] .app{grid-template-columns:252px minmax(0,1fr);
+    grid-template-rows:auto auto auto auto minmax(0,1fr) auto}
+  :root[data-look="nova"] .nxhead{grid-column:2;grid-row:2}
+  :root[data-look="nova"] .banner{grid-row:1}
+  :root[data-look="nova"] .compose{grid-row:3}
+  :root[data-look="nova"] .rail{grid-row:4}
+  :root[data-look="nova"] main{grid-row:5}
+  :root[data-look="nova"] .status{grid-row:6}
+
+  :root[data-look="nova"] .mast{background:var(--nx-side);border-right:1px solid var(--nx-line);border-bottom:0;
+    padding:18px 14px 14px;gap:14px;backdrop-filter:none}
+  :root[data-look="nova"] .brand{padding:2px 6px 4px;gap:11px}
+  :root[data-look="nova"] .brand .seal{width:34px;height:34px;border-radius:10px}
+  :root[data-look="nova"] .wsbtn{height:40px;border-radius:11px;border:1px solid var(--nx-line);background:var(--paper);
+    box-shadow:var(--nx-sh1);padding:0 12px;gap:9px;font-size:13px}
+  :root[data-look="nova"] .wsbtn:hover{border-color:var(--nx-line-2);box-shadow:var(--nx-sh2)}
+  :root[data-look="nova"] .wsbtn .fld{font-size:0;width:16px;height:16px;background:var(--ink-3);
+    -webkit-mask:var(--nxi-folder) center/contain no-repeat;mask:var(--nxi-folder) center/contain no-repeat;order:-1}
+  :root[data-look="nova"] .wsbtn .dot{order:2;margin-left:auto;width:8px;height:8px;
+    box-shadow:0 0 0 3px color-mix(in srgb,currentColor 0%,transparent)}
+  :root[data-look="nova"] .find input{height:38px;border-radius:11px;background:var(--paper);border:1px solid var(--nx-line);padding-left:34px}
+  :root[data-look="nova"] .find .ic{font-size:0;width:15px;height:15px;left:12px;top:11.5px;background:var(--ink-3);
+    -webkit-mask:var(--nxi-search) center/contain no-repeat;mask:var(--nxi-search) center/contain no-repeat}
+  :root[data-look="nova"] .find .k{top:10px;right:9px}
+  :root[data-look="nova"] .tabs{gap:1px}
+  :root[data-look="nova"] .nxg{display:block;font-size:11px;font-weight:650;color:var(--ink-3);letter-spacing:.06em;
+    text-transform:uppercase;padding:14px 10px 6px}
+  :root[data-look="nova"] .nxg:first-child{padding-top:4px}
+  :root[data-look="nova"] .tabs button{padding:0 8px 0 10px;height:36px;font-size:13.5px;font-weight:550;color:var(--ink-2);
+    border-radius:10px;gap:11px}
+  :root[data-look="nova"] .tabs button:hover{background:var(--nx-hover);color:var(--ink)}
+  :root[data-look="nova"] .tabs button:hover::before{color:var(--ink-2)}
+  :root[data-look="nova"] .tabs button.on,
+  :root[data-look="nova"][data-mode="dark"] .tabs button.on{background:var(--paper);color:var(--ink);font-weight:650;
+    box-shadow:var(--nx-sh1),inset 0 0 0 1px var(--nx-line)}
+  :root[data-look="nova"] .tabs button.on::after{display:none}
+  :root[data-look="nova"] .nxb{display:inline-block;margin-left:auto;font-size:11px;font-weight:650;color:var(--ink-2);
+    background:var(--nx-hover);border-radius:999px;padding:0 7px;min-width:20px;text-align:center;line-height:19px}
+  :root[data-look="nova"] .nxb:empty{display:none}
+  :root[data-look="nova"] .tabs button.on .nxb{background:var(--nx-soft);color:var(--accent)}
+  :root[data-look="nova"] .nxb.hot,:root[data-look="nova"] .tabs button.on .nxb.hot{background:var(--p1);color:#fff}
+  :root[data-look="nova"] .mastsp{border-top:0;padding:10px;margin-top:auto;background:var(--paper);border:1px solid var(--nx-line);
+    border-radius:14px;box-shadow:var(--nx-sh1);gap:2px}
+  :root[data-look="nova"] .mastsp .dial{margin-right:auto}
+  :root[data-look="nova"] .mast .ib{width:32px;height:32px}
+  /* with the assistant docked, the sidebar keeps its words where it can */
+  :root[data-look="nova"] body.chatting .tabs button{padding:0 8px 0 10px;font-size:13.5px}
+}
+@media (min-width:901px) and (max-width:1240px){
+  :root[data-look="nova"] body.chatting .app{grid-template-columns:72px minmax(0,1fr)}
+  :root[data-look="nova"] body.chatting .mast{padding:16px 10px 12px}
+  :root[data-look="nova"] body.chatting .nxg,
+  :root[data-look="nova"] body.chatting .nxb{display:none}
+  :root[data-look="nova"] body.chatting .tabs button{justify-content:center;padding:0;height:40px}
+  :root[data-look="nova"] body.chatting .tabs button::before{width:19px;height:19px}
+  :root[data-look="nova"] body.chatting .wsbtn .fld{display:block}
+  :root[data-look="nova"] body.chatting .wsbtn .dot{margin-left:0}
+  :root[data-look="nova"] body.chatting .find input{padding:0}
+  :root[data-look="nova"] body.chatting .find .ic{left:50%;transform:translateX(-50%)}
+  :root[data-look="nova"] body.chatting .mastsp{padding:6px;border-radius:12px}
+}
+/* the header has less room with the assistant docked, or on a narrow window */
+@media (max-width:900px){
+  :root[data-look="nova"]{--nx-pad:16px}
+  :root[data-look="nova"] .tabs button{padding:0;width:36px;height:34px;justify-content:center}
+  :root[data-look="nova"] .tabs button.on{background:var(--nx-soft)}
+  :root[data-look="nova"] .nxhead{padding-top:16px}
+  :root[data-look="nova"] .nxhead h1{font-size:22px}
+  :root[data-look="nova"] .nxsearch{min-width:0}
+  :root[data-look="nova"] .nxsearch > span,:root[data-look="nova"] .nxsearch kbd{display:none}
+  :root[data-look="nova"] .nxbtn.ai span{display:none}
+  :root[data-look="nova"] .nxbtn.ai{width:38px;padding:0;justify-content:center}
+  :root[data-look="nova"] .cbar .paste{display:none}
+}
+@media (max-width:560px){
+  :root[data-look="nova"] .nxbtn.pri span{display:none}
+  :root[data-look="nova"] .nxbtn.pri{width:38px;padding:0;justify-content:center}
+  :root[data-look="nova"] .nxhead p{white-space:normal}
+}
+/* ═══ /NOVA ═══ */
 </style>
 </head>
 <body>
@@ -2670,12 +3321,17 @@ body.chatting .pet[data-corner="br"],body.chatting .pet[data-corner="tr"]{
     </button>
 
     <nav class="tabs" id="tabs">
-      <button data-v="day" class="on"><span class="lb" data-i18n="Day">Day</span><span class="kb">1</span></button>
-      <button data-v="board"><span class="lb" data-i18n="Board">Board</span><span class="kb">2</span></button>
-      <button data-v="register"><span class="lb" data-i18n="Register">Register</span><span class="kb">3</span></button>
-      <button data-v="week"><span class="lb" data-i18n="Week">Week</span><span class="kb">4</span></button>
-      <button data-v="library"><span class="lb" data-i18n="Library">Library</span><span class="kb">5</span></button>
+      <!-- .nxg (section labels) and .nxb (live counts) are Nova's; every
+           other look hides them -->
+      <span class="nxg" data-i18n="NxGroupWork">Work</span>
+      <button data-v="day" class="on"><span class="lb" data-i18n="Day">Day</span><span class="nxb" id="nxbDay"></span><span class="kb">1</span></button>
+      <button data-v="board"><span class="lb" data-i18n="Board">Board</span><span class="nxb" id="nxbBoard"></span><span class="kb">2</span></button>
+      <button data-v="register"><span class="lb" data-i18n="Register">Register</span><span class="nxb" id="nxbReg"></span><span class="kb">3</span></button>
+      <button data-v="week"><span class="lb" data-i18n="Week">Week</span><span class="nxb" id="nxbWeek"></span><span class="kb">4</span></button>
+      <span class="nxg" data-i18n="NxGroupKnow">Knowledge</span>
+      <button data-v="library"><span class="lb" data-i18n="Library">Library</span><span class="nxb" id="nxbLib"></span><span class="kb">5</span></button>
       <button data-v="insight"><span class="lb" data-i18n="Insight">Insight</span><span class="kb">6</span></button>
+      <span class="nxg" data-i18n="NxGroupAi">Assistant</span>
       <button data-v="assist"><span class="lb" data-i18n="Assist">Assist</span><span class="kb">7</span></button>
     </nav>
 
@@ -2702,6 +3358,23 @@ body.chatting .pet[data-corner="br"],body.chatting .pet[data-corner="tr"]{
   <div class="banner" id="banner">
     <span id="bannerTxt"></span>
     <span class="sp" id="bannerAct"></span>
+  </div>
+
+  <!-- Nova's page header: where you are, what is on it, and the three things
+       you reach for most. Hidden in every other look. -->
+  <div class="nxhead" id="nxHead">
+    <div class="nxt">
+      <div class="nxe" id="nxEye"></div>
+      <h1 id="nxTitle"></h1>
+      <p id="nxSub"></p>
+    </div>
+    <div class="nxa">
+      <button class="nxsearch" id="nxSearch" type="button"><i class="nxi i-search"></i>
+        <span data-i18n="NxSearch">Search or jump to…</span><kbd>Ctrl</kbd><kbd>K</kbd></button>
+      <button class="nxbtn sq" id="nxTheme" type="button" data-i18n-title="NxLightDark" title="Light or dark"><i class="nxi i-moon"></i></button>
+      <button class="nxbtn ai" id="nxAsk" type="button"><i class="nxi i-spark"></i><span data-i18n="NxAsk">Ask AI</span></button>
+      <button class="nxbtn pri" id="nxNew" type="button"><i class="nxi i-plus"></i><span data-i18n="NxNew">New record</span></button>
+    </div>
   </div>
 
   <div class="compose">
@@ -2883,6 +3556,9 @@ body.chatting .pet[data-corner="br"],body.chatting .pet[data-corner="tr"]{
 <div class="cmd" id="cmd">
   <input id="cmdq" type="text" placeholder="Type a command or search…" spellcheck="false">
   <div class="cmdl" id="cmdl"></div>
+  <div class="cmdf"><span><kbd>↑</kbd><kbd>↓</kbd> <span data-i18n="NxCmdMove">move</span></span>
+    <span><kbd>⏎</kbd> <span data-i18n="NxCmdRun">open</span></span>
+    <span><kbd>Esc</kbd> <span data-i18n="NxCmdClose">close</span></span></div>
 </div>
 
 <!-- Everything below already worked; nobody could have known it was there. -->
@@ -3720,6 +4396,33 @@ const STRINGS = {
   FlowFallbackHit: "Your flow's safety net answered, not the model: an action in the flow failed, so its answer never came back - and it failed again when asked without your notes and records. In Power Automate open the flow \u2192 Run history \u2192 the latest run \u2192 the box with the red ! \u2192 the action inside it with the red !, and read its error. flow/POWER-AUTOMATE.md 4e, \u201cWhen it goes wrong\u201d, has the usual causes.",
   FlowFiltered: "Microsoft's content filter blocked this question before the model saw it (\u201cPrompt was filtered\u201d) - and again when it was asked without your notes and records, so it is the question itself, or the prompt file. Word it differently; if every question is blocked, check flow/prompt.txt or your dossier-prompt.txt for lines added recently.",
   FlowSaid: "The flow said: {p0}",
+  NovaOn: "Nova is on. The \u25d0 button switches light and dark; Menu \u2192 Appearance \u2192 Look brings any other design back.",
+  NovaInvite: "There is a new design, Nova - a clearer layout, quick actions on every record, light and dark. Your current look stays one click away.",
+  NovaTry: "Try Nova",
+  NxGroupWork: "Work",
+  NxGroupKnow: "Knowledge",
+  NxGroupAi: "Assistant",
+  NxSearch: "Search or jump to\u2026",
+  NxLightDark: "Light or dark",
+  NxAsk: "Ask AI",
+  NxNew: "New record",
+  NxCmdMove: "move",
+  NxCmdRun: "open",
+  NxCmdClose: "close",
+  NxRowAsk: "Ask the assistant about this record",
+  NxRowDone: "Mark done",
+  NxRowReopen: "Reopen",
+  NxMorning: "Good morning",
+  NxAfternoon: "Good afternoon",
+  NxEvening: "Good evening",
+  NxDaySub: "{open} open \u00b7 {today} due today \u00b7 {over} overdue \u00b7 {going} in progress",
+  NxDayClear: "Nothing open - a clear desk. Type below to log what comes in.",
+  NxSub_board: "Every live record by status. Drag a card to move it along.",
+  NxSub_register: "All records in one table - sort by any column, select several, act on them together.",
+  NxSub_week: "The next seven days. Drag a record onto a day to plan it.",
+  NxSub_library: "Every document filed against a record, in one place.",
+  NxSub_insight: "Where the time goes, what keeps coming back, and what is slipping.",
+  NxSub_assist: "What the assistant has noticed in your records, and what it can do about it.",
   BriefHead: "About my work",
   BriefHint: "One page about your world, in plain facts: your team and role, the systems you look after (what each does, where it runs, who owns it), servers and environments, the people and teams you deal with, and the words you use (COI = ...). It goes with every question, so the assistant knows what APP02 or POLICY_MASTER is without being told each time. Write facts, not orders.",
   BriefPh: "## Team\n- Application support for ...\n\n## Systems\n- CX Portal - customer self-service; runs on WEB01; owned by ...\n\n## Servers\n- APP02 - Imaging app pool\n\n## People\n- Sokha (Branch Ops) - raises portal password resets\n\n## Words\n- COI = certificate of insurance",
@@ -4693,7 +5396,8 @@ const STRINGS = {
   UiStudio: "Studio \u2014 sidebar navigation, cards, one accent",
   UiQuiet: "Quiet \u2014 the top bar, one line per record",
   UiClassic: "Classic \u2014 boxed rows and coloured chips",
-  UiNote: "Studio is the current design: navigation down the left, the day laid out in cards, and one accent colour. Quiet keeps the top bar with the same restraint. Classic is what it looked like originally, unchanged. All three work with every theme.",
+  UiNova: "Nova \u2014 the new design: page header, grouped sidebar, hover actions",
+  UiNote: "Nova is the newest design: a page header that says where you are and what is waiting, navigation grouped with live counts, quick actions on every record when you hover it, and its own light and dark palettes (the \u25d0 button switches between them). Studio is the previous design: navigation down the left, the day in cards, one accent. Quiet keeps the top bar with the same restraint. Classic is the original. All of them work with every palette.",
   IncTag: "Incidents",
   IncGapTag: "Thin records",
   IncWhoTag: "Who has fixed this",
@@ -5149,10 +5853,22 @@ function applyFeel(){
   r.style.setProperty("--z", pc === 100 ? "1" : String(pc / 100));
 }
 
+/* Nova was drawn in a neo-grotesque. With the fonts left on automatic it
+   asks for one, and takes the usual choice where the machine has none. */
+const NOVA_FONTS = { display:["Segoe UI Variable Display","Inter","SF Pro Display","Segoe UI"],
+                     ui:["Segoe UI Variable Text","Inter","SF Pro Text","Segoe UI"] };
+let NOVA_FOUND = null;
+function novaFont(role){
+  if (!NOVA_FONTS[role]) return null;
+  if (!NOVA_FOUND) NOVA_FOUND = { display:NOVA_FONTS.display.filter(fontInstalled),
+                                  ui:NOVA_FONTS.ui.filter(fontInstalled) };
+  return NOVA_FOUND[role][0] || null;
+}
 function applyFonts(){
   ["display","ui","mono"].forEach(role => {
     const chosen = S.settings.fonts && S.settings.fonts[role];
-    const pick = (chosen && (chosen === "auto" ? null : chosen)) || FONTS_FOUND[role][0];
+    const pick = (chosen && (chosen === "auto" ? null : chosen)) ||
+                 (S.settings.ui === "nova" && novaFont(role)) || FONTS_FOUND[role][0];
     const rest = FONT_POOL[role].filter(f => f !== pick).slice(0, 3).map(f => '"' + f + '"').join(",");
     const stack = (pick ? '"' + pick + '",' : "") + (rest ? rest + "," : "") +
                   '"' + kmFont() + '",' + FONT_FALLBACK[role];
@@ -5345,8 +6061,8 @@ const STATUSES = [
    the status bar, and clicking it copies a line you can paste into a bug
    report — build date and flow protocol included, because those are the two
    things that actually differ between copies. */
-const APP_VERSION = "4.9.0";
-const APP_BUILT = "2026-09-18";
+const APP_VERSION = "5.0.0";
+const APP_BUILT = "2026-09-27";
 function buildLine(){
   return "Resolv v" + APP_VERSION + " \u00b7 built " + APP_BUILT +
          " \u00b7 flow protocol " + (window.DossierFlow ? DossierFlow.version : "\u2014") +
@@ -5555,6 +6271,13 @@ const BUILTIN_PAL = [
     base:{ canvas:"#F3F4F6", paper:"#FFFFFF", ink:"#14151A", accent:"#4F46E5", teal:"#0E7490" } },
   { id:"studio-dark", name:"Studio Dark", builtin:true, mode:"dark",
     base:{ canvas:"#0E0F13", paper:"#16171D", ink:"#EDEDF2", accent:"#8B8FF7", teal:"#22B8CF" } },
+  /* Nova's own pair: a cool paper white and a deep night navy, with the blue
+     of the Resolv mark as the one accent. Any palette works with the Nova
+     look; these are the ones it was drawn with. */
+  { id:"nova", name:"Nova", builtin:true, mode:"light",
+    base:{ canvas:"#F4F6FB", paper:"#FFFFFF", ink:"#0E1526", accent:"#3563F0", teal:"#0E9F9A" } },
+  { id:"nova-night", name:"Nova Night", builtin:true, mode:"dark",
+    base:{ canvas:"#080C16", paper:"#0F1524", ink:"#E7ECF5", accent:"#7C9BFF", teal:"#2DD4BF" } },
   { id:"archive", name:"Archive", builtin:true, mode:"light", handwritten:true,
     base:{ canvas:"#EDEAE3", paper:"#FFFFFF", ink:"#1C1B18", accent:"#8B1E3F", teal:"#1F4E5F" } },
   { id:"vault", name:"Vault", builtin:true, mode:"dark", handwritten:true,
@@ -5611,7 +6334,7 @@ function applyPalettes(){
    one; "classic" is what the app looked like before, kept because a big
    visual change to something somebody uses every day should be one switch
    away from undone rather than an argument. */
-const UI_MODES = ["studio", "quiet", "classic"];
+const UI_MODES = ["studio", "quiet", "classic", "nova"];
 function applyUi(mode){
   const want = mode || S.settings.ui;
   const m = UI_MODES.indexOf(want) >= 0 ? want : "studio";
@@ -5620,7 +6343,95 @@ function applyUi(mode){
      override. Booting with no argument is not a choice. */
   if (mode) S.settings.uiPicked = true;
   S.settings.ui = m;
-  document.documentElement.setAttribute("data-ui", m);
+  /* Nova is Studio's shell - the sidebar grid, the narrow-screen fallback,
+     the way it makes room for the assistant - with a design of its own laid
+     over it: data-look="nova" carries everything that is new. */
+  document.documentElement.setAttribute("data-ui", m === "nova" ? "studio" : m);
+  if (m === "nova") document.documentElement.setAttribute("data-look", "nova");
+  else document.documentElement.removeAttribute("data-look");
+  if (typeof novaSync === "function") novaSync();
+  applyFonts();
+}
+/* Choosing Nova also puts on its palette - light or dark, whichever the
+   current one was - so it looks the way it was designed the first time.
+   Any other palette can still be picked afterwards. */
+function novaChoose(){
+  applyUi("nova");
+  const cur = getPalette(S.settings.theme);
+  if (!/^nova/.test(cur.id)){
+    S.settings.preNova = cur.id;
+    applyTheme(cur.mode === "dark" ? "nova-night" : "nova");
+  }
+  S.settings.novaSeen = true;
+  touch(); renderAll();
+  toast(L("NovaOn"), { action:L("Ok") });
+}
+/* ...and leaving it puts back the palette that was on before, if Nova's own
+   is still the one in use. A palette picked while in Nova stays. */
+function novaLeave(){
+  const back = S.settings.preNova;
+  if (/^nova/.test(S.settings.theme) && back && allPalettes().some(p => p.id === back)) applyTheme(back);
+  delete S.settings.preNova;
+}
+/* Nova's page header and the counts beside each view in its sidebar. Run on
+   every render; in any other look it returns at once, and the markup it
+   fills is hidden there anyway. */
+function novaSync(){
+  if (S.settings.ui !== "nova" || !$("nxHead")) return;
+  const k = today(), v = S.view || "day";
+  const live = S.tasks.filter(t => LIVE.indexOf(t.status) >= 0);
+  const over = live.filter(t => t.due && t.due < k).length;
+  const dueT = live.filter(t => t.due === k).length;
+  const going = S.tasks.filter(t => t.status === "processing").length;
+  const docs = S.tasks.reduce((n, t) => n + (t.files || []).length, 0);
+  const wk = new Date(); wk.setDate(wk.getDate() + 7);
+  const thisWeek = live.filter(t => t.due && t.due >= k && t.due < dkey(wk)).length;
+  const badge = (id, n, hot) => {
+    const b = $(id); if (!b) return;
+    b.textContent = n > 0 ? (n > 99 ? "99+" : String(n)) : "";
+    b.classList.toggle("hot", !!hot && n > 0);
+  };
+  badge("nxbDay", over + dueT, over > 0);
+  badge("nxbBoard", going);
+  badge("nxbReg", live.length);
+  badge("nxbWeek", thisWeek);
+  badge("nxbLib", docs);
+
+  const loc = I18N.code === "km" ? "km-KH" : "en-GB";
+  let eye, title, sub;
+  if (v === "day"){
+    const h = new Date().getHours();
+    eye = new Date().toLocaleDateString(loc, { weekday:"long", day:"numeric", month:"long" });
+    const who = String(S.settings.owner || "").trim().split(/\s+/)[0];
+    title = L(h < 12 ? "NxMorning" : h < 18 ? "NxAfternoon" : "NxEvening") + (who ? ", " + who : "");
+    sub = !live.length ? L("NxDayClear")
+        : L("NxDaySub", { open:live.length, today:dueT, over:over, going:going });
+  } else {
+    const grp = { board:"NxGroupWork", register:"NxGroupWork", week:"NxGroupWork",
+                  library:"NxGroupKnow", insight:"NxGroupKnow", assist:"NxGroupAi" }[v] || "NxGroupWork";
+    eye = L(grp);
+    title = L({ board:"Board", register:"Register", week:"Week", library:"Library",
+                insight:"Insight", assist:"Assist" }[v] || "Day");
+    sub = L("NxSub_" + v);
+  }
+  $("nxEye").textContent = eye;
+  $("nxTitle").textContent = title;
+  $("nxSub").textContent = sub;
+  $("nxSub").classList.toggle("alarm", v === "day" && over > 0);
+  const dark = getPalette(S.settings.theme).mode === "dark";
+  const ti = $("nxTheme").querySelector(".nxi");
+  if (ti) ti.className = "nxi " + (dark ? "i-sun" : "i-moon");
+}
+/* the two quick actions Nova puts on every row */
+function rowDone(id){
+  const t = getTask(id); if (!t) return;
+  setStatus(id, t.status === "done" ? "open" : "done");
+}
+function rowAsk(id){
+  const t = getTask(id); if (!t) return;
+  if (typeof flowOn === "function" && flowOn()) return recAi("diagnose", id);
+  openChat();
+  setTimeout(() => chatAsk(t.code + " " + t.title, { force:[t] }), 90);
 }
 function applyTheme(id){
   const p = getPalette(id);
@@ -5753,7 +6564,7 @@ function toast(msg, opt){
     el.appendChild(b);
   }
   $("toasts").appendChild(el);
-  const life = opt.action ? 7000 : 2700;
+  const life = opt.life || (opt.action ? 7000 : 2700);
   setTimeout(() => { el.style.opacity = "0"; }, life);
   setTimeout(() => el.remove(), life + 400);
 }
@@ -8228,6 +9039,9 @@ function rowHtml(t){
         (S.settings.runner ? L("Run") : L("CopyTheCommandFor")) +
         esc(((scriptById(t.scripts[0]) || {}).name) || L("ThisScript")) + '">$</button>' : "") +
       (sp >= 1 || t.timerStart ? '<span class="tm' + (t.timerStart ? " run" : "") + '">' + mins(sp) + "</span>" : "") +
+      /* Nova's two quick actions; hidden in every other look */
+      '<button class="mb nxq" data-act="ask" title="' + esc(L("NxRowAsk")) + '">\u2726</button>' +
+      '<button class="mb nxq" data-act="done" title="' + esc(t.status === "done" ? L("NxRowReopen") : L("NxRowDone")) + '">\u2713</button>' +
       '<button class="mb ' + (t.timerStart ? "on" : "") + '" data-act="timer" title="Timer">' + (t.timerStart ? "■" : "▶") + "</button>" +
       '<button class="mb" data-act="open" title="Open">›</button>' +
     "</div></div>";
@@ -12356,6 +13170,13 @@ function flowRun(a, quiet){
       const r = flowSetSetting(String(g.key).trim(), g.value);
       if (r.bad) return flowNeed(a, r.bad);
       pushUndo("setting");
+      /* a look is only a look once it is on the page */
+      if (String(g.key).trim() === "ui"){
+        const want = String(r.value).toLowerCase().trim();
+        if (want === "nova") novaChoose();
+        else { const was = document.documentElement.getAttribute("data-look") === "nova";
+               applyUi(want); if (was) novaLeave(); }
+      }
       buildModel(); touch(); renderAll();
       applyFeel && applyFeel();
       return done(g.key + " is now " + JSON.stringify(r.value) + ".");
@@ -13118,7 +13939,7 @@ function memoryIndexForFlow(q){
                        through a settings key would skip the draft/approved
                        distinction entirely, which is the whole point of it. */
 const FLOW_SET = {
-  ui:             { type:"text",   what:"The visual treatment: studio, quiet or classic" },
+  ui:             { type:"text",   what:"The visual treatment: nova, studio, quiet or classic" },
   owner:          { type:"text",   what:"Your name, used in reports and hand-overs" },
   remind:         { type:"yes/no", what:"Windows reminders on or off" },
   lead:           { type:"number", what:"Minutes of warning before something is due",
@@ -15510,6 +16331,7 @@ function renderAll(){
   if (CON.win && !CON.win.closed) renderConsole();
   $("bulk").classList.toggle("on", S.sel.size > 0);
   $("bulkN").textContent = S.sel.size;
+  novaSync();
 
   const seen = {};
   S.rows = $$("#main [data-id]").map(el => el.dataset.id).filter(id => { if (seen[id]) return false; seen[id]=1; return true; });
@@ -16430,9 +17252,10 @@ async function renderModal(){
       '<option value="subtle"' + (st.motion === "subtle" ? " selected" : "") + ">" + LE("MotionSubtle") + "</option>" +
       '<option value="none"'   + (st.motion === "none" ? " selected" : "") + ">" + LE("MotionNone") + "</option></select>") +
     fr(L("UiMode"), '<select class="in" id="fUi">' +
-      '<option value="studio"'  + (st.ui !== "quiet" && st.ui !== "classic" ? " selected" : "") + ">" + LE("UiStudio") + "</option>" +
+      '<option value="studio"'  + (st.ui !== "quiet" && st.ui !== "classic" && st.ui !== "nova" ? " selected" : "") + ">" + LE("UiStudio") + "</option>" +
       '<option value="quiet"'   + (st.ui === "quiet" ? " selected" : "") + ">" + LE("UiQuiet") + "</option>" +
-      '<option value="classic"' + (st.ui === "classic" ? " selected" : "") + ">" + LE("UiClassic") + "</option></select>") +
+      '<option value="classic"' + (st.ui === "classic" ? " selected" : "") + ">" + LE("UiClassic") + "</option>" +
+      '<option value="nova"'    + (st.ui === "nova" ? " selected" : "") + ">" + LE("UiNova") + "</option></select>") +
     '<p style="font-size:11.5px;color:var(--ink-2);margin:-6px 0 14px;line-height:1.7">' +
       L("UiNote") + "</p>" +
     fr(L("Density"), '<select class="in" id="fDe">' +
@@ -17161,7 +17984,14 @@ function wireModal(){
 
   const feel = (k, v) => { S.settings[k] = v; applyFeel(); touch(); };
   if ($("fMo")) $("fMo").onchange = () => feel("motion", $("fMo").value);
-  if ($("fUi")) $("fUi").onchange = () => { applyUi($("fUi").value); touch(); renderAll(); };
+  if ($("fUi")) $("fUi").onchange = () => {
+    if ($("fUi").value === "nova" && S.settings.ui !== "nova"){ novaChoose(); renderModal(); return; }
+    const leaving = S.settings.ui === "nova";
+    applyUi($("fUi").value);
+    if (leaving) novaLeave();
+    touch(); renderAll();
+    if (leaving) renderModal();
+  };
   if ($("fDe")) $("fDe").onchange = () => feel("density", $("fDe").value);
   if ($("fTs")) $("fTs").oninput = () => {
     $("fTsV").textContent = $("fTs").value + "%";
@@ -22290,11 +23120,22 @@ $("vAi").addEventListener("click", e => {
   if (row && row.dataset.id) openDrawer(row.dataset.id);
 });
 $("themeBtn").addEventListener("click", () => {
+  if (S.settings.ui === "nova" && /^nova/.test(S.settings.theme)){
+    applyTheme(S.settings.theme === "nova" ? "nova-night" : "nova"); touch(); return;
+  }
   const list = allPalettes();
   const i = Math.max(0, list.findIndex(p => p.id === S.settings.theme));
   const next = list[(i + 1) % list.length];
   applyTheme(next.id); touch();
   if (list.length > 2) toast(next.name);
+});
+/* Nova's header buttons: each is a door to something that already exists */
+$("nxSearch").addEventListener("click", openCmd);
+$("nxTheme").addEventListener("click", () => { $("themeBtn").click(); novaSync(); });
+$("nxAsk").addEventListener("click", openChat);
+$("nxNew").addEventListener("click", () => {
+  if (S.view === "assist") setView("day");
+  const q = $("qa"); q.focus(); q.select();
 });
 $("bellBtn").addEventListener("click", askNotify);
 $("menuBtn").addEventListener("click", () => openModal("ws"));
@@ -22391,6 +23232,8 @@ $("main").addEventListener("click", e => {
     if (act === "cycle") return cycleStatus(id);
     if (act === "timer") return toggleTimer(id);
     if (act === "run") return runScriptFor(id);
+    if (act === "done") return rowDone(id);
+    if (act === "ask") return rowAsk(id);
     return openDrawer(id);
   }
   const kc = e.target.closest(".kc"); if (kc) return openDrawer(kc.dataset.id);
@@ -22539,6 +23382,8 @@ $("drillB").addEventListener("click", e => {
   const d = S.drill;
   if (act === "cycle"){ cycleStatus(id); return openDrill(d); }
   if (act === "timer"){ toggleTimer(id); return openDrill(d); }
+  if (act === "done"){ rowDone(id); return openDrill(d); }
+  if (act === "ask"){ closeDrill(); return rowAsk(id); }
   closeDrill(); openDrawer(id);
 });
 /* carry the set over to the board, where it can be worked rather than read */
@@ -23276,6 +24121,14 @@ async function boot(){
   }
   if (restored) renderAll();
   petBoot();
+  /* once, a word about the new design - never again after it is seen */
+  setTimeout(() => {
+    if (S.settings.novaSeen || S.settings.ui === "nova" || !FS.ok) return;
+    /* no touch(): a boot must not write the folder. The mark rides along
+       with the next real save. */
+    S.settings.novaSeen = true;
+    toast(L("NovaInvite"), { action:L("NovaTry"), onAction:novaChoose, life:16000 });
+  }, 5000);
   $("bellBtn").classList.toggle("hot", !!S.settings.remind);
   setSaveState(S.dirty ? "dirty" : "saved");
   setTimeout(() => { S.hush = false; }, 1500);

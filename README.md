@@ -503,17 +503,25 @@ or screen-reader user is never tabbing around a page they cannot see.
 
 Two separate choices, both in *Menu → Look*.
 
-**The look** is the shape of the interface. **Studio** (default) puts the
-navigation down the left as a sidebar with a glyph per view, lays the day out
-as cards on a canvas, and folds to a rail of glyphs when the assistant is
-docked at narrower widths. **Quiet** keeps the top bar with the same restraint
-— one line per record, status as a dot, colour only where it must be noticed.
-**Classic** is the original: boxed rows and coloured chips, unchanged. Below
-900px every look becomes the top bar. The assistant can switch it (`ui`).
+**The look** is the shape of the interface. **Nova** is the newest: a page
+header on every view (the date, a greeting and the day's count on Day; search,
+light/dark, *Ask AI* and *New record* on the right), the sidebar grouped into
+Work, Knowledge and Assistant with a line icon and a live count per view,
+✓ *Mark done* and ✦ *Ask* on every record when you hover it, and everything
+drawn as cards with soft shadows. Choosing it puts on its own palette — **Nova**
+or **Nova Night** — and leaving it puts your previous palette back.
+**Studio** (default) puts the navigation down the left as a sidebar with a
+glyph per view, lays the day out as cards on a canvas, and folds to a rail of
+glyphs when the assistant is docked at narrower widths. **Quiet** keeps the
+top bar with the same restraint — one line per record, status as a dot, colour
+only where it must be noticed. **Classic** is the original: boxed rows and
+coloured chips, unchanged. Below 900px every look becomes the top bar. The
+assistant can switch it (`ui`: `nova`, `studio`, `quiet` or `classic`).
 
-**The theme** is the palette. Four built in — **Studio** (graphite ink,
-off-white canvas, one indigo accent), **Studio Dark**, **Archive** (warm,
-paper) and **Vault** (dark) — none deletable. A custom palette is a copy of
+**The theme** is the palette. Six built in — **Studio** (graphite ink,
+off-white canvas, one indigo accent), **Studio Dark**, **Nova** (cool canvas,
+blue accent), **Nova Night**, **Archive** (warm, paper) and **Vault** (dark) —
+none deletable. A custom palette is a copy of
 one with five colours changed; the other twenty-odd (rules, muted text, hover
 states, shadows) are derived from those five. Any look works with any theme.
 Palettes are stored in `dossier.json`, so a theme travels with the folder.

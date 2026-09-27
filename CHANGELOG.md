@@ -6,6 +6,58 @@ holds — which is what to paste into a bug report.
 
 ---
 
+## 5.0.0 - 2026-09-27
+
+**Nova: a new design, as a fourth look. Studio, Quiet and Classic are
+untouched and one switch away.**
+
+Turn it on in *Menu → Appearance → Look → Nova*, from the one-time
+invitation that appears a few seconds after opening a linked folder, or by
+asking the assistant ("switch to nova"). Choosing it also puts on its own
+palette - **Nova** (light) or **Nova Night**, whichever matches the one you
+had - and going back to another look puts your old palette back.
+
+- **A page header on every view**: the date, a greeting and a live count of
+  the day (open, due today, overdue, in progress) on Day; a line about what
+  the view is for everywhere else. On the right, the four things reached for
+  most: *Search or jump to* (Ctrl K), light/dark, *Ask AI* and
+  *New record*.
+- **Navigation that reads**: the sidebar is grouped (Work, Knowledge,
+  Assistant), drawn with line icons instead of Unicode glyphs, and each view
+  carries a live count - due and overdue on Day (red when anything is late),
+  in progress on Board, live records on Register, due this week on Week,
+  documents on Library. On a small screen the top bar shows the same icons
+  instead of the numbers 1-7.
+- **Quick actions on every row**: hover a record (or move to it with the
+  keyboard) and ✓ *Mark done* and ✦ *Ask the assistant about this record*
+  appear beside the timer. Ask runs **Diagnose** when a flow is set up, and
+  asks the built-in assistant otherwise.
+- **Cards, not boxes**: white surfaces on a cool canvas with soft layered
+  shadows; the day's KPIs with an icon each and today's progress as the one
+  card in colour; each group of records as one sheet; board columns, week
+  days and library documents as lifted cards; the register as one rounded
+  table with a sticky header.
+- **Status and priority as soft pills** (a dot and a tint, not a border);
+  overdue dates and P1 still stand out.
+- **Calmer compose box**: the syntax line (`p1 @System #INC ...`) only shows
+  while you are typing in it; its space is kept so nothing jumps.
+- **Floating sheets**: the record drawer, dialogs and the command palette
+  are rounded and float over a blurred page; the palette has a search icon
+  and a footer with its keys. Toasts are dark pills with their action
+  button inside.
+- **Built for the assistant dock**: with the assistant open the sidebar
+  folds to icons below 1240px, the header drops to icon buttons, and the
+  status line stays on one line.
+- **Every palette works with it**: its hairlines, tints and the one gradient
+  are all derived from the palette's own ink and accent.
+- When the fonts are left on *automatic*, Nova asks for Segoe UI Variable
+  (Windows 11) or Inter, and falls back to the usual choice.
+
+Checked: every view of Studio, Quiet and Classic, light and dark, lays out
+and renders exactly as in 4.9.0 (position, size and style of every
+element compared). The assistant's `ui` setting accepts `nova`, and now
+applies a look straight away.
+
 ## 4.9.0 - 2026-09-25
 
 **The assistant understands what you are doing, your world, and the whole
