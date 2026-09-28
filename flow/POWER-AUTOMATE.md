@@ -1109,8 +1109,10 @@ tick that catches it.)
 
 1. In the assistant, ask anything ordinary. Under the answer: a time like
    `1.9 s` — the fast one.
-2. Under that answer press **✦ Think harder**. The same question goes again;
-   under the new answer: `8.4 s · strong model`.
+2. Under that answer press **✦ Think harder**. The same question goes again,
+   and its answer takes the first one's place as a branch - *Answers: Normal ·
+   ✦ Harder* above it switches between them. Under the new answer:
+   `8.4 s · strong model`.
 3. In Power Automate, open **Run history** → the latest run → **Deep?**. The
    **If yes** branch has the green ticks; the run before it went through
    **If no**.

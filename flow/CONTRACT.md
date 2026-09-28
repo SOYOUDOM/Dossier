@@ -262,6 +262,28 @@ the conversation and never shown as the answer.
 { "say": "…", "ask": "…", "thread": "Working on D-0217, Imaging sync 30s timeout since Monday.\nPool recycle did not help.\nNext: time the POLICY_MASTER query." }
 ```
 
+`titleWanted` is true while the conversation still has only the name the app
+gave it (its first question, tidied) — for the first three questions, until a
+title comes back. Then the reply carries **`title`**: two to six words, like
+a heading, no quotes or full stop (the app trims it to 60 characters). It
+replaces the name in the list of conversations.
+
+```jsonc
+{ "say": "…", "title": "Imaging sync timeout on APP02" }
+```
+
+**Retry and Think harder** send the same question again with the
+conversation as it stood at that question — the answer being replaced is not
+in `conversation` — and, for Think harder, `tier: "deep"`. Nothing in the
+request marks it as a second try; the flow answers it like any question.
+
+**Text to copy.** Anything meant to be pasted elsewhere — an email, a
+message, a note — comes in `say` as a fenced block labelled `email`,
+`message`, `note` or `text` (also `reply`, `draft`, `update`, `summary`,
+`description`), with an optional title after the label on the same line. The
+app draws it as a text card with its own Copy; an email's `Subject:` first
+line gets its own. Code fences keep their language.
+
 ### Past fixes — "last time this happened, you did X"
 
 `workspace.pastFixes` holds up to three closed records most like the

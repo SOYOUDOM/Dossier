@@ -1607,6 +1607,32 @@ interviews and **Diagnose** go to the stronger one, and every answer gets a
 under an answer says *strong model* when it was. Which jobs go where is
 ticked in the same place.
 
+**Branches, not copies.** **✦ Think harder** and **↻ Retry** (under every
+answer from the flow, and under one that failed) ask the same question again
+*in the same conversation*: the new answer takes the old one's place, and a
+row above it — **Answers: Normal · ✦ Harder · Retry** — switches between
+them. Each branch keeps its own follow-ups, so going back to *Normal* brings
+back what you asked after it, and a question asked now belongs to the branch
+on screen. The model is asked with the conversation as it stood at that
+question, never with the answer being replaced; the files that went with
+the question go again (until the app is closed). If asking again fails, the
+answer you had comes back; a failed answer that is retried successfully is
+simply replaced.
+
+**Text ready to paste.** An email, a Teams message, a reply to a user, a
+resolution note or a status update comes in a card of its own — labelled
+*Email*, *Message*, *Note*… with a title — in ordinary type, with one
+**Copy** that takes exactly that text and nothing around it. An email's
+subject sits on its own line with its own **Subject** copy, and is left out
+of the body. Code still comes in a code panel with its language.
+
+**Conversations are named by the assistant.** Its first answer in a new
+conversation carries a short title — *Portal fix email to Sokha*, *Imaging
+sync timeout on APP02* — which replaces the question in the list. Until then
+(and with no flow) the list shows the first question, tidied: *"can you
+please tell me what is overdue?"* reads *What is overdue*. A title set by
+the app itself (a record's *Diagnose*, the look back) is left alone.
+
 ### Asking with a file, and answers with code
 
 The Ask box takes **more than one line** (Enter sends, Shift+Enter breaks) and

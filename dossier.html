@@ -1698,7 +1698,7 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
 .chat[data-skin="nebula"] .chb.bot .note,.chat[data-skin="nebula"] .chb.bot .carry,.chat[data-skin="nebula"] .chb.bot .hedge,
 .chat[data-skin="nebula"] .chtime,.chat[data-skin="nebula"] .chb.bot .unused{color:var(--ch-dim);text-shadow:0 1px 8px rgba(3,8,18,.8)}
 .chat[data-skin="nebula"] .chhero .cht,.chat[data-skin="nebula"] .chhero .chts{text-shadow:0 2px 16px rgba(3,8,18,.8)}
-.chat[data-skin="nebula"] .chrb,.chat[data-skin="nebula"] .chrows,.chat[data-skin="nebula"] .chask,.chat[data-skin="nebula"] .chcode,
+.chat[data-skin="nebula"] .chrb,.chat[data-skin="nebula"] .chrows,.chat[data-skin="nebula"] .chask,.chat[data-skin="nebula"] .chcode,.chat[data-skin="nebula"] .chtext,
 .chat[data-skin="nebula"] .chstep,.chat[data-skin="nebula"] .chprof,.chat[data-skin="nebula"] .chinc{
   background:rgba(12,20,42,.66);border-color:var(--ch-line);color:var(--ch-ink);backdrop-filter:blur(12px)}
 .chat[data-skin="nebula"] .chseed button,.chat[data-skin="nebula"] .chacts button{
@@ -2072,6 +2072,14 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
 .chat .chcode .cpy{background:var(--ch-panel);border-color:var(--ch-line);color:var(--ch-dim)}
 .chat .chcode .cpy:hover{border-color:var(--ch-acc);color:var(--ch-acc);background:var(--ch-bg)}
 .chat .chcode .cpy.ok{color:var(--ch-acc2);border-color:var(--ch-acc2)}
+.chat .chtext{border-color:var(--ch-line);background:var(--ch-panel)}
+.chat .chtext .cth{background:var(--ch-bg);border-bottom-color:var(--ch-line)}
+.chat .chtext .kind{color:var(--ch-acc)}
+.chat .chtext .ttl{color:var(--ch-dim)}
+.chat .chtext .ctb{color:var(--ch-ink)}
+.chat .chtext .cpy{background:var(--ch-panel);border-color:var(--ch-line);color:var(--ch-dim)}
+.chat .chtext .cpy:hover{border-color:var(--ch-acc);color:var(--ch-acc);background:var(--ch-bg)}
+.chat .chtext .cpy.ok{color:var(--ch-acc2);border-color:var(--ch-acc2)}
 
 /* ═══ THE PANEL, THIRD TIME ══════════════════════════════════════════════
    Two earlier passes styled the parts. This one changes what the panel IS
@@ -2366,6 +2374,34 @@ body.chatting .pet[data-corner="br"],body.chatting .pet[data-corner="tr"]{
 .say .sytab table{border-collapse:collapse;font-size:12px;width:100%}
 .say .sytab th,.say .sytab td{border:1px solid var(--rule);padding:5px 8px;text-align:left;vertical-align:top}
 .say .sytab th{background:var(--paper-2);font-weight:650}
+/* text made to be pasted somewhere else - an email, a message, a note -
+   in ordinary type, with one Copy that takes exactly the text */
+.chtext{margin:10px 0;border:1px solid var(--rule);border-radius:var(--r-sm);background:var(--paper);
+  overflow:hidden;white-space:normal}
+.chtext .cth{display:flex;align-items:center;gap:8px;padding:5px 8px 5px 11px;
+  border-bottom:1px solid var(--rule);background:var(--paper-2)}
+.chtext .kind{font-size:9.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--accent);flex:0 0 auto}
+.chtext .ttl{flex:1;min-width:0;font-size:11.5px;font-weight:600;color:var(--ink-2);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chtext .cpy{border:1px solid var(--rule);background:var(--paper);color:var(--ink-2);
+  border-radius:999px;font-size:10px;font-weight:600;padding:2px 9px;cursor:pointer;
+  font-family:var(--f-ui);transition:.14s var(--ease);flex:0 0 auto}
+.chtext .cpy:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+.chtext .cpy.ok{color:var(--teal);border-color:var(--teal)}
+.chtext .csub{padding:8px 13px;border-bottom:1px dashed var(--ch-line,var(--rule));font-size:12.5px;font-weight:600;
+  color:var(--ch-ink,var(--ink))}
+.chtext .csub span{font-size:9.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--ch-dim,var(--ink-3));margin-right:8px}
+.chtext .ctb{padding:11px 13px;font-size:13px;line-height:1.62;color:var(--ink);
+  white-space:pre-wrap;overflow-wrap:anywhere;font-family:var(--f-ui)}
+/* the branches of one answer: the normal one, a retry, the harder one */
+.chbr{display:flex;align-items:center;gap:4px;flex-wrap:wrap;margin:0 0 8px}
+.chbr .bl{font-size:10px;color:var(--ch-dim,var(--ink-3));margin-right:3px;letter-spacing:.04em}
+.chbr button{border:1px solid var(--ch-line,var(--rule));background:transparent;color:var(--ch-dim,var(--ink-2));
+  border-radius:999px;font-size:10.5px;font-weight:600;padding:2px 10px;cursor:pointer;font-family:inherit;
+  transition:.14s var(--ease)}
+.chbr button:hover{color:var(--ch-ink,var(--ink));border-color:var(--ch-acc,var(--accent))}
+.chbr button.on{background:var(--ch-acc,var(--accent));border-color:var(--ch-acc,var(--accent));color:#fff;cursor:default}
 /* a block of code is a thing to copy, not a thing to read past */
 .chcode{position:relative;margin:10px 0;border:1px solid var(--rule);border-radius:var(--r-sm);
   background:var(--paper-3);overflow:hidden;white-space:normal}
@@ -4451,7 +4487,28 @@ const STRINGS = {
   TierDeepTookNone: "strong model not measured yet",
   TierSame: "About the same: most of the time is Power Automate itself, not the model. The strong model then costs AI Builder credits rather than time - tick \u201cevery chat question\u201d below if you would rather have its answers everywhere.",
   TierAgain: "Think harder",
-  TierAgainHint: "Ask this again with the strong model",
+  Retry: "Retry",
+  RetryHint: "Ask this again - the new answer becomes a branch, and this one stays one press away",
+  BranchHead: "Answers",
+  BranchHint: "Each answer is a branch of this conversation and keeps its own follow-ups. Press one to switch.",
+  BranchNormal: "Normal",
+  BranchHarder: "Harder",
+  BranchRetry: "Retry",
+  BranchFailed: "Asking again did not work, so the answer you had is back.",
+  BranchNoFiles: "Asked again without the files that went with the question: they are only kept until the app is closed. Attach them again to ask with them.",
+  TxText: "Text",
+  TxEmail: "Email",
+  TxMessage: "Message",
+  TxNote: "Note",
+  TxReply: "Reply",
+  TxDraft: "Draft",
+  TxLetter: "Letter",
+  TxUpdate: "Update",
+  TxSummary: "Summary",
+  TxDescription: "Description",
+  TxSubject: "Subject",
+  TxCopySubject: "Copy the subject line",
+  TierAgainHint: "Ask this again with the strong model - its answer becomes a branch, and this one stays one press away",
   LocalFirstLabel: "Simple questions",
   LocalFirstOn: "Answer them on this PC, instantly",
   LocalFirstOff: "Send everything to the flow",
@@ -6071,7 +6128,7 @@ const STATUSES = [
    the status bar, and clicking it copies a line you can paste into a bug
    report — build date and flow protocol included, because those are the two
    things that actually differ between copies. */
-const APP_VERSION = "5.1.1";
+const APP_VERSION = "5.2.0";
 const APP_BUILT = "2026-09-27";
 function buildLine(){
   return "Resolv v" + APP_VERSION + " \u00b7 built " + APP_BUILT +
@@ -10973,6 +11030,17 @@ function chatReceipt(text, declined, auto){
 }
 
 /* ── conversations ─────────────────────────────────────────────────────── */
+/* the files each question went with, for this session only: see flowAsk */
+CHAT.sentFiles = CHAT.sentFiles || {};
+/* each answer on screen -> the reply it shows, so a button under it finds
+   its message even after old messages have been trimmed off the front */
+CHAT.botRef = new WeakMap();
+function chatAtOf(el){
+  const b = el && el.closest(".chb[data-at]"), c = chatThread();
+  if (!b || !c) return -1;
+  const r = CHAT.botRef.get(b);
+  return r ? c.msgs.findIndex(m => m.who === "bot" && m.reply === r) : -1;
+}
 function chatThread(){
   if (!Array.isArray(S.chats)) S.chats = [];
   return S.chats.find(c => c.id === S.chatId) || null;
@@ -10995,11 +11063,25 @@ function chatPush(m){
   if (!m.at) m.at = new Date().toISOString();
   c.msgs.push(m);
   while (c.msgs.length > CHAT_MAX_MSGS) c.msgs.shift();
-  if (!c.title && m.who === "you") c.title = m.text.slice(0, 60);
+  /* a name to go on with, until the assistant gives the conversation a
+     better one with its first answer (workspace.thread.titleWanted) */
+  if (!c.title && m.who === "you"){ c.title = chatAutoTitle(m.text); c.titleAuto = true; }
   c.updated = new Date().toISOString();
   /* most recently spoken to, first in the list */
   S.chats = [c].concat(S.chats.filter(x => x.id !== c.id));
   touch();
+}
+/* The first question, tidied into something that reads as a name: the
+   mode tag, the "can you please" and the question mark off, cut at a word,
+   capital first. Only a stopgap - the assistant's own title replaces it. */
+function chatAutoTitle(q){
+  let t = String(q || "").replace(/^\[\w+\]\s*/, "").replace(/\s+/g, " ").trim();
+  const lead = /^(hi|hello|hey|ok|okay|so|um|please|pls|plz|can you|could you|would you|can u|could u|will you|i want to|i want you to|i need to|i need you to|help me( to)?|tell me|show me|let me know|quick question)\b[\s,:-]*/i;
+  for (let k = 0; k < 4 && lead.test(t); k++) t = t.replace(lead, "");
+  t = t.replace(/[\s?!.。,]+$/, "");
+  if (t.length > 48) t = t.slice(0, 48).replace(/\s+\S*$/, "") + "\u2026";
+  if (!t) t = String(q || "").slice(0, 48);
+  return t.charAt(0).toUpperCase() + t.slice(1);
 }
 function chatDeleteThread(id){
   S.chats = (S.chats || []).filter(c => c.id !== id);
@@ -11036,10 +11118,10 @@ function chatReplay(){
       L("ChatSeedNext"), L("ChatSeedOverdue"), L("ChatSeedBrief"), L("ChatSeedHelp") ] });
     return;
   }
-  c.msgs.forEach(m => {
+  c.msgs.forEach((m, i) => {
     if (m.who === "you") chatRenderYou(m.text, m.files);
     else if (m.who === "receipt") chatReceiptEl(m.text, m.no, true);
-    else chatRenderBot(m.reply, m.src, true);
+    else chatRenderBot(m.reply, m.src, true, i);
   });
   chatScroll();
 }
@@ -11322,6 +11404,38 @@ function chatFenceBare(s){
   }
   return lines.join("\n");
 }
+/* ── text to paste somewhere else ──────────────────────────────────────
+   An email, a Teams message, a resolution note: something the answer made
+   for you to copy and send. It used to arrive in a code panel - monospace,
+   labelled TEXT - or loose in the prose, where copying it meant dragging
+   across it and picking up "Here's one you can send" as well. The prompt
+   asks for it in a block labelled with what it is (```email, ```message,
+   ```note, ```text, an optional title after the label), and it is drawn
+   as a card of ordinary text with one Copy that takes exactly the text.
+   A fence with no language whose contents read as sentences is one too. */
+const CHAT_TEXT_KINDS = { text:"TxText", plaintext:"TxText", txt:"TxText", plain:"TxText",
+  email:"TxEmail", mail:"TxEmail", message:"TxMessage", msg:"TxMessage", teams:"TxMessage", chat:"TxMessage",
+  sms:"TxMessage", note:"TxNote", notes:"TxNote", reply:"TxReply", draft:"TxDraft", letter:"TxLetter",
+  update:"TxUpdate", summary:"TxSummary", description:"TxDescription", announcement:"TxUpdate" };
+function chatTextCard(lang, head, body, id){
+  let text = String(body).replace(/^\s*\n/, "").replace(/\s+$/, "");
+  let title = String(head || "").trim();
+  /* an email's subject, when it is written as the first line */
+  /* an email's subject, written as its first line: shown on a line of its
+     own with its own copy, and left out of the body Copy takes - a subject
+     pasted into the body of a mail is one more thing to delete */
+  let subject = "";
+  const sm = /^\s*subject\s*:\s*(.+)\n+/i.exec(text);
+  if (sm){ subject = sm[1].trim(); text = text.slice(sm[0].length); }
+  CHAT.code[id] = text;
+  if (subject) CHAT.code[id + "subj"] = subject;
+  return '<div class="chtext"><div class="cth"><span class="kind">' + esc(L(CHAT_TEXT_KINDS[lang] || "TxText")) + "</span>" +
+    (title ? '<span class="ttl">' + esc(title) + "</span>" : '<span class="ttl"></span>') +
+    (subject ? '<button class="cpy sub" data-copy="' + id + 'subj" title="' + esc(L("TxCopySubject")) + '">' + esc(L("TxSubject")) + "</button>" : "") +
+    '<button class="cpy" data-copy="' + id + '">' + esc(L("Copy")) + "</button></div>" +
+    (subject ? '<div class="csub"><span>' + esc(L("TxSubject")) + "</span>" + esc(subject) + "</div>" : "") +
+    '<div class="ctb">' + esc(text) + "</div></div>";
+}
 function chatSay(text){
   const src = chatMend(text == null ? "" : text);
   if (!src) return "";
@@ -11330,8 +11444,22 @@ function chatSay(text){
   let m;
   while ((m = fence.exec(src))){
     out += chatProse(src.slice(i, m.index));
-    const lang = m[1] || (chatIsJson(m[2]) ? "json" : "");
-    const body = m[2].replace(/\s+$/, "");
+    const tag = m[1].toLowerCase();
+    let raw = m[2];
+    /* whatever follows the label on the fence line is the block's title */
+    let head = "";
+    const sameLine = m[1] && m[0].charAt(3 + m[1].length) !== "\n" && m[0].charAt(3 + m[1].length) !== "\r";
+    if (sameLine && raw.indexOf("\n") > 0){ head = raw.slice(0, raw.indexOf("\n")); raw = raw.slice(raw.indexOf("\n") + 1); }
+    else if (sameLine && !CHAT_TEXT_KINDS[tag]){ head = ""; raw = m[2]; }
+    const bare = !m[1] && !chatIsJson(raw) && !chatLooksCode(raw) && /[A-Za-z\u1780-\u17FF]{2,}\s+\S/.test(raw);
+    if (CHAT_TEXT_KINDS[tag] || bare){
+      out += chatTextCard(tag || "text", head, raw, "ct" + (++CHAT.n) + "x" + m.index);
+      i = m.index + m[0].length;
+      continue;
+    }
+    if (head){ raw = head + "\n" + raw; }
+    const lang = m[1] || (chatIsJson(raw) ? "json" : "");
+    const body = raw.replace(/\s+$/, "");
     const id = "cc" + (++CHAT.n) + "x" + m.index;
     CHAT.code[id] = body;
     out += '<div class="chcode"><div class="cch"><span class="lang">' +
@@ -11468,12 +11596,17 @@ function chatProse(t){
 
 /* render one answer. Everything clickable is registered in CHAT.acts and
    addressed by id, so nothing has to survive a round trip through HTML. */
-function chatRenderBot(r, sourceText, replaying){
+function chatRenderBot(r, sourceText, replaying, at){
   r = r || {};
   const id = "c" + (++CHAT.n);
   const d = document.createElement("div");
   d.className = "chb bot";
   let h = "";
+  /* its place in the thread, for Retry, Think harder and the branch switch */
+  const th = at != null ? chatThread() : null;
+  const msg = th && th.msgs[at] && th.msgs[at].reply === r ? th.msgs[at] : null;
+  if (msg){ d.dataset.at = at; CHAT.botRef.set(d, r); }
+  if (msg && msg.vers && msg.vers.length > 1) h += chatBranchBar(msg);
 
   /* below about six in ten, the reading is a guess and should read as one */
   if (r.unsure && r.label)
@@ -11620,6 +11753,8 @@ function chatRenderBot(r, sourceText, replaying){
   if (rated){
     CHAT.rates[id] = { r, src };
     h += '<div class="chrate" data-rate="' + id + '">' + chatRateInner(r) + "</div>";
+  } else if (msg && r.trouble && src && flowOn()){
+    h += '<div class="chrate">' + chatRetryBtn() + "</div>";
   }
   if (src && (r.say || r.intent) && !r.examples && !rated){
     CHAT.acts[id + "wrong"] = { kind:"teach", text:src };
@@ -11657,6 +11792,105 @@ function chatRenderBot(r, sourceText, replaying){
   if (pending.length) chatQueue(pending);
 }
 
+/* ── branches ─────────────────────────────────────────────────────────
+   Retry and Think harder ask the same question again, and the new answer
+   takes the old one's place in the SAME conversation - the old one is not
+   thrown away and not copied into a new chat: it becomes a branch. Each
+   branch keeps whatever was said after it, so going back to the first
+   answer brings back the follow-ups that were asked of it, and a follow-up
+   asked now belongs to the branch on screen. The model is asked with the
+   conversation as it stood at that question, never with the answer it is
+   replacing.
+
+   Stored on the answer: vers[] - each with its reply, the messages that
+   came after it (tail) and the conversation summary at that point - and v,
+   the one showing. The thread itself stays one straight list, the branch
+   on screen, so everything that reads a thread reads it as before. */
+const CHAT_MAX_VERS = 6;
+function chatBranchLabel(m, k){
+  const kind = (m.vers[k] || {}).kind || "first";
+  const key = kind === "deep" ? "BranchHarder" : kind === "retry" ? "BranchRetry" : "BranchNormal";
+  const same = m.vers.slice(0, k + 1).filter(v => (v.kind || "first") === kind).length;
+  return L(key) + (same > 1 ? " " + same : "");
+}
+function chatBranchBar(m){
+  return '<div class="chbr" title="' + LE("BranchHint") + '"><span class="bl">' + LE("BranchHead") + "</span>" +
+    m.vers.map((v, k) => '<button data-br="' + k + '" class="' + (k === m.v ? "on" : "") + (v.kind === "deep" ? " deep" : "") +
+      '" aria-pressed="' + (k === m.v) + '">' + (v.kind === "deep" ? "\u2726 " : "") + esc(chatBranchLabel(m, k)) + "</button>").join("") +
+    "</div>";
+}
+function chatRetryBtn(){
+  return '<button data-retry="1" class="deeper" title="' + LE("RetryHint") + '">\u21BB ' + LE("Retry") + "</button>";
+}
+/* the branch on screen, put away with what came after it */
+function chatBranchStash(c, m, at){
+  const cur = m.vers[m.v];
+  cur.reply = m.reply; cur.src = m.src; cur.at = m.at;
+  cur.tail = c.msgs.splice(at + 1);
+  cur.summary = c.summary || ""; cur.convo = c.convo;
+  return cur;
+}
+async function chatBranch(at, kind){
+  const c = chatThread(); const m = c && c.msgs[at];
+  if (!m || m.who !== "bot") return;
+  if ($("chat").classList.contains("busy")) return;
+  if (!flowOn()) return toast(L("ReflectNeedsFlow"), { bad:true });
+  const you = c.msgs[at - 1];
+  const q = m.src || (you && you.who === "you" ? you.text : "");
+  if (!q) return;
+  if (!m.vers){
+    m.vers = [{ kind:(m.reply && m.reply.tier === "deep") ? "deep" : "first", reply:m.reply, src:m.src, at:m.at, tail:[] }];
+    m.v = 0;
+  }
+  const cur = chatBranchStash(c, m, at);
+  const keepSum = c.summary;
+  c.msgs.splice(at, 1);
+  c.summary = (m.reply && m.reply.sumBefore) || "";
+  chatReplay(); chatScroll(true);
+  const files = you && CHAT.sentFiles[you.at];
+  const lostFiles = you && (you.files || []).length && !files;
+  const tier = kind === "deep" ? "deep" : (m.reply && m.reply.tier === "deep" ? "deep" : undefined);
+  await flowAsk(q, c, { tier:tier, flow:true, files:files || null, onReply:reply => {
+    /* asked again and failed again: put things back as they were */
+    if (reply.trouble && !(cur.reply && cur.reply.trouble)){
+      c.msgs.push(m); c.msgs.push(...cur.tail); cur.tail = []; c.summary = keepSum;
+      if (m.vers.length === 1){ delete m.vers; delete m.v; }
+      touch(); chatReplay();
+      return toast(L("BranchFailed") + " " + String(reply.note || "").split("\n")[0].slice(0, 160), { bad:true, life:8000 });
+    }
+    if (lostFiles) reply.note = (reply.note ? reply.note + "\n" : "") + L("BranchNoFiles");
+    const now = new Date().toISOString();
+    /* an answer that never arrived is not worth keeping as a branch */
+    if (cur.reply && cur.reply.trouble && !cur.tail.length){ m.vers.splice(m.v, 1); }
+    /* the first answer that actually arrived is the normal one */
+    m.vers.push({ kind:m.vers.length ? kind : (kind === "deep" ? "deep" : "first"), reply:reply, src:q, at:now, tail:[] });
+    while (m.vers.length > CHAT_MAX_VERS) m.vers.splice(0, 1);
+    m.v = m.vers.length - 1;
+    m.reply = reply; m.src = q; m.at = now;
+    c.msgs.push(m);
+    c.updated = now;
+    S.chats = [c].concat(S.chats.filter(x => x.id !== c.id));
+    touch();
+    chatRenderBot(reply, q, false, c.msgs.length - 1);
+    chatSide();
+  }});
+}
+function chatSwitch(at, k){
+  const c = chatThread(); const m = c && c.msgs[at];
+  if (!m || !m.vers || !m.vers[k] || k === m.v) return;
+  if ($("chat").classList.contains("busy")) return;
+  chatBranchStash(c, m, at);
+  const nx = m.vers[k];
+  m.v = k; m.reply = nx.reply; m.src = nx.src; m.at = nx.at;
+  c.msgs.push(...(nx.tail || [])); nx.tail = [];
+  if (nx.summary !== undefined) c.summary = nx.summary;
+  if (nx.convo) c.convo = nx.convo;
+  touch();
+  chatReplay();
+  const el = [...document.querySelectorAll("#chatLog .chb[data-at]")].find(b => CHAT.botRef.get(b) === m.reply);
+  if (el) el.scrollIntoView({ block:"nearest" });
+}
+
 /* say something and keep it */
 /* ── rating an answer ───────────────────────────────────────────────────
    Up is thanks. Down asks for the one line it should have said, and that
@@ -11670,7 +11904,7 @@ function chatRateInner(r){
     '" title="' + LE(tip) + '">' + face + "</button>";
   const harder = r.tier !== "deep" && flowCfg().tiers.on
     ? '<button data-deeper="1" class="deeper" title="' + LE("TierAgainHint") + '">\u2726 ' + LE("TierAgain") + "</button>" : "";
-  return b("up", up, "\u{1F44D}", "RateUp") + b("down", down, "\u{1F44E}", "RateDown") + harder +
+  return b("up", up, "\u{1F44D}", "RateUp") + b("down", down, "\u{1F44E}", "RateDown") + chatRetryBtn() + harder +
     (down && r.fixText ? '<span class="rs">' + LE("RateFixed") + " <i>" + esc(r.fixText) + "</i></span>"
      : down ? '<span class="rs">' + LE("RateNoted") + "</span>"
      : up ? '<span class="rs">' + LE("RateThanks") + "</span>" : "");
@@ -11713,10 +11947,17 @@ function chatRateSet(id, v, fixText){
   else if (!v && was) toast(L("RateTakenBack"));
 }
 $("chatLog").addEventListener("click", e => {
-  const dp = e.target.closest("[data-deeper]");
+  /* asked again - by the strong model, or the same one - as a branch of
+     this answer, and switching between the branches */
+  const dp = e.target.closest("[data-deeper],[data-retry]");
   if (dp){
-    const o = CHAT.rates[dp.closest(".chrate").dataset.rate]; if (!o) return;
-    return chatAsk(o.src, { tier:"deep", flow:true });
+    const at = chatAtOf(dp); if (at < 0) return;
+    return chatBranch(at, dp.hasAttribute("data-deeper") ? "deep" : "retry");
+  }
+  const br = e.target.closest("[data-br]");
+  if (br){
+    const at = chatAtOf(br); if (at < 0) return;
+    return chatSwitch(at, +br.dataset.br);
   }
   const rv = e.target.closest("[data-rv]");
   if (rv){
@@ -11820,7 +12061,8 @@ async function checksRun(){
 
 function chatBot(r, sourceText){
   chatPush({ who:"bot", reply:r, src:sourceText || "" });
-  chatRenderBot(r, sourceText);
+  const c = chatThread();
+  chatRenderBot(r, sourceText, false, c ? c.msgs.length - 1 : null);
 }
 
 /* ── answered here: what the app can count for itself ──────────────────
@@ -12193,6 +12435,17 @@ async function flowAsk(q, thread, opts){
      any file". */
   const ctx = flowContext(q);
   if (opts.force) ctx.forceRecords = opts.force.slice();
+  /* where the answer goes: into the thread as the next message, or - asked
+     again from Retry or Think harder - to the branch waiting for it */
+  const deliver = opts.onReply || (r => chatBot(r, q));
+  const sumBefore = thread ? thread.summary || "" : "";
+  /* The files that went with a question are kept for this session, so an
+     answer asked again is asked with them. Not saved: they can be
+     megabytes, and the folder is for records. */
+  const youMsg = thread && thread.msgs && thread.msgs[thread.msgs.length - 1];
+  if (opts.files){ ctx.attachments = opts.files.attachments; ctx.picture = opts.files.picture; ctx.pictureName = opts.files.pictureName; }
+  else if (youMsg && youMsg.who === "you" && (ctx.attachments || []).length)
+    CHAT.sentFiles[youMsg.at] = { attachments:ctx.attachments, picture:ctx.picture, pictureName:ctx.pictureName };
   await promptLoad();
   ctx.promptTemplate = PROMPT.text; ctx.promptFrom = PROMPT.from;
   try { out = await DossierFlow.ask(q, ctx, cfg); }
@@ -12211,13 +12464,13 @@ async function flowAsk(q, thread, opts){
       r.note = L("FlowFellBack") + " " + String(err.message || err) +
                (sentFiles ? "\n\n" + L("FlowHadFiles", { n:sentFiles, size:bytes(sentBytes) }) : "");
       r.trouble = true;
-      return chatBot(r, q);
+      return deliver(r);
     }
-    return chatBot({ say:L("FlowFailed"), trouble:true,
+    return deliver({ say:L("FlowFailed"), trouble:true,
                      note:String(err.message || err) + (sentFiles
                        ? "\n\n" + L("FlowHadFiles", { n:sentFiles, size:bytes(sentBytes) })
                        : ""),
-                     chips:[{ label:L("FlowTest"), act:{ kind:"panel", panel:"setup" } }] }, q);
+                     chips:[{ label:L("FlowTest"), act:{ kind:"panel", panel:"setup" } }] });
   }
 
   /* ── the flow's safety net answered ──────────────────────────────────────
@@ -12329,7 +12582,9 @@ async function flowAsk(q, thread, opts){
   if (out && out.tier) reply.tier = out.tier;
   if (out && out.ms && !sentFiles) flowTimed(out.tier || "fast", out.ms);
   if (out && out.thread && thread){ thread.summary = out.thread; thread.summaryAt = new Date().toISOString(); }
-  chatBot(reply, q);
+  if (out && out.title && thread && thread.titleAuto && !thread.titleAi){ thread.title = out.title; thread.titleAi = true; }
+  reply.sumBefore = sumBefore;
+  deliver(reply);
   chatSide();
 }
 
@@ -19960,8 +20215,11 @@ function threadForFlow(c){
   const talk = c.msgs.filter(m => m.who === "you" || m.who === "bot");
   const earlier = Math.max(0, talk.length - 8);
   const wanted = talk.length >= 3;
-  if (!c.summary && !wanted) return undefined;
-  return { summary:c.summary || "", earlier, wanted };
+  /* the name it has is only the first question, tidied: ask for a real one,
+     for the first few exchanges, until one comes back */
+  const titleWanted = !!c.titleAuto && !c.titleAi && talk.filter(m => m.who === "you").length <= 3;
+  if (!c.summary && !wanted && !titleWanted) return undefined;
+  return { summary:c.summary || "", earlier, wanted, titleWanted };
 }
 
 /* what "not what I meant" was pressed on, for the look back */

@@ -6,6 +6,40 @@ holds — which is what to paste into a bug report.
 
 ---
 
+## 5.2.0 - 2026-09-28
+
+**Branches, Retry, text ready to paste, and conversations the assistant names.**
+
+- **✦ Think harder makes a branch, not a copy.** The strong model's answer
+  takes the first answer's place in the same conversation, and a row above
+  it - *Answers: Normal · ✦ Harder* - switches between the two. Each branch
+  keeps its own follow-ups: go back to *Normal* and what you asked after it
+  comes back; ask something now and it belongs to the branch on screen. The
+  model is asked with the conversation as it stood at that question, never
+  with the answer being replaced. Up to six branches an answer.
+- **↻ Retry** under every answer from the flow asks the same question again
+  with the same model, as another branch (*Retry*, *Retry 2*…). Under an
+  answer that failed it is there too, and a successful retry simply replaces
+  the failure. A retry that fails puts back the answer you had, and says so.
+  The files that went with the question are sent again (kept until the app
+  is closed; after that the answer says they were not).
+- **Text ready to paste**: an email, a Teams message, a reply to a user, a
+  resolution note, a status update comes as a card of ordinary text -
+  labelled *Email*, *Message*, *Note*, with a title - and one **Copy** that
+  takes exactly that text. An email's subject line sits on its own with its
+  own **Subject** copy and is left out of the body. A fence with no language
+  whose contents are sentences becomes one of these too; code stays in a
+  code panel. The prompt asks for it (```email, ```message, ```note,
+  ```text, with an optional title), with one new example.
+- **Conversation titles written by the assistant**: its first answer in a
+  new conversation carries a short `title` (`workspace.thread.titleWanted`),
+  which replaces the question in the list. Until then - and with no flow -
+  the list shows the first question tidied (*"can you please tell me what is
+  overdue?"* → *What is overdue*). Titles the app sets itself (a record's
+  *Diagnose*, the look back) are left alone.
+- Flow: new reply key `title`; `workspace.thread.titleWanted`. Nothing
+  changes in Power Automate. Prompt 28.9 KB.
+
 ## 5.1.1 - 2026-09-28
 
 - Word documents: bullets and numbered steps made with Word's list styles
