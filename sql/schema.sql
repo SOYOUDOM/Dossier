@@ -504,6 +504,37 @@ BEGIN
 END
 GO
 
+/* -- 7 -- which parts changed ------------------------------------------------
+   dbo.LoadWorkspace used to rewrite every table on every save. It now keeps
+   a hash of each part of the workspace (records, routines, runbooks,
+   incidents, chats ...) here, and writes a part again only when its hash
+   has moved - so a change to one record no longer rewrites the whole
+   incident history. Nothing in it is data; emptying it only makes the next
+   save write everything. */
+IF (SELECT Version FROM dbo.SchemaVersion WHERE Id = 1) < 7
+BEGIN
+    PRINT 'migrating to 7: saves write only the parts that changed';
+    BEGIN TRY
+    BEGIN TRAN;
+
+    IF OBJECT_ID('dbo.ShredState', 'U') IS NULL
+    CREATE TABLE dbo.ShredState (
+        Section  nvarchar(40)   NOT NULL CONSTRAINT PK_ShredState PRIMARY KEY,
+        Hash     varbinary(32)  NOT NULL,
+        At       datetime2(0)   NOT NULL CONSTRAINT DF_ShredState_At DEFAULT (SYSUTCDATETIME())
+    );
+
+    UPDATE dbo.SchemaVersion SET Version = 7, AppliedAt = SYSUTCDATETIME() WHERE Id = 1;
+    COMMIT;
+    END TRY
+    BEGIN CATCH
+        IF XACT_STATE() <> 0 ROLLBACK;
+        PRINT 'migration 7 rolled back; the database is as it was';
+        THROW;
+    END CATCH
+END
+GO
+
 /* what the database looks like now */
 SELECT  SchemaVersion = (SELECT Version FROM dbo.SchemaVersion WHERE Id = 1),
         Tables        = (SELECT COUNT(*) FROM sys.tables WHERE schema_id = SCHEMA_ID('dbo')),

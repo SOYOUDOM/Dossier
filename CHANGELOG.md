@@ -6,6 +6,55 @@ holds — which is what to paste into a bug report.
 
 ---
 
+## 5.3.0 - 2026-09-28
+
+**Saving: faster, and never stuck.** A change could sit on *unsaved* for
+forty minutes. Every way that could happen is closed, and a save is a
+fraction of what it was.
+
+Why it could stick, and what changed:
+
+- **Every save rewrote every table in the database** - the records and their
+  logs, routines, runbooks, every imported incident and every chat message -
+  in one transaction, for a change to one record. As the incident history and
+  the conversations grew, so did every save. `dbo.LoadWorkspace` now hashes
+  each part of the workspace (schema migration 7, `dbo.ShredState`) and
+  writes a part again only when it has changed: a status change rewrites the
+  record tables and nothing else. The canonical row is still written whole.
+- **The page gave up on the database after one minute; SQL keeps going for
+  two.** The page then sent the next save while the last was still writing,
+  and the two fought over the same tables. The page now waits two and a half
+  minutes; the bridge takes saves one at a time; and a save that a newer one
+  from the same window has overtaken while it waited is skipped (it has
+  nothing the newer one lacks). The bridge logs any save over three seconds.
+- **A folder write that never answered held every save behind it** (a sync
+  client or a scanner holding `dossier.json`). Folder writes now have thirty
+  seconds; past that the write is abandoned - its half-written copy
+  discarded, never committed late over a newer one - and tried again.
+- **Nothing noticed a save that never came back.** A watchdog now does:
+  every few seconds, unsaved work with nothing on its way to save it is
+  saved, and a save "on its way" for over three and a half minutes is let go
+  of and tried again. A late answer from the abandoned one is ignored.
+- **The export, the day's backup and this PC's copy were written inside
+  every save** - two indented files and a walk through `backups/`. In
+  database mode they now follow the save instead: `dossier.json` within
+  eight seconds (the newest state each time; right away when the window is
+  hidden), the day's backup at most every five minutes, `backups/` tidied
+  once a day, the browser's copy at most every thirty seconds (at once when
+  the record count changes). Without a database, `dossier.json` is still the
+  save itself and is written first.
+- **A question could hold saving with nothing saying so** ("this PC
+  remembers more records"). The status line now says *not saved · answer the
+  question at the top*, and clicking it shows the question again.
+- Changes are saved 0.45 s after the last one (was 0.7 s). A slow save counts
+  its seconds (*saving… 6 s*); hovering the status line says how long the
+  last save took and how big it was.
+
+To get all of it: update the files, **quit Resolv from the icon by the
+clock** (right-click → Quit), and run `Resolv.bat` - it rebuilds the bridge
+and brings the database to schema 7 by itself. The first save afterwards
+writes everything once; every save after that writes only what changed.
+
 ## 5.2.2 - 2026-09-28
 
 - **A window left open says when a newer Resolv is in the folder.** The page

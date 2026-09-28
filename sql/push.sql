@@ -107,6 +107,10 @@ SELECT TRY_CONVERT(datetime2(0), JSON_VALUE(@doc, '$.savedAt')),
 
 /* a push is a photograph of the file, not a merge: what is in the tables is
    what the file says, and the history lives in Snapshot */
+/* a push is the file, whole: every table written again, whatever the last
+   save left behind (LoadWorkspace otherwise skips the parts it thinks are
+   unchanged) */
+IF OBJECT_ID('dbo.ShredState', 'U') IS NOT NULL DELETE dbo.ShredState;
 EXEC dbo.LoadWorkspace @doc;
 
 COMMIT;

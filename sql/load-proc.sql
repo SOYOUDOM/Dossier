@@ -18,6 +18,18 @@
 SET NOCOUNT ON;
 GO
 
+/* What each part of the workspace looked like at the last save, as a hash:
+   the part whose hash has not moved is not written again. Idempotent; the
+   same table schema.sql makes in migration 7, here as well so a database
+   given only this file still has it. */
+IF OBJECT_ID('dbo.ShredState', 'U') IS NULL
+    CREATE TABLE dbo.ShredState (
+        Section  nvarchar(40)   NOT NULL CONSTRAINT PK_ShredState PRIMARY KEY,
+        Hash     varbinary(32)  NOT NULL,
+        At       datetime2(0)   NOT NULL CONSTRAINT DF_ShredState_At DEFAULT (SYSUTCDATETIME())
+    );
+GO
+
 CREATE OR ALTER PROCEDURE dbo.LoadWorkspace
     @doc nvarchar(max)
 AS
@@ -39,16 +51,54 @@ BEGIN
         INSERT dbo.Workspace (Id, Doc, UpdatedAt, Records)
         VALUES (1, @doc, SYSUTCDATETIME(), (SELECT COUNT(*) FROM OPENJSON(@doc, '$.tasks')));
 
-    /* and the same thing in columns, for querying */
+    /* ── and the same thing in columns, for querying ─────────────────────
+       Every save used to delete and rewrite every one of these tables: the
+       records, their logs and steps, the routines, the runbooks, every
+       imported incident and every chat message - a few thousand rows, in one
+       transaction, for a change to one record's status. As the incident
+       history and the conversations grew, a save grew from a moment to many
+       seconds, and past the page's patience.
+
+       So each part is hashed, and only a part whose hash has moved since the
+       last save is written again. Changing a record rewrites the record
+       tables; talking to the assistant rewrites the chats; the incident
+       history, which hardly ever changes, is left alone. The canonical row
+       above is still written whole every time - it is what everything reads.
+       With no ShredState (an older database mid-upgrade) everything is
+       written, as before. */
+    DECLARE @now TABLE (Section nvarchar(40) NOT NULL PRIMARY KEY, Hash varbinary(32) NOT NULL);
+    INSERT @now (Section, Hash)
+    SELECT v.Section, HASHBYTES('SHA2_256', CAST(ISNULL(v.Part, N'') AS nvarchar(max)))
+    FROM (VALUES
+            (N'records',   JSON_QUERY(@doc, '$.tasks')),
+            (N'routines',  JSON_QUERY(@doc, '$.routines')),
+            (N'scripts',   JSON_QUERY(@doc, '$.scripts')),
+            (N'runbooks',  JSON_QUERY(@doc, '$.settings.runbooks')),
+            (N'profiles',  JSON_QUERY(@doc, '$.settings.profiles')),
+            (N'notes',     JSON_QUERY(@doc, '$.settings.memory')),
+            (N'incidents', JSON_QUERY(@doc, '$.incidents')),
+            (N'chats',     JSON_QUERY(@doc, '$.chats')),
+            (N'holidays',  JSON_QUERY(@doc, '$.settings.holidays')),
+            (N'settings',  JSON_QUERY(@doc, '$.settings'))
+         ) AS v(Section, Part);
+
+    DECLARE @dirty TABLE (Section nvarchar(40) NOT NULL PRIMARY KEY);
+    IF OBJECT_ID('dbo.ShredState', 'U') IS NOT NULL
+        INSERT @dirty (Section)
+        SELECT n.Section FROM @now AS n
+        LEFT JOIN dbo.ShredState AS s ON s.Section = n.Section
+        WHERE s.Hash IS NULL OR s.Hash <> n.Hash;
+    ELSE
+        INSERT @dirty (Section) SELECT Section FROM @now;
+
+    IF EXISTS (SELECT 1 FROM @dirty WHERE Section = N'records')
+    BEGIN
     DELETE dbo.RecordBlocker;
     DELETE dbo.RecordTag;
     DELETE dbo.RecordStep;
     DELETE dbo.RecordFile;
     DELETE dbo.RecordLog;
     DELETE dbo.Record;
-    DELETE dbo.Routine;
-    DELETE dbo.Script;
-    DELETE dbo.Setting;
 
     INSERT dbo.Record (Id, Code, Title, Notes, Status, Priority, System, Type, Ticket,
                        Requester, Folder, WaitOn, WaitNote, WaitSince, WaitUntil, AutoBlocked,
@@ -126,6 +176,11 @@ BEGIN
     CROSS APPLY OPENJSON(r.blockedBy) AS b
     WHERE b.value IS NOT NULL AND b.value <> '';
 
+    END;
+
+    IF EXISTS (SELECT 1 FROM @dirty WHERE Section = N'routines')
+    BEGIN
+    DELETE dbo.Routine;
     INSERT dbo.Routine (Id, Title, Freq, AutoRun, Doc)
     SELECT x.id, x.title, x.freq, CASE WHEN x.autoRun = 'true' THEN 1 ELSE 0 END, x.doc
     FROM OPENJSON(@doc, '$.routines') WITH (
@@ -133,6 +188,11 @@ BEGIN
             autoRun nvarchar(10) '$.autoRun', doc nvarchar(max) '$' AS JSON) AS x
     WHERE x.id IS NOT NULL;
 
+    END;
+
+    IF EXISTS (SELECT 1 FROM @dirty WHERE Section = N'scripts')
+    BEGIN
+    DELETE dbo.Script;
     INSERT dbo.Script (Id, Name, FileName, Descr)
     SELECT x.id, x.name, x.fileName, x.descr
     FROM OPENJSON(@doc, '$.scripts') WITH (
@@ -140,20 +200,18 @@ BEGIN
             fileName nvarchar(400) '$.file', descr nvarchar(max) '$.desc') AS x
     WHERE x.id IS NOT NULL;
 
+    END;
+
     /* -- the library, the history and the conversations -------------------------
        Runbooks, profiles and notes live inside settings in the file; incidents
-       and chats are top-level. All of them are replaced wholesale on a push, the
-       same as the records: the file is the truth, this is the copy of it you can
-       query. */
+       and chats are top-level. Each is replaced wholesale when it has changed,
+       the same as the records: the file is the truth, this is the copy of it
+       you can query. */
+    IF EXISTS (SELECT 1 FROM @dirty WHERE Section = N'runbooks')
+    BEGIN
     DELETE dbo.RunbookTrigger;
     DELETE dbo.RunbookStep;
     DELETE dbo.Runbook;
-    DELETE dbo.SystemProfile;
-    DELETE dbo.Note;
-    DELETE dbo.Incident;
-    DELETE dbo.ChatMessage;
-    DELETE dbo.Chat;
-    DELETE dbo.Holiday;
 
     INSERT dbo.Runbook (Title, System, Severity, Status, Owner, Verified, Uses, Escalation, Checks)
     SELECT b.title, b.system, b.severity, b.status, b.owner, b.verified,
@@ -187,6 +245,11 @@ BEGIN
     CROSS APPLY OPENJSON(b.steps) AS g
     WHERE g.value IS NOT NULL AND g.value <> '';
 
+    END;
+
+    IF EXISTS (SELECT 1 FROM @dirty WHERE Section = N'profiles')
+    BEGIN
+    DELETE dbo.SystemProfile;
     INSERT dbo.SystemProfile (System, Facts, Quirks, Tables, Owner, Updated)
     SELECT p.system, p.facts, p.quirks, p.tables, p.owner, TRY_CONVERT(datetime2(0), p.updated)
     FROM OPENJSON(@doc, '$.settings.profiles') WITH (
@@ -199,6 +262,11 @@ BEGIN
          ) AS p
     WHERE p.system IS NOT NULL AND p.system <> '';
 
+    END;
+
+    IF EXISTS (SELECT 1 FROM @dirty WHERE Section = N'notes')
+    BEGIN
+    DELETE dbo.Note;
     INSERT dbo.Note (Id, Title, Body, System, Tags, Created, Updated)
     SELECT n.id, n.title, n.body, n.system, n.tags,
            TRY_CONVERT(datetime2(0), n.created), TRY_CONVERT(datetime2(0), n.updated)
@@ -213,6 +281,11 @@ BEGIN
          ) AS n
     WHERE n.id IS NOT NULL;
 
+    END;
+
+    IF EXISTS (SELECT 1 FROM @dirty WHERE Section = N'incidents')
+    BEGIN
+    DELETE dbo.Incident;
     INSERT dbo.Incident (Num, Opened, Resolved, Closed, Title, Descr, Sys, Ci, Cat, Sub,
                          [Group], Who, Caller, Pri, State, CloseCode, CloseNotes, Cause, Reopens)
     SELECT i.num, TRY_CONVERT(datetime2(0), i.opened), TRY_CONVERT(datetime2(0), i.resolved),
@@ -242,6 +315,12 @@ BEGIN
          ) AS i
     WHERE i.num IS NOT NULL;
 
+    END;
+
+    IF EXISTS (SELECT 1 FROM @dirty WHERE Section = N'chats')
+    BEGIN
+    DELETE dbo.ChatMessage;
+    DELETE dbo.Chat;
     INSERT dbo.Chat (Id, Title, Created, Updated, Messages)
     SELECT c.id, c.title, TRY_CONVERT(datetime2(0), c.created),
            TRY_CONVERT(datetime2(0), c.updated),
@@ -266,17 +345,39 @@ BEGIN
             id nvarchar(60) '$.id', msgs nvarchar(max) '$.msgs' AS JSON) AS c
     CROSS APPLY OPENJSON(c.msgs) AS m;
 
+    END;
+
+    IF EXISTS (SELECT 1 FROM @dirty WHERE Section = N'holidays')
+    BEGIN
+    DELETE dbo.Holiday;
     INSERT dbo.Holiday ([Date], Name, Kind)
     SELECT TRY_CONVERT(date, h.d), h.n, h.k
     FROM OPENJSON(@doc, '$.settings.holidays') WITH (
             d nvarchar(20) '$.d', n nvarchar(200) '$.n', k nvarchar(40) '$.k') AS h
     WHERE TRY_CONVERT(date, h.d) IS NOT NULL;
 
+    END;
+
     /* settings are a bag of anything, so they are kept as key/value with the
        nested ones left as the JSON they are */
+    IF EXISTS (SELECT 1 FROM @dirty WHERE Section = N'settings')
+    BEGIN
+    DELETE dbo.Setting;
     INSERT dbo.Setting ([Key], Value)
     SELECT s.[key], s.value
     FROM OPENJSON(@doc, '$.settings') AS s
     WHERE s.[key] NOT IN ('runbooks', 'profiles', 'memory', 'holidays');
+    END;
+
+    /* and what each part looked like, for the next save to compare with */
+    IF OBJECT_ID('dbo.ShredState', 'U') IS NOT NULL
+    BEGIN
+        UPDATE s SET s.Hash = n.Hash, s.At = SYSUTCDATETIME()
+        FROM dbo.ShredState AS s JOIN @now AS n ON n.Section = s.Section
+        WHERE s.Hash <> n.Hash;
+        INSERT dbo.ShredState (Section, Hash)
+        SELECT n.Section, n.Hash FROM @now AS n
+        WHERE NOT EXISTS (SELECT 1 FROM dbo.ShredState AS s WHERE s.Section = n.Section);
+    END;
 END
 GO

@@ -4374,7 +4374,12 @@ const STRINGS = {
   SaveRetryIn: "not saved yet \u00b7 trying again in {p0}s",
   SaveKeepsTrying: "Resolv keeps trying by itself.",
   SaveNoBridge: "the bridge is not answering",
-  SaveBridgeSlow: "the bridge had not answered after a minute",
+  SaveBridgeSlow: "the database had not finished after two and a half minutes",
+  SaveStuck: "a save never came back, so it was let go of and is being tried again",
+  SaveHeld: "not saved \u00b7 answer the question at the top",
+  SaveHeldHint: "Saving waits for your answer to the question at the top of the window - click to show it again",
+  SaveTook: "Last save took {s} s (the database {db} s) \u00b7 {kb} KB",
+  FolderSlow: "the folder did not answer within 30 seconds ({p0})",
   SaveBridgeDown: "Not saved yet: {p0}. Your changes stay on screen and are written by themselves the moment the bridge answers \u2014 no need to click anything.",
   SaveBackNow: "Saved \u2014 everything that was waiting is written.",
   SaveExportLate: "Saved to SQL Server. The dossier.json export beside it could not be written ({p0}); the next save writes it.",
@@ -6066,6 +6071,12 @@ const MEM = (function(){
    <folder>/backups/dossier-YYYY-MM-DD.json     (30 kept)
    <folder>/tasks/D-0001 restart imaging app pool/…attachments…            */
 const HAS_FS = typeof window !== "undefined" && !!window.showDirectoryPicker;
+const FS_WAIT = 30000;
+function fsIn(p, name){
+  let t;
+  return Promise.race([p, new Promise((res, rej) => { t = setTimeout(() =>
+    rej(new Error(L("FolderSlow", { p0:name || "" }))), FS_WAIT); })]).finally(() => clearTimeout(t));
+}
 const FS = {
   root: null,
   name: "",
@@ -6097,10 +6108,15 @@ const FS = {
     for (const part of path){ d = await d.getDirectoryHandle(part, { create: !!create }); }
     return d;
   },
+  /* A write the folder never answers - a sync client or a virus scanner
+     holding the file - used to hold every save behind it. Each step now has
+     half a minute; past that the write is abandoned (its half-written copy
+     discarded, never committed late over a newer one) and tried again. */
   async writeText(dirHandle, name, text){
-    const fh = await dirHandle.getFileHandle(name, { create:true });
-    const w = await fh.createWritable();
-    await w.write(text); await w.close();
+    const fh = await fsIn(dirHandle.getFileHandle(name, { create:true }), name);
+    const w = await fsIn(fh.createWritable(), name);
+    try { await fsIn(w.write(text), name); await fsIn(w.close(), name); }
+    catch(e){ try { await w.abort(); } catch(x){} throw e; }
   },
   async readText(dirHandle, name){
     const fh = await dirHandle.getFileHandle(name);
@@ -6130,7 +6146,7 @@ const STATUSES = [
    the status bar, and clicking it copies a line you can paste into a bug
    report — build date and flow protocol included, because those are the two
    things that actually differ between copies. */
-const APP_VERSION = "5.2.2";
+const APP_VERSION = "5.3.0";
 const APP_BUILT = "2026-09-27";
 function buildLine(){
   return "Resolv v" + APP_VERSION + " \u00b7 built " + APP_BUILT +
@@ -7591,6 +7607,7 @@ function hydrate(d){
 }
 function touch(){
   S.dirty = true; S.rev++;
+  SAVE.touchedAt = Date.now(); SAVE.waiting = false;
   setSaveState("dirty");
   scheduleSave();
 }
@@ -7604,7 +7621,17 @@ function setSaveState(mode){
   sb.title = FS.ok && mode !== "saving" && mode !== "saved"
     ? L("SaveClickHint") + (SAVE.why ? "\n" + SAVE.why : "") : "";
   if (!FS.ok){ dot.className = L("DotBad"); sb.textContent = L("NotLinkedToAFolder"); return; }
-  if (mode === "saving"){ dot.className = L("DotWarn") + " busy"; sb.textContent = L("Saving"); return; }
+  /* a question on screen is the one thing a save waits for; say so, rather
+     than sit on "unsaved" with no reason given */
+  if (VAULT.held && mode !== "saving"){
+    dot.className = L("DotWarn"); sb.textContent = L("SaveHeld"); sb.title = L("SaveHeldHint"); return;
+  }
+  if (mode === "saving"){
+    dot.className = L("DotWarn") + " busy";
+    const secs = SAVE.startedAt ? Math.round((Date.now() - SAVE.startedAt) / 1000) : 0;
+    sb.textContent = L("Saving") + (secs >= 4 ? " " + secs + " s" : "");
+    return;
+  }
   if (mode === "dirty" && SAVE.at && SAVE.fails) mode = "retry";
   if (mode === "retry"){
     dot.className = L("DotWarn");
@@ -7614,8 +7641,10 @@ function setSaveState(mode){
   if (mode === "dirty"){ dot.className = L("DotWarn"); sb.textContent = L("Unsaved"); return; }
   dot.className = "dot";
   sb.textContent = L("SavedAt") + " " + (S.lastSaved ? stamp(S.lastSaved) : "");
+  if (SAVE.lastMs) sb.title = L("SaveTook", { s:(SAVE.lastMs / 1000).toFixed(1),
+    db:SAVE.lastDbMs != null ? (SAVE.lastDbMs / 1000).toFixed(1) : "-", kb:SAVE.lastKb || 0 });
 }
-const scheduleSave = debounce(function(){ saveNow(false, { auto:true }); }, 700);
+const scheduleSave = debounce(function(){ saveNow(false, { auto:true }); }, 450);
 
 /* ── saving: one at a time, none lost, none left waiting on a click ──────
    Every change moves S.rev on. A save writes what is there when it starts
@@ -7626,7 +7655,14 @@ const scheduleSave = debounce(function(){ saveNow(false, { auto:true }); }, 700)
    database busy, the folder locked for a moment - is tried again by
    itself, after 2 seconds, then 4, 8 ... up to a minute, so the dot turns
    green on its own when the way is clear again. */
-const SAVE = { running:null, again:false, rev:0, fails:0, timer:0, at:0, told:false, why:"", bridgeErr:false, exportTold:false, wait:60000 };
+/* wait: how long a save to the database is given. SQL gives a statement two
+   minutes; the page used to give up after one and send the next save while
+   the database was still writing the last, and the two then fought. */
+const SAVE = { running:null, again:false, rev:0, fails:0, timer:0, at:0, told:false, why:"", bridgeErr:false, exportTold:false,
+               wait:150000, token:null, startedAt:0, touchedAt:0, lastMs:0, lastDbMs:null, lastKb:0,
+               /* this window, to the bridge: a save overtaken by a newer one from
+                  the same window is not written (DossierBridge.cs, SaveLock) */
+               win:"w" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7) };
 function saveSoon(ms){
   clearTimeout(SAVE.timer);
   SAVE.at = Date.now() + ms;
@@ -7649,10 +7685,16 @@ function saveAfter(res){
     setSaveState("retry");
   }
   /* false: a question is on the screen, or its answer was no. Nothing is
-     tried again by itself; the next change, or the answer, saves. */
+     tried again by itself - not even by the watchdog, which would put the
+     same question up every few seconds; the next change, or the answer,
+     saves. */
+  if (res === false) SAVE.waiting = true;
 }
 /* the countdown in the status bar */
-setInterval(() => { if (SAVE.at && SAVE.fails && S.dirty && !SAVE.running) setSaveState("retry"); }, 1000);
+setInterval(() => {
+  if (SAVE.at && SAVE.fails && S.dirty && !SAVE.running) setSaveState("retry");
+  else if (SAVE.running && SAVE.startedAt && Date.now() - SAVE.startedAt > 3500) setSaveState("saving");
+}, 1000);
 /* back at the desk, back online: try now rather than at the end of the wait */
 function saveNudge(){
   if (!S.dirty || SAVE.running || !FS.ok) return;
@@ -7668,7 +7710,7 @@ document.addEventListener("visibilitychange", () => { if (!document.hidden && SA
    saved. A save that would take that to nothing is refused outright - it is
    what a workspace that failed to load looks like - and one that would more
    than halve it keeps a copy of the file first. */
-const GUARD = { base:-1, emptyOk:false, bday:"", bcount:-1 };
+const GUARD = { base:-1, emptyOk:false, bday:"", bcount:-1, bat:0 };
 function shrinks(current, incoming){
   return current > 0 && (incoming <= 0 || (current >= 10 && incoming * 2 < current));
 }
@@ -7694,13 +7736,42 @@ async function saveNow(silent, opts){
   }
   if (opts.auto && !S.dirty) return true;
   saveStop();
+  const token = {};
   const run = saveOnce(silent, opts);
-  SAVE.running = run;
+  SAVE.running = run; SAVE.token = token; SAVE.startedAt = Date.now();
   let res = false;
-  try { res = await run; } finally { SAVE.running = null; }
+  try { res = await run; } catch(e){ res = "retry"; }
+  /* the watchdog gave up on this one and something newer is running:
+     whatever it says now is about the past */
+  if (SAVE.token !== token) return res === true;
+  SAVE.running = null; SAVE.token = null;
+  if (res === true) SAVE.lastMs = Date.now() - SAVE.startedAt;
+  SAVE.startedAt = 0;
   saveAfter(res);
   return res === true;
 }
+/* ── the watchdog ─────────────────────────────────────────────────────────
+   Every few seconds: something unsaved and nothing on its way to save it -
+   a lost timer, a save that returned without scheduling the next - saves
+   it now; a save that has been "on its way" for longer than any save can
+   take is let go of and tried again, so one stuck write can never hold up
+   every write after it (which is how a change sat unsaved for forty
+   minutes); and the "saving" line counts the seconds. */
+const SAVE_STUCK = 210000;
+setInterval(() => {
+  if (!FS.ok) return;
+  if (SAVE.running){
+    if (Date.now() - SAVE.startedAt > SAVE_STUCK){
+      SAVE.running = null; SAVE.token = null; SAVE.startedAt = 0;
+      SAVE.why = L("SaveStuck"); SAVE.bridgeErr = true;
+      saveAfter("retry");
+    } else setSaveState("saving");
+    return;
+  }
+  if (!S.dirty || VAULT.held || SAVE.timer || SAVE.waiting) return;
+  if (Date.now() - (SAVE.touchedAt || 0) < 2500) return;
+  saveNow(false, { auto:true });
+}, 4000);
 /* true when it is written, "retry" when it could not be and is worth
    trying again, false when it is waiting on somebody */
 async function saveOnce(silent, opts){
@@ -7747,7 +7818,7 @@ async function saveOnce(silent, opts){
        a file that is ahead of the database is the beginning of two versions
        of the truth. */
     if (DB.on){
-      try { await dbPut(doc, { reason:opts.reason, confirm:opts.confirm }); }
+      try { await dbPut(doc, { reason:opts.reason, confirm:opts.confirm, rev:rev }); }
       catch(e){
         if (!e.shrink) throw e;
         /* far fewer records than the database holds: say the numbers and ask */
@@ -7759,7 +7830,7 @@ async function saveOnce(silent, opts){
           toast(L("ShrinkStopped"), { bad:true });
           return false;
         }
-        await dbPut(doc, { reason:opts.reason, confirm:true });
+        await dbPut(doc, { reason:opts.reason, confirm:true, rev:rev });
       }
       /* In the database is saved. The dot says so now, not after the
          export below - which on Windows can take a second or two while the
@@ -7772,21 +7843,25 @@ async function saveOnce(silent, opts){
        this save leaves far fewer records than the file has, the file as it
        was goes into backups/ first. */
     const oldBase = GUARD.base;
-    if (stored){ GUARD.base = doc.tasks.length; GUARD.emptyOk = false; }
-    try {
-      if (shrinks(oldBase, doc.tasks.length)) await keepFileCopy("before-" + (opts.reason || "save").replace(/\W+/g, "-"));
-      await FS.writeText(FS.root, "dossier.json", JSON.stringify(doc, null, 2));
-      await dailyBackup(doc);
-      SAVE.exportTold = false;
-    } catch(e){
-      if (!stored) throw e;
-      /* the records are in the database; only the copy beside them is
-         late, and the next save writes it */
-      if (!SAVE.exportTold){ SAVE.exportTold = true; toast(L("SaveExportLate", { p0:e.message || String(e) }), { bad:true }); }
+    const shrinking = shrinks(oldBase, doc.tasks.length);
+    if (stored){
+      GUARD.base = doc.tasks.length; GUARD.emptyOk = false;
+      /* In the database, the save is done. The export beside the records
+         and the day's backup are copies, and they used to be written - two
+         pretty-printed files, and a walk through backups/ - before the next
+         save could start. Now they follow on their own, at most every few
+         seconds, the latest state each time. */
+      exportSoon(doc, shrinking ? "before-" + (opts.reason || "save").replace(/\W+/g, "-") : "");
+    } else {
+      /* No database: dossier.json IS the save, so it is written now. */
+      if (shrinking) await keepFileCopy("before-" + (opts.reason || "save").replace(/\W+/g, "-"));
+      const text = JSON.stringify(doc, null, 2);
+      await FS.writeText(FS.root, "dossier.json", text);
+      GUARD.base = doc.tasks.length; GUARD.emptyOk = false; savedRev(rev);
+      dailyBackup(doc, text);
     }
-    if (!stored){ GUARD.base = doc.tasks.length; GUARD.emptyOk = false; savedRev(rev); }
     paintStore();
-    vaultWrite();            /* and the copy this PC keeps of it */
+    vaultWrite(doc);         /* and the copy this PC keeps of it */
     return true;
   } catch(e){
     SAVE.why = e.message || String(e);
@@ -7808,22 +7883,67 @@ function savedRev(rev){
   S.dirty = S.rev !== rev;
   setSaveState(S.dirty ? "dirty" : "saved");
 }
-async function dailyBackup(doc){
+/* ── the copies: dossier.json beside the records, and the day's backup ─────
+   With the database as the store these are copies, written after the save
+   rather than inside it: the newest state, at most every EXPORT_EVERY, and
+   only into the folder they were meant for (a folder switched in between
+   gets none of the old one's). A save that shrank the workspace keeps the
+   file as it was, first, as it always did. */
+const EXPORT_EVERY = 8000;
+const EXPORT = { doc:null, root:null, keep:"", timer:0, running:null, at:0 };
+function exportSoon(doc, keepTag){
+  EXPORT.doc = doc; EXPORT.root = FS.root;
+  if (keepTag && !EXPORT.keep) EXPORT.keep = keepTag;
+  if (EXPORT.timer) return;
+  EXPORT.timer = setTimeout(exportRun, Math.max(0, EXPORT_EVERY - (Date.now() - EXPORT.at)));
+}
+async function exportRun(){
+  EXPORT.timer = 0;
+  if (EXPORT.running){ EXPORT.timer = setTimeout(exportRun, 1000); return; }
+  const doc = EXPORT.doc, root = EXPORT.root, keep = EXPORT.keep;
+  EXPORT.doc = null; EXPORT.keep = "";
+  if (!doc || !root || root !== FS.root) return;
+  EXPORT.running = (async () => {
+    try {
+      if (keep) await keepFileCopy(keep);
+      const text = JSON.stringify(doc, null, 2);
+      await FS.writeText(root, "dossier.json", text);
+      await dailyBackup(doc, text);
+      SAVE.exportTold = false;
+    } catch(e){
+      /* the records are in the database; only the copy beside them is
+         late, and the next save writes it */
+      if (!SAVE.exportTold){ SAVE.exportTold = true; toast(L("SaveExportLate", { p0:e.message || String(e) }), { bad:true }); }
+    } finally { EXPORT.at = Date.now(); EXPORT.running = null; }
+  })();
+}
+/* the window going away: the copy goes now, as far as it gets */
+document.addEventListener("visibilitychange", () => { if (document.hidden && EXPORT.timer){ clearTimeout(EXPORT.timer); exportRun(); } });
+
+/* The day's backup: rewritten at most every BACKUP_EVERY, and backups/ is
+   walked for the old ones once a day rather than on every save. */
+const BACKUP_EVERY = 5 * 60000;
+async function dailyBackup(doc, text){
   doc = doc || payload();
   const name = "dossier-" + today() + ".json";
+  if (GUARD.brun) return;          /* one at a time; the next save brings the next */
+  GUARD.brun = true;
   try {
     const dir = await FS.dir(["backups"], true);
     /* A day's backup is rewritten on every save, which used to mean that the
        save that emptied a workspace emptied that day's backup too. It is not
        rewritten by a save that would shrink it: the fuller one stays. */
+    let fresh = false;
     if (GUARD.bday !== name){
-      GUARD.bday = name; GUARD.bcount = -1;
+      GUARD.bday = name; GUARD.bcount = -1; GUARD.bat = 0; fresh = true;
       try { GUARD.bcount = docCount(JSON.parse(await FS.readText(dir, name))); } catch(e){}
     }
     if (shrinks(GUARD.bcount, docCount(doc))) return;
-    await FS.writeText(dir, name, JSON.stringify(doc, null, 2));
-    GUARD.bcount = docCount(doc);
-    // keep the last 30 days
+    if (!fresh && GUARD.bat && Date.now() - GUARD.bat < BACKUP_EVERY && docCount(doc) === GUARD.bcount) return;
+    await FS.writeText(dir, name, text || JSON.stringify(doc, null, 2));
+    GUARD.bcount = docCount(doc); GUARD.bat = Date.now();
+    // keep the last 30 days - looked at once a day
+    if (!fresh) return;
     const keep = [];
     for (let i = 0; i < 30; i++) keep.push("dossier-" + addDays(today(), -i) + ".json");
     if (dir.values){
@@ -7834,6 +7954,7 @@ async function dailyBackup(doc){
       }
     }
   } catch(e){ /* backups are a nicety, never block the main save */ }
+  finally { GUARD.brun = false; }
 }
 
 /* workspaces remembered by name */
@@ -8122,10 +8243,13 @@ async function dbPut(doc, opts){
   const headers = { "X-Dossier-Token":DB.token, "Content-Type":"application/json" };
   if (opts.confirm) headers["X-Dossier-Confirm"] = "shrink";
   if (opts.reason) headers["X-Dossier-Reason"] = opts.reason;
+  if (opts.rev != null) headers["X-Dossier-Seq"] = SAVE.win + ":" + opts.rev;
   let r;
   /* a save that has had no answer in a minute is not going to get one;
      giving up lets it be tried again rather than sit on "saving" */
-  try { r = await fetchIn(dbUrl("/workspace"), { method:"PUT", headers, body: JSON.stringify(doc) }, SAVE.wait); }
+  const body = typeof doc === "string" ? doc : JSON.stringify(doc);
+  SAVE.lastKb = Math.round(body.length / 1024);
+  try { r = await fetchIn(dbUrl("/workspace"), { method:"PUT", headers, body }, SAVE.wait); }
   catch(e){
     const err = new Error(e && e.name === "AbortError" ? L("SaveBridgeSlow") : L("SaveNoBridge"));
     err.bridge = true;
@@ -8141,7 +8265,9 @@ async function dbPut(doc, opts){
     else err.bridge = true;     /* a new token after a restart, the database waking, a lock */
     throw err;
   }
-  return r.json();
+  const out = await r.json();
+  SAVE.lastDbMs = out && typeof out.ms === "number" ? out.ms : null;
+  return out;
 }
 function fetchIn(url, init, ms){
   const ac = new AbortController(), t = setTimeout(() => ac.abort(), ms);
@@ -8360,20 +8486,27 @@ async function dbDiagnose(){
    browser's site data removes it, another browser cannot see it, and another
    PC certainly cannot. Menu → Workspace → Export JSON is what moves a
    workspace; this is what survives the folder. */
-const VAULT = { held:false };
+const VAULT = { held:false, at:0, n:-1, loaded:false };
 const vaultKey = () => "mirror:" + (FS.name || "-");
 
 /* Written after every successful save, and after a restore. Same shape as
    dossier.json, plus when and where it came from. */
-async function vaultWrite(){
+/* Every save used to copy the whole workspace into this browser's storage
+   as well. Now: at most every half minute (always when the record count
+   moves, and whenever it is asked for directly), from the document the
+   save just wrote. */
+async function vaultWrite(doc){
   if (!IDB.available || !FS.ok) return;
+  const n = S.tasks.length;
+  if (doc && VAULT.at && Date.now() - VAULT.at < 30000 && VAULT.n === n) return;
+  VAULT.at = Date.now(); VAULT.n = n;
   try {
     await IDB.set(vaultKey(), {
       at: new Date().toISOString(),
       folder: FS.name,
-      tasks: S.tasks.length,
-      docs: S.tasks.reduce((n, t) => n + ((t.files || []).length), 0),
-      payload: payload()
+      tasks: n,
+      docs: S.tasks.reduce((c, t) => c + ((t.files || []).length), 0),
+      payload: doc || payload()
     });
   } catch(e){ /* a full or blocked store is not a reason to stop working */ }
 }
@@ -8385,6 +8518,7 @@ async function vaultRead(){
 /* The one question it exists to ask. Called on the way in, BEFORE anything
    is written back to the folder. */
 async function vaultCheck(loaded){
+  VAULT.loaded = loaded;
   const m = await vaultRead();
   if (!m || !m.payload) return false;
   const here = S.tasks.length, there = (m.payload.tasks || []).length;
@@ -24125,7 +24259,10 @@ $("bellBtn").addEventListener("click", askNotify);
 $("menuBtn").addEventListener("click", () => openModal("ws"));
 $("wsBtn").addEventListener("click", () => openModal("ws"));
 /* "unsaved" in the status bar: click it and it tries now */
-function sbSaveKick(){ if (S.dirty && FS.ok){ SAVE.fails = 0; saveNow(); } }
+function sbSaveKick(){
+  if (VAULT.held){ vaultCheck(VAULT.loaded); window.scrollTo(0, 0); return; }
+  if (S.dirty && FS.ok){ SAVE.fails = 0; saveNow(); }
+}
 $("sbSave").addEventListener("click", sbSaveKick);
 $("sbSave").addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " "){ e.preventDefault(); sbSaveKick(); } });
 

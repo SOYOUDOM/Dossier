@@ -57,7 +57,7 @@ These are design invariants, not preferences. Anything built on top of Resolv
 |---|---|---|
 | 1 | **`dossier.html` can reach exactly one thing: `http://127.0.0.1`.** Not the internet, not `localhost` by name, not any other origin, and no form post anywhere. | A `Content-Security-Policy` meta tag: `connect-src http://127.0.0.1:*; form-action 'none'`. The browser enforces it; you can verify it in F12 → Network. **This was `connect-src 'none'` until v4.0**, when the database bridge arrived — it is the one loosening in the file's history, it is a loopback address, and nothing on the far side of it leaves the machine. |
 | 2 | **Your records never leave the folder** unless you configure an endpoint and switch it on. No telemetry, no sync, no account, no cloud, and nothing at all by default. | Rule 1, plus there is no server component. The one exception is [§12](#12-asking-through-a-power-automate-flow), which is off until you paste in a URL, states what it sends, and shows you the bytes first. |
-| 3 | **The data outlives the app.** Every save writes `dossier.json` — human-readable, indented, openable in Notepad on a machine with no SQL Server and no Resolv on it. In database mode that file is an export rather than the store, and it is still written on every single save, for exactly this reason. | `saveNow()` writes the export after the transaction commits, or writes nothing at all. |
+| 3 | **The data outlives the app.** Every save writes `dossier.json` — human-readable, indented, openable in Notepad on a machine with no SQL Server and no Resolv on it. In database mode that file is an export rather than the store, written a few seconds after each save commits (the latest state each time), for exactly this reason. | `exportSoon()` runs only after the transaction commits, and only into the folder it was meant for. |
 | 4 | **Nothing is written while you ask a question.** Reading is read-only, down to not creating an empty object in settings. | `chatApi()` builds its view without mutating state. |
 | 5 | **Anything that writes asks first.** Log, close, hand over, chase, run, remind — each is proposed and confirmed, whether it arrived as a sentence or a button. | `chatDo()` refuses `act.confirm` unless the action carries `__ok`. |
 | 6 | **Nothing an endpoint returns is trusted.** A reply is data to be validated, never a command. An unknown action, a wrong-shaped argument, or a record reference that resolves to nothing is refused by name. | `flow.js` `validate()` and `checkAction()`. |
@@ -676,14 +676,22 @@ What that one program does:
   *Starting the database…* until it is ready, rather than deciding there is no
   database and writing to a file.
 - **writes every change to SQL Server LocalDB**, one transaction per save;
-  `dossier.json` beside your records is an export written on every save.
+  `dossier.json` beside your records is an export that follows each save
+  within a few seconds (and a day's backup at most every five minutes).
   Saving is automatic and there is nothing to press: the dot by the folder
   name pulses yellow while a save is on its way and turns green the moment
-  SQL Server has it. If a save cannot go through — the bridge restarting,
+  SQL Server has it; hover the status line for how long the last one took.
+  A save rewrites only the parts of the workspace that changed — a status
+  change rewrites the record tables, not the whole incident history — and
+  saves go to the database one at a time, a waiting one skipped when a newer
+  one has overtaken it. If a save cannot go through — the bridge restarting,
   the database waking up — your changes stay on screen, the status bar says
   *not saved yet · trying again in 4s*, and Resolv keeps trying on its own
   (2 s, 4 s, 8 s … up to a minute) until it is green again. Click that text
-  to try straight away.
+  to try straight away. A save that is slow counts its seconds (*saving… 12
+  s*); one that never comes back is let go of and tried again; and when a
+  question at the top of the window is what saving waits for, the status
+  line says *not saved · answer the question at the top*.
 - **runs your scripts, hidden.** The runner for your workspace's `scripts\`
   folder starts with no window and stops when Resolv quits.
 - **is only ever one.** A second double-click opens the page the first one is

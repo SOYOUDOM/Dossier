@@ -82,6 +82,14 @@ public class DossierBridge
     static Mutex One;
 
     static readonly object LogLock = new object();
+    //  Saves, one at a time. Each request is served on its own thread, and two
+    //  saves in flight at once used to fight over the same tables - the page
+    //  gave up on a slow one after a minute and sent the next while SQL was
+    //  still writing the first. Now the second waits its turn, and a save
+    //  that a newer one from the same window has overtaken while it waited is
+    //  not written at all: the newer one carries everything it had.
+    static readonly object SaveLock = new object();
+    static readonly Dictionary<string, long> SaveNewest = new Dictionary<string, long>();
     static readonly List<string> LogLines = new List<string>();
     static string LogPath;
 
@@ -853,7 +861,7 @@ public class DossierBridge
             // A page opened from file:// has the origin "null". Nothing can
             // use the database routes without the token anyway.
             h.Append("Access-Control-Allow-Origin: *\r\n");
-            h.Append("Access-Control-Allow-Headers: content-type, x-dossier-token, x-dossier-confirm, x-dossier-reason, x-name, x-type, x-record\r\n");
+            h.Append("Access-Control-Allow-Headers: content-type, x-dossier-token, x-dossier-confirm, x-dossier-reason, x-dossier-seq, x-name, x-type, x-record\r\n");
             h.Append("Access-Control-Allow-Methods: GET, PUT, POST, DELETE, OPTIONS\r\n");
             h.Append("Access-Control-Max-Age: 600\r\n");
             // Chrome's private network access checks ask for this by name
@@ -1066,6 +1074,35 @@ public class DossierBridge
         string reason = Header(headers, "x-dossier-reason");
         if (!Regex.IsMatch(reason, "^[a-z ]{1,24}$")) reason = "save";
 
+        //  "<window>:<rev>" - which open window sent it, and how far along
+        //  that window's changes it was
+        string seq = Header(headers, "x-dossier-seq"), win = null;
+        long rev = -1;
+        int colon = seq.LastIndexOf(':');
+        if (colon > 0 && colon < 80 && long.TryParse(seq.Substring(colon + 1), out rev)) win = seq.Substring(0, colon);
+        if (win != null)
+            lock (SaveNewest)
+            {
+                long have;
+                if (!SaveNewest.TryGetValue(win, out have) || rev > have) SaveNewest[win] = rev;
+                if (SaveNewest.Count > 200) SaveNewest.Clear();
+            }
+
+        Stopwatch clock = Stopwatch.StartNew();
+        lock (SaveLock)
+        {
+        long waited = clock.ElapsedMilliseconds;
+        if (win != null && reason == "save")
+        {
+            long newest;
+            lock (SaveNewest) { if (!SaveNewest.TryGetValue(win, out newest)) newest = rev; }
+            if (newest > rev)
+            {
+                Log("  skipped   a save overtaken by a newer one from the same window (waited " + waited + " ms)");
+                Respond(net, 200, "application/json", Bytes("{\"ok\":true,\"superseded\":true}"));
+                return;
+            }
+        }
         using (SqlConnection c = Open())
         {
             int incoming = 0, current = -1;
@@ -1125,8 +1162,15 @@ public class DossierBridge
             }
             if (reason != "save") Log("  " + reason.PadRight(9) + " " + incoming + " record(s); the state before it is kept");
             object recs = Scalar(c, "SELECT ISNULL(Records, 0) FROM dbo.Workspace WHERE Id = 1");
+            long took = clock.ElapsedMilliseconds;
+            //  the slow ones are the ones worth knowing about
+            if (took > 3000)
+                Log("  slow save " + incoming + " record(s), " + (body.Length / 1024) + " KB in " +
+                    (took / 1000.0).ToString("0.0") + " s" + (waited > 500 ? " (" + waited + " ms of it waiting for the save before)" : ""));
             Respond(net, 200, "application/json",
-                    Bytes("{\"ok\":true,\"records\":" + (recs == null ? "0" : recs.ToString()) + "}"));
+                    Bytes("{\"ok\":true,\"records\":" + (recs == null ? "0" : recs.ToString()) +
+                          ",\"ms\":" + took + ",\"waited\":" + waited + "}"));
+        }
         }
     }
 
