@@ -2687,6 +2687,403 @@ body.chatting .pet[data-corner="br"],body.chatting .pet[data-corner="tr"]{
 .rtbar .sep{width:1px;height:18px;background:rgba(255,255,255,.22);margin:0 3px}
 .rtbar input{all:unset;width:220px;height:26px;padding:0 8px;border-radius:6px;background:rgba(255,255,255,.12);
   color:var(--paper);font:12px/26px var(--f-ui, system-ui)}
+/* ── what Breeze draws and Original does not ─────────────────────────────
+   Both designs of the assistant panel share one set of markup. These are
+   the pieces only Breeze uses: to Original the tabs, the message heads, the
+   greeting, the label over suggestions, the note in the footer and the date
+   under a conversation are not drawn, and the bubble and the action row
+   around an answer are display:contents - no box of their own, so what is
+   inside them lays out exactly as it always has. */
+.chtabs,.chmh,.chhi,.chtry,.chhint .chfn,.chhint .chfk,.chsi .d{display:none}
+.chbub,.chfoot{display:contents}
+.chat.fx-reveal .chb.bot > .chbub > .chacts,
+.chat.fx-reveal .chb.bot > .chbub > .chrows{animation:chIn .3s cubic-bezier(.2,.8,.25,1) both;animation-delay:110ms}
+
+/* the design picker at the top of the look sheet, in either design: a small
+   picture of each rather than a sentence about it */
+.chdesigns{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.chdesign{display:flex;flex-direction:column;align-items:stretch;gap:3px;text-align:left;
+  padding:7px 7px 10px;border:1px solid var(--ch-line);border-radius:12px;background:var(--ch-panel);
+  color:var(--ch-ink);font-family:var(--f-ui);cursor:pointer;
+  transition:border-color .16s,box-shadow .16s}
+.chdesign:hover{border-color:var(--ch-acc)}
+.chdesign.on{border-color:var(--ch-acc);box-shadow:0 0 0 1px var(--ch-acc)}
+.chdesign:focus-visible{outline:2px solid var(--ch-acc);outline-offset:2px}
+.chdesign b{font-size:12.5px;font-weight:650;padding:0 3px}
+.chdesign small{font-size:10.5px;color:var(--ch-dim);line-height:1.45;padding:0 3px}
+.chdesign .pv{position:relative;display:block;height:70px;border-radius:8px;overflow:hidden;margin-bottom:6px}
+.chdesign .pv i{position:absolute;display:block}
+/* Original: the night panel, its orb, a question in blue glass, an answer on the sky */
+.pv-original{background:radial-gradient(60% 50% at 25% 45%,rgba(107,143,214,.35),transparent 70%),
+  linear-gradient(165deg,#0b1834,#060c1a 72%)}
+.pv-original i:nth-child(1){left:9px;top:9px;width:13px;height:13px;border-radius:50%;
+  background:radial-gradient(circle at 35% 30%,#bfe6ff,#3f68c9 70%);box-shadow:0 0 8px rgba(110,168,255,.7)}
+.pv-original i:nth-child(2){left:28px;top:13px;width:44px;height:5px;border-radius:3px;background:rgba(255,255,255,.55)}
+.pv-original i:nth-child(3){right:9px;top:28px;width:52px;height:12px;border-radius:6px;
+  background:rgba(110,168,255,.3);box-shadow:inset 0 0 0 1px rgba(154,215,255,.45)}
+.pv-original i:nth-child(4){left:9px;top:48px;width:78px;height:4px;border-radius:2px;
+  background:rgba(243,247,255,.6);box-shadow:0 8px 0 rgba(243,247,255,.35)}
+/* Breeze: a white card, the mint tile, the tab strip, a mint question, a grey answer */
+.pv-breeze{background:#fff;box-shadow:inset 0 0 0 1px #E3E8ED}
+.pv-breeze i:nth-child(1){left:8px;top:7px;width:14px;height:14px;border-radius:4px;
+  background:radial-gradient(circle,#12A58A 0 2.6px,#E3F4F1 3.2px)}
+.pv-breeze i:nth-child(2){left:0;right:0;top:26px;height:9px;
+  background:linear-gradient(90deg,transparent 6px,#DDF2EC 6px,#DDF2EC 30px,transparent 30px),#F4F6F8}
+.pv-breeze i:nth-child(3){right:8px;top:41px;width:46px;height:10px;border-radius:5px;background:#E3F4F1}
+.pv-breeze i:nth-child(4){left:17px;top:55px;width:66px;height:10px;border-radius:5px;background:#F0F3F6;
+  box-shadow:-10px 0 0 -2px #E3F4F1}
+
+/* ═══ BREEZE ══════════════════════════════════════════════════════════════
+   The assistant panel's second design, and a whole one rather than a skin:
+   a white card floating beside the work instead of a panel nailed to the
+   edge, the assistant's mark on a tinted tile, the three header buttons
+   turned into tabs - Chat, History, Notes, Settings - an avatar and a time
+   on every message, your questions in the accent's tint and answers in a
+   grey bubble with the things to do with them underneath, the newest
+   answer's suggestions under "Try these next", and one rounded composer
+   with a round send button.
+
+   It is built on two remappings rather than on a thousand overrides. The
+   skin variables (--ch-*) that every part of the thread already reads are
+   pointed at Breeze's own, and so are the app's palette variables, inside
+   the panel only - so a runbook card, a mail draft, a row sheet or a form
+   field in the teaching sheet takes Breeze's colours without being named
+   here, and a dark app theme cannot leave a light part stranded on a dark
+   panel or the other way round.
+
+   Tone: light, dark, or "auto", which follows the app's palette through
+   :root[data-mode] - so changing the app's theme changes the panel with no
+   script involved. Accent: mint, ocean, violet or coral, each a pair for
+   light and dark from which everything tinted is mixed.
+
+   Everything is scoped to data-design="breeze", which only this design
+   sets, so Original is exactly what it was. */
+.chat[data-design="breeze"]{
+  --bzi-spark:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath fill='black' stroke='none' d='M11 2.5C11.6 8.4 13.2 10 19 11C13.2 12 11.6 13.6 11 19.5C10.4 13.6 8.8 12 3 11C8.8 10 10.4 8.4 11 2.5Z'/%3E%3Cpath fill='black' stroke='none' d='M18.5 15C18.8 17.2 19.3 17.7 21.5 18C19.3 18.3 18.8 18.8 18.5 21C18.2 18.8 17.7 18.3 15.5 18C17.7 17.7 18.2 17.2 18.5 15Z'/%3E%3C/svg%3E");
+  --bzi-chat:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20.5 12a8.5 8.5 0 0 1-12.4 7.5L3.5 21l1.5-4.6A8.5 8.5 0 1 1 20.5 12z'/%3E%3C/svg%3E");
+  --bzi-history:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3.5 12a8.5 8.5 0 1 0 2.5-6'/%3E%3Cpath d='M3.5 4v4.5H8'/%3E%3Cpath d='M12 7.5V12l3 2'/%3E%3C/svg%3E");
+  --bzi-notes:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M14 3H7.5A2.5 2.5 0 0 0 5 5.5v13A2.5 2.5 0 0 0 7.5 21h9a2.5 2.5 0 0 0 2.5-2.5V8z'/%3E%3Cpath d='M14 3v5h5'/%3E%3Cpath d='M9 13h6M9 17h4'/%3E%3C/svg%3E");
+  --bzi-tools:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3.5' y='3.5' width='7' height='7' rx='2'/%3E%3Crect x='13.5' y='3.5' width='7' height='7' rx='2'/%3E%3Crect x='3.5' y='13.5' width='7' height='7' rx='2'/%3E%3Crect x='13.5' y='13.5' width='7' height='7' rx='2'/%3E%3C/svg%3E");
+  --bzi-new:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 4H6.5A2.5 2.5 0 0 0 4 6.5v11A2.5 2.5 0 0 0 6.5 20h11a2.5 2.5 0 0 0 2.5-2.5V12'/%3E%3Cpath d='M17.6 3.6a2 2 0 0 1 2.8 2.8l-7.9 7.9L9 15l.7-3.5z'/%3E%3C/svg%3E");
+  --bzi-close:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 6l12 12M18 6L6 18'/%3E%3C/svg%3E");
+  --bzi-clip:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20.5 11.2l-8.4 8.4a5.3 5.3 0 0 1-7.5-7.5l8.4-8.4a3.5 3.5 0 0 1 5 5l-8.4 8.4a1.8 1.8 0 0 1-2.5-2.5l7.7-7.7'/%3E%3C/svg%3E");
+  --bzi-send:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 3L10.5 13.5'/%3E%3Cpath d='M21 3l-6.5 18-4-7.5L3 9.5z'/%3E%3C/svg%3E");
+  --bzi-up:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7 10v11'/%3E%3Cpath d='M15 5.9L14 10h5.8a2 2 0 0 1 1.9 2.5l-2.3 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.8a2 2 0 0 0 1.8-1.1L12 2a3.1 3.1 0 0 1 3 3.9z'/%3E%3C/svg%3E");
+  --bzi-down:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M17 14V2'/%3E%3Cpath d='M9 18.1L10 14H4.2a2 2 0 0 1-1.9-2.5l2.3-8A2 2 0 0 1 6.5 2H20a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2.8a2 2 0 0 0-1.8 1.1L12 22a3.1 3.1 0 0 1-3-3.9z'/%3E%3C/svg%3E");
+  --bzi-copy:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='8.5' y='8.5' width='12' height='12' rx='2.5'/%3E%3Cpath d='M15.5 8.5V6A2.5 2.5 0 0 0 13 3.5H6A2.5 2.5 0 0 0 3.5 6v7A2.5 2.5 0 0 0 6 15.5h2.5'/%3E%3C/svg%3E");
+  --bzi-code:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M8.5 7.5L4 12l4.5 4.5M15.5 7.5L20 12l-4.5 4.5'/%3E%3C/svg%3E");
+  --bzi-person:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='8.5' r='3.8'/%3E%3Cpath d='M4.5 20.5a7.5 7.5 0 0 1 15 0'/%3E%3C/svg%3E");
+  --bzi-ask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7 17L17 7M9 7h8v8'/%3E%3C/svg%3E");
+  --bz-acc-l:#12A58A; --bz-str-l:#1B6E63; --bz-acc-d:#34D3B4; --bz-str-d:#1FA58C;
+  --bz-bg:#FFFFFF; --bz-soft:#F4F6F8; --bz-soft-2:#EBEFF3; --bz-line:#E6EAEF; --bz-line-2:#D5DCE3;
+  --bz-ink:#0F172A; --bz-ink-2:#334155; --bz-dim:#64748B; --bz-faint:#94A3B8; --bz-card:#FFFFFF;
+  --bz-av:#E2E8F0; --bz-av-ink:#334155; --bz-lift:0 1px 2px rgba(15,23,42,.05);
+  --bz-shadow:0 30px 70px -22px rgba(15,23,42,.32),0 10px 26px -10px rgba(15,23,42,.12);
+  --bz-a:var(--bz-acc-l); --bz-str:var(--bz-str-l); --bz-on-soft:var(--bz-str-l);
+  --bz-acc-soft:color-mix(in srgb,var(--bz-a) 12%,var(--bz-bg));
+  --bz-acc-line:color-mix(in srgb,var(--bz-a) 45%,var(--bz-line));
+  /* what the rest of the panel reads */
+  --ch-bg:var(--bz-bg); --ch-panel:var(--bz-soft); --ch-line:var(--bz-line); --ch-ink:var(--bz-ink);
+  --ch-dim:var(--bz-dim); --ch-acc:var(--bz-str); --ch-acc2:var(--bz-a);
+  --ch-glow:color-mix(in srgb,var(--bz-a) 28%,transparent); --ch-mesh:transparent;
+  --paper:var(--bz-bg); --paper-2:var(--bz-soft); --paper-3:var(--bz-soft-2); --canvas:var(--bz-soft);
+  --rule:var(--bz-line); --rule-hi:var(--bz-line-2); --ink:var(--bz-ink); --ink-2:var(--bz-ink-2);
+  --ink-3:var(--bz-dim); --accent:var(--bz-str); --accent-2:color-mix(in srgb,var(--bz-str) 82%,#000);
+  --accent-soft:var(--bz-acc-soft); --teal:var(--bz-a); --ring:color-mix(in srgb,var(--bz-a) 30%,transparent);
+  --scroll:var(--bz-line-2);
+  color-scheme:light}
+.chat[data-design="breeze"][data-accent="ocean"]{--bz-acc-l:#2F7CF6;--bz-str-l:#1E4FD1;--bz-acc-d:#6AA8FF;--bz-str-d:#3B7BEA}
+.chat[data-design="breeze"][data-accent="violet"]{--bz-acc-l:#8B5CF6;--bz-str-l:#6232D6;--bz-acc-d:#AE92FF;--bz-str-d:#7C4DEB}
+.chat[data-design="breeze"][data-accent="coral"]{--bz-acc-l:#EC4A68;--bz-str-l:#C22A4B;--bz-acc-d:#FF8199;--bz-str-d:#E0476A}
+.chat[data-design="breeze"][data-tone="dark"],
+:root[data-mode="dark"] .chat[data-design="breeze"][data-tone="auto"]{
+  --bz-bg:#11171B; --bz-soft:#1A2227; --bz-soft-2:#232D33; --bz-line:#27323A; --bz-line-2:#36434C;
+  --bz-ink:#E9EEF2; --bz-ink-2:#C4CED6; --bz-dim:#8C99A5; --bz-faint:#66737F; --bz-card:#141B20;
+  --bz-av:#27323A; --bz-av-ink:#C4CED6; --bz-lift:0 1px 2px rgba(0,0,0,.25);
+  --bz-shadow:0 30px 70px -18px rgba(0,0,0,.6),0 10px 26px -10px rgba(0,0,0,.4);
+  --bz-a:var(--bz-acc-d); --bz-str:var(--bz-str-d); --bz-on-soft:var(--bz-acc-d);
+  --bz-acc-soft:color-mix(in srgb,var(--bz-a) 16%,var(--bz-bg));
+  color-scheme:dark}
+
+/* ── the card ──────────────────────────────────────────────────────────── */
+.chat[data-design="breeze"]{top:10px;right:10px;bottom:10px;width:min(432px,calc(100vw - 20px));
+  display:grid;grid-template-rows:auto auto minmax(0,1fr);grid-template-columns:minmax(0,1fr);
+  background:var(--bz-bg);color:var(--bz-ink);border:1px solid var(--bz-line);border-radius:22px;
+  box-shadow:var(--bz-shadow);font-family:var(--f-ui)}
+/* ten pixels in from the edge, so closing has to travel further than its own width */
+.chat[data-design="breeze"]:not(.on){transform:translateX(calc(100% + 28px))}
+.chat[data-design="breeze"]::before,.chat[data-design="breeze"] .chfx{display:none}
+
+/* ── the header: the mark on its tile, the name, a live status ─────────── */
+.chat[data-design="breeze"] .chh{padding:16px 14px 14px 16px;gap:12px;border-bottom:0;align-items:center;background:transparent}
+.chat[data-design="breeze"] #chatMenu,.chat[data-design="breeze"] #chatFx,.chat[data-design="breeze"] #chatTeachBtn{display:none}
+.chat[data-design="breeze"] .chorb,.chat[data-design="breeze"] .chorb.pixorb{width:44px;height:44px;border-radius:14px;
+  background:var(--bz-acc-soft);box-shadow:none;align-self:center}
+.chat[data-design="breeze"] .chorb > *,.chat[data-design="breeze"] .chorb::before{display:none}
+.chat[data-design="breeze"] .chorb::after{content:"";display:block;position:absolute;inset:11px;background:var(--bz-a);
+  -webkit-mask:var(--bzi-spark) center/contain no-repeat;mask:var(--bzi-spark) center/contain no-repeat;animation:none}
+.chat[data-design="breeze"].busy .chorb::after{animation:bzThink 1s ease-in-out infinite alternate}
+@keyframes bzThink{from{transform:scale(.8) rotate(0);opacity:.6}to{transform:scale(1.05) rotate(14deg);opacity:1}}
+.chat[data-design="breeze"] .chid{gap:3px}
+.chat[data-design="breeze"] .chh .t{font:700 17px/1.2 var(--f-ui);letter-spacing:-.01em;color:var(--bz-ink)}
+.chat[data-design="breeze"] .chh .sub{font-size:12.5px;line-height:1.3;color:var(--bz-dim);font-weight:500}
+.chat[data-design="breeze"] .chh .sub::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;
+  margin-right:7px;vertical-align:1px;background:#22C55E;box-shadow:0 0 0 3px rgba(34,197,94,.16)}
+.chat[data-design="breeze"] .chh .sub.live{color:var(--bz-on-soft);font-weight:600}
+.chat[data-design="breeze"] .chh .sub.live::before{background:var(--bz-a);box-shadow:0 0 0 3px var(--bz-acc-soft);
+  animation:bzDot .8s ease-in-out infinite alternate}
+@keyframes bzDot{to{opacity:.35}}
+.chat[data-design="breeze"] .chh .ib{width:36px;height:36px;border:0;border-radius:11px;background:transparent;
+  color:var(--bz-dim);font-size:0}
+.chat[data-design="breeze"] .chh .ib:hover{background:var(--bz-soft);color:var(--bz-ink)}
+.chat[data-design="breeze"] .chh .ib::before{content:"";width:19px;height:19px;background:currentColor;-webkit-mask:var(--ic) center/contain no-repeat;mask:var(--ic) center/contain no-repeat}
+.chat[data-design="breeze"] #chatNew{--ic:var(--bzi-new)}
+.chat[data-design="breeze"] #chatX{--ic:var(--bzi-close)}
+
+/* ── the tabs ──────────────────────────────────────────────────────────── */
+.chat[data-design="breeze"] .chtabs{display:flex;gap:4px;padding:7px 12px;background:var(--bz-soft);
+  border-top:1px solid var(--bz-line);border-bottom:1px solid var(--bz-line)}
+.chtab{flex:1 1 auto;min-width:0;height:38px;padding:0 10px;display:inline-flex;align-items:center;
+  justify-content:center;gap:6px;border:0;border-radius:11px;background:transparent;color:var(--bz-dim);
+  font:550 13px/1 var(--f-ui);cursor:pointer;transition:background .15s var(--ease),color .15s var(--ease)}
+.chtab:hover{background:var(--bz-soft-2);color:var(--bz-ink)}
+.chtab.on{background:var(--bz-acc-soft);color:var(--bz-on-soft);font-weight:650}
+.chtab:focus-visible{outline:2px solid var(--bz-a);outline-offset:1px}
+.chtab span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bzi{display:inline-block;width:16px;height:16px;flex:0 0 auto;background:currentColor;-webkit-mask:var(--ic) center/contain no-repeat;mask:var(--ic) center/contain no-repeat}
+.chtab .bzi{width:17px;height:17px}
+.chtab[data-tab="chat"]{--ic:var(--bzi-chat)}
+.chtab[data-tab="convos"]{--ic:var(--bzi-history)}
+.chtab[data-tab="teach"]{--ic:var(--bzi-notes)}
+.chtab[data-tab="fx"]{--ic:var(--bzi-tools)}
+
+/* ── the thread ────────────────────────────────────────────────────────── */
+.chat[data-design="breeze"] .chbody{min-height:0}
+.chat[data-design="breeze"] .chl{padding:20px 18px 14px;gap:18px;scrollbar-color:var(--bz-line-2) transparent}
+.chat[data-design="breeze"] .chtime{display:none}
+.chat[data-design="breeze"] .chmh{display:flex;align-items:center;gap:12px}
+.chat[data-design="breeze"] .chmh .chav{position:relative;width:34px;height:34px;flex:0 0 auto;border-radius:50%;display:grid;
+  place-items:center;font:700 12px/1 var(--f-ui);letter-spacing:.02em}
+.chat[data-design="breeze"] .chmh .chmt{font-size:12px;line-height:18px;color:var(--bz-faint);white-space:nowrap;
+  font-variant-numeric:tabular-nums}
+
+/* you: the accent's tint, your initials beside it, the time above */
+.chat[data-design="breeze"] .chb.you{position:relative;align-self:flex-end;max-width:calc(100% - 70px);margin:24px 46px 0 0;
+  background:var(--bz-acc-soft);color:var(--bz-ink);border:0;border-radius:18px;padding:11px 16px;
+  font-size:14px;line-height:1.5;box-shadow:none}
+.chat[data-design="breeze"] .chb.you + .chb.you{margin-top:24px;border-top-right-radius:18px}
+.chat[data-design="breeze"] .chb.you .chmh{position:absolute;right:-46px;top:-26px;flex-direction:row-reverse;align-items:flex-start}
+.chat[data-design="breeze"] .chb.you .chav{background:var(--bz-av);color:var(--bz-av-ink)}
+.chat[data-design="breeze"] .chb.you .chav:empty::before{content:"";width:18px;height:18px;background:currentColor;
+  -webkit-mask:var(--bzi-person) center/contain no-repeat;mask:var(--bzi-person) center/contain no-repeat}
+.chat[data-design="breeze"] .chb.you .cfs span{color:var(--bz-dim)}
+
+/* the assistant: its mark and the time on one line, the answer in a bubble
+   under it, and everything that belongs to the answer in the same column */
+.chat[data-design="breeze"] .chb.bot{display:flex;flex-direction:column;align-items:flex-start;padding-left:46px;max-width:100%}
+.chat[data-design="breeze"] .chb.bot > *{max-width:100%}
+/* the two rows that reach back under the avatar are wider than the column */
+.chat[data-design="breeze"] .chb.bot > .chtry,.chat[data-design="breeze"] .chb.bot > .chseed{max-width:none}
+.chat[data-design="breeze"] .chb.bot > .chmh{margin:0 0 8px -46px}
+.chat[data-design="breeze"] .chb.bot .chav{background:var(--bz-acc-soft)}
+.chat[data-design="breeze"] .chb.bot .chav::before{content:"";width:18px;height:18px;background:var(--bz-a);
+  -webkit-mask:var(--bzi-spark) center/contain no-repeat;mask:var(--bzi-spark) center/contain no-repeat}
+.chat[data-design="breeze"] .chbub{display:block;min-width:0;background:var(--bz-soft);color:var(--bz-ink);
+  border-radius:18px;padding:13px 16px}
+.chat[data-design="breeze"] .chb.bot .say{font-size:14px;line-height:1.62;color:var(--bz-ink)}
+.chat[data-design="breeze"] .chb.bot .say:empty{display:none}
+.chat[data-design="breeze"] .chb.bot .chbr{margin:0 0 8px}
+.chat[data-design="breeze"] .chb.bot > .chrb,.chat[data-design="breeze"] .chb.bot > .chrbp,.chat[data-design="breeze"] .chb.bot > .chmail{align-self:stretch}
+.chat[data-design="breeze"] .chb.bot .meta{order:2}
+
+/* what to do with an answer: a row of quiet icons under the bubble */
+.chat[data-design="breeze"] .chfoot{order:1;display:flex;align-items:center;flex-wrap:wrap;gap:2px;margin-top:6px}
+.chat[data-design="breeze"] .chfoot:empty{display:none}
+.chat[data-design="breeze"] .chfoot .chrate,.chat[data-design="breeze"] .chfoot .chtools{display:contents}
+.chat[data-design="breeze"] .chfoot .chrate > button[data-rv],.chat[data-design="breeze"] .chfoot .chtools button{width:32px;height:32px;
+  padding:0;border:0;border-radius:9px;background:transparent;color:var(--bz-dim);font-size:0;opacity:1;
+  filter:none;display:grid;place-items:center;cursor:pointer;transition:background .14s,color .14s}
+.chat[data-design="breeze"] .chfoot .chrate > button[data-rv]::before,.chat[data-design="breeze"] .chfoot .chtools button::before{content:"";
+  width:17px;height:17px;background:currentColor;-webkit-mask:var(--ic) center/contain no-repeat;mask:var(--ic) center/contain no-repeat}
+.chat[data-design="breeze"] .chfoot [data-rv="up"]{--ic:var(--bzi-up)}
+.chat[data-design="breeze"] .chfoot [data-rv="down"]{--ic:var(--bzi-down)}
+.chat[data-design="breeze"] .chfoot [data-copysay]{--ic:var(--bzi-copy)}
+.chat[data-design="breeze"] .chfoot .chrate > button[data-rv]:hover,.chat[data-design="breeze"] .chfoot .chtools button:hover{background:var(--bz-soft);color:var(--bz-ink)}
+.chat[data-design="breeze"] .chfoot .chrate > button[data-rv].on{background:var(--bz-acc-soft);color:var(--bz-on-soft);border:0}
+.chat[data-design="breeze"] .chfoot .chtools button.ok{color:var(--bz-a)}
+/* the undo arrow says what the words beside it already say */
+.chat[data-design="breeze"] .chfoot .chtools [data-act]{display:none}
+.chat[data-design="breeze"] .chfoot [data-rv]{order:0}
+.chat[data-design="breeze"] .chfoot .chtools button{order:1}
+.chat[data-design="breeze"] .chfoot .deeper{order:2}
+.chat[data-design="breeze"] .chfoot .rs{order:3}
+.chat[data-design="breeze"] .chfoot .wrong{order:4}
+.chat[data-design="breeze"] .chfoot .chfix{order:5;flex:1 1 100%;margin-top:6px}
+.chat[data-design="breeze"] .chfoot .chrate > button.deeper{height:30px;padding:0 12px;margin-left:4px;border:1px solid var(--bz-line);
+  border-radius:999px;background:var(--bz-bg);color:var(--bz-dim);font:600 11.5px/1 var(--f-ui);opacity:1}
+.chat[data-design="breeze"] .chfoot .chrate > button.deeper:hover{color:var(--bz-on-soft);border-color:var(--bz-acc-line);background:var(--bz-acc-soft)}
+.chat[data-design="breeze"] .chfoot .rs{font-size:11.5px;color:var(--bz-dim);margin-left:6px}
+.chat[data-design="breeze"] .chfoot .wrong{margin:0 0 0 6px;opacity:1}
+.chat[data-design="breeze"] .chfoot .wrong button{font-size:11.5px;color:var(--bz-faint);text-decoration:none}
+.chat[data-design="breeze"] .chfoot .wrong button:hover{color:var(--bz-on-soft);text-decoration:underline}
+
+/* the newest answer's suggestions, under a label; an older answer's are
+   history once you have asked something else, and step out of the way */
+.chat[data-design="breeze"] .chtry{order:3;align-self:stretch;display:flex;align-items:center;gap:8px;margin:18px 0 0 -46px;
+  font:650 14.5px/1.3 var(--f-ui);color:var(--bz-ink)}
+.chat[data-design="breeze"] .chtry .bzi{width:18px;height:18px;color:var(--bz-a);--ic:var(--bzi-spark)}
+.chat[data-design="breeze"] .chseed{order:4;align-self:stretch;flex-wrap:wrap;overflow:visible;gap:8px;margin:12px 0 0 -46px;padding:0}
+.chat[data-design="breeze"] .chseed button{display:inline-flex;align-items:center;gap:8px;min-height:40px;max-width:100%;
+  padding:8px 15px 8px 12px;border:1px solid var(--bz-line);border-radius:999px;background:var(--bz-bg);
+  color:var(--bz-ink);font:500 13px/1.3 var(--f-ui);text-align:left;box-shadow:var(--bz-lift)}
+.chat[data-design="breeze"] .chseed button::before{content:"";width:15px;height:15px;flex:0 0 auto;background:var(--bz-dim);
+  -webkit-mask:var(--bzi-ask) center/contain no-repeat;mask:var(--bzi-ask) center/contain no-repeat}
+.chat[data-design="breeze"] .chseed button:hover{border-color:var(--bz-acc-line);background:var(--bz-acc-soft);color:var(--bz-on-soft)}
+.chat[data-design="breeze"] .chseed button:hover::before{background:var(--bz-on-soft)}
+.chat[data-design="breeze"] .chb.bot:has(~ .chb.you) .chtry,.chat[data-design="breeze"] .chb.bot:has(~ .chb.you) .chseed{display:none}
+
+/* the things you can press inside an answer */
+.chat[data-design="breeze"] .chacts{gap:8px;margin-top:12px}
+.chat[data-design="breeze"] .chacts button{min-height:34px;padding:7px 14px;border:1px solid var(--bz-line);background:var(--bz-bg);
+  color:var(--bz-ink);font:600 12.5px/1.2 var(--f-ui);box-shadow:var(--bz-lift)}
+.chat[data-design="breeze"] .chacts button:hover{border-color:var(--bz-acc-line);background:var(--bz-acc-soft);color:var(--bz-on-soft)}
+.chat[data-design="breeze"] .chacts button.pri{background:var(--bz-str);border-color:var(--bz-str);color:#fff}
+.chat[data-design="breeze"] .chacts button.pri:hover{background:var(--bz-str);color:#fff;filter:brightness(1.08)}
+.chat[data-design="breeze"] .chacts.done button.picked{background:transparent;border-color:var(--bz-line);color:var(--bz-dim)}
+
+/* cards inside the bubble are white, so they read as things to take away */
+.chat[data-design="breeze"] .chrows{margin-top:10px;background:var(--bz-card);border:1px solid var(--bz-line);border-radius:14px}
+.chat[data-design="breeze"] .chrow{padding:10px 12px}
+.chat[data-design="breeze"] .chrow:hover{background:var(--bz-soft)}
+.chat[data-design="breeze"] .chrow .x b{font-weight:600;font-size:13px}
+.chat[data-design="breeze"] .chtext,.chat[data-design="breeze"] .chcode{margin:12px 0 4px;background:var(--bz-card);border:1px solid var(--bz-line);
+  border-radius:14px;box-shadow:var(--bz-lift)}
+.chat[data-design="breeze"] .chtext .cth,.chat[data-design="breeze"] .chcode .cch{gap:9px;padding:11px 11px 4px 14px;background:transparent;border-bottom:0}
+.chat[data-design="breeze"] .chtext .cth::before,.chat[data-design="breeze"] .chcode .cch::before{content:"";width:17px;height:17px;flex:0 0 auto;
+  background:var(--bz-a);-webkit-mask:var(--ic) center/contain no-repeat;mask:var(--ic) center/contain no-repeat}
+.chat[data-design="breeze"] .chtext .cth{--ic:var(--bzi-notes)}
+.chat[data-design="breeze"] .chcode .cch{--ic:var(--bzi-code)}
+.chat[data-design="breeze"] .chtext .kind{font:650 13.5px/1.3 var(--f-ui);letter-spacing:0;text-transform:none;color:var(--bz-ink)}
+.chat[data-design="breeze"] .chtext .cth:has(.ttl:not(:empty)) .kind{display:none}
+.chat[data-design="breeze"] .chtext .ttl{font:650 13.5px/1.3 var(--f-ui);color:var(--bz-ink)}
+.chat[data-design="breeze"] .chcode .lang{font:650 12px/1.3 var(--f-ui);letter-spacing:.02em;text-transform:none;color:var(--bz-ink)}
+.chat[data-design="breeze"] .chtext .cpy,.chat[data-design="breeze"] .chcode .cpy{display:inline-flex;align-items:center;gap:6px;height:30px;
+  padding:0 11px;border:1px solid var(--bz-line);border-radius:9px;background:var(--bz-bg);color:var(--bz-ink-2);
+  font:600 12px/1 var(--f-ui)}
+.chat[data-design="breeze"] .chtext .cpy:not(.sub)::before,.chat[data-design="breeze"] .chcode .cpy::before{content:"";width:14px;height:14px;
+  background:currentColor;-webkit-mask:var(--bzi-copy) center/contain no-repeat;mask:var(--bzi-copy) center/contain no-repeat}
+.chat[data-design="breeze"] .chtext .cpy:hover,.chat[data-design="breeze"] .chcode .cpy:hover{border-color:var(--bz-acc-line);background:var(--bz-acc-soft);color:var(--bz-on-soft)}
+.chat[data-design="breeze"] .chtext .cpy.ok,.chat[data-design="breeze"] .chcode .cpy.ok{color:var(--bz-on-soft);border-color:var(--bz-acc-line)}
+.chat[data-design="breeze"] .chtext .ctb{padding:6px 14px 14px;font-size:13.5px;line-height:1.65;color:var(--bz-ink-2)}
+.chat[data-design="breeze"] .chtext .csub{margin:4px 14px 0;padding:8px 0;border-bottom:1px solid var(--bz-line)}
+.chat[data-design="breeze"] .chcode pre{padding:8px 14px 13px;font-size:12px}
+.chat[data-design="breeze"] .chrb,.chat[data-design="breeze"] .chrbp,.chat[data-design="breeze"] .chmail{border-radius:14px;background:var(--bz-card);box-shadow:var(--bz-lift)}
+.chat[data-design="breeze"] .chrb .rbh,.chat[data-design="breeze"] .chrbp .rbph,.chat[data-design="breeze"] .chmail .mh{background:var(--bz-soft)}
+
+/* while it thinks, and what happened after a dialogue */
+.chat[data-design="breeze"] .chb.bot.thinking .chthink{background:var(--bz-soft);border-radius:18px;padding:10px 16px}
+.chat[data-design="breeze"] .chwait{font-size:13px;color:var(--bz-dim)}
+.chat[data-design="breeze"] .chghost{padding-left:46px}
+.chat[data-design="breeze"] .chghost .chmh{display:none}
+.chat[data-design="breeze"] .chrcpt{margin-left:46px;border:0;border-radius:12px;padding:8px 12px;background:var(--bz-soft);color:var(--bz-ink-2)}
+
+/* ── an empty thread: a greeting by name and somewhere to start ────────── */
+.chat[data-design="breeze"] .chb.bot.chhero{align-items:flex-start;text-align:left;padding:18px 2px 4px}
+.chat[data-design="breeze"] .chhero .chorbx{width:60px;height:60px;margin:0 0 18px;border-radius:18px;filter:none;
+  background:var(--bz-acc-soft);display:grid;place-items:center}
+.chat[data-design="breeze"] .chhero .chorbx > *{display:none}
+.chat[data-design="breeze"] .chhero .chorbx::after{content:"";width:30px;height:30px;background:var(--bz-a);
+  -webkit-mask:var(--bzi-spark) center/contain no-repeat;mask:var(--bzi-spark) center/contain no-repeat}
+.chat[data-design="breeze"] .chhero .chhi{display:block;font:700 22px/1.25 var(--f-ui);letter-spacing:-.015em;color:var(--bz-ink)}
+.chat[data-design="breeze"] .chhero .cht{display:none}
+.chat[data-design="breeze"] .chhero .chts{margin-top:6px;font-size:13.5px;color:var(--bz-dim);text-shadow:none}
+.chat[data-design="breeze"] .chhero .chcard{align-self:stretch;max-width:none;margin:20px 0 4px;padding:14px 16px;border:0;
+  border-radius:16px;background:var(--bz-soft);box-shadow:none;backdrop-filter:none}
+.chat[data-design="breeze"] .chhero .chcard b{font-size:14px;color:var(--bz-ink)}
+.chat[data-design="breeze"] .chhero .chcard span{font-size:13px;color:var(--bz-dim)}
+.chat[data-design="breeze"] .chhero .chtry,.chat[data-design="breeze"] .chhero .chseed{margin-left:0;justify-content:flex-start}
+.chat[data-design="breeze"] .chhero .chfoot{display:none}
+
+/* ── the composer: one rounded box, the clip, a round send button ──────── */
+.chat[data-design="breeze"] .chfw{padding:4px 16px 12px;background:var(--bz-bg)}
+.chat[data-design="breeze"] .chf{min-height:60px;padding:8px 8px 8px 16px;gap:4px;align-items:flex-end;border:1px solid var(--bz-line);
+  border-radius:18px;background:var(--bz-bg);box-shadow:var(--bz-lift),0 8px 24px -16px rgba(15,23,42,.22)}
+.chat[data-design="breeze"] .chf:focus-within{background:var(--bz-bg);border-color:var(--bz-acc-line);
+  box-shadow:0 0 0 4px color-mix(in srgb,var(--bz-a) 13%,transparent)}
+.chat[data-design="breeze"] .chf.tall{border-radius:18px}
+.chat[data-design="breeze"] .chf textarea,.chat[data-design="breeze"] .chf textarea:focus{order:0;padding:10px 0;min-height:40px;font-size:14px;
+  color:var(--bz-ink);background:transparent}
+.chat[data-design="breeze"] .chf textarea::placeholder{color:var(--bz-faint)}
+/* the box draws the focus ring; a look that rings every :focus-visible would draw a second one inside it */
+.chat[data-design="breeze"] .chf textarea:focus-visible{outline:0}
+.chat[data-design="breeze"] .chpin{order:1;width:38px;height:38px;margin:0 0 2px;display:grid;place-items:center;border:0;
+  border-radius:11px;background:transparent;color:var(--bz-dim);font-size:0}
+.chat[data-design="breeze"] .chpin:hover{background:var(--bz-soft);color:var(--bz-ink)}
+.chat[data-design="breeze"] .chpin::before{content:"";width:19px;height:19px;background:currentColor;
+  -webkit-mask:var(--bzi-clip) center/contain no-repeat;mask:var(--bzi-clip) center/contain no-repeat}
+.chat[data-design="breeze"] .chf .btn.pri{order:2;width:42px;height:42px;border-radius:50%;border:0;background:var(--bz-str);
+  box-shadow:0 8px 18px -8px color-mix(in srgb,var(--bz-str) 80%,transparent)}
+.chat[data-design="breeze"] .chf .btn.pri:hover{background:var(--bz-str);filter:brightness(1.1)}
+.chat[data-design="breeze"] .chf .btn.pri::after{content:"";width:18px;height:18px;margin:0 2px 0 0;background:#fff;
+  -webkit-mask:var(--bzi-send) center/contain no-repeat;mask:var(--bzi-send) center/contain no-repeat}
+.chat[data-design="breeze"] .chf .btn.pri.empty{opacity:.5;box-shadow:none}
+.chat[data-design="breeze"] .chhint{display:flex;justify-content:space-between;align-items:center;gap:12px;opacity:1;max-height:none;
+  padding:9px 4px 0;font-size:11.5px;color:var(--bz-faint)}
+.chat[data-design="breeze"] .chhint .chfn{display:block;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chat[data-design="breeze"] .chhint .chfk{display:block;flex:0 0 auto;white-space:nowrap}
+.chat[data-design="breeze"] .chhint .chfo{display:none}
+.chat[data-design="breeze"] .chhint kbd{font-size:10px;padding:1px 5px;border-radius:5px;border:1px solid var(--bz-line);
+  background:var(--bz-soft);color:var(--bz-ink-2)}
+.chat[data-design="breeze"] .chclip{padding:0 0 8px}
+.chat[data-design="breeze"] .chclip .cf{border-radius:11px;background:var(--bz-soft);border-color:var(--bz-line)}
+.chat[data-design="breeze"] .chpill{top:-44px;border:0;background:var(--bz-ink);color:var(--bz-bg);box-shadow:0 10px 24px -10px rgba(15,23,42,.5)}
+
+/* ── the tab pages: History, Notes and Settings sit under the tabs ───────
+   The panel is a grid - header, tabs, body - and these three are placed in
+   its third row, so they cover the thread and the composer but never the
+   tabs you use to leave them. They fade rather than slide: a tab changes
+   what you are looking at, it does not bring something in from off-screen. */
+.chat[data-design="breeze"] .chfxp,.chat[data-design="breeze"] .chteach{grid-row:3;grid-column:1;transform:none;opacity:0;visibility:hidden;
+  pointer-events:none;background:var(--bz-bg);transition:opacity .18s var(--ease),visibility 0s .18s}
+.chat[data-design="breeze"] .chfxp.on,.chat[data-design="breeze"] .chteach.on{opacity:1;visibility:visible;pointer-events:auto;transition-delay:0s}
+.chat[data-design="breeze"] .chth{align-items:center;padding:14px 16px 12px 18px;background:transparent;border-bottom:1px solid var(--bz-line)}
+.chat[data-design="breeze"] .chth .t{font:650 14.5px/1.3 var(--f-ui);letter-spacing:0}
+.chat[data-design="breeze"] .chth .ib{width:32px;height:32px;border:0;border-radius:10px;background:transparent;color:var(--bz-dim)}
+.chat[data-design="breeze"] .chth .ib:hover{background:var(--bz-soft);color:var(--bz-ink)}
+.chat[data-design="breeze"] .chfxb{padding:16px 18px}
+.chat[data-design="breeze"] .chfxb h6{font:650 11px/1.3 var(--f-ui);letter-spacing:.06em}
+.chat[data-design="breeze"] .chskin{border-radius:10px}
+.chat[data-design="breeze"] .chside{inset:0;width:auto;z-index:6;padding:12px;transform:none;opacity:0;visibility:hidden;
+  pointer-events:none;background:var(--bz-bg);border-right:0;box-shadow:none;backdrop-filter:none;
+  transition:opacity .18s var(--ease),visibility 0s .18s}
+.chat[data-design="breeze"].convos .chside{opacity:1;visibility:visible;pointer-events:auto;transition-delay:0s}
+.chat[data-design="breeze"] .chsh{padding:6px 8px 10px;font:650 11px/1.3 var(--f-ui);letter-spacing:.06em;text-transform:uppercase;color:var(--bz-dim)}
+.chat[data-design="breeze"] .chsi{position:relative;grid-template-columns:34px minmax(0,1fr) auto;grid-template-rows:auto auto;
+  column-gap:12px;row-gap:2px;align-items:center;padding:10px;margin-bottom:4px;border-radius:14px}
+.chat[data-design="breeze"] .chsi::before{content:"";grid-row:1 / 3;width:34px;height:34px;border-radius:11px;background:var(--bz-soft)}
+.chat[data-design="breeze"] .chsi::after{content:"";position:absolute;left:19px;top:50%;width:16px;height:16px;margin-top:-8px;
+  background:var(--bz-dim);-webkit-mask:var(--bzi-chat) center/contain no-repeat;mask:var(--bzi-chat) center/contain no-repeat}
+.chat[data-design="breeze"] .chsi:hover{background:var(--bz-soft)}
+.chat[data-design="breeze"] .chsi:hover::before{background:var(--bz-bg)}
+.chat[data-design="breeze"] .chsi.on{background:var(--bz-acc-soft);box-shadow:none}
+.chat[data-design="breeze"] .chsi.on::before{background:var(--bz-bg)}
+.chat[data-design="breeze"] .chsi.on::after{background:var(--bz-a)}
+.chat[data-design="breeze"] .chsi .n{grid-column:2;font:600 13.5px/1.35 var(--f-ui);color:var(--bz-ink)}
+.chat[data-design="breeze"] .chsi .d{display:block;grid-column:2;font:500 11.5px/1.35 var(--f-ui);color:var(--bz-faint);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chat[data-design="breeze"] .chsi .x{grid-column:3;grid-row:1 / 3;width:28px;height:28px;border-radius:8px}
+.chat[data-design="breeze"] .chsi .x:hover{background:var(--bz-bg);color:var(--bz-ink)}
+
+/* the confirmation, as a card over the card */
+.chat[data-design="breeze"] .chask2{background:color-mix(in srgb,var(--bz-ink) 22%,transparent);backdrop-filter:blur(2px)}
+.chat[data-design="breeze"] .chask2 .dlg{border-radius:18px;border-color:var(--bz-line);box-shadow:0 30px 60px -20px rgba(15,23,42,.45)}
+.chat[data-design="breeze"] .chask2 .dlgh{padding:14px 16px;background:transparent}
+.chat[data-design="breeze"] .chask2 .dlgt{font-size:13px}
+.chat[data-design="breeze"] .chask2 .dlgb{padding:6px 16px 14px;font-size:13.5px}
+.chat[data-design="breeze"] .chask2 .dlgf{padding:12px 16px;background:var(--bz-soft)}
+.chat[data-design="breeze"] .chask2 .btn{border-radius:10px;padding:8px 15px}
+.chat[data-design="breeze"] .chask2 .btn.pri{background:var(--bz-str);border-color:var(--bz-str)}
+
 /* ═══ NOVA ════════════════════════════════════════════════════════════════
    The fourth look, and the first one designed rather than subtracted.
    Studio's shell underneath — the sidebar grid, the rail it folds to when
@@ -3521,7 +3918,15 @@ body.chatting .pet[data-corner="br"],body.chatting .pet[data-corner="tr"]{
     <button class="ib" id="chatFx" data-i18n-title="ChatLook" title="Look and behaviour">◎</button>
     <button class="ib" id="chatTeachBtn" data-i18n-title="ChatTaughtBtn" title="What I have taught you">✎</button>
     <button class="ib" id="chatNew" data-i18n-title="ChatNew" title="New conversation">＋</button>
-    <button class="ib" id="chatX">✕</button>
+    <button class="ib" id="chatX" data-i18n-title="ChatClose" title="Close">✕</button>
+  </div>
+  <!-- Breeze only: the four places the header buttons above lead to, as
+       tabs. Each one opens the same sheet its button does. -->
+  <div class="chtabs" id="chatTabs" role="tablist" aria-label="Assistant">
+    <button class="chtab on" role="tab" data-tab="chat" aria-selected="true"><i class="bzi" aria-hidden="true"></i><span data-i18n="ChatTabChat">Chat</span></button>
+    <button class="chtab" role="tab" data-tab="convos" aria-selected="false" tabindex="-1"><i class="bzi" aria-hidden="true"></i><span data-i18n="ChatTabHistory">History</span></button>
+    <button class="chtab" role="tab" data-tab="teach" aria-selected="false" tabindex="-1"><i class="bzi" aria-hidden="true"></i><span data-i18n="ChatTabNotes">Notes</span></button>
+    <button class="chtab" role="tab" data-tab="fx" aria-selected="false" tabindex="-1"><i class="bzi" aria-hidden="true"></i><span data-i18n="ChatTabSettings">Settings</span></button>
   </div>
   <div class="chbody">
     <aside class="chside" id="chatSide"></aside>
@@ -5550,6 +5955,32 @@ const STRINGS = {
 
   ChatLook: "Look and behaviour",
   ChatSkin: "Skin",
+  ChatDesign: "Design",
+  DesignOriginal: "Original",
+  DesignOriginalWhy: "The panel as it has been: skins, the living background, the orb.",
+  DesignBreeze: "Breeze",
+  DesignBreezeWhy: "A clean floating card: tabs, avatars, answers in bubbles, a round send button.",
+  BreezeTone: "Tone",
+  BreezeToneAuto: "Match the app",
+  BreezeToneLight: "Light",
+  BreezeToneDark: "Dark",
+  BreezeAccent: "Accent",
+  BreezeMint: "Mint",
+  BreezeOcean: "Ocean",
+  BreezeViolet: "Violet",
+  BreezeCoral: "Coral",
+  ChatDesignMenu: "Assistant panel",
+  ChatDesignNote: "Original keeps the panel's skins and effects. Breeze is a clean card with tabs, avatars and a round send button; its tone, accent and motion are under Settings inside the panel.",
+  ChatClose: "Close",
+  ChatTabChat: "Chat",
+  ChatTabHistory: "History",
+  ChatTabNotes: "Notes",
+  ChatTabSettings: "Settings",
+  ChatTryNext: "Try these next",
+  ChatTryFirst: "Try asking",
+  ChatFootNote: "Ask about your records, runbooks and systems.",
+  ChatMsgOne: "1 message",
+  ChatMsgCount: "{n} messages",
   ChatMotion: "Motion",
   ChatArt: "Pixel art",
   ChatDoing: "Doing things",
@@ -6146,8 +6577,8 @@ const STATUSES = [
    the status bar, and clicking it copies a line you can paste into a bug
    report — build date and flow protocol included, because those are the two
    things that actually differ between copies. */
-const APP_VERSION = "5.3.0";
-const APP_BUILT = "2026-09-27";
+const APP_VERSION = "5.4.0";
+const APP_BUILT = "2026-09-28";
 function buildLine(){
   return "Resolv v" + APP_VERSION + " \u00b7 built " + APP_BUILT +
          " \u00b7 flow protocol " + (window.DossierFlow ? DossierFlow.version : "\u2014") +
@@ -10134,6 +10565,8 @@ function teachForgetAll(){
    That switch is off — meaning ask first — until you move it. */
 
 const CHAT_FX = ["reveal", "glow", "grid", "pulse", "ambient", "typing", "chips", "pixel"];
+/* the ones that belong to the Original design's ground and orb */
+const CHAT_FX_ORIGINAL = ["glow", "grid", "pulse", "ambient"];
 /* Whether this machine has asked not to be moved at. Read fresh each time
    rather than once at startup, because it is a system setting and somebody
    who turns it on halfway through the afternoon means it. */
@@ -10514,6 +10947,24 @@ const CHAT_SKINS = [
   { id:"ember",  name:"Ember",  a:"#FB7185", b:"#FBBF24" },
   { id:"paper",  name:"Paper",  a:"var(--accent)", b:"var(--teal)" }
 ];
+/* Two designs for the whole panel, not two colours for one. Original is the
+   panel as it has been since 3.6 - the skins above, the living background,
+   the orb. Breeze is drawn again from the ground up: a white card floating
+   beside the work, tabs under the header, an avatar and a time on every
+   message, answers in bubbles, suggestions under "Try these next", and a
+   composer with a round send button. Skins belong to Original; Breeze has a
+   tone (light, dark, or whatever the app is wearing) and an accent. */
+const CHAT_DESIGNS = [
+  { id:"original", name:"DesignOriginal", why:"DesignOriginalWhy" },
+  { id:"breeze",   name:"DesignBreeze",   why:"DesignBreezeWhy" }
+];
+const CHAT_TONES = [["auto", "BreezeToneAuto"], ["light", "BreezeToneLight"], ["dark", "BreezeToneDark"]];
+const CHAT_ACCENTS = [
+  { id:"mint",   name:"BreezeMint",   c:"#12A58A" },
+  { id:"ocean",  name:"BreezeOcean",  c:"#2F7CF6" },
+  { id:"violet", name:"BreezeViolet", c:"#8B5CF6" },
+  { id:"coral",  name:"BreezeCoral",  c:"#F0506E" }
+];
 
 function chatUI(){
   const st = S.settings;
@@ -10531,14 +10982,29 @@ function chatUI(){
      has asked not to be moved at — and from then on it is a switch like any
      other and whatever it is left at is what it stays at. */
   if (typeof st.chatUI.pixel !== "boolean") st.chatUI.pixel = !chatCalm();
+  /* the design arrived in 5.4: a panel set up before it keeps the one it had */
+  if (!CHAT_DESIGNS.some(x => x.id === st.chatUI.design)) st.chatUI.design = "original";
+  if (!CHAT_TONES.some(x => x[0] === st.chatUI.tone)) st.chatUI.tone = "auto";
+  if (!CHAT_ACCENTS.some(x => x.id === st.chatUI.accent)) st.chatUI.accent = "mint";
   return st.chatUI;
 }
+function chatDesign(){ return chatUI().design; }
 
 function applyChatUI(){
   const el = $("chat"); if (!el) return;
   const u = chatUI();
-  el.dataset.skin = CHAT_SKINS.some(x => x.id === u.skin) ? u.skin : "aurora";
-  CHAT_FX.forEach(k => el.classList.toggle("fx-" + k, !!u[k]));
+  /* auto is settled in the stylesheet against :root[data-mode], so a change
+     of app theme reaches the panel without anything here being called */
+  el.dataset.design = u.design;
+  el.dataset.tone = u.tone;
+  el.dataset.accent = u.accent;
+  /* a skin and the four effects that only ever lit Original's ground and
+     orb are taken off while Breeze is on - not switched off: what they are
+     set to is kept for when Original comes back */
+  const breeze = u.design === "breeze";
+  if (breeze) delete el.dataset.skin;
+  else el.dataset.skin = CHAT_SKINS.some(x => x.id === u.skin) ? u.skin : "aurora";
+  CHAT_FX.forEach(k => el.classList.toggle("fx-" + k, !!u[k] && !(breeze && CHAT_FX_ORIGINAL.indexOf(k) >= 0)));
   el.style.setProperty("--ch-every", Math.max(4, Math.min(120, +u.every || 12)) + "s");
   chatPixDress();
 }
@@ -10575,25 +11041,48 @@ function renderChatFx(){
     '<button class="tgl" role="switch" data-fx="' + key + '" aria-checked="' +
       (u[key] ? "true" : "false") + '" aria-label="' + esc(name) + '"></button></div>';
 
+  /* Breeze has no background to animate and no orb to light, so the
+     switches that only ever did those are not offered while it is on -
+     they keep their values for when Original comes back */
+  const breeze = u.design === "breeze";
   box.innerHTML =
-    "<h6>" + esc(L("ChatSkin")) + "</h6>" +
-    '<div class="chskins">' + CHAT_SKINS.map(k =>
-      '<button class="chskin' + (u.skin === k.id ? " on" : "") + '" data-skin="' + k.id + '">' +
-        '<span class="dot" style="background:linear-gradient(135deg,' + k.a + ',' + k.b + ')"></span>' +
-        esc(k.name) + "</button>").join("") + "</div>" +
+    "<h6>" + esc(L("ChatDesign")) + "</h6>" +
+    '<div class="chdesigns">' + CHAT_DESIGNS.map(k =>
+      '<button class="chdesign' + (u.design === k.id ? " on" : "") + '" data-design="' + k.id +
+        '" aria-pressed="' + (u.design === k.id ? "true" : "false") + '">' +
+        '<span class="pv pv-' + k.id + '" aria-hidden="true"><i></i><i></i><i></i><i></i></span>' +
+        "<b>" + esc(L(k.name)) + "</b><small>" + esc(L(k.why)) + "</small></button>").join("") + "</div>" +
+
+    (breeze
+      ? "<h6>" + esc(L("BreezeTone")) + "</h6>" +
+        '<div class="chskins">' + CHAT_TONES.map(([id, name]) =>
+          '<button class="chskin' + (u.tone === id ? " on" : "") + '" data-tone="' + id + '">' +
+            esc(L(name)) + "</button>").join("") + "</div>" +
+        "<h6>" + esc(L("BreezeAccent")) + "</h6>" +
+        '<div class="chskins">' + CHAT_ACCENTS.map(k =>
+          '<button class="chskin' + (u.accent === k.id ? " on" : "") + '" data-accent="' + k.id + '">' +
+            '<span class="dot" style="background:' + k.c + '"></span>' +
+            esc(L(k.name)) + "</button>").join("") + "</div>"
+      : "<h6>" + esc(L("ChatSkin")) + "</h6>" +
+        '<div class="chskins">' + CHAT_SKINS.map(k =>
+          '<button class="chskin' + (u.skin === k.id ? " on" : "") + '" data-skin="' + k.id + '">' +
+            '<span class="dot" style="background:linear-gradient(135deg,' + k.a + ',' + k.b + ')"></span>' +
+            esc(k.name) + "</button>").join("") + "</div>") +
 
     "<h6>" + esc(L("ChatMotion")) + "</h6>" +
     sw("reveal",  L("FxReveal"),  L("FxRevealWhy")) +
-    sw("glow",    L("FxGlow"),    L("FxGlowWhy")) +
-    sw("grid",    L("FxGrid"),    L("FxGridWhy")) +
-    sw("pulse",   L("FxPulse"),   L("FxPulseWhy")) +
+    (breeze ? "" :
+      sw("glow",    L("FxGlow"),    L("FxGlowWhy")) +
+      sw("grid",    L("FxGrid"),    L("FxGridWhy")) +
+      sw("pulse",   L("FxPulse"),   L("FxPulseWhy"))) +
     sw("typing",  L("FxTyping"),  L("FxTypingWhy")) +
     sw("chips",   L("FxChips"),   L("FxChipsWhy")) +
-    sw("ambient", L("FxAmbient"), L("FxAmbientWhy")) +
-    '<div class="chsw"><span class="lb">' + esc(L("FxEvery")) + "</span>" +
-      '<input type="range" id="fxEvery" min="4" max="60" step="2" value="' +
-        (+u.every || 12) + '"><span class="val" id="fxEveryV">' +
-        (+u.every || 12) + 's</span></div>' +
+    (breeze ? "" :
+      sw("ambient", L("FxAmbient"), L("FxAmbientWhy")) +
+      '<div class="chsw"><span class="lb">' + esc(L("FxEvery")) + "</span>" +
+        '<input type="range" id="fxEvery" min="4" max="60" step="2" value="' +
+          (+u.every || 12) + '"><span class="val" id="fxEveryV">' +
+          (+u.every || 12) + 's</span></div>') +
 
     "<h6>" + esc(L("ChatArt")) + "</h6>" +
     sw("pixel", L("FxPixel"), L("FxPixelWhy")) +
@@ -10621,6 +11110,17 @@ function renderChatFx(){
   });
   box.querySelectorAll("[data-skin]").forEach(b => {
     b.onclick = () => { u.skin = b.dataset.skin; u.skinPicked = true; applyChatUI(); touch(); renderChatFx(); };
+  });
+  /* the thread is drawn the same way under either design - only the
+     stylesheet differs - so a switch needs no repaint, just the sheet */
+  box.querySelectorAll("[data-design]").forEach(b => {
+    b.onclick = () => { u.design = b.dataset.design; applyChatUI(); touch(); renderChatFx(); };
+  });
+  box.querySelectorAll("[data-tone]").forEach(b => {
+    b.onclick = () => { u.tone = b.dataset.tone; applyChatUI(); touch(); renderChatFx(); };
+  });
+  box.querySelectorAll("[data-accent]").forEach(b => {
+    b.onclick = () => { u.accent = b.dataset.accent; applyChatUI(); touch(); renderChatFx(); };
   });
   const ev = $("fxEvery");
   if (ev) ev.oninput = () => {
@@ -11236,6 +11736,8 @@ function chatSide(){
     list.map(c =>
       '<div class="chsi' + (c.id === S.chatId ? " on" : "") + '" data-chat="' + esc(c.id) + '">' +
         '<span class="n">' + esc(c.title || L("ChatUntitled")) + "</span>" +
+        /* when, and how long - Breeze shows it under the title */
+        '<span class="d">' + esc(chatStamp(c.updated) + (c.msgs.length ? " \u00b7 " + L(c.msgs.length === 1 ? "ChatMsgOne" : "ChatMsgCount", { n:c.msgs.length }) : "")) + "</span>" +
         '<button class="x" data-delchat="' + esc(c.id) + '" title="' + esc(L("Delete")) + '">✕</button>' +
       "</div>").join("") +
     (list.length > 1 ? '<div class="chsh">' + esc(L("ChatKeptCount", { n:list.length })) + "</div>" : "");
@@ -11255,7 +11757,7 @@ function chatReplay(){
     return;
   }
   c.msgs.forEach((m, i) => {
-    if (m.who === "you") chatRenderYou(m.text, m.files);
+    if (m.who === "you") chatRenderYou(m.text, m.files, m.at);
     else if (m.who === "receipt") chatReceiptEl(m.text, m.no, true);
     else chatRenderBot(m.reply, m.src, true, i);
   });
@@ -11311,9 +11813,17 @@ function openChat(){
   applyChatUI();
   CHAT.stuck = true;            /* opening always lands on the newest thing */
   chatPaint();
-  $("chatHint").innerHTML = "<kbd>Enter</kbd> " + esc(L("ChatHintSend")) +
+  /* Original shows all three keys while you are typing; Breeze keeps the
+     line on screen with a word about what to ask on the left and the first
+     key on the right. Two lines, one shown - so Original's is still one run
+     of text, set exactly as it was. */
+  $("chatHint").innerHTML = '<span class="chfo"><kbd>Enter</kbd> ' + esc(L("ChatHintSend")) +
     " \u00b7 <kbd>Shift</kbd><kbd>Enter</kbd> " + esc(L("ChatHintLine")) +
-    " \u00b7 <kbd>\u2191</kbd> " + esc(L("ChatHintLast"));
+    " \u00b7 <kbd>\u2191</kbd> " + esc(L("ChatHintLast")) + "</span>" +
+    '<span class="chfn">' + esc(L("ChatFootNote")) + "</span>" +
+    '<span class="chfk"><kbd>Enter</kbd> ' + esc(L("ChatHintSend")) + "</span>";
+  $("chatTabs").setAttribute("aria-label", L("ChatTitle"));
+  chatTabSync();
   chatGrow();
   setTimeout(() => $("chatq").focus(), 60);
 }
@@ -11343,7 +11853,7 @@ function chatThinking(log){
   /* With the pixel set on it is the pixel one that waits with you; with it
      off, the animation that has always been here. Never both. */
   const pix = chatPix("think", "p32");
-  w.innerHTML = '<div class="chthink"><div class="chwait">' +
+  w.innerHTML = chatHead("bot") + '<div class="chthink"><div class="chwait">' +
     (pix || (CHAT.gif ? '<img class="chgif" alt="" src="' + esc(CHAT.gif) + '">' : "")) +
     '<span class="tx">' + esc(L("FlowAsking")) +
     '</span><span class="el"></span></div></div>';
@@ -11422,11 +11932,32 @@ function chatTimeMark(){
   t.textContent = pad2(d.getHours()) + ":" + pad2(d.getMinutes());
   log.appendChild(t);
 }
-function chatRenderYou(text, files){
+/* ── who said it, and when ──────────────────────────────────────────────
+   Every message carries a head: an avatar and the time it was said. The
+   Original design hides it and keeps the half-hour marks above; Breeze shows
+   it on every message, the way a chat app does, and hides the marks. */
+function chatStamp(at){
+  const d = at ? new Date(at) : new Date();
+  if (isNaN(d.getTime())) return "";
+  const t = pad2(d.getHours()) + ":" + pad2(d.getMinutes());
+  if (dkey(d) === today()) return t;
+  return d.toLocaleDateString(I18N.code === "km" ? "km-KH" : "en-GB", { day:"numeric", month:"short" }) + ", " + t;
+}
+/* your initials from Setup's name; no name, and the avatar draws a person */
+function chatInitials(){
+  return String(S.settings.owner || "").trim().split(/\s+/).filter(Boolean)
+    .slice(0, 2).map(w => w.charAt(0).toUpperCase()).join("");
+}
+function chatHead(who, at){
+  return '<div class="chmh"><span class="chav" aria-hidden="true">' + (who === "you" ? esc(chatInitials()) : "") +
+    '</span><span class="chmt">' + esc(chatStamp(at)) + "</span></div>";
+}
+function chatRenderYou(text, files, at){
   { const hero = document.querySelector("#chatLog .chhero"); if (hero) hero.remove(); }
   chatTimeMark();
   const d = document.createElement("div");
   d.className = "chb you";
+  d.innerHTML = chatHead("you", at);
   /* what you typed, with your line breaks intact — textContent on a
      white-space:pre-wrap box, so it can never carry markup */
   const p = document.createElement("div");
@@ -11820,7 +12351,13 @@ function chatRenderBot(r, sourceText, replaying, at){
   const th = at != null ? chatThread() : null;
   const msg = th && th.msgs[at] && th.msgs[at].reply === r ? th.msgs[at] : null;
   if (msg){ d.dataset.at = at; CHAT.botRef.set(d, r); }
+  /* Two wrappers that only Breeze draws: .chbub, the bubble - the answer
+     and everything that belongs to it - and .chfoot, the row of things to
+     do with it. Original sets both to display:contents, so to it they are
+     not there at all and the answer lays out exactly as it always has. */
+  if (!r.hero) h += chatHead("bot", msg ? msg.at : null);
   if (msg && msg.vers && msg.vers.length > 1) h += chatBranchBar(msg);
+  if (!r.hero) h += '<div class="chbub">';
 
   /* below about six in ten, the reading is a guess and should read as one */
   if (r.unsure && r.label)
@@ -11854,7 +12391,12 @@ function chatRenderBot(r, sourceText, replaying, at){
        landed yet — which is exactly how the drawn mark it stands in for is
        handled, a few lines down in the stylesheet. */
     const art = chatPix("hero", "p144");
+    /* Breeze opens on a greeting by name instead of on the assistant's own
+       name, which its header already carries */
+    const hr = new Date().getHours(), who = String(S.settings.owner || "").trim().split(/\s+/)[0];
     h += '<div class="chorbx" aria-hidden="true">' + (art || CHAT_ORB_SVG) + "</div>" +
+         '<div class="chhi">' + esc(L(hr < 12 ? "NxMorning" : hr < 18 ? "NxAfternoon" : "NxEvening") +
+           (who ? ", " + who : "")) + ' <span aria-hidden="true">\u{1F44B}</span></div>' +
          '<div class="cht">' + esc(L("ChatHeroTitle")) + "</div>" +
          '<div class="chts">' + esc(L("ChatHeroSub")) + "</div>" +
          '<div class="chcard"><b>' + esc(L("ChatHeroCard1")) + "</b><span>" + esc(L("ChatHeroCard2")) + "</span></div>";
@@ -11937,8 +12479,12 @@ function chatRenderBot(r, sourceText, replaying, at){
     h += "</div>";
   }
 
+  if (!r.hero) h += "</div>";
+
   if ((r.seeds || []).length){
-    h += '<div class="chseed">';
+    /* the label over them is Breeze's; Original never shows it */
+    h += '<div class="chtry"><i class="bzi" aria-hidden="true"></i>' + LE(r.hero ? "ChatTryFirst" : "ChatTryNext") + "</div>" +
+         '<div class="chseed">';
     r.seeds.forEach((s, i) => {
       CHAT.acts[id + "s" + i] = { kind:"say", text:s };
       h += '<button data-act="' + id + "s" + i + '">' + esc(s) + "</button>";
@@ -11964,6 +12510,7 @@ function chatRenderBot(r, sourceText, replaying, at){
      The pick-the-intent teacher below is for the app's own reading of a
      question, which the model's answers never go through. */
   const rated = r.via === "flow" && src && !r.examples;
+  h += '<div class="chfoot">';
   if (rated){
     CHAT.rates[id] = { r, src };
     h += '<div class="chrate" data-rate="' + id + '">' + chatRateInner(r) + "</div>";
@@ -11984,6 +12531,7 @@ function chatRenderBot(r, sourceText, replaying, at){
          (src && !rated ? '<button data-act="' + id + 'wrong" title="' + esc(L("ChatWrong")) + '">\u21BA</button>' : "") +
          "</div>";
   }
+  h += "</div>";
 
   d.innerHTML = h;
   pixFix(d);
@@ -17740,6 +18288,11 @@ async function renderModal(){
       '<option value="nova"'    + (st.ui === "nova" ? " selected" : "") + ">" + LE("UiNova") + "</option></select>") +
     '<p style="font-size:11.5px;color:var(--ink-2);margin:-6px 0 14px;line-height:1.7">' +
       L("UiNote") + "</p>" +
+    fr(L("ChatDesignMenu"), '<select class="in" id="fChatDesign">' +
+      CHAT_DESIGNS.map(k => '<option value="' + k.id + '"' + (chatDesign() === k.id ? " selected" : "") + ">" +
+        LE(k.name) + "</option>").join("") + "</select>") +
+    '<p style="font-size:11.5px;color:var(--ink-2);margin:-6px 0 14px;line-height:1.7">' +
+      L("ChatDesignNote") + "</p>" +
     fr(L("Density"), '<select class="in" id="fDe">' +
       '<option value="comfortable"' + (st.density !== "compact" ? " selected" : "") + ">" + LE("DensityComfortable") + "</option>" +
       '<option value="compact"'     + (st.density === "compact" ? " selected" : "") + ">" + LE("DensityCompact") + "</option></select>") +
@@ -18473,6 +19026,10 @@ function wireModal(){
     if (leaving) novaLeave();
     touch(); renderAll();
     if (leaving) renderModal();
+  };
+  if ($("fChatDesign")) $("fChatDesign").onchange = () => {
+    chatUI().design = $("fChatDesign").value;
+    applyChatUI(); touch();
   };
   if ($("fDe")) $("fDe").onchange = () => feel("density", $("fDe").value);
   if ($("fTs")) $("fTs").oninput = () => {
@@ -21339,8 +21896,59 @@ $("chatSide").addEventListener("click", e => {
   const del = e.target.closest("[data-delchat]");
   if (del){ e.stopPropagation(); return chatDeleteThread(del.dataset.delchat); }
   const row = e.target.closest("[data-chat]");
-  if (row){ S.chatId = row.dataset.chat; chatPaint(); touch(); $("chatq").focus(); }
+  if (row){
+    S.chatId = row.dataset.chat; chatPaint(); touch();
+    /* a tab, not a drawer: in Breeze choosing one is going back to it */
+    if (chatDesign() === "breeze") $("chat").classList.remove("convos");
+    $("chatq").focus();
+  }
 });
+
+/* ── Breeze's tabs ──────────────────────────────────────────────────────
+   Chat, History, Notes and Settings are the thread, the conversation list,
+   what it has been taught and the look sheet - the same three sheets the
+   Original header opens with its buttons. Which tab is lit is read from
+   which sheet is open, whoever opened it, so the two can never disagree. */
+function chatTabNow(){
+  if ($("chatFxPanel").classList.contains("on")) return "fx";
+  if ($("chatTeach").classList.contains("on")) return "teach";
+  if ($("chat").classList.contains("convos")) return "convos";
+  return "chat";
+}
+function chatTabSync(){
+  const now = chatTabNow();
+  $$("#chatTabs [data-tab]").forEach(b => {
+    const on = b.dataset.tab === now;
+    b.classList.toggle("on", on);
+    b.setAttribute("aria-selected", on ? "true" : "false");
+    b.tabIndex = on ? 0 : -1;
+  });
+}
+function chatTab(k){
+  if (k !== "fx" && $("chatFxPanel").classList.contains("on")) closeChatFx();
+  if (k !== "teach") $("chatTeach").classList.remove("on");
+  $("chat").classList.toggle("convos", k === "convos");
+  if (k === "convos") chatSide();
+  else if (k === "teach" && !$("chatTeach").classList.contains("on")) openTaught();
+  else if (k === "fx" && !$("chatFxPanel").classList.contains("on")) openChatFx();
+  else if (k === "chat") setTimeout(() => $("chatq").focus(), 40);
+  chatTabSync();
+}
+$("chatTabs").addEventListener("click", e => {
+  const b = e.target.closest("[data-tab]"); if (b) chatTab(b.dataset.tab);
+});
+/* arrow keys walk the tabs, as they do in any tab strip */
+$("chatTabs").addEventListener("keydown", e => {
+  if (e.key !== "ArrowLeft" && e.key !== "ArrowRight" && e.key !== "Home" && e.key !== "End") return;
+  const all = $$("#chatTabs [data-tab]"), i = all.indexOf(document.activeElement);
+  const n = e.key === "Home" ? 0 : e.key === "End" ? all.length - 1
+          : (Math.max(0, i) + (e.key === "ArrowRight" ? 1 : all.length - 1)) % all.length;
+  e.preventDefault();
+  chatTab(all[n].dataset.tab); all[n].focus();
+});
+{ const watch = new MutationObserver(chatTabSync);
+  ["chat", "chatFxPanel", "chatTeach"].forEach(id =>
+    watch.observe($(id), { attributes:true, attributeFilter:["class"] })); }
 $("chatGo").addEventListener("click", () => chatAsk($("chatq").value));
 
 /* the box grows with what you are typing, up to about eight lines */

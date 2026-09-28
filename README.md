@@ -278,7 +278,7 @@ adds `D-0099` without touching `seq` will not cause a collision.
 | `chatLearn` | object | — | Everything you have taught the assistant. See [§10.8](#108-teaching-it). |
 | `flow` | `{on, url, scope, deep, cap, timeout, fallback}` | `{on:false,…}` | The Power Automate endpoint. See [§12](#12-asking-through-a-power-automate-flow). |
 | `hushed` | array of string | `[]` | Keys of the Day-sheet notices you have silenced. Cleared from **Setup → Hidden notices**. |
-| `chatUI` | `{skin, confirm, every, reveal, glow, grid, pulse, typing, chips, ambient}` | all on, `aurora`, ask-first | How the assistant panel looks and behaves. Set from **◎** in the chat header. |
+| `chatUI` | `{design, tone, accent, skin, confirm, every, reveal, glow, grid, pulse, typing, chips, ambient, pixel}` | `original`, `auto`, `mint`; all on, `nebula`, ask-first | How the assistant panel looks and behaves. `design` is `original` or `breeze`; `tone` (`auto` \| `light` \| `dark`) and `accent` (`mint` \| `ocean` \| `violet` \| `coral`) are Breeze's, `skin` is Original's. Set from **◎** in the chat header (**Settings** in Breeze), or *Menu → Appearance → Assistant panel*. |
 | `memory` | array of `{id, title, body, tags, system, created, updated, uses, lastUsed}` | `[]` | What you have taught the assistant: how something is done, what caused something, what to check next time. See [§12](#12-asking-through-a-power-automate-flow). |
 
 ### 5.3 `tasks` — a record
@@ -401,7 +401,7 @@ Switch with **1**–**7**, or by clicking the tab.
 | **Reports** | This week / last week / this month, plus **Stand-up** and **Hand-over** formats. Copy, save into `reports/`, or print. |
 | **Routines** | The schedule editor. ✎ edits in place and keeps the id. Shows *runs itself*, *reminds you*, *paused*, *missing script*, when it last raised, and — loudly — *runs itself but nothing is listening*. |
 | **Scripts** | Register a script, read its `{{params}}`, set the workspace **Folder path**, write the runner, copy the `schtasks` line. |
-| **Appearance** | Theme (Archive, Vault, or your own), fonts including the bundled Khmer face, "feel" (density and motion), language, and **Reload** for language files. |
+| **Appearance** | Theme (Archive, Vault, or your own), fonts including the bundled Khmer face, "feel" (density and motion), the assistant panel's design (Original or Breeze), language, and **Reload** for language files. |
 | **Setup** | Your name · Reminders · Chase after · Running a script · Target dates (SLA) · Holidays and festivals · **Understanding harder questions** (the optional model). |
 | **Help** | The keyboard sheet, how your folder is laid out, and the privacy statement. |
 
@@ -440,6 +440,7 @@ in `dossier.json`:
 
 | | |
 |---|---|
+| **Design** | **Original** or **Breeze** — two designs of the whole panel, picked from a small picture of each. Also in *Menu → Appearance → Assistant panel*. See below. |
 | **Skin** | Nebula · Aurora · Carbon · Ember · Paper. Every surface in the panel takes its colour from the skin, not from the app theme. |
 | **Motion** | Seven switches — answers arriving, edge light, the living background, the orb pulse, thinking dots, springy buttons, and a passing light on an interval you set. Each one genuinely unhooks its animation. |
 | **Pixel art** | One switch, for the sprites below. Off leaves the panel exactly as it was: the drawn orb, the old waiting animation, a `✓` on a receipt. |
@@ -448,6 +449,54 @@ in `dossier.json`:
 A machine that has asked for reduced motion gets all of it off the first time
 the panel is opened; after that the choice is yours. None of this touches the
 rest of the app — the record sheet stays still while you read it.
+
+#### The two designs
+
+**Original** is the panel as it has been since 3.6: docked against the right
+edge, the skins above, the living background and the orb. It is the default,
+and a panel set up before 5.4 keeps it.
+
+**Breeze** is the same assistant drawn again from the ground up:
+
+- **A floating card** — white (or dark), rounded, ten pixels in from the edge
+  of the window, taking the same 452 pixels the dock always did, so nothing
+  else in the app moves.
+- **A header with the mark on a tinted tile**, the assistant's name, and a
+  status line with a dot that pulses while an answer is on its way.
+  New conversation and close are the only buttons in it.
+- **Tabs** — **Chat**, **History**, **Notes**, **Settings** — for the thread,
+  the conversation list (each with when and how many messages), what you have
+  taught it, and *Look and behaviour*. They are the same three sheets the
+  Original header opens with ☰, ✎ and ◎. Arrow keys move between them.
+- **An avatar and a time on every message** — your initials from *Setup →
+  Your name* (a person when there is no name), the sparkle for the assistant.
+- **Answers in a grey bubble**; your questions in the accent's tint. Text
+  cards, code, record rows and runbooks sit inside as white cards with the
+  Copy button on their header.
+- **A row of icons under each answer** — 👍, 👎, copy — with *Retry*,
+  *Think harder* and *Not what I meant* beside them where they apply.
+- **Try these next** — the newest answer's suggestions as pills under a label.
+  Once you ask something else, an older answer's suggestions step aside.
+- **An empty thread opens on a greeting by name** ("Good afternoon, Alex")
+  with the first suggestions under *Try asking*.
+- **One rounded composer** with the clip and a round send button, and a line
+  under it that stays: what to ask about on the left, `Enter` on the right.
+
+Breeze has no skins and no background to animate. Instead it has a **Tone** —
+*Match the app* (the default: light on a light palette, dark on a dark one,
+following the app's theme as it changes), *Light* or *Dark* — and an
+**Accent**: Mint, Ocean, Violet or Coral. While Breeze is on, the sheet offers
+only the motion switches that still mean something (answers arriving, thinking
+dots, springy buttons); the edge light, living background, orb pulse and
+passing light keep their settings for when Original comes back. The sprites
+still mark waiting, receipts and alerts; the header keeps its sparkle.
+
+Both designs are drawn from the same markup, so switching is instant, needs
+no repaint of the thread, and loses nothing. Inside Breeze the app's own
+palette is remapped to Breeze's for the panel only — a runbook card, a mail
+draft or a form in the teaching sheet takes the panel's colours without
+being restyled one by one, and a dark app theme cannot leave a light part
+stranded on a dark panel.
 
 #### The pixel set
 

@@ -6,6 +6,47 @@ holds — which is what to paste into a bug report.
 
 ---
 
+## 5.4.0 - 2026-09-28
+
+**The assistant panel has a second design: Breeze.** Pick it, or keep the
+one you have, from *Look and behaviour* (◎ in the panel's header) or
+*Menu → Appearance → Assistant panel*. **Original** stays the default, and a
+panel set up before 5.4 keeps it - pixel for pixel.
+
+Breeze is the whole panel drawn again, not a new skin:
+
+- **A floating card** ten pixels in from the window's edge, rounded, with a
+  soft shadow - in the same 452 pixels the dock always took, so nothing else
+  in the app moves when it opens.
+- **The header**: the mark on a tinted tile, the assistant's name, and a
+  status line whose dot pulses while an answer is on its way. New
+  conversation and close are its only buttons.
+- **Tabs** under it - *Chat*, *History*, *Notes*, *Settings* - for the
+  thread, the conversations (each with when and how many messages), what it
+  has been taught, and *Look and behaviour*. The tab that is lit is read from
+  whichever sheet is open, however it was opened. Arrow keys move along them.
+- **An avatar and a time on every message**: your initials from *Setup →
+  Your name*, the sparkle for the assistant.
+- **Answers in a bubble**, your questions in the accent's tint; text cards,
+  code, record rows and runbooks inside it as white cards with *Copy* on
+  their header.
+- **👍 👎 and copy as icons under each answer**, with *Retry*, *Think harder*
+  and *Not what I meant* beside them where they apply.
+- **Try these next**: the newest answer's suggestions as pills under a label.
+  Ask something else and the older ones step aside.
+- **An empty thread greets you by name** and offers somewhere to start.
+- **One rounded composer** with the clip and a round send button, and a line
+  underneath that stays.
+
+It has a **tone** - *Match the app* (follows the app's light or dark palette
+as you change it), *Light* or *Dark* - and an **accent**: Mint, Ocean, Violet
+or Coral. Skins, the living background, the edge light, the orb pulse and the
+passing light belong to Original; while Breeze is on they are not offered,
+and they keep their settings for when you switch back.
+
+Both designs draw from the same markup, so switching is instant and loses
+nothing. `settings.chatUI` gains `design`, `tone` and `accent`.
+
 ## 5.3.0 - 2026-09-28
 
 **Saving: faster, and never stuck.** A change could sit on *unsaved* for
