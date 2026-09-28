@@ -1066,8 +1066,15 @@ Condition.)
 Open **Compose — "Clean"** and replace its expression with
 
 ```
-json(replace(replace(trim(variables('answer')), '```json', ''), '```', ''))
+json(substring(trim(variables('answer')), indexOf(trim(variables('answer')), '{'), add(sub(lastIndexOf(trim(variables('answer')), '}'), indexOf(trim(variables('answer')), '{')), 1)))
 ```
+
+It takes the answer from its first `{` to its last `}` — so a fence the model
+wraps round its JSON falls away, and the fences *inside* the answer (a SQL
+query, an email to copy) arrive intact. (An older version of this guide used
+`replace(..., '```', '')`, which also took those out: code still showed, but
+an email came through as plain text. If yours still has `replace`, change it
+to this.)
 
 That is the only edit to the rest of the flow. **Response** is unchanged
 (`outputs('Clean')`).
@@ -1234,13 +1241,22 @@ you will spend an afternoon wondering why.
 
 ### Compose — "Clean"
 
-Models add code fences even when told not to. Strip them rather than trusting.
+Models add code fences round their JSON even when told not to. Take the JSON
+out from its first `{` to its last `}` rather than trusting — and without
+touching the fences inside the answer, which are the code blocks and the
+emails the app draws.
 
 Add **Data Operation → Compose**, named `Clean`:
 
 ```
-json(replace(replace(trim(<THE AI ACTION'S TEXT OUTPUT>), '```json', ''), '```', ''))
+json(substring(trim(<THE AI ACTION'S TEXT OUTPUT>), indexOf(trim(<THE AI ACTION'S TEXT OUTPUT>), '{'), add(sub(lastIndexOf(trim(<THE AI ACTION'S TEXT OUTPUT>), '}'), indexOf(trim(<THE AI ACTION'S TEXT OUTPUT>), '{')), 1)))
 ```
+
+The same token goes in all four places. (An older version of this guide used
+`json(replace(replace(trim(...), '```json', ''), '```', ''))`. That strips
+every ``` in the answer, not only the ones round it — code still showed, but
+an email or a note to copy came through as plain text. Change it to the one
+above.)
 
 Replace `<THE AI ACTION'S TEXT OUTPUT>` with the dynamic-content token your AI
 action provides — *Text* for **Create text with GPT**, *Predicted Text* or

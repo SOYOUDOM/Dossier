@@ -1624,7 +1624,11 @@ resolution note or a status update comes in a card of its own — labelled
 *Email*, *Message*, *Note*… with a title — in ordinary type, with one
 **Copy** that takes exactly that text and nothing around it. An email's
 subject sits on its own line with its own **Subject** copy, and is left out
-of the body. Code still comes in a code panel with its language.
+of the body. Code still comes in a code panel with its language. (A flow
+built from an older copy of the guide strips the model's ``` fences in its
+*Clean* step; the app recognises those blocks anyway, and
+[`flow/POWER-AUTOMATE.md`](flow/POWER-AUTOMATE.md) §6 has the expression that
+keeps them.)
 
 **Conversations are named by the assistant.** Its first answer in a new
 conversation carries a short title — *Portal fix email to Sokha*, *Imaging

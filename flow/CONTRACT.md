@@ -278,11 +278,15 @@ in `conversation` — and, for Think harder, `tier: "deep"`. Nothing in the
 request marks it as a second try; the flow answers it like any question.
 
 **Text to copy.** Anything meant to be pasted elsewhere — an email, a
-message, a note — comes in `say` as a fenced block labelled `email`,
-`message`, `note` or `text` (also `reply`, `draft`, `update`, `summary`,
-`description`), with an optional title after the label on the same line. The
-app draws it as a text card with its own Copy; an email's `Subject:` first
-line gets its own. Code fences keep their language.
+message, a note — comes in `say` as a block fenced with `~~~` (or ```)
+labelled `email`, `message`, `note` or `text` (also `reply`, `draft`,
+`update`, `summary`, `description`), with an optional title after the label
+on the same line. Tildes, because a flow built from an older copy of the
+guide strips every ``` from the answer in its Clean step. The app draws it as
+a text card with its own Copy; an email's `Subject:` first line gets its own.
+A block whose fence was stripped anyway — a lower-case label line such as
+`email Portal is fixed` — is recognised and drawn as one. Code fences keep
+their language.
 
 ### Past fixes — "last time this happened, you did X"
 

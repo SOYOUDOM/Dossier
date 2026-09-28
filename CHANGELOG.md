@@ -6,6 +6,26 @@ holds — which is what to paste into a bug report.
 
 ---
 
+## 5.2.1 - 2026-09-28
+
+- **Text cards now appear with the flow as it is built.** The email in the
+  chat came through as plain text, starting "email Portal is fixed". The
+  model had written the block properly; the flow's *Clean* step, as the
+  guide gave it - `replace(replace(trim(...), '```json', ''), '```', '')` -
+  takes every ``` out of the answer, not only a fence round the JSON. Code
+  blocks survived that only because the app already put a bare `sql` line's
+  fence back. Three fixes:
+  - the prompt asks for text to copy in a `~~~` block, which Clean leaves
+    alone (`~~~email Portal is fixed` … `~~~`);
+  - the app recognises a text block whose fence was stripped anyway - a
+    lower-case label line such as `email Portal is fixed` after a blank line,
+    ending where the fence was (two blank lines), or after an email's sign-off
+    - and draws it as a card; conversations already saved are drawn the same
+    way;
+  - POWER-AUTOMATE.md gives a new Clean expression that takes the JSON from
+    its first `{` to its last `}`, so fences inside the answer survive. Worth
+    changing (§5 step 5 or §6), not required.
+
 ## 5.2.0 - 2026-09-28
 
 **Branches, Retry, text ready to paste, and conversations the assistant names.**

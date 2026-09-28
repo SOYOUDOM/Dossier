@@ -6128,7 +6128,7 @@ const STATUSES = [
    the status bar, and clicking it copies a line you can paste into a bug
    report — build date and flow protocol included, because those are the two
    things that actually differ between copies. */
-const APP_VERSION = "5.2.0";
+const APP_VERSION = "5.2.1";
 const APP_BUILT = "2026-09-27";
 function buildLine(){
   return "Resolv v" + APP_VERSION + " \u00b7 built " + APP_BUILT +
@@ -11346,6 +11346,9 @@ function chatLooksCode(t){
    swallow a sentence. */
 function chatMend(src){
   let s = String(src);
+  /* ~~~ is a fence too - the one text to paste comes in, because the flow's
+     Clean step (POWER-AUTOMATE.md 6) takes every ``` out of the answer */
+  s = s.replace(/^[ \t]*~~~+[ \t]*([A-Za-z0-9_+-]*)([^\n]*)$/gm, (x, lang, rest) => "```" + lang + rest);
   if ((s.match(/```/g) || []).length % 2) s += "\n```";
   /* An answer with three queries in it often arrives with the first one
      fenced and the rest not - the model stops bothering once it has shown
@@ -11375,9 +11378,49 @@ function chatFenceJson(lines){
   }
   return lines;
 }
+/* ── a text block whose fence was taken out ─────────────────────────────
+   The Clean step the flow guide used to give - replace(..., '```', '') -
+   takes every fence out of the answer, not only one wrapped round it. A
+   block of code survives that (its language is left on a line of its own,
+   and the repair below puts the fence back), but an email arrived as
+   "email Portal is fixed" over the email, as prose. So: a line that is a
+   text label in lower case - how a model writes a fence label, not how it
+   starts a sentence - with an optional title, after a blank line or a
+   colon, starts a text block again. It ends where the closing fence was,
+   which Clean left as two blank lines in a row; failing that, after an
+   email's sign-off and the name under it; failing that, with a greeting on
+   its first line, at the end. Anything else is left as it was. */
+const CHAT_TEXT_LABEL = /^(email|e-mail|mail|message|msg|teams|chat|sms|note|notes|text|reply|draft|letter|update|summary|description|announcement)(?:[ \t]+(\S.{0,100}))?$/;
+const CHAT_SIGNOFF = /^(best regards|kind regards|warm regards|warmest regards|regards|best|best wishes|many thanks|thanks|thank you|thanks and regards|thanks & regards|cheers|sincerely|yours sincerely|br|rgds)[,.!]?\s*$/i;
+function chatFenceText(lines){
+  for (let i = 0; i < lines.length - 1; i++){
+    const m = CHAT_TEXT_LABEL.exec(lines[i].trim());
+    if (!m) continue;
+    const prev = i ? lines[i - 1].trim() : "";
+    if (prev && !/[:\uff1a]$/.test(prev)) continue;
+    if (!lines[i + 1].trim()) continue;
+    let end = -1;
+    for (let j = i + 1; j + 1 < lines.length; j++)
+      if (!lines[j].trim() && !lines[j + 1].trim()){ end = j; break; }
+    if (end < 0){
+      for (let j = i + 1; j < lines.length; j++){
+        if (!CHAT_SIGNOFF.test(lines[j].trim())) continue;
+        let k = j + 1;
+        while (k < lines.length && k <= j + 3 && lines[k].trim() && lines[k].trim().length <= 60 && !/[.!?]$/.test(lines[k].trim())) k++;
+        end = k; break;
+      }
+    }
+    if (end < 0 && /^(hi|hello|hey|dear|good (morning|afternoon|evening)|greetings|team|all)\b/i.test(lines[i + 1].trim())) end = lines.length;
+    if (end < 0 || end <= i + 1) continue;
+    lines.splice(end, 0, "```");
+    lines[i] = "```" + m[1] + (m[2] ? " " + m[2] : "");
+    i = end + 1;
+  }
+  return lines;
+}
 function chatFenceBare(s){
   if (!s || s.indexOf("\n") < 0) return s;
-  const lines = chatFenceJson(s.split("\n"));
+  const lines = chatFenceJson(chatFenceText(s.split("\n")));
   for (let i = 0; i < lines.length; i++){
     const tok = lines[i].trim().toLowerCase();
     if (!tok || CHAT_LANGS.indexOf(tok) < 0) continue;
