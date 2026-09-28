@@ -4435,6 +4435,8 @@ const STRINGS = {
   NovaOn: "Nova is on. The \u25d0 button switches light and dark; Menu \u2192 Appearance \u2192 Look brings any other design back.",
   NovaInvite: "There is a new design, Nova - a clearer layout, quick actions on every record, light and dark. Your current look stays one click away.",
   NovaTry: "Try Nova",
+  UpdReady: "Resolv {v} is in the folder, and this window is still running {now}. Reload to use it - your work is saved first.",
+  UpdReload: "Reload now",
   NxGroupWork: "Work",
   NxGroupKnow: "Knowledge",
   NxGroupAi: "Assistant",
@@ -6128,7 +6130,7 @@ const STATUSES = [
    the status bar, and clicking it copies a line you can paste into a bug
    report — build date and flow protocol included, because those are the two
    things that actually differ between copies. */
-const APP_VERSION = "5.2.1";
+const APP_VERSION = "5.2.2";
 const APP_BUILT = "2026-09-27";
 function buildLine(){
   return "Resolv v" + APP_VERSION + " \u00b7 built " + APP_BUILT +
@@ -11126,7 +11128,42 @@ function chatReplay(){
   chatScroll();
 }
 
+/* ── a newer copy in the folder ─────────────────────────────────────────
+   The page is read once, when the window opens; the prompt is read again
+   before every question. So after an update, a window left open answers
+   with the new prompt and draws the answers with the old page - which is
+   how an email written in the new ~~~ block arrived as plain text under
+   5.2.0. The page's size is taken when it starts; now and then (on coming
+   back to the window, opening the assistant, asking) it is asked again,
+   and when the file has changed and says a different version, a toast
+   offers to reload - after saving. Served pages only: a file:// page has
+   nothing to ask. */
+const UPD = { len:0, at:0, told:"" };
+async function updCheck(first){
+  if (!/^https?:$/.test(location.protocol)) return;
+  if (!first && Date.now() - UPD.at < 120000) return;
+  UPD.at = Date.now();
+  const url = location.href.replace(/[?#].*$/, "");
+  try {
+    const r = await fetch(url, { method:"HEAD", cache:"no-store" });
+    const n = +(r.headers.get("content-length") || 0);
+    if (!r.ok || !n) return;
+    if (first || !UPD.len){ UPD.len = n; return; }
+    if (n === UPD.len) return;
+    const t = await (await fetch(url, { cache:"no-store" })).text();
+    const m = /^const APP_VERSION = "([^"]+)"/m.exec(t);
+    const v = m ? m[1] : "";
+    if (!v || v === APP_VERSION || UPD.told === v) return;
+    UPD.told = v;
+    toast(L("UpdReady", { v:v, now:APP_VERSION }), { action:L("UpdReload"), life:60000, onAction:async () => {
+      try { if (S.dirty && FS.ok) await saveNow(true); } catch(e){}
+      location.reload();
+    } });
+  } catch(e){}
+}
+window.addEventListener("focus", () => updCheck());
 function openChat(){
+  updCheck();
   chatOcrWarm();
   if (!CHAT.art){ CHAT.art = true; chatArt(); const o = $("chatOrb"); if (o && !o.querySelector("svg")) o.insertAdjacentHTML("beforeend", CHAT_ORB_SVG); }
   if (!window.DossierChat) return toast(L("ChatNoEngine"), { bad:true });
@@ -12219,6 +12256,7 @@ function chatAsk(text, opts){
      here and still knows this workspace — it is what a failed call falls back
      to, and what answers when the flow is switched off. */
   if (flowOn()){
+    updCheck();
     const p = flowAsk(q, c, opts);
     /* they went with the question; the tray starts empty for the next one */
     CHAT.files = []; renderChatFiles();
@@ -25067,6 +25105,7 @@ async function boot(){
   }
   if (restored) renderAll();
   petBoot();
+  updCheck(true);
   /* once, a word about the new design - never again after it is seen */
   setTimeout(() => {
     if (S.settings.novaSeen || S.settings.ui === "nova" || !FS.ok) return;

@@ -6,6 +6,20 @@ holds — which is what to paste into a bug report.
 
 ---
 
+## 5.2.2 - 2026-09-28
+
+- **A window left open says when a newer Resolv is in the folder.** The page
+  is read once, when the window opens, but the prompt is read again before
+  every question - so after updating the files, an open window answered with
+  the new prompt and drew the answers with the old page. That is why emails
+  still came through as plain text after 5.2.1: the model wrote the new
+  `~~~email` block, and the 5.2.0 page still running did not know it. Now the
+  page notes its own size when it starts and, on coming back to the window,
+  opening the assistant or asking (at most every two minutes), asks the
+  folder again; when the file has changed and carries a different version, a
+  toast says so with **Reload now**, which saves first. Only when the app is
+  served by Resolv.bat.
+
 ## 5.2.1 - 2026-09-28
 
 - **Text cards now appear with the flow as it is built.** The email in the
