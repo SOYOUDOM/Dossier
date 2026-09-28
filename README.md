@@ -461,18 +461,21 @@ and a panel set up before 5.4 keeps it.
 - **A floating card** — white (or dark), rounded, ten pixels in from the edge
   of the window, taking the same 452 pixels the dock always did, so nothing
   else in the app moves.
-- **A header with the mark on a tinted tile**, the assistant's name, and a
-  status line with a dot that pulses while an answer is on its way.
+- **A header with the assistant's own mark** — the same one Original wears:
+  your logo from `assets/assistant-logo.png`, else the pixel orb while the
+  sprites are on, else the drawn orb — its name, and a status line with a dot
+  that pulses while an answer is on its way.
   New conversation and close are the only buttons in it.
 - **Tabs** — **Chat**, **History**, **Notes**, **Settings** — for the thread,
   the conversation list (each with when and how many messages), what you have
   taught it, and *Look and behaviour*. They are the same three sheets the
   Original header opens with ☰, ✎ and ◎. Arrow keys move between them.
 - **An avatar and a time on every message** — your initials from *Setup →
-  Your name* (a person when there is no name), the sparkle for the assistant.
-- **Answers in a grey bubble**; your questions in the accent's tint. Text
-  cards, code, record rows and runbooks sit inside as white cards with the
-  Copy button on their header.
+  Your name* (a person when there is no name), the same mark as the header
+  for the assistant. The time carries how long the answer took.
+- **Answers in a soft bubble**; your questions in the accent's tint. Text
+  cards, code, record rows and runbooks sit inside as flat cards — one step
+  lighter or darker than the bubble, no outlines — with a quiet Copy.
 - **A row of icons under each answer** — 👍, 👎, copy — with *Retry*,
   *Think harder* and *Not what I meant* beside them where they apply.
 - **Try these next** — the newest answer's suggestions as pills under a label.
@@ -489,7 +492,7 @@ following the app's theme as it changes), *Light* or *Dark* — and an
 only the motion switches that still mean something (answers arriving, thinking
 dots, springy buttons); the edge light, living background, orb pulse and
 passing light keep their settings for when Original comes back. The sprites
-still mark waiting, receipts and alerts; the header keeps its sparkle.
+still mark waiting, receipts and alerts.
 
 Both designs are drawn from the same markup, so switching is instant, needs
 no repaint of the thread, and loses nothing. Inside Breeze the app's own

@@ -6,6 +6,25 @@ holds — which is what to paste into a bug report.
 
 ---
 
+## 5.4.1 - 2026-09-28
+
+**Breeze, calmer, and wearing the assistant's own mark.**
+
+- **The logo is the existing one.** The header, the mark beside every answer
+  and the empty thread use the same mark Original does - your logo in
+  `assets/`, else the pixel orb while the sprites are on, else the drawn orb -
+  instead of a new sparkle on a tile.
+- **Fewer lines.** Code and text cards inside an answer are flat, with no
+  outline and no shadow; Copy, Retry and Think harder are plain words and
+  icons rather than outlined buttons; inline `code` has no box; the tabs sit
+  over one hairline instead of a banded strip.
+- **The composer has one outline and no glow**, a smaller send button, and a
+  quiet grey circle when there is nothing to send.
+- **How long an answer took moves up** onto its time ("15:30 · 10.1 s")
+  instead of a line of its own under the answer.
+- **The thread's scrollbar is thin and only shows while you are over it.**
+- Slightly smaller avatars, headings and suggestion pills throughout.
+
 ## 5.4.0 - 2026-09-28
 
 **The assistant panel has a second design: Breeze.** Pick it, or keep the

@@ -2736,7 +2736,7 @@ body.chatting .pet[data-corner="br"],body.chatting .pet[data-corner="tr"]{
 /* ═══ BREEZE ══════════════════════════════════════════════════════════════
    The assistant panel's second design, and a whole one rather than a skin:
    a white card floating beside the work instead of a panel nailed to the
-   edge, the assistant's mark on a tinted tile, the three header buttons
+   edge, the assistant's own mark beside every answer, the three header buttons
    turned into tabs - Chat, History, Notes, Settings - an avatar and a time
    on every message, your questions in the accent's tint and answers in a
    grey bubble with the things to do with them underneath, the newest
@@ -2797,8 +2797,8 @@ body.chatting .pet[data-corner="br"],body.chatting .pet[data-corner="tr"]{
 .chat[data-design="breeze"][data-accent="coral"]{--bz-acc-l:#EC4A68;--bz-str-l:#C22A4B;--bz-acc-d:#FF8199;--bz-str-d:#E0476A}
 .chat[data-design="breeze"][data-tone="dark"],
 :root[data-mode="dark"] .chat[data-design="breeze"][data-tone="auto"]{
-  --bz-bg:#11171B; --bz-soft:#1A2227; --bz-soft-2:#232D33; --bz-line:#27323A; --bz-line-2:#36434C;
-  --bz-ink:#E9EEF2; --bz-ink-2:#C4CED6; --bz-dim:#8C99A5; --bz-faint:#66737F; --bz-card:#141B20;
+  --bz-bg:#11171B; --bz-soft:#192126; --bz-soft-2:#222B31; --bz-line:#232D34; --bz-line-2:#34414A;
+  --bz-ink:#E6ECF0; --bz-ink-2:#BCC7CF; --bz-dim:#86939E; --bz-faint:#5F6C77; --bz-card:#12191D;
   --bz-av:#27323A; --bz-av-ink:#C4CED6; --bz-lift:0 1px 2px rgba(0,0,0,.25);
   --bz-shadow:0 30px 70px -18px rgba(0,0,0,.6),0 10px 26px -10px rgba(0,0,0,.4);
   --bz-a:var(--bz-acc-d); --bz-str:var(--bz-str-d); --bz-on-soft:var(--bz-acc-d);
@@ -2815,43 +2815,41 @@ body.chatting .pet[data-corner="br"],body.chatting .pet[data-corner="tr"]{
 .chat[data-design="breeze"]::before,.chat[data-design="breeze"] .chfx{display:none}
 
 /* ── the header: the mark on its tile, the name, a live status ─────────── */
-.chat[data-design="breeze"] .chh{padding:16px 14px 14px 16px;gap:12px;border-bottom:0;align-items:center;background:transparent}
+.chat[data-design="breeze"] .chh{padding:14px 12px 12px 16px;gap:11px;border-bottom:0;align-items:center;background:transparent}
 .chat[data-design="breeze"] #chatMenu,.chat[data-design="breeze"] #chatFx,.chat[data-design="breeze"] #chatTeachBtn{display:none}
-.chat[data-design="breeze"] .chorb,.chat[data-design="breeze"] .chorb.pixorb{width:44px;height:44px;border-radius:14px;
-  background:var(--bz-acc-soft);box-shadow:none;align-self:center}
-.chat[data-design="breeze"] .chorb > *,.chat[data-design="breeze"] .chorb::before{display:none}
-.chat[data-design="breeze"] .chorb::after{content:"";display:block;position:absolute;inset:11px;background:var(--bz-a);
-  -webkit-mask:var(--bzi-spark) center/contain no-repeat;mask:var(--bzi-spark) center/contain no-repeat;animation:none}
-.chat[data-design="breeze"].busy .chorb::after{animation:bzThink 1s ease-in-out infinite alternate}
-@keyframes bzThink{from{transform:scale(.8) rotate(0);opacity:.6}to{transform:scale(1.05) rotate(14deg);opacity:1}}
+/* The mark is the assistant's own, exactly as Original wears it: your logo
+   from assets/ when there is one, the pixel orb while the sprites are on,
+   the drawn orb otherwise - only its frame is Breeze's. */
+.chat[data-design="breeze"] .chorb{width:36px;height:36px;background:none;box-shadow:none}
+.chat[data-design="breeze"] .chorb.pixorb{width:32px;height:32px}
+.chat[data-design="breeze"] .chorb i,.chat[data-design="breeze"] .chorb::before{display:none}
 .chat[data-design="breeze"] .chid{gap:3px}
-.chat[data-design="breeze"] .chh .t{font:700 17px/1.2 var(--f-ui);letter-spacing:-.01em;color:var(--bz-ink)}
-.chat[data-design="breeze"] .chh .sub{font-size:12.5px;line-height:1.3;color:var(--bz-dim);font-weight:500}
-.chat[data-design="breeze"] .chh .sub::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;
-  margin-right:7px;vertical-align:1px;background:#22C55E;box-shadow:0 0 0 3px rgba(34,197,94,.16)}
+.chat[data-design="breeze"] .chh .t{font:650 15.5px/1.2 var(--f-ui);letter-spacing:-.01em;color:var(--bz-ink)}
+.chat[data-design="breeze"] .chh .sub{font-size:12px;line-height:1.3;color:var(--bz-dim);font-weight:500}
+.chat[data-design="breeze"] .chh .sub::before{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;
+  margin-right:6px;vertical-align:1px;background:#22C55E}
 .chat[data-design="breeze"] .chh .sub.live{color:var(--bz-on-soft);font-weight:600}
-.chat[data-design="breeze"] .chh .sub.live::before{background:var(--bz-a);box-shadow:0 0 0 3px var(--bz-acc-soft);
+.chat[data-design="breeze"] .chh .sub.live::before{background:var(--bz-a);
   animation:bzDot .8s ease-in-out infinite alternate}
 @keyframes bzDot{to{opacity:.35}}
-.chat[data-design="breeze"] .chh .ib{width:36px;height:36px;border:0;border-radius:11px;background:transparent;
+.chat[data-design="breeze"] .chh .ib{width:32px;height:32px;border:0;border-radius:9px;background:transparent;
   color:var(--bz-dim);font-size:0}
 .chat[data-design="breeze"] .chh .ib:hover{background:var(--bz-soft);color:var(--bz-ink)}
-.chat[data-design="breeze"] .chh .ib::before{content:"";width:19px;height:19px;background:currentColor;-webkit-mask:var(--ic) center/contain no-repeat;mask:var(--ic) center/contain no-repeat}
+.chat[data-design="breeze"] .chh .ib::before{content:"";width:17px;height:17px;background:currentColor;-webkit-mask:var(--ic) center/contain no-repeat;mask:var(--ic) center/contain no-repeat}
 .chat[data-design="breeze"] #chatNew{--ic:var(--bzi-new)}
 .chat[data-design="breeze"] #chatX{--ic:var(--bzi-close)}
 
 /* ── the tabs ──────────────────────────────────────────────────────────── */
-.chat[data-design="breeze"] .chtabs{display:flex;gap:4px;padding:7px 12px;background:var(--bz-soft);
-  border-top:1px solid var(--bz-line);border-bottom:1px solid var(--bz-line)}
-.chtab{flex:1 1 auto;min-width:0;height:38px;padding:0 10px;display:inline-flex;align-items:center;
-  justify-content:center;gap:6px;border:0;border-radius:11px;background:transparent;color:var(--bz-dim);
-  font:550 13px/1 var(--f-ui);cursor:pointer;transition:background .15s var(--ease),color .15s var(--ease)}
-.chtab:hover{background:var(--bz-soft-2);color:var(--bz-ink)}
+.chat[data-design="breeze"] .chtabs{display:flex;gap:2px;padding:0 12px 10px;border-bottom:1px solid var(--bz-line)}
+.chtab{flex:1 1 auto;min-width:0;height:34px;padding:0 10px;display:inline-flex;align-items:center;
+  justify-content:center;gap:6px;border:0;border-radius:10px;background:transparent;color:var(--bz-dim);
+  font:550 12.5px/1 var(--f-ui);cursor:pointer;transition:background .15s var(--ease),color .15s var(--ease)}
+.chtab:hover{background:var(--bz-soft);color:var(--bz-ink)}
 .chtab.on{background:var(--bz-acc-soft);color:var(--bz-on-soft);font-weight:650}
 .chtab:focus-visible{outline:2px solid var(--bz-a);outline-offset:1px}
 .chtab span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .bzi{display:inline-block;width:16px;height:16px;flex:0 0 auto;background:currentColor;-webkit-mask:var(--ic) center/contain no-repeat;mask:var(--ic) center/contain no-repeat}
-.chtab .bzi{width:17px;height:17px}
+.chtab .bzi{width:16px;height:16px}
 .chtab[data-tab="chat"]{--ic:var(--bzi-chat)}
 .chtab[data-tab="convos"]{--ic:var(--bzi-history)}
 .chtab[data-tab="teach"]{--ic:var(--bzi-notes)}
@@ -2859,52 +2857,58 @@ body.chatting .pet[data-corner="br"],body.chatting .pet[data-corner="tr"]{
 
 /* ── the thread ────────────────────────────────────────────────────────── */
 .chat[data-design="breeze"] .chbody{min-height:0}
-.chat[data-design="breeze"] .chl{padding:20px 18px 14px;gap:18px;scrollbar-color:var(--bz-line-2) transparent}
+.chat[data-design="breeze"] .chl{padding:18px 18px 14px;gap:16px;scrollbar-width:thin;scrollbar-color:transparent transparent}
+.chat[data-design="breeze"] .chl:hover{scrollbar-color:var(--bz-line-2) transparent}
 .chat[data-design="breeze"] .chtime{display:none}
-.chat[data-design="breeze"] .chmh{display:flex;align-items:center;gap:12px}
-.chat[data-design="breeze"] .chmh .chav{position:relative;width:34px;height:34px;flex:0 0 auto;border-radius:50%;display:grid;
-  place-items:center;font:700 12px/1 var(--f-ui);letter-spacing:.02em}
-.chat[data-design="breeze"] .chmh .chmt{font-size:12px;line-height:18px;color:var(--bz-faint);white-space:nowrap;
+.chat[data-design="breeze"] .chmh{display:flex;align-items:center;gap:10px}
+.chat[data-design="breeze"] .chmh .chav{position:relative;width:30px;height:30px;flex:0 0 auto;border-radius:50%;display:grid;
+  place-items:center;font:650 11px/1 var(--f-ui);letter-spacing:.02em}
+.chat[data-design="breeze"] .chmh .chmt{font-size:11.5px;line-height:18px;color:var(--bz-faint);white-space:nowrap;
   font-variant-numeric:tabular-nums}
 
 /* you: the accent's tint, your initials beside it, the time above */
-.chat[data-design="breeze"] .chb.you{position:relative;align-self:flex-end;max-width:calc(100% - 70px);margin:24px 46px 0 0;
-  background:var(--bz-acc-soft);color:var(--bz-ink);border:0;border-radius:18px;padding:11px 16px;
+.chat[data-design="breeze"] .chb.you{position:relative;align-self:flex-end;max-width:calc(100% - 64px);margin:22px 40px 0 0;
+  background:var(--bz-acc-soft);color:var(--bz-ink);border:0;border-radius:16px;padding:10px 14px;
   font-size:14px;line-height:1.5;box-shadow:none}
-.chat[data-design="breeze"] .chb.you + .chb.you{margin-top:24px;border-top-right-radius:18px}
-.chat[data-design="breeze"] .chb.you .chmh{position:absolute;right:-46px;top:-26px;flex-direction:row-reverse;align-items:flex-start}
+.chat[data-design="breeze"] .chb.you + .chb.you{margin-top:22px;border-top-right-radius:16px}
+.chat[data-design="breeze"] .chb.you .chmh{position:absolute;right:-40px;top:-22px;flex-direction:row-reverse;align-items:flex-start}
 .chat[data-design="breeze"] .chb.you .chav{background:var(--bz-av);color:var(--bz-av-ink)}
-.chat[data-design="breeze"] .chb.you .chav:empty::before{content:"";width:18px;height:18px;background:currentColor;
+.chat[data-design="breeze"] .chb.you .chav:empty::before{content:"";width:16px;height:16px;background:currentColor;
   -webkit-mask:var(--bzi-person) center/contain no-repeat;mask:var(--bzi-person) center/contain no-repeat}
 .chat[data-design="breeze"] .chb.you .cfs span{color:var(--bz-dim)}
 
 /* the assistant: its mark and the time on one line, the answer in a bubble
    under it, and everything that belongs to the answer in the same column */
-.chat[data-design="breeze"] .chb.bot{display:flex;flex-direction:column;align-items:flex-start;padding-left:46px;max-width:100%}
+.chat[data-design="breeze"] .chb.bot{display:flex;flex-direction:column;align-items:flex-start;padding-left:40px;max-width:100%}
 .chat[data-design="breeze"] .chb.bot > *{max-width:100%}
 /* the two rows that reach back under the avatar are wider than the column */
 .chat[data-design="breeze"] .chb.bot > .chtry,.chat[data-design="breeze"] .chb.bot > .chseed{max-width:none}
-.chat[data-design="breeze"] .chb.bot > .chmh{margin:0 0 8px -46px}
-.chat[data-design="breeze"] .chb.bot .chav{background:var(--bz-acc-soft)}
-.chat[data-design="breeze"] .chb.bot .chav::before{content:"";width:18px;height:18px;background:var(--bz-a);
-  -webkit-mask:var(--bzi-spark) center/contain no-repeat;mask:var(--bzi-spark) center/contain no-repeat}
+.chat[data-design="breeze"] .chb.bot > .chmh{margin:0 0 6px -40px}
+.chat[data-design="breeze"] .chb.bot .chav{border-radius:0;background:var(--ch-orb) center/contain no-repeat}
+.chat[data-design="breeze"].fx-pixel .chb.bot .chav{background:var(--ch-pixorb) center/contain no-repeat;
+  image-rendering:crisp-edges;image-rendering:pixelated}
+.chat[data-design="breeze"].ownmark .chb.bot .chav{background:var(--ch-mark) center/contain no-repeat;image-rendering:auto}
 .chat[data-design="breeze"] .chbub{display:block;min-width:0;background:var(--bz-soft);color:var(--bz-ink);
-  border-radius:18px;padding:13px 16px}
-.chat[data-design="breeze"] .chb.bot .say{font-size:14px;line-height:1.62;color:var(--bz-ink)}
+  border-radius:16px;padding:12px 15px}
+.chat[data-design="breeze"] .chb.bot .say{font-size:14px;line-height:1.6;color:var(--bz-ink)}
+/* how long it took is on the head line instead */
+.chat[data-design="breeze"] .chb.bot .took{display:none}
+.chat[data-design="breeze"] .chb.bot .say code.inl{border:0;background:color-mix(in srgb,var(--bz-ink) 8%,transparent);
+  padding:1px 5px;border-radius:5px}
 .chat[data-design="breeze"] .chb.bot .say:empty{display:none}
 .chat[data-design="breeze"] .chb.bot .chbr{margin:0 0 8px}
 .chat[data-design="breeze"] .chb.bot > .chrb,.chat[data-design="breeze"] .chb.bot > .chrbp,.chat[data-design="breeze"] .chb.bot > .chmail{align-self:stretch}
 .chat[data-design="breeze"] .chb.bot .meta{order:2}
 
 /* what to do with an answer: a row of quiet icons under the bubble */
-.chat[data-design="breeze"] .chfoot{order:1;display:flex;align-items:center;flex-wrap:wrap;gap:2px;margin-top:6px}
+.chat[data-design="breeze"] .chfoot{order:1;display:flex;align-items:center;flex-wrap:wrap;gap:0;margin-top:4px}
 .chat[data-design="breeze"] .chfoot:empty{display:none}
 .chat[data-design="breeze"] .chfoot .chrate,.chat[data-design="breeze"] .chfoot .chtools{display:contents}
-.chat[data-design="breeze"] .chfoot .chrate > button[data-rv],.chat[data-design="breeze"] .chfoot .chtools button{width:32px;height:32px;
-  padding:0;border:0;border-radius:9px;background:transparent;color:var(--bz-dim);font-size:0;opacity:1;
+.chat[data-design="breeze"] .chfoot .chrate > button[data-rv],.chat[data-design="breeze"] .chfoot .chtools button{width:30px;height:30px;
+  padding:0;border:0;border-radius:8px;background:transparent;color:var(--bz-dim);font-size:0;opacity:1;
   filter:none;display:grid;place-items:center;cursor:pointer;transition:background .14s,color .14s}
 .chat[data-design="breeze"] .chfoot .chrate > button[data-rv]::before,.chat[data-design="breeze"] .chfoot .chtools button::before{content:"";
-  width:17px;height:17px;background:currentColor;-webkit-mask:var(--ic) center/contain no-repeat;mask:var(--ic) center/contain no-repeat}
+  width:16px;height:16px;background:currentColor;-webkit-mask:var(--ic) center/contain no-repeat;mask:var(--ic) center/contain no-repeat}
 .chat[data-design="breeze"] .chfoot [data-rv="up"]{--ic:var(--bzi-up)}
 .chat[data-design="breeze"] .chfoot [data-rv="down"]{--ic:var(--bzi-down)}
 .chat[data-design="breeze"] .chfoot [data-copysay]{--ic:var(--bzi-copy)}
@@ -2919,9 +2923,9 @@ body.chatting .pet[data-corner="br"],body.chatting .pet[data-corner="tr"]{
 .chat[data-design="breeze"] .chfoot .rs{order:3}
 .chat[data-design="breeze"] .chfoot .wrong{order:4}
 .chat[data-design="breeze"] .chfoot .chfix{order:5;flex:1 1 100%;margin-top:6px}
-.chat[data-design="breeze"] .chfoot .chrate > button.deeper{height:30px;padding:0 12px;margin-left:4px;border:1px solid var(--bz-line);
-  border-radius:999px;background:var(--bz-bg);color:var(--bz-dim);font:600 11.5px/1 var(--f-ui);opacity:1}
-.chat[data-design="breeze"] .chfoot .chrate > button.deeper:hover{color:var(--bz-on-soft);border-color:var(--bz-acc-line);background:var(--bz-acc-soft)}
+.chat[data-design="breeze"] .chfoot .chrate > button.deeper{height:30px;padding:0 9px;margin-left:2px;border:0;border-radius:8px;
+  background:transparent;color:var(--bz-dim);font:500 12px/1 var(--f-ui);opacity:1}
+.chat[data-design="breeze"] .chfoot .chrate > button.deeper:hover{color:var(--bz-ink);background:var(--bz-soft)}
 .chat[data-design="breeze"] .chfoot .rs{font-size:11.5px;color:var(--bz-dim);margin-left:6px}
 .chat[data-design="breeze"] .chfoot .wrong{margin:0 0 0 6px;opacity:1}
 .chat[data-design="breeze"] .chfoot .wrong button{font-size:11.5px;color:var(--bz-faint);text-decoration:none}
@@ -2929,14 +2933,14 @@ body.chatting .pet[data-corner="br"],body.chatting .pet[data-corner="tr"]{
 
 /* the newest answer's suggestions, under a label; an older answer's are
    history once you have asked something else, and step out of the way */
-.chat[data-design="breeze"] .chtry{order:3;align-self:stretch;display:flex;align-items:center;gap:8px;margin:18px 0 0 -46px;
-  font:650 14.5px/1.3 var(--f-ui);color:var(--bz-ink)}
-.chat[data-design="breeze"] .chtry .bzi{width:18px;height:18px;color:var(--bz-a);--ic:var(--bzi-spark)}
-.chat[data-design="breeze"] .chseed{order:4;align-self:stretch;flex-wrap:wrap;overflow:visible;gap:8px;margin:12px 0 0 -46px;padding:0}
-.chat[data-design="breeze"] .chseed button{display:inline-flex;align-items:center;gap:8px;min-height:40px;max-width:100%;
-  padding:8px 15px 8px 12px;border:1px solid var(--bz-line);border-radius:999px;background:var(--bz-bg);
-  color:var(--bz-ink);font:500 13px/1.3 var(--f-ui);text-align:left;box-shadow:var(--bz-lift)}
-.chat[data-design="breeze"] .chseed button::before{content:"";width:15px;height:15px;flex:0 0 auto;background:var(--bz-dim);
+.chat[data-design="breeze"] .chtry{order:3;align-self:stretch;display:flex;align-items:center;gap:7px;margin:16px 0 0 -40px;
+  font:600 13px/1.3 var(--f-ui);color:var(--bz-dim)}
+.chat[data-design="breeze"] .chtry .bzi{width:15px;height:15px;color:var(--bz-a);--ic:var(--bzi-spark)}
+.chat[data-design="breeze"] .chseed{order:4;align-self:stretch;flex-wrap:wrap;overflow:visible;gap:7px;margin:9px 0 0 -40px;padding:0}
+.chat[data-design="breeze"] .chseed button{display:inline-flex;align-items:center;gap:7px;min-height:34px;max-width:100%;
+  padding:7px 13px 7px 11px;border:1px solid var(--bz-line);border-radius:999px;background:transparent;
+  color:var(--bz-ink-2);font:500 12.5px/1.3 var(--f-ui);text-align:left;box-shadow:none}
+.chat[data-design="breeze"] .chseed button::before{content:"";width:13px;height:13px;flex:0 0 auto;background:var(--bz-dim);
   -webkit-mask:var(--bzi-ask) center/contain no-repeat;mask:var(--bzi-ask) center/contain no-repeat}
 .chat[data-design="breeze"] .chseed button:hover{border-color:var(--bz-acc-line);background:var(--bz-acc-soft);color:var(--bz-on-soft)}
 .chat[data-design="breeze"] .chseed button:hover::before{background:var(--bz-on-soft)}
@@ -2952,52 +2956,47 @@ body.chatting .pet[data-corner="br"],body.chatting .pet[data-corner="tr"]{
 .chat[data-design="breeze"] .chacts.done button.picked{background:transparent;border-color:var(--bz-line);color:var(--bz-dim)}
 
 /* cards inside the bubble are white, so they read as things to take away */
-.chat[data-design="breeze"] .chrows{margin-top:10px;background:var(--bz-card);border:1px solid var(--bz-line);border-radius:14px}
+.chat[data-design="breeze"] .chrows{margin-top:10px;background:var(--bz-card);border:0;border-radius:12px}
 .chat[data-design="breeze"] .chrow{padding:10px 12px}
 .chat[data-design="breeze"] .chrow:hover{background:var(--bz-soft)}
 .chat[data-design="breeze"] .chrow .x b{font-weight:600;font-size:13px}
-.chat[data-design="breeze"] .chtext,.chat[data-design="breeze"] .chcode{margin:12px 0 4px;background:var(--bz-card);border:1px solid var(--bz-line);
-  border-radius:14px;box-shadow:var(--bz-lift)}
-.chat[data-design="breeze"] .chtext .cth,.chat[data-design="breeze"] .chcode .cch{gap:9px;padding:11px 11px 4px 14px;background:transparent;border-bottom:0}
-.chat[data-design="breeze"] .chtext .cth::before,.chat[data-design="breeze"] .chcode .cch::before{content:"";width:17px;height:17px;flex:0 0 auto;
-  background:var(--bz-a);-webkit-mask:var(--ic) center/contain no-repeat;mask:var(--ic) center/contain no-repeat}
-.chat[data-design="breeze"] .chtext .cth{--ic:var(--bzi-notes)}
-.chat[data-design="breeze"] .chcode .cch{--ic:var(--bzi-code)}
-.chat[data-design="breeze"] .chtext .kind{font:650 13.5px/1.3 var(--f-ui);letter-spacing:0;text-transform:none;color:var(--bz-ink)}
+.chat[data-design="breeze"] .chtext,.chat[data-design="breeze"] .chcode{margin:10px 0;background:var(--bz-card);border:0;border-radius:12px;box-shadow:none}
+.chat[data-design="breeze"] .chtext .cth,.chat[data-design="breeze"] .chcode .cch{gap:8px;padding:6px 6px 0 14px;min-height:36px;background:transparent;border-bottom:0}
+.chat[data-design="breeze"] .chtext .cth::before{content:"";width:15px;height:15px;flex:0 0 auto;
+  background:var(--bz-a);-webkit-mask:var(--bzi-notes) center/contain no-repeat;mask:var(--bzi-notes) center/contain no-repeat}
+.chat[data-design="breeze"] .chtext .kind{font:600 13px/1.3 var(--f-ui);letter-spacing:0;text-transform:none;color:var(--bz-ink)}
 .chat[data-design="breeze"] .chtext .cth:has(.ttl:not(:empty)) .kind{display:none}
-.chat[data-design="breeze"] .chtext .ttl{font:650 13.5px/1.3 var(--f-ui);color:var(--bz-ink)}
-.chat[data-design="breeze"] .chcode .lang{font:650 12px/1.3 var(--f-ui);letter-spacing:.02em;text-transform:none;color:var(--bz-ink)}
-.chat[data-design="breeze"] .chtext .cpy,.chat[data-design="breeze"] .chcode .cpy{display:inline-flex;align-items:center;gap:6px;height:30px;
-  padding:0 11px;border:1px solid var(--bz-line);border-radius:9px;background:var(--bz-bg);color:var(--bz-ink-2);
-  font:600 12px/1 var(--f-ui)}
-.chat[data-design="breeze"] .chtext .cpy:not(.sub)::before,.chat[data-design="breeze"] .chcode .cpy::before{content:"";width:14px;height:14px;
+.chat[data-design="breeze"] .chtext .ttl{font:600 13px/1.3 var(--f-ui);color:var(--bz-ink)}
+.chat[data-design="breeze"] .chcode .lang{font:500 11.5px/1.3 var(--f-mono);letter-spacing:0;text-transform:none;color:var(--bz-dim)}
+.chat[data-design="breeze"] .chtext .cpy,.chat[data-design="breeze"] .chcode .cpy{display:inline-flex;align-items:center;gap:5px;height:28px;
+  padding:0 9px;border:0;border-radius:8px;background:transparent;color:var(--bz-dim);
+  font:550 11.5px/1 var(--f-ui)}
+.chat[data-design="breeze"] .chtext .cpy:not(.sub)::before,.chat[data-design="breeze"] .chcode .cpy::before{content:"";width:13px;height:13px;
   background:currentColor;-webkit-mask:var(--bzi-copy) center/contain no-repeat;mask:var(--bzi-copy) center/contain no-repeat}
-.chat[data-design="breeze"] .chtext .cpy:hover,.chat[data-design="breeze"] .chcode .cpy:hover{border-color:var(--bz-acc-line);background:var(--bz-acc-soft);color:var(--bz-on-soft)}
-.chat[data-design="breeze"] .chtext .cpy.ok,.chat[data-design="breeze"] .chcode .cpy.ok{color:var(--bz-on-soft);border-color:var(--bz-acc-line)}
-.chat[data-design="breeze"] .chtext .ctb{padding:6px 14px 14px;font-size:13.5px;line-height:1.65;color:var(--bz-ink-2)}
+.chat[data-design="breeze"] .chtext .cpy:hover,.chat[data-design="breeze"] .chcode .cpy:hover{background:var(--bz-soft);color:var(--bz-ink)}
+.chat[data-design="breeze"] .chtext .cpy.ok,.chat[data-design="breeze"] .chcode .cpy.ok{color:var(--bz-on-soft)}
+.chat[data-design="breeze"] .chtext .ctb{padding:4px 14px 13px;font-size:13.5px;line-height:1.62;color:var(--bz-ink-2)}
 .chat[data-design="breeze"] .chtext .csub{margin:4px 14px 0;padding:8px 0;border-bottom:1px solid var(--bz-line)}
-.chat[data-design="breeze"] .chcode pre{padding:8px 14px 13px;font-size:12px}
-.chat[data-design="breeze"] .chrb,.chat[data-design="breeze"] .chrbp,.chat[data-design="breeze"] .chmail{border-radius:14px;background:var(--bz-card);box-shadow:var(--bz-lift)}
+.chat[data-design="breeze"] .chcode pre{padding:2px 14px 13px;font-size:12px;line-height:1.6}
+.chat[data-design="breeze"] .chrb,.chat[data-design="breeze"] .chrbp,.chat[data-design="breeze"] .chmail{border-radius:12px;background:var(--bz-card);box-shadow:none}
 .chat[data-design="breeze"] .chrb .rbh,.chat[data-design="breeze"] .chrbp .rbph,.chat[data-design="breeze"] .chmail .mh{background:var(--bz-soft)}
 
 /* while it thinks, and what happened after a dialogue */
-.chat[data-design="breeze"] .chb.bot.thinking .chthink{background:var(--bz-soft);border-radius:18px;padding:10px 16px}
+.chat[data-design="breeze"] .chb.bot.thinking .chthink{background:var(--bz-soft);border-radius:16px;padding:9px 15px}
 .chat[data-design="breeze"] .chwait{font-size:13px;color:var(--bz-dim)}
-.chat[data-design="breeze"] .chghost{padding-left:46px}
+.chat[data-design="breeze"] .chghost{padding-left:40px}
 .chat[data-design="breeze"] .chghost .chmh{display:none}
-.chat[data-design="breeze"] .chrcpt{margin-left:46px;border:0;border-radius:12px;padding:8px 12px;background:var(--bz-soft);color:var(--bz-ink-2)}
+.chat[data-design="breeze"] .chrcpt{margin-left:40px;border:0;border-radius:12px;padding:8px 12px;background:var(--bz-soft);color:var(--bz-ink-2)}
 
 /* ── an empty thread: a greeting by name and somewhere to start ────────── */
 .chat[data-design="breeze"] .chb.bot.chhero{align-items:flex-start;text-align:left;padding:18px 2px 4px}
-.chat[data-design="breeze"] .chhero .chorbx{width:60px;height:60px;margin:0 0 18px;border-radius:18px;filter:none;
-  background:var(--bz-acc-soft);display:grid;place-items:center}
-.chat[data-design="breeze"] .chhero .chorbx > *{display:none}
-.chat[data-design="breeze"] .chhero .chorbx::after{content:"";width:30px;height:30px;background:var(--bz-a);
-  -webkit-mask:var(--bzi-spark) center/contain no-repeat;mask:var(--bzi-spark) center/contain no-repeat}
-.chat[data-design="breeze"] .chhero .chhi{display:block;font:700 22px/1.25 var(--f-ui);letter-spacing:-.015em;color:var(--bz-ink)}
+.chat[data-design="breeze"] .chhero .chorbx{width:72px;height:72px;margin:0 0 16px;filter:none}
+/* 72 is three times the big sprite's 24, so it stays crisp */
+.chat[data-design="breeze"] .chhero .chorbx .pxl.p144{width:72px;height:72px;margin:0}
+.chat[data-design="breeze"] .chhero .chhi{display:block;font:650 21px/1.25 var(--f-ui);letter-spacing:-.015em;color:var(--bz-ink)}
 .chat[data-design="breeze"] .chhero .cht{display:none}
 .chat[data-design="breeze"] .chhero .chts{margin-top:6px;font-size:13.5px;color:var(--bz-dim);text-shadow:none}
-.chat[data-design="breeze"] .chhero .chcard{align-self:stretch;max-width:none;margin:20px 0 4px;padding:14px 16px;border:0;
+.chat[data-design="breeze"] .chhero .chcard{align-self:stretch;max-width:none;margin:18px 0 4px;padding:13px 15px;border:0;
   border-radius:16px;background:var(--bz-soft);box-shadow:none;backdrop-filter:none}
 .chat[data-design="breeze"] .chhero .chcard b{font-size:14px;color:var(--bz-ink)}
 .chat[data-design="breeze"] .chhero .chcard span{font-size:13px;color:var(--bz-dim)}
@@ -3005,35 +3004,35 @@ body.chatting .pet[data-corner="br"],body.chatting .pet[data-corner="tr"]{
 .chat[data-design="breeze"] .chhero .chfoot{display:none}
 
 /* ── the composer: one rounded box, the clip, a round send button ──────── */
-.chat[data-design="breeze"] .chfw{padding:4px 16px 12px;background:var(--bz-bg)}
-.chat[data-design="breeze"] .chf{min-height:60px;padding:8px 8px 8px 16px;gap:4px;align-items:flex-end;border:1px solid var(--bz-line);
-  border-radius:18px;background:var(--bz-bg);box-shadow:var(--bz-lift),0 8px 24px -16px rgba(15,23,42,.22)}
-.chat[data-design="breeze"] .chf:focus-within{background:var(--bz-bg);border-color:var(--bz-acc-line);
-  box-shadow:0 0 0 4px color-mix(in srgb,var(--bz-a) 13%,transparent)}
-.chat[data-design="breeze"] .chf.tall{border-radius:18px}
-.chat[data-design="breeze"] .chf textarea,.chat[data-design="breeze"] .chf textarea:focus{order:0;padding:10px 0;min-height:40px;font-size:14px;
+.chat[data-design="breeze"] .chfw{padding:4px 14px 10px;background:var(--bz-bg)}
+.chat[data-design="breeze"] .chf{min-height:50px;padding:6px 6px 6px 14px;gap:2px;align-items:flex-end;border:1px solid var(--bz-line);
+  border-radius:16px;background:var(--bz-soft);box-shadow:none}
+.chat[data-design="breeze"] .chf:focus-within{background:var(--bz-soft);border-color:var(--bz-line-2);box-shadow:none}
+.chat[data-design="breeze"] .chf.tall{border-radius:16px}
+.chat[data-design="breeze"] .chf textarea,.chat[data-design="breeze"] .chf textarea:focus{order:0;padding:9px 0;min-height:38px;font-size:14px;
   color:var(--bz-ink);background:transparent}
 .chat[data-design="breeze"] .chf textarea::placeholder{color:var(--bz-faint)}
 /* the box draws the focus ring; a look that rings every :focus-visible would draw a second one inside it */
 .chat[data-design="breeze"] .chf textarea:focus-visible{outline:0}
-.chat[data-design="breeze"] .chpin{order:1;width:38px;height:38px;margin:0 0 2px;display:grid;place-items:center;border:0;
-  border-radius:11px;background:transparent;color:var(--bz-dim);font-size:0}
-.chat[data-design="breeze"] .chpin:hover{background:var(--bz-soft);color:var(--bz-ink)}
-.chat[data-design="breeze"] .chpin::before{content:"";width:19px;height:19px;background:currentColor;
+.chat[data-design="breeze"] .chpin{order:1;width:36px;height:36px;margin:0 0 1px;display:grid;place-items:center;border:0;
+  border-radius:10px;background:transparent;color:var(--bz-dim);font-size:0}
+.chat[data-design="breeze"] .chpin:hover{background:var(--bz-soft-2);color:var(--bz-ink)}
+.chat[data-design="breeze"] .chpin::before{content:"";width:18px;height:18px;background:currentColor;
   -webkit-mask:var(--bzi-clip) center/contain no-repeat;mask:var(--bzi-clip) center/contain no-repeat}
-.chat[data-design="breeze"] .chf .btn.pri{order:2;width:42px;height:42px;border-radius:50%;border:0;background:var(--bz-str);
-  box-shadow:0 8px 18px -8px color-mix(in srgb,var(--bz-str) 80%,transparent)}
+.chat[data-design="breeze"] .chf .btn.pri{order:2;width:36px;height:36px;border-radius:50%;border:0;background:var(--bz-str);box-shadow:none}
 .chat[data-design="breeze"] .chf .btn.pri:hover{background:var(--bz-str);filter:brightness(1.1)}
-.chat[data-design="breeze"] .chf .btn.pri::after{content:"";width:18px;height:18px;margin:0 2px 0 0;background:#fff;
+.chat[data-design="breeze"] .chf .btn.pri::after{content:"";width:16px;height:16px;margin:0 2px 0 0;background:#fff;
   -webkit-mask:var(--bzi-send) center/contain no-repeat;mask:var(--bzi-send) center/contain no-repeat}
-.chat[data-design="breeze"] .chf .btn.pri.empty{opacity:.5;box-shadow:none}
+/* nothing to send: a quiet circle, not a faded accent */
+.chat[data-design="breeze"] .chf .btn.pri.empty{opacity:1;background:var(--bz-soft-2)}
+.chat[data-design="breeze"] .chf .btn.pri.empty::after{background:var(--bz-faint)}
 .chat[data-design="breeze"] .chhint{display:flex;justify-content:space-between;align-items:center;gap:12px;opacity:1;max-height:none;
-  padding:9px 4px 0;font-size:11.5px;color:var(--bz-faint)}
+  padding:7px 4px 0;font-size:11px;color:var(--bz-faint)}
 .chat[data-design="breeze"] .chhint .chfn{display:block;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .chat[data-design="breeze"] .chhint .chfk{display:block;flex:0 0 auto;white-space:nowrap}
 .chat[data-design="breeze"] .chhint .chfo{display:none}
-.chat[data-design="breeze"] .chhint kbd{font-size:10px;padding:1px 5px;border-radius:5px;border:1px solid var(--bz-line);
-  background:var(--bz-soft);color:var(--bz-ink-2)}
+.chat[data-design="breeze"] .chhint kbd{font-size:10px;padding:0 4px;border-radius:4px;border:0;
+  background:var(--bz-soft);color:var(--bz-dim);box-shadow:none}
 .chat[data-design="breeze"] .chclip{padding:0 0 8px}
 .chat[data-design="breeze"] .chclip .cf{border-radius:11px;background:var(--bz-soft);border-color:var(--bz-line)}
 .chat[data-design="breeze"] .chpill{top:-44px;border:0;background:var(--bz-ink);color:var(--bz-bg);box-shadow:0 10px 24px -10px rgba(15,23,42,.5)}
@@ -6577,7 +6576,7 @@ const STATUSES = [
    the status bar, and clicking it copies a line you can paste into a bug
    report — build date and flow protocol included, because those are the two
    things that actually differ between copies. */
-const APP_VERSION = "5.4.0";
+const APP_VERSION = "5.4.1";
 const APP_BUILT = "2026-09-28";
 function buildLine(){
   return "Resolv v" + APP_VERSION + " \u00b7 built " + APP_BUILT +
@@ -11015,6 +11014,13 @@ function applyChatUI(){
    plain arrow straight back without a reload. */
 function chatPixDress(){
   const el = $("chat"); if (!el) return;
+  /* Breeze puts the assistant's mark beside every answer, and it is the
+     same mark the header wears: your own logo, else the pixel orb while the
+     sprites are on, else the drawn orb. Those are an <img> and an inline
+     <svg> in the header; for the avatars they are handed over as images. */
+  if (!CHAT.orbUrl) CHAT.orbUrl = 'url("data:image/svg+xml,' + encodeURIComponent(CHAT_ORB_SVG) + '")';
+  el.style.setProperty("--ch-orb", CHAT.orbUrl);
+  el.style.setProperty("--ch-pixorb", PIX.orb ? 'url("' + PIX.orb + '")' : "none");
   const orb = $("chatOrb"), pill = $("chatPill");
   if (orb){
     const art = chatPix("orb", "p32");
@@ -11948,9 +11954,12 @@ function chatInitials(){
   return String(S.settings.owner || "").trim().split(/\s+/).filter(Boolean)
     .slice(0, 2).map(w => w.charAt(0).toUpperCase()).join("");
 }
-function chatHead(who, at){
+function chatHead(who, at, took){
   return '<div class="chmh"><span class="chav" aria-hidden="true">' + (who === "you" ? esc(chatInitials()) : "") +
-    '</span><span class="chmt">' + esc(chatStamp(at)) + "</span></div>";
+    '</span><span class="chmt">' + esc(chatStamp(at)) +
+    /* how long an answer took rides on the head line in Breeze, rather
+       than sitting under the answer as a line of its own */
+    (took ? " \u00b7 " + (took / 1000).toFixed(1) + " s" : "") + "</span></div>";
 }
 function chatRenderYou(text, files, at){
   { const hero = document.querySelector("#chatLog .chhero"); if (hero) hero.remove(); }
@@ -12355,7 +12364,7 @@ function chatRenderBot(r, sourceText, replaying, at){
      and everything that belongs to it - and .chfoot, the row of things to
      do with it. Original sets both to display:contents, so to it they are
      not there at all and the answer lays out exactly as it always has. */
-  if (!r.hero) h += chatHead("bot", msg ? msg.at : null);
+  if (!r.hero) h += chatHead("bot", msg ? msg.at : null, r.took);
   if (msg && msg.vers && msg.vers.length > 1) h += chatBranchBar(msg);
   if (!r.hero) h += '<div class="chbub">';
 
