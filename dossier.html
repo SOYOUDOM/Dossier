@@ -6071,7 +6071,7 @@ const STATUSES = [
    the status bar, and clicking it copies a line you can paste into a bug
    report — build date and flow protocol included, because those are the two
    things that actually differ between copies. */
-const APP_VERSION = "5.1.0";
+const APP_VERSION = "5.1.1";
 const APP_BUILT = "2026-09-27";
 function buildLine(){
   return "Resolv v" + APP_VERSION + " \u00b7 built " + APP_BUILT +
@@ -22427,9 +22427,14 @@ class DocxReader {
     this.rels = await docxRels(this.z, this.part);
     /* heading levels by style name, which is the same in every language
        ("heading 1") even where the id is not ("Titre1") */
-    this.styles = {};
+    this.styles = {}; this.styleNum = {}; this.styleBase = {};
     const st = await zipXml(this.z, this.part.replace(/[^/]*$/, "") + "styles.xml");
     if (st) for (const s of docxAll(st, "style")){
+      /* a list style ("List Bullet", "List Number") carries its numbering
+         itself, and the paragraphs that use it carry none of their own */
+      const sid = docxAttr(s, "styleId"), np = docxKid(docxKid(s, "pPr"), "numPr");
+      if (np) this.styleNum[sid] = { id:docxAttr(docxKid(np, "numId"), "val"), il:+(docxAttr(docxKid(np, "ilvl"), "val") || 0) };
+      const based = docxAttr(docxKid(s, "basedOn"), "val"); if (based) this.styleBase[sid] = based;
       const nm = (docxAttr(docxKid(s, "name"), "val") || "").toLowerCase();
       const m = /^heading (\d)$/.exec(nm);
       const ol = docxAttr(docxKid(docxKid(s, "pPr"), "outlineLvl"), "val");
@@ -22509,11 +22514,13 @@ class DocxReader {
     const ol = docxAttr(docxKid(pPr, "outlineLvl"), "val");
     if (!lvl && ol !== null && +ol < 6) lvl = +ol + 1;
     const numPr = docxKid(pPr, "numPr");
+    let num = numPr ? { id:docxAttr(docxKid(numPr, "numId"), "val"), il:+(docxAttr(docxKid(numPr, "ilvl"), "val") || 0) } : null;
+    for (let k = sid, hop = 0; !num && k && hop < 8; k = this.styleBase[k], hop++) num = this.styleNum[k] || null;
     text = text.replace(/[ \t]+$/g, "");
     let line = text;
     if (text.trim() && lvl) line = "#".repeat(Math.min(6, lvl)) + " " + text.trim();
-    else if (text.trim() && numPr){
-      const id = docxAttr(docxKid(numPr, "numId"), "val"), il = +(docxAttr(docxKid(numPr, "ilvl"), "val") || 0);
+    else if (text.trim() && num){
+      const id = num.id, il = num.il;
       if (id && id !== "0"){
         const lv = (this.nums[id] || {})[il] || { fmt:"bullet", start:1 };
         const cn = this.counters[id] = this.counters[id] || [];

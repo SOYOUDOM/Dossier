@@ -6,6 +6,13 @@ holds — which is what to paste into a bug report.
 
 ---
 
+## 5.1.1 - 2026-09-28
+
+- Word documents: bullets and numbered steps made with Word's list styles
+  (*List Bullet*, *List Number* - what the Styles gallery applies) now come
+  through as `-` and `1.`, like lists made with the toolbar buttons. Found by
+  uploading a document built on Word's own template through the paperclip.
+
 ## 5.1.0 - 2026-09-27
 
 **The assistant reads Word documents, and the pictures inside PDFs and Word
