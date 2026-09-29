@@ -6,6 +6,47 @@ holds — which is what to paste into a bug report.
 
 ---
 
+## 5.5.0 - 2026-09-29
+
+**Lumen: lively icons.** Every icon in the Lumen chat skin now moves, and
+moves in a way that says what it does - after the way the animated icon sets
+(Lordicon, lucide-animated) handle it: when you point at it or press it, not
+all the time.
+
+- **Send** flies up and comes back; it sits up once when there is something
+  to send. **Copy** slides its two sheets apart and, pressed, turns into a
+  tick that draws itself (answers, code blocks and text cards alike).
+  **👍 👎** nod, and pop when pressed. **Retry** turns a full circle
+  backwards. **Think harder** fills its star and twinkles. The **clip**
+  wiggles.
+- The header: the history icon's line slides (and its arrow flips while the
+  history is open), the slider knobs cross, the notes rewrite themselves, the
+  pen writes, the **✕** turns. In the history, the bin's lid lifts and the
+  search glass looks around.
+- The four starter cards: the target pulses, the clock's hand goes round, the
+  bulb lights up, the ? wiggles.
+- Three things move on their own, because they have news: the *New reply*
+  arrow, a small twinkle on *Think harder* under the newest answer, and the
+  mark over an answer while it is on its way (slowly, on an empty
+  conversation).
+- A **Lively icons** switch under Motion (shown while Lumen is the skin, on
+  by default) stops the movement and keeps the icons; *reduced motion* on the
+  PC stops it everywhere, the moving marks included.
+
+They are drawn as lines rather than shipped as GIFs: a GIF's edges are
+either fully there or not at all, so they fray on a dark panel; its colour
+is fixed, so it cannot follow light, dark or a hover; and it loops whether
+anyone is looking or not.
+
+Also: a long conversation redraws about twice as fast in Lumen - the rule
+that shows the tools under the newest answer was being checked against
+every part of every answer.
+
+The other five skins are unchanged: the icons are only ever put into the
+panel while Lumen is the skin, and taken out again when it is not.
+
+---
+
 ## 5.4.0 - 2026-09-29
 
 **Lumen: a new look for the assistant, as a preset.** A sixth chat skin,

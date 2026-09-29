@@ -442,7 +442,7 @@ in `dossier.json`:
 | | |
 |---|---|
 | **Skin** | Nebula · Aurora · Carbon · Ember · Paper · **Lumen**. Every surface in the panel takes its colour from the skin, not from the app theme — except Lumen, which follows the app's light or dark mode and changes the layout too (below). |
-| **Motion** | Seven switches — answers arriving, edge light, the living background, the orb pulse, thinking dots, springy buttons, and a passing light on an interval you set. Each one genuinely unhooks its animation. |
+| **Motion** | Seven switches — answers arriving, edge light, the living background, the orb pulse, thinking dots, springy buttons, and a passing light on an interval you set — and an eighth, *Lively icons*, while Lumen is the skin. Each one genuinely unhooks its animation. |
 | **Pixel art** | One switch, for the sprites below. Off leaves the panel exactly as it was: the drawn orb, the old waiting animation, a `✓` on a receipt. |
 | **Ask before doing anything** | On by default: everything is put to you first. Off: it does what you ask straight away and the line says *done without asking*. `Ctrl`+`Z` still undoes it either way. |
 
@@ -482,6 +482,33 @@ edge light, living background, orb pulse, springy buttons, the passing light,
 and the pixel set, which dresses Lumen as it dresses the others. Your own
 `assets/assistant-logo.png` still replaces the mark, in the header, on the
 greeting and over each answer.
+
+**Lively icons** (a Motion switch that appears while Lumen is picked, on by
+default). Every icon in Lumen is drawn in lines and moves in a way that says
+what its button does — only when you point at it or press it:
+
+| Icon | Pointed at | Pressed / state |
+|---|---|---|
+| Send | the arrow flies up and comes back | flies; sits up once when there is something to send |
+| Copy (answer, code, text card) | the two sheets slide apart | turns into a tick that draws itself |
+| 👍 / 👎 | nods | pops, and stays filled |
+| Retry | turns a full circle backwards | spins |
+| Think harder | the star fills and twinkles | — |
+| Clip | wiggles | wiggles |
+| History · Look · Taught · New · Close | the panel line slides, the slider knobs cross, the notes rewrite, the pen writes, the ✕ turns | the history icon's arrow flips while it is open |
+| Delete (history) · Search | the bin's lid lifts · the glass looks around | — |
+| The four starter cards | the target pulses, the clock's hand goes round, the bulb lights up, the ? wiggles | — |
+
+Only three things move by themselves, because they have news: the arrow on
+*New reply*, the star on *Think harder* under the newest answer (a small
+twinkle every few seconds), and the mark over the answer while it is on its
+way (the gradient turns and the star breathes; slowly, on an empty
+conversation). Icons pop in when they appear. With the switch off the icons
+stay and nothing moves; with *reduced motion* on the PC, nothing moves at
+all. They are vector drawings rather than GIF files on purpose: a GIF's edges
+are either fully there or not at all, so they fray on a dark panel; its
+colour is baked in, so it cannot follow light and dark or a hover; and it
+loops whether you are looking or not.
 
 #### The pixel set
 
