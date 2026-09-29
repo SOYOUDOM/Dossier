@@ -6,6 +6,58 @@ holds — which is what to paste into a bug report.
 
 ---
 
+## 5.6.0 - 2026-09-29
+
+**Reminders on your phone, through Telegram - only when you are away.** The
+reminders Resolv already raises (a time due today, routines that remind you,
+late work, chases, and now scheduled scripts that fail) can go to your phone
+through a Telegram bot of your own, with buttons to deal with them from
+there. Set it up under **Menu → Setup → Telegram**: paste the token from
+@BotFather, press Start in your bot, press **Find it for me** (it fills in
+your chat ID), **Send a test message**.
+
+Built not to be one more thing buzzing:
+
+- **Only when you are away** - no keyboard or mouse anywhere on the PC for
+  five minutes (you choose), or the screen locked. At the PC the Windows
+  notification is enough, so nothing arrives twice. `Resolv.bat` now tells
+  the page both (`/presence`); opened without it, Resolv waits three times as
+  long, or the browser's idle detection can be allowed.
+- **Left without dealing with it** - a reminder for a time today that came
+  up while you were at the PC still goes to your phone if you walk away
+  before that time. A daily nag you already saw is not repeated.
+- **Quiet hours** (19:00-07:30 by default), **weekends and holidays** off,
+  several at once as **one message**, at most **6 an hour**, never sent twice
+  (not after a reload, not from a second window).
+- **Buttons**: ✅ Done (closes the record, logged *Closed from Telegram*),
+  ⏰ 15 min / 1 h (reminds you again - on the phone if still away, on the
+  screen if back), 📅 move to the next working day, 📨 log a chase. The
+  message then says what was done.
+- **Commands**: /today, /late, /next, /mute 1h (and /mute off), /help, or a
+  few words to search what is open. Only your own chat is answered.
+- **Back at the PC**: a line says how many reminders went to your phone.
+- **Keep the PC awake** while something is due within two hours, plugged in
+  only (`/awake` in `Resolv.bat` resets Windows' idle timer; the screen still
+  turns off and closing the lid still sleeps).
+- **P1 records** can go to the phone even when you are at the PC, if you
+  switch that on.
+
+Nothing reaches the internet from `dossier.html`: every Telegram call goes
+through the new `flow/telegram.html`, a page with no records whose content
+security policy allows `https://api.telegram.org` and nothing else. Only the
+lines of a reminder leave the PC; the token is never sent to the assistant.
+
+**The assistant knows Resolv itself.** It reads Resolv's own README.md and
+CHANGELOG.md (beside the app): every question carries the version, the
+latest release headlines and the manual's chapters, and a question about
+Resolv - *how do I...*, *where is...*, *what does ... do* - carries the
+sections that answer it, with a prompt rule to answer those from the manual
+only and never invent a setting. *What's new?* and *which version is this?*
+are answered at once from the CHANGELOG, flow or no flow. New
+`workspace.app` in the request (flow/CONTRACT.md).
+
+---
+
 ## 5.5.0 - 2026-09-29
 
 **Lumen: lively icons.** Every icon in the Lumen chat skin now moves, and

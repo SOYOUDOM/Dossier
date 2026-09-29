@@ -1570,6 +1570,25 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
   color:var(--ink-3);font-weight:600 }
 .schform [data-when][hidden]{ display:none }
 .hint2{ font-size:11px;color:var(--ink-3);line-height:1.65;margin:-4px 0 10px }
+/* Setup → Telegram */
+.tgrow{display:flex;gap:7px;align-items:center;flex-wrap:wrap}
+.tgrow .in{flex:1;min-width:0}
+.tgrow .in.tgt{flex:0 0 auto;width:auto}
+.tgrow .in.tgn{flex:0 0 72px}
+.tgrow .tgunit{flex:1;min-width:160px;line-height:1.5}
+.tgrow .tgunit.tgto{flex:0 0 auto;min-width:0}
+.fr .tgck{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--ink);cursor:pointer;white-space:nowrap}
+.tgcks{display:flex;flex-wrap:wrap;gap:6px 16px}
+.tgunit{font-size:11.5px;color:var(--ink-3)}
+.fr .tgunit{margin-left:2px}
+.tgstat{font-size:12px;color:var(--ink-2);line-height:1.6;margin:6px 0 10px;display:flex;align-items:baseline;gap:7px;flex-wrap:wrap}
+.tgdot{width:8px;height:8px;border-radius:50%;background:var(--ink-3);flex:0 0 auto;transform:translateY(-1px)}
+.tgdot.ok{background:var(--st-done,#2e9d6a)}.tgdot.bad{background:var(--p1)}.tgdot.warn{background:var(--p2)}
+.tghow{margin:0 0 12px;font-size:12px;color:var(--ink-2);line-height:1.7}
+.tghow summary{cursor:pointer;color:var(--accent);font-weight:600}
+.tghow ol{margin:8px 0 0;padding-left:20px}
+.tghow li{margin:4px 0}
+.tghow code{font-family:var(--f-mono);font-size:11px}
 .schsum{ font-size:11.5px;color:var(--ink-1);background:var(--paper-3);border-radius:var(--r-xs);
   padding:7px 10px;margin:2px 0 12px;line-height:1.5;min-height:16px }
 .schsum:empty{ display:none }
@@ -5966,6 +5985,107 @@ const STRINGS = {
   ChatKeptCount: "{n} kept in this workspace",
   ChatName: "Resolv",
   ChatSkinNew: "New",
+  TgNoRelay: "flow/telegram.html did not load. It has to sit next to dossier.html, in the flow folder.",
+  TgRelaySilent: "The Telegram relay stopped answering.",
+  TgDueAt: "Due at {time}",
+  TgAgain: "Reminder again",
+  TgAgainHere: "{code} \u2014 reminder again: {title}",
+  TgNeedYou: "{n} things need you",
+  TgBtnDone: "Done",
+  TgBtnTomorrow: "Move to the next working day",
+  TgBtnChased: "Chased them",
+  TgBtnSeen: "Got it",
+  TgGone: "That record is not in Resolv any more.",
+  TgAlreadyClosed: "{code} was already closed.",
+  TgClosedLog: "Closed from Telegram.",
+  TgDoneNote: "{code} closed",
+  TgSnoozed: "{code}: again at {time}",
+  TgMovedLog: "Moved to {date} from Telegram.",
+  TgMoved: "{code} moved to {date}",
+  TgNoWait: "{code} is not waiting on anyone.",
+  TgChasedNote: "Chase logged against {who}",
+  TgSeenNote: "Seen",
+  TgMore: "\u2026and {n} more",
+  TgHelp: "<b>Resolv</b> \u2014 reminders from your workspace while you are away from the PC.\n\n/today \u2014 what is due today, and anything late\n/late \u2014 only what is late\n/next \u2014 the next thing, with buttons\n/mute 1h \u2014 quiet for an hour (/mute off to undo)\n\nOr type a few words to find an open record.",
+  TgTodayHead: "Today \u2014 {date}",
+  TgTodayNone: "Nothing due today.",
+  TgLateHead: "Late",
+  TgLateNone: "Nothing is late.",
+  TgNextNone: "Nothing due \u2014 a clear desk.",
+  TgUnmuted: "\ud83d\udd14 Reminders are back on.",
+  TgMuted: "\ud83d\udd15 Quiet until {time}. /mute off to undo.",
+  TgFound: "Open records matching \u201c{q}\u201d",
+  TgDidNotFind: "Nothing open matches \u201c{q}\u201d.",
+  TgWhileAway: "While you were away, {n} reminder(s) went to your phone.",
+  TgRunFailed: "Script failed: {name}",
+  TgHead: "Telegram \u2014 reminders on your phone",
+  TgIntro: "When you are away from the PC \u2014 lunch, a meeting, the other building \u2014 reminders go to your phone through a Telegram bot of your own, with buttons to close, snooze or move a record from there. At the PC you get the Windows notification as before, so nothing arrives twice.",
+  TgOnLabel: "Reminders on Telegram",
+  TgToken: "Bot token",
+  TgShowToken: "Show or hide the token",
+  TgChat: "Your chat ID",
+  TgFind: "Find it for me",
+  TgFinding: "Looking\u2026",
+  TgTest: "Send a test message",
+  TgHowHead: "How to make your bot (two minutes)",
+  TgHowSteps: "<li>In Telegram, open <b>@BotFather</b> and send <b>/newbot</b>. Give it a name, and a username ending in <i>bot</i>.</li><li>BotFather answers with a <b>token</b> like <code>123456789:AAF\u2026</code>. Paste it into <b>Bot token</b> above, and treat it like a password: anyone who has it can send messages as your bot.</li><li>Open your new bot in Telegram and press <b>Start</b>.</li><li>Press <b>Find it for me</b>: Resolv reads who pressed Start and fills in <b>Your chat ID</b>.</li><li>Press <b>Send a test message</b>. When it arrives on your phone, you are done.</li>",
+  TgWhen: "Send",
+  TgWhenAway: "Only when I am away from the PC",
+  TgWhenAlways: "Always, even when I am at the PC",
+  TgAwayAfter: "Away after",
+  TgMinutesUnit: "minutes with no keyboard or mouse \u2014 or at once when the screen is locked",
+  TgSeenWindows: "Resolv can see the whole PC through Resolv.bat: the keyboard and mouse in any program, and a locked screen.",
+  TgSeenBrowser: "Resolv can see when this PC is idle or locked, through the browser's idle detection.",
+  TgSeenTab: "Resolv can only see this tab, so working in another program looks like being away \u2014 it waits three times as long before it believes it. Starting Resolv with <b>Resolv.bat</b> fixes that; so does this:",
+  TgSeenAsk: "Let Resolv see when this PC is idle",
+  TgSeenAskOk: "Resolv can now tell when this PC is idle or locked.",
+  TgSeenAskNo: "The browser did not allow it. Resolv.bat is the reliable way.",
+  TgWhat: "What to send",
+  TgWhatDue: "Times due today",
+  TgWhatRoutines: "Routines that remind",
+  TgWhatLate: "Late work",
+  TgWhatChase: "Chases due",
+  TgWhatRuns: "Scheduled scripts that failed",
+  TgQuietLabel: "Quiet hours",
+  TgQuietFrom: "Nothing from",
+  TgQuietTo: "to",
+  TgOffDays: "Weekends and holidays",
+  TgOffQuiet: "Quiet",
+  TgOffSend: "Send as usual",
+  TgMax: "At most",
+  TgMaxUnit: "messages an hour \u2014 more are put together into one",
+  TgUrgent: "P1 records",
+  TgUrgentNo: "Like everything else",
+  TgUrgentYes: "Send even when I am at the PC",
+  TgAwake: "Keep the PC awake",
+  TgAwakeYes: "While something is due soon (plugged in only)",
+  TgAwakeNo: "Never",
+  TgAwakeHint: "A laptop left on the desk at lunch goes to sleep after its idle timeout, and a PC that is asleep cannot remind anyone. While a reminder is due within two hours, Resolv.bat keeps the PC from sleeping: the screen still turns off, closing the lid still sleeps, and on battery it does nothing.",
+  TgMutedNow: "Muted from Telegram until {time}.",
+  TgUnmute: "Unmute",
+  TgStatOff: "Off.",
+  TgStatNoToken: "Paste the bot token that @BotFather gave you.",
+  TgStatNoChat: "Open your bot in Telegram, press Start, then press Find it for me.",
+  TgStatConflict: "Something else is reading this bot's messages \u2014 Resolv open in another browser, or a webhook. Reminders still go out, but the buttons answer wherever that is.",
+  TgStatOn: "Connected",
+  TgStatAs: "as {who}",
+  TgStatLast: "last sent {time} ({n})",
+  TgStatOther: "another Resolv window is doing the sending",
+  TgFindNone: "Nobody has written to the bot yet. Open it in Telegram, press Start, then press Find it for me again.",
+  TgFindOk: "Found you \u2014 {name}. Now press Send a test message.",
+  TgTestText: "\u2705 <b>Resolv is connected.</b>\nWhen you are away from the PC and something needs you, it will come here \u2014 with buttons to close, snooze or move it.\n\nTry /today.",
+  TgTestOk: "Sent \u2014 check your phone.",
+  TgChatNotFound: "Telegram does not know that chat. Open your bot, press Start, then press Find it for me.",
+  TgCmdToday: "What is due today, and anything late",
+  TgCmdLate: "Only what is late",
+  TgCmdNext: "The next thing, with buttons",
+  TgCmdMute: "Quiet for a while: /mute 1h, /mute off",
+  TgCmdHelp: "What I can do",
+  TgOpen: "Open",
+  AboutNotThis: "This copy of Resolv is {v}.",
+  AboutEarlier: "Earlier releases",
+  AboutWhatIn: "What's new in {v}",
+  AboutFrom: "From Resolv's CHANGELOG.md, beside the app.",
   LmSearch: "Search conversations",
   LmToday: "Today",
   LmYesterday: "Yesterday",
@@ -6734,7 +6854,7 @@ const STATUSES = [
    the status bar, and clicking it copies a line you can paste into a bug
    report — build date and flow protocol included, because those are the two
    things that actually differ between copies. */
-const APP_VERSION = "5.5.0";
+const APP_VERSION = "5.6.0";
 const APP_BUILT = "2026-09-27";
 function buildLine(){
   return "Resolv v" + APP_VERSION + " \u00b7 built " + APP_BUILT +
@@ -12084,6 +12204,7 @@ async function updCheck(first){
 window.addEventListener("focus", () => updCheck());
 function openChat(){
   updCheck();
+  aboutLoad();
   chatOcrWarm();
   if (!CHAT.art){ CHAT.art = true; chatArt(); const o = $("chatOrb"); if (o && !o.querySelector("svg")) o.insertAdjacentHTML("beforeend", CHAT_ORB_SVG); }
   if (!window.DossierChat) return toast(L("ChatNoEngine"), { bad:true });
@@ -12761,7 +12882,7 @@ function chatRenderBot(r, sourceText, replaying, at){
   } else if (msg && r.trouble && src && flowOn()){
     h += '<div class="chrate">' + chatRetryBtn() + "</div>";
   }
-  if (src && (r.say || r.intent) && !r.examples && !rated){
+  if (src && (r.say || r.intent) && !r.examples && !rated && !r.about){
     CHAT.acts[id + "wrong"] = { kind:"teach", text:src };
     h += '<div class="wrong"><button data-act="' + id + 'wrong">' +
          esc(L("ChatWrong")) + "</button></div>";
@@ -12772,7 +12893,7 @@ function chatRenderBot(r, sourceText, replaying, at){
     CHAT.code[id + "say"] = r.say;
     h += '<div class="chtools" aria-label="' + esc(L("ChatTools")) + '">' +
          '<button data-copysay="' + id + 'say" title="' + esc(L("ChatCopyAnswer")) + '">\u2398</button>' +
-         (src && !rated ? '<button data-act="' + id + 'wrong" title="' + esc(L("ChatWrong")) + '">\u21BA</button>' : "") +
+         (src && !rated && !r.about ? '<button data-act="' + id + 'wrong" title="' + esc(L("ChatWrong")) + '">\u21BA</button>' : "") +
          "</div>";
   }
 
@@ -13166,6 +13287,15 @@ function chatAsk(text, opts){
     chatSide();
     return;
   }
+  /* "what's new?", "which version is this?" - from Resolv's own
+     CHANGELOG, at once; the flow can still be asked for more */
+  const own = !CHAT.files.length && !opts.flow && !opts.tier && !opts.force && aboutLocal(q);
+  if (own){
+    if (flowOn()) own.chips = [{ label:L("LocalAskAi"), act:{ kind:"askflow", text:q } }];
+    chatBot(own, q);
+    chatSide();
+    return;
+  }
 
   /* "What's overdue?", "what should I do next?", "how many did I close
      today?" - questions the app can count for itself - are answered here,
@@ -13310,6 +13440,166 @@ function flowOrigin(){
    it is announce that it will go and look. Matching is local and costs
    nothing, so the two or three that actually match travel in full and the
    endpoint can read them, weigh them against what was asked, and answer. */
+/* ═══ WHAT RESOLV KNOWS ABOUT ITSELF ═════════════════════════════════════
+   The assistant was the one part of Resolv that had never read Resolv's
+   manual. Asked "how do I turn on the Lumen look?" or "what's new?", it
+   could only guess - and a confident guess about a button that does not
+   exist is worse than no answer.
+
+   README.md and CHANGELOG.md sit beside dossier.html and the bridge serves
+   them with the page, so they are read once, split into sections, and:
+   - every question carries the version and the headlines of the last few
+     releases, and the README's list of chapters (a few hundred bytes), so
+     the assistant always knows what it is and what it can do;
+   - a question about Resolv itself - a feature, a setting, where something
+     is, what changed - also carries the two or three sections of the
+     README and the release notes that match it best, whole enough to
+     answer from;
+   - "what's new?" and "which version is this?" are answered here, at once,
+     from the CHANGELOG, flow or no flow.
+   A copy opened from the folder (file://) cannot read the files; it sends
+   the version and nothing more. */
+const ABOUT = { loaded:false, loading:null, readme:[], changes:[], chapters:[] };
+function aboutLoad(){
+  if (ABOUT.loaded) return Promise.resolve(ABOUT);
+  if (ABOUT.loading) return ABOUT.loading;
+  if (!/^https?:$/.test(location.protocol)) return Promise.resolve(ABOUT);
+  const get = async name => {
+    try { const r = await fetchIn(name + "?v=" + APP_VERSION, { cache:"no-store" }, 8000); return r.ok ? await r.text() : ""; }
+    catch(e){ return ""; }
+  };
+  ABOUT.loading = Promise.all([get("README.md"), get("CHANGELOG.md")]).then(([rd, cl]) => {
+    ABOUT.readme = aboutSections(rd);
+    ABOUT.chapters = (rd.match(/^##\s+.+$/gm) || []).map(h => h.replace(/^##\s+/, "").replace(/[`*]/g, "").trim())
+      .filter(h => !/table of contents/i.test(h));
+    ABOUT.changes = aboutReleases(cl);
+    ABOUT.loaded = !!(ABOUT.readme.length || ABOUT.changes.length);
+    ABOUT.loading = null;
+    return ABOUT;
+  });
+  return ABOUT.loading;
+}
+/* Markdown to plain reading text. The files are hard-wrapped at about
+   seventy columns, which a chat renders as broken lines, so paragraphs and
+   list items are joined back into one line each - but not code, and not the
+   rows of a table, which become one line each with the rules left out. */
+function aboutPlain(md){
+  const out = [];
+  let fence = false, joinable = false;
+  String(md || "").replace(/<!--[\s\S]*?-->/g, "")
+    .replace(/<\/?(details|summary|br|img|a|p|div|span|sup|sub|kbd|b|i|em|strong|code|table|thead|tbody|tr|td|th)\b[^>]*>/gi, "").split("\n").forEach(raw => {
+    const line = raw.replace(/\s+$/, "");
+    if (/^\s*(```|~~~)/.test(line)){ fence = !fence; out.push(line.trim()); joinable = false; return; }
+    if (fence){ out.push(line); return; }
+    if (!line.trim()){ if (out.length && out[out.length - 1] !== "") out.push(""); joinable = false; return; }
+    if (/^\s*\|?\s*:?-{3,}/.test(line)) return;
+    if (/^\s*\|/.test(line)){
+      out.push(line.replace(/^\s*\||\|\s*$/g, "").split("|").map(x => x.trim()).filter(Boolean).join(" — "));
+      joinable = false; return;
+    }
+    if (/^\s*([-*+]\s|\d+[.)]\s|#{1,6}\s|>)/.test(line) || !joinable){ out.push(line.replace(/^\s{0,3}(?=[-*+\d#>])/, "")); joinable = true; return; }
+    out[out.length - 1] += " " + line.trim();
+  });
+  return out.join("\n").replace(/\n{3,}/g, "\n\n").replace(/[ \t]{2,}/g, " ").trim();
+}
+function aboutSections(md){
+  const out = [], path = [];
+  let cur = null;
+  String(md || "").split("\n").forEach(line => {
+    const h = /^(#{2,4})\s+(.+?)\s*$/.exec(line);
+    if (h){
+      const lv = h[1].length, title = h[2].replace(/[`*]/g, "");
+      path.length = lv - 2; path[lv - 2] = title;
+      cur = { level:lv, title:title, path:path.filter(Boolean).join(" › "), body:[] };
+      out.push(cur);
+    } else if (cur) cur.body.push(line);
+  });
+  return out.map(s => {
+    const text = aboutPlain(s.body.join("\n"));
+    return { level:s.level, title:s.title, path:s.path, text:text,
+             low:(s.path + "\n" + text).toLowerCase(), tlow:s.path.toLowerCase() };
+  }).filter(s => s.text.length > 40 && !/table of contents/i.test(s.title));
+}
+function aboutReleases(md){
+  const out = [];
+  let cur = null;
+  String(md || "").split("\n").forEach(line => {
+    const h = /^##\s+(\d+\.\d+(?:\.\d+)?)\s*[-–—]\s*(\d{4}-\d{2}-\d{2})/.exec(line);
+    if (h){ cur = { version:h[1], date:h[2], body:[] }; out.push(cur); }
+    else if (/^##\s/.test(line)) cur = null;
+    else if (cur && !/^---\s*$/.test(line)) cur.body.push(line);
+  });
+  return out.map(r => {
+    const text = aboutPlain(r.body.join("\n"));
+    const bold = /\*\*([^*]{4,160})\*\*/.exec(text);
+    const headline = (bold ? bold[1] : text.split("\n").find(l => l.trim()) || "").replace(/\*\*/g, "").trim();
+    return { version:r.version, date:r.date, headline:headline, text:text };
+  });
+}
+const ABOUT_STOP = new Set(("the a an and or of to in on for is are be it this that with from as at by can do does did how what when where which who why " +
+  "i me my you your we our they them their there here not no yes if so about into out up down just get got use using make want need " +
+  "resolv app please would could should will have has had any some all more most very").split(" "));
+function aboutWords(q){
+  return [...new Set(String(q || "").toLowerCase().match(/[a-z0-9][a-z0-9.+#-]{2,}/g) || [])].filter(w => !ABOUT_STOP.has(w));
+}
+function aboutSearch(q, n){
+  const words = aboutWords(q);
+  if (!words.length) return [];
+  return ABOUT.readme.map(s => {
+    let score = 0;
+    words.forEach(w => {
+      if (s.tlow.indexOf(w) >= 0) score += 4;
+      let i = -1, c = 0;
+      while (c < 6 && (i = s.low.indexOf(w, i + 1)) >= 0) c++;
+      score += c;
+    });
+    return { s:s, score:score / Math.log2(8 + s.text.length / 400) };
+  }).filter(x => x.score > 0).sort((a, b) => b.score - a.score).slice(0, n || 3);
+}
+/* is this question about Resolv itself, rather than about their work */
+const ABOUT_OWN = /\b(resolv|this app|the app|in the app|your(self)? (version|features?)|what'?s new|what is new|new (in|feature|version)|release notes?|change ?log|changelog|version|feature|setting|settings|set ?up|preset|skin|theme|lumen|nova|nebula|aurora|carbon|pixel|desk pet|shortcut|keyboard|telegram|reminders?|notifications?|bridge|power automate|prompt|language|khmer|menu|button|look and behaviou?r)\b/i;
+const ABOUT_HELP = /\b(how (do|can|to|should|does)|where (is|are|do|can)|can (i|you|it)|is there|does it|what does|what is|turn (on|off)|switch (on|off)|enable|disable|configure|change|show me how)\b/i;
+const ABOUT_NEWS = /\b(what'?s new|what is new|what changed|what has changed|new in|release notes?|change ?log|changelog|latest (version|release|update)|which version|what version|version (are you|is this|am i))\b/i;
+function aboutForFlow(q){
+  if (!ABOUT.loaded){ aboutLoad(); return { name:"Resolv", version:APP_VERSION }; }
+  const app = { name:"Resolv", version:APP_VERSION,
+    recent:ABOUT.changes.slice(0, 6).map(r => ({ version:r.version, date:r.date, headline:r.headline })),
+    contents:(ABOUT.chapters || []).slice() };
+  const t = String(q || "");
+  const asked = (t.match(/\b(\d+\.\d+(?:\.\d+)?)\b/g) || []).map(v => ABOUT.changes.find(r => r.version === v || r.version.indexOf(v + ".") === 0)).filter(Boolean);
+  if (ABOUT_NEWS.test(t) || asked.length){
+    const pick = asked.length ? asked : ABOUT.changes.slice(0, 2);
+    app.releases = pick.slice(0, 3).map(r => ({ version:r.version, date:r.date, text:r.text.slice(0, 4500) }));
+  }
+  if (ABOUT_OWN.test(t) && (ABOUT_HELP.test(t) || /\b(resolv|lumen|nova|telegram|this app|the app)\b/i.test(t))){
+    /* the best match, and the next ones only if they are nearly as good -
+       a chapter that merely mentions the word is not an answer */
+    const all = aboutSearch(t, 3), best = all.length ? all[0].score : 0;
+    const hits = all.filter(h => h.score >= best * 0.45);
+    if (hits.length) app.docs = hits.map(h => ({ from:"README", section:h.s.path, text:h.s.text.slice(0, 3000) }));
+  }
+  return app;
+}
+/* "what's new" and "which version", answered here from the CHANGELOG */
+function aboutLocal(q){
+  const t = String(q || "").trim();
+  if (!ABOUT.loaded || !ABOUT.changes.length || t.length > 80 || !ABOUT_NEWS.test(t)) return null;
+  const v = (t.match(/\b(\d+\.\d+(?:\.\d+)?)\b/) || [])[1];
+  const r = (v && ABOUT.changes.find(x => x.version === v || x.version.indexOf(v + ".") === 0)) || ABOUT.changes[0];
+  const mine = r.version === APP_VERSION;
+  let body = r.text.split(/\n\n+/).slice(0, 6).join("\n\n");
+  if (body.length > 1800) body = body.slice(0, 1800).replace(/\s+\S*$/, "") + "…";
+  const older = ABOUT.changes.filter(x => x !== r).slice(0, 4);
+  return {
+    say:"## Resolv " + r.version + " · " + r.date + (mine ? "" : "\n\n" + L("AboutNotThis", { v:APP_VERSION })) +
+        "\n\n" + body + (older.length ? "\n\n### " + L("AboutEarlier") + "\n" +
+        older.map(x => "- **" + x.version + "** — " + x.headline).join("\n") : ""),
+    seeds:older.slice(0, 3).map(x => L("AboutWhatIn", { v:x.version })),
+    about:true,
+    note:L("AboutFrom")
+  };
+}
+
 function flowContext(q){
   const st = S.settings;
   const c = chatThread();
@@ -13362,6 +13652,9 @@ function flowContext(q){
     runbooksMatched: runbooksMatchedForFlow(q),
     pastFixes: pastFixesFor(q),
     brief: briefForFlow(),
+    /* Resolv itself: its version and latest releases always, and the parts
+       of its README and CHANGELOG that answer a question about it */
+    app: aboutForFlow(q),
     focus: flowFocus(),
     thread: threadForFlow(c),
     mentioned: rbIdents(q),
@@ -18632,6 +18925,7 @@ async function renderModal(){
       '"> <span style="display:none"></span>') +
     '<p style="font-size:11.5px;color:var(--ink-2);line-height:1.7;margin:4px 0 0">' +
       L("DaysARecordCanSitWith") +
+    tgSetupHtml() +
 
     "<h5 class=\"eyebrow\" style=\"margin:20px 0 8px\">" + L("WhenThisTabIsClosed") + "</h5>" +
     '<p style="font-size:12px;color:var(--ink-2);line-height:1.75;margin:0 0 10px">' +
@@ -19392,6 +19686,7 @@ function wireModal(){
   const ld = $("sLead"); if (ld) ld.onchange = e => { S.settings.lead = +e.target.value || 15; touch(); };
   const lt = $("sLate"); if (lt) lt.onchange = e => { S.settings.remindOverdue = e.target.value === "1"; touch(); };
   const ch = $("sChase"); if (ch) ch.onchange = e => { S.settings.remindWait = Math.max(1, +e.target.value || 3); touch(); };
+  tgSetupWire();
   const mem = $("sMem"); if (mem) mem.onchange = e => {
     S.settings.rememberFilters = e.target.value === "1";
     if (!S.settings.rememberFilters) S.settings.savedFilters = null; else rememberFilters();
@@ -19907,7 +20202,10 @@ function remindOnce(key, fn){
   return true;
 }
 function checkReminders(){
-  if (!S.settings.remind) return;
+  /* the Windows side and the phone side are separate switches: either one
+     on is reason enough to look */
+  const win = !!S.settings.remind, tg = tgReady();
+  if (!win && !tg) return;
   const now = new Date(), k = today(), lead = +S.settings.lead || 15;
 
   /* Routines set to nudge. A record is raised once a day, so it could only
@@ -19925,8 +20223,12 @@ function checkReminders(){
     const when = new Date(now.getFullYear(), now.getMonth(), now.getDate(), +p[0], +p[1]);
     if ((now - when) / 60000 > 5) return;
     remindOnce("rem|" + r.id + "|" + k + "|" + slot, () => {
-      toast(r.title);
-      notify(r.title, r.message || r.notes || L("RoutineReminderBody", { p0: slot }), null, "rem" + r.id);
+      if (win){
+        toast(r.title);
+        notify(r.title, r.message || r.notes || L("RoutineReminderBody", { p0: slot }), null, "rem" + r.id);
+      }
+      tgAlert({ key:"rem|" + r.id + "|" + k + "|" + slot, kind:"routine", head:r.title,
+                body:r.message || r.notes || L("RoutineReminderBody", { p0: slot }) });
     });
   });
 
@@ -19940,17 +20242,22 @@ function checkReminders(){
       const diff = (when - now) / 60000;
       if (diff <= lead && diff > -2){
         remindOnce("due|" + t.id + "|" + k + "|" + t.dueTime, () => {
-          toast(t.title + L("DueAt") + t.dueTime);
-          notify(t.code + L("DueAt2") + t.dueTime,
-            t.title + (t.system ? "\n" + t.system : ""), t.id);
+          if (win){
+            toast(t.title + L("DueAt") + t.dueTime);
+            notify(t.code + L("DueAt2") + t.dueTime,
+              t.title + (t.system ? "\n" + t.system : ""), t.id);
+          }
+          tgAlert(tgDueAlert(t, "due|" + t.id + "|" + k + "|" + t.dueTime, when.getTime()));
         });
       }
     }
     // quietly late, once a day
     if (S.settings.remindOverdue && t.due && t.due < k){
       remindOnce("late|" + t.id + "|" + k, () => {
-        notify(t.code + " · " + t.carried + " day(s) late",
+        if (win) notify(t.code + " · " + t.carried + " day(s) late",
           t.title + "\nDue " + niceDate(t.due) + ". Reschedule it or close it.", t.id);
+        tgAlert({ key:"late|" + t.id + "|" + k, kind:"late", taskId:t.id,
+                  head:t.code + " \u00b7 " + t.carried + " day(s) late", body:t.title + " \u2014 due " + niceDate(t.due) });
       });
     }
     // someone else has been sitting on it
@@ -19959,7 +20266,10 @@ function checkReminders(){
       const overdueChase = t.waitUntil && t.waitUntil <= k;
       if (overdueChase || chaseDays(t) >= limit){
         remindOnce("wait|" + t.id + "|" + k, () => {
-          notify(L("Chase") + t.waitOn + " · " + t.code,
+          tgAlert({ key:"wait|" + t.id + "|" + k, kind:"chase", taskId:t.id,
+                    head:L("Chase") + t.waitOn + " \u00b7 " + t.code,
+                    body:t.title + " \u2014 waiting " + waitDays(t) + " day(s)" });
+          if (win) notify(L("Chase") + t.waitOn + " · " + t.code,
             t.title + "\nWaiting " + waitDays(t) + " day(s)" +
             ((t.chases||[]).length ? L("LastChasedDAgo", { p0: chaseDays(t) }) : L("NeverChased2")) + ".", t.id);
         });
@@ -19997,6 +20307,646 @@ function askNotify(){
 
 
 
+
+/* ═══ TELEGRAM ═══════════════════════════════════════════════════════════
+   Reminders on your phone, for when you are not at the PC: at lunch, in a
+   meeting room, walking the floor. The Windows notifications above are for
+   the PC in front of you; this is for the one in your pocket.
+
+   The rules it keeps, so it is a help and not one more thing buzzing:
+   - Only when you are away. The bridge (Resolv.bat) tells the page how long
+     since the last key or mouse movement anywhere on the PC and whether the
+     screen is locked; five minutes without either, or a locked screen, and
+     you are away. At the PC, the Windows notification is enough.
+   - Left without seeing to it? A reminder for a time today that came up
+     while you were here is still sent if you walk away before its time -
+     that is exactly the lunch break this is for. A daily nag (late work,
+     chases) that you saw at the PC is not repeated to your phone.
+   - Quiet hours, weekends and holidays are quiet.
+   - Several at once are one message, and at most a few an hour.
+   - Everything that can be done about a reminder can be done from the
+     message: Done, again in 15 minutes or an hour, move to the next working
+     day, log a chase. /today, /late, /next and /mute answer from the phone.
+   - One window sends and listens (the others stand by), and nothing is
+     resent after a reload.
+
+   Nothing here reaches the network. Every call goes through
+   flow/telegram.html, a page with no records whose content security policy
+   allows api.telegram.org and nothing else. */
+const TG_RELAY = "flow/telegram.html";
+const TG_TOKEN = /^\d{5,15}:[A-Za-z0-9_-]{30,64}$/;
+const TG_DEFAULTS = { on:false, token:"", chat:"", who:"", when:"away", idle:5,
+  quiet:true, quietFrom:"19:00", quietTo:"07:30", offDays:true,
+  due:true, routines:true, late:true, chase:false, runs:true, urgent:false,
+  max:6, awake:true, muteUntil:0 };
+/* which switch each kind of reminder answers to */
+const TG_KIND = { due:"due", again:"due", routine:"routines", late:"late", chase:"chase", run:"runs" };
+const TG_ICON = { due:"⏰", again:"\u{1F514}", routine:"\u{1F501}", late:"⚠️", chase:"\u{1F4E8}", run:"❌" };
+const TG = { frame:null, ready:false, opening:null, seq:0, waiting:{}, leader:false, leadAsked:false,
+  polling:false, pollErr:0, conflict:false, err:"", me:null, pending:[], hour:[], pumping:false,
+  pres:{ at:0, src:"", idle:0, locked:false, away:false, power:"" }, wasAway:false, awaySent:0,
+  lastInput:Date.now(), idle:null, idleSince:0, awakeMin:-1, awakeAt:0, hold:0, last:null, store:null };
+
+function tgCfg(){
+  const st = S.settings;
+  if (!st.telegram || typeof st.telegram !== "object") st.telegram = {};
+  const c = st.telegram;
+  Object.keys(TG_DEFAULTS).forEach(k => { if (c[k] === undefined) c[k] = TG_DEFAULTS[k]; });
+  return c;
+}
+function tgReady(){
+  const c = tgCfg();
+  return !!c.on && TG_TOKEN.test(String(c.token).trim()) && /^-?\d{3,20}$/.test(String(c.chat).trim());
+}
+/* What only this PC needs to remember - where it is up to in the bot's
+   messages, what it has already sent, what is snoozed - is kept in this
+   browser, not in the workspace: it is not a record, and a second PC on
+   the same workspace must not think it has already told you. */
+function tgStore(){
+  if (!TG.store){ try { TG.store = JSON.parse(localStorage.getItem("resolv.tg") || "{}") || {}; } catch(e){ TG.store = {}; } }
+  const s = TG.store;
+  s.sent = s.sent || {}; s.snooze = s.snooze || []; s.msgs = s.msgs || {};
+  return s;
+}
+function tgSave(){
+  const s = tgStore(), cut = Date.now() - 3 * 864e5;
+  Object.keys(s.sent).forEach(k => { if (s.sent[k] < cut) delete s.sent[k]; });
+  Object.keys(s.msgs).forEach(k => { if ((s.msgs[k].at || 0) < cut) delete s.msgs[k]; });
+  try { localStorage.setItem("resolv.tg", JSON.stringify(s)); } catch(e){}
+}
+function tgEsc(s){ return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+function tgHm(ms){ const d = new Date(ms); return pad2(d.getHours()) + ":" + pad2(d.getMinutes()); }
+function tgMin(hm){ const p = String(hm || "").split(":"); return (+p[0] || 0) * 60 + (+p[1] || 0); }
+const tgSleep = ms => new Promise(r => setTimeout(r, ms));
+
+/* ── the relay ──────────────────────────────────────────────────────── */
+function tgFrame(){
+  if (TG.frame && TG.ready) return Promise.resolve(TG.frame);
+  if (TG.opening) return TG.opening;
+  TG.opening = new Promise((resolve, reject) => {
+    let f = TG.frame;
+    if (!f){
+      f = document.createElement("iframe");
+      f.title = "Resolv Telegram relay";
+      f.setAttribute("aria-hidden", "true"); f.tabIndex = -1;
+      f.style.cssText = "position:fixed;left:-9999px;top:0;width:1px;height:1px;border:0;visibility:hidden";
+      f.src = TG_RELAY + "?v=" + APP_VERSION;
+      document.body.appendChild(f);
+      TG.frame = f;
+    }
+    const t = setTimeout(() => reject(new Error(L("TgNoRelay"))), 10000);
+    TG.onReady = () => { clearTimeout(t); TG.ready = true; resolve(f); };
+    if (TG.ready) TG.onReady();
+  });
+  TG.opening.catch(() => { TG.opening = null; });
+  return TG.opening;
+}
+window.addEventListener("message", ev => {
+  const m = ev.data;
+  if (!m || m.__dossierTg !== 1 || !TG.frame || ev.source !== TG.frame.contentWindow) return;
+  if (m.evt === "ready"){ TG.ready = true; if (TG.onReady) TG.onReady(); return; }
+  const w = TG.waiting[m.id]; if (!w) return;
+  delete TG.waiting[m.id]; clearTimeout(w.timer);
+  if (m.ok) return w.resolve(m.result);
+  const e = new Error(m.error || "Telegram failed");
+  e.kind = m.kind || "error"; e.status = m.status || 0; e.retry = m.retry || 0;
+  w.reject(e);
+});
+function tgCall(method, params, ms, token){
+  const tok = String(token || tgCfg().token || "").trim();
+  return tgFrame().then(f => new Promise((resolve, reject) => {
+    const id = "t" + (++TG.seq);
+    const timer = setTimeout(() => { delete TG.waiting[id];
+      reject(Object.assign(new Error(L("TgRelaySilent")), { kind:"timeout" })); }, (ms || 15000) + 6000);
+    TG.waiting[id] = { resolve, reject, timer };
+    f.contentWindow.postMessage({ __dossierTg:1, id:id, cmd:"call", method:method,
+      params:params || {}, token:tok, timeout:ms || 15000 }, "*");
+  })).then(j => j.result);
+}
+
+/* ── are you here ───────────────────────────────────────────────────── */
+["pointerdown", "keydown", "wheel", "pointermove"].forEach(ev =>
+  document.addEventListener(ev, () => { TG.lastInput = Date.now(); }, { passive:true }));
+async function tgIdleStart(ask){
+  if (TG.idle || !("IdleDetector" in window)) return !!TG.idle;
+  try {
+    if (ask){ if (await IdleDetector.requestPermission() !== "granted") return false; }
+    else {
+      const p = await navigator.permissions.query({ name:"idle-detection" });
+      if (p.state !== "granted") return false;
+    }
+    const d = new IdleDetector();
+    d.addEventListener("change", () => { if (d.userState === "idle") TG.idleSince = Date.now(); });
+    await d.start({ threshold:60000 });
+    TG.idle = d;
+    return true;
+  } catch(e){ return false; }
+}
+async function tgPresence(force){
+  const now = Date.now(), c = tgCfg();
+  if (!force && now - TG.pres.at < 20000) return TG.pres;
+  let p = null;
+  if (DB.bridge && DB.port && DB.token){
+    try {
+      const r = await fetchIn(dbUrl("/presence"), { headers:{ "X-Dossier-Token":DB.token }, cache:"no-store" }, 4000);
+      const j = r.ok ? await r.json() : null;
+      if (j && j.idle >= 0) p = { src:"windows", idle:+j.idle, locked:!!j.locked, power:j.power || "" };
+    } catch(e){}
+  }
+  if (!p && TG.idle)
+    p = { src:"browser", idle:TG.idle.userState === "idle" ? Math.round((now - TG.idleSince) / 1000) + 60 : 0,
+          locked:TG.idle.screenState === "locked", power:"" };
+  /* only this tab to go on: someone working in Outlook looks exactly like
+     someone at lunch, so it waits three times as long before it believes it */
+  if (!p) p = { src:"tab", idle:document.hidden ? Math.round((now - TG.lastInput) / 1000) : 0, locked:false, power:"" };
+  const need = Math.max(1, +c.idle || 5) * 60 * (p.src === "tab" ? 3 : 1);
+  p.away = p.locked || p.idle >= need;
+  p.at = now;
+  TG.pres = p;
+  return p;
+}
+function tgQuiet(){
+  const c = tgCfg(), d = new Date();
+  if (c.offDays && isOffDay(today())) return true;
+  if (!c.quiet) return false;
+  const hm = d.getHours() * 60 + d.getMinutes(), a = tgMin(c.quietFrom), b = tgMin(c.quietTo);
+  if (a === b) return false;
+  return a < b ? (hm >= a && hm < b) : (hm >= a || hm < b);
+}
+
+/* ── a reminder, offered ───────────────────────────────────────────────
+   Called from checkReminders and the script sweep with what the Windows
+   notification says. How long it stays worth sending depends on what it
+   is: a time today until a little after that time; a routine for twenty
+   minutes; a failed script for an hour; a daily nag only if you were
+   already away when it came up. */
+function tgAlert(a){
+  if (!tgReady()) return;
+  const c = tgCfg();
+  if (!c[TG_KIND[a.kind]]) return;
+  const st = tgStore();
+  if (st.sent[a.key] || TG.pending.some(x => x.key === a.key)) return;
+  const now = Date.now();
+  a.at = now;
+  a.until = a.kind === "due" || a.kind === "again" ? Math.max(now, a.when || now) + 30 * 60000
+          : a.kind === "routine" ? now + 20 * 60000
+          : a.kind === "run" ? now + 60 * 60000
+          : now + 2 * 60000;
+  TG.pending.push(a);
+  tgPump();
+}
+function tgDueAlert(t, key, when){
+  return { key:key, kind:"due", taskId:t.id, due:t.due, dueTime:t.dueTime, when:when,
+    soon:(when - Date.now()) <= 5 * 60000, urgent:t.priority === "P1",
+    head:L("TgDueAt", { time:t.dueTime }) + " · " + t.code,
+    body:t.title + (t.system ? " — " + t.system : "") + (t.priority === "P1" ? " · P1" : "") };
+}
+/* still worth saying: the record is still open and still the same */
+function tgStill(a){
+  if (!a.taskId) return true;
+  const t = getTask(a.taskId);
+  if (!t || LIVE.indexOf(t.status) < 0) return false;
+  if (a.kind === "due") return t.due === a.due && t.dueTime === a.dueTime;
+  if (a.kind === "late") return !!t.due && t.due < today();
+  if (a.kind === "chase") return !!t.waitOn;
+  return true;
+}
+
+/* ── deciding, every half minute ─────────────────────────────────────── */
+async function tgPump(){
+  if (!tgReady() || !TG.leader || TG.pumping) return;
+  TG.pumping = true;
+  try {
+    const now = Date.now(), c = tgCfg(), st = tgStore();
+    let p = null;
+    /* snoozed from the phone and now due again: to the phone if you are
+       still away, to this screen if you are back */
+    const due = st.snooze.filter(z => z.until <= now);
+    if (due.length){
+      st.snooze = st.snooze.filter(z => z.until > now); tgSave();
+      p = await tgPresence(true);
+      due.forEach(z => {
+        const t = getTask(z.taskId);
+        if (!t || LIVE.indexOf(t.status) < 0) return;
+        if (!p.away && c.when === "away"){
+          toast(L("TgAgainHere", { code:t.code, title:t.title }), { action:L("TgOpen"), onAction:() => openDrawer(t.id) });
+          notify(t.code + " · " + L("TgAgain"), t.title, t.id);
+          return;
+        }
+        TG.pending.push({ key:"again|" + t.id + "|" + z.until, kind:"again", taskId:t.id, at:now - 60000,
+          until:now + 30 * 60000, soon:true, head:L("TgAgain") + " · " + t.code, body:t.title });
+      });
+    }
+    TG.pending = TG.pending.filter(a => a.until > now && tgStill(a) && !st.sent[a.key]);
+    if (!TG.pending.length || c.muteUntil > now || TG.hold > now || tgQuiet()) return;
+    p = p || await tgPresence();
+    const list = c.when === "always" || p.away ? TG.pending.slice()
+               : c.urgent ? TG.pending.filter(a => a.urgent) : [];
+    if (!list.length) return;
+    /* a moment for anything else to arrive, so three at noon are one message */
+    if (now - Math.min.apply(null, list.map(a => a.at)) < 40000 && !list.some(a => a.soon)) return;
+    TG.hour = TG.hour.filter(x => now - x < 3600000);
+    if (TG.hour.length >= Math.max(1, +c.max || 6)) return;
+    await tgSendAlerts(list, p);
+  } catch(e){ TG.err = String(e.message || e); }
+  finally { TG.pumping = false; }
+}
+
+/* ── what the message says, and the buttons under it ─────────────────── */
+function tgLine(a){ return (TG_ICON[a.kind] || "•") + " <b>" + tgEsc(a.head) + "</b>" + (a.body ? "\n" + tgEsc(a.body) : ""); }
+/* the buttons under a reminder, as rows: the full set under one, a short
+   row per record under several */
+function tgButtons(a, short){
+  const t = a.taskId ? getTask(a.taskId) : null;
+  if (!t || a.kind === "run") return null;
+  const tag = short ? " " + t.code : "";
+  if (a.kind === "chase") return [[{ text:"\u{1F4E8} " + L("TgBtnChased") + tag, callback_data:"c:" + t.id },
+                                   { text:"\u23F0 1 h", callback_data:"s:60:" + t.id }]];
+  const row = [{ text:"\u2705 " + L("TgBtnDone") + tag, callback_data:"d:" + t.id },
+               { text:"\u23F0 15 min", callback_data:"s:15:" + t.id }];
+  if (short) return [row];
+  row.push({ text:"\u23F0 1 h", callback_data:"s:60:" + t.id });
+  return [row, [{ text:"\u{1F4C5} " + L("TgBtnTomorrow"), callback_data:"m:" + t.id }]];
+}
+async function tgSendAlerts(list, p){
+  const c = tgCfg(), st = tgStore();
+  list.sort((a, b) => (a.when || a.at) - (b.when || b.at));
+  let text, kb = [];
+  if (list.length === 1){
+    text = tgLine(list[0]);
+    const b = tgButtons(list[0], false);
+    if (b) kb = kb.concat(b);
+    else if (list[0].kind === "routine") kb.push([{ text:"\u{1F44D} " + L("TgBtnSeen"), callback_data:"ok" }]);
+  } else {
+    text = "\u{1F514} <b>" + tgEsc(L("TgNeedYou", { n:list.length })) + "</b>\n\n" +
+      list.map((a, i) => (i + 1) + ". " + tgLine(a).replace(/\n/, "\n    ")).join("\n\n");
+    list.slice(0, 6).forEach(a => { const b = tgButtons(a, true); if (b) kb = kb.concat(b); });
+    kb.push([{ text:"\u{1F44D} " + L("TgBtnSeen"), callback_data:"ok" }]);
+  }
+  try {
+    const m = await tgCall("sendMessage", { chat_id:String(c.chat).trim(), text:text, parse_mode:"HTML",
+      disable_web_page_preview:true, reply_markup:kb.length ? { inline_keyboard:kb } : undefined });
+    const now = Date.now();
+    list.forEach(a => { st.sent[a.key] = now; });
+    TG.pending = TG.pending.filter(a => list.indexOf(a) < 0);
+    if (m && m.message_id) st.msgs[m.message_id] = { at:now, text:text, done:[] };
+    tgSave();
+    TG.hour.push(now);
+    if (p && p.away) TG.awaySent += list.length;
+    TG.last = { at:now, n:list.length };
+    TG.err = "";
+  } catch(e){
+    TG.err = String(e.message || e);
+    if (e.kind === "slow") TG.hold = Date.now() + Math.max(30, e.retry || 60) * 1000;
+    /* a token that no longer works, or a chat that blocked the bot: stop
+       trying every half minute and say so on the Setup page instead */
+    if (e.kind === "token" || e.kind === "blocked-by-user") TG.hold = Date.now() + 30 * 60000;
+  }
+}
+
+/* ── the buttons, pressed on the phone ───────────────────────────────── */
+function tgMine(id){ return String(id) === String(tgCfg().chat).trim(); }
+function tgSnooze(t, n){
+  const st = tgStore(), until = Date.now() + n * 60000;
+  st.snooze = st.snooze.filter(z => z.taskId !== t.id).concat([{ taskId:t.id, until:until }]);
+  tgSave();
+  return until;
+}
+async function tgCallback(q){
+  if (!q || !(tgMine(q.from && q.from.id) || tgMine(q.message && q.message.chat && q.message.chat.id))) return;
+  const bits = String(q.data || "").split(":"), verb = bits[0];
+  const id = verb === "s" ? bits[2] : bits[1];
+  const t = id ? getTask(id) : null;
+  let note = "";
+  if (verb !== "ok" && !t) note = L("TgGone");
+  else if (verb === "d"){
+    if (LIVE.indexOf(t.status) < 0) note = L("TgAlreadyClosed", { code:t.code });
+    else {
+      setStatus(t.id, "done");
+      t.log.push({ at:new Date().toISOString(), kind:"status", text:L("TgClosedLog") });
+      touch();
+      note = "✅ " + L("TgDoneNote", { code:t.code });
+    }
+  } else if (verb === "s"){
+    const n = Math.max(5, Math.min(240, +bits[1] || 15));
+    note = "⏰ " + L("TgSnoozed", { code:t.code, time:tgHm(tgSnooze(t, n)) });
+  } else if (verb === "m"){
+    let to = addDays(today(), 1);
+    for (let i = 0; i < 30 && isOffDay(to); i++) to = addDays(to, 1);
+    updateTask(t.id, { due:to, carried:0 }, L("TgMovedLog", { date:niceDate(to) }));
+    renderAll();
+    note = "\u{1F4C5} " + L("TgMoved", { code:t.code, date:niceDate(to) });
+  } else if (verb === "c"){
+    if (!t.waitOn) note = L("TgNoWait", { code:t.code });
+    else { chaseWait(t.id, true); touch(); renderAll(); note = "\u{1F4E8} " + L("TgChasedNote", { who:t.waitOn }); }
+  } else note = "\u{1F44D} " + L("TgSeenNote");
+  tgCall("answerCallbackQuery", { callback_query_id:q.id, text:note.slice(0, 190) }).catch(() => {});
+  /* the message keeps what it said, gains a line saying what was done, and
+     loses the buttons that no longer apply */
+  const msg = q.message; if (!msg) return;
+  const st = tgStore(), rec = st.msgs[msg.message_id] || { at:Date.now(), text:tgEsc(msg.text || ""), done:[] };
+  rec.done = (rec.done || []).concat([note + " · " + tgHm(Date.now())]);
+  st.msgs[msg.message_id] = rec; tgSave();
+  let kb = [];
+  if (verb !== "ok"){
+    kb = ((msg.reply_markup && msg.reply_markup.inline_keyboard) || [])
+      .map(row => row.filter(b => b.callback_data !== "ok" && String(b.callback_data || "").split(":").pop() !== id))
+      .filter(row => row.length);
+    if (kb.length) kb.push([{ text:"\u{1F44D} " + L("TgBtnSeen"), callback_data:"ok" }]);
+  }
+  tgCall("editMessageText", { chat_id:String(tgCfg().chat).trim(), message_id:msg.message_id,
+    text:rec.text + "\n\n" + rec.done.map(tgEsc).join("\n"), parse_mode:"HTML",
+    reply_markup:{ inline_keyboard:kb } }).catch(() => {});
+}
+
+/* ── commands, typed on the phone ─────────────────────────────────────
+   /today /late /next /mute /help, and anything else is a search of what is
+   open. Read-only apart from /mute: nothing typed into a chat app changes
+   a record without a button being pressed. */
+function tgTaskLine(t){
+  const k = today();
+  return "• " + (t.due && t.due < k ? "⚠️ " : t.dueTime ? "<b>" + tgEsc(t.dueTime) + "</b> " : "") +
+    tgEsc(t.code) + " " + tgEsc(t.title) + (t.priority === "P1" || t.priority === "P2" ? " · " + t.priority : "");
+}
+function tgList(head, list, empty){
+  if (!list.length) return { text:empty };
+  const more = list.length > 15 ? "\n" + L("TgMore", { n:list.length - 15 }) : "";
+  return { text:"<b>" + tgEsc(head) + "</b>\n" + list.slice(0, 15).map(tgTaskLine).join("\n") + more };
+}
+function tgByTime(a, b){ return (a.due || "9").localeCompare(b.due || "9") || (a.dueTime || "99").localeCompare(b.dueTime || "99") ||
+  String(a.priority).localeCompare(String(b.priority)); }
+function tgReply(txt){
+  const c = tgCfg(), k = today(), live = S.tasks.filter(t => LIVE.indexOf(t.status) >= 0);
+  const words = String(txt || "").trim().split(/\s+/);
+  const cmd = (words[0] || "").toLowerCase().replace(/@\w+$/, "");
+  if (cmd === "/start" || cmd === "/help") return { text:L("TgHelp") };
+  if (cmd === "/today"){
+    const list = live.filter(t => t.due && t.due <= k).sort(tgByTime);
+    const d = pk(k), mo = LC(MON[d.getMonth()]);
+    const date = LC(DOW[d.getDay()]) + " " + d.getDate() + " " + (/^[A-Za-z]{4,}$/.test(mo) ? mo.slice(0, 3) : mo);
+    return tgList(L("TgTodayHead", { date:date }), list, L("TgTodayNone"));
+  }
+  if (cmd === "/late") return tgList(L("TgLateHead"), live.filter(t => t.due && t.due < k).sort(tgByTime), L("TgLateNone"));
+  if (cmd === "/next"){
+    const hm = tgHm(Date.now());
+    const t = live.filter(x => x.due === k && x.dueTime && x.dueTime >= hm).sort(tgByTime)[0] ||
+              live.filter(x => x.due && x.due <= k).sort((a, b) => String(a.priority).localeCompare(String(b.priority)) || tgByTime(a, b))[0];
+    if (!t) return { text:L("TgNextNone") };
+    const a = { kind:t.dueTime && t.due === k ? "due" : "late", taskId:t.id };
+    const b = tgButtons(a, false);
+    return { text:"➡️ <b>" + tgEsc(t.code + " " + t.title) + "</b>\n" +
+                  tgEsc([t.dueTime && t.due === k ? L("TgDueAt", { time:t.dueTime }) : t.due ? niceDate(t.due) : "", t.system, t.priority].filter(Boolean).join(" · ")),
+             kb:b || null };
+  }
+  if (cmd === "/mute"){
+    const arg = (words[1] || "60").toLowerCase();
+    if (arg === "off" || arg === "0"){ c.muteUntil = 0; touch(); return { text:L("TgUnmuted") }; }
+    const m = /^(\d+)\s*(h|hr|hrs|hours?)?$/.exec(arg);
+    const n = m ? Math.min(24 * 60, (+m[1]) * (m[2] ? 60 : 1)) : 60;
+    c.muteUntil = Date.now() + n * 60000; touch();
+    return { text:L("TgMuted", { time:tgHm(c.muteUntil) }) };
+  }
+  if (cmd === "/unmute"){ c.muteUntil = 0; touch(); return { text:L("TgUnmuted") }; }
+  const q = words.filter(w => w.length > 1).map(w => w.toLowerCase());
+  const hits = q.length ? live.filter(t => q.every(w => (t.code + " " + t.title + " " + (t.system || "")).toLowerCase().indexOf(w) >= 0)) : [];
+  if (hits.length) return tgList(L("TgFound", { q:words.join(" ") }), hits.sort(tgByTime), "");
+  return { text:L("TgDidNotFind", { q:tgEsc(words.join(" ")) }) + "\n\n" + L("TgHelp") };
+}
+async function tgMessage(m){
+  if (!m || !m.chat || !tgMine(m.chat.id)) return;
+  if (Date.now() / 1000 - (m.date || 0) > 900) return;          /* stale: sent while nothing was listening */
+  if (!m.text) return;
+  const r = tgReply(m.text);
+  await tgCall("sendMessage", { chat_id:String(tgCfg().chat).trim(), text:r.text, parse_mode:"HTML",
+    disable_web_page_preview:true, reply_markup:r.kb ? { inline_keyboard:r.kb } : undefined }).catch(() => {});
+}
+
+/* ── listening ───────────────────────────────────────────────────────── */
+async function tgLoop(){
+  if (TG.polling) return;
+  TG.polling = true;
+  const st = tgStore();
+  try {
+    while (tgReady() && TG.leader){
+      const hold = TG.hold - Date.now();
+      if (hold > 0){ await tgSleep(Math.min(hold, 60000)); continue; }
+      try {
+        /* the first time on this PC: whatever was waiting in the bot is old
+           news, and is skipped rather than acted on */
+        if (st.offset == null){
+          const old = await tgCall("getUpdates", { offset:-1, timeout:0 }, 10000);
+          st.offset = old.length ? old[old.length - 1].update_id + 1 : 0; tgSave();
+        }
+        const ups = await tgCall("getUpdates", { offset:st.offset, timeout:25,
+          allowed_updates:["message", "callback_query"] }, 35000);
+        TG.pollErr = 0; TG.conflict = false;
+        for (const u of ups){
+          st.offset = u.update_id + 1; tgSave();
+          try { if (u.callback_query) await tgCallback(u.callback_query); else if (u.message) await tgMessage(u.message); }
+          catch(e){}
+        }
+      } catch(e){
+        TG.pollErr++;
+        TG.conflict = e.kind === "conflict";
+        if (e.kind === "token"){ TG.err = String(e.message || e); TG.hold = Date.now() + 30 * 60000; continue; }
+        await tgSleep(Math.min(300000, 10000 * Math.pow(2, Math.min(5, TG.pollErr - 1))));
+      }
+    }
+  } finally { TG.polling = false; }
+}
+/* one window sends and listens; another open window waits its turn and
+   takes over when that one closes */
+function tgLead(){
+  if (!tgReady()) return;
+  if (TG.leader){ tgLoop(); return; }
+  if (TG.leadAsked) return;
+  TG.leadAsked = true;
+  if (!navigator.locks){ TG.leader = true; tgLoop(); return; }
+  navigator.locks.request("resolv-telegram", () => new Promise(() => {
+    TG.leader = true; tgLoop(); tgPump();
+  })).catch(() => {});
+}
+
+/* ── the half-minute tick ───────────────────────────────────────────────
+   Back from lunch: a line to say what went to the phone meanwhile. And
+   while something is due soon, the PC is asked to stay awake - a laptop
+   asleep on the desk at 12:40 cannot say anything at 13:00. */
+async function tgTick(){
+  if (!tgReady()){ if (TG.awakeMin > 0) tgAwake(0); return; }
+  tgLead();
+  if (!TG.leader) return;
+  await tgPump();
+  const p = await tgPresence();
+  if (TG.wasAway && !p.away && TG.awaySent){
+    toast(L("TgWhileAway", { n:TG.awaySent }));
+    TG.awaySent = 0;
+  }
+  TG.wasAway = p.away;
+  const c = tgCfg();
+  let min = 0;
+  if (c.awake && !tgQuiet()){
+    const now = Date.now(), k = today();
+    if (TG.pending.length || tgStore().snooze.length) min = 30;
+    S.tasks.forEach(t => {
+      if (LIVE.indexOf(t.status) < 0 || t.due !== k || !t.dueTime) return;
+      const w = pk(k); const hm = t.dueTime.split(":"); w.setHours(+hm[0], +hm[1], 0, 0);
+      const ahead = (w.getTime() - now) / 60000;
+      if (ahead > -5 && ahead <= 120) min = Math.max(min, Math.ceil(ahead) + 20);
+    });
+  }
+  tgAwake(min);
+}
+async function tgAwake(min){
+  if (!DB.bridge || !DB.port || !DB.token) return;
+  if (min === TG.awakeMin && Date.now() - TG.awakeAt < 4 * 60000) return;
+  try {
+    await fetchIn(dbUrl("/awake?minutes=" + min), { method:"POST", headers:{ "X-Dossier-Token":DB.token } }, 4000);
+    TG.awakeMin = min; TG.awakeAt = Date.now();
+  } catch(e){}
+}
+setInterval(tgTick, 30000);
+
+/* ── Setup → Telegram ─────────────────────────────────────────────────── */
+function tgSetupHtml(){
+  return '<h5 class="eyebrow" style="margin:20px 0 8px">' + LE("TgHead") + "</h5>" +
+    '<p style="font-size:12px;color:var(--ink-2);line-height:1.75;margin:0 0 10px">' + L("TgIntro") + "</p>" +
+    '<div id="tgBox">' + tgBoxHtml() + "</div>";
+}
+function tgBoxHtml(){
+  const c = tgCfg();
+  const opt = (v, cur, label) => '<option value="' + v + '"' + (String(cur) === String(v) ? " selected" : "") + ">" + esc(label) + "</option>";
+  const ck = (k, label) => '<label class="tgck"><input type="checkbox" data-tgk="' + k + '"' + (c[k] ? " checked" : "") + "> " + esc(label) + "</label>";
+  return fr(L("TgOnLabel"), '<select class="in" id="tgOn">' + opt(0, c.on ? 1 : 0, L("Off")) + opt(1, c.on ? 1 : 0, L("On")) + "</select>") +
+    fr(L("TgToken"), '<div class="tgrow"><input class="in" id="tgToken" type="password" autocomplete="off" spellcheck="false" ' +
+      'placeholder="123456789:AAF…" value="' + esc(c.token) + '"><button class="btn sm" id="tgShow" type="button" title="' +
+      LE("TgShowToken") + '">\u{1F441}</button></div>') +
+    fr(L("TgChat"), '<div class="tgrow"><input class="in" id="tgChat" inputmode="numeric" autocomplete="off" spellcheck="false" ' +
+      'placeholder="512345678" value="' + esc(c.chat) + '"><button class="btn" id="tgFind" type="button">' + LE("TgFind") + "</button></div>") +
+    '<div class="brow" style="margin:8px 0 2px"><button class="btn pri" id="tgTest" type="button">' + LE("TgTest") + "</button></div>" +
+    '<div id="tgStat" class="tgstat">' + tgStatusHtml() + "</div>" +
+    '<details class="tghow"><summary>' + LE("TgHowHead") + "</summary><ol>" + L("TgHowSteps") + "</ol></details>" +
+    fr(L("TgWhen"), '<select class="in" id="tgWhen">' + opt("away", c.when, L("TgWhenAway")) + opt("always", c.when, L("TgWhenAlways")) + "</select>") +
+    fr(L("TgAwayAfter"), '<div class="tgrow"><input class="in tgn" id="tgIdle" type="number" min="1" max="60" value="' + (+c.idle || 5) + '">' +
+      '<span class="tgunit">' + LE("TgMinutesUnit") + "</span></div>") +
+    '<p class="hint2" id="tgSeen">' + tgSeenHtml() + "</p>" +
+    fr(L("TgWhat"), '<div class="tgcks">' + ck("due", L("TgWhatDue")) + ck("routines", L("TgWhatRoutines")) +
+      ck("late", L("TgWhatLate")) + ck("chase", L("TgWhatChase")) + ck("runs", L("TgWhatRuns")) + "</div>") +
+    fr(L("TgQuietLabel"), '<div class="tgrow"><label class="tgck"><input type="checkbox" data-tgk="quiet"' + (c.quiet ? " checked" : "") + "> " +
+      LE("TgQuietFrom") + '</label><input class="in tgt" id="tgQFrom" type="time" value="' + esc(c.quietFrom) + '"><span class="tgunit tgto">' +
+      LE("TgQuietTo") + '</span><input class="in tgt" id="tgQTo" type="time" value="' + esc(c.quietTo) + '"></div>') +
+    fr(L("TgOffDays"), '<select class="in" id="tgOff">' + opt(1, c.offDays ? 1 : 0, L("TgOffQuiet")) + opt(0, c.offDays ? 1 : 0, L("TgOffSend")) + "</select>") +
+    fr(L("TgMax"), '<div class="tgrow"><input class="in tgn" id="tgMax" type="number" min="1" max="30" value="' + (+c.max || 6) + '"><span class="tgunit">' + LE("TgMaxUnit") + "</span></div>") +
+    fr(L("TgUrgent"), '<select class="in" id="tgUrgent">' + opt(0, c.urgent ? 1 : 0, L("TgUrgentNo")) + opt(1, c.urgent ? 1 : 0, L("TgUrgentYes")) + "</select>") +
+    fr(L("TgAwake"), '<select class="in" id="tgAwake">' + opt(1, c.awake ? 1 : 0, L("TgAwakeYes")) + opt(0, c.awake ? 1 : 0, L("TgAwakeNo")) + "</select>") +
+    '<p class="hint2">' + L("TgAwakeHint") + "</p>" +
+    (c.muteUntil > Date.now() ? '<p class="hint2">' + LE("TgMutedNow", { time:tgHm(c.muteUntil) }) +
+      ' <button class="btn sm" id="tgUnmute" type="button">' + LE("TgUnmute") + "</button></p>" : "");
+}
+function tgStatusHtml(){
+  const c = tgCfg();
+  if (!c.on) return '<span class="tgdot"></span>' + LE("TgStatOff");
+  if (!TG_TOKEN.test(String(c.token).trim())) return '<span class="tgdot bad"></span>' + LE("TgStatNoToken");
+  if (!/^-?\d{3,20}$/.test(String(c.chat).trim())) return '<span class="tgdot bad"></span>' + LE("TgStatNoChat");
+  if (TG.err) return '<span class="tgdot bad"></span>' + esc(TG.err);
+  if (TG.conflict) return '<span class="tgdot warn"></span>' + LE("TgStatConflict");
+  const who = c.who ? " " + LE("TgStatAs", { who:c.who }) : "";
+  const last = TG.last ? " · " + LE("TgStatLast", { time:tgHm(TG.last.at), n:TG.last.n }) : "";
+  return '<span class="tgdot ok"></span>' + LE("TgStatOn") + who + last +
+    (TG.leader ? "" : " · " + LE("TgStatOther"));
+}
+function tgSeenHtml(){
+  const p = TG.pres, src = p.src || (DB.bridge ? "windows" : TG.idle ? "browser" : "tab");
+  if (src === "windows") return L("TgSeenWindows");
+  if (src === "browser") return L("TgSeenBrowser");
+  return L("TgSeenTab") + ("IdleDetector" in window
+    ? ' <button class="btn sm" id="tgIdleAsk" type="button">' + LE("TgSeenAsk") + "</button>" : "");
+}
+function tgSetupWire(){
+  const box = $("tgBox"); if (!box) return;
+  const c = tgCfg();
+  const paint = () => { const s = $("tgStat"); if (s) s.innerHTML = tgStatusHtml(); };
+  const set = (k, v) => { c[k] = v; touch(); paint(); if (tgReady()) tgLead(); };
+  const val = id => ($(id) || {}).value;
+  $("tgOn").onchange = e => set("on", e.target.value === "1");
+  $("tgToken").onchange = e => { c.who = ""; TG.err = ""; set("token", e.target.value.trim()); if (TG_TOKEN.test(c.token)) tgWhoAmI(); };
+  $("tgChat").onchange = e => { TG.err = ""; set("chat", e.target.value.trim()); };
+  $("tgShow").onclick = () => { const t = $("tgToken"); t.type = t.type === "password" ? "text" : "password"; };
+  $("tgWhen").onchange = e => set("when", e.target.value);
+  $("tgIdle").onchange = e => set("idle", Math.max(1, Math.min(60, +e.target.value || 5)));
+  $("tgQFrom").onchange = e => set("quietFrom", e.target.value || "19:00");
+  $("tgQTo").onchange = e => set("quietTo", e.target.value || "07:30");
+  $("tgOff").onchange = e => set("offDays", e.target.value === "1");
+  $("tgMax").onchange = e => set("max", Math.max(1, Math.min(30, +e.target.value || 6)));
+  $("tgUrgent").onchange = e => set("urgent", e.target.value === "1");
+  $("tgAwake").onchange = e => set("awake", e.target.value === "1");
+  box.querySelectorAll("[data-tgk]").forEach(b => { b.onchange = () => set(b.dataset.tgk, b.checked); });
+  const um = $("tgUnmute"); if (um) um.onclick = () => { c.muteUntil = 0; touch(); box.innerHTML = tgBoxHtml(); tgSetupWire(); };
+  const ia = $("tgIdleAsk"); if (ia) ia.onclick = async () => {
+    const ok = await tgIdleStart(true);
+    toast(ok ? L("TgSeenAskOk") : L("TgSeenAskNo"), { bad:!ok });
+    await tgPresence(true); const s = $("tgSeen"); if (s) s.innerHTML = tgSeenHtml();
+  };
+  $("tgFind").onclick = () => tgFindChat();
+  $("tgTest").onclick = () => tgTest();
+}
+/* the name the bot goes by, so the Setup page can say which one it is */
+async function tgWhoAmI(){
+  const c = tgCfg();
+  try {
+    const me = await tgCall("getMe", {}, 10000);
+    c.who = me && me.username ? "@" + me.username : ""; TG.err = ""; touch();
+  } catch(e){ TG.err = String(e.message || e); }
+  const s = $("tgStat"); if (s) s.innerHTML = tgStatusHtml();
+}
+/* The chat ID is the one thing people get wrong. So: open your bot, press
+   Start, and this reads who it was that pressed it. */
+async function tgFindChat(){
+  const c = tgCfg(), token = String(($("tgToken") || {}).value || c.token).trim();
+  if (!TG_TOKEN.test(token)) return toast(L("TgStatNoToken"), { bad:true });
+  c.token = token;
+  const b = $("tgFind"); if (b){ b.disabled = true; b.textContent = L("TgFinding"); }
+  try {
+    const ups = await tgCall("getUpdates", { offset:-20, timeout:0 }, 10000, token);
+    const hit = ups.map(u => u.message || (u.callback_query && u.callback_query.message)).filter(m => m && m.chat && m.chat.type === "private").pop();
+    if (!hit){ toast(L("TgFindNone"), { bad:true, life:9000 }); return; }
+    c.chat = String(hit.chat.id); touch();
+    const i = $("tgChat"); if (i) i.value = c.chat;
+    toast(L("TgFindOk", { name:[hit.chat.first_name, hit.chat.last_name].filter(Boolean).join(" ") || hit.chat.username || c.chat }));
+    if (!c.who) tgWhoAmI();
+  } catch(e){
+    toast(e.kind === "conflict" ? L("TgStatConflict") : String(e.message || e), { bad:true, life:9000 });
+  } finally {
+    if (b){ b.disabled = false; b.textContent = L("TgFind"); }
+    const s = $("tgStat"); if (s) s.innerHTML = tgStatusHtml();
+  }
+}
+async function tgTest(){
+  const c = tgCfg();
+  c.token = String(($("tgToken") || {}).value || c.token).trim();
+  c.chat = String(($("tgChat") || {}).value || c.chat).trim();
+  if (!TG_TOKEN.test(c.token)) return toast(L("TgStatNoToken"), { bad:true });
+  if (!/^-?\d{3,20}$/.test(c.chat)) return toast(L("TgStatNoChat"), { bad:true });
+  const b = $("tgTest"); if (b) b.disabled = true;
+  try {
+    if (!c.who) await tgWhoAmI();
+    await tgCall("sendMessage", { chat_id:c.chat, text:L("TgTestText"), parse_mode:"HTML" }, 12000);
+    /* the commands, in the menu Telegram shows beside the box you type in */
+    tgCall("setMyCommands", { commands:[
+      { command:"today", description:L("TgCmdToday") }, { command:"late", description:L("TgCmdLate") },
+      { command:"next", description:L("TgCmdNext") }, { command:"mute", description:L("TgCmdMute") },
+      { command:"help", description:L("TgCmdHelp") }] }, 10000).catch(() => {});
+    if (!c.on){ c.on = true; const o = $("tgOn"); if (o) o.value = "1"; }
+    TG.err = ""; touch();
+    toast(L("TgTestOk"));
+    tgLead();
+  } catch(e){
+    TG.err = String(e.message || e);
+    toast(e.kind === "bad" && /chat not found/i.test(TG.err) ? L("TgChatNotFound") : TG.err, { bad:true, life:9000 });
+  } finally {
+    if (b) b.disabled = false;
+    const s = $("tgStat"); if (s) s.innerHTML = tgStatusHtml();
+  }
+}
 
 /* ═══ THE RUN QUEUE — actually running the thing ══════════════════════════
    A page in a browser cannot start a program, and that is not going to
@@ -20192,6 +21142,10 @@ async function sweepAutoRuns(){
               text: L("RanOnSchedule") + (ok ? "" : " (failed, exit " + res.exit + ")") +
                     (res.output ? "\n" + String(res.output).slice(0, 4000) : "") });
             filed++;
+            /* a failed run is worth a message; a run that worked is not */
+            if (!ok) tgAlert({ key:"run|" + id, kind:"run", taskId:t.id,
+              head:L("TgRunFailed", { name:t.title }) + " \u00b7 exit " + res.exit,
+              body:String(res.output || "").trim().split("\n").slice(-3).join("\n").slice(0, 300) });
           }
         } else if (!res.forDate || res.forDate < addDays(today(), -3)) {
           /* the record is long gone; the result has nowhere to live */

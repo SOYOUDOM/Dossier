@@ -244,6 +244,17 @@ nothing to say.
 
 "This", "it", "the ticket" with nothing else to go on mean `focus.record`.
 
+**`workspace.app`** — Resolv describing itself, from its own README.md and
+CHANGELOG.md (5.6.0). Always: `version`, `recent` (the latest releases,
+newest first: `version`, `date`, `headline`) and `contents` (the README's
+chapters). When the question is about Resolv — a feature, a setting, where
+something is, what is new — also `docs` (up to three README sections:
+`from`, `section`, `text`) and, for what's-new and version questions,
+`releases` (`version`, `date`, `text`). Answer questions about the app from
+these only; never invent a setting or a button. Absent sections mean the
+question was not about Resolv, or the page could not read the files
+(opened from `file://`), in which case only `name` and `version` are sent.
+
 **`workspace.brief`** — their own "About my work" page (Setup → About my
 work): team, systems, servers and environments, people, the words they use.
 Markdown, at most 4,000 characters, sent with every question. The model can
