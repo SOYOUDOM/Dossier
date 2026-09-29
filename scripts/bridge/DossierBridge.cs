@@ -17,10 +17,6 @@
 //      transaction, and keeps the previous state before it replaces it.
 //    - starts the script runner for your workspace, hidden, and stops it
 //      again when it quits.
-//    - tells the page whether you are at the PC - how long since the last
-//      key or mouse movement anywhere, and whether the screen is locked - so
-//      a reminder can go to your phone when you are not, and, while one is
-//      due soon and the PC is plugged in, keeps it from going to sleep.
 //
 //  With no LocalDB on the machine it still hands out the page, and Dossier
 //  keeps its records in dossier.json as it always did.
@@ -714,8 +710,7 @@ public class DossierBridge
                 // file types out of the folder dossier.html sits in, which is
                 // a checkout of a public repository. Your records are not in
                 // that folder, and nothing below will serve them if they are.
-                bool api = (path == "/health" || path == "/workspace" || path == "/attachment" || path == "/history" ||
-                            path == "/presence" || path == "/awake");
+                bool api = (path == "/health" || path == "/workspace" || path == "/attachment" || path == "/history");
                 if (!api)
                 {
                     if ((method == "GET" || method == "HEAD") && Static(net, path, method == "HEAD")) return;
@@ -735,10 +730,6 @@ public class DossierBridge
 
                 try
                 {
-                    // these two are about the PC, not the database, so they
-                    // answer whether or not there is one
-                    if (method == "GET" && path == "/presence") { Presence(net); return; }
-                    if (method == "POST" && path == "/awake") { Awake(net, query); return; }
                     if (!DbReady)
                     {
                         Respond(net, method == "GET" && path == "/health" ? 200 : 503, "application/json",
@@ -1321,112 +1312,6 @@ public class DossierBridge
             object v = cmd.ExecuteScalar();
             if (v == DBNull.Value) return null;
             return v;
-        }
-    }
-
-    // ── are you at the PC? ─────────────────────────────────────────────────
-    //  A reminder that goes to your phone while you are sitting at your desk
-    //  is noise, so the page asks before it sends one. A web page can only
-    //  see its own tab; this can see the machine: how long since the last key
-    //  or mouse movement anywhere, and whether the screen is locked (the
-    //  input desktop is then Windows' secure one, which nothing may switch
-    //  to). Neither says what you were doing - only whether you were there.
-    [StructLayout(LayoutKind.Sequential)]
-    struct LASTINPUTINFO { public uint cbSize; public uint dwTime; }
-    [DllImport("user32.dll")] static extern bool GetLastInputInfo(ref LASTINPUTINFO plii);
-    [DllImport("user32.dll", SetLastError = true)]
-    static extern IntPtr OpenInputDesktop(uint dwFlags, bool fInherit, uint dwDesiredAccess);
-    [DllImport("user32.dll")] static extern bool SwitchDesktop(IntPtr hDesktop);
-    [DllImport("user32.dll")] static extern bool CloseDesktop(IntPtr hDesktop);
-    [DllImport("kernel32.dll")] static extern uint SetThreadExecutionState(uint esFlags);
-    const uint ES_SYSTEM_REQUIRED = 0x00000001;
-    const uint DESKTOP_SWITCHDESKTOP = 0x0100;
-
-    static long IdleSeconds()
-    {
-        try
-        {
-            LASTINPUTINFO li = new LASTINPUTINFO();
-            li.cbSize = (uint)Marshal.SizeOf(typeof(LASTINPUTINFO));
-            if (!GetLastInputInfo(ref li)) return -1;
-            uint now = unchecked((uint)Environment.TickCount);
-            return (long)(unchecked(now - li.dwTime) / 1000);
-        }
-        catch (Exception) { return -1; }
-    }
-
-    static bool ScreenLocked()
-    {
-        try
-        {
-            IntPtr d = OpenInputDesktop(0, false, DESKTOP_SWITCHDESKTOP);
-            if (d == IntPtr.Zero) return true;
-            bool ours = SwitchDesktop(d);
-            CloseDesktop(d);
-            return !ours;
-        }
-        catch (Exception) { return false; }
-    }
-
-    static string PowerLine()
-    {
-        try
-        {
-            PowerLineStatus p = SystemInformation.PowerStatus.PowerLineStatus;
-            return p == PowerLineStatus.Online ? "ac" : p == PowerLineStatus.Offline ? "battery" : "unknown";
-        }
-        catch (Exception) { return "unknown"; }
-    }
-
-    static void Presence(NetworkStream net)
-    {
-        string json = "{\"idle\":" + IdleSeconds() + ",\"locked\":" + (ScreenLocked() ? "true" : "false") +
-                      ",\"power\":" + Json(PowerLine()) + ",\"awake\":" + (AwakeNow ? "true" : "false") + "}";
-        Respond(net, 200, "application/json", Bytes(json));
-    }
-
-    //  Awake while something is due. A laptop left at lunch goes to sleep
-    //  after its idle timeout, and a PC that is asleep cannot tell you
-    //  anything. So while the page says a reminder is due within the next
-    //  while, this resets the idle timer every thirty seconds - which keeps
-    //  the PC awake but lets the screen go dark, and never overrides closing
-    //  the lid or pressing the power button. On battery it does nothing: an
-    //  unplugged laptop in a bag is not somewhere a reminder should keep
-    //  running. The page asks again every few minutes; if it stops asking
-    //  (closed, crashed) this lapses by itself.
-    static readonly object AwakeLock = new object();
-    static DateTime AwakeUntil = DateTime.MinValue;
-    static System.Threading.Timer AwakeTimer;
-    static volatile bool AwakeNow;
-
-    static void Awake(NetworkStream net, string query)
-    {
-        int minutes;
-        if (!int.TryParse(QueryValue(query, "minutes"), out minutes)) minutes = 0;
-        minutes = Math.Max(0, Math.Min(240, minutes));
-        lock (AwakeLock)
-        {
-            AwakeUntil = minutes > 0 ? DateTime.UtcNow.AddMinutes(minutes) : DateTime.MinValue;
-            if (AwakeTimer == null) AwakeTimer = new System.Threading.Timer(delegate { AwakeTick(); }, null, 0, 30000);
-        }
-        AwakeTick();
-        Respond(net, 200, "application/json",
-                Bytes("{\"awake\":" + (AwakeNow ? "true" : "false") + ",\"minutes\":" + minutes +
-                      ",\"power\":" + Json(PowerLine()) + "}"));
-    }
-
-    static void AwakeTick()
-    {
-        bool want;
-        lock (AwakeLock) want = DateTime.UtcNow < AwakeUntil && PowerLine() != "battery";
-        if (want)
-        {
-            try { SetThreadExecutionState(ES_SYSTEM_REQUIRED); } catch (Exception) { }
-        }
-        if (want != AwakeNow)
-        {
-            AwakeNow = want;
-            Log(want ? "  keeping the PC awake - a reminder is due soon" : "  no longer keeping the PC awake");
         }
     }
 

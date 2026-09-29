@@ -6,7 +6,35 @@ holds — which is what to paste into a bug report.
 
 ---
 
+## 5.8.0 - 2026-09-29
+
+**Telegram is gone; alerts stay, on the screen.** Sending alerts to a phone
+through Telegram (5.6.0, 5.7.0) is removed completely - it cannot work on a
+network that blocks `api.telegram.org`, and Resolv should not be knocking on
+a door the network has closed. What went:
+
+- `flow/telegram.html`, the page the messages went out through, and every
+  call to it. Nothing in Resolv reaches Telegram, or anywhere new, now.
+- Setup → Telegram, and what it kept: the bot's token and chat ID are
+  deleted from the workspace the first time 5.8.0 opens it, and the note
+  this browser kept of what it had sent is cleared.
+- In `Resolv.bat`'s program, the two routes that only Telegram used:
+  `/presence` (how long since the last key or mouse movement, and whether
+  the screen was locked) and `/awake` (keeping the PC from sleeping). It is
+  back to exactly what it was in 5.5.0, and rebuilds itself the next time
+  `Resolv.bat` runs after Resolv has been quit from its icon.
+
+What stays: **the bell on every record** - at its due time, 15 min or 1 h
+before, or a date and time of your own - now going off as a Windows
+notification and a note in Resolv; the assistant setting and clearing alerts
+(`setAlert`, `clearAlert`); and the assistant knowing Resolv's own README and
+CHANGELOG. The everyday reminders are unchanged.
+
+---
+
 ## 5.7.0 - 2026-09-29
+
+*(The Telegram part of this release was removed in 5.8.0; the bell stays.)*
 
 **Alerts: only the records you choose.** In 5.6.0 every reminder Resolv
 raised could go to your phone. Now nothing alerts you unless you asked it to,
@@ -44,6 +72,8 @@ on that one record:
 ---
 
 ## 5.6.0 - 2026-09-29
+
+*(Telegram was removed again in 5.8.0.)*
 
 **Reminders on your phone, through Telegram - only when you are away.** The
 reminders Resolv already raises (a time due today, routines that remind you,

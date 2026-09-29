@@ -56,7 +56,7 @@ These are design invariants, not preferences. Anything built on top of Resolv
 | # | Rule | Enforced by |
 |---|---|---|
 | 1 | **`dossier.html` can reach exactly one thing: `http://127.0.0.1`.** Not the internet, not `localhost` by name, not any other origin, and no form post anywhere. | A `Content-Security-Policy` meta tag: `connect-src http://127.0.0.1:*; form-action 'none'`. The browser enforces it; you can verify it in F12 → Network. **This was `connect-src 'none'` until v4.0**, when the database bridge arrived — it is the one loosening in the file's history, it is a loopback address, and nothing on the far side of it leaves the machine. |
-| 2 | **Your records never leave the folder** unless you configure an endpoint and switch it on. No telemetry, no sync, no account, no cloud, and nothing at all by default. | Rule 1, plus there is no server component. The one exception is [§12](#12-asking-through-a-power-automate-flow), which is off until you paste in a URL, states what it sends, and shows you the bytes first — and, since 5.6.0, [Telegram alerts (§6.7)](#67-alerts-on-the-records-you-choose-and-telegram), which are off until you give them a bot of your own and send only the few lines of an alert you set, through `flow/telegram.html`, whose policy allows `api.telegram.org` and nothing else. |
+| 2 | **Your records never leave the folder** unless you configure an endpoint and switch it on. No telemetry, no sync, no account, no cloud, and nothing at all by default. | Rule 1, plus there is no server component. The one exception is [§12](#12-asking-through-a-power-automate-flow), which is off until you paste in a URL, states what it sends, and shows you the bytes first. |
 | 3 | **The data outlives the app.** Every save writes `dossier.json` — human-readable, indented, openable in Notepad on a machine with no SQL Server and no Resolv on it. In database mode that file is an export rather than the store, written a few seconds after each save commits (the latest state each time), for exactly this reason. | `exportSoon()` runs only after the transaction commits, and only into the folder it was meant for. |
 | 4 | **Nothing is written while you ask a question.** Reading is read-only, down to not creating an empty object in settings. | `chatApi()` builds its view without mutating state. |
 | 5 | **Anything that writes asks first.** Log, close, hand over, chase, run, remind — each is proposed and confirmed, whether it arrived as a sentence or a button. | `chatDo()` refuses `act.confirm` unless the action carries `__ok`. |
@@ -141,8 +141,7 @@ With the demo copied in you should immediately see:
 | `chat.js` | ~360 KB | optional | The assistant — plain-English questions about your own records. Without it, the Ask box says so and everything else works. |
 | `assist.js` | ~20 KB | optional | The ranking and briefing engine behind the **Assist** tab and the Insight cards. |
 | `flow.js` | ~22 KB | optional | Client for a Power Automate endpoint: builds the request, validates the reply, and owns the relay frame. |
-| `flow/relay.html` | ~9 KB | optional | The page the assistant's questions go out through. Holds no records, pinned to one origin. |
-| `flow/telegram.html` | ~5 KB | optional | The page Telegram alerts go out through. Holds no records; its content security policy allows `https://api.telegram.org` and nothing else. |
+| `flow/relay.html` | ~9 KB | optional | The **only** page allowed to touch the network. Sandboxed, holds no records, pinned to one origin. |
 | `flow/CONTRACT.md` | ~16 KB | — | What your flow receives and must return, generated from `flow.js`. |
 | `flow/POWER-AUTOMATE.md` | ~19 KB | — | How to build the flow: trigger schema, the prompt, knowledge, and the test order. |
 | `flow/SPEED.md` | ~9 KB | — | Why a question used to grow with the workspace, what is ranked on the PC now, and the one prompt edit that goes with it. |
@@ -282,7 +281,6 @@ adds `D-0099` without touching `seq` will not cause a collision.
 | `hushed` | array of string | `[]` | Keys of the Day-sheet notices you have silenced. Cleared from **Setup → Hidden notices**. |
 | `chatUI` | `{skin, confirm, every, reveal, glow, grid, pulse, typing, chips, ambient}` | all on, `aurora`, ask-first | How the assistant panel looks and behaves. Set from **◎** in the chat header. |
 | `memory` | array of `{id, title, body, tags, system, created, updated, uses, lastUsed}` | `[]` | What you have taught the assistant: how something is done, what caused something, what to check next time. See [§12](#12-asking-through-a-power-automate-flow). |
-| `telegram` | `{on, token, chat, who, when, idle, awake, muteUntil}` | off | Alerts on your phone. `when` is `away` (the default) or `always`; `idle` is the minutes without keyboard or mouse that count as away. See [§6.7](#67-alerts-on-the-records-you-choose-and-telegram). `token` is your bot's password: it lives in your workspace like the flow URL does, and is never sent to the assistant. |
 
 ### 5.3 `tasks` — a record
 
@@ -326,7 +324,7 @@ Every field, in the order Resolv writes them:
 | `carried` | number | How many times this was rolled forward to another day. |
 | `fromRoutine` | string | The routine **id** that raised it, if any. |
 | `forDate` | `YYYY-MM-DD` | The day a routine raised it for. |
-| `alert` | object \| `null` | An alert you set on this record ([§6.7](#67-alerts-on-the-records-you-choose-and-telegram)): `{by, before, at, set, from, fired, seen, again}`. `by:"due"` goes off `before` minutes (0 = at) before its due time and follows the date; `by:"at"` goes off at `at` (`YYYY-MM-DDTHH:MM`, local time). `from` is `you`, `assistant` or `telegram`; `fired` is the moment (epoch ms, as a string) it last went off for, so it never goes off twice. |
+| `alert` | object \| `null` | An alert you set on this record ([§6.7](#67-alerts-on-the-records-you-choose)): `{by, before, at, set, from, fired}`. `by:"due"` goes off `before` minutes (0 = at) before its due time and follows the date; `by:"at"` goes off at `at` (`YYYY-MM-DDTHH:MM`, local time). `from` is `you` or `assistant`; `fired` is the moment (epoch ms, as a string) it last went off for, so it never goes off twice. |
 
 ### 5.4 `routines` — a schedule
 
@@ -406,7 +404,7 @@ Switch with **1**–**7**, or by clicking the tab.
 | **Routines** | The schedule editor. ✎ edits in place and keeps the id. Shows *runs itself*, *reminds you*, *paused*, *missing script*, when it last raised, and — loudly — *runs itself but nothing is listening*. |
 | **Scripts** | Register a script, read its `{{params}}`, set the workspace **Folder path**, write the runner, copy the `schtasks` line. |
 | **Appearance** | Theme (Archive, Vault, or your own), fonts including the bundled Khmer face, "feel" (density and motion), language, and **Reload** for language files. |
-| **Setup** | Your name · Reminders · **Telegram — alerts on your phone** · Chase after · Running a script · Target dates (SLA) · Holidays and festivals · **Understanding harder questions** (the optional model). |
+| **Setup** | Your name · Reminders · Chase after · Running a script · Target dates (SLA) · Holidays and festivals · **Understanding harder questions** (the optional model). |
 | **Help** | The keyboard sheet, how your folder is laid out, and the privacy statement. |
 
 ### 6.3 The other surfaces
@@ -634,7 +632,7 @@ away.
 
 ---
 
-### 6.7 Alerts on the records you choose (and Telegram)
+### 6.7 Alerts on the records you choose
 
 An **alert** is something you put on one record yourself. Nothing else ever
 alerts you this way — not every record with a date, not the routines, not the
@@ -662,71 +660,15 @@ you before it is set, like every change the assistant makes. A flow can do the
 same with `setAlert` and `clearAlert` (see [§12](#12-asking-through-a-power-automate-flow)).
 *"Every day at 3"* is a routine, not an alert.
 
-**When it goes off — where you are:**
+**When it goes off** you get a Windows notification and a note in Resolv, with
+**Open** to go straight to the record. Windows notifications need permission
+once (**Setup → Reminders**); without it, the note in Resolv still shows.
 
 | | |
 |---|---|
-| **At the PC** | A Windows notification and a note in Resolv, with **Open**. |
-| **Away from it** (with Telegram set up) | On your phone, with buttons (below). Away means no keyboard or mouse anywhere on the PC for **5 minutes** (you choose), or the screen locked (`Win`+`L`). |
-| **Went off at the PC, and you walked off** | If you leave within half an hour without opening the record, it follows you to the phone. |
+| **Never twice** | Each alert goes off once. A reload or a second window does not repeat it; only one Resolv window watches the alerts, and another takes over when it closes. |
 | **Resolv was closed** | Up to half a day late it still goes off, saying when it was for; older than that it is only noted in the record's log — a morning of stale alerts helps nobody. |
-| **Never twice** | Each alert goes off once. A reload, a second window or a second PC does not repeat it; only one Resolv window watches the alerts, and another takes over when it closes. |
-
-*Alerts go: to my phone and the screen* (Setup → Telegram) sends every alert
-to the phone even when you are at the PC.
-
-**Setting up Telegram — Menu → Setup → Telegram (about two minutes).** Without
-it, alerts still work — on the screen only.
-
-1. In Telegram, open **@BotFather**, send **/newbot**, give it a name and a
-   username ending in *bot*. It answers with a **token** like
-   `123456789:AAF…` — paste it into **Bot token**. Treat it like a password.
-2. Open your new bot in Telegram and press **Start**.
-3. Press **Find it for me** — Resolv reads who pressed Start and fills in
-   **Your chat ID**.
-4. Press **Send a test message**. When it arrives on your phone, it is on.
-
-**What you can do from the message:**
-
-| Button | What happens in Resolv |
-|---|---|
-| ✅ **Done** | The record is closed, and its log says *Closed from Telegram*. |
-| ⏰ **15 min** / **1 h** | The alert is set again for then — on the phone if you are still away, on the screen if you are back. |
-| 📅 **Move to the next working day** | Its due date moves to the next working day (weekends and holidays skipped). An alert on the due time follows it; one at a time of your own moves to the same time that day. |
-| 👍 **Got it** | The buttons go away (when several alerts arrived together). |
-
-The message keeps what it said and gains a line saying what was done and
-when. Only messages from your own chat ID are ever acted on — anyone else who
-finds the bot is ignored.
-
-**Commands**, typed to the bot: **/alerts** (the alerts still to come),
-**/today** (due today and anything late), **/late**, **/next** (the next
-thing, with its buttons), **/mute 1h** (quiet for an hour; **/mute off** to
-undo), **/help** — and a few words on their own search what is open. Commands
-only read, apart from /mute.
-
-**Back at the PC**, a line says how many alerts went to your phone while you
-were away.
-
-**Keep the PC awake.** A laptop left on the desk goes to sleep after its idle
-timeout, and a PC that is asleep cannot alert anyone. While one of your alerts
-is due within two hours, *Keep the PC awake* (on by default) has `Resolv.bat`
-reset Windows' idle timer: the screen still turns off, closing the lid still
-sleeps, and on battery it does nothing.
-
-**How it knows you are away.** Started with `Resolv.bat`, Resolv sees the
-whole PC. Opened any other way, it can only see its own tab — working in
-Outlook looks like being away — so it waits three times as long, or you can
-let the browser tell it (*Let Resolv see when this PC is idle*, Chrome and
-Edge).
-
-**What leaves the PC.** Only the lines of an alert (the record's code, title,
-system and time) and your commands' answers, to Telegram, through
-`flow/telegram.html` — a page with no records whose content security policy
-allows `https://api.telegram.org` and nothing else. Nothing is sent until you
-set a bot up, and the token is never sent to the assistant. It needs Resolv
-open (the tab can be in the background) and a network that lets you reach
-Telegram.
+| **Nothing leaves the PC** | An alert is worked out and shown inside Resolv. It sends nothing anywhere. |
 
 ## 7. How a record behaves
 
@@ -822,11 +764,6 @@ open it, see what it is doing, make it start with Windows, and quit it.
 
 What that one program does:
 
-- **tells the page whether you are at the PC** — seconds since the last key
-  or mouse movement anywhere, and whether the screen is locked (`/presence`) —
-  so a reminder goes to your phone only when you are not; and while one is due
-  soon and the PC is plugged in, keeps it from falling asleep (`/awake`). Both
-  need the same token as the database routes.
 - **hands out the page.** Chrome and Edge refuse notifications to a page opened
   from `file://`, which is the only reason `dossier-serve.bat` ever existed.
   The address is fixed at port 5500, because a browser keeps your folder
@@ -1956,7 +1893,7 @@ Power Automate once you have a service account.
 
 ### It knows Resolv itself
 
-Ask the assistant about Resolv — *how do I get reminders on my phone?*,
+Ask the assistant about Resolv — *how do I set an alert on a record?*,
 *where do I change the look of the chat?*, *what's new?*, *which version is
 this?* — and it answers from Resolv's own **README.md** and **CHANGELOG.md**,
 which sit beside `dossier.html`:
@@ -2454,11 +2391,10 @@ model from scratch was tried, measured, and rejected on the numbers.
   runner to watch.
 - **Notifications need `http://`**, not `file://`. Start Resolv with
   `Resolv.bat`, which hands the page out from `127.0.0.1`.
-- **Alerts need Resolv open and the PC awake.** The tab can be in the
-  background and the screen locked, but a closed browser or a sleeping PC
-  alerts nobody (an alert missed that way goes off when Resolv next opens, if
-  it is less than half a day late) — *Keep the PC awake* covers idle sleep when plugged in, not a
-  closed lid. The network must also let the PC reach `api.telegram.org`.
+- **Alerts need Resolv open.** The tab can be in the background, but a
+  closed browser or a sleeping PC alerts nobody. An alert missed that way goes
+  off when Resolv next opens, if it is less than half a day late; older, it is
+  only noted in the record's log.
 - **The daily look back needs Resolv open** at some point after the time set.
   It is the page that sends it; with every tab closed all day, it waits for
   the next time Resolv is open after that time.

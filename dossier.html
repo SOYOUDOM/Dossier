@@ -1570,25 +1570,6 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
   color:var(--ink-3);font-weight:600 }
 .schform [data-when][hidden]{ display:none }
 .hint2{ font-size:11px;color:var(--ink-3);line-height:1.65;margin:-4px 0 10px }
-/* Setup → Telegram */
-.tgrow{display:flex;gap:7px;align-items:center;flex-wrap:wrap}
-.tgrow .in{flex:1;min-width:0}
-.tgrow .in.tgt{flex:0 0 auto;width:auto}
-.tgrow .in.tgn{flex:0 0 72px}
-.tgrow .tgunit{flex:1;min-width:160px;line-height:1.5}
-.tgrow .tgunit.tgto{flex:0 0 auto;min-width:0}
-.fr .tgck{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--ink);cursor:pointer;white-space:nowrap}
-.tgcks{display:flex;flex-wrap:wrap;gap:6px 16px}
-.tgunit{font-size:11.5px;color:var(--ink-3)}
-.fr .tgunit{margin-left:2px}
-.tgstat{font-size:12px;color:var(--ink-2);line-height:1.6;margin:6px 0 10px;display:flex;align-items:baseline;gap:7px;flex-wrap:wrap}
-.tgdot{width:8px;height:8px;border-radius:50%;background:var(--ink-3);flex:0 0 auto;transform:translateY(-1px)}
-.tgdot.ok{background:var(--st-done,#2e9d6a)}.tgdot.bad{background:var(--p1)}.tgdot.warn{background:var(--p2)}
-.tghow{margin:0 0 12px;font-size:12px;color:var(--ink-2);line-height:1.7}
-.tghow summary{cursor:pointer;color:var(--accent);font-weight:600}
-.tghow ol{margin:8px 0 0;padding-left:20px}
-.tghow li{margin:4px 0}
-.tghow code{font-family:var(--f-mono);font-size:11px}
 /* the bell on a record: quiet until it is set, then it stays in view */
 .bellsvg{width:14px;height:14px;display:block;pointer-events:none}
 .mb.bell{display:inline-grid;place-items:center;vertical-align:middle}
@@ -6017,85 +5998,9 @@ const STRINGS = {
   ChatKeptCount: "{n} kept in this workspace",
   ChatName: "Resolv",
   ChatSkinNew: "New",
-  TgNoRelay: "flow/telegram.html did not load. It has to sit next to dossier.html, in the flow folder.",
-  TgRelaySilent: "The Telegram relay stopped answering.",
-  TgDueAt: "Due at {time}",
-  TgAgain: "Reminder again",
-  TgNeedYou: "{n} things need you",
-  TgBtnDone: "Done",
-  TgBtnTomorrow: "Move to the next working day",
-  TgBtnSeen: "Got it",
-  TgGone: "That record is not in Resolv any more.",
-  TgAlreadyClosed: "{code} was already closed.",
-  TgClosedLog: "Closed from Telegram.",
-  TgDoneNote: "{code} closed",
-  TgSnoozed: "{code}: again at {time}",
-  TgMovedLog: "Moved to {date} from Telegram.",
-  TgMoved: "{code} moved to {date}",
-  TgSeenNote: "Seen",
-  TgMore: "\u2026and {n} more",
-  TgHelp: "<b>Resolv</b> \u2014 the alerts you set on your records, when you are away from the PC.\n\n/alerts \u2014 the alerts you have set\n/today \u2014 what is due today, and anything late\n/late \u2014 only what is late\n/next \u2014 the next thing, with buttons\n/mute 1h \u2014 quiet for an hour (/mute off to undo)\n\nOr type a few words to find an open record.",
-  TgTodayHead: "Today \u2014 {date}",
-  TgTodayNone: "Nothing due today.",
-  TgLateHead: "Late",
-  TgLateNone: "Nothing is late.",
-  TgNextNone: "Nothing due \u2014 a clear desk.",
-  TgUnmuted: "\ud83d\udd14 Reminders are back on.",
-  TgMuted: "\ud83d\udd15 Quiet until {time}. /mute off to undo.",
-  TgFound: "Open records matching \u201c{q}\u201d",
-  TgDidNotFind: "Nothing open matches \u201c{q}\u201d.",
-  TgWhileAway: "While you were away, {n} alert(s) went to your phone.",
-  TgHead: "Telegram \u2014 alerts on your phone",
-  TgIntro: "Only the records you choose: press the <b>bell</b> on a record (or ask the assistant) and pick when \u2014 its due time, a while before, or a date and time of your own. At that moment it comes to your phone through a Telegram bot of your own if you are away from the PC, and to this screen if you are here. Nothing else is ever sent.",
-  TgOnLabel: "Alerts on Telegram",
-  TgToken: "Bot token",
-  TgShowToken: "Show or hide the token",
-  TgChat: "Your chat ID",
-  TgFind: "Find it for me",
-  TgFinding: "Looking\u2026",
-  TgTest: "Send a test message",
-  TgHowHead: "How to make your bot (two minutes)",
-  TgHowSteps: "<li>In Telegram, open <b>@BotFather</b> and send <b>/newbot</b>. Give it a name, and a username ending in <i>bot</i>.</li><li>BotFather answers with a <b>token</b> like <code>123456789:AAF\u2026</code>. Paste it into <b>Bot token</b> above, and treat it like a password: anyone who has it can send messages as your bot.</li><li>Open your new bot in Telegram and press <b>Start</b>.</li><li>Press <b>Find it for me</b>: Resolv reads who pressed Start and fills in <b>Your chat ID</b>.</li><li>Press <b>Send a test message</b>. When it arrives on your phone, you are done.</li>",
-  TgWhen: "Alerts go",
-  TgWhenAway: "To my phone only when I am away from the PC",
-  TgWhenAlways: "To my phone always, and to the screen",
-  TgAwayAfter: "Away after",
-  TgMinutesUnit: "minutes with no keyboard or mouse \u2014 or at once when the screen is locked",
-  TgSeenWindows: "Resolv can see the whole PC through Resolv.bat: the keyboard and mouse in any program, and a locked screen.",
-  TgSeenBrowser: "Resolv can see when this PC is idle or locked, through the browser's idle detection.",
-  TgSeenTab: "Resolv can only see this tab, so working in another program looks like being away \u2014 it waits three times as long before it believes it. Starting Resolv with <b>Resolv.bat</b> fixes that; so does this:",
-  TgSeenAsk: "Let Resolv see when this PC is idle",
-  TgSeenAskOk: "Resolv can now tell when this PC is idle or locked.",
-  TgSeenAskNo: "The browser did not allow it. Resolv.bat is the reliable way.",
-  TgAwake: "Keep the PC awake",
-  TgAwakeYes: "While something is due soon (plugged in only)",
-  TgAwakeNo: "Never",
-  TgAwakeHint: "A laptop left on the desk at lunch goes to sleep after its idle timeout, and a PC that is asleep cannot alert anyone. While one of your alerts is due within two hours, Resolv.bat keeps the PC from sleeping: the screen still turns off, closing the lid still sleeps, and on battery it does nothing.",
-  TgMutedNow: "Muted from Telegram until {time}.",
-  TgUnmute: "Unmute",
-  TgStatOff: "Off.",
-  TgStatNoToken: "Paste the bot token that @BotFather gave you.",
-  TgStatNoChat: "Open your bot in Telegram, press Start, then press Find it for me.",
-  TgStatConflict: "Something else is reading this bot's messages \u2014 Resolv open in another browser, or a webhook. Reminders still go out, but the buttons answer wherever that is.",
-  TgStatOn: "Connected",
-  TgStatAs: "as {who}",
-  TgStatLast: "last sent {time} ({n})",
-  TgStatOther: "another Resolv window is doing the sending",
-  TgFindNone: "Nobody has written to the bot yet. Open it in Telegram, press Start, then press Find it for me again.",
-  TgFindOk: "Found you \u2014 {name}. Now press Send a test message.",
-  TgTestText: "\u2705 <b>Resolv is connected.</b>\nPress the bell on a record in Resolv and choose when. If you are away from the PC at that moment, the alert comes here \u2014 with buttons to close it, be told again later, or move it.\n\nTry /alerts.",
-  TgTestOk: "Sent \u2014 check your phone.",
-  TgChatNotFound: "Telegram does not know that chat. Open your bot, press Start, then press Find it for me.",
-  TgCmdToday: "What is due today, and anything late",
-  TgCmdLate: "Only what is late",
-  TgCmdNext: "The next thing, with buttons",
-  TgCmdMute: "Quiet for a while: /mute 1h, /mute off",
-  TgCmdHelp: "What I can do",
-  TgOpen: "Open",
+  AlertOpen: "Open",
   AlertSetBtn: "Set alert",
   AlertChange: "Change alert",
-  AlertHintPhone: "It goes to your phone (Telegram) if you are away from the PC then, and to this screen if you are here.",
-  AlertHintAlways: "It goes to your phone (Telegram) and to this screen.",
   AlertHead: "Alert me about this record",
   AlertSetTitle: "Alert me about this record",
   AlertSetFor: "Alert set for {when}",
@@ -6104,19 +6009,17 @@ const STRINGS = {
   AlertBeforeDue: "{n} before it is due",
   AlertAtCustom: "At a date and time of my own",
   AlertRemove: "Remove alert",
-  AlertHintScreen: "It will show on this screen. To get it on your phone when you are away, set up Telegram under <b>Setup \u2192 Telegram</b>.",
-  AlertHintPhoneShort: "To your phone if you are away then, to the screen if you are here.",
-  AlertHintScreenShort: "It will show on the screen (Telegram is not set up).",
+  AlertHint: "At that moment you get a Windows notification and a note here in Resolv.",
+  AlertHintNoWin: "At that moment a note shows here in Resolv. Windows notifications are not allowed for Resolv yet \u2014 turn them on under <b>Setup \u2192 Reminders</b>.",
+  AlertHintShort: "A Windows notification and a note in Resolv, at that moment.",
   AlertNeedTime: "Choose a date and a time.",
   AlertPast: "That time has already gone.",
   AlertSetToast: "\ud83d\udd14 Alert set on {code} for {when}.",
-  AlertSetNoPhone: "(On screen only until Telegram is set up.)",
   AlertClearedToast: "Alert removed from {code}.",
   AlertSetLog: "Alert set for {when}",
   AlertByAssistant: "by the assistant",
   AlertClearedLog: "Alert removed",
   AlertMissedLog: "Alert for {when} was missed \u2014 Resolv was not open",
-  AlertPhoneLog: "Alert sent to your phone (Telegram)",
   AlertUndo: "alert",
   AlertBefore: "{n} before due",
   AlertAtDueShort: "at its due time",
@@ -6132,10 +6035,6 @@ const STRINGS = {
   AlertClearFlow: "Remove the alert on {rec}",
   AlertClearConfirm: "Remove it?",
   AlertNoneOn: "{code} has no alert.",
-  TgAlertsHead: "Your alerts",
-  TgAlertsNone: "No alerts set. Press the bell on a record in Resolv to set one.",
-  TgSnoozedLog: "Alert again at {time} (from Telegram)",
-  TgCmdAlerts: "The alerts you have set",
   AboutNotThis: "This copy of Resolv is {v}.",
   AboutEarlier: "Earlier releases",
   AboutWhatIn: "What's new in {v}",
@@ -6908,7 +6807,7 @@ const STATUSES = [
    the status bar, and clicking it copies a line you can paste into a bug
    report — build date and flow protocol included, because those are the two
    things that actually differ between copies. */
-const APP_VERSION = "5.7.0";
+const APP_VERSION = "5.8.0";
 const APP_BUILT = "2026-09-27";
 function buildLine(){
   return "Resolv v" + APP_VERSION + " \u00b7 built " + APP_BUILT +
@@ -8347,6 +8246,10 @@ function hydrate(d){
   })).slice(0, 30) : [];
   S.chatId = typeof d.chatId === "string" ? d.chatId : "";
   if (d.settings) Object.assign(S.settings, d.settings);
+  /* 5.6 and 5.7 could send alerts to a Telegram bot; that is gone, and so
+     is what it kept - see ALERTS */
+  if ("telegram" in S.settings){ delete S.settings.telegram; S.alertForget = true; }
+  try { localStorage.removeItem("resolv.tg"); } catch(e){}
   if (!S.settings.systems || !S.settings.systems.length) S.settings.systems = DEF_SYS.slice();
   if (!S.settings.types || !S.settings.types.length) S.settings.types = DEF_TYPE.slice();
   if (!S.settings.parties || !S.settings.parties.length) S.settings.parties = DEF_PARTY.slice();
@@ -13620,7 +13523,7 @@ function aboutSearch(q, n){
   }).filter(x => x.score > 0).sort((a, b) => b.score - a.score).slice(0, n || 3);
 }
 /* is this question about Resolv itself, rather than about their work */
-const ABOUT_OWN = /\b(resolv|this app|the app|in the app|your(self)? (version|features?)|what'?s new|what is new|new (in|feature|version)|release notes?|change ?log|changelog|version|feature|setting|settings|set ?up|preset|skin|theme|lumen|nova|nebula|aurora|carbon|pixel|desk pet|shortcut|keyboard|telegram|alerts?|bell|reminders?|notifications?|bridge|power automate|prompt|language|khmer|menu|button|look and behaviou?r)\b/i;
+const ABOUT_OWN = /\b(resolv|this app|the app|in the app|your(self)? (version|features?)|what'?s new|what is new|new (in|feature|version)|release notes?|change ?log|changelog|version|feature|setting|settings|set ?up|preset|skin|theme|lumen|nova|nebula|aurora|carbon|pixel|desk pet|shortcut|keyboard|alerts?|bell|reminders?|notifications?|bridge|power automate|prompt|language|khmer|menu|button|look and behaviou?r)\b/i;
 const ABOUT_HELP = /\b(how (do|can|to|should|does)|where (is|are|do|can)|can (i|you|it)|is there|does it|what does|what is|turn (on|off)|switch (on|off)|enable|disable|configure|change|show me how)\b/i;
 const ABOUT_NEWS = /\b(what'?s new|what is new|what changed|what has changed|new in|release notes?|change ?log|changelog|latest (version|release|update)|which version|what version|version (are you|is this|am i))\b/i;
 function aboutForFlow(q){
@@ -13634,7 +13537,7 @@ function aboutForFlow(q){
     const pick = asked.length ? asked : ABOUT.changes.slice(0, 2);
     app.releases = pick.slice(0, 3).map(r => ({ version:r.version, date:r.date, text:r.text.slice(0, 4500) }));
   }
-  if (ABOUT_OWN.test(t) && (ABOUT_HELP.test(t) || /\b(resolv|lumen|nova|telegram|this app|the app)\b/i.test(t))){
+  if (ABOUT_OWN.test(t) && (ABOUT_HELP.test(t) || /\b(resolv|lumen|nova|this app|the app)\b/i.test(t))){
     /* the best match, and the next ones only if they are nearly as good -
        a chapter that merely mentions the word is not an answer */
     const all = aboutSearch(t, 3), best = all.length ? all[0].score : 0;
@@ -14068,7 +13971,7 @@ function flowDescribe(a){
       /* said plainly before you are asked, rather than refused after */
       if (t && spec && spec.by === "due" && !t.due) return { say:L("AlertNoDueSay", { code:t.code }), confirm:L("AlertConfirm") };
       return { say:L("AlertProposeFlow", { rec:ref(), when:t && spec ? alertSpecLabel(t, spec) : (g.date || "") + " " + (g.time || "") }),
-               note:tgReady() ? L("AlertHintPhoneShort") : L("AlertHintScreenShort"), confirm:L("AlertConfirm") };
+               note:L("AlertHintShort"), confirm:L("AlertConfirm") };
     }
     case "clearAlert":
       return { say:L("AlertClearFlow", { rec:ref() }), confirm:L("AlertClearConfirm") };
@@ -14555,7 +14458,7 @@ function flowRun(a, quiet){
       const w = alertWhen({ due:t.due, dueTime:t.dueTime, alert:alertNorm(spec) });
       if (w == null || w < Date.now() - 60000){ flowNeed(a, L("AlertPast")); return null; }
       alertSet(t, spec, "assistant");
-      return done(L("AlertSetDone", { code:t.code, when:alertLabel(t) }) + (tgReady() ? "" : " " + L("AlertSetNoPhone")),
+      return done(L("AlertSetDone", { code:t.code, when:alertLabel(t) }),
                   [{ label:L("AiOpenRecord"), act:{ kind:"open", id:t.id } }]);
     }
     case "clearAlert": {
@@ -16393,8 +16296,7 @@ function chatDo(act){
     case "alert": {
       const t = getTask(act.id); if (!t) return;
       alertSet(t, act.spec, "assistant");
-      return chatBot({ say:L("AlertSetDone", { code:t.code, when:alertLabel(t) }) +
-                       (tgReady() ? "" : " " + L("AlertSetNoPhone")),
+      return chatBot({ say:L("AlertSetDone", { code:t.code, when:alertLabel(t) }),
                        chips:[{ label:L("AiOpenRecord"), act:{ kind:"open", id:t.id } }] });
     }
     /* one action a flow proposed, now that it has been agreed to */
@@ -19032,7 +18934,6 @@ async function renderModal(){
       '"> <span style="display:none"></span>') +
     '<p style="font-size:11.5px;color:var(--ink-2);line-height:1.7;margin:4px 0 0">' +
       L("DaysARecordCanSitWith") +
-    tgSetupHtml() +
 
     "<h5 class=\"eyebrow\" style=\"margin:20px 0 8px\">" + L("WhenThisTabIsClosed") + "</h5>" +
     '<p style="font-size:12px;color:var(--ink-2);line-height:1.75;margin:0 0 10px">' +
@@ -19793,7 +19694,6 @@ function wireModal(){
   const ld = $("sLead"); if (ld) ld.onchange = e => { S.settings.lead = +e.target.value || 15; touch(); };
   const lt = $("sLate"); if (lt) lt.onchange = e => { S.settings.remindOverdue = e.target.value === "1"; touch(); };
   const ch = $("sChase"); if (ch) ch.onchange = e => { S.settings.remindWait = Math.max(1, +e.target.value || 3); touch(); };
-  tgSetupWire();
   const mem = $("sMem"); if (mem) mem.onchange = e => {
     S.settings.rememberFilters = e.target.value === "1";
     if (!S.settings.rememberFilters) S.settings.savedFilters = null; else rememberFilters();
@@ -20400,78 +20300,33 @@ function askNotify(){
 
 
 
-/* ═══ ALERTS, AND TELEGRAM ═══════════════════════════════════════════════
+/* ═══ ALERTS ═════════════════════════════════════════════════════════════
    An alert is something you put on ONE record yourself: press its bell,
    choose when - at its due time, a while before it, or a date and time of
-   your own - and at that moment Resolv tells you. Nothing else ever alerts
-   you this way: not every record with a date, not the routines, not the
-   daily nags. Those keep their ordinary Windows reminders; an alert is the
-   thing you said you did not want to miss.
-
-   Where it tells you depends on where you are. At the PC: on the screen
-   (a Windows notification and a note in Resolv). Away from it - lunch, a
-   meeting - and with a Telegram bot set up: on your phone, with buttons to
-   close the record, be told again in 15 minutes or an hour, or move it to
-   the next working day. Went off while you were here and you walked away
-   without opening it? It follows you to the phone for half an hour.
+   your own - and at that moment Resolv tells you, with a Windows
+   notification and a note on the screen. Nothing else ever alerts you this
+   way: not every record with a date, not the routines, not the daily nags.
+   Those keep their ordinary reminders; an alert is the thing you said you
+   did not want to miss.
 
    The assistant can set and clear alerts too (setAlert / clearAlert), and
-   asks first like every change it makes.
-
-   Nothing here reaches the network. Every Telegram call goes through
-   flow/telegram.html, a page with no records whose content security policy
-   allows api.telegram.org and nothing else. */
-const TG_RELAY = "flow/telegram.html";
-const TG_TOKEN = /^\d{5,15}:[A-Za-z0-9_-]{30,64}$/;
-const TG_DEFAULTS = { on:false, token:"", chat:"", who:"", when:"away", idle:5, awake:true, muteUntil:0 };
-const TG = { frame:null, ready:false, opening:null, seq:0, waiting:{}, leader:false, leadAsked:false,
-  polling:false, pollErr:0, conflict:false, err:"", pending:[], pumping:false,
-  pres:{ at:0, src:"", idle:0, locked:false, away:false, power:"" }, wasAway:false, awaySent:0,
-  lastInput:Date.now(), idle:null, idleSince:0, awakeMin:-1, awakeAt:0, hold:0, last:null, store:null };
+   asks first like every change it makes. Nothing here reaches the network. */
+const ALERT = { leader:false, asked:false };
 /* a function, not a constant, so a row drawn early in the page's life can use it */
 function bellSvg(){
   return '<svg class="bellsvg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" ' +
   'stroke-linecap="round" stroke-linejoin="round"><path d="M6 9.5a6 6 0 0 1 12 0c0 5.5 2.2 7.5 2.2 7.5H3.8S6 15 6 9.5z"/>' +
   '<path d="M10.2 20.5a2 2 0 0 0 3.6 0"/></svg>';
 }
-
-function tgCfg(){
-  const st = S.settings;
-  if (!st.telegram || typeof st.telegram !== "object") st.telegram = {};
-  const c = st.telegram;
-  Object.keys(TG_DEFAULTS).forEach(k => { if (c[k] === undefined) c[k] = TG_DEFAULTS[k]; });
-  return c;
-}
-function tgReady(){
-  const c = tgCfg();
-  return !!c.on && TG_TOKEN.test(String(c.token).trim()) && /^-?\d{3,20}$/.test(String(c.chat).trim());
-}
-/* What only this PC needs to remember - where it is up to in the bot's
-   messages, what it has already sent - is kept in this browser, not in the
-   workspace: it is not a record. */
-function tgStore(){
-  if (!TG.store){ try { TG.store = JSON.parse(localStorage.getItem("resolv.tg") || "{}") || {}; } catch(e){ TG.store = {}; } }
-  const s = TG.store;
-  s.sent = s.sent || {}; s.msgs = s.msgs || {};
-  return s;
-}
-function tgSave(){
-  const s = tgStore(), cut = Date.now() - 3 * 864e5;
-  Object.keys(s.sent).forEach(k => { if (s.sent[k] < cut) delete s.sent[k]; });
-  Object.keys(s.msgs).forEach(k => { if ((s.msgs[k].at || 0) < cut) delete s.msgs[k]; });
-  try { localStorage.setItem("resolv.tg", JSON.stringify(s)); } catch(e){}
-}
-function tgEsc(s){ return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
-function tgHm(ms){ const d = new Date(ms); return pad2(d.getHours()) + ":" + pad2(d.getMinutes()); }
-const tgSleep = ms => new Promise(r => setTimeout(r, ms));
+function alertHm(ms){ const d = new Date(ms); return pad2(d.getHours()) + ":" + pad2(d.getMinutes()); }
 
 /* ── an alert on a record ────────────────────────────────────────────────
    t.alert = { by:"due", before:minutes }  - at its due time, or before it;
                                              follows the date if it moves
            | { by:"at", at:"YYYY-MM-DDTHH:MM" } - a moment of your own
    plus when it was set, by whom, and which moment it last went off for
-   (fired), so a reload, a second window or a second PC never repeats it -
-   and a date that moves arms it again by itself. */
+   (fired), so a reload or a second window never repeats it - and a date
+   that moves arms it again by itself. */
 function alertNorm(a){
   if (!a || typeof a !== "object") return null;
   const by = a.by === "due" ? "due" : a.by === "at" ? "at" : "";
@@ -20479,7 +20334,7 @@ function alertNorm(a){
   const at = by === "at" && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(a.at || "") ? a.at : "";
   if (by === "at" && !at) return null;
   return { by:by, at:at, before:by === "due" ? Math.max(0, Math.min(1440, Math.round(+a.before || 0))) : 0,
-           set:a.set || "", from:a.from || "", fired:a.fired || "", seen:a.seen || "", again:!!a.again };
+           set:a.set || "", from:a.from === "assistant" ? "assistant" : a.from ? "you" : "", fired:a.fired || "" };
 }
 function alertWhen(t){
   const a = t && t.alert; if (!a) return null;
@@ -20497,12 +20352,12 @@ function alertLive(t){
 }
 function alertLabel(t){
   const w = alertWhen(t); if (w == null) return "";
-  return niceDate(dkey(new Date(w))) + " " + tgHm(w);
+  return niceDate(dkey(new Date(w))) + " " + alertHm(w);
 }
-function alertLocalAt(ms){ const d = new Date(ms); return dkey(d) + "T" + tgHm(ms); }
+function alertLocalAt(ms){ const d = new Date(ms); return dkey(d) + "T" + alertHm(ms); }
 function alertSet(t, spec, from){
   pushUndo(L("AlertUndo"));
-  t.alert = alertNorm(Object.assign({}, spec, { set:new Date().toISOString(), from:from || "you", fired:"", seen:"" }));
+  t.alert = alertNorm(Object.assign({}, spec, { set:new Date().toISOString(), from:from || "you", fired:"" }));
   t.log.push({ at:new Date().toISOString(), kind:"status", text:L("AlertSetLog", { when:alertLabel(t) }) +
     (from === "assistant" ? " (" + L("AlertByAssistant") + ")" : "") });
   touch(); renderAll();
@@ -20525,6 +20380,7 @@ function alertSpecLabel(t, spec){
   return when && how ? when + " · " + how : when || how;
 }
 function alertMins(n){ return n % 60 === 0 ? (n / 60) + " h" : n + " min"; }
+function alertCanNotify(){ return typeof Notification !== "undefined" && Notification.permission === "granted"; }
 
 /* ── going off ─────────────────────────────────────────────────────────── */
 function alertCheck(){
@@ -20540,408 +20396,41 @@ function alertCheck(){
        off, saying when it was for; older than that it is only noted on the
        record - a morning of stale alerts helps nobody */
     if (now - w > 12 * 3600000){
-      t.log.push({ at:new Date().toISOString(), kind:"status", text:L("AlertMissedLog", { when:niceDate(dkey(new Date(w))) + " " + tgHm(w) }) });
+      t.log.push({ at:new Date().toISOString(), kind:"status", text:L("AlertMissedLog", { when:niceDate(dkey(new Date(w))) + " " + alertHm(w) }) });
       return;
     }
     alertFire(t, w);
   });
 }
-async function alertFire(t, w){
-  const c = tgCfg(), late = Date.now() - w > 5 * 60000;
+function alertFire(t, w){
+  const late = Date.now() - w > 5 * 60000;
   const head = t.code + " · " + t.title;
   const due = t.due ? (t.due === today() ? L("AlertDueToday") : L("AlertDueOn", { date:niceDate(t.due) })) + (t.dueTime ? " " + t.dueTime : "") : "";
   const body = [due, t.system, t.priority === "P1" || t.priority === "P2" ? t.priority : ""].filter(Boolean).join(" · ") +
-    (late ? (due ? " — " : "") + L("AlertWasFor", { time:tgHm(w) }) : "");
-  let phone = false;
-  if (tgReady()){
-    const p = await tgPresence(true);
-    phone = c.when === "always" || p.away;
-    /* sent now if you are away; kept for half an hour if you are here, in
-       case you walk off without opening it */
-    tgQueue({ key:"alert|" + t.id + "|" + w, taskId:t.id, fireKey:String(w), again:!!t.alert.again,
-              head:head, body:body, until:w + 30 * 60000 });
-  }
-  if (!phone || c.when === "always"){
-    toast("\u{1F514} " + head + (body ? " — " + body : ""),
-      { life:60000, action:L("TgOpen"), onAction:() => { alertSeen(t); openDrawer(t.id); } });
-    notify("\u{1F514} " + t.code + (t.dueTime && t.due === today() ? " · " + t.dueTime : ""), t.title, t.id, "alert" + t.id);
-  }
+    (late ? (due ? " — " : "") + L("AlertWasFor", { time:alertHm(w) }) : "");
+  toast("\u{1F514} " + head + (body ? " — " + body : ""),
+    { life:60000, action:L("AlertOpen"), onAction:() => openDrawer(t.id) });
+  notify("\u{1F514} " + t.code + (t.dueTime && t.due === today() ? " · " + t.dueTime : ""), t.title, t.id, "alert" + t.id);
   renderAll();
 }
-function alertSeen(t){ if (t && t.alert){ t.alert.seen = alertKey(t) || t.alert.fired; touch(); } }
 
-/* ── the relay ──────────────────────────────────────────────────────── */
-function tgFrame(){
-  if (TG.frame && TG.ready) return Promise.resolve(TG.frame);
-  if (TG.opening) return TG.opening;
-  TG.opening = new Promise((resolve, reject) => {
-    let f = TG.frame;
-    if (!f){
-      f = document.createElement("iframe");
-      f.title = "Resolv Telegram relay";
-      f.setAttribute("aria-hidden", "true"); f.tabIndex = -1;
-      f.style.cssText = "position:fixed;left:-9999px;top:0;width:1px;height:1px;border:0;visibility:hidden";
-      f.src = TG_RELAY + "?v=" + APP_VERSION;
-      document.body.appendChild(f);
-      TG.frame = f;
-    }
-    const t = setTimeout(() => reject(new Error(L("TgNoRelay"))), 10000);
-    TG.onReady = () => { clearTimeout(t); TG.ready = true; resolve(f); };
-    if (TG.ready) TG.onReady();
-  });
-  TG.opening.catch(() => { TG.opening = null; });
-  return TG.opening;
-}
-window.addEventListener("message", ev => {
-  const m = ev.data;
-  if (!m || m.__dossierTg !== 1 || !TG.frame || ev.source !== TG.frame.contentWindow) return;
-  if (m.evt === "ready"){ TG.ready = true; if (TG.onReady) TG.onReady(); return; }
-  const w = TG.waiting[m.id]; if (!w) return;
-  delete TG.waiting[m.id]; clearTimeout(w.timer);
-  if (m.ok) return w.resolve(m.result);
-  const e = new Error(m.error || "Telegram failed");
-  e.kind = m.kind || "error"; e.status = m.status || 0; e.retry = m.retry || 0;
-  w.reject(e);
-});
-function tgCall(method, params, ms, token){
-  const tok = String(token || tgCfg().token || "").trim();
-  return tgFrame().then(f => new Promise((resolve, reject) => {
-    const id = "t" + (++TG.seq);
-    const timer = setTimeout(() => { delete TG.waiting[id];
-      reject(Object.assign(new Error(L("TgRelaySilent")), { kind:"timeout" })); }, (ms || 15000) + 6000);
-    TG.waiting[id] = { resolve, reject, timer };
-    f.contentWindow.postMessage({ __dossierTg:1, id:id, cmd:"call", method:method,
-      params:params || {}, token:tok, timeout:ms || 15000 }, "*");
-  })).then(j => j.result);
-}
-
-/* ── are you here ───────────────────────────────────────────────────── */
-["pointerdown", "keydown", "wheel", "pointermove"].forEach(ev =>
-  document.addEventListener(ev, () => { TG.lastInput = Date.now(); }, { passive:true }));
-async function tgIdleStart(ask){
-  if (TG.idle || !("IdleDetector" in window)) return !!TG.idle;
-  try {
-    if (ask){ if (await IdleDetector.requestPermission() !== "granted") return false; }
-    else {
-      const p = await navigator.permissions.query({ name:"idle-detection" });
-      if (p.state !== "granted") return false;
-    }
-    const d = new IdleDetector();
-    d.addEventListener("change", () => { if (d.userState === "idle") TG.idleSince = Date.now(); });
-    await d.start({ threshold:60000 });
-    TG.idle = d;
-    return true;
-  } catch(e){ return false; }
-}
-async function tgPresence(force){
-  const now = Date.now(), c = tgCfg();
-  if (!force && now - TG.pres.at < 20000) return TG.pres;
-  let p = null;
-  if (DB.bridge && DB.port && DB.token){
-    try {
-      const r = await fetchIn(dbUrl("/presence"), { headers:{ "X-Dossier-Token":DB.token }, cache:"no-store" }, 4000);
-      const j = r.ok ? await r.json() : null;
-      if (j && j.idle >= 0) p = { src:"windows", idle:+j.idle, locked:!!j.locked, power:j.power || "" };
-    } catch(e){}
-  }
-  if (!p && TG.idle)
-    p = { src:"browser", idle:TG.idle.userState === "idle" ? Math.round((now - TG.idleSince) / 1000) + 60 : 0,
-          locked:TG.idle.screenState === "locked", power:"" };
-  /* only this tab to go on: someone working in Outlook looks exactly like
-     someone at lunch, so it waits three times as long before it believes it */
-  if (!p) p = { src:"tab", idle:document.hidden ? Math.round((now - TG.lastInput) / 1000) : 0, locked:false, power:"" };
-  const need = Math.max(1, +c.idle || 5) * 60 * (p.src === "tab" ? 3 : 1);
-  p.away = p.locked || p.idle >= need;
-  p.at = now;
-  TG.pres = p;
-  return p;
-}
-
-/* ── to the phone ──────────────────────────────────────────────────────── */
-function tgQueue(a){
-  if (!tgReady()) return;
-  const st = tgStore();
-  if (st.sent[a.key] || TG.pending.some(x => x.key === a.key)) return;
-  a.at = Date.now();
-  TG.pending.push(a);
-  tgPump();
-}
-/* still worth sending: the record is still open, the alert is still the
-   same one, and you have not opened it since it went off */
-function tgStill(a){
-  const t = getTask(a.taskId);
-  if (!t || LIVE.indexOf(t.status) < 0 || !t.alert) return false;
-  if (t.alert.fired !== a.fireKey || t.alert.seen === a.fireKey) return false;
-  return S.open !== t.id;
-}
-async function tgPump(){
-  if (!tgReady() || !TG.leader || TG.pumping) return;
-  TG.pumping = true;
-  try {
-    const now = Date.now(), c = tgCfg(), st = tgStore();
-    TG.pending = TG.pending.filter(a => a.until > now && tgStill(a) && !st.sent[a.key]);
-    if (!TG.pending.length || c.muteUntil > now || TG.hold > now) return;
-    const p = await tgPresence();
-    if (c.when !== "always" && !p.away) return;
-    await tgSendAlerts(TG.pending.slice(), p);
-  } catch(e){ TG.err = String(e.message || e); }
-  finally { TG.pumping = false; }
-}
-function tgLine(a){ return "\u{1F514} <b>" + tgEsc(a.head) + "</b>" + (a.again ? " · " + tgEsc(L("TgAgain")) : "") + (a.body ? "\n" + tgEsc(a.body) : ""); }
-/* the buttons under an alert: the full set under one, a short row per
-   record when several went off together */
-function tgButtons(taskId, short){
-  const t = getTask(taskId);
-  if (!t) return null;
-  const tag = short ? " " + t.code : "";
-  const row = [{ text:"✅ " + L("TgBtnDone") + tag, callback_data:"d:" + t.id },
-               { text:"⏰ 15 min", callback_data:"s:15:" + t.id }];
-  if (short) return [row];
-  row.push({ text:"⏰ 1 h", callback_data:"s:60:" + t.id });
-  return [row, [{ text:"\u{1F4C5} " + L("TgBtnTomorrow"), callback_data:"m:" + t.id }]];
-}
-async function tgSendAlerts(list, p){
-  const c = tgCfg(), st = tgStore();
-  let text, kb = [];
-  if (list.length === 1){
-    text = tgLine(list[0]);
-    kb = tgButtons(list[0].taskId, false) || [];
-  } else {
-    text = "\u{1F514} <b>" + tgEsc(L("TgNeedYou", { n:list.length })) + "</b>\n\n" +
-      list.map((a, i) => (i + 1) + ". " + tgLine(a).replace(/^\u{1F514} /u, "").replace(/\n/, "\n    ")).join("\n\n");
-    list.slice(0, 6).forEach(a => { const b = tgButtons(a.taskId, true); if (b) kb = kb.concat(b); });
-    kb.push([{ text:"\u{1F44D} " + L("TgBtnSeen"), callback_data:"ok" }]);
-  }
-  try {
-    const m = await tgCall("sendMessage", { chat_id:String(c.chat).trim(), text:text, parse_mode:"HTML",
-      disable_web_page_preview:true, reply_markup:kb.length ? { inline_keyboard:kb } : undefined });
-    const now = Date.now();
-    list.forEach(a => {
-      st.sent[a.key] = now;
-      const t = getTask(a.taskId);
-      if (t) t.log.push({ at:new Date().toISOString(), kind:"status", text:L("AlertPhoneLog") });
-    });
-    touch();
-    TG.pending = TG.pending.filter(a => list.indexOf(a) < 0);
-    if (m && m.message_id) st.msgs[m.message_id] = { at:now, text:text, done:[] };
-    tgSave();
-    if (p && p.away) TG.awaySent += list.length;
-    TG.last = { at:now, n:list.length };
-    TG.err = "";
-  } catch(e){
-    TG.err = String(e.message || e);
-    if (e.kind === "slow") TG.hold = Date.now() + Math.max(30, e.retry || 60) * 1000;
-    /* a token that no longer works, or a chat that blocked the bot: stop
-       trying every half minute and say so on the Setup page instead */
-    if (e.kind === "token" || e.kind === "blocked-by-user") TG.hold = Date.now() + 30 * 60000;
-  }
-}
-
-/* ── the buttons, pressed on the phone ───────────────────────────────── */
-function tgMine(id){ return String(id) === String(tgCfg().chat).trim(); }
-function tgNextWorkday(){
-  let to = addDays(today(), 1);
-  for (let i = 0; i < 30 && isOffDay(to); i++) to = addDays(to, 1);
-  return to;
-}
-async function tgCallback(q){
-  if (!q || !(tgMine(q.from && q.from.id) || tgMine(q.message && q.message.chat && q.message.chat.id))) return;
-  const bits = String(q.data || "").split(":"), verb = bits[0];
-  const id = verb === "s" ? bits[2] : bits[1];
-  const t = id ? getTask(id) : null;
-  let note = "";
-  if (verb !== "ok" && !t) note = L("TgGone");
-  else if (verb === "d"){
-    if (LIVE.indexOf(t.status) < 0) note = L("TgAlreadyClosed", { code:t.code });
-    else {
-      setStatus(t.id, "done");
-      t.log.push({ at:new Date().toISOString(), kind:"status", text:L("TgClosedLog") });
-      touch();
-      note = "✅ " + L("TgDoneNote", { code:t.code });
-    }
-  } else if (verb === "s"){
-    /* again later: the alert itself moves, so it survives a reload and
-       goes off wherever you are by then - phone or screen */
-    const n = Math.max(5, Math.min(240, +bits[1] || 15));
-    const at = Date.now() + n * 60000;
-    t.alert = alertNorm({ by:"at", at:alertLocalAt(at), again:true, set:new Date().toISOString(), from:"telegram" });
-    t.log.push({ at:new Date().toISOString(), kind:"status", text:L("TgSnoozedLog", { time:tgHm(at) }) });
-    touch(); renderAll();
-    note = "⏰ " + L("TgSnoozed", { code:t.code, time:tgHm(at) });
-  } else if (verb === "m"){
-    const to = tgNextWorkday();
-    const hm = t.alert && t.alert.by === "at" ? t.alert.at.slice(11, 16) : "";
-    updateTask(t.id, { due:to, carried:0 }, L("TgMovedLog", { date:niceDate(to) }));
-    /* an alert on the due date follows it by itself; one at a set time
-       moves to the same time on the new day */
-    if (t.alert && t.alert.by === "at") t.alert = alertNorm(Object.assign({}, t.alert, { at:to + "T" + hm, fired:"", seen:"", again:false }));
-    touch(); renderAll();
-    note = "\u{1F4C5} " + L("TgMoved", { code:t.code, date:niceDate(to) });
-  } else note = "\u{1F44D} " + L("TgSeenNote");
-  tgCall("answerCallbackQuery", { callback_query_id:q.id, text:note.slice(0, 190) }).catch(() => {});
-  /* the message keeps what it said, gains a line saying what was done, and
-     loses the buttons that no longer apply */
-  const msg = q.message; if (!msg) return;
-  const st = tgStore(), rec = st.msgs[msg.message_id] || { at:Date.now(), text:tgEsc(msg.text || ""), done:[] };
-  rec.done = (rec.done || []).concat([note + " · " + tgHm(Date.now())]);
-  st.msgs[msg.message_id] = rec; tgSave();
-  let kb = [];
-  if (verb !== "ok"){
-    kb = ((msg.reply_markup && msg.reply_markup.inline_keyboard) || [])
-      .map(row => row.filter(b => b.callback_data !== "ok" && String(b.callback_data || "").split(":").pop() !== id))
-      .filter(row => row.length);
-    if (kb.length) kb.push([{ text:"\u{1F44D} " + L("TgBtnSeen"), callback_data:"ok" }]);
-  }
-  tgCall("editMessageText", { chat_id:String(tgCfg().chat).trim(), message_id:msg.message_id,
-    text:rec.text + "\n\n" + rec.done.map(tgEsc).join("\n"), parse_mode:"HTML",
-    reply_markup:{ inline_keyboard:kb } }).catch(() => {});
-}
-
-/* ── commands, typed on the phone ─────────────────────────────────────
-   /alerts /today /late /next /mute /help, and anything else is a search of
-   what is open. Read-only apart from /mute: nothing typed into a chat app
-   changes a record without a button being pressed. */
-function tgTaskLine(t){
-  const k = today();
-  return "• " + (t.due && t.due < k ? "⚠️ " : t.dueTime ? "<b>" + tgEsc(t.dueTime) + "</b> " : "") +
-    tgEsc(t.code) + " " + tgEsc(t.title) + (t.priority === "P1" || t.priority === "P2" ? " · " + t.priority : "");
-}
-function tgList(head, list, empty, line){
-  if (!list.length) return { text:empty };
-  const more = list.length > 15 ? "\n" + L("TgMore", { n:list.length - 15 }) : "";
-  return { text:"<b>" + tgEsc(head) + "</b>\n" + list.slice(0, 15).map(line || tgTaskLine).join("\n") + more };
-}
-function tgByTime(a, b){ return (a.due || "9").localeCompare(b.due || "9") || (a.dueTime || "99").localeCompare(b.dueTime || "99") ||
-  String(a.priority).localeCompare(String(b.priority)); }
-function tgReply(txt){
-  const c = tgCfg(), k = today(), live = S.tasks.filter(t => LIVE.indexOf(t.status) >= 0);
-  const words = String(txt || "").trim().split(/\s+/);
-  const cmd = (words[0] || "").toLowerCase().replace(/@\w+$/, "");
-  if (cmd === "/start" || cmd === "/help") return { text:L("TgHelp") };
-  if (cmd === "/alerts"){
-    const list = live.filter(alertLive).sort((a, b) => alertWhen(a) - alertWhen(b));
-    return tgList(L("TgAlertsHead"), list, L("TgAlertsNone"),
-      t => "• <b>" + tgEsc(alertLabel(t)) + "</b> " + tgEsc(t.code) + " " + tgEsc(t.title));
-  }
-  if (cmd === "/today"){
-    const list = live.filter(t => t.due && t.due <= k).sort(tgByTime);
-    const d = pk(k), mo = LC(MON[d.getMonth()]);
-    const date = LC(DOW[d.getDay()]) + " " + d.getDate() + " " + (/^[A-Za-z]{4,}$/.test(mo) ? mo.slice(0, 3) : mo);
-    return tgList(L("TgTodayHead", { date:date }), list, L("TgTodayNone"));
-  }
-  if (cmd === "/late") return tgList(L("TgLateHead"), live.filter(t => t.due && t.due < k).sort(tgByTime), L("TgLateNone"));
-  if (cmd === "/next"){
-    const hm = tgHm(Date.now());
-    const t = live.filter(x => x.due === k && x.dueTime && x.dueTime >= hm).sort(tgByTime)[0] ||
-              live.filter(x => x.due && x.due <= k).sort((a, b) => String(a.priority).localeCompare(String(b.priority)) || tgByTime(a, b))[0];
-    if (!t) return { text:L("TgNextNone") };
-    return { text:"➡️ <b>" + tgEsc(t.code + " " + t.title) + "</b>\n" +
-                  tgEsc([t.dueTime && t.due === k ? L("TgDueAt", { time:t.dueTime }) : t.due ? niceDate(t.due) : "", t.system, t.priority].filter(Boolean).join(" · ")),
-             kb:tgButtons(t.id, false) };
-  }
-  if (cmd === "/mute"){
-    const arg = (words[1] || "60").toLowerCase();
-    if (arg === "off" || arg === "0"){ c.muteUntil = 0; touch(); return { text:L("TgUnmuted") }; }
-    const m = /^(\d+)\s*(h|hr|hrs|hours?)?$/.exec(arg);
-    const n = m ? Math.min(24 * 60, (+m[1]) * (m[2] ? 60 : 1)) : 60;
-    c.muteUntil = Date.now() + n * 60000; touch();
-    return { text:L("TgMuted", { time:tgHm(c.muteUntil) }) };
-  }
-  if (cmd === "/unmute"){ c.muteUntil = 0; touch(); return { text:L("TgUnmuted") }; }
-  const q = words.filter(w => w.length > 1).map(w => w.toLowerCase());
-  const hits = q.length ? live.filter(t => q.every(w => (t.code + " " + t.title + " " + (t.system || "")).toLowerCase().indexOf(w) >= 0)) : [];
-  if (hits.length) return tgList(L("TgFound", { q:words.join(" ") }), hits.sort(tgByTime), "");
-  return { text:L("TgDidNotFind", { q:tgEsc(words.join(" ")) }) + "\n\n" + L("TgHelp") };
-}
-async function tgMessage(m){
-  if (!m || !m.chat || !tgMine(m.chat.id)) return;
-  if (Date.now() / 1000 - (m.date || 0) > 900) return;          /* stale: sent while nothing was listening */
-  if (!m.text) return;
-  const r = tgReply(m.text);
-  await tgCall("sendMessage", { chat_id:String(tgCfg().chat).trim(), text:r.text, parse_mode:"HTML",
-    disable_web_page_preview:true, reply_markup:r.kb ? { inline_keyboard:r.kb } : undefined }).catch(() => {});
-}
-
-/* ── listening ───────────────────────────────────────────────────────── */
-async function tgLoop(){
-  if (TG.polling) return;
-  TG.polling = true;
-  const st = tgStore();
-  try {
-    while (tgReady() && TG.leader){
-      const hold = TG.hold - Date.now();
-      if (hold > 0){ await tgSleep(Math.min(hold, 60000)); continue; }
-      try {
-        /* the first time on this PC: whatever was waiting in the bot is old
-           news, and is skipped rather than acted on */
-        if (st.offset == null){
-          const old = await tgCall("getUpdates", { offset:-1, timeout:0 }, 10000);
-          st.offset = old.length ? old[old.length - 1].update_id + 1 : 0; tgSave();
-        }
-        const ups = await tgCall("getUpdates", { offset:st.offset, timeout:25,
-          allowed_updates:["message", "callback_query"] }, 35000);
-        TG.pollErr = 0; TG.conflict = false;
-        for (const u of ups){
-          st.offset = u.update_id + 1; tgSave();
-          try { if (u.callback_query) await tgCallback(u.callback_query); else if (u.message) await tgMessage(u.message); }
-          catch(e){}
-        }
-      } catch(e){
-        TG.pollErr++;
-        TG.conflict = e.kind === "conflict";
-        if (e.kind === "token"){ TG.err = String(e.message || e); TG.hold = Date.now() + 30 * 60000; continue; }
-        await tgSleep(Math.min(300000, 10000 * Math.pow(2, Math.min(5, TG.pollErr - 1))));
-      }
-    }
-  } finally { TG.polling = false; }
-}
-/* One window watches the alerts, sends and listens; another open window
-   waits its turn and takes over when that one closes. */
+/* One window watches the alerts; another open window waits its turn and
+   takes over when that one closes - so an alert goes off once, not once
+   per window. */
 function alertLead(){
-  if (TG.leader || TG.leadAsked) return;
-  TG.leadAsked = true;
-  if (!navigator.locks){ TG.leader = true; return; }
-  navigator.locks.request("resolv-alerts", () => new Promise(() => { TG.leader = true; alertTick(); })).catch(() => {});
+  if (ALERT.leader || ALERT.asked) return;
+  ALERT.asked = true;
+  if (!navigator.locks){ ALERT.leader = true; return; }
+  navigator.locks.request("resolv-alerts", () => new Promise(() => { ALERT.leader = true; alertTick(); })).catch(() => {});
 }
-
-/* ── the half-minute tick ───────────────────────────────────────────────
-   Alerts that are due go off. Back from lunch: a line to say what went to
-   the phone meanwhile. And while an alert is due soon, the PC is asked to
-   stay awake - a laptop asleep on the desk at 12:40 cannot say anything at
-   13:00. */
-async function alertTick(){
+function alertTick(){
   if (!S.tasks) return;
+  /* 5.6 and 5.7 could send alerts to a Telegram bot. That is gone, and the
+     bot's token has no business staying in the workspace: hydrate() drops
+     it, and this saves the workspace without it */
+  if (S.alertForget){ S.alertForget = false; touch(); }
   alertLead();
-  if (!TG.leader) return;
-  alertCheck();
-  if (!tgReady()){ if (TG.awakeMin > 0) tgAwake(0); return; }
-  tgLoop();
-  await tgPump();
-  const p = await tgPresence();
-  if (TG.wasAway && !p.away && TG.awaySent){
-    toast(L("TgWhileAway", { n:TG.awaySent }));
-    TG.awaySent = 0;
-  }
-  TG.wasAway = p.away;
-  let min = 0;
-  if (tgCfg().awake){
-    const now = Date.now();
-    if (TG.pending.length) min = 30;
-    S.tasks.forEach(t => {
-      if (!alertLive(t)) return;
-      const ahead = (alertWhen(t) - now) / 60000;
-      if (ahead > -5 && ahead <= 120) min = Math.max(min, Math.ceil(ahead) + 20);
-    });
-  }
-  tgAwake(min);
-}
-async function tgAwake(min){
-  if (!DB.bridge || !DB.port || !DB.token) return;
-  if (min === TG.awakeMin && Date.now() - TG.awakeAt < 4 * 60000) return;
-  try {
-    await fetchIn(dbUrl("/awake?minutes=" + min), { method:"POST", headers:{ "X-Dossier-Token":DB.token } }, 4000);
-    TG.awakeMin = min; TG.awakeAt = Date.now();
-  } catch(e){}
+  if (ALERT.leader) alertCheck();
 }
 setInterval(alertTick, 30000);
 setTimeout(alertTick, 4000);
@@ -20983,8 +20472,7 @@ function alertPop(id, anchor){
     '<div class="apf"><button class="btn pri sm" data-ap="set" type="button">' + LE(cur ? "AlertChange" : "AlertSetBtn") + "</button>" +
       (cur ? '<button class="btn sm" data-ap="clear" type="button">' + LE("AlertRemove") + "</button>" : "") +
       '<button class="btn sm" data-ap="close" type="button">' + LE("Cancel") + "</button></div>" +
-    '<p class="aphint">' + (tgReady() ? LE(tgCfg().when === "always" ? "AlertHintAlways" : "AlertHintPhone")
-                                       : L("AlertHintScreen")) + "</p>";
+    '<p class="aphint">' + (alertCanNotify() ? LE("AlertHint") : L("AlertHintNoWin")) + "</p>";
   document.body.appendChild(el);
   /* beside the bell, kept inside the window */
   const r = anchor && anchor.getBoundingClientRect ? anchor.getBoundingClientRect() : { left:innerWidth / 2, right:innerWidth / 2, top:innerHeight / 3, bottom:innerHeight / 3 };
@@ -21008,7 +20496,7 @@ function alertPop(id, anchor){
     if (when == null) return toast(L("AlertNeedTime"), { bad:true });
     if (when < Date.now() - 60000) return toast(L("AlertPast"), { bad:true });
     alertSet(t, spec, "you");
-    toast(L("AlertSetToast", { code:t.code, when:alertLabel(t) }) + (tgReady() ? "" : " " + L("AlertSetNoPhone")));
+    toast(L("AlertSetToast", { code:t.code, when:alertLabel(t) }));
     alertPopClose();
   });
   setTimeout(() => document.addEventListener("mousedown", alertPopOutside, true), 0);
@@ -21067,133 +20555,6 @@ function alertLocal(q){
            act:{ kind:"alert", id:t.id, spec:spec, confirm:L("AlertConfirm") } };
 }
 
-/* ── Setup → Telegram ─────────────────────────────────────────────────── */
-function tgSetupHtml(){
-  return '<h5 class="eyebrow" style="margin:20px 0 8px">' + LE("TgHead") + "</h5>" +
-    '<p style="font-size:12px;color:var(--ink-2);line-height:1.75;margin:0 0 10px">' + L("TgIntro") + "</p>" +
-    '<div id="tgBox">' + tgBoxHtml() + "</div>";
-}
-function tgBoxHtml(){
-  const c = tgCfg();
-  const opt = (v, cur, label) => '<option value="' + v + '"' + (String(cur) === String(v) ? " selected" : "") + ">" + esc(label) + "</option>";
-  return fr(L("TgOnLabel"), '<select class="in" id="tgOn">' + opt(0, c.on ? 1 : 0, L("Off")) + opt(1, c.on ? 1 : 0, L("On")) + "</select>") +
-    fr(L("TgToken"), '<div class="tgrow"><input class="in" id="tgToken" type="password" autocomplete="off" spellcheck="false" ' +
-      'placeholder="123456789:AAF…" value="' + esc(c.token) + '"><button class="btn sm" id="tgShow" type="button" title="' +
-      LE("TgShowToken") + '">\u{1F441}</button></div>') +
-    fr(L("TgChat"), '<div class="tgrow"><input class="in" id="tgChat" inputmode="numeric" autocomplete="off" spellcheck="false" ' +
-      'placeholder="512345678" value="' + esc(c.chat) + '"><button class="btn" id="tgFind" type="button">' + LE("TgFind") + "</button></div>") +
-    '<div class="brow" style="margin:8px 0 2px"><button class="btn pri" id="tgTest" type="button">' + LE("TgTest") + "</button></div>" +
-    '<div id="tgStat" class="tgstat">' + tgStatusHtml() + "</div>" +
-    '<details class="tghow"><summary>' + LE("TgHowHead") + "</summary><ol>" + L("TgHowSteps") + "</ol></details>" +
-    fr(L("TgWhen"), '<select class="in" id="tgWhen">' + opt("away", c.when, L("TgWhenAway")) + opt("always", c.when, L("TgWhenAlways")) + "</select>") +
-    fr(L("TgAwayAfter"), '<div class="tgrow"><input class="in tgn" id="tgIdle" type="number" min="1" max="60" value="' + (+c.idle || 5) + '">' +
-      '<span class="tgunit">' + LE("TgMinutesUnit") + "</span></div>") +
-    '<p class="hint2" id="tgSeen">' + tgSeenHtml() + "</p>" +
-    fr(L("TgAwake"), '<select class="in" id="tgAwake">' + opt(1, c.awake ? 1 : 0, L("TgAwakeYes")) + opt(0, c.awake ? 1 : 0, L("TgAwakeNo")) + "</select>") +
-    '<p class="hint2">' + L("TgAwakeHint") + "</p>" +
-    (c.muteUntil > Date.now() ? '<p class="hint2">' + LE("TgMutedNow", { time:tgHm(c.muteUntil) }) +
-      ' <button class="btn sm" id="tgUnmute" type="button">' + LE("TgUnmute") + "</button></p>" : "");
-}
-function tgStatusHtml(){
-  const c = tgCfg();
-  if (!c.on) return '<span class="tgdot"></span>' + LE("TgStatOff");
-  if (!TG_TOKEN.test(String(c.token).trim())) return '<span class="tgdot bad"></span>' + LE("TgStatNoToken");
-  if (!/^-?\d{3,20}$/.test(String(c.chat).trim())) return '<span class="tgdot bad"></span>' + LE("TgStatNoChat");
-  if (TG.err) return '<span class="tgdot bad"></span>' + esc(TG.err);
-  if (TG.conflict) return '<span class="tgdot warn"></span>' + LE("TgStatConflict");
-  const who = c.who ? " " + LE("TgStatAs", { who:c.who }) : "";
-  const last = TG.last ? " · " + LE("TgStatLast", { time:tgHm(TG.last.at), n:TG.last.n }) : "";
-  return '<span class="tgdot ok"></span>' + LE("TgStatOn") + who + last +
-    (TG.leader ? "" : " · " + LE("TgStatOther"));
-}
-function tgSeenHtml(){
-  const p = TG.pres, src = p.src || (DB.bridge ? "windows" : TG.idle ? "browser" : "tab");
-  if (src === "windows") return L("TgSeenWindows");
-  if (src === "browser") return L("TgSeenBrowser");
-  return L("TgSeenTab") + ("IdleDetector" in window
-    ? ' <button class="btn sm" id="tgIdleAsk" type="button">' + LE("TgSeenAsk") + "</button>" : "");
-}
-function tgSetupWire(){
-  const box = $("tgBox"); if (!box) return;
-  const c = tgCfg();
-  const paint = () => { const s = $("tgStat"); if (s) s.innerHTML = tgStatusHtml(); };
-  const set = (k, v) => { c[k] = v; touch(); paint(); if (tgReady()) alertTick(); };
-  const val = id => ($(id) || {}).value;
-  $("tgOn").onchange = e => set("on", e.target.value === "1");
-  $("tgToken").onchange = e => { c.who = ""; TG.err = ""; set("token", e.target.value.trim()); if (TG_TOKEN.test(c.token)) tgWhoAmI(); };
-  $("tgChat").onchange = e => { TG.err = ""; set("chat", e.target.value.trim()); };
-  $("tgShow").onclick = () => { const t = $("tgToken"); t.type = t.type === "password" ? "text" : "password"; };
-  $("tgWhen").onchange = e => set("when", e.target.value);
-  $("tgIdle").onchange = e => set("idle", Math.max(1, Math.min(60, +e.target.value || 5)));
-  $("tgAwake").onchange = e => set("awake", e.target.value === "1");
-  const um = $("tgUnmute"); if (um) um.onclick = () => { c.muteUntil = 0; touch(); box.innerHTML = tgBoxHtml(); tgSetupWire(); };
-  const ia = $("tgIdleAsk"); if (ia) ia.onclick = async () => {
-    const ok = await tgIdleStart(true);
-    toast(ok ? L("TgSeenAskOk") : L("TgSeenAskNo"), { bad:!ok });
-    await tgPresence(true); const s = $("tgSeen"); if (s) s.innerHTML = tgSeenHtml();
-  };
-  $("tgFind").onclick = () => tgFindChat();
-  $("tgTest").onclick = () => tgTest();
-}
-/* the name the bot goes by, so the Setup page can say which one it is */
-async function tgWhoAmI(){
-  const c = tgCfg();
-  try {
-    const me = await tgCall("getMe", {}, 10000);
-    c.who = me && me.username ? "@" + me.username : ""; TG.err = ""; touch();
-  } catch(e){ TG.err = String(e.message || e); }
-  const s = $("tgStat"); if (s) s.innerHTML = tgStatusHtml();
-}
-/* The chat ID is the one thing people get wrong. So: open your bot, press
-   Start, and this reads who it was that pressed it. */
-async function tgFindChat(){
-  const c = tgCfg(), token = String(($("tgToken") || {}).value || c.token).trim();
-  if (!TG_TOKEN.test(token)) return toast(L("TgStatNoToken"), { bad:true });
-  c.token = token;
-  const b = $("tgFind"); if (b){ b.disabled = true; b.textContent = L("TgFinding"); }
-  try {
-    const ups = await tgCall("getUpdates", { offset:-20, timeout:0 }, 10000, token);
-    const hit = ups.map(u => u.message || (u.callback_query && u.callback_query.message)).filter(m => m && m.chat && m.chat.type === "private").pop();
-    if (!hit){ toast(L("TgFindNone"), { bad:true, life:9000 }); return; }
-    c.chat = String(hit.chat.id); touch();
-    const i = $("tgChat"); if (i) i.value = c.chat;
-    toast(L("TgFindOk", { name:[hit.chat.first_name, hit.chat.last_name].filter(Boolean).join(" ") || hit.chat.username || c.chat }));
-    if (!c.who) tgWhoAmI();
-  } catch(e){
-    toast(e.kind === "conflict" ? L("TgStatConflict") : String(e.message || e), { bad:true, life:9000 });
-  } finally {
-    if (b){ b.disabled = false; b.textContent = L("TgFind"); }
-    const s = $("tgStat"); if (s) s.innerHTML = tgStatusHtml();
-  }
-}
-async function tgTest(){
-  const c = tgCfg();
-  c.token = String(($("tgToken") || {}).value || c.token).trim();
-  c.chat = String(($("tgChat") || {}).value || c.chat).trim();
-  if (!TG_TOKEN.test(c.token)) return toast(L("TgStatNoToken"), { bad:true });
-  if (!/^-?\d{3,20}$/.test(c.chat)) return toast(L("TgStatNoChat"), { bad:true });
-  const b = $("tgTest"); if (b) b.disabled = true;
-  try {
-    if (!c.who) await tgWhoAmI();
-    await tgCall("sendMessage", { chat_id:c.chat, text:L("TgTestText"), parse_mode:"HTML" }, 12000);
-    /* the commands, in the menu Telegram shows beside the box you type in */
-    tgCall("setMyCommands", { commands:[
-      { command:"alerts", description:L("TgCmdAlerts") },
-      { command:"today", description:L("TgCmdToday") }, { command:"late", description:L("TgCmdLate") },
-      { command:"next", description:L("TgCmdNext") }, { command:"mute", description:L("TgCmdMute") },
-      { command:"help", description:L("TgCmdHelp") }] }, 10000).catch(() => {});
-    if (!c.on){ c.on = true; const o = $("tgOn"); if (o) o.value = "1"; }
-    TG.err = ""; touch();
-    toast(L("TgTestOk"));
-    alertTick();
-  } catch(e){
-    TG.err = String(e.message || e);
-    toast(e.kind === "bad" && /chat not found/i.test(TG.err) ? L("TgChatNotFound") : TG.err, { bad:true, life:9000 });
-  } finally {
-    if (b) b.disabled = false;
-    const s = $("tgStat"); if (s) s.innerHTML = tgStatusHtml();
-  }
-}
 
 /* ═══ THE RUN QUEUE — actually running the thing ══════════════════════════
    A page in a browser cannot start a program, and that is not going to

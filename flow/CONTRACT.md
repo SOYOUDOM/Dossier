@@ -982,7 +982,7 @@ Set or clear a target date. Send due as "" to clear it.
 
 #### `setAlert`
 
-Alert them about one record at a moment they choose: due:true for its due time (before: minutes earlier, e.g. 15 or 60), or date and time. It reaches their phone through Telegram when they are away from the PC and their screen when they are at it. Replaces any alert the record had. Not setDue - the target date stays as it is.
+Alert them about one record at a moment they choose: due:true for its due time (before: minutes earlier, e.g. 15 or 60), or date and time. At that moment they get a Windows notification and a note in Resolv. Replaces any alert the record had. Not setDue - the target date stays as it is.
 
 | argument | shape | required |
 |---|---|---|
