@@ -6,6 +6,43 @@ holds — which is what to paste into a bug report.
 
 ---
 
+## 5.7.0 - 2026-09-29
+
+**Alerts: only the records you choose.** In 5.6.0 every reminder Resolv
+raised could go to your phone. Now nothing alerts you unless you asked it to,
+on that one record:
+
+- **A bell on every record** - in its row, next to the timer, and at the top
+  of its sheet. Press it and choose when: **at its due time**, **15 min** or
+  **1 h before it is due**, or **a date and time of your own** (the only
+  choice for a record with no due date). A record with an alert shows the
+  bell lit and a 🔔 chip with the time; press it again to change or remove
+  it. A due-time alert follows the date if it moves. Set, changed and removed
+  are logged on the record, and Undo takes them back.
+- **The assistant can do it too.** *"Alert me about D-0101 at 3pm"*, *"ping
+  me about D-0102 30 minutes before it's due"* - read at once when the record
+  and time are plain, and put to you before it is set. A flow has two new
+  actions, `setAlert` and `clearAlert`, and each record in the request
+  carries its `alert` (flow/CONTRACT.md).
+- **Where it tells you**: on the screen if you are at the PC; on your phone
+  through Telegram if you are away (or both, if you choose *to my phone and
+  the screen*). One that went off at the PC and was not opened follows you
+  to the phone if you walk off within half an hour. Resolv closed at the
+  time: up to half a day late it still goes off, saying when it was for;
+  older, it is only noted in the log.
+- **Telegram buttons now move the alert**: ⏰ 15 min / 1 h sets it again for
+  then; 📅 next working day moves the record and its alert together. New
+  **/alerts** command lists what is still to come.
+- **Everything else is as it was before 5.6.0**: time-due, routine, late-work
+  and chase reminders are Windows notifications only, and never go to the
+  phone. The Telegram settings that were only about them - quiet hours,
+  weekends, what to send, P1s, the hourly limit, the chase button - are gone;
+  Setup → Telegram is now the bot, where alerts go, when you count as away,
+  and keeping the PC awake (now: while one of your alerts is due within two
+  hours).
+
+---
+
 ## 5.6.0 - 2026-09-29
 
 **Reminders on your phone, through Telegram - only when you are away.** The

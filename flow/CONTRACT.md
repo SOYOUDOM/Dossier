@@ -644,7 +644,7 @@ answer than deleting, and keeps the history.
 ## 6. The action reference
 
 Generated from `flow.js`. `ref` means a record code (`D-0004`), a ticket
-number, or an id. **57 actions — 20 that read, 37 that write.**
+number, or an id. **62 actions — 21 that read, 41 that write.**
 
 ### Actions that only read
 
@@ -980,6 +980,32 @@ Set or clear a target date. Send due as "" to clear it.
 | `due` | YYYY-MM-DD | no |
 | `dueTime` | HH:MM | no |
 
+#### `setAlert`
+
+Alert them about one record at a moment they choose: due:true for its due time (before: minutes earlier, e.g. 15 or 60), or date and time. It reaches their phone through Telegram when they are away from the PC and their screen when they are at it. Replaces any alert the record had. Not setDue - the target date stays as it is.
+
+| argument | shape | required |
+|---|---|---|
+| `record` | ref | **yes** |
+| `due` | bool | no |
+| `before` | int | no |
+| `date` | YYYY-MM-DD | no |
+| `time` | HH:MM | no |
+
+Refused, with the reason said in the chat, when it names no moment, when
+`due:true` is sent for a record with no due date, or when the moment has
+already gone. A record's current alert is the `alert` field on it in
+`workspace.records`: `"due"`, `"due minus 30 min"`, or a date and time such as
+`"2026-09-30 10:30"`, followed by ` (went off)` once it has.
+
+#### `clearAlert`
+
+Remove the alert on a record.
+
+| argument | shape | required |
+|---|---|---|
+| `record` | ref | **yes** |
+
 #### `addLog`
 
 Add a line to a record's work log.
@@ -1204,6 +1230,15 @@ Delete a record. Its folder and documents stay on disk. Prefer setStatus to canc
 | argument | shape | required |
 |---|---|---|
 | `record` | ref | **yes** |
+
+#### `addToBrief`
+
+Add one line of fact to their "About my work" brief (workspace.brief) - a term and what it means, a server and what runs on it, who owns a system, an environment. section is one of: Team, Systems, Servers, People, Words. Plain fact, one line. Asks first.
+
+| argument | shape | required |
+|---|---|---|
+| `line` | text | **yes** |
+| `section` | string | no |
 
 #### `learn`
 
