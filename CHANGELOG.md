@@ -6,6 +6,48 @@ holds — which is what to paste into a bug report.
 
 ---
 
+## 5.4.0 - 2026-09-29
+
+**Lumen: a new look for the assistant, as a preset.** A sixth chat skin,
+picked under **◎ → Skin → Lumen** (marked *New* until it has been tried).
+Nebula, Aurora, Carbon, Ember and Paper are unchanged - checked by drawing
+the same conversation in each with 5.3.0 and 5.4.0 and comparing the
+pictures - and stay one click away.
+
+Lumen changes the layout, not just the colours, after the way the chat tools
+people use every day have settled:
+
+- **An answer is the page, not a bubble:** full width under a small mark and
+  the assistant's name, in Inter at 14px with room between the lines;
+  headings, lists, tables and quotes spaced for reading. Your questions are
+  soft bubbles on the right.
+- **One row of tools under each answer** - copy, thumbs, Retry, Think harder,
+  as icons - on the newest answer and the one under the pointer.
+- **The composer is one card:** text on top, the clip and a round send button
+  under it, attached files inside it. It lights up while you type in it.
+- **An empty conversation greets you** by the time of day, with four cards
+  to start from.
+- **The history drawer** has *New conversation*, a search over titles and
+  what was said, and the conversations grouped under Today, Yesterday,
+  Previous 7 days and Older. It dims the thread; a click there or `Esc`
+  closes it, and picking a conversation closes it too.
+- **The header shows the conversation's name** (the one the assistant gave
+  it) with the live status under it.
+- **Code blocks are dark in both modes;** copy-ready text is a card with its
+  kind as a tag; the branch switch is a segmented control; the confirmation,
+  the look sheet and the teach sheet are redrawn to match.
+- **Light and dark follow the app's mode.**
+
+The animations are the same ones, behind the same switches, and the pixel
+set and your own `assets/assistant-logo.png` dress Lumen as they dress the
+other skins.
+
+The typeface is Inter 4 (SIL Open Font License), Latin subset, 48 KB,
+embedded in `dossier.html` like the Khmer one - no network - and used by
+Lumen only. `fonts/Inter-latin.woff2`, `fonts/Inter-OFL.txt`.
+
+---
+
 ## 5.3.0 - 2026-09-28
 
 **Saving: faster, and never stuck.** A change could sit on *unsaved* for

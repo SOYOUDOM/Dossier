@@ -150,6 +150,7 @@ With the demo copied in you should immediately see:
 | `lang/en.xml` | ~175 KB | optional | Every interface phrase in English — 1,343 entries. |
 | `lang/km.xml` | ~125 KB | optional | The same 1,343 keys, **values empty**: a translation template for Khmer. |
 | `fonts/NotoSansKhmer-*.woff2` | ~33 KB | optional | Bundled Khmer typeface, so Khmer renders without fetching a webfont. `OFL.txt` is its licence. |
+| `fonts/Inter-latin.woff2` | ~48 KB | optional | Inter, the typeface of the Lumen chat skin, embedded in `dossier.html` the same way. `Inter-OFL.txt` is its licence. |
 | `scripts/dossier-runner.bat` | 3.4 KB | optional | The runner. Executes what Resolv queues. No PowerShell anywhere. |
 | `Resolv.bat` | ~6 KB | **start here** | **The one thing to double-click.** Builds and starts Resolv as an icon by the clock — the page at `http://127.0.0.1:5500/dossier.html`, the database created and migrated by itself, your scripts' runner hidden. `startup` / `startup off` for starting with Windows. |
 | `Dossier.bat` | ~1 KB | — | The old name, kept so shortcuts and habits keep working: passes straight through to `Resolv.bat`. |
@@ -440,7 +441,7 @@ in `dossier.json`:
 
 | | |
 |---|---|
-| **Skin** | Nebula · Aurora · Carbon · Ember · Paper. Every surface in the panel takes its colour from the skin, not from the app theme. |
+| **Skin** | Nebula · Aurora · Carbon · Ember · Paper · **Lumen**. Every surface in the panel takes its colour from the skin, not from the app theme — except Lumen, which follows the app's light or dark mode and changes the layout too (below). |
 | **Motion** | Seven switches — answers arriving, edge light, the living background, the orb pulse, thinking dots, springy buttons, and a passing light on an interval you set. Each one genuinely unhooks its animation. |
 | **Pixel art** | One switch, for the sprites below. Off leaves the panel exactly as it was: the drawn orb, the old waiting animation, a `✓` on a receipt. |
 | **Ask before doing anything** | On by default: everything is put to you first. Off: it does what you ask straight away and the line says *done without asking*. `Ctrl`+`Z` still undoes it either way. |
@@ -448,6 +449,39 @@ in `dossier.json`:
 A machine that has asked for reduced motion gets all of it off the first time
 the panel is opened; after that the choice is yours. None of this touches the
 rest of the app — the record sheet stays still while you read it.
+
+#### Lumen
+
+The newest skin, and the only one that changes the layout as well as the
+colours. Pick it under **◎ → Skin → Lumen**; the other five stay exactly as
+they were, and switching back is one click.
+
+- **Answers are the page, not bubbles.** Each one sits under a small mark and
+  the assistant's name, full width, in [Inter](https://rsms.me/inter/) at a
+  reading size (embedded in the file, so it looks the same on every PC).
+  Your questions are soft bubbles on the right.
+- **One row of tools under an answer** — copy, 👍 👎, Retry, Think harder —
+  drawn as icons, shown on the newest answer and on the one under the
+  pointer, out of the way on the rest.
+- **The composer is one card.** The text on top; the clip and a round send
+  button on a row under it; attached files inside the card, above the text.
+- **An empty conversation opens on a greeting** (good morning, afternoon or
+  evening) and four cards to start from.
+- **The history is a drawer**: a *New conversation* button, a search box that
+  looks through titles *and* what was said, and the conversations grouped
+  under Today, Yesterday, Previous 7 days and Older, each with when it was
+  last used. It dims the thread behind it; a click there or `Esc` puts it away.
+- **The header names the conversation** you are in, with the live status
+  under it.
+- **Code is dark in both modes**; copy-ready text (an email, a message) is a
+  card with its kind, its title and a Copy for each part; branches are a
+  segmented switch.
+
+Every animation is the same and behind the same switch — answers arriving,
+edge light, living background, orb pulse, springy buttons, the passing light,
+and the pixel set, which dresses Lumen as it dresses the others. Your own
+`assets/assistant-logo.png` still replaces the mark, in the header, on the
+greeting and over each answer.
 
 #### The pixel set
 
