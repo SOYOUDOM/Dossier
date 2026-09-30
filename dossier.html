@@ -6193,6 +6193,8 @@ const STRINGS = {
   SrcKeptNoFlow: "Kept in Sources: {list}. Ask about it and the passages that answer come up here; with a flow set up, the assistant answers from them.",
   SrcAttachPointer: "[kept in Sources as \"{name}\" — its passages are in THEIR DOCUMENTS (SOURCES), labelled; cite them]",
   SrcAnswerLab: "Answer",
+  SrcKeptNote: "Kept in Sources: {list}. Every question from now on can find and cite it - ask about it in any conversation.",
+  SrcDraftWarn: "Not in the document: {list}. Check these against the original before saving.",
   SrcSourceLab: "Source",
   SrcRelatedLab: "What they do say",
   SrcCitedLab: "It cited",
@@ -7003,7 +7005,7 @@ const STATUSES = [
    the status bar, and clicking it copies a line you can paste into a bug
    report — build date and flow protocol included, because those are the two
    things that actually differ between copies. */
-const APP_VERSION = "5.9.0";
+const APP_VERSION = "5.9.1";
 const APP_BUILT = "2026-09-27";
 function buildLine(){
   return "Resolv v" + APP_VERSION + " \u00b7 built " + APP_BUILT +
@@ -13495,12 +13497,12 @@ function chatAsk(text, opts){
     updCheck();
     const p = flowAsk(q, c, opts);
     /* they went with the question; the tray starts empty for the next one */
-    CHAT.files = []; CHAT.pins = []; renderChatFiles();
+    CHAT.files = []; CHAT.pins = []; CHAT.kept = []; renderChatFiles();
     return p;
   }
   if (CHAT.files.length){
     const kept = CHAT.files.filter(f => f.srcId).map(f => f.srcName);
-    CHAT.files = []; CHAT.pins = []; renderChatFiles();
+    CHAT.files = []; CHAT.pins = []; CHAT.kept = []; renderChatFiles();
     chatBot({ say:"", note:kept.length ? L("SrcKeptNoFlow", { list:kept.join(", ") }) : L("AttachNeedsFlow") });
   }
   /* no flow: what your documents say about it, passage by passage */
@@ -14054,6 +14056,7 @@ async function flowAsk(q, thread, opts){
     out.choices = (out.choices || []).filter(c => !phTalks(c));
   }
 
+  if (out && !fell) srcCheckDrafts(out, ctx.sources);
   const reply = flowReply(out, q);
   /* answered from the documents? its quotes and figures are checked
      against the passages it was sent before it is shown */
@@ -14296,7 +14299,7 @@ function flowDescribe(a){
       const had = memoryFind(g.replaces || g.title);
       return { say:(had ? "Update what I know about \u201c" + had.title + "\u201d"
                         : "Remember \u201c" + g.title + "\u201d"),
-               note:String(g.body).slice(0, 400) +
+               note:srcWarnLine(a) + String(g.body).slice(0, 400) +
                     (String(g.body).length > 400 ? "\u2026" : ""),
                confirm:had ? "Replace that note?" : "Keep this?" };
     }
@@ -14326,11 +14329,11 @@ function flowDescribe(a){
     case "saveRunbook":
       return { say:(rbFind(g.title) ? "Update the runbook \u201c" : "Write a runbook \u201c") + g.title + "\u201d" +
                    (g.system ? " \u00b7 " + g.system : "") + " \u00b7 " + (g.status === "approved" ? "approved" : "draft"),
-               note:(g.steps || []).slice(0, 4).map((x, i) => (i + 1) + ". " + x).join("\n"),
+               note:srcWarnLine(a) + (g.steps || []).slice(0, 4).map((x, i) => (i + 1) + ". " + x).join("\n"),
                confirm:"Save it?" };
     case "saveProfile":
       return { say:"Update what I know about " + g.system,
-               note:[g.facts, g.quirks].filter(Boolean).join("\n").slice(0, 400),
+               note:srcWarnLine(a) + [g.facts, g.quirks].filter(Boolean).join("\n").slice(0, 400),
                confirm:"Save it?" };
     case "verifyRunbook":
       return { say:"Mark \u201c" + g.title + "\u201d as checked today", confirm:"Stamp it?" };
@@ -20862,7 +20865,15 @@ async function srcLoad(force){
     try { cat = JSON.parse(await FS.readText(await FS.dir([SRC_DIR], false), "catalog.json")); } catch(e){ cat = null; }
     if (cat && Array.isArray(cat.docs)) SRC.cat = cat;
     const stale = SRC.cat.algo !== DossierSources.ALGO;
-    let redone = 0;
+    let redone = 0, renamed = 0;
+    /* 5.9.0 named a PDF kept from a conversation after its first line, which
+       is often a logo ("AIA"): those take their file's name */
+    SRC.cat.docs.forEach(d => {
+      if (d.from === "chat" && d.kind === "pdf" && !d.named && DossierSources.weakTitle(d.name)){
+        const n = DossierSources.nameFor("", d.file, d.kind);
+        if (n && n !== d.name){ d.name = n; d.family = DossierSources.familyKey(n); renamed++; }
+      }
+    });
     for (const d of SRC.cat.docs){
       if (d.status === "deleted") continue;
       try {
@@ -20878,7 +20889,7 @@ async function srcLoad(force){
         d.missing = true;
       }
     }
-    if (stale){ SRC.cat.algo = DossierSources.ALGO; try { await srcSaveCat(); } catch(e){} }
+    if (stale || renamed){ SRC.cat.algo = DossierSources.ALGO; try { await srcSaveCat(); } catch(e){} }
     srcRebuild();
     SRC.at = new Date().toISOString();
     if (redone) srcNote({ kind:"reindex", docs:redone, why:"the way passages are cut changed" });
@@ -20991,9 +21002,7 @@ async function srcAddFiles(list){
                    d.textHash === DossierSources.hash36(DossierSources.norm(x.text))));
     if (same){ toast(L("SrcUnchanged", { name:same.name })); continue; }
     const meta = DossierSources.detectMeta(x.text, f.name);
-    const base = f.name.replace(/\.[^.]+$/, "");
-    const pre = { name:(meta.title && meta.title.length <= 90 && x.kind !== "text") ? meta.title.replace(/^#+\s*/, "") : base,
-                  version:meta.version, effective:meta.effective };
+    const pre = { name:DossierSources.nameFor(meta.title, f.name, x.kind), version:meta.version, effective:meta.effective };
     const ans = await srcDetails(pre, x, f.name);
     if (!ans) continue;
     try {
@@ -21025,7 +21034,7 @@ function srcKeepFromChat(files){
     if (!d){
       const kind = srcKindOf(f.name, f.type);
       const meta = DossierSources.detectMeta(text, f.name);
-      const name = (meta.title && meta.title.length <= 90 && kind !== "text") ? meta.title.replace(/^#+\s*/, "") : f.name.replace(/\.[^.]+$/, "");
+      const name = DossierSources.nameFor(meta.title, f.name, kind);
       d = { id:srcNewId(), name:name, file:safeFile(f.name || "document"), kind:kind, version:meta.version, effective:meta.effective,
             systems:[], environment:"", category:"", label:"", assistant:true, status:"active",
             family:DossierSources.familyKey(name), textHash:th, size:f.size || 0, pages:f.pages || 0,
@@ -21036,6 +21045,7 @@ function srcKeepFromChat(files){
       srcRebuild();
       srcKeepFiles(d, f, text);
       f.srcNew = true;
+      (CHAT.kept = CHAT.kept || []).push(d.name);
     }
     f.srcId = d.id; f.srcName = d.name;
     pins.push(d.id);
@@ -21177,7 +21187,7 @@ async function srcEdit(id){
   const d = srcDoc(id); if (!d) return;
   const ans = await srcDetails(d, null, d.file, true);
   if (!ans) return;
-  Object.assign(d, { name:ans.name, version:ans.version, effective:ans.effective, systems:ans.systems,
+  Object.assign(d, { name:ans.name, named:true, version:ans.version, effective:ans.effective, systems:ans.systems,
     environment:ans.environment, category:ans.category, label:ans.label, assistant:ans.assistant,
     family:DossierSources.familyKey(ans.name), changed:new Date().toISOString() });
   /* the name is part of every passage's search terms */
@@ -21218,7 +21228,7 @@ function srcForFlow(q, thread, pin){
   const r = srcSearch(q, thread, { purpose:"flow", pin:pin });
   if (!r) return undefined;
   const out = { text:r.text, searched:r.searched, filters:r.filters, docQuestion:r.docQuestion, unproven:r.unproven,
-                closest:r.closest, follow:r.follow, passages:r.passages };
+                closest:r.closest, follow:r.follow, passages:r.passages, pinned:(pin || []).slice(), kept:(CHAT.kept || []).slice() };
   out.diag = DossierSources.diagnose(q, r.found, r, null);
   return out;
 }
@@ -21232,6 +21242,18 @@ function srcForFlow(q, thread, pin){
 function srcApply(reply, out, sources, q, thread){
   if (!srcHere() || !out) return;
   const pack = sources || { passages:[], docQuestion:false };
+  const mode = (String(q || "").match(/^\[(\w+)\]/) || [0, "chat"])[1];
+  /* a document handed over just now: say it is kept, and where */
+  if (sources && (sources.kept || []).length)
+    reply.note = (reply.note ? reply.note + "\n" : "") + L("SrcKeptNote", { list:sources.kept.join(", ") });
+  /* Studying a guideline, being interviewed about a runbook, logging an
+     email, the daily look back: jobs, not questions about what a document
+     says. Their reply is not held back - what they propose to keep is
+     checked instead, draft by draft (srcCheckDrafts). */
+  if (mode !== "chat"){
+    if (out.suggest) reply.suggest = out.suggest;
+    return;
+  }
   const g = DossierSources.ground(out, pack, q);
   /* the search that went with the question, and what became of the answer:
      which passages it cited and whether they held, and any figure it gave
@@ -21477,6 +21499,30 @@ function srcPanelHtml(){
                     : '<p class="srchint">' + LE("SrcDiagNone") + "</p>") + "</div></details>";
   return h + "</section>";
 }
+function srcWarnLine(a){ return a && (a.srcWarn || []).length ? "\u26a0 " + L("SrcDraftWarn", { list:a.srcWarn.join(", ") }) + "\n\n" : ""; }
+/* Draft runbooks, notes and profiles written from a document: any figure in
+   one that the document does not state is named on the draft, before it is
+   saved - "Not in the document: 4 hours". */
+function srcCheckDrafts(out, sources){
+  if (!srcHere() || !out || !sources || !(out.actions || []).length) return;
+  /* a draft from the document handed over is checked against that document
+     alone - another document saying "4 hours" does not make it this one's */
+  const texts = [];
+  (sources.pinned || []).forEach(id => (SRC.chunks.get(id) || []).forEach(c => texts.push(c.text)));
+  if (!texts.length) (sources.passages || []).forEach(p => texts.push(p.text));
+  if (!texts.length) return;
+  out.actions.forEach(a => {
+    if (["saveRunbook", "saveProfile", "remember"].indexOf(a.do) < 0) return;
+    const g = a.args || {};
+    const t = [g.title, [].concat(g.steps || []).join("\n"), [].concat(g.checks || []).join("\n"), g.escalation, g.body,
+               g.facts, g.quirks, [].concat(g.triggers || []).join("\n")].filter(Boolean).join("\n");
+    const miss = DossierSources.unsupportedIn(t, texts);
+    if (miss.length){
+      a.srcWarn = miss;
+      srcNote({ kind:"draft", doc:g.title || g.system || "", unsupported:miss.length, unsupportedFigures:miss.slice(0, 6) });
+    }
+  });
+}
 function srcNoteLine(e){
   if (e.kind === "answer" || e.kind === "local"){
     const r = (e.retrieved || []);
@@ -21485,13 +21531,15 @@ function srcNoteLine(e){
       " · " + r.length + " passages" + (r.length ? " [" + r.slice(0, 4).map(p => p.doc + (p.version ? " v" + p.version : "") +
       (p.page ? " p" + p.page : "") + " " + p.score).join("; ") + (r.length > 4 ? "; …" : "") + "]" : "") +
       (e.status ? " · " + e.status : "") + (e.cited && e.cited.length ? " · cited " + e.cited.filter(c => c.verified).length + "/" + e.cited.length : "") +
-      (e.unsupported ? " · BLOCKED: " + e.unsupported + " unsupported figure(s)" : "") + (e.noEvidence ? " · no evidence found" : "");
+      (e.unsupported ? " · BLOCKED: " + (e.unsupportedFigures || []).join(", ") + " - in no passage it cited" : "") +
+      (e.noEvidence ? " · no evidence found" : "");
   }
   if (e.kind === "added") return "added " + e.doc + (e.version ? " v" + e.version : "") + " · " + e.passages + " passages" +
     (e.from === "chat" ? " (from a conversation)" : "") + ((e.replaced || []).length ? " · replaces " + e.replaced.join(", ") : "") +
     ((e.problems || []).length ? " · " + e.problems.length + " problem(s): " + e.problems.slice(0, 3).join("; ") : "");
   if (e.kind === "reindex") return "re-indexed " + (e.doc || e.docs + " documents") + (e.added != null ? " · +" + e.added + " -" + e.removed + " =" + e.kept : "") + (e.why ? " (" + e.why + ")" : "");
   if (e.kind === "error") return "could not read " + (e.file || e.doc) + ": " + e.what;
+  if (e.kind === "draft") return "draft \u201c" + e.doc + "\u201d has figures its document does not state: " + (e.unsupportedFigures || []).join(", ");
   return e.kind + " " + (e.doc || "") + (e.version ? " v" + e.version : "") + (e.status ? " → " + e.status : "");
 }
 function srcPanelWire(){

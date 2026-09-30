@@ -1914,6 +1914,39 @@ question only. It is cited in that answer, found again by the next question,
 and by a new conversation next week. (**Library → Sources → Access, and
 documents attached in conversations** switches the default off.)
 
+#### Studying a guideline (BAU learning), and checking it was learned
+
+**Menu → Setup → Runbooks → Learn from a BAU document…** opens a
+`[study]` question with the document attached.
+It does two things:
+
+1. **The document is kept in Sources at once** — the reply says *Kept in
+   Sources: …*. That is what lets any later question, in any conversation,
+   find it and cite it; nothing else is needed for it to be "learned". A PDF
+   is named after its file (`ITSR.039 Vulnerability Management Standard`)
+   unless its first line is a real title — the first line of a PDF is often
+   a logo. **Details** renames it and sets its version and effective date.
+2. **The assistant proposes draft runbooks** from it, each with a **Save
+   it?** You decide each one. A figure in a draft that the document does not
+   state anywhere is named on it — *⚠ Not in the document: 4 hours* — so an
+   invented timeframe is caught before it is kept.
+
+A study reply is a job, not a question about what the document says, so it is
+never held back; the drafts are what is checked.
+
+To check it was learned, in a **new** conversation (not `[study]`):
+
+- ask something the document states — *"How long do we have to remediate a
+  critical vulnerability on an internet-facing system?"* — and look for
+  **Source** (its name, page, lines, section), **Evidence** and **Confidence:
+  High**; click the source to see the page with the lines marked;
+- ask something it does not state, and expect *"The provided … do not
+  specify …"* with **Not found**;
+- follow up — *"how about medium severity?"* — and ask *"which source
+  supports this answer?"*;
+- look at **Library → Sources → Recent searches and changes** for what was
+  searched and cited.
+
 #### How do I re-index an updated guideline?
 
 - **A new version of the document**: add it (**+ Add**). Resolv sees it is a
@@ -2507,8 +2540,8 @@ Answering from documents has its tests in the repository, and they are the
 first thing to run after changing anything it touches:
 
 ```
-node --test                 # tests/sources.test.js: 19 tests - every scenario below
-node tests/e2e/run.js       # the app in Chrome or Edge: 34 checks on the screen
+node --test                 # tests/sources.test.js: 22 tests - every scenario below
+node tests/e2e/run.js       # the app in Chrome or Edge: 39 checks on the screen
 node flow/check-prompt.js   # the prompt's examples against the reply validator
 ```
 

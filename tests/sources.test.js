@@ -399,3 +399,37 @@ test("the flow reads cite, confidence and suggest, and fills {sources}", () => {
   /* a prompt from before {sources} still gets the passages, inside workspace */
   assert.match(F.fillPrompt("{workspace}", req), /\[S1\] Doc/);
 });
+
+/* ── after 5.9.0: studying a guideline, names, and tables read by column ─ */
+test("names: a PDF whose first line is a logo takes its file's name", () => {
+  assert.equal(S.nameFor("AIA", "ITSR.039 Vulnerability Management Standard.pdf", "pdf"), "ITSR.039 Vulnerability Management Standard");
+  assert.equal(S.nameFor("ACME", "SEC.014 Patch Management Standard.pdf", "pdf"), "SEC.014 Patch Management Standard");
+  assert.equal(S.nameFor("DATA RETENTION STANDARD", "data-retention-standard.pdf", "pdf"), "Data Retention Standard");
+  assert.equal(S.nameFor("Vulnerability Management Standard", "scan0001.pdf", "pdf"), "Vulnerability Management Standard");
+  assert.equal(S.nameFor("Application Security Standard", "appsec.md", "md"), "Application Security Standard");
+  assert.ok(S.weakTitle("AIA") && !S.weakTitle("Patch Management Standard"));
+});
+
+test("a table the PDF reader gives a column at a time still supports its figure, at medium confidence", () => {
+  const text = "[page 1]\nPatch Management Standard\n1 Patch Timeframes\nSecurity patches are applied within the timeframe for their severity:\n" +
+               "Critical High Medium\n14 30 90\n(calendar days from the vendor release)\n";
+  const lib = library([{ file:"patch.pdf.txt", text:text, pages:1, meta:{ name:"Patch Management Standard" } }]);
+  const q = "How long do we have to apply a critical security patch?";
+  const { pack } = ask(lib, q);
+  const p = withText(pack, /14 30 90/)[0];
+  assert.ok(p);
+  const g = S.ground({ say:"Critical patches: within 14 days of the vendor release.", confidence:"high",
+                       cite:[{ s:p.s, quote:"Critical High Medium" }] }, pack, q);
+  assert.equal(g.status, "grounded");
+  assert.equal(g.confidence, "medium");
+  assert.deepEqual(g.loose, ["14 days"]);
+  /* but a figure the table does not have is still held back */
+  assert.equal(S.ground({ say:"Critical patches: within 7 days.", confidence:"high",
+                          cite:[{ s:p.s, quote:"Critical High Medium" }] }, pack, q).status, "blocked");
+});
+
+test("drafts written from a document: figures it does not state are named", () => {
+  const doc = ["Security patches are applied within the timeframe for their severity:\nCritical High Medium\n14 30 90\n(calendar days)"];
+  assert.deepEqual(S.unsupportedIn("Apply critical patches within 14 days. Escalate to the CAB after 4 hours.", doc), ["4 hours"]);
+  assert.deepEqual(S.unsupportedIn("Apply high patches within 30 days.", doc), []);
+});

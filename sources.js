@@ -350,6 +350,36 @@ function parseDate(s){
   if (m && MONTHS[m[1].slice(0, 3)]) return iso(+m[2], MONTHS[m[1].slice(0, 3)], 1);
   return "";
 }
+/* A document's name: the title it gives itself when that is a real title,
+   otherwise its file name. The first line of a PDF is often a logo's words
+   or a company name - "AIA", "CONFIDENTIAL" - and a file called
+   "ITSR.039 Vulnerability Management Standard.pdf" says more. */
+function weakTitle(t){
+  const s = String(t || "").replace(/^#+\s*/, "").trim();
+  const letters = s.replace(/[^\p{L}]/gu, "").length;
+  const ws = s.split(/\s+/).filter(w => /\p{L}{2,}/u.test(w));
+  return !s || letters < 8 || ws.length < 2 || s.length > 90 || /^(confidential|internal|restricted|draft|public|page \d+)\b/i.test(s);
+}
+function genericFile(name){
+  const b = String(name || "").replace(/\.[^.]+$/, "").trim();
+  return !b || /^(document|doc|scan|scanned|file|untitled|download|img|image|new|copy|attachment)[\s_\-\d()]*$/i.test(b) ||
+         b.replace(/[^\p{L}]/gu, "").length < 4;
+}
+function tidyName(s){
+  s = String(s || "").replace(/[_]+|(?<=\p{L})-(?=\p{L})/gu, " ").replace(/\s+/g, " ").trim();
+  /* "data retention standard" and "DATA RETENTION STANDARD" read as a name */
+  if (s === s.toLowerCase() || (s === s.toUpperCase() && /\p{L}{4,}/u.test(s)))
+    s = s.toLowerCase().replace(/(^|\s)(\p{L})/gu, (m, a, c) => a + c.toUpperCase());
+  return s;
+}
+function nameFor(title, fileName, kind){
+  const base = tidyName(String(fileName || "").replace(/\.[^.]+$/, ""));
+  const t = String(title || "").replace(/^#+\s*/, "").trim();
+  if (kind === "md" || kind === "docx") return !weakTitle(t) ? t : base || t || "Untitled";
+  /* a PDF's first line is too often a logo to be trusted over its file name */
+  if (!genericFile(fileName)) return base;
+  return !weakTitle(t) ? tidyName(t) : base || t || "Untitled";
+}
 /* what makes two files the same document: its name without the version,
    the year, and words like draft or final */
 function familyKey(name){
@@ -828,6 +858,17 @@ function figures(text){
   while ((m = re4.exec(s))) add("n " + m[1], m[0]);
   return out;
 }
+/* the number and its unit both in the passage, but not side by side - how a
+   PDF reader can hand back a table, a column at a time ("7 14 30" on one
+   line, "days days days" on the next). Accepted, never at full confidence. */
+const UNIT_WORDS = { minute:/\b(min|mins|minutes?)\b/, hour:/\b(h|hr|hrs|hours?)\b/, day:/\bdays?\b/, week:/\b(wks?|weeks?)\b/,
+                     month:/\bmonths?\b/, year:/\b(yrs?|years?)\b/, percent:/%|\bper ?cent\b/ };
+function hasFigureLoose(text, f){
+  const m = /^(\d+(?:\.\d+)?) (\w+)$/.exec(f.key);
+  if (!m || !UNIT_WORDS[m[2]]) return false;
+  const t = " " + norm(text) + " ";
+  return t.indexOf(" " + m[1] + " ") >= 0 && UNIT_WORDS[m[2]].test(String(text).toLowerCase());
+}
 function hasFigure(text, f){
   const got = figures(text).map(x => x.key);
   if (got.indexOf(f.key) >= 0) return true;
@@ -848,7 +889,7 @@ function ground(reply, pack, question){
   const raw = Array.isArray(reply && reply.cite) ? reply.cite : [];
   const conf = String((reply && reply.confidence) || "").toLowerCase().replace(/[^a-z_]/g, "");
   const docMode = !!(pack && pack.docQuestion) || raw.length > 0 || /^(high|medium|not_?found|low)$/.test(conf);
-  const res = { status:"general", confidence:"", cites:[], unsupported:[], uncited:[], notes:[] };
+  const res = { status:"general", confidence:"", cites:[], unsupported:[], uncited:[], loose:[], notes:[] };
   if (!docMode) return res;
   const bySid = new Map(P.map(p => [String(p.s).toUpperCase(), p]));
   const byId = new Map(P.map(p => [p.id, p]));
@@ -870,6 +911,7 @@ function ground(reply, pack, question){
   figures(say).forEach(f => {
     if (notFound && qFig.indexOf(f.key) >= 0) return;         /* "the standard does not say 4 hours" */
     if (good.some(c => hasFigure(c.text, f))) return;
+    if (good.some(c => hasFigureLoose(c.text, f))){ res.loose.push(f.text); return; }
     /* written in a passage the answer did not cite - an incident target
        sitting next to a vulnerability question is not support for it */
     const other = P.filter(p => hasFigure(p.text, f));
@@ -881,9 +923,18 @@ function ground(reply, pack, question){
   if (!good.length){ res.status = "unsupported"; res.confidence = "not_found"; return res; }
   res.status = "grounded";
   const lowOnly = good.every(c => c.quality === "low");
-  res.confidence = conf === "high" && !lowOnly ? "high" : "medium";
+  res.confidence = conf === "high" && !lowOnly && !res.loose.length ? "high" : "medium";
+  if (res.loose.length) res.notes.push("a figure is in the cited passage, but not next to its unit - a table read column by column");
   if (lowOnly) res.notes.push("every cited passage is from a page that could not be read reliably");
   return res;
+}
+
+/* A draft runbook, note or profile written from a document: the figures in
+   it that the document does not state anywhere. Shown on the draft before
+   it is saved - a draft is where an invented figure would stay. */
+function unsupportedIn(text, sourceTexts){
+  const all = (sourceTexts || []).join("\n");
+  return figures(text).filter(f => !hasFigure(all, f) && !hasFigureLoose(all, f)).map(f => f.text);
 }
 
 /* ── one line of diagnostics, with no document text in it ──────────────── */
@@ -912,7 +963,8 @@ const API = {
   createIndex: createIndex, eligible: eligible, search: search, gather: gather, packText: packText,
   locate: locate, citation: citation, lastHead: lastHead,
   isDocQuestion: isDocQuestion, followUp: followUp, beside: beside,
-  figures: figures, ground: ground, diagnose: diagnose
+  figures: figures, ground: ground, diagnose: diagnose, unsupportedIn: unsupportedIn,
+  nameFor: nameFor, weakTitle: weakTitle
 };
 if (typeof module === "object" && module.exports) module.exports = API;
 if (root) root.DossierSources = API;

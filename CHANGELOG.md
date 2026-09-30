@@ -6,6 +6,31 @@ holds — which is what to paste into a bug report.
 
 ---
 
+## 5.9.1 - 2026-09-30
+
+**Studying a guideline is not held back; its drafts are checked instead.**
+In 5.9.0 a `[study]` reply that summed up the runbooks it wrote could be
+"held back" like an answer to a question. A study, an interview about a
+runbook, logging an email and the daily look back are jobs, so their reply
+is now shown as it is - and every draft runbook, note or system profile they
+propose is checked against the document it came from: a figure the document
+does not state is named on the draft's **Save it?** (*⚠ Not in the document:
+4 hours*). The reply also says the document is **kept in Sources**.
+
+- **Names**: a PDF kept from a conversation is named after its file
+  (*ITSR.039 Vulnerability Management Standard*) unless its first line is a
+  real title - it was often a logo (*AIA*). Documents already named that way
+  are renamed from their file the next time the workspace opens (unless
+  renamed by hand).
+- **Tables read a column at a time**: a figure whose number and unit are
+  both in the cited passage, but not side by side - how a PDF reader can
+  return a table - now counts as supported, at Medium confidence, instead of
+  holding the answer back.
+- **Recent searches** show the figure that held an answer back.
+- README: *Studying a guideline, and checking it was learned*.
+
+---
+
 ## 5.9.0 - 2026-09-30
 
 **Answers from your runbooks and standards come from the documents - with

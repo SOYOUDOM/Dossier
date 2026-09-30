@@ -135,7 +135,7 @@ inside `{workspace}`, and **Setup** names the missing place.
 
 ```
 node --test                  # sources.js and the flow's handling of it
-node tests/e2e/run.js        # the app in a browser, 34 checks
+node tests/e2e/run.js        # the app in a browser, 39 checks
 node flow/check-prompt.js    # after editing flow/prompt.txt ...
 python flow/embed-prompt.py  # ... and to copy it into flow.js
 node tests/fixtures/make-pdf.js   # remakes the PDF fixture
@@ -168,8 +168,10 @@ node tests/fixtures/make-pdf.js   # remakes the PDF fixture
 | What you see | Why, and what to do |
 |---|---|
 | **No supporting source found** | No passage states the answer. Ask *"why was it not found?"*: it lists what was searched. If the document is not in Sources, add it; if it is, check it is **active**, cleared for its label, and about the system or environment the question names. Name the document in the question to search only it. |
-| **Answer held back** | The reply stated a figure no cited passage contains. The documents do not give it — or the model cited the wrong passage. Ask again naming the section, or read the document (**View**). |
+| **Answer held back** | Only for a question in an ordinary conversation (never a `[study]`, `[teach]` or `[intake]` job). The reply stated a figure no cited passage contains; **Recent searches** names the figure. The documents do not give it — or the model cited the wrong passage. Ask again naming the section, or read the document (**View**). |
 | **Not from your documents** | The reply cited nothing. Treat it as general advice. |
+| "⚠ Not in the document" on a draft runbook | A figure in the draft that its document does not state anywhere. Correct the draft (or say No) before saving. |
+| A document named after its logo (*AIA*) | Rename it with **Details**. From 5.9.1 a PDF is named after its file unless its first line is a real title. |
 | Two versions in answers | Both are active and nothing proves which is current: give each a version or effective date (**Details**), or switch the old one off. |
 | "*n* page(s) could not be read reliably" | A scan without `ocr.js`, a font the reader could not decode, or garbled text. Add `ocr.js` and **Re-index**, or add a text version of the document. |
 | "No text could be read" | A scanned PDF without `ocr.js`, or an image-only document. |

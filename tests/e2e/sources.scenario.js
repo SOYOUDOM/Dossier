@@ -24,7 +24,7 @@
   document.head.appendChild(style);
   await srcLoad(true);
 
-  const file = async (name, type) => new File([await (await fetch("tests/fixtures/" + name, { cache:"no-store" })).arrayBuffer()], name, { type });
+  const file = async (name, type) => new File([await (await fetch("tests/fixtures/" + encodeURIComponent(name), { cache:"no-store" })).arrayBuffer()], name, { type });
   const addDoc = async (name, type, ans) => {
     const f = await file(name, type);
     const x = await srcExtract(f);
@@ -186,6 +186,36 @@
   await until(async () => { try { await (await (await ws.getDirectoryHandle("sources")).getDirectoryHandle(kept.id)).getFileHandle("chunks.json"); return true; } catch (e) { return false; } }, 8000);
   const later = srcSearch("How quickly must critical security patches be applied on internet-facing servers?", null, {});
   check("...and is found again by a later question", later.passages.some(p => /within 3 days/.test(p.text)));
+
+  /* ── studying a guideline: a job, not a question - never held back; the
+        drafts it proposes are checked instead ─────────────────────────── */
+  chatNew(true); chatPaint();
+  await chatAttach([await file("SEC.014 Patch Management Standard.pdf", "application/pdf")]);
+  await until(() => CHAT.files.length && !CHAT.files[0].reading, 8000);
+  plan = req => ({ say:"I saved one draft runbook from it: critical patches go on within 14 days, and anything overdue is escalated after 4 hours.",
+                   cite:[{ s:label(req, /14 30 90/), quote:"Critical High Medium" }], confidence:"high",
+                   actions:[{ do:"saveRunbook", title:"Critical patch overdue", system:"Patching", status:"draft",
+                              triggers:["critical patch not applied"], steps:["Apply critical patches within 14 days of the vendor release.",
+                              "Escalate to the change advisory board after 4 hours."] }] });
+  const nAsk = sent.length;
+  el = await ask("[study] Here is a guideline. Turn each procedure into a runbook.");
+  await until(() => ASK.cur, 5000);
+  const kept2 = srcDocs().find(d => /Patch Management/.test(d.name));
+  check("a PDF whose first line is a logo is kept under its file's name", kept2 && kept2.name === "SEC.014 Patch Management Standard",
+        JSON.stringify(srcDocs().map(d => d.name)));
+  check("study: the reply is shown, not held back", sent.length > nAsk && !el.querySelector(".srcans") && /I saved one draft runbook/.test(el.textContent),
+        el.textContent.slice(0, 300));
+  check("study: it says the document is kept in Sources", /Kept in Sources: SEC\.014 Patch Management Standard/.test(el.textContent), el.textContent.slice(0, 400));
+  check("study: the draft names the figure its document does not state", ASK.cur && /Not in the document: 4 hours/.test(ASK.cur.note) &&
+        !/14 days/.test((/Not in the document:[^\n]*/.exec(ASK.cur.note) || [""])[0]), ASK.cur ? ASK.cur.note : "no dialog");
+  await shot("8-study-draft");
+  while (ASK.cur) chatDeclineAsked();
+
+  /* and then a question about it: the table, read a column at a time */
+  plan = req => ({ say:"Within 14 days of the vendor release.", confidence:"high", cite:[{ s:label(req, /14 30 90/), quote:"Critical High Medium" }] });
+  el = await ask("How long do we have to apply a critical security patch?");
+  check("a figure from a table read by column is accepted, at medium confidence", el.querySelector(".srcans.grounded") &&
+        /Medium/.test((el.querySelector(".srcconf") || {}).textContent || ""), el.textContent.slice(0, 400));
 
   /* ── access labels ─────────────────────────────────────────────────── */
   await addDoc("security-incident-playbook.md", "text/markdown", { label:"security-restricted" });
