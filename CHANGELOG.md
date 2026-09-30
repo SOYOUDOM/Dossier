@@ -6,6 +6,52 @@ holds — which is what to paste into a bug report.
 
 ---
 
+## 5.5.0 - 2026-09-30
+
+**Questions about Resolv are answered from its documentation, and every
+answer can say where it came from.**
+
+- **Asked about the application - how something works, what a setting does,
+  what changed - the assistant quotes `README.md` or `CHANGELOG.md`**, and
+  nothing else. The page reads both from its own folder when the assistant
+  opens (and at most once a minute after), so the answer is the documentation
+  as it stands in that folder, not a copy taken when the page was built. The
+  hand-written help that used to answer *how do I* and *what is this* is gone.
+- **The answer is the section's own words**, with the **source under it**: the
+  file and the section, and for a release its version and date. Press it, or
+  *Show the whole section*, for the rest. Other sections that match well are
+  offered as *Also:*.
+- **Release notes have their own questions**: *what is new*, *what changed in
+  5.3*, *what version is this* (and whether a newer release is in the folder),
+  and *when was the desk pet added* - the first release that mentions it.
+- **"Which source supports this answer?"** - or *cite your source*, *is that
+  documented*, *where is that from* - names the file and section of a quoted
+  answer; says an answer counted from your records came from your records,
+  with the working; and says a flow's answer was written by its model and
+  names no source, followed by what the documentation says on the same
+  subject when it was about Resolv. *Are you sure* no longer claims a flow's
+  answer was counted from your records.
+- **Nothing to quote, no answer.** A question the documentation does not cover
+  gets *The documentation does not cover that*. A page opened as a file cannot
+  read either file and says so - start Resolv with `Resolv.bat`.
+- **With a flow switched on, these are still answered here**, whatever *Answer
+  locally first* is set to: a model's idea of how Resolv works is not the
+  documentation. Questions about your own work go to the flow as before.
+- **Fixed on the way:** *which source supports this answer?* used to be read
+  as a question about your systems, and *release notes* as a request to log a
+  record called that.
+- **`node scripts/check-assistant-docs.js`** checks all of this against the two
+  files as they stand. It found two faults in this release before it shipped: a
+  sentence in these notes that begins with three backticks was being taken
+  for a block of code, hiding eighteen releases; and quoted answers were
+  being contracted (*are not* to *aren't*) like the assistant's own
+  sentences.
+
+Of 1,187 phrasings the assistant already had, 1,171 are still read as the same
+question, word for word the same answer; the other 16 are the new kinds of
+question above. *How do I* and *what is this* now answer in the
+documentation's words wherever the documentation can be read.
+
 ## 5.4.1 - 2026-09-28
 
 **Breeze, calmer, and wearing the assistant's own mark.**

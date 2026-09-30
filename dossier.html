@@ -2394,6 +2394,19 @@ body.chatting .pet[data-corner="br"],body.chatting .pet[data-corner="tr"]{
   color:var(--ch-dim,var(--ink-3));margin-right:8px}
 .chtext .ctb{padding:11px 13px;font-size:13px;line-height:1.62;color:var(--ink);
   white-space:pre-wrap;overflow-wrap:anywhere;font-family:var(--f-ui)}
+/* where an answer's words came from: the file, the section, the release */
+.chsrc{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:10px}
+.chsrc .lb{font-size:9.5px;letter-spacing:.09em;text-transform:uppercase;font-weight:700;
+  color:var(--ch-dim,var(--ink-3));margin-right:2px}
+.chsrc button{display:inline-flex;align-items:baseline;gap:6px;max-width:100%;min-width:0;
+  border:1px solid var(--ch-line,var(--rule));background:var(--ch-panel,var(--paper-2));
+  color:var(--ch-ink,var(--ink));border-radius:999px;padding:3px 10px;cursor:pointer;
+  font:500 11px/1.4 var(--f-ui);text-align:left;transition:border-color .14s,color .14s}
+.chsrc button:hover{border-color:var(--ch-acc,var(--accent))}
+.chsrc b{font:600 10.5px/1.4 var(--f-mono);color:var(--ch-acc,var(--accent));flex:0 0 auto}
+.chsrc .v{font:500 10.5px/1.4 var(--f-mono);color:var(--ch-dim,var(--ink-3));flex:0 0 auto}
+.chsrc .t{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chsrc .t:empty{display:none}
 /* the branches of one answer: the normal one, a retry, the harder one */
 .chbr{display:flex;align-items:center;gap:4px;flex-wrap:wrap;margin:0 0 8px}
 .chbr .bl{font-size:10px;color:var(--ch-dim,var(--ink-3));margin-right:3px;letter-spacing:.04em}
@@ -2980,6 +2993,10 @@ body.chatting .pet[data-corner="br"],body.chatting .pet[data-corner="tr"]{
 .chat[data-design="breeze"] .chcode pre{padding:2px 14px 13px;font-size:12px;line-height:1.6}
 .chat[data-design="breeze"] .chrb,.chat[data-design="breeze"] .chrbp,.chat[data-design="breeze"] .chmail{border-radius:12px;background:var(--bz-card);box-shadow:none}
 .chat[data-design="breeze"] .chrb .rbh,.chat[data-design="breeze"] .chrbp .rbph,.chat[data-design="breeze"] .chmail .mh{background:var(--bz-soft)}
+.chat[data-design="breeze"] .chsrc{margin-top:10px}
+.chat[data-design="breeze"] .chsrc button{border:0;border-radius:8px;background:var(--bz-card);padding:4px 10px}
+.chat[data-design="breeze"] .chsrc button:hover{background:var(--bz-acc-soft)}
+.chat[data-design="breeze"] .chsrc b{color:var(--bz-on-soft)}
 
 /* while it thinks, and what happened after a dialogue */
 .chat[data-design="breeze"] .chb.bot.thinking .chthink{background:var(--bz-soft);border-radius:16px;padding:9px 15px}
@@ -5979,6 +5996,10 @@ const STRINGS = {
   ChatTryFirst: "Try asking",
   ChatFootNote: "Ask about your records, runbooks and systems.",
   ChatMsgOne: "1 message",
+  DocSource: "Source",
+  DocSources: "Sources",
+  DocOpenSection: "Show this section of the documentation",
+  DocGone: "The documentation cannot be read from here, so that section cannot be shown.",
   ChatMsgCount: "{n} messages",
   ChatMotion: "Motion",
   ChatArt: "Pixel art",
@@ -6576,8 +6597,8 @@ const STATUSES = [
    the status bar, and clicking it copies a line you can paste into a bug
    report — build date and flow protocol included, because those are the two
    things that actually differ between copies. */
-const APP_VERSION = "5.4.1";
-const APP_BUILT = "2026-09-28";
+const APP_VERSION = "5.5.0";
+const APP_BUILT = "2026-09-30";
 function buildLine(){
   return "Resolv v" + APP_VERSION + " \u00b7 built " + APP_BUILT +
          " \u00b7 flow protocol " + (window.DossierFlow ? DossierFlow.version : "\u2014") +
@@ -10319,6 +10340,67 @@ const CHAT_ALL_MAX = 3.5 * 1024 * 1024; /* everything on one question */
 const CHAT_READ_MAX = 25 * 1024 * 1024; /* refuse to even open one bigger */
 const CHAT_MAX_THREADS = 30, CHAT_MAX_MSGS = 80;
 
+/* ═══ THE DOCUMENTATION ═════════════════════════════════════════════════
+   Questions about Resolv itself - how something works, what a setting does,
+   what changed in which release - are answered from README.md and
+   CHANGELOG.md, read out of the folder this page was served from. So an
+   answer is the documentation as it stands in that folder today, never a
+   copy of it taken when the page was built, and "which source supports this
+   answer?" can always name the file and the section.
+
+   Read when the assistant opens, and at most once a minute while it is in
+   use; indexed again only when a file has actually changed (chat.js does
+   the indexing and the finding). The bridge serves .md out of the app
+   folder already. A page opened as a file cannot read them at all, and the
+   assistant says so rather than answer from anything else. */
+const DOCS = { index:null, state:"", at:0, sig:"", busy:null };
+const DOCS_FILES = [["README.md", "guide"], ["CHANGELOG.md", "release"]];
+function docsSig(t){
+  let h = 2166136261;
+  for (let i = 0; i < t.length; i++){ h ^= t.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return t.length + ":" + (h >>> 0).toString(36);
+}
+function docsLoad(force){
+  if (!/^https?:$/.test(location.protocol)){ DOCS.state = "file"; DOCS.index = null; return Promise.resolve(null); }
+  if (DOCS.busy) return DOCS.busy;
+  if (!force && DOCS.state && Date.now() - DOCS.at < 60000) return Promise.resolve(DOCS.index);
+  DOCS.at = Date.now();
+  DOCS.busy = Promise.all(DOCS_FILES.map(([name]) => fetch(name, { cache:"no-store" })
+      .then(r => r.ok ? r.text() : Promise.reject(new Error(name + " " + r.status)))))
+    .then(texts => {
+      const sig = texts.map(docsSig).join("|");
+      if (sig !== DOCS.sig || !DOCS.index){
+        DOCS.index = (window.DossierChat && DossierChat.docsIndex)
+          ? DossierChat.docsIndex(DOCS_FILES.map(([name, kind], i) => ({ name, kind, text:texts[i] }))) : null;
+        DOCS.sig = sig;
+      }
+      DOCS.state = DOCS.index ? "ok" : "missing";
+      return DOCS.index;
+    })
+    .catch(() => { DOCS.index = null; DOCS.state = "missing"; return null; })
+    .finally(() => { DOCS.busy = null; });
+  return DOCS.busy;
+}
+/* The answer on screen when a question is asked about it - "which source
+   supports this answer?" - whichever way it was made: quoted from the
+   documentation, counted from the records, or written by a flow's model.
+   A question about an answer is not itself the answer being asked about. */
+function chatLastReply(){
+  const c = chatThread();
+  const msgs = (c && c.msgs) || [];
+  for (let i = msgs.length - 1; i >= 0; i--){
+    const m = msgs[i], r = m.who === "bot" && m.reply;
+    if (!r || r.intent === "source" || r.intent === "justify") continue;
+    return { via:r.via || "", intent:r.intent || "", label:r.label || "", kind:r.kind || "",
+             say:String(r.say || "").slice(0, 800), src:m.src || "",
+             sources:r.sources || [], also:r.also || [], docs:r.docs || null,
+             count: typeof r.count === "number" ? r.count : null, rows:(r.rows || []).length,
+             confidence:r.confidence || 0, learned:!!r.learned, taught:(r.taught && r.taught.how) || "",
+             applied:r.applied || "", filters:"" };
+  }
+  return null;
+}
+
 function chatApi(convo){
   const st = S.settings;
   /* asking a question must write nothing at all — not even an empty object
@@ -10335,6 +10417,10 @@ function chatApi(convo){
     phrase: p => (p ? L(p.k, p.v || {}) : ""),
     ai: window.DossierAI || null,
     ctx: aiCtx,
+    /* the documentation, the build, and the answer above - for questions
+       about Resolv and about where an answer came from */
+    docs: DOCS.index, docsState: DOCS.state, version: APP_VERSION, built: APP_BUILT,
+    last: chatLastReply(),
     h: { tok, idf, similar, estimateFor, predict, knownValues, repeatCandidates,
          today, addDays, dow, mondayOf, niceDate, mins, dayOf, dkey, stamp,
          live, peopleOf, canonPerson, splitPeople, matchParty, findByRef, findScript,
@@ -11806,6 +11892,7 @@ async function updCheck(first){
 window.addEventListener("focus", () => updCheck());
 function openChat(){
   updCheck();
+  docsLoad(true);
   chatOcrWarm();
   if (!CHAT.art){ CHAT.art = true; chatArt(); const o = $("chatOrb"); if (o && !o.querySelector("svg")) o.insertAdjacentHTML("beforeend", CHAT_ORB_SVG); }
   if (!window.DossierChat) return toast(L("ChatNoEngine"), { bad:true });
@@ -12420,6 +12507,21 @@ function chatRenderBot(r, sourceText, replaying, at){
      visible rather than silently changing the answer */
   if (r.applied) h += '<div class="carry">' + esc(L("ChatApplied", { what:r.applied })) + "</div>";
 
+  /* where the words came from, when they came from the documentation: the
+     file, the section, and for a release the version and the day. Pressing
+     one shows the whole section. */
+  if ((r.sources || []).length){
+    h += '<div class="chsrc"><span class="lb">' + esc(L(r.sources.length > 1 ? "DocSources" : "DocSource")) + "</span>";
+    r.sources.forEach((sr, i) => {
+      CHAT.acts[id + "src" + i] = { kind:"docshow", id:sr.id };
+      const rel = sr.kind === "release" && sr.version;
+      h += '<button data-act="' + id + "src" + i + '" title="' + esc(L("DocOpenSection")) + '"><b>' + esc(sr.file) + "</b>" +
+           (rel ? '<span class="v">' + esc(sr.version) + (sr.date ? " \u00b7 " + esc(sr.date) : "") + "</span>" : "") +
+           '<span class="t">' + esc(rel && sr.title.indexOf(sr.version) === 0 ? "" : sr.title) + "</span></button>";
+    });
+    h += "</div>";
+  }
+
   /* and the words it could not use. Answering as though they were never typed
      is the one failure nobody can catch. */
   if (r.ignored){
@@ -12885,6 +12987,30 @@ function chatLocalFirst(q, c){
   return r;
 }
 
+/* Questions about Resolv, and questions about where an answer came from,
+   are answered here even with a flow set up - and whatever "answered
+   locally" is set to. A model can describe the application from whatever
+   it was trained on; the documentation in the folder is what is true of
+   this copy, and it is the only source these answers may come from. A
+   how-to that turns out not to be about Resolv ("how do I fix the export")
+   is still the flow's. */
+const DOCS_FIRST = new Set(["docs", "releases", "source", "justify", "howTo", "about"]);
+function chatDocsFirst(q, c){
+  if (!window.DossierChat) return null;
+  const t = String(q || "").trim();
+  if (!t || /^\[/.test(t)) return null;
+  let r;
+  try { r = DossierChat.ask(t, chatApi(Object.assign({}, (c && c.convo) || {}))); } catch(e){ return null; }
+  if (!r || !DOCS_FIRST.has(r.intent) || r.unsure) return null;
+  const d = r.docs || {};
+  if ((r.intent === "howTo" || r.intent === "about") && !(r.sources || []).length && !(d.product || d.state === "unreadable")) return null;
+  if (r.intent === "docs" && d.state === "none" && !d.product) return null;
+  if (r.intent === "justify" && !(r.sources || []).length && !chatLastReply()) return null;
+  if (c && r.context) c.convo = r.context;
+  r.local = true;
+  return r;
+}
+
 /* A greeting or a thank-you, alone - nothing else in the sentence. Anything
    more ("hi, what's overdue?") is a question and goes to the assistant. */
 function chatSmallTalk(q){
@@ -12916,6 +13042,10 @@ function chatAsk(text, opts){
      to do with the second one is not to make it. */
   if ($("chat").classList.contains("busy")) return;
   if (CHAT.files.some(f => f.reading) || CHAT.gridBusy) return chatReadsDone().then(() => chatAsk(q, opts));
+  /* the documentation is read before the first question that might need
+     it, and looked at again in the background at most once a minute */
+  if (!DOCS.state && !opts.docsRead) return docsLoad().then(() => chatAsk(q, Object.assign({}, opts, { docsRead:true })));
+  docsLoad();
   CHAT.last = q;
   const c = chatThread() || chatNew(true);
   const files = CHAT.files.map(f => ({ name:f.name, type:f.type, size:f.size }));
@@ -12939,6 +13069,8 @@ function chatAsk(text, opts){
      goes to the flow, and every local answer carries a button that sends
      the same question there instead. */
   if (flowOn() && !CHAT.files.length && !opts.flow && !opts.force && !opts.tier){
+    const doc = chatDocsFirst(q, c);
+    if (doc){ chatBot(doc, q); chatSide(); return; }
     const local = chatLocalFirst(q, c);
     if (local){ chatBot(local, q); chatSide(); return; }
   }
@@ -15659,6 +15791,11 @@ function chatDo(act){
   switch (act.kind){
     case "say":      return chatAsk(act.text);
     case "askflow":  return chatAsk(act.text, { flow:true });
+    case "docshow": {
+      const show = () => chatBot(DOCS.index ? DossierChat.docsShow(DOCS.index, act.id)
+                                            : { say:L("DocGone"), docs:{ state:"unreadable" } }, null);
+      return DOCS.index ? show() : docsLoad(true).then(show);
+    }
     case "rerun": {
       const c = chatThread();
       let r;

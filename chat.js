@@ -1261,6 +1261,8 @@ function live(api, list){ return (list || api.tasks).filter(t => api.h.LIVE.inde
 
 const INTENTS = [];
 function intent(name, def){ def.name = name; INTENTS.push(def); }
+/* the ones that answer from README.md and CHANGELOG.md, or about an answer */
+const DOC_INTENTS = new Set(["docs", "releases", "source", "howTo"]);
 
 /* ── what should I be doing ───────────────────────────────────────────── */
 intent("next", {
@@ -3930,6 +3932,13 @@ intent("howTo", {
            ["is it possible to",9],["can i",5],["teach me",11],["explain how",12]],
   run(A){
     const g = guideFor(A.mw, A.norm);
+    /* the steps come from the manual; what this file knows is only which
+       panel the button under them should open */
+    if (A.api.docs || A.api.docsState){
+      const ans = docsAnswer(A);
+      if (g && (ans.sources || []).length) ans.chips = (ans.chips || []).concat(guideChips(g));
+      return ans;
+    }
     if (!g) return {
       say: say(["I am not sure which part you mean.",
                 "I do not know that one.",
@@ -3945,17 +3954,20 @@ intent("howTo", {
                { name:g.name, Name:g.name.charAt(0).toUpperCase() + g.name.slice(1), where:g.where },
                A.norm),
       note: g.how.join("\n") + (g.tip ? "\n\n" + g.tip : ""),
-      chips: g.id === "routine" ? [{ label:"Open Routines", act:{ kind:"panel", panel:"routine" } }]
-           : g.id === "script"  ? [{ label:"Open Scripts", act:{ kind:"panel", panel:"scripts" } }]
-           : g.id === "workspace" ? [{ label:"Open Workspace", act:{ kind:"panel", panel:"ws" } }]
-           : g.id === "assist"  ? [{ label:"Open Assist", act:{ kind:"view", view:"assist" } }]
-           : g.id === "notification" ? [{ label:"Turn them on",
-               act:{ kind:"notify", on:true, confirm:"Switch reminders on?" } }]
-           : g.id === "shortcut" ? [{ label:"Show the shortcuts", act:{ kind:"keys" } }]
-           : [{ label:"Open Setup", act:{ kind:"panel", panel:"setup" } }]
+      chips: guideChips(g)
     };
   }
 });
+function guideChips(g){
+  return g.id === "routine" ? [{ label:"Open Routines", act:{ kind:"panel", panel:"routine" } }]
+       : g.id === "script"  ? [{ label:"Open Scripts", act:{ kind:"panel", panel:"scripts" } }]
+       : g.id === "workspace" ? [{ label:"Open Workspace", act:{ kind:"panel", panel:"ws" } }]
+       : g.id === "assist"  ? [{ label:"Open Assist", act:{ kind:"view", view:"assist" } }]
+       : g.id === "notification" ? [{ label:"Turn them on",
+           act:{ kind:"notify", on:true, confirm:"Switch reminders on?" } }]
+       : g.id === "shortcut" ? [{ label:"Show the shortcuts", act:{ kind:"keys" } }]
+       : [{ label:"Open Setup", act:{ kind:"panel", panel:"setup" } }];
+}
 
 intent("about", {
   kind:"read", label:"About Resolv",
@@ -3985,6 +3997,31 @@ intent("about", {
     const sys = {};
     api.tasks.forEach(x => { if (x.system) sys[x.system] = (sys[x.system] || 0) + 1; });
     const top = Object.keys(sys).sort((a, b) => sys[b] - sys[a]).slice(0, 3);
+    /* "what is this app" is the manual's opening; "what is this app's
+       backup" is a question about backups, and gets that section instead */
+    if (A.api.docs){
+      const about = new Set(docToks("purpose point for about made who used what describe describes"));
+      const subject = docToks(A.raw).filter(t => !about.has(t));
+      const ans = subject.length ? docsAnswer(A) : null;
+      /* a subject the documentation has nothing on is not answered with
+         the introduction instead - that would be a quote about something
+         else, with a source attached */
+      if (ans && !(ans.sources || []).length) return ans;
+      if (ans && ans.sources[0].title !== A.api.docs.secs[0].title) return ans;
+      const intro = A.api.docs.secs.find(x => x.file === "README.md" && !x.skip);
+      const told = intro && intro.units.filter(u => u.kind === "p" && !/^>/.test(u.text)).slice(0, 2);
+      if (intro && told.length) return {
+        say: docClean(told.map(u => u.text).join("\n\n")),
+        note: n ? "Right now it holds " + qty(n, "record") + ", " + live + " of them still live" +
+                  (top.length ? ", mostly across " + andList(top, 3) : "") + "." : "",
+        sources:[docSource(intro)],
+        docs:{ state:"ok" },
+        chips:[{ label:"Show the whole section", act:{ kind:"docshow", id:intro.id } },
+               { label:"What can you do", act:{ kind:"say", text:"what can you do" } }]
+      };
+    }
+    if (!A.api.docs && A.api.docsState) return Object.assign(docsUnreadable(A), {
+      note: docsUnreadable(A).note + (n ? "\n\nThis workspace holds " + qty(n, "record") + ", " + live + " still live." : "") });
     return {
       say: say(["Resolv is a record of your support work — everything you are asked to do, what you did about it, and what is still owed.",
                 "It is where your support work is written down: what came in, what you did, and what is still outstanding.",
@@ -4004,6 +4041,662 @@ intent("about", {
              { label:"Open Assist", act:{ kind:"view", view:"assist" } }]
     };
   }
+});
+
+/* ═══ QUESTIONS ABOUT RESOLV ITSELF ══════════════════════════════════════
+   How the application works, what a setting does, what changed in which
+   release: answered from README.md and CHANGELOG.md - the documentation
+   that is maintained beside the code - and from nothing else. The app reads
+   both files out of its own folder and hands them over as api.docs; this
+   cuts them into sections, finds the one a question is about, quotes it,
+   and says where the quote came from.
+
+   Quoting rather than paraphrasing is the point. There is nothing in here
+   to paraphrase with, and an answer in the documentation's own words, with
+   the file and the section beside it, is one that "which source supports
+   this answer?" can always be asked of. When the files cannot be read, or
+   say nothing that matches, it says so rather than answer from anywhere
+   else - the hand-written help that used to live in this file included. */
+
+/* words that say nothing about which part of the documentation is meant */
+const DOC_STOP = new Set(("a an the of for to in on at is are am was were be been being do does did done " +
+  "can could would should will shall may might must i me my mine you your yours we our us it its " +
+  "this that these those there here what which who whom whose when where why how " +
+  "and or but if then so than too very just also only not no yes any some all each every " +
+  "about into from by as with without over under up out off again more most much many " +
+  "get gets got make makes made use uses used using let want need please tell show explain " +
+  "resolv dossier app application program tool software thing things way ways work works").split(" "));
+/* the documentation is written in British English; a question need not be */
+const DOC_SPELL = { color:"colour", colors:"colours", behavior:"behaviour", behaviors:"behaviours",
+  customize:"customise", customized:"customised", favorite:"favourite", center:"centre",
+  gray:"grey", dialog:"dialogue", dialogs:"dialogues", organize:"organise", recognize:"recognise",
+  catalog:"catalogue", canceled:"cancelled", license:"licence" };
+function docStem(w){
+  if (w.length <= 3 || /\d/.test(w)) return w;
+  if (/ies$/.test(w) && w.length > 4) w = w.slice(0, -3) + "y";
+  else if (/(sses|xes|ches|shes|zes)$/.test(w)) w = w.slice(0, -2);
+  else if (/ing$/.test(w) && w.length > 5) w = w.slice(0, -3);
+  else if (/ed$/.test(w) && w.length > 4) w = w.slice(0, -2);
+  else if (/s$/.test(w) && !/(ss|us|is)$/.test(w)) w = w.slice(0, -1);
+  if (/([b-df-hj-np-tv-z])\1$/.test(w) && !/(ll|ss|zz)$/.test(w)) w = w.slice(0, -1);
+  /* save, saved, saving and saves all end up as "sav" */
+  if (w.length > 3 && /e$/.test(w)) w = w.slice(0, -1);
+  return w;
+}
+function docToks(text){
+  return String(text || "").toLowerCase()
+    .replace(/[‘’]/g, "'").replace(/'s\b/g, "").replace(/[`*_]/g, " ")
+    .split(/[^a-z0-9.#]+/)
+    .map(w => w.replace(/^[.#]+|[.#]+$/g, ""))
+    .filter(w => w.length > 1 && !DOC_STOP.has(w))
+    .map(w => /\./.test(w) ? w : docStem(DOC_SPELL[w] || w));
+}
+/* what a heading says, without its markup */
+function docTitle(t){
+  return String(t || "").replace(/\[([^\]]+)\]\([^)]*\)/g, "$1").replace(/[`*]/g, "").trim();
+}
+/* markdown as the thread shows it: links become their words, because an
+   anchor into README.md goes nowhere from inside the panel */
+function docClean(md){
+  const text = String(md || "").replace(/<!--[\s\S]*?-->/g, "")
+    .replace(/\[([^\]\n]+)\]\((?:[^)\s]+)\)/g, "$1");
+  /* The files are wrapped at seventy-odd columns, and a newline inside a
+     paragraph is a space in markdown - the thread would otherwise break
+     every sentence where the editor did. Code and tables keep their lines;
+     a new list item, quote or heading starts its own. */
+  const out = [];
+  let fence = "";
+  text.split("\n").forEach(line => {
+    const fm = fence ? docFence(line, fence) : docFence(line);
+    if (fm){ fence = fence ? "" : fm; out.push(line); return; }
+    const prev = out.length ? out[out.length - 1] : "";
+    const joins = !fence && line.trim() && prev.trim() && !docFence(prev) &&
+      !/^\s*(\||>|#|[-*+]\s|\d+[.)]\s)/.test(line) && !/^\s*\|/.test(prev);
+    if (joins) out[out.length - 1] = prev.replace(/\s+$/, "") + " " + line.trim();
+    else out.push(line);
+  });
+  return out.join("\n").replace(/\n{3,}/g, "\n\n").trim();
+}
+/* A block of code opens with ``` or ~~~ and at most a language name, and
+   closes with the same run alone on its line. A sentence that happens to
+   begin with backticks - "```text, with an optional title)" is one, in the
+   release notes - is prose, and taking it for a fence swallowed eighteen
+   releases whole. */
+function docFence(line, open){
+  if (open) return new RegExp("^\\s*" + open.charAt(0) + "{" + open.length + ",}\\s*$").test(line);
+  const m = /^\s*(`{3,}|~{3,})\s*[\w+#.-]*\s*$/.exec(line);
+  return m ? m[1] : "";
+}
+/* a section's body in pieces an excerpt can be cut from: paragraphs, one
+   list item each, whole tables, whole blocks of code */
+function docUnits(lines){
+  const units = [];
+  let buf = [], mode = "", fence = "";
+  const flush = () => {
+    const t = buf.join("\n").trim();
+    if (t) units.push({ kind:mode || "p", text:t });
+    buf = []; mode = "";
+  };
+  lines.forEach(line => {
+    if (fence){
+      buf.push(line);
+      if (docFence(line, fence)){ fence = ""; flush(); }
+      return;
+    }
+    const fm = docFence(line);
+    if (fm){ flush(); fence = fm; mode = "code"; buf.push(line); return; }
+    if (!line.trim()){ flush(); return; }
+    if (/^\s*\|/.test(line)){ if (mode !== "table") flush(); mode = "table"; buf.push(line); return; }
+    if (/^\s{0,3}(?:[-*+]|\d+[.)])\s+/.test(line)){ flush(); mode = "item"; buf.push(line); return; }
+    if (mode === "table"){ flush(); }
+    if (!mode) mode = "p";
+    buf.push(line);
+  });
+  if (fence) flush();
+  flush();
+  return units;
+}
+
+/* README.md and CHANGELOG.md, as sections. files is [{ name, kind, text }]
+   where kind is "guide" for the manual and "release" for the release notes;
+   a heading is # to ####, anywhere but inside a block of code. */
+function docsIndex(files){
+  const secs = [];
+  (files || []).forEach(f => {
+    if (!f || typeof f.text !== "string" || !f.text.trim()) return;
+    const kind = f.kind === "release" ? "release" : "guide";
+    const stack = [], ids = {};
+    let cur = null, fence = "";
+    const start = (level, raw) => {
+      while (stack.length && stack[stack.length - 1].level >= level) stack.pop();
+      const title = docTitle(raw);
+      const vm = /^v?(\d+\.\d+(?:\.\d+)?)\s*[-–—]\s*(\d{4}-\d{2}-\d{2})\b/.exec(title);
+      const up = stack.slice().reverse().find(x => x.version);
+      let id = f.name + "#" + (title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "top");
+      if (ids[id]) id += "-" + (++ids[id]); else ids[id] = 1;
+      cur = { id, file:f.name, kind, level, title, trail:stack.map(x => x.title),
+              version: vm ? vm[1] : (up ? up.version : ""), date: vm ? vm[2] : (up ? up.date : ""),
+              order: secs.length, lines:[] };
+      stack.push({ level, title, version:cur.version, date:cur.date });
+      secs.push(cur);
+    };
+    f.text.replace(/\r\n?/g, "\n").split("\n").forEach(line => {
+      const fm = fence ? docFence(line, fence) : docFence(line);
+      if (fm){
+        fence = fence ? "" : fm;
+      } else if (!fence){
+        const h = /^(#{1,4})\s+(.+?)\s*#*\s*$/.exec(line);
+        if (h) return start(h[1].length, h[2]);
+      }
+      if (!cur) start(1, f.name);
+      cur.lines.push(line);
+    });
+  });
+
+  const df = {};
+  let total = 0;
+  secs.forEach(sec => {
+    sec.units = docUnits(sec.lines);
+    sec.body = sec.units.map(u => u.text).join("\n\n");
+    delete sec.lines;
+    /* the table of contents names every section, so it would match every
+       question; a heading with nothing under it has nothing to quote */
+    sec.skip = /^table of contents$/i.test(sec.title) || !sec.body;
+    sec.units.forEach(u => { u.toks = docToks(u.text); });
+    const body = [].concat.apply([], sec.units.map(u => u.toks));
+    const head = docToks(sec.title), parent = docToks(sec.trail[sec.trail.length - 1] || "");
+    sec.head = new Set(head);
+    const tf = {};
+    const add = (t, n) => { tf[t] = (tf[t] || 0) + n; };
+    body.forEach(t => add(t, 1));
+    head.forEach(t => add(t, 3));
+    parent.forEach(t => add(t, 1));
+    sec.tf = tf;
+    sec.len = body.length + head.length * 3 + parent.length;
+    sec.bi = new Set();
+    for (let i = 0; i + 1 < body.length; i++) sec.bi.add(body[i] + " " + body[i + 1]);
+    for (let i = 0; i + 1 < head.length; i++) sec.bi.add(head[i] + " " + head[i + 1]);
+    if (sec.skip) return;
+    total += sec.len;
+    Object.keys(tf).forEach(t => { df[t] = (df[t] || 0) + 1; });
+  });
+  const live = secs.filter(x => !x.skip).length;
+  return { secs, df, n:live, avg: live ? total / live : 1,
+           files: (files || []).filter(f => f && f.text).map(f => f.name) };
+}
+
+function docIdf(ix, t){
+  const df = ix.df[t] || 0;
+  return df ? Math.log(1 + (ix.n - df + 0.5) / (df + 0.5)) : 0;
+}
+/* Verbs say what you want to do, not what you want to do it to: "change"
+   is in the heading of "Settings the assistant may change", and "how do I
+   change the theme" is about themes. They still count, a third as much. */
+const DOC_WEAK = new Set(docToks("change changing set setting turn switch add adding create remove delete open find see " +
+  "look go put start stop edit happen happens mean means say says know"));
+/* the few words a question uses that the documentation says differently */
+const DOC_ALSO = {};
+[["shortcut", "keyboard key keys"], ["hotkey", "keyboard shortcut key"], ["logo", "mark"],
+ ["colour", "palette theme"], ["dark", "theme palette"], ["delete", "remove"], ["remove", "delete"],
+ ["offline", "network"], ["internet", "network"], ["send", "leave network"], ["data", "record"],
+ ["bot", "assistant"], ["ai", "assistant model"], ["chatbot", "assistant"]].forEach(([k, v]) => {
+  DOC_ALSO[docToks(k)[0]] = docToks(v);
+});
+/* BM25 over sections, with the heading counted three times over, a little
+   for two query words that sit side by side in the text, and the share of
+   the question the section covers weighed in, so one rare word cannot carry
+   a section the rest of the question has nothing to do with. The score is
+   then set against the most the question could have scored, so a question
+   of two words and a question of ten are judged on the same scale. */
+function docsSearch(ix, text, opt){
+  opt = opt || {};
+  if (!ix || !ix.secs) return [];
+  const seq = docToks(text).filter(t => !(opt.drop && opt.drop.has(t)));
+  const groups = seq.filter((t, i) => seq.indexOf(t) === i).map(t => {
+    const w = docIdf(ix, t) * (DOC_WEAK.has(t) ? 0.35 : 1);
+    const alt = (DOC_ALSO[t] || []).map(x => ({ t:x, w:docIdf(ix, x) * 0.8 })).filter(x => x.w > 0);
+    return { w, terms:[{ t, w }].concat(alt).filter(x => x.w > 0) };
+  }).filter(g => g.terms.length);
+  const whole = groups.reduce((n, g) => n + Math.max(g.w, g.terms[0].w), 0);
+  if (!whole) return [];
+  const pairs = [];
+  for (let i = 0; i + 1 < seq.length; i++) pairs.push(seq[i] + " " + seq[i + 1]);
+  const out = [];
+  ix.secs.forEach(sec => {
+    if (sec.skip || (opt.kind && sec.kind !== opt.kind)) return;
+    let s = 0, got = 0;
+    groups.forEach(g => {
+      let best = 0, hit = 0;
+      g.terms.forEach(x => {
+        const f = sec.tf[x.t];
+        if (!f) return;
+        const v = x.w * (f * 2.2) / (f + 1.2 * (0.25 + 0.75 * sec.len / ix.avg));
+        if (v > best){ best = v; hit = Math.max(g.w, g.terms[0].w); }
+      });
+      /* a section named after the thing asked about is the one about it */
+      if (best && sec.head.has(g.terms[0].t) && !DOC_WEAK.has(g.terms[0].t)) best += g.w * 0.8;
+      s += best; got += hit;
+    });
+    if (!s) return;
+    pairs.forEach(pr => { if (sec.bi.has(pr)) s += 1; });
+    s *= 0.3 + 0.7 * (got / whole);
+    if (opt.prefer && sec.kind !== opt.prefer) s *= 0.6;
+    out.push({ sec, score:Math.round(s * 100) / 100, norm:s / (whole * 2.2), cover:got / whole });
+  });
+  return out.sort((a, b) => b.score - a.score || a.sec.order - b.sec.order).slice(0, opt.limit || 6);
+}
+/* good enough to quote: found by the words that matter, not by one of them */
+const DOC_FOUND = 0.3, DOC_COVER = 0.5;
+function docStrong(hit){ return !!hit && hit.norm >= DOC_FOUND && hit.cover >= DOC_COVER; }
+
+/* the part of a section the question is about, in the section's own words */
+function docExcerpt(ix, sec, text, max){
+  max = max || 900;
+  const q = new Set(docToks(text));
+  const units = sec.units.filter(u => u.kind !== "code" || u.toks.some(t => q.has(t)));
+  if (!units.length) return "";
+  const score = units.map(u => {
+    const seen = new Set();
+    let s = 0;
+    u.toks.forEach(t => { if (q.has(t) && !seen.has(t)){ seen.add(t); s += docIdf(ix, t); } });
+    return u.kind === "code" ? s * 0.5 : s;
+  });
+  let best = 0;
+  score.forEach((s, i) => { if (s > score[best]) best = i; });
+  let from = score[best] > 0 ? best : 0;
+  /* found by its heading - "6.4 Keyboard" for "what shortcuts are there" -
+     the section is the answer, so it starts where the section starts */
+  const own = [...q].filter(t => !sec.head || !sec.head.has(t));
+  if (sec.head && own.every(t => !units[from].toks.includes(t) || (DOC_ALSO[t] || []).some(x => sec.head.has(x)))) from = 0;
+  /* a list item reads better with the sentence that introduces the list */
+  if (units[from].kind === "item"){
+    let k = from;
+    while (k > 0 && units[k - 1].kind === "item") k--;
+    if (k > 0 && /:\s*$/.test(units[k - 1].text) && from - k < 3) from = k - 1;
+  }
+  const pick = [];
+  let len = 0;
+  for (let i = from; i < units.length; i++){
+    const u = units[i];
+    let t = u.text;
+    if (u.kind === "table" && t.length > max){
+      const rows = t.split("\n");
+      t = rows.slice(0, 2).concat(rows.slice(2).filter(r => docToks(r).some(x => q.has(x))).slice(0, 6)).join("\n");
+    }
+    if (pick.length && (len + t.length > max || (len > 260 && !score[i]))) break;
+    pick.push({ kind:u.kind, text:t });
+    len += t.length;
+  }
+  let md = "";
+  pick.forEach((u, i) => {
+    md += (i ? (u.kind === "item" && pick[i - 1].kind === "item" ? "\n" : "\n\n") : "") + u.text;
+  });
+  if (md.length > max + 200){
+    const cut = md.slice(0, max);
+    const stop = Math.max(cut.lastIndexOf(". "), cut.lastIndexOf(".\n"));
+    md = (stop > max * 0.5 ? cut.slice(0, stop + 1) : cut.replace(/\s+\S*$/, "")) + " …";
+  }
+  return docClean(md);
+}
+
+/* where a quote came from: the file, the section, and for the release notes
+   the version and the day it shipped */
+function docSource(sec){
+  return { id:sec.id, file:sec.file, kind:sec.kind, title:sec.title,
+           trail: sec.trail[sec.trail.length - 1] || "", version:sec.version || "", date:sec.date || "" };
+}
+function docCite(src){
+  return src.file + " › " + (src.kind === "release" && src.version && src.title.indexOf(src.version) < 0
+    ? src.version + " › " : "") + src.title;
+}
+
+function docsUnreadable(A){
+  const st = A.api.docsState || "";
+  return {
+    say:"I answer questions about Resolv from its documentation only, and I cannot read it from here.",
+    note: st === "file"
+      ? "This page was opened as a file, and a page opened that way cannot read README.md and " +
+        "CHANGELOG.md beside it. Start Resolv with Resolv.bat — it serves the page at " +
+        "http://127.0.0.1:5500/ — and ask again."
+      : "README.md and CHANGELOG.md belong in the same folder as dossier.html, and they did not " +
+        "answer. Put them back beside it and ask again, or open README.md yourself.",
+    docs:{ state:"unreadable" }
+  };
+}
+function docsNothing(what, raw){
+  return {
+    say:"The documentation does not cover that.",
+    note:"I only answer questions about Resolv from README.md and CHANGELOG.md, and neither says " +
+         "anything I can match to " + (what || "it") + ". Try naming the feature or the setting, " +
+         "or ask “what is new” for the latest release.",
+    docs:{ state:"none", product:productish(raw || "") }
+  };
+}
+
+/* a question about the application, answered from the manual (and from the
+   release notes when the manual has nothing) */
+function docsAnswer(A, opt){
+  opt = opt || {};
+  const ix = A.api.docs;
+  if (!ix) return docsUnreadable(A);
+  const hits = docsSearch(ix, A.raw, { prefer:opt.prefer || "guide", drop:opt.drop });
+  const top = hits[0];
+  if (!docStrong(top)) return docsNothing(opt.what, A.raw);
+  const text = docExcerpt(ix, top.sec, A.raw);
+  const more = hits.slice(1).filter(h => docStrong(h) && h.score >= top.score * 0.6).slice(0, 2);
+  return {
+    say:text,
+    sources:[docSource(top.sec)],
+    also: more.map(h => docSource(h.sec)),
+    docs:{ state:"ok", score:top.score, cover:Math.round(top.cover * 100) / 100, product:productish(A.raw) },
+    chips:[{ label:"Show the whole section", act:{ kind:"docshow", id:top.sec.id } }]
+      .concat(more.map(h => ({ label:"Also: " + h.sec.title.slice(0, 40), act:{ kind:"docshow", id:h.sec.id } })))
+  };
+}
+
+/* a whole section, for "show the whole section" and a source being opened */
+function docsShow(ix, id){
+  const sec = ix && ix.secs.find(x => x.id === id);
+  if (!sec) return { say:"That section is not in the documentation any more.",
+                     note:"README.md or CHANGELOG.md has changed since the answer above was given.",
+                     docs:{ state:"none" } };
+  let md = "", cut = false;
+  sec.units.forEach(u => {
+    if (cut) return;
+    if (md.length + u.text.length > 6000 && md){ cut = true; return; }
+    md += (md ? (u.kind === "item" && /^\s{0,3}(?:[-*+]|\d+[.)])\s/.test(md.split("\n\n").pop()) ? "\n" : "\n\n") : "") + u.text;
+  });
+  const kids = ix.secs.filter(x => x.trail[x.trail.length - 1] === sec.title && x.file === sec.file &&
+                                   x.level === sec.level + 1 && x.order > sec.order).slice(0, 12);
+  return {
+    intent:"docs", label:"From the Resolv documentation", kind:"read", confidence:1,
+    say: docClean(md) + (cut ? "\n\n… the rest is in " + sec.file + "." : ""),
+    sources:[docSource(sec)],
+    docs:{ state:"ok", shown:true },
+    chips: kids.map(k => ({ label:k.title.slice(0, 44), act:{ kind:"docshow", id:k.id } }))
+  };
+}
+
+/* ── the release notes ───────────────────────────────────────────────── */
+const REL_WORDS = new Set(docToks("new news change changed changes changing release releases released notes " +
+  "changelog version versions latest recent recently update updates updated upgrade added add adding " +
+  "introduced introduce arrived arrive came come first appear appeared since last happened different " +
+  "fixed fix fixes improved improvement improvements shipped ship in"));
+function releases(ix){ return ix ? ix.secs.filter(x => x.kind === "release" && x.level === 2 && x.version) : []; }
+function cmpVer(a, b){
+  const x = String(a).split(".").map(Number), y = String(b).split(".").map(Number);
+  for (let i = 0; i < 3; i++){ const d = (x[i] || 0) - (y[i] || 0); if (d) return d; }
+  return 0;
+}
+function niceDay(iso){
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || "");
+  if (!m) return iso || "";
+  return (+m[3]) + " " + "Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec".split(" ")[+m[2] - 1] + " " + m[1];
+}
+/* the start of a release: what it was about, then the first of its points */
+function releaseSummary(ix, rel, max){
+  max = max || 1000;
+  let md = "", n = 0;
+  for (const u of rel.units){
+    if (md && md.length + u.text.length > max) break;
+    md += (md ? (u.kind === "item" && n && rel.units[n - 1].kind === "item" ? "\n" : "\n\n") : "") + u.text;
+    n++;
+  }
+  const kids = ix.secs.filter(x => x.kind === "release" && x.level === 3 && x.version === rel.version && x.date === rel.date);
+  if (kids.length && md.length < 400) md += (md ? "\n\n" : "") + kids.map(k => "- " + k.title).join("\n");
+  if (n < rel.units.length || md.length > max + 200) md += "\n\n…";
+  return docClean(md);
+}
+
+function releaseAnswer(A){
+  const ix = A.api.docs;
+  if (!ix) return docsUnreadable(A);
+  const list = releases(ix);
+  if (!list.length) return docsNothing("the release notes");
+  const newest = list[0];
+  const running = A.api.version || "";
+  const norm = A.norm;
+  const cite = rel => ({ sources:[docSource(rel)],
+                         chips:[{ label:"Show all of " + rel.version, act:{ kind:"docshow", id:rel.id } }] });
+
+  /* "what version is this", "which version am I on" */
+  if (/\b(what|which) version\b|\bversion (am i|is this|do i have|are you|is it)\b|\bam i (on|running)\b/.test(norm)){
+    const mine = running && list.find(r => r.version === running);
+    const lines = [];
+    if (running && newest.version !== running)
+      lines.push(cmpVer(newest.version, running) > 0
+        ? "The release notes in the folder go up to " + newest.version + " — reload the page to run it."
+        : "The release notes do not have an entry for " + running + " yet.");
+    return Object.assign({
+      say: running ? "This is Resolv " + running + (A.api.built ? ", built " + A.api.built : "") + "." +
+                     (mine ? " Its release notes, " + niceDay(mine.date) + ":\n\n" + releaseSummary(ix, mine, 700) : "")
+                   : "The newest release in the notes is " + newest.version + ", " + niceDay(newest.date) + ".",
+      note: lines.join("\n"),
+      docs:{ state:"ok", release:(mine || newest).version }
+    }, cite(mine || newest));
+  }
+
+  /* a version named: "what changed in 5.3", "what is new in 5.4.1" */
+  const vm = /\b(\d+\.\d+(?:\.\d+)?)\b/.exec(A.raw);
+  if (vm){
+    const v = vm[1];
+    const match = list.filter(r => r.version === v || r.version.indexOf(v + ".") === 0);
+    if (!match.length) return {
+      say:"There is no " + v + " in the release notes.",
+      note:"They run from " + list[list.length - 1].version + " to " + newest.version +
+           " (" + niceDay(newest.date) + ").",
+      docs:{ state:"none" },
+      chips:[{ label:"What is in " + newest.version, act:{ kind:"docshow", id:newest.id } }]
+    };
+    const rel = match[0];
+    return Object.assign({
+      say: (match.length > 1 ? v + " came as " + match.length + " releases — " +
+             match.map(r => r.version).join(", ") + ". The newest, " + rel.version + ", " + niceDay(rel.date) + ":"
+           : rel.version + ", " + niceDay(rel.date) + ":") + "\n\n" + releaseSummary(ix, rel),
+      docs:{ state:"ok", release:rel.version }
+    }, cite(rel), match.length > 1
+      ? { chips:[{ label:"Show all of " + rel.version, act:{ kind:"docshow", id:rel.id } }]
+          .concat(match.slice(1, 4).map(r => ({ label:r.version, act:{ kind:"docshow", id:r.id } }))) } : {});
+  }
+
+  /* a subject: "when was the desk pet added", "what changed about saving" */
+  const subject = docToks(A.raw).filter(t => !REL_WORDS.has(t));
+  if (subject.length){
+    const hits = docsSearch(ix, A.raw, { kind:"release", drop:REL_WORDS, limit:40 });
+    const top = hits[0];
+    if (docStrong(top) || (top && top.norm >= DOC_FOUND * 0.8 && top.cover >= 0.99)){
+      const first = /\b(when|first|introduced|added|arrived|came)\b/.test(norm) && !/\blast\b/.test(norm);
+      const near = hits.filter(h => h.score >= top.score * 0.45 && h.cover >= top.cover * 0.99);
+      /* the notes are newest first, so the earliest mention is the last one */
+      const pickH = first ? near.reduce((a, b) => (b.sec.order > a.sec.order ? b : a)) : top;
+      const sec = pickH.sec;
+      const rel = list.find(r => r.version === sec.version && r.date === sec.date) || sec;
+      return {
+        say:(first ? "The release notes first mention it in " : "That is in ") + sec.version +
+            ", " + niceDay(sec.date) + ":\n\n" + docExcerpt(ix, sec, A.raw, 800),
+        sources:[docSource(sec)],
+        docs:{ state:"ok", release:sec.version, score:pickH.score },
+        chips:[{ label:"Show all of " + sec.version, act:{ kind:"docshow", id:rel.id } }]
+      };
+    }
+    /* not in the release notes by that name: perhaps the manual has it */
+    const guide = docsAnswer(A, { prefer:"guide", drop:REL_WORDS });
+    if ((guide.sources || []).length) return guide;
+    return docsNothing("that in the release notes");
+  }
+
+  /* "what is new", "release notes", "what changed lately" */
+  return Object.assign({
+    say:"The latest release is " + newest.version + ", " + niceDay(newest.date) + ":\n\n" + releaseSummary(ix, newest),
+    note: running && running !== newest.version
+      ? (cmpVer(newest.version, running) > 0 ? "This page is still " + running + " — reload it to run " + newest.version + "."
+                                            : "This page is " + running + ", newer than the release notes say.") : "",
+    docs:{ state:"ok", release:newest.version }
+  }, cite(newest), { chips:[{ label:"Show all of " + newest.version, act:{ kind:"docshow", id:newest.id } }]
+      .concat(list.slice(1, 3).map(r => ({ label:"Before that: " + r.version, act:{ kind:"docshow", id:r.id } }))) });
+}
+
+/* ── which source supports the answer above ──────────────────────────────
+   The app hands over the answer that was on screen when this was asked, as
+   api.last - whichever way it was made. Four kinds: quoted from the
+   documentation (name the section), counted from your records (show the
+   working), written by the flow's model (say so, and look the subject up in
+   the documentation), or not a fact at all. */
+const PRODUCT = new Set(docToks("resolv dossier readme documentation manual changelog release version update upgrade install " +
+  "breeze nebula aurora carbon ember skin design preset theme palette dark mode nova studio quiet classic appearance " +
+  "font typeface khmer language translation pixel sprite pet assistant panel chat tab bridge runner backup database " +
+  "sql localdb folder workspace store storage saving flow automate endpoint prompt shortcut keyboard hotkey setup " +
+  "settings setting option reminder notification tray icon startup csp privacy telemetry offline network cloud upload " +
+  "routine schedule cron script drawer console compose rail insight assist register board library template holiday " +
+  "sla feature button menu export import attachment ocr pdf docx teach taught motion sidebar").concat(["dossier.json"]));
+function productish(text){
+  const n = normalise(text);
+  if (/\b(resolv|dossier|readme|documentation|changelog|this application|the application)\b/.test(n)) return 2;
+  return docToks(n).filter(t => PRODUCT.has(t)).length;
+}
+
+function recordsBasis(l){
+  const bits = [];
+  bits.push("I read “" + (l.say || "").slice(0, 170) + "” as " + String(l.label || "that").toLowerCase() + ".");
+  if (l.count != null) bits.push("The " + l.count + " is a count of records in this workspace, " +
+    "not an estimate — I can list every one of them.");
+  if (l.rows) bits.push(l.rows + " of them were shown above.");
+  if (l.filters) bits.push("Filtered to: " + l.filters + ".");
+  if (l.applied) bits.push("Condition applied: " + l.applied + ".");
+  if (l.learned) bits.push(l.taught === "shape"
+    ? "I took that reading from a shape you taught me, not from my own guess."
+    : "I took that reading from a correction you gave me.");
+  else if (l.confidence) bits.push("How sure I was of the reading: " + Math.round(l.confidence * 100) + "%.");
+  return bits;
+}
+
+function traceLast(A){
+  const api = A.api, l = api.last || null, c = A.convo || {};
+  const docsNote = "Questions about Resolv are answered from README.md and CHANGELOG.md in the folder " +
+                   "beside dossier.html, read again each time the assistant opens.";
+  if (!l && !c.last) return {
+    keepLast:true,
+    say:"There is no answer above to trace yet.",
+    note:"Ask me something first. " + docsNote + " Questions about your work are counted from " +
+         "your own records, and a flow's answers are written by its model — I will say which."
+  };
+  if (!l) return {
+    keepLast:true,
+    say:"That came from your own records in this workspace, not from a document.",
+    note:recordsBasis(c.last).join("\n")
+  };
+  if ((l.sources || []).length){
+    const all = l.sources.concat(l.also || []);
+    return {
+      keepLast:true,
+      say:(l.sources.length > 1 ? "Those words are from " : "Those words are quoted from ") +
+          l.sources.map(docCite).join(" and ") + ".",
+      note:docsNote + " Nothing in the answer was added to what the section says.",
+      sources:l.sources,
+      chips:all.slice(0, 3).map(s => ({ label:"Show \u201c" + (s.kind === "release" ? s.version : s.title).slice(0, 40) + "\u201d",
+                                         act:{ kind:"docshow", id:s.id } }))
+    };
+  }
+  if (l.docs && l.docs.state === "unreadable") return {
+    keepLast:true,
+    say:"None — the documentation could not be read, so that was not an answer.",
+    note:docsNote
+  };
+  if (l.docs && l.docs.state === "none") return {
+    keepLast:true,
+    say:"None — the documentation had nothing on it, so I did not answer it.",
+    note:docsNote
+  };
+  if (l.via === "flow"){
+    const out = {
+      keepLast:true,
+      say:"That answer was written by your flow’s model. It is not quoted from a document.",
+      note:"Resolv sent the model your question, with the records and notes it picked for it, and the " +
+           "model wrote the reply. It names no source, so anything it says about Resolv itself is " +
+           "worth checking against the documentation."
+    };
+    if (productish((l.src || "") + " " + (l.say || "")) && api.docs){
+      const hits = docsSearch(api.docs, l.src || l.say || "", { prefer:"guide" });
+      if (docStrong(hits[0])){
+        out.say += "\n\n**What the documentation says, in \u201c" + hits[0].sec.title + "\u201d:**\n\n" +
+                   docExcerpt(api.docs, hits[0].sec, l.src || l.say || "", 700);
+        out.sources = [docSource(hits[0].sec)];
+        out.chips = [{ label:"Show the whole section", act:{ kind:"docshow", id:hits[0].sec.id } }];
+      } else out.note += "\n\nNothing in README.md or CHANGELOG.md matches it closely.";
+    } else if (!api.docs && productish(l.src || "")) out.note += "\n\n" + docsUnreadable(A).note;
+    return out;
+  }
+  if (l.kind === "social" || !l.intent) return {
+    keepLast:true,
+    say:"That one was not a fact, so there is no source for it.",
+    note:"Ask me something and then ask this again. " + docsNote
+  };
+  if (l.intent === "help") return {
+    keepLast:true,
+    say:"That list is the questions I understand, from the assistant itself (chat.js).",
+    note:"README.md documents them in section 10, “The assistant”."
+  };
+  return {
+    keepLast:true,
+    say:"That came from your own records in this workspace, not from a document.",
+    note:recordsBasis(l).join("\n") + "\n\nIt is counted out of your records on this PC; nothing is " +
+         "fetched for it and nothing is invented."
+  };
+}
+
+intent("docs", {
+  kind:"read", label:"From the Resolv documentation",
+  cues:{ documentation:14, readme:16, manual:11, documented:14, docs:9, guide:2, feature:6,
+         features:6, setting:5, settings:5, option:4, options:4 },
+  phrases:[["the documentation",14],["the docs",12],["the manual",12],["in the readme",16],
+           ["what does the setting",12],["what is the setting",11],["how does resolv",14],
+           ["does resolv",12],["can resolv",12],["in resolv",12],["what does resolv",13]],
+  /* a record, a system or a person named in the sentence makes it a
+     question about the work, which the documentation has nothing to say on */
+  probe(mw, norm, slots){
+    if (slots.record || slots.system || slots.person || slots.party) return 0;
+    if (/\b(readme|documentation|manual)\b/.test(norm)) return 12;
+    if (!/\b(how (do|does|can|to|would|should|is|are)|what (is|are|does|do|happens)|where (is|are|do|does)|can i|is there|are there|does it|why (does|is|do)|which)\b/.test(norm)) return 0;
+    const p = productish(norm);
+    return p >= 2 ? 9 : p === 1 ? 5 : 0;
+  },
+  run(A){ return docsAnswer(A); }
+});
+
+intent("releases", {
+  kind:"read", label:"What changed (release notes)",
+  cues:{ changelog:16, release:10, releases:10, released:9, version:9, versions:9, upgrade:6,
+         upgraded:6, introduced:6, changes:4, latest:4 },
+  phrases:[["release notes",16],["change log",16],["what is new in",14],["new in version",15],
+           ["what changed in",12],["what version",15],["which version",15],["latest version",16],
+           ["latest release",16],["what is in the latest",14],["new in resolv",15],["new in this version",16],
+           ["what is new with resolv",15],["what has changed in resolv",15]],
+  probe(mw, norm, slots){
+    if (slots.record) return 0;
+    if (/\b\d+\.\d+(\.\d+)?\b/.test(norm) && /\b(new|change|changed|changes|version|release|in|what|fixed)\b/.test(norm)) return 12;
+    if (/\bwhen (was|were|did)\b.*\b(add|added|introduced|arrive|arrived|come|came|appear|appeared|change|changed|removed|renamed)\b/.test(norm) &&
+        productish(norm)) return 10;
+    return 0;
+  },
+  run(A){ return releaseAnswer(A); }
+});
+
+intent("source", {
+  kind:"read", label:"Which source supports that",
+  keepLast:true,
+  /* "source" alone is weak on purpose: "the biggest source of work" is a
+     question about who raises the most, and the phrases below carry it */
+  cues:{ source:5, sources:5, cite:14, cited:12, citation:14, citations:14, documented:9,
+         reference:6, references:6, evidence:10 },
+  phrases:[["which source",18],["what source",18],["what is the source",18],["what is your source",18],
+           ["source for that",17],["source of that",17],["source for this",17],["the source",12],
+           ["cite your source",18],["cite it",15],["cite that",15],["where is that documented",18],
+           ["where is this documented",18],["is that documented",17],["is this documented",17],
+           ["which document",17],["what document",17],["supports this answer",18],
+           ["supports that answer",18],["support this answer",18],["support that answer",18],
+           ["backs that up",16],["back that up",16],["back it up",13],["where did you read",17],
+           ["where did you find that",17],["where is that from",17],["where is this from",17]],
+  run(A){ return traceLast(A); }
 });
 
 /* ═══ ABOUT ONE RECORD, IN DETAIL ════════════════════════════════════════
@@ -5093,6 +5786,11 @@ intent("justify", {
            ["how did you get that",17],["what is that based on",17],["says it who",14]],
   run(A){
     const api = A.api, c = A.convo || {}, l = c.last;
+    /* "nothing is invented, it is all counted" is only true of the answers
+       counted here. One quoted from the documentation, or written by the
+       flow's model, is traced for what it is. */
+    const shown = api.last;
+    if (shown && (shown.via === "flow" || (shown.sources || []).length || shown.docs)) return traceLast(A);
     if (!l) return {
       say: say(["Everything I tell you is counted out of your own records \u2014 nothing else reaches me.",
                 "I only ever count what is in this workspace, so yes, I can be checked.",
@@ -6214,7 +6912,7 @@ function finish(it, A, confidence, altIntents, learned, followed){
   const mods = A.slots.mods;
   if (mods && mods.sawTrigger && !mods.resolvedAny)
     out.ignored = { kind:"condition", words:[mods.sawTrigger] };
-  else if (it.kind !== "social" && it.name !== "help" && it.name !== "about"){
+  else if (it.kind !== "social" && it.name !== "help" && it.name !== "about" && !DOC_INTENTS.has(it.name)){
     const left = leftoverWords(it, A);
     if (left.length) out.ignored = { kind:"words", words:left };
   }
@@ -6347,8 +7045,10 @@ function finish(it, A, confidence, altIntents, learned, followed){
   /* Contractions go on the sentence, never on the note. The note carries
      checklists and quoted system messages — "the service did not respond to
      the start request in a timely fashion" is Windows' wording, and rewriting
-     it to "didn't" makes it unsearchable and slightly wrong. */
-  out.say = contract(out.say);
+     it to "didn't" makes it unsearchable and slightly wrong. The same goes
+     for an answer quoted from the documentation: a quotation is not ours to
+     reword, and "which source supports this answer?" has to find it there. */
+  if (!out.verbatim && !(out.sources || []).length) out.say = contract(out.say);
   out.alternatives = (altIntents || []).filter(Boolean)
     .map(x => ({ label:x.label, intent:x.name }));
   return out;
@@ -6631,7 +7331,7 @@ function shortlist(raw, api, n){
 }
 
 window.DossierChat = {
-  version: "1.1",
+  version: "1.2",
   /* the picker in the app needs something to show for each one, and the first
      phrase an intent matches on is the plainest example there is */
   intents: INTENTS.map(i => ({ name:i.name, label:i.label, kind:i.kind,
@@ -6644,6 +7344,11 @@ window.DossierChat = {
   /* the readings it was weighing up, for something else to choose between */
   shortlist: shortlist,
   template: (raw, api) => { const k = teachKeys(raw, api); return k ? k.template : ""; },
+  /* the documentation: the app reads README.md and CHANGELOG.md and indexes
+     them once; a source in an answer opens its section with docsShow */
+  docsIndex: docsIndex,
+  docsSearch: docsSearch,
+  docsShow: docsShow,
   forget: () => { LEX = null; LEXKEY = ""; },
   _util: { normalise, words, meaningful, close, editDistance, readRange, readDate,
            buildLexicon, templateOf, nearestTaught, tplParts }

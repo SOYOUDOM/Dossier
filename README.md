@@ -138,7 +138,7 @@ With the demo copied in you should immediately see:
 | File | Size | Required? | What it is |
 |---|---|---|---|
 | `dossier.html` | ~670 KB | **yes** | The whole application: markup, styles, and all of the logic. Open it directly. |
-| `chat.js` | ~360 KB | optional | The assistant — plain-English questions about your own records. Without it, the Ask box says so and everything else works. |
+| `chat.js` | ~400 KB | optional | The assistant — plain-English questions about your own records. Without it, the Ask box says so and everything else works. |
 | `assist.js` | ~20 KB | optional | The ranking and briefing engine behind the **Assist** tab and the Insight cards. |
 | `flow.js` | ~22 KB | optional | Client for a Power Automate endpoint: builds the request, validates the reply, and owns the relay frame. |
 | `flow/relay.html` | ~9 KB | optional | The **only** page allowed to touch the network. Sandboxed, holds no records, pinned to one origin. |
@@ -170,6 +170,7 @@ With the demo copied in you should immediately see:
 | `sql/pull.sql` | ~1 KB | optional | The newest snapshot back out as JSON — the exact bytes that went in. |
 | `sql/check-reserved-words.py` | ~4 KB | — | Checks every identifier in the SQL against the T-SQL reserved-word list. Written after three of them shipped. |
 | `sql/check-json-paths.py` | ~3 KB | — | Walks every JSON path the loader reads against a workspace holding one of everything. A wrong path loads nothing, quietly. |
+| `scripts/check-assistant-docs.js` | ~12 KB | — | Checks that questions about Resolv are answered from `README.md` and `CHANGELOG.md`: both files index cleanly, the page's version has release notes, answers find the right section and are its exact words, and *which source supports this answer?* is right for every kind of answer. `node scripts/check-assistant-docs.js`. |
 | `scripts/check-bat.py` | ~4 KB | — | The five things that have actually gone wrong in a `.bat`: an argument used as a path (`%1` stops at the first space, and a work folder is `OneDrive - Contoso Ltd`), a redirect on an `if` line (cmd performs it whether the condition holds or not), LF line endings, a byte over 7 bits, a call to PowerShell. |
 | `scripts/dossier-sql.bat` | ~7 KB | optional | The launcher: `init`, `push`, `pull`, `check`, `history`, `find`. Defaults to `(localdb)\MSSQLLocalDB`. |
 | `scripts/dossier-bridge.bat` | ~1 KB | — | Kept so nothing that points at it breaks: passes through to `Resolv.bat`, arguments and all. |
@@ -1062,7 +1063,7 @@ That is workable because this is not general conversation — it is a *bounded*
 one. Every system, person, work type, tag, script and record code you might
 name is already in your workspace. The half of the problem that normally needs
 a model — knowing what your words *refer to* — is answered by reading your own
-data. What is left is working out which of ~79 questions you are asking, and
+data. What is left is working out which of ~82 questions you are asking, and
 that is done by **weighing evidence rather than matching patterns**, so word
 order and filler stop mattering:
 
@@ -1114,6 +1115,10 @@ treated as noise, or a bare "hi" reaches the matcher as an empty sentence.
   phrase(p),                            // renders a {k, v} phrase key through the language file
   ai,                                   // window.DossierAI, or null
   ctx,                                  // the context Assist works from
+  docs,                                 // README.md + CHANGELOG.md, indexed by DossierChat.docsIndex; null if unreadable
+  docsState,                            // "ok" | "file" (opened as a file) | "missing" | "" (not read yet)
+  version, built,                       // APP_VERSION and APP_BUILT
+  last,                                 // the answer on screen: { via, intent, say, src, sources, docs, count, rows, … }
   h: { tok, idf, similar, estimateFor, predict, knownValues, repeatCandidates,
        today, addDays, dow, mondayOf, niceDate, mins, dayOf, dkey, stamp,
        live, peopleOf, canonPerson, splitPeople, matchParty, findByRef,
@@ -1154,10 +1159,10 @@ skipping the matcher; that is what the correction UI uses.
 
 ### 10.5 The intent catalogue
 
-79 intents. `kind` decides the manners: `read` answers immediately, `write`
+82 intents. `kind` decides the manners: `read` answers immediately, `write`
 always proposes and waits, `nav` moves the app, `social` is conversation.
 
-**`read` — 50**
+**`read` — 53**
 
 | intent | what it answers | example |
 |---|---|---|
@@ -1187,8 +1192,11 @@ always proposes and waits, `nav` moves the app, `social` is conversation.
 | `troubleshoot` | What to check | *what should i check* |
 | `clock` | The time | *the time* |
 | `dateToday` | The date | *what is the date* |
-| `howTo` | How to do something | *how do i* |
-| `about` | About Resolv | *what is this* |
+| `howTo` | How to do something — quoted from `README.md` | *how do i* |
+| `about` | About Resolv — quoted from `README.md` | *what is this* |
+| `docs` | Any question about Resolv — quoted from `README.md` | *what does the pixel set do* |
+| `releases` | What changed, and when — quoted from `CHANGELOG.md` | *what changed in 5.3* |
+| `source` | Which source supports that answer | *which source supports this answer* |
 | `steps` | What is left to do | *what is left* |
 | `why` | Why it is stuck | *why is* |
 | `history` | What happened on it | *what happened* |
@@ -1390,6 +1398,59 @@ what's overdue                → three of them
 `justify` ("are you sure", "where did that come from") deliberately keeps the
 previous answer's context instead of replacing it, so you can interrogate an
 answer without losing it.
+
+### 10.12 Questions about Resolv — answered from its documentation
+
+Questions about the application itself — how something works, what a setting
+does, what changed in which release — are answered from **`README.md`** (this
+file) and **`CHANGELOG.md`**, and from nothing else. The hand-written help that
+used to live in `chat.js` no longer answers them.
+
+- **Where the files come from.** The page reads both out of its own folder
+  when the assistant opens, and at most once a minute while it is in use. The
+  bridge already serves `.md` from the app folder, so the answer is always the
+  documentation as it stands there today — never a copy taken when the page
+  was built. They are indexed again only when one has changed.
+- **What an answer is.** `DossierChat.docsIndex` cuts both files into their
+  `#`–`####` sections (headings inside a block of code are not headings), and
+  a question is matched to the section it is about. The answer is that
+  section's own words — the paragraph, list or table the question is about —
+  never a paraphrase, and the contraction pass that makes other answers sound
+  natural does not touch it.
+- **The source is under every such answer**: the file, the section, and for
+  the release notes the version and its date. Pressing it — or *Show the whole
+  section* — puts the whole section in the thread. Other sections that match
+  well are offered as *Also:* buttons.
+- **The release notes answer their own kind of question**: *what is new*,
+  *what changed in 5.3*, *what version is this* (and whether the page is older
+  than the notes in the folder), and *when was the desk pet added* — the
+  oldest release that mentions it, since the notes run newest first.
+- **When there is nothing to quote, it says so.** A question the documentation
+  does not cover gets *The documentation does not cover that*, not an answer
+  from elsewhere. A page opened as a `file://` cannot read the files at all, and
+  says that, with the way to fix it: start Resolv with `Resolv.bat`.
+- **With a flow switched on these still never reach it** — whatever *Answer
+  locally first* is set to. A model can describe the application from whatever
+  it was trained on; the documentation in the folder is what is true of this
+  copy. A how-to that turns out not to be about Resolv (*how do I fix the
+  export*) still goes to the flow.
+
+**"Which source supports this answer?"** — or *cite your source*, *is that
+documented*, *where is that from* — is answered for whatever the answer above
+it was:
+
+| The answer above was | The reply |
+|---|---|
+| Quoted from the documentation | The file and section it is quoted from, with the section a press away. |
+| Counted from your records | That it came from your own records, not a document — with the working, as *are you sure* gives it. |
+| Written by the flow's model | That a model wrote it and it names no source. If the question was about Resolv, what the documentation says on the same subject, and where. |
+| Conversation, or nothing yet | That there is no source, because it was not a fact. |
+
+*Are you sure* and *where did you get that* follow the same rule, so neither
+claims an answer was counted from your records when a model wrote it.
+
+`scripts/check-assistant-docs.js` holds all of this to the files as they stand
+— see [§16](#16-testing-and-measured-numbers).
 
 ---
 
@@ -2246,6 +2307,15 @@ drive the real files in a real browser (Playwright + Chromium), because the
 things that break here are things a unit test cannot see: a stale iframe cache,
 a CSP refusal, a file one folder away from where a manifest says.
 
+A few small checks do live here, and need nothing but Node or Python:
+`flow/check-prompt.js`, `scripts/check-bat.py`, the three `sql/check-*.py` and
+`scripts/check-assistant-docs.js`. The last checks the assistant against
+`README.md` and `CHANGELOG.md` as they stand — every release heading readable, the page's
+version in the release notes, product questions finding their section, every
+answer word for word in the section it cites, *which source supports this
+answer?* right after each kind of answer, and questions about your own work
+left alone. Run it after editing either file, or after changing `APP_VERSION`.
+
 The thirty exercised for the current release — `teach`, `talk2`, `pick`,
 `flowval`, `flowe2e`, `flowui`, `flowmore`, `chatui`, `memui`, `probe`,
 `shrink`, `chatfx`, `settings`, `mend`, `runbook`, `ver`, `analyse`,
@@ -2314,6 +2384,13 @@ model from scratch was tried, measured, and rejected on the numbers.
 ---
 
 ## 17. Known limits
+
+- **Questions about Resolv need the page served**, as `Resolv.bat` does. A page
+  opened as a file cannot read `README.md` and `CHANGELOG.md`, and says so
+  rather than answer. The matching is by words, not meaning: a question that
+  names the feature finds its section; a question phrased around it (*where
+  do my old copies go*) may find a neighbouring one — the source under the
+  answer shows which, and *Also:* offers the others.
 
 - **A folder on disk needs Edge or Chrome.** Other browsers keep the records
   inside the browser, which is theirs to clear; export a copy now and then.
