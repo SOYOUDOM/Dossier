@@ -6,6 +6,64 @@ holds — which is what to paste into a bug report.
 
 ---
 
+## 5.9.2 - 2026-09-30
+
+**A right answer is no longer hidden because of one line.** Asked *"what is
+the standard password should be?"* about a password standard, the reply had
+the answer - the passphrase length for user accounts, and the shorter
+password allowed where a passphrase cannot be used - quoted and cited
+correctly. But one line gave a
+figure the passages it cited do not state, so the whole reply was held back
+and replaced by *"The documents searched do not specify this"*, which was
+not true. Now:
+
+- **Only the line is taken out.** A sentence, list item or table row that
+  gives a figure no cited passage contains is removed (with a heading or an
+  introduction left with nothing under it); the rest is checked as usual and
+  shown, marked **Part of the answer was taken out**, at Medium confidence.
+  The figure is still never shown. When that figure is written in your
+  documents but in a passage the reply did not cite, **Figure seen in** links
+  to the line and section where it is, to judge - never counted as support.
+  A not-found answer with a guess added keeps its not-found and loses the
+  guess.
+- **Held back honestly.** When the whole reply rested on such a figure it is
+  still held back, but the message no longer claims the documents are silent:
+  it says the reply was held back and shows what the cited passages do say
+  (**What they do say**, confidence **None**). Choice buttons from a
+  held-back reply are no longer shown.
+- **Page headers are not sections.** A line printed at the same place on
+  most pages of a PDF - *VERSION*, *DATE*, *REFERENCE*, *CLASSIFICATION*, the
+  page number, a footer - is left out of the passages and is never a heading.
+  A rule that ran on to the next page used to be cited as section
+  *"CLASSIFICATION : OFFICIAL"*; it now keeps its own section (the rule's
+  reference, like *ACS-PWD-01*).
+  Fields like *VERSION: 1.0*, runs of control references (*AC-1, AC-2*), web
+  addresses, lines cut off mid-phrase and table rows split by tabs are not
+  headings either. Documents already in Sources are cut again, from the text
+  already kept, the next time the workspace opens.
+- **Typos.** A question word no document uses, one letter from one they do,
+  is searched as that word (*stardard* as *standard*); a question about a
+  mistyped *standard* or *policy* is still a question about documents.
+- **Broad questions find the rules.** When a question's words are on every
+  page (every page of a password standard says "password"), passages that set
+  a rule - minimum, maximum, must, must not, a number of characters or days -
+  come first, synonyms of those everywhere-words are not added, and word
+  pairs no longer run across the end of a sentence or a title's lines.
+- **Prompt**: cite every passage a figure comes from (the app takes out a
+  line whose figure is in no cited passage); when the rules differ by case -
+  account type, severity, environment - lead with the everyday one and list
+  the others, each cited. A worked example. A workspace's own
+  `dossier-prompt.txt` works as before without these lines.
+- **Recent searches** show lines taken out and mistyped words read.
+- README: *Why was part of the answer taken out?*, *The answer is in my
+  document, but Resolv said it was not found or held it back*, *Does it
+  understand a question with a typo?*, *Which passages does a broad question
+  get?*, *My PDF prints the same header on every page*.
+- Tests: 28 unit tests and 45 browser checks, with a made-up password
+  standard laid out like a real one.
+
+---
+
 ## 5.9.1 - 2026-09-30
 
 **Studying a guideline is not held back; its drafts are checked instead.**

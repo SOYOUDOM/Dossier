@@ -1648,7 +1648,7 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
 .srclab{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;opacity:.6;font-weight:700;margin:0 0 2px}
 .srcans{margin:10px 0 2px;padding:10px 12px;border-radius:10px;font-size:12.5px;line-height:1.55;
   background:color-mix(in srgb,currentColor 5%,transparent);border:1px solid color-mix(in srgb,currentColor 14%,transparent)}
-.srcans.blocked,.srcans.unsupported{border-color:color-mix(in srgb,#e0a030 55%,transparent)}
+.srcans.blocked,.srcans.unsupported,.srcans.partial{border-color:color-mix(in srgb,#e0a030 55%,transparent)}
 .srcnone{font-weight:700;margin:0 0 6px;color:#d9902a}
 .srcrow{display:grid;grid-template-columns:86px 1fr;gap:8px;margin:5px 0}
 .srcrow>b{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;opacity:.65;padding-top:2px}
@@ -6197,17 +6197,23 @@ const STRINGS = {
   SrcDraftWarn: "Not in the document: {list}. Check these against the original before saving.",
   SrcSourceLab: "Source",
   SrcRelatedLab: "What they do say",
-  SrcCitedLab: "It cited",
   SrcEvidenceLab: "Evidence",
   SrcConfidenceLab: "Confidence",
   SrcConfHigh: "High — the source states it",
   SrcConfMedium: "Medium — it follows from what the source says, but no one sentence says it",
   SrcConfNotFound: "Not found — the documents searched do not specify this",
+  SrcConfPartial: "Medium — what is left is supported by the source; the rest was taken out",
+  SrcConfHeld: "None — the reply was held back, so nothing was concluded",
   SrcConfpassages: "Passages only — read them; nothing was concluded from them",
   SrcNoSource: "No supporting source found",
-  SrcHeldBack: "Answer held back — no supporting source",
-  SrcBlockedSay: "The documents searched do not specify this, so there is no answer from them to give. Resolv held back the reply it received: it stated a figure that none of the passages it cited contains, so it may have been invented.",
-  SrcBlockedWhy: "Every figure in an answer about your documents — a timeframe, a percentage, a severity — must be written in a passage the answer cites. This one was not. Ask “why was it not found?” for what was searched.",
+  SrcHeldBack: "Answer held back — it gave a figure its sources do not state",
+  SrcBlockedSay: "Resolv held back the reply it received: it gave a figure that none of the passages it cited contains, so it may have been invented. Ask “why was it held back?” to see what was searched, or ask again naming the document or the system.",
+  SrcBlockedSayCited: "Resolv held back the reply it received: it gave a figure that the passages it cited do not state, so it may have been invented. What those passages do say is below — open a source to read it in place, or ask again.",
+  SrcBlockedWhy: "Every figure in an answer about your documents — a timeframe, a percentage, a severity — must be written in a passage the answer cites. This reply rested on one that was not. Ask “why was it held back?” for what was searched.",
+  SrcPartialHead: "Part of the answer was taken out",
+  SrcTrimmedWhy: "Resolv took out {n} line(s) of this answer: each gave a figure — a time, a percentage, a severity — that no passage it cited contains, so it may have been invented. Everything left is checked against the sources shown.",
+  SrcElsewhereLab: "Figure seen in",
+  SrcElsewhereHint: "The figure that was taken out is written here, in a passage the answer did not cite. Open it to judge whether it applies — it was not counted as support.",
   SrcUnsupportedWhy: "This answer does not cite your documents, so it is not what they say. Treat it as general advice.",
   SrcLowQuality: "A cited page could not be read reliably — check it in the original.",
   SrcOpenHint: "Open the document at this place",
@@ -6223,7 +6229,8 @@ const STRINGS = {
   SrcWhySay: "For the last answer Resolv searched {n} active documents you may read (closest: {list}; filters: {filters}).",
   SrcNoFilters: "none",
   SrcWhyNotFound: "None of the passages found states the answer, so it was reported as not specified. A document either does not say it, or says it in words the question did not reach.",
-  SrcWhyBlocked: "The reply that came back stated a figure that no passage it cited contains, so Resolv held it back rather than show a guess as your policy.",
+  SrcWhyBlocked: "The reply that came back rested on a figure that no passage it cited contains, so Resolv held it back rather than show a guess as your policy.",
+  SrcWhyPartial: "{n} line(s) of the reply gave a figure that no passage it cited contains, so Resolv took them out rather than show a guess as your policy; the rest was shown with its sources. If that figure is in your documents, ask about it directly and the answer will cite it.",
   SrcWhyUnsupported: "The reply did not cite any passage, so it was shown as not from your documents.",
   SrcWhyFound: "It was answered from the passages cited under it.",
   SrcWhyNext: "If the answer is in a document that is not in Sources, add it (Library → Sources). If it is there, check it is active, that you are cleared for its access label, and that the question names the system or environment it is about; after updating a document, press Re-index.",
@@ -7005,7 +7012,7 @@ const STATUSES = [
    the status bar, and clicking it copies a line you can paste into a bug
    report — build date and flow protocol included, because those are the two
    things that actually differ between copies. */
-const APP_VERSION = "5.9.1";
+const APP_VERSION = "5.9.2";
 const APP_BUILT = "2026-09-27";
 function buildLine(){
   return "Resolv v" + APP_VERSION + " \u00b7 built " + APP_BUILT +
@@ -21236,9 +21243,13 @@ function srcForFlow(q, thread, pin){
 /* ── the answer, checked before it is shown ──────────────────────────────
    Every quote must be in the passage it cites, and every figure the answer
    states - a duration, a percentage, a severity - must be in a passage it
-   cites. An answer that states a figure no cited passage contains is not
-   shown: it would be a guess presented as policy, which is the one thing
-   this exists to stop. */
+   cites. A line that states a figure no cited passage contains is taken
+   out: it would be a guess presented as policy, which is the one thing
+   this exists to stop. The rest of the answer, checked, is shown, with a
+   note that a line was taken out. Only when nothing worth showing is left
+   is the whole reply held back - and then it says so plainly, and shows
+   what the passages it cited do say, rather than claiming the documents
+   are silent when it cannot know that. */
 function srcApply(reply, out, sources, q, thread){
   if (!srcHere() || !out) return;
   const pack = sources || { passages:[], docQuestion:false };
@@ -21261,11 +21272,27 @@ function srcApply(reply, out, sources, q, thread){
   srcNote(Object.assign({ kind:"answer" }, (sources && sources.diag) || { searched:0, filters:{}, retrieved:[] }, {
     at:new Date().toISOString(), status:g.status, confidence:g.confidence,
     cited:g.cites.map(c => ({ chunk:c.id, verified:c.verified, citation:c.citation })),
-    unsupported:g.unsupported.length, unsupportedFigures:g.unsupported.slice(0, 6),
+    unsupported:g.unsupported.length, unsupportedFigures:g.unsupported.slice(0, 6), removed:g.removed || 0,
     noEvidence:!(pack.passages || []).length }));
   if (g.status === "general"){ if (out.suggest) reply.suggest = out.suggest; return; }
+  /* where a figure that was taken out is written, in a passage the reply
+     did not cite - to open and judge, never counted as support */
+  const bySid = new Map((pack.passages || []).map(p => [p.s, p]));
+  const elsewhere = [];
+  (g.uncited || []).forEach(u => (u.at || []).forEach(w => {
+    const p = bySid.get(w.s);
+    if (!p || elsewhere.length >= 3 || elsewhere.some(x => x.id === p.id) || g.cites.some(c => c.id === p.id && c.verified)) return;
+    /* to the line and the section it is written under, when it is on one line */
+    const at = w.line ? DossierSources.locate(p, w.line) : null;
+    const c = { s:p.s, id:p.id, doc:p.doc, name:p.name, file:p.file, kind:p.kind, version:p.version, page:p.page,
+      lineStart:at ? at.lineStart : p.lineStart, lineEnd:at ? at.lineEnd : p.lineEnd, section:at ? at.section : p.section,
+      quote:at ? w.line : "" };
+    c.citation = DossierSources.citation(c);
+    elsewhere.push(c);
+  }));
   reply.grounding = {
     status:g.status, confidence:g.confidence, notes:g.notes.slice(0, 6), unsupported:g.unsupported.length,
+    removed:g.removed || 0, elsewhere:elsewhere,
     searched:(sources && sources.searched) || 0, closest:(sources && sources.closest) || [], filters:(sources && sources.filters) || {},
     /* kept with the conversation without the passages' text: the words are
        in sources/, and a conversation is not the place for a copy */
@@ -21274,9 +21301,21 @@ function srcApply(reply, out, sources, q, thread){
       verified:c.verified, quality:c.quality, citation:c.citation }))
   };
   if (out.suggest) reply.suggest = out.suggest;
+  if (g.removed && g.status !== "blocked"){
+    /* what is left once the lines with an unsupported figure are out. The
+       reply's "say" was followed by its question (flowReply): a question or
+       a choice that repeats one of those figures goes too. */
+    const keys = new Set([].concat(...g.unsupported.map(u => DossierSources.figures(u).map(f => f.key))));
+    const bad = t => DossierSources.figures(String(t || "")).some(f => keys.has(f.key));
+    const said = String(out.say || "");
+    let rest = said && reply.say.indexOf(said) === 0 ? reply.say.slice(said.length) : "";
+    if (out.ask && bad(out.ask)) rest = rest.replace("\n\n" + out.ask, "");
+    reply.say = g.say + rest;
+    if (reply.seeds) reply.seeds = reply.seeds.filter(c => !bad(typeof c === "string" ? c : c && (c.label || c.text)));
+  }
   if (g.status === "blocked"){
-    reply.say = L("SrcBlockedSay");
-    reply.ask = ""; reply.choices = [];
+    reply.say = L(g.cites.some(c => c.verified) ? "SrcBlockedSayCited" : "SrcBlockedSay");
+    reply.seeds = [];
   }
   /* what the next question may lean on: "that policy", "the previous section" */
   if (thread){
@@ -21303,12 +21342,12 @@ function srcAnswerHtml(r, id){
     const none = g.status === "not_found" || g.status === "unsupported" || g.status === "blocked";
     h += '<div class="srcans ' + esc(g.status) + '">';
     if (none) h += '<div class="srcnone">' + LE(g.status === "blocked" ? "SrcHeldBack" : "SrcNoSource") + "</div>";
+    else if (g.status === "partial") h += '<div class="srcnone">' + LE("SrcPartialHead") + "</div>";
     const good = (g.cites || []).filter(c => c.verified);
     if (good.length){
       /* "Source" only when they support the answer; beside a not-found or a
-         held-back answer they are what the documents do say, or what the
-         reply pointed at */
-      const lab = g.status === "grounded" ? "SrcSourceLab" : g.status === "not_found" ? "SrcRelatedLab" : "SrcCitedLab";
+         held-back answer they are what the documents do say */
+      const lab = g.status === "grounded" || g.status === "partial" ? "SrcSourceLab" : "SrcRelatedLab";
       h += '<div class="srcrow"><b>' + LE(lab) + '</b><div class="srccites">' + good.map((c, k) => {
         CHAT.acts[id + "sv" + k] = { kind:"srcview", ref:c };
         return '<button class="srccite" data-act="' + id + "sv" + k + '" title="' + LE("SrcOpenHint") + '">' + esc(c.citation) + "</button>";
@@ -21317,10 +21356,20 @@ function srcAnswerHtml(r, id){
            good.filter(c => c.quote).map(c => '<blockquote class="srcq">“' + esc(c.quote) + '”<span>' + esc(c.s) + "</span></blockquote>").join("") + "</div></div>";
       if (good.some(c => c.quality === "low")) h += '<div class="srcwarn">' + LE("SrcLowQuality") + "</div>";
     }
-    const conf = { high:"SrcConfHigh", medium:"SrcConfMedium", passages:"SrcConfpassages" }[g.confidence] || "SrcConfNotFound";
+    const conf = g.status === "blocked" ? "SrcConfHeld" : g.status === "partial" ? "SrcConfPartial" :
+      ({ high:"SrcConfHigh", medium:"SrcConfMedium", passages:"SrcConfpassages" }[g.confidence] || "SrcConfNotFound");
     h += '<div class="srcrow"><b>' + LE("SrcConfidenceLab") + '</b><span class="srcconf ' + esc(g.confidence || "not_found") + '">' + LE(conf) + "</span></div>";
     if (g.status === "blocked") h += '<div class="srcwarn">' + LE("SrcBlockedWhy") + "</div>";
+    else if (g.removed) h += '<div class="srcwarn">' + LE("SrcTrimmedWhy", { n:g.removed }) + "</div>";
     else if (g.status === "unsupported") h += '<div class="srcwarn">' + LE("SrcUnsupportedWhy") + "</div>";
+    /* the figure that was taken out is written somewhere the reply did not
+       cite: where, to open and judge - not as support */
+    if ((g.status === "blocked" || g.removed) && (g.elsewhere || []).length){
+      h += '<div class="srcrow"><b>' + LE("SrcElsewhereLab") + '</b><div class="srccites">' + g.elsewhere.map((c, k) => {
+        CHAT.acts[id + "se" + k] = { kind:"srcview", ref:c };
+        return '<button class="srccite" data-act="' + id + "se" + k + '" title="' + LE("SrcElsewhereHint") + '">' + esc(c.citation) + "</button>";
+      }).join("") + "</div></div>";
+    }
   }
   if (r.suggest){
     h += '<div class="srcsug"><b>' + LE("SrcSuggestLab") + "</b>" + chatSay(r.suggest) + "</div>";
@@ -21348,7 +21397,7 @@ function srcLast(thread){
 function srcLocalIntent(q, thread){
   const s = String(q || "").toLowerCase();
   const which = /\b(which|what) (source|sources|document|documents|passage|passages|page|section)\b.*\b(support|supports|backs?|say|says|said|come|came|from)\b|\bshow (me )?(the )?(source|sources|evidence|citation)s?\b|\bwhere (did|does) (that|this|it) (come from|say)\b/.test(s);
-  const why = /\bwhy\b.*\b(not found|no (supporting )?source|not specified|could ?n[o']?t find|held (it )?back|blocked|no answer)\b/.test(s);
+  const why = /\bwhy\b.*\b(not found|no (supporting )?source|not specified|could ?n[o']?t find|held (it )?back|blocked|no answer|taken out|took (it |that |them |those |a line |lines )?out|take[ns]? (it |that |them |those |a line |lines )?out)\b/.test(s);
   if (!which && !why) return null;
   const last = srcLast(thread);
   if (!last) return null;
@@ -21363,6 +21412,7 @@ function srcLocalIntent(q, thread){
   const f = g.filters || {};
   const fl = Object.keys(f).map(k => k + " " + [].concat(f[k]).join(", ")).join("; ");
   const why2 = g.status === "blocked" ? L("SrcWhyBlocked")
+             : g.removed ? L("SrcWhyPartial", { n:g.removed })
              : g.status === "unsupported" ? L("SrcWhyUnsupported")
              : g.status === "not_found" ? L("SrcWhyNotFound") : L("SrcWhyFound");
   return { say:L("SrcWhySay", { n:g.searched, list:(g.closest || []).join(", ") || "-", filters:fl || L("SrcNoFilters") }) + "\n\n" + why2 +
@@ -21531,7 +21581,9 @@ function srcNoteLine(e){
       " · " + r.length + " passages" + (r.length ? " [" + r.slice(0, 4).map(p => p.doc + (p.version ? " v" + p.version : "") +
       (p.page ? " p" + p.page : "") + " " + p.score).join("; ") + (r.length > 4 ? "; …" : "") + "]" : "") +
       (e.status ? " · " + e.status : "") + (e.cited && e.cited.length ? " · cited " + e.cited.filter(c => c.verified).length + "/" + e.cited.length : "") +
-      (e.unsupported ? " · BLOCKED: " + (e.unsupportedFigures || []).join(", ") + " - in no passage it cited" : "") +
+      (e.unsupported ? (e.status === "blocked" ? " · BLOCKED: " : " · TAKEN OUT (" + (e.removed || 0) + " line(s)): ") +
+        (e.unsupportedFigures || []).join(", ") + " - in no passage it cited" : "") +
+      ((e.typos || []).length ? " · read " + e.typos.map(t => "\u201c" + t[0] + "\u201d as \u201c" + t[1] + "\u201d").join(", ") : "") +
       (e.noEvidence ? " · no evidence found" : "");
   }
   if (e.kind === "added") return "added " + e.doc + (e.version ? " v" + e.version : "") + " · " + e.passages + " passages" +

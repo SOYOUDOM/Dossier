@@ -6,6 +6,12 @@
 //   SEC.014 Patch Management Standard.pdf  a logo's word as its first line,
 //                                          and a table that reads a column
 //                                          at a time, as real PDFs do
+//   access-password-standard.pdf          the same header printed on every
+//                                          page (VERSION, DATE, CLASSIFICATION
+//                                          and the page number), a rule that
+//                                          runs on to the next page, and
+//                                          different rules for different
+//                                          kinds of account - all made up
 // Kept as a script so the fixtures can be read and remade, not trusted as
 // opaque files.
 "use strict";
@@ -25,6 +31,24 @@ docs["SEC.014 Patch Management Standard.pdf"] = [
    "Security patches are applied within the timeframe for their severity:",
    "Critical High Medium", "14 30 90", "(calendar days from the vendor release)"],
   ["2 Exceptions", "An exception is approved by the change advisory board."]
+];
+
+/* the running header, as a real standard prints it at the top of each page */
+const hdr = n => [String(n), "VERSION: 2.1", "DATE: 01/03/2026", "REFERENCE: ACS-STD-PWD", "CLASSIFICATION : INTERNAL"];
+docs["access-password-standard.pdf"] = [
+  ["ACCESS STANDARD", "Passwords and Passphrases", "Version 2.1", "Effective date: 1 March 2026",
+   "Owner: Head of Information Security"],
+  hdr(2).concat(["Purpose", "This standard sets the rules for passwords and passphrases on all systems.",
+   "Staff awareness of passwords is covered in the Communication section.",
+   "Requirements", "Standard user accounts", "ACS-PWD-01", "Applies to all user accounts without administration rights.",
+   "Minimum Length: 16 characters", "Composition: three or more unrelated words", "separated by a hyphen."]),
+  hdr(3).concat(["Examples: Blue-river-lantern", "Where a system cannot take a passphrase,",
+   "a password of at least 12 characters", "using three kinds of character is allowed.",
+   "Local administrator accounts", "ACS-PWD-02", "Minimum Length: 20 characters",
+   "The password is changed every 60 days."]),
+  hdr(4).concat(["Service accounts", "ACS-PWD-03", "Minimum Length: 30 characters",
+   "Communication", "Staff are told never to share their passwords or passphrases.",
+   "Password and passphrase awareness is part of induction training for every password holder."])
 ];
 
 const esc = s => s.replace(/\\/g, "\\\\").replace(/\(/g, "\\(").replace(/\)/g, "\\)");
@@ -55,4 +79,6 @@ out += "xref\n0 " + (objs.length + 1) + "\n0000000000 65535 f \n" +
 fs.writeFileSync(path.join(__dirname, file), out, "latin1");
 console.log("wrote " + file + " (" + Buffer.byteLength(out) + " bytes, " + pages.length + " pages)");
 }
-Object.keys(docs).forEach(f => write(f, docs[f]));
+/* the pages, for tests that read the text the app's reader would give */
+module.exports = docs;
+if (require.main === module) Object.keys(docs).forEach(f => write(f, docs[f]));

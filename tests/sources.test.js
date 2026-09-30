@@ -433,3 +433,118 @@ test("drafts written from a document: figures it does not state are named", () =
   assert.deepEqual(S.unsupportedIn("Apply critical patches within 14 days. Escalate to the CAB after 4 hours.", doc), ["4 hours"]);
   assert.deepEqual(S.unsupportedIn("Apply high patches within 30 days.", doc), []);
 });
+
+/* ── 5.9.2: a password standard that was answered right and shown as "not
+   specified" ─────────────────────────────────────────────────────────────
+   A made-up standard laid out like the real one: the same header printed on
+   every page (the page number, VERSION, DATE, REFERENCE, CLASSIFICATION),
+   the user-account rule running on to the next page, and different rules
+   for different kinds of account. */
+const PDFS = require("./fixtures/make-pdf.js");
+const pdfText = name => PDFS[name].map((lines, i) => "[page " + (i + 1) + "]\n" + lines.join("\n")).join("\n");
+const pwLib = () => library([{ file:"access-password-standard.pdf.txt", text:pdfText("access-password-standard.pdf"), pages:4,
+                               meta:{ name:"Access Standard - Passwords" } }]);
+
+test("a header printed on every page is left out of the passages, and is never a section", () => {
+  const lib = pwLib();
+  assert.ok(lib.chunks.every(c => !/CLASSIFICATION|VERSION: 2\.1|REFERENCE: ACS/.test(c.text)), "no passage carries the header");
+  assert.ok(lib.chunks.every(c => !/CLASSIFICATION|VERSION|DATE/.test(c.section)), lib.chunks.map(c => c.section).join(" | "));
+  /* the rule that runs on to page 3 keeps its section, and its lines are
+     counted as a person counts them on the printed page, header included */
+  const p3 = lib.chunks.find(c => /at least 12 characters/.test(c.text));
+  assert.equal(p3.page, 3);
+  assert.equal(p3.section, "ACS-PWD-01");
+  const at = S.locate(p3, "a password of at least 12 characters");
+  assert.equal(at.lineStart, 8);
+  assert.equal(S.citation(Object.assign({}, p3, at, { name:"Access Standard - Passwords", kind:"pdf" })),
+    '[Source: Access Standard - Passwords, page 3, line 8, section "ACS-PWD-01"]');
+  /* the rules near the top of each page are rules, not a header, although
+     each says "Minimum Length" at nearly the same place */
+  ["16", "20", "30"].forEach(n => assert.ok(lib.chunks.some(c => c.text.includes("Minimum Length: " + n + " characters")), n));
+  /* and the document's own details are still read from its first page */
+  assert.equal(lib.docs[0].version, "2.1");
+  assert.equal(lib.docs[0].effective, "2026-03-01");
+});
+
+test("metadata fields, control references and web addresses are not headings", () => {
+  const text = "[page 1]\nACCESS STANDARD\nVERSION: 1.0\nDATE: 26/01/2023\nCLASSIFICATION : OFFICIAL\nREQUIREMENTS\nAll accounts need a password.\n" +
+               "AC-1, AC-2\nNCSC.GOV.UK\nThe rule applies to everyone.\n";
+  const lines = S.readLines("pdf", text);
+  const heads = lines.filter(l => l.head).map(l => l.t);
+  assert.deepEqual(heads, ["ACCESS STANDARD", "REQUIREMENTS"]);
+});
+
+test("a mistyped word is read as the word the documents use, and a broad question finds the rules", () => {
+  const lib = pwLib();
+  const q = "what is the stardard password should be?";
+  assert.ok(S.isDocQuestion(q), "a question about a mistyped standard is still one about a standard");
+  const { found, pack } = ask(lib, q);
+  assert.deepEqual(found.fixed, [["stardard", "standard"]]);
+  assert.ok(withText(pack, /Minimum Length: 16 characters/).length, "the user-account rule");
+  assert.ok(withText(pack, /at least 12 characters/).length, "and where it runs on");
+  /* every passage says "password": the one that sets the rule comes before
+     the one that only talks about passwords */
+  const rule = pack.passages.find(p => /Minimum Length: 16/.test(p.text));
+  const talk = pack.passages.find(p => /induction training/.test(p.text));
+  assert.ok(!talk || rule.score >= talk.score, JSON.stringify(pack.passages.map(p => [p.s, p.score, p.text.slice(0, 30)])));
+  /* one letter off only, for deciding what a question is about */
+  assert.ok(S.isDocQuestion("what does the polisy say about guests?"));
+  assert.ok(!S.isDocQuestion("which selection should I choose?"));
+  assert.ok(!S.isDocQuestion("restart the portal service"));
+  assert.ok(!S.isDocQuestion("the customer complaint about the portal"), "a real word is not a mistyped \"compliant\"");
+});
+
+test("one line with a figure no cited passage states is taken out - not the whole answer", () => {
+  const lib = pwLib();
+  const q = "what should a password be?";
+  const { pack } = ask(lib, q);
+  const user = pack.passages.find(p => /Minimum Length: 16/.test(p.text));
+  const admin = pack.passages.find(p => /every 60 days/.test(p.text));
+  assert.ok(user && admin);
+  const say = "For an ordinary user account the standard asks for a passphrase of at least 16 characters: three or more unrelated words.\n\n" +
+              "For local administrators:\n- the password is changed every 60 days.\n\n" +
+              "Passwords should also be changed every 90 days, as is usual.";
+  const g = S.ground({ say:say, cite:[{ s:user.s, quote:"Minimum Length: 16 characters" }], confidence:"high" }, pack, q);
+  assert.equal(g.status, "partial");
+  assert.equal(g.confidence, "medium");
+  assert.deepEqual(g.unsupported.sort(), ["60 days", "90 days"]);
+  assert.equal(g.removed, 2);
+  assert.ok(!/60 days|90 days/.test(g.say), "neither figure is shown: " + g.say);
+  assert.ok(!/For local administrators/.test(g.say), "nor the introduction left with nothing under it");
+  assert.match(g.say, /at least 16 characters/);
+  /* where the 60 days really is, for the app to point at - not support */
+  assert.deepEqual(g.uncited.map(u => u.figure), ["60 days"]);
+  assert.ok(g.uncited[0].in.includes(admin.s));
+  /* cited, the same line stays */
+  const both = S.ground({ say:say.replace(/\n\nPasswords should[^]*$/, ""), confidence:"high",
+    cite:[{ s:user.s, quote:"Minimum Length: 16 characters" }, { s:admin.s, quote:"The password is changed every 60 days." }] }, pack, q);
+  assert.equal(both.status, "grounded");
+  assert.equal(both.removed, 0);
+});
+
+test("taken out: a not-found answer keeps its not-found; an answer that was only the guess is still held back", () => {
+  const lib = pwLib();
+  const q = "how often must a user change their password?";
+  const { pack } = ask(lib, q);
+  const nf = S.ground({ say:"The standard does not specify how often a user must change their password. Many organisations use 90 days.",
+                        confidence:"not_found" }, pack, q);
+  assert.equal(nf.status, "not_found");
+  assert.equal(nf.removed, 1);
+  assert.equal(nf.say, "The standard does not specify how often a user must change their password.");
+  const only = S.ground({ say:"Every 90 days.", confidence:"high", cite:[{ s:pack.passages[0].s, quote:"x" }] }, pack, q);
+  assert.equal(only.status, "blocked");
+});
+
+test("taking out: sentences, list items, headings, tables and fenced blocks", () => {
+  assert.deepEqual(S.sentencesOf("Examples (e.g. Blue-river-lantern). Next one! J. Smith owns it. Rev. 5 applies. 3 words."),
+    ["Examples (e.g. Blue-river-lantern).", "Next one!", "J. Smith owns it.", "Rev. 5 applies.", "3 words."]);
+  const t1 = S.trimSay("Keep this line, it is fine and useful. Drop this one, within 4 hours.\n- item within 4 hours\n- item that stays", ["4 hour"]);
+  assert.equal(t1.say, "Keep this line, it is fine and useful.\n- item that stays");
+  assert.equal(t1.removed, 2);
+  assert.equal(S.trimSay("## Admins\nChanged every 30 days.\n\n## Users\nSixteen characters at least for everyone.", ["30 day"]).say,
+    "## Users\nSixteen characters at least for everyone.");
+  assert.equal(S.trimSay("| Severity | Target |\n|---|---|\n| Critical | 4 hours |\n\nThat is what the table says here.", ["4 hour"]).say,
+    "That is what the table says here.");
+  assert.equal(S.trimSay("```sql\nselect 1 -- 30 days\n```\nRun that query to see the rows.", ["30 day"]).say, "Run that query to see the rows.");
+  assert.deepEqual(S.trimSay("Nothing to take out here.", ["4 hour"]), { say:"Nothing to take out here.", removed:0 });
+});

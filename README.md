@@ -1999,8 +1999,9 @@ Under an answer about what a document says:
   marked, and **Open the original** opens the file itself (a PDF at that page).
 - **Evidence** — the exact words of the passage that support it.
 - **Confidence** — **High** (the passage states it), **Medium** (it follows
-  from several statements, but no one sentence says it), **Not found** (the
-  documents searched do not specify it).
+  from several statements, but no one sentence says it — or part of the answer
+  was taken out, see below), **Not found** (the documents searched do not
+  specify it), **None** (the reply was held back).
 - **Suggestion — not from your documents**, when the assistant adds advice of
   its own. It is never mixed into the answer.
 - **Searched N documents**, the closest of them, and any filter the question
@@ -2024,16 +2025,83 @@ and which filters the question set. There are three kinds of *not found*:
 
 - **Not found** — the documents do not say it, or say it in words the question
   did not reach. The answer says what is missing, and what they do say.
-- **Answer held back** — the reply stated a figure — a timeframe, a
-  percentage, a severity — that no passage it cited contains, so Resolv did
+- **Answer held back** — the whole reply rested on a figure — a timeframe,
+  a percentage, a severity — that no passage it cited contains, so Resolv did
   not show it: it would have been a guess presented as your policy. (This is
-  the "4 hours".)
+  the "4 hours".) Resolv says it held the reply back — it does not claim the
+  documents are silent, because it cannot know that — and shows under it what
+  the cited passages do say.
 - **Not from your documents** — the reply cited nothing, so it is shown as
   general advice, not as what a document says.
 
 If the answer is in a document: check it is in Sources, **active**, that the
 workspace is cleared for its access label, and that the question names the
 system or environment it is about; after changing a document, **Re-index**.
+
+#### Why was part of the answer taken out?
+
+Because one line of it gave a figure — a time, a percentage, a severity —
+that none of the passages it cited states. Resolv takes out that line (and a
+heading or an introduction left with nothing under it) and shows the rest,
+which is checked like any answer. Under it:
+
+- **Part of the answer was taken out**, and how many lines.
+- **Confidence: Medium** — what is left is supported by the source.
+- **Figure seen in** — when that figure *is* written in your documents, but
+  in a passage the answer did not cite (a password rule for administrators
+  next to one for ordinary users, say), the place it is written. Click it to
+  read it there and judge whether it applies. It is never counted as support.
+
+The figure itself is not shown in the answer. **Library → Sources → Recent
+searches and changes** names it. To get an answer that includes it, ask about
+it directly (*"how often is the local administrator password changed?"*) —
+then the passage that states it is the one cited.
+
+Before 5.9.2 the whole answer was held back instead, with *"The documents
+searched do not specify this"* — even when they did, and the rest of the
+answer was right.
+
+#### The answer is in my document, but Resolv said it was not found or held it back — am I wrong or is the AI wrong?
+
+Usually neither: the answer is in the document, and the reply added
+something the passages it cited do not say. Look at **Evidence** under the
+answer — those are the document's own words — and at **Recent searches and
+changes** for the figure that was taken out. Then:
+
+- If the reply mixed several cases (user accounts and administrator accounts,
+  critical and high), ask about the one you mean.
+- Name the document or the section in the question (*"what does ACS-PWD-01 in
+  the password standard say?"*).
+- Open the document from **Source** and read the lines marked.
+
+#### Does it understand a question with a typo?
+
+Yes. A word no document uses, one letter away from one they do (two for a
+long word), is searched as that word: *"stardard"* as *standard*, *"pasword"*
+as *password*, *"doucment"* as *document*. **Recent searches** shows it
+(*read "stardard" as "standard"*). It only decides which passages are read;
+an answer still has to be in their words.
+
+#### Which passages does a broad question get?
+
+*"What should a password be?"* in a password standard matches every page —
+they all say "password". Resolv then prefers the passages that set a rule — a
+minimum or a maximum, a *must* or *must not*, a number of characters, days or
+attempts — over ones that only talk about the subject, and sends the rows
+around them. When the rules differ by case (user, administrator, service
+account), the assistant is asked to lead with the everyday one and list the
+others briefly, each with its own source.
+
+#### My PDF prints the same header on every page — does that confuse it?
+
+Not any more. A line that stands at the same place at the top or the bottom
+of most pages — *VERSION: 1.0*, *DATE: …*, *CLASSIFICATION : OFFICIAL*, the
+page number, a footer — is left out of the passages, and is never taken for a
+section heading. Before 5.9.2 such a header became a "section" on every page,
+so a rule that ran on to the next page was cited as section *"CLASSIFICATION
+: OFFICIAL"*. The header still counts in the line numbers, as it does on the
+printed page. Documents already in Sources are cut again automatically the
+next time the workspace opens.
 
 #### Follow-ups and new conversations
 
@@ -2070,7 +2138,8 @@ reliably and point to the original.
 **Library → Sources → Recent searches and changes**, and the browser's
 console (`[sources]`): each question's documents searched, filters, passages
 with their scores and versions, what the answer cited and whether it held,
-answers held back and the figure that held them back, documents added,
+answers held back or lines taken out and the figure that caused it, a
+mistyped word and what it was read as, documents added,
 re-indexed, switched off or removed, and anything that could not be read.
 Never the documents' words, and never a token.
 
@@ -2540,8 +2609,8 @@ Answering from documents has its tests in the repository, and they are the
 first thing to run after changing anything it touches:
 
 ```
-node --test                 # tests/sources.test.js: 22 tests - every scenario below
-node tests/e2e/run.js       # the app in Chrome or Edge: 39 checks on the screen
+node --test                 # tests/sources.test.js: 28 tests - every scenario below
+node tests/e2e/run.js       # the app in Chrome or Edge: 45 checks on the screen
 node flow/check-prompt.js   # the prompt's examples against the reply validator
 ```
 
@@ -2551,8 +2620,10 @@ passages, one the documents do not give, a model that invents "4 hours"
 replacing an older one, a document switched off, a follow-up, a document the
 workspace is not cleared for, a PDF page read badly, citations to the right
 page, section and lines, 150 documents searched at once, look-alike runbooks
-for different systems and environments, and the same question in a new
-conversation. `tests/e2e/run.js` finds Chrome or Edge by itself (set
+for different systems and environments, the same question in a new
+conversation, and a password standard with its header printed on every page,
+asked with a typo, whose right answer carried two lines it could not back
+(those two taken out, the rest shown). `tests/e2e/run.js` finds Chrome or Edge by itself (set
 `CHROME=<path>` to choose) and skips, passing, when there is none.
 
 The other suites live outside the repository and

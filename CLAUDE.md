@@ -82,13 +82,13 @@ A *workspace* is a folder the user picks (File System Access API):
 - Commit messages: clear summary + body; no model names in commits, code or
   docs. Do not open a pull request unless the owner asks.
 - Work so far is on branch `claude/chat-panel-pixel-art-gifs-d822hq`
-  (latest: 5.9.1). Follow the branch instructions of your own session.
+  (latest: 5.9.2). Follow the branch instructions of your own session.
 
 ## Testing
 
 ```
-node --test                                   # 22 unit tests (Sources, grounding, flow reply fields)
-node tests/e2e/run.js                         # the app in headless Chrome/Edge: 39 checks (CHROME=<path> to choose)
+node --test                                   # 28 unit tests (Sources, grounding, flow reply fields)
+node tests/e2e/run.js                         # the app in headless Chrome/Edge: 45 checks (CHROME=<path> to choose)
 node flow/check-prompt.js                     # after editing flow/prompt.txt ...
 python3 flow/embed-prompt.py                  # ... then copy it into flow.js (PROMPT_BUILTIN)
 node tests/fixtures/make-pdf.js               # regenerate the PDF fixtures
@@ -111,6 +111,27 @@ Also useful:
 
 ## Recent history (newest first)
 
+- **5.9.2** — A right answer was hidden because of one line: asked about a
+  (public, downloaded) password standard, the reply quoted the rule correctly
+  but one line gave a figure no cited passage had, so the whole reply was
+  replaced by "The documents searched do not specify this". Now
+  `DossierSources.ground()` takes out only the sentences/list items/rows with
+  such a figure (`trimSay`), status `partial` (Medium) when a grounded answer
+  is left, `blocked` only when nothing is; the blocked message no longer claims
+  the documents are silent and shows "What they do say"; "Figure seen in"
+  links to where the figure is written in an uncited passage (`uncited[].at`).
+  PDF running headers/footers (same words, same place, on 60% of pages; only
+  the page number ignored) are left out of passages and are never headings;
+  `META_LINE`, control-reference runs, web addresses, cut-off lines and
+  tab-split rows are not headings (ALGO 2 → documents re-cut on open).
+  Typo-tolerant search (`nearTerm`, `editWithin`) and `isDocQuestion`;
+  rule-bearing passages lifted (`RULE_CUES`); no synonyms for a word already
+  in most passages; word pairs stop at sentence ends and at a new line that
+  starts with a capital. Prompt: cite every passage a figure comes from; lead
+  with the everyday case when rules differ by case. Fixture
+  `access-password-standard.pdf` (made up, from `make-pdf.js`, which now also
+  exports its pages for the unit tests). The owner's real PDF was tested
+  locally only, never committed.
 - **5.9.1** — `[study]`/`[teach]`/`[intake]`/look-back replies are never
   held back; instead draft runbooks/notes/profiles are checked against the
   document they came from and a figure it does not state is shown on the

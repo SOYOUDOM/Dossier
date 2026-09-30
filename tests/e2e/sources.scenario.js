@@ -217,6 +217,39 @@
   check("a figure from a table read by column is accepted, at medium confidence", el.querySelector(".srcans.grounded") &&
         /Medium/.test((el.querySelector(".srcconf") || {}).textContent || ""), el.textContent.slice(0, 400));
 
+  /* ── 5.9.2: a password standard with its header on every page, asked
+        with a typo; a right answer with two lines it could not back ───── */
+  chatNew(true); chatPaint();
+  const pw = await addDoc("access-password-standard.pdf", "application/pdf", { name:"Access Standard - Passwords" });
+  const pwChunks = SRC.chunks.get(pw.id) || [];
+  check("the header printed on every page is left out of the passages (the app's own PDF reader)",
+        pw.pages === 4 && pwChunks.length && pwChunks.every(c => !/CLASSIFICATION|REFERENCE: ACS/.test(c.text)) &&
+        pwChunks.some(c => c.page === 3 && c.section === "ACS-PWD-01" && /at least 12 characters/.test(c.text)),
+        JSON.stringify(pwChunks.map(c => [c.page, c.section, c.text.slice(0, 40)])));
+  plan = req => ({ say:"For an ordinary **user account** the standard asks for a **passphrase of at least 16 characters**: three or more unrelated words " +
+                       "joined by hyphens. Where a system cannot take a passphrase, a longer password is allowed.\n\n" +
+                       "For local administrators the password is changed every 60 days.\n\nPasswords should also be changed every 90 days.",
+                   cite:[{ s:label(req, /Minimum Length: 16 characters/), quote:"Minimum Length: 16 characters" }], confidence:"high" });
+  el = await ask("what is the stardard password should be?");
+  last = sent[sent.length - 1];
+  check("a mistyped question still finds the rule, and the page it runs on to",
+        /Minimum Length: 16 characters/.test(last.req.sourcesText) && /at least 12 characters/.test(last.req.sourcesText), last.req.sourcesText.slice(0, 400));
+  check("the answer is shown with only the unsupported lines taken out", el.querySelector(".srcans.partial") &&
+        /passphrase of at least 16 characters/.test(el.textContent) && !/60 days|90 days/.test(el.textContent) && !/do not specify/.test(el.textContent),
+        el.textContent.slice(0, 600));
+  const seen = [...el.querySelectorAll(".srccite")].map(b => b.textContent);
+  check("...it says lines were taken out, and points to where the 60 days is written", /Part of the answer was taken out/.test(el.textContent) &&
+        /took out 2 line/.test(el.textContent) && seen.includes('[Source: Access Standard - Passwords, version 2.1, page 3, line 13, section "ACS-PWD-02"]'),
+        seen.join(" | ") + " :: " + el.textContent.slice(0, 500));
+  await shot("9-partial");
+  el = await ask("why was it taken out?");
+  check("'why was it taken out?' is answered", /took them out/.test(el.textContent), el.textContent.slice(0, 300));
+  plan = req => ({ say:"Every 90 days.", confidence:"high", cite:[{ s:label(req, /Minimum Length: 16 characters/), quote:"Minimum Length: 16 characters" }] });
+  el = await ask("how often must a user change their password?");
+  check("held back whole, it says so plainly - never that the documents are silent - and shows what they do say",
+        el.querySelector(".srcans.blocked") && !/90 days/.test(el.textContent) && !/do not specify/.test(el.textContent) &&
+        /What they do say/i.test(el.textContent) && /Minimum Length: 16 characters/.test(el.textContent), el.textContent.slice(0, 500));
+
   /* ── access labels ─────────────────────────────────────────────────── */
   await addDoc("security-incident-playbook.md", "text/markdown", { label:"security-restricted" });
   plan = req => ({ say:"Isolate it within 15 minutes.", confidence:"high" });

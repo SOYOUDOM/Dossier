@@ -27,8 +27,9 @@
      check   the answer that comes back: every quote must be in the passage
              it cites, and every figure it states - a duration, a
              percentage, a severity - must be written in a passage that was
-             searched. An answer that states a figure no passage contains is
-             not shown as the documents' answer.
+             searched. A line that states a figure no passage it cites
+             contains is taken out, and an answer that rested on one is not
+             shown as the documents' answer.
 
    Pure: no DOM, no files, no network. dossier.html reads the files, keeps
    them in the workspace folder and draws the answers; tests/ runs this
@@ -39,8 +40,9 @@
 
 const VERSION = "1.0";
 /* the shape of passages: raise it and every document is cut again, from
-   the text already kept, the next time the workspace opens */
-const ALGO = 1;
+   the text already kept, the next time the workspace opens
+   (2: a PDF's running header and footer are left out of its passages) */
+const ALGO = 2;
 const CHUNK_TARGET = 1100, CHUNK_MAX = 1800;
 const BUDGET = 14000;                   /* characters of passages per question */
 
@@ -156,9 +158,20 @@ function hash36(s){
    them.
    kind "docx": the reader's text, with "# Heading" lines; no pages, and no
    line numbers worth quoting - a citation names the section. */
+/* "VERSION: 1.0", "DATE: 26/01/2023", "CLASSIFICATION: OFFICIAL" - a field
+   of the document's own details, in capitals, is not a heading */
+const META_LINE = /^(?:version|ver|date|dated|reference|ref|doc(?:ument)?\s*(?:ref(?:erence)?|no|number|id|size)|(?:security\s+|government\s+security\s+)?classification|protective\s+marking|marking|copyright|page|owner|author|status|issued|issue\s+date|approved(?:\s+(?:by|on))?|effective(?:\s+date)?|(?:next\s+|planned\s+)?review(?:\s+date)?|distribution)\s*:\s*\S/i;
 function isHeadingPdf(t){
   if (t.length < 3 || t.length > 90) return 0;
   if (/[.;,:]$/.test(t) && !/^\d+(\.\d+)*\.$/.test(t)) return 0;
+  if (META_LINE.test(t)) return 0;
+  /* nor a run of control references ("AC-1, AC-2", "IA-3, IA-4,"), nor a
+     web address ("NCSC.GOV.UK") - capitals, but not a section */
+  if (t.split(/[\s,;]+/).filter(Boolean).every(w => /^[A-Z]{1,4}-?\d+(?:\.\d+)*$/.test(w))) return 0;
+  if (!/\s/.test(t) && /\.[A-Za-z]{2,}/.test(t) && !/^\d/.test(t)) return 0;
+  /* nor a line cut off mid-phrase ("Cyber Security -", "Policy &"), nor a
+     table row read out as cells between tabs ("0.1  Tim  Initial version") */
+  if (/\s[-–&]$/.test(t) || (t.match(/\t/g) || []).length >= 2) return 0;
   let m = /^((?:\d+\.)*\d+)\.?\s+(.{2,80})$/.exec(t);
   if (m){
     const ws = m[2].split(/\s+/);
@@ -174,9 +187,81 @@ function isHeadingPdf(t){
   if (letters.length >= 4 && letters === letters.toUpperCase() && /\p{Lu}/u.test(letters) && t.split(/\s+/).length <= 8) return 1;
   return 0;
 }
+/* Lines printed at the top or the bottom of most pages - a running header
+   ("VERSION: 1.0", "CLASSIFICATION : OFFICIAL"), a footer, the page number
+   - are not the document's words. Read as text, a header in capitals
+   became a heading on every page, so the second page of a rule was cited
+   as section "CLASSIFICATION : OFFICIAL" instead of the rule it continues,
+   and every passage carried the same seven lines. They still count as
+   lines of their page (a person counting lines on the printed page counts
+   them), but no passage carries them and none is a heading.
+
+   A line is furniture when the same words stand at the same place - the
+   same line from the top (of the first eight) or from the bottom (of the
+   last four) - on at least 60% of the pages, and on three. Only the page
+   number is ignored when comparing ("Page 3 of 17" matches "Page 4 of
+   17"), never another number: "Minimum Length: 16 characters" near the top
+   of one page and "Minimum Length: 20 characters" on the next are rules,
+   not a header. */
+const FURN_TOP = 8, FURN_BOTTOM = 4;
+const LONE_NUM = /(?<![\w./:-])\d+(?![\w./-])/g;
+function furnSig(s, pageNo){
+  const t = String(s || "").toLowerCase().replace(/\s+/g, " ").trim();
+  return pageNo == null ? t : t.replace(LONE_NUM, n => +n === pageNo ? "#" : n);
+}
+function furnitureOf(src){
+  const pages = new Map();
+  let pg = 1;
+  src.forEach(raw => {
+    const pm = /^\[page (\d+)\]\s*$/.exec(raw);
+    if (pm){ pg = +pm[1]; return; }
+    if (!raw.trim()) return;
+    if (!pages.has(pg)) pages.set(pg, []);
+    pages.get(pg).push(raw.trim());
+  });
+  if (pages.size < 3) return null;
+  const need = Math.max(3, Math.ceil(pages.size * 0.6));
+  const zone = (ls, i) => i < FURN_TOP ? "t" + i : i >= ls.length - FURN_BOTTOM ? "b" + (ls.length - 1 - i) : "";
+  /* the printed page number: the number, alone on a short line near the
+     top or the bottom, that stands the same distance from the page's place
+     in the file on most pages (a cover that is not numbered shifts it) */
+  const offs = new Map();
+  pages.forEach((ls, n) => {
+    const got = new Set();
+    ls.forEach((l, i) => {
+      if (!zone(ls, i) || l.length > 60) return;
+      (l.match(LONE_NUM) || []).forEach(x => { const o = +x - n; if (Math.abs(o) <= 5) got.add(o); });
+    });
+    got.forEach(o => offs.set(o, (offs.get(o) || 0) + 1));
+  });
+  let off = null, best = 0;
+  offs.forEach((c, o) => { if (c > best || (c === best && Math.abs(o) < Math.abs(off))){ best = c; off = o; } });
+  if (best < need) off = null;
+  const printed = n => off == null ? null : n + off;
+  const count = new Map();
+  pages.forEach((ls, n) => {
+    const seen = new Set();
+    ls.forEach((l, i) => {
+      const z = zone(ls, i);
+      if (!z || l.length > 120) return;
+      const key = z + "\u0000" + furnSig(l, printed(n));
+      if (seen.has(key)) return;
+      seen.add(key);
+      count.set(key, (count.get(key) || 0) + 1);
+    });
+  });
+  const keys = new Set();
+  count.forEach((c, k) => { if (c >= need) keys.add(k); });
+  if (!keys.size) return null;
+  return { pages:pages, is:(n, i, raw) => {
+    const ls = pages.get(n) || [], z = zone(ls, i);
+    return !!z && keys.has(z + "\u0000" + furnSig(raw.trim(), printed(n)));
+  } };
+}
 function readLines(kind, text){
   const out = [];
   const src = String(text || "").replace(/\r\n?/g, "\n").split("\n");
+  const furn = kind === "pdf" ? furnitureOf(src) : null;
   let page = kind === "pdf" ? 1 : 0, pline = 0;
   for (let i = 0; i < src.length; i++){
     const raw = src[i];
@@ -185,6 +270,10 @@ function readLines(kind, text){
       if (pm){ page = +pm[1]; pline = 0; continue; }
       if (!raw.trim()) { out.push({ t:"", page:page, line:0, blank:true }); continue; }
       pline++;
+      if (furn && furn.is(page, pline - 1, raw)){
+        out.push({ t:raw, page:page, line:pline, furn:true });
+        continue;
+      }
       out.push({ t:raw, page:page, line:pline, head:isHeadingPdf(raw.trim()) });
       continue;
     }
@@ -218,6 +307,7 @@ function blocksOf(lines){
   const blocks = []; let cur = null;
   const flush = () => { if (cur && cur.lines.length) blocks.push(cur); cur = null; };
   for (const ln of lines){
+    if (ln.furn) continue;
     if (ln.rule) { if (cur) cur.lines.push(ln); continue; }
     if (ln.head){ flush(); blocks.push({ kind:"head", lines:[ln], level:ln.head, title:(ln.title || ln.t).trim() }); continue; }
     if (ln.blank){ flush(); continue; }
@@ -488,8 +578,24 @@ function diffChunks(before, after){
 }
 
 /* ── the index ─────────────────────────────────────────────────────────── */
+/* How much a passage lays down a rule: a minimum or a maximum, a must or a
+   must-not, a number of characters, days or attempts, a "within" or an
+   "every". Asked what something should be, the passage that sets the rule
+   is the answer, and the one that only talks about the subject is not -
+   "what should a password be?" in a password standard, where every passage
+   says "password". A lift of a tenth per kind of cue, never a filter. */
+const RULE_CUES = [
+  /\bminimum\b|\bat least\b|\bno (?:fewer|less) than\b/i,
+  /\bmaximum\b|\bno more than\b|\bat most\b|\bno later than\b/i,
+  /\bmust\b|\bshall\b|\b(?:is|are) required\b|\bmandatory\b/i,
+  /\b(?:must|shall) not\b|\bprohibited\b|\bnot (?:be )?(?:permitted|allowed)\b|\bblocked\b/i,
+  /\b\d+(?:\.\d+)?\s*-?\s*(?:(?:characters?|chars?|digits?|letters?|words?|attempts?|minutes?|mins?|hours?|hrs?|days?|weeks?|months?|years?|percent)\b|%)/i,
+  /\bwithin\b|\bevery\b|\bexpires?\b|\bdeadline\b/i
+];
+const RULE_WEIGHT = 0.1;
+function ruleCues(text){ return RULE_CUES.filter(re => re.test(String(text || ""))).length; }
 function createIndex(docs, chunks){
-  const ix = { docs:new Map(), chunks:[], post:new Map(), dl:[], avgdl:0, byDoc:new Map(), byId:new Map() };
+  const ix = { docs:new Map(), chunks:[], post:new Map(), dl:[], avgdl:0, byDoc:new Map(), byId:new Map(), rule:[] };
   (docs || []).forEach(d => ix.docs.set(d.id, d));
   let total = 0;
   (chunks || []).forEach(c => {
@@ -507,8 +613,16 @@ function createIndex(docs, chunks){
     terms(d.name).forEach(t => bump(t, 0.5));
     let len = body.length;
     ix.dl.push(len); total += len;
-    /* pairs of words, for "internet facing" meaning more than the two apart */
-    for (let k = 0; k + 1 < body.length; k++) bump(body[k] + "_" + body[k + 1], 0.5);
+    ix.rule.push(ruleCues(c.text));
+    /* pairs of words, for "internet facing" meaning more than the two apart
+       - within a sentence: "...the System Access standard. Passwords
+       represent..." is not a "standard password", and neither is a title
+       over two lines ("ACCESS STANDARD" / "Passwords and Passphrases"). A
+       line that starts in lower case carries on the one before it. */
+    String(c.text).split(/[.!?;:]+(?=\s|$)|\n(?=\s*[^\p{Ll}\s])/u).forEach(seg => {
+      const ts = terms(seg);
+      for (let k = 0; k + 1 < ts.length; k++) bump(ts[k] + "_" + ts[k + 1], 0.5);
+    });
     tf.forEach((w, t) => { if (!ix.post.has(t)) ix.post.set(t, []); ix.post.get(t).push([i, w]); });
   });
   ix.avgdl = ix.chunks.length ? total / ix.chunks.length : 1;
@@ -589,14 +703,75 @@ function eligible(ix, q, opts){
   return { docs:out, filters:filters, unproven:unproven, total:all.length };
 }
 
+/* ── a slip of the keyboard ───────────────────────────────────────────────
+   "what is the stardard password", "pasword rules", "the doucment": a word
+   of the question that no document uses, one letter away from one they do
+   (two for a long word), is searched as that word, at a little less
+   weight. Only words of five letters or more, never numbers, and the first
+   letter has to match - a typo rarely starts wrong, and a different word
+   usually does. It only decides which passages are read: an answer still
+   has to be in their words. */
+function editWithin(a, b, max){
+  /* letters changed, added, dropped or swapped, stopping once past max */
+  const la = a.length, lb = b.length;
+  if (Math.abs(la - lb) > max) return max + 1;
+  let prev2 = null, prev = [];
+  for (let j = 0; j <= lb; j++) prev.push(j);
+  for (let i = 1; i <= la; i++){
+    const cur = [i];
+    let low = i;
+    for (let j = 1; j <= lb; j++){
+      let v = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+      if (i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) v = Math.min(v, prev2[j - 2] + 1);
+      cur.push(v);
+      if (v < low) low = v;
+    }
+    if (low > max) return max + 1;
+    prev2 = prev; prev = cur;
+  }
+  return prev[lb];
+}
+/* real words one letter from a document word - "complaint" is not a
+   mistyped "compliant", nor "police" a mistyped "policy". Checked against
+   an English word list of 114,000 words: these are the common ones. */
+const NOT_TYPOS = new Set(["complaint", "police", "polity", "requirer", "allower"].reduce((a, w) => a.concat([w, stem(w)]), []));
+function nearTerm(ix, t){
+  if (t.length < 5 || /\d/.test(t) || ix.post.has(t) || NOT_TYPOS.has(t)) return "";
+  if (!ix.vocab){
+    ix.vocab = new Map();
+    ix.post.forEach((p, k) => {
+      if (k.indexOf("_") >= 0 || /\d/.test(k) || k.length < 4) return;
+      if (!ix.vocab.has(k.length)) ix.vocab.set(k.length, []);
+      ix.vocab.get(k.length).push(k);
+    });
+  }
+  const max = t.length >= 8 ? 2 : 1;
+  let best = "", bd = max + 1, bdf = 0;
+  for (let n = t.length - max; n <= t.length + max; n++){
+    (ix.vocab.get(n) || []).forEach(v => {
+      if (v[0] !== t[0]) return;
+      const d = editWithin(t, v, max);
+      if (d > max) return;
+      const df = ix.post.get(v).length;
+      if (d < bd || (d === bd && df > bdf)){ best = v; bd = d; bdf = df; }
+    });
+  }
+  return best;
+}
+
 /* ── searching ─────────────────────────────────────────────────────────── */
 const K1 = 1.2, B = 0.75;
-function queryTerms(q, weight){
-  const base = terms(q);
+function queryTerms(q, weight, fix, common){
+  const soft = new Set();
+  const base = terms(q).map(t => { const n = fix ? fix(t) : t; if (n !== t) soft.add(n); return n; });
   const out = new Map();
   const add = (t, w) => out.set(t, Math.max(out.get(t) || 0, w));
-  base.forEach(t => add(t, weight));
-  base.forEach(t => (SYN.get(t) || []).forEach(s => add(s, weight * 0.5)));
+  base.forEach(t => add(t, soft.has(t) ? weight * 0.85 : weight));
+  /* a word already in most of the passages searched - "password" in a
+     password standard - is found plenty without its synonyms, and they
+     only add noise: "standard" reaching for "procedure" found the helpdesk
+     procedures before the rules */
+  base.forEach(t => { if (!(common && common(t))) (SYN.get(t) || []).forEach(s => add(s, weight * 0.5)); });
   if (/\bhow long\b|\bhow soon\b|\bhow quickly\b|\bby when\b/i.test(q)){
     const tf = stem("timeframe");
     (SYN.get(tf) || []).concat([tf]).forEach(s => add(s, weight * 0.6));
@@ -608,9 +783,26 @@ function search(ix, q, opts){
   opts = opts || {};
   const el = eligible(ix, q + " " + (opts.context || ""), opts);
   const ok = new Set(el.docs.map(d => d.id));
-  const qt = queryTerms(q, 1);
+  const fixed = [];
+  const fix = t => {
+    if (ix.post.has(t)) return t;
+    const n = nearTerm(ix, t);
+    if (!n) return t;
+    if (!fixed.some(f => f[0] === t)) fixed.push([t, n]);
+    return n;
+  };
+  let pool = 0;
+  ix.chunks.forEach(c => { if (ok.has(c.doc)) pool++; });
+  const common = t => {
+    const p = ix.post.get(t);
+    if (!p || pool < 4) return false;
+    let n = 0;
+    for (const [i] of p) if (ok.has(ix.chunks[i].doc)) n++;
+    return n / pool > 0.5;
+  };
+  const qt = queryTerms(q, 1, fix, common);
   if (opts.context){
-    const ct = queryTerms(opts.context, 0.45);
+    const ct = queryTerms(opts.context, 0.45, fix, common);
     ct.terms.forEach((w, t) => { if (!qt.terms.has(t)) qt.terms.set(t, w); });
   }
   const N = ix.chunks.length || 1;
@@ -640,7 +832,8 @@ function search(ix, q, opts){
        found through one of its synonyms */
     const cov = base.length ? base.filter(t => got.has(t) || (SYN.get(t) || []).some(x => got.has(x))).length / base.length : 0;
     const quality = c.quality === "low" ? 0.6 : 1;
-    return { i:i, chunk:c, score:s * (boost.has(c.doc) ? 1.5 : 1) * quality, coverage:cov, matched:[...got] };
+    const rule = 1 + RULE_WEIGHT * (ix.rule[i] || 0);
+    return { i:i, chunk:c, score:s * (boost.has(c.doc) ? 1.5 : 1) * quality * rule, coverage:cov, matched:[...got] };
   }).sort((a, b) => b.score - a.score);
   const top = ranked.length ? ranked[0].score : 0;
   const minCov = base.length >= 4 ? 0.25 : base.length ? 1 / base.length - 0.01 : 1;
@@ -653,7 +846,7 @@ function search(ix, q, opts){
     if (n >= 4 && ranked.some(x => x.chunk.doc !== r.chunk.doc && primary.indexOf(x) < 0 && (per.get(x.chunk.doc) || 0) < 4)) continue;
     per.set(r.chunk.doc, n + 1); primary.push(r);
   }
-  return { hits:primary, eligible:el, candidates:ranked.length, terms:qt.base.length };
+  return { hits:primary, eligible:el, candidates:ranked.length, terms:qt.base.length, fixed:fixed };
 }
 
 /* The passages around a hit, so an answer that depends on the paragraph
@@ -796,7 +989,19 @@ function citation(c){
 
 /* ── is this a question the documents should answer ─────────────────────── */
 const DOC_Q = /\b(polic(?:y|ies)|standards?|guidelines?|guidance|runbooks?|procedures?|processes|sops?|slas?|requirements?|required|requires?|mandatory|must|allowed|permitted|prohibited|timeframes?|time ?frames?|deadlines?|how long|how soon|how quickly|within how|severity|critical|compliance|compliant|audit|vulnerabilit(?:y|ies)|remediat\w*|according to|document(?:s|ed)?|what does (?:the|our|this) \w+ say|which (?:section|page|document|clause)|clause|section|annex|appendix)\b/i;
-function isDocQuestion(q){ return DOC_Q.test(String(q || "")); }
+/* ...and the same question with a word mistyped: "what does the stardard
+   say", "the pasword polisy". One letter off only, so "selection" is never
+   read as "section" and a troubleshooting question stays one. */
+const DOC_WORDS = ("policy policies standard standards guideline guidelines guidance runbook runbooks procedure " +
+  "procedures requirement requirements required mandatory compliance compliant vulnerability vulnerabilities " +
+  "remediation remediate document documents documented deadline timeframe severity critical permitted prohibited " +
+  "allowed appendix according").split(" ");
+function isDocQuestion(q){
+  const s = String(q || "");
+  if (DOC_Q.test(s)) return true;
+  return words(s).some(w => w.length >= 6 && !/\d/.test(w) && !NOT_TYPOS.has(w) &&
+    DOC_WORDS.some(d => d[0] === w[0] && d !== w && editWithin(w, d, 1) <= 1));
+}
 
 /* a follow-up leans on the last question: "how about low severity?",
    "and in UAT?", "what does the previous section say?" */
@@ -880,16 +1085,128 @@ function hasFigure(text, f){
 function unverifiable(say){
   return /\b(not (?:specified|stated|mentioned|covered|defined|say|said|found|included|given|provided|set out)|does(?:n't| not) (?:specify|state|say|mention|cover|define|include|give|set)|no (?:information|mention|reference|timeframe|figure|value|requirement)|isn't (?:specified|stated|covered)|cannot find|could not find|couldn't find)\b/i.test(String(say || ""));
 }
+
+/* ── taking out only what cannot be shown ─────────────────────────────────
+   An answer is sentences, list items and table rows. When one of them
+   states a figure that no passage it cites contains, that one is taken out
+   - not the whole answer. A password standard answered correctly for user
+   accounts, with one line about administrators' passwords that cited
+   nothing for its "30 days", used to be held back whole and replaced by
+   "the documents do not specify this" - when they plainly did. Now the
+   line goes, the rest is shown with its sources, and the answer says a
+   line was taken out. The figure itself is never shown.
+
+   A heading or an introduction ("For local administrators:") left with
+   nothing under it goes too, and so does a table left with no rows. */
+const ABBR = /(?:^|[\s(])(?:e\.g|i\.e|etc|vs|approx|incl|no|nos|rev|fig|sec|para|ref|min|max|cf|al|mr|mrs|ms|dr|st)\.$/i;
+function sentencesOf(s){
+  const out = [];
+  const re = /([.!?])(["”’')\]*_]*)(\s+)(?=["“‘'(\[*_]*[\p{Lu}\d])/gu;
+  let from = 0, m;
+  while ((m = re.exec(s))){
+    const end = m.index + m[1].length + m[2].length;
+    const head = s.slice(from, m.index + 1);
+    /* "e.g. Sunny", "Rev. 5", "J. Smith" are not the end of a sentence */
+    if (m[1] === "." && (ABBR.test(head) || /(?:^|\s)\p{Lu}\.$/u.test(head))) continue;
+    out.push(s.slice(from, end)); from = end + m[3].length;
+  }
+  out.push(s.slice(from));
+  return out.filter(x => x.trim());
+}
+function trimSay(say, badKeys){
+  const hit = t => figures(t).some(f => badKeys.indexOf(f.key) >= 0);
+  const src = String(say || "").replace(/\r\n?/g, "\n").split("\n");
+  /* each line: its text now ("" when taken out) and whether it was cut */
+  const rows = src.map(t => ({ t:t, was:t, gone:false }));
+  let removed = 0;
+  for (let i = 0; i < rows.length; i++){
+    const r = rows[i];
+    /* a fenced block - code, or text to copy - is one piece */
+    const fm = /^\s*(```|~~~)/.exec(r.t);
+    if (fm){
+      let j = i + 1;
+      while (j < rows.length && !new RegExp("^\\s*" + fm[1]).test(rows[j].t)) j++;
+      j = Math.min(j, rows.length - 1);
+      if (hit(rows.slice(i, j + 1).map(x => x.t).join("\n"))){
+        for (let k = i; k <= j; k++){ rows[k].t = ""; rows[k].gone = true; }
+        removed++;
+      }
+      i = j;
+      continue;
+    }
+    if (!hit(r.t)) continue;
+    /* a table row or a heading: the whole line */
+    if (/^\s*\|/.test(r.t) || /^\s*#/.test(r.t)){ r.t = ""; r.gone = true; removed++; continue; }
+    const lead = (/^\s*(?:(?:[-*+•]|\d+[.)])\s+|>\s*)*/.exec(r.t) || [""])[0];
+    const parts = sentencesOf(r.t.slice(lead.length));
+    const keep = parts.filter(p => !hit(p));
+    const rest = keep.join(" ").trim();
+    if (keep.length === parts.length || !/[\p{L}\p{N}]/u.test(rest)){ r.t = ""; r.gone = true; removed += Math.max(1, parts.length - keep.length); continue; }
+    removed += parts.length - keep.length;
+    r.t = lead + rest;
+  }
+  if (!removed) return { say:String(say || ""), removed:0 };
+  const blank = r => !r.gone && !r.t.trim();
+  const listy = t => /^\s*(?:[-*+•]|\d+[.)])\s+|^\s*\||^\s{2,}\S/.test(t);
+  /* an introduction whose list or table was all taken out */
+  rows.forEach((r, i) => {
+    if (r.gone || !/:\**\s*$/.test(r.t.trim())) return;
+    let j = i + 1, under = 0, left = 0;
+    while (j < rows.length && (blank(rows[j]) || rows[j].gone || listy(rows[j].was))){
+      if (listy(rows[j].was)){ under++; if (!rows[j].gone) left++; }
+      j++;
+    }
+    if (under && !left){ r.t = ""; r.gone = true; }
+  });
+  /* a heading whose section was all taken out */
+  rows.forEach((r, i) => {
+    const hm = /^\s*(#{1,6})\s/.exec(r.t);
+    if (r.gone || !hm) return;
+    let j = i + 1, under = 0, left = 0;
+    while (j < rows.length){
+      const h2 = /^\s*(#{1,6})\s/.exec(rows[j].was);
+      if (h2 && h2[1].length <= hm[1].length) break;
+      if (rows[j].was.trim()){ under++; if (!rows[j].gone) left++; }
+      j++;
+    }
+    if (under && !left){ r.t = ""; r.gone = true; }
+  });
+  /* a table left with its header and no rows */
+  for (let i = 0; i < rows.length; i++){
+    if (!/^\s*\|/.test(rows[i].t)) continue;
+    let j = i; const body = [];
+    while (j < rows.length && (/^\s*\|/.test(rows[j].t) || (rows[j].gone && /^\s*\|/.test(rows[j].was)))){ body.push(j); j++; }
+    const live = body.filter(k => !rows[k].gone && !/^\s*\|?\s*:?-{2,}/.test(rows[k].t));
+    if (live.length <= 1 && body.some(k => rows[k].gone)) body.forEach(k => { rows[k].t = ""; rows[k].gone = true; });
+    i = j;
+  }
+  const text = rows.filter(r => !r.gone).map(r => r.t).join("\n").replace(/\n{3,}/g, "\n\n").trim();
+  return { say:text, removed:removed };
+}
+/* enough left to be an answer: a few real words, not only "Sure!" */
+function substantial(text){
+  return (String(text || "").replace(/[#*_>|`~]/g, " ").match(/\p{L}{2,}/gu) || []).length >= 5;
+}
 /* reply: { say, cite:[{s, quote}], confidence, suggest }
    pack:  { passages, docQuestion }
-   ->     { status, confidence, cites, unsupported, uncited, notes } */
+   ->     { status, confidence, cites, unsupported, uncited, notes, and when
+            lines were taken out: say (what is left), removed (how many) }
+
+   status  grounded   every figure is in a passage it cites
+           partial    some lines stated a figure no cited passage has; they
+                      were taken out, and what is left is grounded
+           not_found  the documents do not say it (and nothing is invented)
+           blocked    the answer rested on a figure no cited passage has,
+                      and nothing worth showing is left without it
+           unsupported  no figure, but no passage it cites holds up either
+           general    not an answer about the documents */
 function ground(reply, pack, question){
   const P = (pack && pack.passages) || [];
   const say = String((reply && reply.say) || "");
   const raw = Array.isArray(reply && reply.cite) ? reply.cite : [];
   const conf = String((reply && reply.confidence) || "").toLowerCase().replace(/[^a-z_]/g, "");
   const docMode = !!(pack && pack.docQuestion) || raw.length > 0 || /^(high|medium|not_?found|low)$/.test(conf);
-  const res = { status:"general", confidence:"", cites:[], unsupported:[], uncited:[], loose:[], notes:[] };
+  const res = { status:"general", confidence:"", cites:[], unsupported:[], uncited:[], loose:[], notes:[], removed:0 };
   if (!docMode) return res;
   const bySid = new Map(P.map(p => [String(p.s).toUpperCase(), p]));
   const byId = new Map(P.map(p => [p.id, p]));
@@ -908,6 +1225,7 @@ function ground(reply, pack, question){
   const good = res.cites.filter(c => c.verified);
   const qFig = figures(question || "").map(f => f.key);
   const notFound = /^not_?found$/.test(conf) || (!good.length && unverifiable(say));
+  const badKeys = [];
   figures(say).forEach(f => {
     if (notFound && qFig.indexOf(f.key) >= 0) return;         /* "the standard does not say 4 hours" */
     if (good.some(c => hasFigure(c.text, f))) return;
@@ -915,10 +1233,29 @@ function ground(reply, pack, question){
     /* written in a passage the answer did not cite - an incident target
        sitting next to a vulnerability question is not support for it */
     const other = P.filter(p => hasFigure(p.text, f));
-    if (other.length) res.uncited.push({ figure:f.text, in:other.map(p => p.s) });
+    if (other.length) res.uncited.push({ figure:f.text, in:other.map(p => p.s),
+      /* the line it is on, so the app can point at it */
+      at:other.map(p => ({ s:p.s, line:String(p.text).split("\n").find(l => hasFigure(l, f)) || "" })) });
     res.unsupported.push(f.text);
+    badKeys.push(f.key);
   });
-  if (res.unsupported.length){ res.status = "blocked"; res.confidence = "not_found"; return res; }
+  if (res.unsupported.length){
+    /* take out the lines that state them, and see what is left */
+    const t = trimSay(say, badKeys);
+    if (t.removed && substantial(t.say)){
+      res.say = t.say; res.removed = t.removed;
+      res.notes.push(t.removed + " line(s) taken out for a figure no cited passage states");
+      if (/^not_?found$/.test(conf) || (!good.length && unverifiable(t.say))){
+        res.status = "not_found"; res.confidence = "not_found"; return res;
+      }
+      if (good.length){
+        res.status = "partial"; res.confidence = "medium";
+        if (res.loose.length) res.notes.push("a figure is in the cited passage, but not next to its unit - a table read column by column");
+        return res;
+      }
+    }
+    res.status = "blocked"; res.confidence = "not_found"; return res;
+  }
   if (notFound){ res.status = "not_found"; res.confidence = "not_found"; return res; }
   if (!good.length){ res.status = "unsupported"; res.confidence = "not_found"; return res; }
   res.status = "grounded";
@@ -942,6 +1279,8 @@ function diagnose(q, found, packed, g){
   return {
     at: new Date().toISOString(),
     words: (found && found.terms) || 0,
+    /* a mistyped word read as the one the documents use: ["stardard", "standard"] */
+    typos: (found && found.fixed) || [],
     searched: found ? found.eligible.docs.length : 0,
     filters: found ? found.eligible.filters : {},
     candidates: found ? found.candidates : 0,
@@ -950,6 +1289,7 @@ function diagnose(q, found, packed, g){
     cited: g ? g.cites.map(c => ({ chunk:c.id, verified:c.verified, citation:c.citation })) : [],
     status: g ? g.status : "",
     unsupported: g ? g.unsupported.length : 0,
+    removed: g ? g.removed || 0 : 0,
     noEvidence: !((packed && packed.passages) || []).length
   };
 }
@@ -964,6 +1304,7 @@ const API = {
   locate: locate, citation: citation, lastHead: lastHead,
   isDocQuestion: isDocQuestion, followUp: followUp, beside: beside,
   figures: figures, ground: ground, diagnose: diagnose, unsupportedIn: unsupportedIn,
+  trimSay: trimSay, sentencesOf: sentencesOf,
   nameFor: nameFor, weakTitle: weakTitle
 };
 if (typeof module === "object" && module.exports) module.exports = API;
