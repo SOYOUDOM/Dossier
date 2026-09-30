@@ -6,6 +6,38 @@ holds — which is what to paste into a bug report.
 
 ---
 
+## 5.9.3 - 2026-09-30
+
+**A slimmer conversation: sources fold to one line, and the files you send
+show as cards you can open or hide.**
+
+- **Sources under an answer start folded to one line**: the document it came
+  from and its page, the confidence, and a **›** - *Source: Application
+  Security Standard · p. 12 · High*. A click opens the Source, the Evidence,
+  the notes and what was searched; another folds them. Each answer remembers
+  how you left it. A warning is never folded away: *Part of the answer was
+  taken out*, *Answer held back* and *No supporting source found* are on the
+  line itself, and a held-back answer opens by itself. A suggestion stays in
+  view - it is advice, not a reference. The line is about a tenth of the
+  height of the old box.
+- **Files you send show as cards under your question**, like in any chat: a
+  small picture for a picture; kind, pages and size for a document, and *in
+  Sources* when it is kept there. **Click a card to see what you sent**: a
+  document kept in Sources opens in the Sources viewer (page by page, with the
+  original a button away), any time; other files show, while Resolv is open,
+  the words read out of them or the picture as it went. A picture keeps a
+  small copy (200 pixels, a few kilobytes) with the conversation, for after a
+  restart. **Hide** folds the cards to one line (*📎 2 attached: ...*), and
+  each question remembers it. A question sent before this version finds its
+  document in Sources by its file name.
+- The note under an answer that kept a document is one line now.
+- README: *How do I see a file I sent with a question? Can I hide it?*, *How
+  do I make the sources under an answer smaller, or see them in full?*
+- Tests: 56 browser checks (folding, remembering, the cards, the picture's
+  small copy, older questions).
+
+---
+
 ## 5.9.2 - 2026-09-30
 
 **A right answer is no longer hidden because of one line.** Asked *"what is

@@ -1849,6 +1849,24 @@ each to open; for what travels as bytes, 2 MB each and 3.5 MB for one
 question; 60,000 characters of text a file. The composer shows the running
 total.
 
+#### How do I see a file I sent with a question? Can I hide it?
+
+Every file you send shows as a **card** under your question, the way files show
+in any chat: a small picture for a picture, and for a document its kind, pages
+and size — and **in Sources** when it was kept there. **Click a card** to see
+what you sent:
+
+- a document kept in Sources opens in the Sources viewer, page by page, with
+  **Open the original** for the file itself — today, tomorrow, or next month;
+- any other file, while Resolv stays open, shows the words that were read out of
+  it and sent with the question, or the picture as it went;
+- after Resolv is restarted, a picture shows the small copy kept with the
+  conversation (about 200 pixels); a file that was not kept anywhere says so.
+
+**Hide** (after the cards) folds them to one line — *📎 2 attached: runbook.pdf,
+error.png* — and a click on that line opens them again. Each question remembers
+whether you hid its files.
+
 Answers come back with their line breaks intact. A fenced block becomes a code
 panel with its language and a copy button; `backticks` become inline code.
 Nothing else in a reply is interpreted — it is not a markdown renderer and
@@ -2036,9 +2054,16 @@ The full setup, storage, access and troubleshooting guide is
 
 #### What an answer from your documents looks like
 
-Under an answer about what a document says:
+Under an answer about what a document says there is **one short line**: which
+document the answer came from, and its page — *Source: Application Security
+Standard · p. 12* — how sure it is (**High**, **Medium**…), and a **›**. Click the line to
+open everything below; click it again to fold it. Each answer remembers whether
+you left it open. A warning is never folded away: *Part of the answer was taken
+out*, *Answer held back* and *No supporting source found* show on the line
+itself, and a held-back answer opens by itself, because what the passages do
+say is then the whole answer. Opened, it shows:
 
-- **Answer** — the direct answer.
+- **Answer** — the direct answer (above the line).
 - **Source** — `[Source: Application Security Standard, version 2.0, page 12,
   lines 18-27, section "Remediation Timeframe"]` for a PDF, or
   `[Source: application-security-standard.md, version 2.0, lines 120-138,
@@ -2051,16 +2076,23 @@ Under an answer about what a document says:
   was taken out, see below), **Not found** (the documents searched do not
   specify it), **None** (the reply was held back).
 - **Suggestion — not from your documents**, when the assistant adds advice of
-  its own. It is never mixed into the answer.
+  its own. It is never mixed into the answer, and it stays in view under the
+  folded line — it is advice, not a reference.
 - **Searched N documents**, the closest of them, and any filter the question
   set (a document, version, system or environment it named).
 
 With no flow set up, a question about your documents is answered on this PC
 with the passages themselves, each with its citation.
 
+#### How do I make the sources under an answer smaller, or see them in full?
+
+They start folded to one line. Click the line to see the Source, the Evidence,
+the confidence and what was searched; click it again to fold it. Each answer
+keeps the way you left it.
+
 #### Which source supports this answer?
 
-The **Source** line under the answer, and **Evidence** under it. Ask *"which
+The **Source** line under the answer (open it for **Evidence**). Ask *"which
 source supports this answer?"* and Resolv lists the citations and quotes of
 the last answer. A citation is only shown as a source when its quote was found,
 word for word, in the passage it names.
@@ -2658,7 +2690,7 @@ first thing to run after changing anything it touches:
 
 ```
 node --test                 # tests/sources.test.js: 28 tests - every scenario below
-node tests/e2e/run.js       # the app in Chrome or Edge: 45 checks on the screen
+node tests/e2e/run.js       # the app in Chrome or Edge: 56 checks on the screen
 node flow/check-prompt.js   # the prompt's examples against the reply validator
 ```
 

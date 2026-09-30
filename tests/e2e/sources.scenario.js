@@ -143,6 +143,18 @@
         on.querySelector("i").textContent === String(row), on ? on.textContent : "no viewer");
   await shot("5-viewer");
   if ($("svClose")) $("svClose").click();
+  /* folded to one line until opened, and remembered with the answer */
+  const box = answers().pop().querySelector(".srcans"), sumBtn = box && box.querySelector(".srcsum");
+  check("the sources under an answer start folded to one line: the document, and how sure", box && !box.classList.contains("open") &&
+        getComputedStyle(box.querySelector(".srcbody")).display === "none" &&
+        /Source: Application Security Standard/.test(sumBtn.textContent) && /High/.test(sumBtn.textContent),
+        box ? box.outerHTML.slice(0, 400) : "no box");
+  sumBtn.click();
+  check("...a click opens them, with the evidence", box.classList.contains("open") && getComputedStyle(box.querySelector(".srcbody")).display !== "none" &&
+        sumBtn.getAttribute("aria-expanded") === "true");
+  chatPaint();
+  const again = answers().pop().querySelector(".srcans");
+  check("...and they stay open when the conversation is drawn again", again && again.classList.contains("open"));
 
   el = await ask("which source supports this answer?");
   check("'which source supports this answer?' lists the citation", el.textContent.includes(want), el.textContent.slice(0, 300));
@@ -186,6 +198,53 @@
   await until(async () => { try { await (await (await ws.getDirectoryHandle("sources")).getDirectoryHandle(kept.id)).getFileHandle("chunks.json"); return true; } catch (e) { return false; } }, 8000);
   const later = srcSearch("How quickly must critical security patches be applied on internet-facing servers?", null, {});
   check("...and is found again by a later question", later.passages.some(p => /within 3 days/.test(p.text)));
+
+  /* the file under the question: a card that opens what was sent, and folds */
+  const you = () => [...document.querySelectorAll("#chatLog .chb.you")].pop();
+  let card = you().querySelector(".cfcard");
+  check("the question shows its file as a card, kept in Sources", card && /patching-standard\.md/.test(card.textContent) && /in Sources/.test(card.textContent),
+        you().innerHTML.slice(0, 400));
+  card.click();
+  await until(() => document.getElementById("srcView"), 3000);
+  check("...pressing it opens the document that was sent", /within 3 days/.test(($("srcView") || {}).textContent || ""),
+        (($("srcView") || {}).textContent || "no viewer").slice(0, 200));
+  if ($("svClose")) $("svClose").click();
+  you().querySelector(".cfhide").click();
+  const youMsg = chatThread().msgs.filter(m => m.who === "you").pop();
+  check("...Hide folds it to one line, kept with the message", you().querySelector(".cfs.min .cfmin") &&
+        /1 attached: patching-standard\.md/.test(you().textContent) && youMsg.filesMin === true);
+  chatPaint();
+  check("...and it stays folded when the conversation is drawn again", !!you().querySelector(".cfs.min"));
+  you().querySelector(".cfmin").click();
+  check("...and opens again", !!you().querySelector(".cfcard"));
+  /* a question saved before 5.9.3 did not note where its document went */
+  const oldMsg = { who:"you", text:"an older question", at:"2026-09-01T08:00:00.000Z",
+                   files:[{ name:"patching-standard.md", type:"text/markdown", size:2000 }] };
+  chatThread().msgs.push(oldMsg); chatPaint();
+  const oldCard = [...document.querySelectorAll("#chatLog .chb.you")].find(b => /an older question/.test(b.textContent)).querySelector(".cfcard");
+  check("a question sent before this version finds its document in Sources by its name", oldCard && /in Sources/.test(oldCard.textContent) &&
+        !oldCard.classList.contains("gone"), oldCard ? oldCard.outerHTML.slice(0, 300) : "no card");
+  chatThread().msgs.pop(); chatPaint();
+
+  /* a picture: a small copy is kept with the conversation */
+  const cv = document.createElement("canvas"); cv.width = 640; cv.height = 360;
+  const cg = cv.getContext("2d"); cg.fillStyle = "#1f4e5f"; cg.fillRect(0, 0, 640, 360); cg.fillStyle = "#fff"; cg.font = "48px sans-serif"; cg.fillText("ERROR 4098", 150, 200);
+  const png = await new Promise(r => cv.toBlob(r, "image/png"));
+  await chatAttach([new File([png], "error-screen.png", { type:"image/png" })]);
+  await until(() => CHAT.files.length && !CHAT.files[0].reading, 8000);
+  plan = req => ({ say:"That is error 4098." });
+  await ask("what is this error?");
+  const picCard = you().querySelector(".cfcard img");
+  const picMsg = chatThread().msgs.filter(m => m.who === "you").pop();
+  await until(() => picMsg.files[0].thumb, 5000);
+  check("a picture shows as a small picture on its card, and a small copy is kept", picCard && /^data:image\//.test(picCard.src) &&
+        /^data:image\/jpeg/.test(picMsg.files[0].thumb || "") && picMsg.files[0].thumb.length < 30000,
+        JSON.stringify({ card:!!picCard, thumb:(picMsg.files[0].thumb || "").length }));
+  you().querySelector(".cfcard").click();
+  await until(() => document.querySelector("#srcView .cfvimg img"), 3000);
+  check("...pressing it shows the picture that was sent", !!document.querySelector("#srcView .cfvimg img"));
+  if ($("svClose")) $("svClose").click();
+  await shot("10-file-cards");
 
   /* ── studying a guideline: a job, not a question - never held back; the
         drafts it proposes are checked instead ─────────────────────────── */

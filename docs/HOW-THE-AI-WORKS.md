@@ -349,10 +349,14 @@ this"* — when they did. Now only the line goes.
 - **Changing actions** (41 of the 62: raise a record, close one, set a due
   date…) are **shown to you one at a time and wait for your yes**. However
   confident the AI is, it cannot change your records by itself.
-- Under an answer about your documents: **Source** (click it to open the
+- Under an answer about your documents: **one short line** — the source, its
+  page and the confidence. Click it to open **Source** (click that to open the
   document at those lines), **Evidence** (the exact words), **Confidence**
-  (High, Medium, Not found, or None when held back), and a **Suggestion** kept
-  separate when the AI adds advice of its own.
+  (High, Medium, Not found, or None when held back) and what was searched. A
+  warning (a line taken out, an answer held back) is always on the short line.
+  A **Suggestion** is kept separate when the AI adds advice of its own.
+- Your own question shows each file you sent as a **card**: click it to see
+  what was sent, or **Hide** the cards to keep the conversation short.
 - Under every AI answer: the time it took, 👍 / 👎, **Retry**, and **Think
   harder** (asks the strong model).
 
@@ -479,7 +483,7 @@ longer grows as you use the app.
   conversation finds the same passages as the old one.
 - **Tests run the real app** in a browser with a *stand-in* AI that returns
   scripted replies, so every check is repeatable: `node --test` (28 tests) and
-  `node tests/e2e/run.js` (45 checks).
+  `node tests/e2e/run.js` (56 checks).
 
 ---
 

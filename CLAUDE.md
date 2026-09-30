@@ -83,13 +83,13 @@ A *workspace* is a folder the user picks (File System Access API):
 - Commit messages: clear summary + body; no model names in commits, code or
   docs. Do not open a pull request unless the owner asks.
 - Work so far is on branch `claude/chat-panel-pixel-art-gifs-d822hq`
-  (latest: 5.9.2). Follow the branch instructions of your own session.
+  (latest: 5.9.3). Follow the branch instructions of your own session.
 
 ## Testing
 
 ```
 node --test                                   # 28 unit tests (Sources, grounding, flow reply fields)
-node tests/e2e/run.js                         # the app in headless Chrome/Edge: 45 checks (CHROME=<path> to choose)
+node tests/e2e/run.js                         # the app in headless Chrome/Edge: 56 checks (CHROME=<path> to choose)
 node flow/check-prompt.js                     # after editing flow/prompt.txt ...
 python3 flow/embed-prompt.py                  # ... then copy it into flow.js (PROMPT_BUILTIN)
 node tests/fixtures/make-pdf.js               # regenerate the PDF fixtures
@@ -112,6 +112,18 @@ Also useful:
 
 ## Recent history (newest first)
 
+- **5.9.3** — A slimmer chat. The sources box under an answer
+  (`srcAnswerHtml`) starts folded to one line (`.srcsum`: document · page,
+  confidence, chevron); `srcToggle` opens it and stores `r.srcOpen` with the
+  answer; warnings stay on the line; `blocked` opens by default; the
+  suggestion stays outside. The "you" bubble shows each sent file as a card
+  (`chatFilesPaint`): kept docs open in `srcView` (`all:true` for whole text
+  docs), session files open in `chatFileView` from `CHAT.msgFiles[msg.at]`,
+  pictures keep a 200 px JPEG `thumb` on the message; **Hide** sets
+  `m.filesMin`. `srcKeepFromChat` now runs before `chatPush`, so the message
+  records `srcId`; older messages find their doc by file name
+  (`chatSrcByName`). Card classes are `cfcard/cfic/cftx/cfnm/cfmt` — `.mt`
+  and `.tx` are taken elsewhere in the stylesheet.
 - **5.9.2** — A right answer was hidden because of one line: asked about a
   (public, downloaded) password standard, the reply quoted the rule correctly
   but one line gave a figure no cited passage had, so the whole reply was
