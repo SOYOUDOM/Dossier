@@ -142,6 +142,8 @@ With the demo copied in you should immediately see:
 | `assist.js` | ~20 KB | optional | The ranking and briefing engine behind the **Assist** tab and the Insight cards. |
 | `flow.js` | ~22 KB | optional | Client for a Power Automate endpoint: builds the request, validates the reply, and owns the relay frame. |
 | `sources.js` | ~40 KB | optional | Answering from your runbooks and standards ([Sources](#answering-from-your-runbooks-and-standards-sources)): cuts a document into passages with page, lines and section, searches them, formats citations, and checks an answer's quotes and figures against what it cites. Pure JavaScript, tested under Node. Without it, questions go without passages, as before 5.9. |
+| `docs/HOW-THE-AI-WORKS.md` | ~42 KB | — | **How the assistant works, for anyone** — the journey of a question in eight steps, how it learns, how it stays fast, and a reusable blueprint and checklist for building a new AI assistant the same way. |
+| `docs/how-the-ai-works.html` | ~58 KB | — | The same guide as pictures: open it in any browser. Self-contained, nothing loaded from the internet. |
 | `tests/` | — | — | `node --test` runs the Sources and grounding tests; `node tests/e2e/run.js` runs the app in Chrome or Edge against the same scenarios; `tests/fixtures/` holds the sample documents (made up, no real policy). |
 | `flow/relay.html` | ~9 KB | optional | The **only** page allowed to touch the network. Sandboxed, holds no records, pinned to one origin. |
 | `flow/CONTRACT.md` | ~16 KB | — | What your flow receives and must return, generated from `flow.js`. |
@@ -1507,6 +1509,52 @@ testable on its own.
 ---
 
 ## 12. Asking through a Power Automate flow
+
+#### How does the assistant work, from my question to its answer?
+
+In eight steps, and only one of them is the AI:
+
+1. **Answer here?** Greetings, counts (*what's overdue?*), *what's new?* —
+   answered on your PC at once, with no AI.
+2. **Gather** — on your PC, only what this question needs: the best records
+   (with totals of all of them), matching notes, lessons, runbooks, past
+   fixes, and the passages of your documents in Sources.
+3. **Pack** — fill in the blanks of `flow/prompt.txt`.
+4. **Send** — through the one door, `flow/relay.html`, to your flow.
+5. **Think** — the AI model in your flow writes a reply in a fixed shape.
+6. **Check** — only allowed actions; every quote and figure against the
+   documents it cites; a line with a figure they do not state is taken out.
+7. **Show, and ask** — any change waits for your yes.
+8. **Learn** — thumbs down, lessons, notes, *How was it fixed?*, the daily look
+   back.
+
+The full explanation, for anyone (no programming needed), is
+`docs/HOW-THE-AI-WORKS.md`, and the same as pictures is
+`docs/how-the-ai-works.html` — open it in any browser.
+
+#### Does the AI learn? Is it retrained?
+
+It is never retrained, and it does not need to be. The model is the same every
+day; what grows is Resolv's notebook in your workspace — lessons, notes, how
+things were fixed, draft runbooks, corrections — and the right pages of it go
+with each question. You can read every line of it in Setup and delete any
+of it. Change the model and nothing learned is lost.
+
+#### Why is it fast, and why does it not get slower as I use it?
+
+Nearly all of the wait is the AI reading what it is sent, so Resolv sends
+less: it answers easy questions itself, chooses the data on your PC (about 6
+ms for 5,000 records, 2 ms to search 150 documents) instead of with a second
+AI call, sends the best 60 records and counts the rest, puts a limit on
+everything that grows, uses a fast model for chat and a strong one only for
+hard jobs, and makes at most one extra round trip. See *Fast and steady* in
+`docs/HOW-THE-AI-WORKS.md`.
+
+#### Can we build another assistant the same way?
+
+Yes: `docs/HOW-THE-AI-WORKS.md` Part 5 is the method without the Resolv
+details — nine parts, the order to build them, a checklist, and the mistakes
+Resolv made on the way.
 
 The local assistant ([§10](#10-the-assistant-chatjs)) answers from your own
 records with no network and no model. This is the other route, and it is the

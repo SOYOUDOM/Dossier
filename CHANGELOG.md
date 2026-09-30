@@ -61,6 +61,15 @@ not true. Now:
   get?*, *My PDF prints the same header on every page*.
 - Tests: 28 unit tests and 45 browser checks, with a made-up password
   standard laid out like a real one.
+- **How the assistant works, for anyone**: `docs/HOW-THE-AI-WORKS.md` - the
+  journey of a question in eight steps (with the password question as the
+  example), what goes with a question and why, how it learns without being
+  retrained, the ten rules that keep it fast and steady, and a reusable
+  blueprint and checklist for building a new AI assistant the same way.
+  `docs/how-the-ai-works.html` is the same as pictures, and works offline.
+  README: *How does the assistant work, from my question to its answer?*,
+  *Does the AI learn? Is it retrained?*, *Why is it fast?*, *Can we build
+  another assistant the same way?*
 
 ---
 

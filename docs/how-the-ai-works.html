@@ -1,0 +1,789 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Inside Resolv's Assistant</title>
+<style>
+/* Layout: one reading column (max 1080px) of sections; each section pairs a
+   short explanation with one diagram. Colour tells you WHERE a step runs:
+   teal = on your PC, amber = in your flow. Resolv's own palettes (Archive
+   light, Vault dark) and its Windows font stacks; nothing is loaded from the
+   internet, so the page works offline. */
+:root{
+  --bg:#EDEAE3; --paper:#FFFFFF; --paper-2:#FAF8F4; --rule:#DEDACF; --rule-hi:#C4BEAF;
+  --ink:#1C1B18; --ink-2:#5C574E; --ink-3:#8F8879;
+  --accent:#8B1E3F; --accent-soft:#F6E9EC;
+  --pc:#1F4E5F; --pc-soft:#E3EEF1;
+  --cloud:#A8620F; --cloud-soft:#F8EEDF; --on-cloud:#FFFFFF;
+  --good:#1F7A5C; --bad:#A31D3A; --bad-soft:#F8E4E8;
+  --shadow:0 1px 2px rgba(28,27,24,.06),0 10px 26px rgba(28,27,24,.07);
+  --f-display:"Bahnschrift","Aptos Display","Franklin Gothic Medium","Segoe UI",system-ui,-apple-system,sans-serif;
+  --f-ui:"Aptos","Segoe UI Variable Text","Segoe UI",system-ui,-apple-system,sans-serif;
+  --f-mono:"Cascadia Mono","Consolas","Lucida Console",ui-monospace,SFMono-Regular,monospace;
+  --r:12px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#131316; --paper:#1B1B20; --paper-2:#202028; --rule:#2E2E38; --rule-hi:#414150;
+    --ink:#E9E7E2; --ink-2:#A29D95; --ink-3:#7E7A88;
+    --accent:#D9506F; --accent-soft:rgba(217,80,111,.14);
+    --pc:#4FA3B8; --pc-soft:rgba(79,163,184,.14);
+    --cloud:#E0A34A; --cloud-soft:rgba(224,163,74,.14); --on-cloud:#1B1B20;
+    --good:#3FBF92; --bad:#E8556F; --bad-soft:rgba(232,85,111,.14);
+    --shadow:0 1px 2px rgba(0,0,0,.5),0 12px 30px rgba(0,0,0,.4);
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#131316; --paper:#1B1B20; --paper-2:#202028; --rule:#2E2E38; --rule-hi:#414150;
+  --ink:#E9E7E2; --ink-2:#A29D95; --ink-3:#7E7A88;
+  --accent:#D9506F; --accent-soft:rgba(217,80,111,.14);
+  --pc:#4FA3B8; --pc-soft:rgba(79,163,184,.14);
+  --cloud:#E0A34A; --cloud-soft:rgba(224,163,74,.14); --on-cloud:#1B1B20;
+  --good:#3FBF92; --bad:#E8556F; --bad-soft:rgba(232,85,111,.14);
+  --shadow:0 1px 2px rgba(0,0,0,.5),0 12px 30px rgba(0,0,0,.4);
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 var(--f-ui);-webkit-font-smoothing:antialiased}
+.wrap{max-width:1080px;margin:0 auto;padding-inline:20px;padding-block:0 64px}
+h1,h2,h3{font-family:var(--f-display);line-height:1.15;text-wrap:balance;margin:0}
+h1{font-size:clamp(2rem,5vw,3.1rem);font-weight:600;letter-spacing:-.01em}
+h2{font-size:clamp(1.45rem,3vw,1.9rem);font-weight:600}
+h3{font-size:1.08rem;font-weight:600}
+p{margin:0}
+a{color:var(--accent)}
+a:focus-visible,button:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
+code,.mono{font-family:var(--f-mono);font-size:.88em}
+.eyebrow{font:600 .74rem/1.2 var(--f-ui);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3)}
+.lead{font-size:1.1rem;color:var(--ink-2);max-width:62ch}
+.muted{color:var(--ink-2)}
+section{padding-block:56px 8px;scroll-margin-top:64px}
+.sechead{display:grid;gap:10px;margin-bottom:26px;max-width:70ch}
+.sechead p{color:var(--ink-2)}
+
+/* ── top bar ───────────────────────────────────────────────────── */
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:color-mix(in srgb,var(--bg) 88%,transparent);
+  backdrop-filter:blur(8px);border-bottom:1px solid var(--rule)}
+.bar .wrap{display:flex;align-items:center;gap:16px;padding-block:10px}
+.brand{font:700 1rem var(--f-display);letter-spacing:.02em;white-space:nowrap}
+.brand b{color:var(--accent)}
+.nav{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;min-width:0}
+.nav::-webkit-scrollbar{display:none}
+.nav a{flex:none;text-decoration:none;color:var(--ink-2);font-size:.86rem;padding:5px 11px;border-radius:999px;border:1px solid transparent}
+.nav a:hover{color:var(--ink);border-color:var(--rule-hi)}
+
+/* ── hero ──────────────────────────────────────────────────────── */
+.hero{padding-block:52px 10px;display:grid;gap:18px}
+.legend{display:flex;flex-wrap:wrap;gap:10px 18px;font-size:.88rem;color:var(--ink-2)}
+.dot{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:7px;vertical-align:-1px}
+.dot.pc{background:var(--pc)} .dot.cloud{background:var(--cloud)}
+.colleague{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;margin-top:10px}
+.panel{background:var(--paper);border:1px solid var(--rule);border-radius:var(--r);padding:20px 22px;box-shadow:var(--shadow);min-width:0}
+.panel h3{margin-bottom:10px}
+.panel ol,.panel ul{margin:0;padding-left:1.2em;display:grid;gap:6px}
+.panel li::marker{color:var(--ink-3)}
+.panel.lead-panel{border-top:3px solid var(--accent)}
+@media (max-width:720px){.colleague{grid-template-columns:1fr}}
+
+/* ── the journey: eight steps, snake on wide screens ───────────── */
+.flow{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:40px 34px;position:relative}
+.step{position:relative;background:var(--paper);border:1px solid var(--rule);border-radius:var(--r);padding:16px 16px 14px;
+  display:grid;gap:8px;align-content:start;min-width:0;box-shadow:var(--shadow);border-top:4px solid var(--pc)}
+.step.cloud{border-top-color:var(--cloud)}
+.step.both{border-top-color:transparent;background:linear-gradient(90deg,var(--pc) 0 50%,var(--cloud) 50% 100%) top/100% 4px no-repeat,var(--paper)}
+.num{font:700 .78rem var(--f-mono);color:var(--ink-3)}
+.step h3{font-size:1.05rem}
+.step p{font-size:.92rem;color:var(--ink-2)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:2px}
+.chip{font:600 .72rem/1 var(--f-ui);padding:5px 8px;border-radius:999px;background:var(--pc-soft);color:var(--pc);white-space:nowrap}
+.chip.cloud{background:var(--cloud-soft);color:var(--cloud)}
+.chip.plain{background:transparent;color:var(--ink-2);border:1px solid var(--rule-hi)}
+.side{font-size:.84rem;color:var(--ink-2);border-top:1px dashed var(--rule-hi);padding-top:8px}
+.side b{color:var(--good)}
+/* arrows between steps */
+.step::after{content:"";position:absolute;width:22px;height:14px;background:var(--ink-3);
+  -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 22 14'%3E%3Cpath d='M0 7h18M13 1l6 6-6 6' fill='none' stroke='black' stroke-width='2'/%3E%3C/svg%3E") center/contain no-repeat;
+          mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 22 14'%3E%3Cpath d='M0 7h18M13 1l6 6-6 6' fill='none' stroke='black' stroke-width='2'/%3E%3C/svg%3E") center/contain no-repeat}
+@media (min-width:900px){
+  .s1{grid-column:1;grid-row:1}.s2{grid-column:2;grid-row:1}.s3{grid-column:3;grid-row:1}.s4{grid-column:4;grid-row:1}
+  .s5{grid-column:4;grid-row:2}.s6{grid-column:3;grid-row:2}.s7{grid-column:2;grid-row:2}.s8{grid-column:1;grid-row:2}
+  .s1::after,.s2::after,.s3::after{right:-28px;top:50%;transform:translateY(-50%)}
+  .s4::after{left:50%;bottom:-30px;transform:translateX(-50%) rotate(90deg)}
+  .s5::after,.s6::after,.s7::after{left:-28px;top:50%;transform:translateY(-50%) rotate(180deg)}
+  .s8::after{left:50%;top:-30px;transform:translateX(-50%) rotate(-90deg)}
+}
+@media (min-width:560px) and (max-width:899.98px){
+  .flow{grid-template-columns:repeat(2,minmax(0,1fr));gap:36px 30px}
+  .s1{grid-column:1;grid-row:1}.s2{grid-column:2;grid-row:1}
+  .s3{grid-column:2;grid-row:2}.s4{grid-column:1;grid-row:2}
+  .s5{grid-column:1;grid-row:3}.s6{grid-column:2;grid-row:3}
+  .s7{grid-column:2;grid-row:4}.s8{grid-column:1;grid-row:4}
+  .s1::after,.s5::after{right:-26px;top:50%;transform:translateY(-50%)}
+  .s3::after,.s7::after{left:-26px;top:50%;transform:translateY(-50%) rotate(180deg)}
+  .s2::after,.s6::after{left:50%;bottom:-28px;transform:translateX(-50%) rotate(90deg)}
+  .s4::after{left:50%;bottom:-28px;transform:translateX(-50%) rotate(90deg)}
+  .s8::after{display:none}
+}
+@media (max-width:559.98px){
+  .flow{grid-template-columns:1fr;gap:30px}
+  .step::after{left:50%;bottom:-24px;transform:translateX(-50%) rotate(90deg)}
+  .s8::after{display:none}
+}
+.loopnote{margin-top:18px;font-size:.92rem;color:var(--ink-2);display:flex;gap:10px;align-items:center}
+.loopnote svg{flex:none}
+
+/* ── where the time goes (drawn to scale) ─────────────────────── */
+.timebox{margin-top:28px}
+.tbar{display:flex;height:34px;border-radius:8px;overflow:hidden;border:1px solid var(--rule-hi);background:var(--paper)}
+.tbar .pcpart{background:var(--pc);flex:0 0 2px}
+.tbar .cloudpart{background:var(--cloud);flex:1;display:flex;align-items:center;padding-left:12px;color:var(--on-cloud);font:600 .85rem var(--f-ui);min-width:0}
+.tlabels{display:flex;justify-content:space-between;gap:12px;font-size:.84rem;color:var(--ink-2);margin-top:8px;flex-wrap:wrap}
+.tlabels b{color:var(--pc)} .tlabels i{font-style:normal;color:var(--cloud);font-weight:600}
+
+/* ── the example question ──────────────────────────────────────── */
+.q{font:600 clamp(1.1rem,2.6vw,1.35rem)/1.35 var(--f-display);background:var(--paper);border:1px solid var(--rule);
+  border-left:4px solid var(--accent);border-radius:var(--r);padding:16px 20px;max-width:680px}
+.q small{display:block;font:400 .85rem var(--f-ui);color:var(--ink-3);margin-top:6px}
+.trail{list-style:none;margin:22px 0 0;padding:0;display:grid;gap:0;max-width:820px}
+.trail li{display:grid;grid-template-columns:44px minmax(0,1fr);gap:14px;position:relative;padding-bottom:18px}
+.trail li::before{content:"";position:absolute;left:21px;top:34px;bottom:0;width:2px;background:var(--rule-hi)}
+.trail li:last-child::before{display:none}
+.trail .n{width:44px;height:34px;border-radius:9px;display:grid;place-items:center;font:700 .85rem var(--f-mono);
+  background:var(--pc-soft);color:var(--pc)}
+.trail .n.cloud{background:var(--cloud-soft);color:var(--cloud)}
+.trail h3{font-size:1rem;margin-top:6px}
+.trail p{font-size:.93rem;color:var(--ink-2);margin-top:3px}
+
+/* ── the folder ─────────────────────────────────────────────────── */
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px}
+.tile{background:var(--paper);border:1px solid var(--rule);border-radius:10px;padding:14px 16px;display:grid;gap:4px;align-content:start}
+.tile .big{font:600 1.7rem/1 var(--f-display);color:var(--accent);font-variant-numeric:tabular-nums}
+.tile .what{font-weight:600}
+.tile .why{font-size:.84rem;color:var(--ink-2)}
+.callout{margin-top:18px;background:var(--accent-soft);border-radius:10px;padding:14px 18px;max-width:780px}
+
+/* ── documents ─────────────────────────────────────────────────── */
+.pipe{display:flex;flex-wrap:wrap;align-items:stretch;gap:10px}
+.stage{flex:1 1 170px;min-width:0;background:var(--paper);border:1px solid var(--rule);border-radius:10px;padding:14px;display:grid;gap:8px;align-content:start}
+.stage h3{font-size:.98rem}
+.stage p{font-size:.86rem;color:var(--ink-2)}
+.arrow{flex:0 0 auto;align-self:center;color:var(--ink-3);font:700 1.2rem var(--f-mono)}
+@media (max-width:640px){.arrow{flex-basis:100%;text-align:center;transform:rotate(90deg);height:18px}}
+.cards{display:grid;gap:5px}
+.card{font:500 .74rem/1.35 var(--f-mono);overflow-wrap:anywhere;background:var(--paper-2);border:1px solid var(--rule-hi);border-radius:6px;padding:5px 7px;color:var(--ink-2)}
+.card b{color:var(--ink)}
+.card.hit{border-color:var(--pc);background:var(--pc-soft);color:var(--ink)}
+.card.cut{text-decoration:line-through;opacity:.6}
+.dim{opacity:.55}
+
+/* ── the check (a mock answer) ──────────────────────────────────── */
+.checkgrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px;align-items:start}
+@media (max-width:820px){.checkgrid{grid-template-columns:1fr}}
+.reply{background:var(--paper);border:1px solid var(--rule);border-radius:var(--r);padding:16px 18px;display:grid;gap:10px;box-shadow:var(--shadow)}
+.line{font-size:.93rem;padding:8px 10px;border-radius:8px;background:var(--paper-2);display:grid;gap:6px}
+.line .tag{font:600 .7rem/1 var(--f-ui);letter-spacing:.06em;text-transform:uppercase}
+.line.ok .tag{color:var(--good)}
+.line.out{background:var(--bad-soft)}
+.line.out span.t{text-decoration:line-through;text-decoration-thickness:1.5px;color:var(--ink-2)}
+.line.out .tag{color:var(--bad)}
+.fig{font-family:var(--f-mono);font-size:.85em;padding:1px 5px;border-radius:5px;background:var(--cloud-soft);color:var(--cloud)}
+.answer{background:var(--paper);border:1px solid var(--rule);border-radius:var(--r);padding:16px 18px;box-shadow:var(--shadow);display:grid;gap:12px}
+.srcbox{border:1px solid color-mix(in srgb,var(--cloud) 55%,transparent);border-radius:10px;padding:12px 14px;display:grid;gap:8px;font-size:.86rem}
+.srcbox .head{font-weight:700;color:var(--cloud)}
+.row{display:grid;grid-template-columns:118px minmax(0,1fr);gap:10px}
+@media (max-width:420px){.row{grid-template-columns:1fr;gap:2px}}
+.row > b{font:600 .7rem/1.6 var(--f-ui);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+.cite{font-family:var(--f-mono);font-size:.8rem;text-decoration:underline;text-decoration-color:var(--rule-hi);text-underline-offset:3px;overflow-wrap:anywhere}
+.warn{background:var(--cloud-soft);border-radius:8px;padding:8px 10px}
+.rules{display:grid;gap:8px;margin-top:6px}
+.rules li{margin-left:1.1em}
+
+/* ── learning loop ─────────────────────────────────────────────── */
+.learn{display:grid;grid-template-columns:minmax(0,460px) minmax(0,1fr);gap:28px;align-items:center}
+@media (max-width:860px){.learn{grid-template-columns:1fr}}
+.loop svg{width:100%;height:auto;display:block;max-width:460px;margin:0 auto}
+.lp-g{font-family:var(--f-display)}
+.lp-ring{fill:none;stroke:var(--rule-hi)} .lp-arc{fill:none;stroke:var(--ink-3)} .lp-head{fill:var(--ink-3)}
+.lp-box{fill:var(--paper);stroke:var(--pc)} .lp-box.cloud{stroke:var(--cloud)}
+.lp-t{fill:var(--ink)} .lp-s{fill:var(--ink-2)} .lp-core{fill:var(--accent-soft);stroke:var(--accent)} .lp-core-t{fill:var(--accent)} .lp-core-h{fill:var(--accent)} .lp-in{fill:none;stroke:var(--accent)}
+.ways{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}
+.way{background:var(--paper);border:1px solid var(--rule);border-radius:10px;padding:12px 14px;display:grid;gap:4px;align-content:start}
+.way b{font-size:.95rem}
+.way span{font-size:.85rem;color:var(--ink-2)}
+.never{margin-top:16px;display:grid;gap:6px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+.never div{border-left:3px solid var(--good);padding:4px 0 4px 12px;font-size:.9rem;color:var(--ink-2)}
+.never b{color:var(--ink)}
+
+/* ── rules for speed ───────────────────────────────────────────── */
+.rulegrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
+.rule{background:var(--paper);border:1px solid var(--rule);border-radius:10px;padding:14px 16px;display:grid;gap:6px;align-content:start}
+.rule h3{font-size:.98rem}
+.rule p{font-size:.88rem;color:var(--ink-2)}
+.rule .in{font-size:.8rem;color:var(--pc);font-weight:600}
+
+/* ── blueprint ─────────────────────────────────────────────────── */
+.bp{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:24px;align-items:start}
+@media (max-width:860px){.bp{grid-template-columns:1fr}}
+.parts{list-style:none;margin:0;padding:0;display:grid;gap:8px;counter-reset:p}
+.parts li{counter-increment:p;display:grid;grid-template-columns:36px minmax(0,1fr);gap:12px;align-items:start;background:var(--paper);
+  border:1px solid var(--rule);border-radius:10px;padding:10px 12px}
+.parts li::before{content:counter(p);font:700 .85rem/34px var(--f-mono);text-align:center;border-radius:8px;background:var(--accent-soft);color:var(--accent);height:34px}
+.parts b{display:block;font-size:.95rem}
+.parts span{font-size:.85rem;color:var(--ink-2)}
+.parts .fb{border-style:dashed}
+.checklist{background:var(--paper);border:1px solid var(--rule);border-radius:var(--r);padding:16px 18px;display:grid;gap:14px}
+.checklist h3{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.cl-group{display:grid;gap:6px}
+.cl-group .eyebrow{margin-bottom:2px}
+.cl-item{display:flex;gap:9px;align-items:flex-start;font-size:.9rem;cursor:pointer}
+.cl-item input{margin-top:4px;accent-color:var(--accent);flex:none}
+.btn{font:600 .82rem var(--f-ui);padding:7px 12px;border-radius:8px;border:1px solid var(--rule-hi);background:var(--paper-2);color:var(--ink);cursor:pointer}
+.btn:hover{border-color:var(--accent)}
+.progress{font-size:.82rem;color:var(--ink-2);font-variant-numeric:tabular-nums}
+
+/* ── mistakes, words, files ────────────────────────────────────── */
+.tablewrap{overflow-x:auto;border:1px solid var(--rule);border-radius:var(--r);background:var(--paper)}
+table{border-collapse:collapse;width:100%;font-size:.9rem;min-width:620px}
+th,td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font:600 .72rem/1.3 var(--f-ui);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);background:var(--paper-2)}
+tr:last-child td{border-bottom:0}
+td:first-child{font-weight:600}
+.words{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px}
+.word{background:var(--paper);border:1px solid var(--rule);border-radius:10px;padding:12px 14px}
+.word dt{font-weight:700}
+.word dd{margin:4px 0 0;font-size:.88rem;color:var(--ink-2)}
+footer{margin-top:56px;padding-top:20px;border-top:1px solid var(--rule);font-size:.88rem;color:var(--ink-2);display:grid;gap:6px}
+@media (prefers-reduced-motion:no-preference){.step,.tile,.way,.rule{transition:transform .2s ease,border-color .2s ease}
+  .step:hover,.tile:hover,.way:hover,.rule:hover{transform:translateY(-2px);border-color:var(--rule-hi)}}
+</style>
+</head>
+<body>
+
+<header class="bar">
+  <div class="wrap">
+    <div class="brand">Resolv <b>AI</b></div>
+    <nav class="nav" aria-label="Sections">
+      <a href="#idea">The idea</a>
+      <a href="#journey">8 steps</a>
+      <a href="#example">One question</a>
+      <a href="#folder">The folder</a>
+      <a href="#documents">Documents</a>
+      <a href="#check">The check</a>
+      <a href="#learn">Learning</a>
+      <a href="#fast">Fast &amp; steady</a>
+      <a href="#blueprint">Build your own</a>
+      <a href="#words">Words</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+
+<!-- ═══ HERO ═══════════════════════════════════════════════════════ -->
+<section class="hero" id="idea" aria-labelledby="t-idea">
+  <p class="eyebrow">A guide for everyone · Resolv 5.9.2</p>
+  <h1 id="t-idea">How Resolv's assistant thinks, checks and learns</h1>
+  <p class="lead">The AI model is clever, but it knows nothing about your work, forgets everything after each question,
+    and sometimes guesses. Resolv does not try to change the model. It prepares the right papers for each question,
+    checks the answer before you see it, and keeps a notebook for next time.</p>
+  <div class="legend" aria-label="Colour key">
+    <span><span class="dot pc"></span>runs on your PC: instant, private</span>
+    <span><span class="dot cloud"></span>runs in your Power Automate flow: where the AI thinks</span>
+  </div>
+  <div class="colleague">
+    <div class="panel">
+      <p class="eyebrow">The AI model is like a brilliant new colleague</p>
+      <h3>…on their first day, every day</h3>
+      <ol>
+        <li><b>Knows nothing about your work.</b> Not your records, systems, runbooks or standards.</li>
+        <li><b>Forgets everything after each question.</b> Every question is day one again.</li>
+        <li><b>Sometimes answers wrongly, with confidence.</b> When it does not know, it may fill the gap.</li>
+      </ol>
+    </div>
+    <div class="panel lead-panel">
+      <p class="eyebrow">So Resolv acts like a good team lead</p>
+      <h3>Three jobs, around every question</h3>
+      <ol>
+        <li><b>Prepare a small folder</b> with only the papers this question needs.</li>
+        <li><b>Check the work</b> before you see it: shape, actions, and every figure against the documents.</li>
+        <li><b>Keep a notebook</b> of what it learns, and put the right pages in the next folder.</li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ JOURNEY ════════════════════════════════════════════════════ -->
+<section id="journey" aria-labelledby="t-journey">
+  <div class="sechead">
+    <p class="eyebrow">The whole flow</p>
+    <h2 id="t-journey">The journey of one question, in eight steps</h2>
+    <p>Follow the arrows. Teal steps happen on your PC in milliseconds. The amber step is your flow in Power Automate,
+      where the AI reads and writes. Almost all of the waiting happens there.</p>
+  </div>
+  <ol class="flow">
+    <li class="step s1">
+      <span class="num">STEP 1</span>
+      <h3>Answer here?</h3>
+      <p>Can Resolv answer by itself? Greetings, counts like "what's overdue?", "what's new?".</p>
+      <p class="side"><b>Yes:</b> answered at once, with no AI and no waiting.</p>
+      <div class="chips"><span class="chip">your PC</span><span class="chip plain">milliseconds</span></div>
+    </li>
+    <li class="step s2">
+      <span class="num">STEP 2</span>
+      <h3>Gather</h3>
+      <p>Choose only what this question needs: the best records, notes, runbooks, past fixes, and the matching passages of your documents.</p>
+      <div class="chips"><span class="chip">your PC</span><span class="chip plain">2–6 ms</span></div>
+    </li>
+    <li class="step s3">
+      <span class="num">STEP 3</span>
+      <h3>Pack</h3>
+      <p>Fill in the blanks of one text file, the prompt: the rules, worked examples, your question and what was gathered.</p>
+      <div class="chips"><span class="chip">your PC</span><span class="chip plain">1–2 ms</span></div>
+    </li>
+    <li class="step s4 both">
+      <span class="num">STEP 4</span>
+      <h3>Send through one door</h3>
+      <p>The app itself cannot reach the internet. One small page, the relay, can reach exactly one address: your flow.</p>
+      <div class="chips"><span class="chip">your PC</span><span class="chip cloud">your flow</span></div>
+    </li>
+    <li class="step s5 cloud">
+      <span class="num">STEP 5</span>
+      <h3>Think</h3>
+      <p>The AI model reads everything and writes a reply in a fixed shape (JSON): the answer, its sources, any actions.</p>
+      <div class="chips"><span class="chip cloud">your flow</span><span class="chip plain">usually 5–10 s</span></div>
+    </li>
+    <li class="step s6">
+      <span class="num">STEP 6</span>
+      <h3>Check</h3>
+      <p>Right shape? Only allowed actions? Every quote really in the document? Every figure in a passage it cites? A bad line is taken out.</p>
+      <div class="chips"><span class="chip">your PC</span><span class="chip plain">milliseconds</span></div>
+    </li>
+    <li class="step s7">
+      <span class="num">STEP 7</span>
+      <h3>Show, and ask</h3>
+      <p>The answer, with Source, Evidence and Confidence. Any change to your records waits for your "yes", one at a time.</p>
+      <div class="chips"><span class="chip">your PC</span><span class="chip plain">at once</span></div>
+    </li>
+    <li class="step s8">
+      <span class="num">STEP 8</span>
+      <h3>Learn</h3>
+      <p>Thumbs up or down, lessons, notes, "How was it fixed?", the daily look back. Kept in your workspace for the next question.</p>
+      <div class="chips"><span class="chip">your PC</span><span class="chip plain">for next time</span></div>
+    </li>
+  </ol>
+  <p class="loopnote">
+    <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.3-5.6M4 4v4h4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    Then the next question starts at step 1 again, with a better notebook.
+  </p>
+
+  <div class="timebox" aria-labelledby="t-time">
+    <h3 id="t-time" style="margin-bottom:10px">Where the time goes, drawn to scale</h3>
+    <div class="tbar" role="img" aria-label="Of a typical answer of about 7 seconds, the steps on your PC take about 0.01 seconds and the flow takes the rest.">
+      <div class="pcpart"></div>
+      <div class="cloudpart">the flow and the AI model: a typical 7 s</div>
+    </div>
+    <div class="tlabels">
+      <span><b>your PC, all steps together: about 0.01 s</b> (the thin teal line)</span>
+      <span><i>the flow</i>: nearly all of the wait</span>
+    </div>
+    <p class="muted" style="margin-top:10px;max-width:70ch">That is why the biggest speed wins come from sending less,
+      and from not calling the AI at all when it is not needed.</p>
+  </div>
+</section>
+
+<!-- ═══ ONE QUESTION ═══════════════════════════════════════════════ -->
+<section id="example" aria-labelledby="t-example">
+  <div class="sechead">
+    <p class="eyebrow">A real example</p>
+    <h2 id="t-example">Follow one question from start to finish</h2>
+    <p>It was typed with a spelling mistake, exactly like this. The workspace had a 17-page password standard (a PDF) in Library → Sources.</p>
+  </div>
+  <p class="q">"what is the stardard password should be?"<small>Typed by a real user. The typo is kept on purpose: real questions have typos.</small></p>
+  <ol class="trail">
+    <li><span class="n">1</span><div><h3>Answer here? No.</h3><p>It asks what a standard says, so the AI is needed.</p></div></li>
+    <li><span class="n">2</span><div><h3>Gather: 1 document searched, 9 passages chosen</h3>
+      <p>"stardard" was read as "standard". The passages that set rules came first, among them the user-account rule
+      (section CSP-PWD-02, pages 8 and 9) and the local-administrator rule (CSP-PWD-04, page 10). The same header printed on
+      every page (VERSION, DATE, CLASSIFICATION) was left out.</p></div></li>
+    <li><span class="n">3</span><div><h3>Pack</h3><p>The passages went into the <code>{sources}</code> blank of the prompt, labelled S1 to S9, each with its page, lines and section.</p></div></li>
+    <li><span class="n cloud">4–5</span><div><h3>Send and think</h3><p>The flow ran the AI model. Suppose it replied like the answer that caused the trouble: the right rule, citing S4 and S5, plus two extra lines.</p></div></li>
+    <li><span class="n">6</span><div><h3>Check: 2 lines taken out</h3><p>One extra line said administrators change their password "every 30 days" but cited no passage for it.
+      The other said "every 90 days", which no passage says anywhere. Both lines are taken out. The rest is supported.</p></div></li>
+    <li><span class="n">7</span><div><h3>Show</h3><p>The user-account answer, with its Source and Evidence, Confidence Medium, and a note that 2 lines were taken out.
+      "Figure seen in" links to page 10, where the 30 days really is.</p></div></li>
+    <li><span class="n">8</span><div><h3>Learn</h3><p>If the answer had been wrong, a thumbs down with the right line would be kept as a correction and as a check to re-run later.</p></div></li>
+  </ol>
+  <p class="callout">Before version 5.9.2, lines like those made Resolv hide the whole answer and say "the documents do not specify this",
+    when they did. The fix: take out only the line, and say so.</p>
+</section>
+
+<!-- ═══ THE FOLDER ═════════════════════════════════════════════════ -->
+<section id="folder" aria-labelledby="t-folder">
+  <div class="sechead">
+    <p class="eyebrow">Step 2 in detail</p>
+    <h2 id="t-folder">What goes into the folder</h2>
+    <p>The model reads every word it is sent before it starts to answer. Too much, and every answer is slow. The wrong things, and the answer is wrong.
+      So Resolv chooses on your PC, and puts a limit on everything that grows.</p>
+  </div>
+  <div class="tiles">
+    <div class="tile"><span class="big">60</span><span class="what">records</span><span class="why">the ones that best match the question, plus totals of all of them, so "how many?" stays right</span></div>
+    <div class="tile"><span class="big">10</span><span class="what">notes you taught it</span><span class="why">the ones that match, in full; the rest by title only</span></div>
+    <div class="tile"><span class="big">30</span><span class="what">lessons about you</span><span class="why">the newest, plus the corrections that match this question</span></div>
+    <div class="tile"><span class="big">3</span><span class="what">runbooks</span><span class="why">the ones that match, in full; the rest as a short index</span></div>
+    <div class="tile"><span class="big">3</span><span class="what">past fixes</span><span class="why">closed records most like this question, with how each was fixed</span></div>
+    <div class="tile"><span class="big">3</span><span class="what">system profiles</span><span class="why">for the systems in play</span></div>
+    <div class="tile"><span class="big">14,000</span><span class="what">characters of documents</span><span class="why">the best passages from Library → Sources, and their neighbours</span></div>
+    <div class="tile"><span class="big">8</span><span class="what">recent messages</span><span class="why">each cut to 1,200 characters, plus a short running summary</span></div>
+    <div class="tile"><span class="big">30</span><span class="what">days of incidents</span><span class="why">a summary of the recent incident history</span></div>
+    <div class="tile"><span class="big">62</span><span class="what">allowed actions</span><span class="why">the only things it may ask Resolv to do; 41 of them change something and always ask you first</span></div>
+  </div>
+  <p class="callout">Also in the folder: today's date, the next working day and holidays (dates are where AI most often goes wrong),
+    the record you have open, and any file you attached. Resolv shows you the exact bytes before they go: Menu → Setup → Ask through Power Automate → Preview.</p>
+</section>
+
+<!-- ═══ DOCUMENTS ══════════════════════════════════════════════════ -->
+<section id="documents" aria-labelledby="t-docs">
+  <div class="sechead">
+    <p class="eyebrow">How the right page of a document is found</p>
+    <h2 id="t-docs">Index cards, and a very fast librarian</h2>
+    <p>A document is read once, when you add it. Every question after that is a search over small cards, on your PC,
+      in about 2 milliseconds. No AI chooses the cards: a chooser would have to read everything first.</p>
+  </div>
+  <div class="pipe" role="group" aria-label="From document to labelled passages">
+    <div class="stage">
+      <h3>Your document</h3>
+      <p>PDF, Word, Markdown or text. Kept whole in the workspace folder (<code>sources/</code>).</p>
+      <div class="cards" aria-hidden="true">
+        <div class="card cut">VERSION: 1.0 · DATE: 26/01/2023</div>
+        <div class="card cut">CLASSIFICATION : OFFICIAL</div>
+        <div class="card">CSP-PWD-02 … Minimum Length: 17 characters …</div>
+      </div>
+      <p class="dim" style="font-size:.78rem">Struck out: the header printed on every page, left out.</p>
+    </div>
+    <span class="arrow" aria-hidden="true">→</span>
+    <div class="stage">
+      <h3>Cut into cards</h3>
+      <p>About 1,100 characters each, never across a page. Each card knows its page, lines and section.</p>
+      <div class="cards" aria-hidden="true">
+        <div class="card"><b>p8</b> · lines 31–62<br>CSP-PWD-02</div>
+        <div class="card"><b>p9</b> · lines 8–41<br>CSP-PWD-02</div>
+        <div class="card"><b>p10</b> · lines 32–71<br>CSP-PWD-04</div>
+        <div class="card"><b>p16</b> · lines 8–28<br>CSP-PWD-13</div>
+      </div>
+    </div>
+    <span class="arrow" aria-hidden="true">→</span>
+    <div class="stage">
+      <h3>Search, every question</h3>
+      <p>Rare words count more. Headings count more. A typo is read as the word the documents use. Cards that set a rule come first.</p>
+      <div class="cards" aria-hidden="true">
+        <div class="card">"stardard" → <b>"standard"</b></div>
+        <div class="card hit">sets a rule: "Minimum", "must", "17 characters"</div>
+        <div class="card dim">only talks about passwords</div>
+      </div>
+    </div>
+    <span class="arrow" aria-hidden="true">→</span>
+    <div class="stage">
+      <h3>Labelled, and sent</h3>
+      <p>The best cards and their neighbours, up to 14,000 characters, labelled for the AI to cite.</p>
+      <div class="cards" aria-hidden="true">
+        <div class="card hit"><b>S4</b> p8 · CSP-PWD-02</div>
+        <div class="card hit"><b>S5</b> p9 · CSP-PWD-02</div>
+        <div class="card"><b>S7</b> p10 · CSP-PWD-04</div>
+        <div class="card dim">… S1 to S9</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ THE CHECK ══════════════════════════════════════════════════ -->
+<section id="check" aria-labelledby="t-check">
+  <div class="sechead">
+    <p class="eyebrow">Step 6 in detail</p>
+    <h2 id="t-check">Nothing the AI sends is trusted until it is checked</h2>
+    <p>A figure is a number that makes a rule: a time in days or hours, a percentage, a priority or severity, a score.
+      Every figure in an answer about your documents must be written in a passage the answer cites.</p>
+  </div>
+  <div class="checkgrid">
+    <div class="reply" aria-label="What the AI replied, and what the check found">
+      <p class="eyebrow">What the AI replied (an example of the kind of reply that caused trouble)</p>
+      <div class="line ok"><span class="tag">✓ supported by S4</span><span class="t">For a user account: a passphrase of at least 17 characters, three or more unrelated words joined by hyphens.</span></div>
+      <div class="line ok"><span class="tag">✓ supported by S5</span><span class="t">If a passphrase is not possible: a password of at least 10 characters with three kinds of character.</span></div>
+      <div class="line out"><span class="tag">✗ taken out: cites no passage with this figure</span><span class="t">For local administrators the password is changed every <span class="fig">30 days</span>.</span></div>
+      <div class="line out"><span class="tag">✗ taken out: in no passage at all</span><span class="t">Passwords should also be changed every <span class="fig">90 days</span>.</span></div>
+    </div>
+    <div class="answer">
+      <p class="eyebrow">What you see</p>
+      <p>For a user account the standard asks for a passphrase of at least 17 characters: three or more unrelated words joined by hyphens.
+        If a passphrase is not possible, a password of at least 10 characters with three kinds of character is allowed.</p>
+      <div class="srcbox">
+        <div class="head">Part of the answer was taken out</div>
+        <div class="row"><b>Source</b><span class="cite">[Source: Password Standard v1, version 1.0, page 8, line 38, section "CSP-PWD-02"]</span></div>
+        <div class="row"><b>Evidence</b><span><i>"Minimum Length: 17 characters"</i> <span class="muted mono">S4</span></span></div>
+        <div class="row"><b>Confidence</b><span style="color:var(--cloud)">Medium: what is left is supported by the source</span></div>
+        <div class="warn">Resolv took out 2 lines of this answer: each gave a figure that no passage it cited contains.</div>
+        <div class="row"><b>Figure seen in</b><span class="cite">[Source: …, page 10, line 40, section "CSP-PWD-04"]</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="panel" style="margin-top:18px">
+    <h3>Everything the check looks at, in order</h3>
+    <ol class="rules">
+      <li><b>The shape.</b> The reply must be JSON. A short plain-text reply is shown as plain text; anything else unusable is dropped, with a reason.</li>
+      <li><b>The actions.</b> Only the 62 in Resolv's own list, each with the right details. Anything else is refused by name.</li>
+      <li><b>A failed flow.</b> If the flow's safety net answered instead of the AI, Resolv asks once more with only the essentials.</li>
+      <li><b>More records.</b> The AI may ask for more records (<code>needRecords</code>). Resolv finds them on your PC and asks once more.</li>
+      <li><b>The documents.</b> Every quote must be in its passage, word for word. A line with an unsupported figure is taken out.
+        Only if nothing useful is left is the whole reply held back, and then Resolv says so honestly and shows what the passages do say.</li>
+    </ol>
+  </div>
+</section>
+
+<!-- ═══ LEARNING ═══════════════════════════════════════════════════ -->
+<section id="learn" aria-labelledby="t-learn">
+  <div class="sechead">
+    <p class="eyebrow">Step 8 in detail</p>
+    <h2 id="t-learn">How it learns, when the model never changes</h2>
+    <p>People imagine an AI learning by changing its brain. That does not happen here, and it does not need to.
+      What changes is the notebook in your workspace, and which pages of it go into the next folder.</p>
+  </div>
+  <div class="learn">
+    <div class="loop">
+      <svg viewBox="0 0 460 460" role="img" aria-labelledby="loop-t loop-d">
+        <title id="loop-t">The learning loop</title>
+        <desc id="loop-d">You ask. Resolv gathers pages from the notebook. The model answers. You react, and your reactions are written into the notebook in the middle. Then the next question. The model never changes; the notebook grows.</desc>
+        <defs>
+          <marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0 0L10 5L0 10z" class="lp-head"/>
+          </marker>
+          <marker id="ahn" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+            <path d="M0 0L10 5L0 10z" class="lp-core-h"/>
+          </marker>
+        </defs>
+        <circle cx="230" cy="230" r="150" class="lp-ring" stroke-width="2" stroke-dasharray="3 7"/>
+        <path d="M322.4 111.8 A150 150 0 0 1 374.2 188.7" class="lp-arc" stroke-width="2.4" marker-end="url(#ah)"/>
+        <path d="M374.2 271.3 A150 150 0 0 1 322.4 348.2" class="lp-arc" stroke-width="2.4" marker-end="url(#ah)"/>
+        <path d="M137.6 348.2 A150 150 0 0 1 85.8 271.3" class="lp-arc" stroke-width="2.4" marker-end="url(#ah)"/>
+        <path d="M85.8 188.7 A150 150 0 0 1 137.6 111.8" class="lp-arc" stroke-width="2.4" marker-end="url(#ah)"/>
+        <path d="M146 230 H163" class="lp-in" stroke-width="2.4" marker-end="url(#ahn)"/>
+        <path d="M297 230 H313" class="lp-in" stroke-width="2.4" marker-end="url(#ahn)"/>
+        <g class="lp-g" text-anchor="middle">
+          <rect x="150" y="50" width="160" height="58" rx="12" class="lp-box" stroke-width="2"/>
+          <text x="230" y="75" font-size="17" font-weight="600" class="lp-t">You ask</text>
+          <text x="230" y="96" font-size="13.5" class="lp-s">a question</text>
+          <rect x="316" y="201" width="138" height="58" rx="12" class="lp-box" stroke-width="2"/>
+          <text x="385" y="226" font-size="17" font-weight="600" class="lp-t">Gather</text>
+          <text x="385" y="247" font-size="13.5" class="lp-s">notebook pages</text>
+          <rect x="150" y="352" width="160" height="58" rx="12" class="lp-box cloud" stroke-width="2"/>
+          <text x="230" y="377" font-size="17" font-weight="600" class="lp-t">Model answers</text>
+          <text x="230" y="398" font-size="13.5" class="lp-s">in your flow</text>
+          <rect x="6" y="201" width="138" height="58" rx="12" class="lp-box" stroke-width="2"/>
+          <text x="75" y="226" font-size="17" font-weight="600" class="lp-t">You react</text>
+          <text x="75" y="247" font-size="13.5" class="lp-s">👍 👎 fixes</text>
+          <circle cx="230" cy="230" r="64" class="lp-core" stroke-width="2"/>
+          <text x="230" y="214" font-size="13.5" font-weight="700" class="lp-core-t">NOTEBOOK</text>
+          <text x="230" y="234" font-size="12" class="lp-t">lessons · notes</text>
+          <text x="230" y="251" font-size="12" class="lp-t">fixes · runbooks</text>
+          <text x="230" y="268" font-size="12" class="lp-t">corrections</text>
+        </g>
+      </svg>
+      <p class="muted" style="text-align:center;font-size:.86rem;margin-top:6px">Your reactions go into the notebook; "Gather" takes pages from it.<br>The model is the same every day. The notebook grows.</p>
+    </div>
+    <div>
+      <div class="ways">
+        <div class="way"><b>👎 with the right answer</b><span>Kept as a correction that travels with similar questions, and as a check you can re-run: PASS or FAIL.</span></div>
+        <div class="way"><b>Lessons</b><span>One line each: your style, a preference, a habit, a person, a system, a gap. The 30 newest travel.</span></div>
+        <div class="way"><b>Notes (remember)</b><span>The method in your own words. The 10 that match a question travel in full.</span></div>
+        <div class="way"><b>"How was it fixed?"</b><span>One line when you close a record. Later: "This looks like D-0142, that was the SSO cache."</span></div>
+        <div class="way"><b>The daily look back</b><span>At noon, the day's work becomes lessons, notes and draft runbooks, plus one question for you.</span></div>
+        <div class="way"><b>Interview me / Learn from a document</b><span>Draft runbooks from you or from a guideline, checked against the document.</span></div>
+      </div>
+      <div class="never">
+        <div><b>You can read it all.</b> Every lesson and note is in Setup, in plain words.</div>
+        <div><b>You can undo it.</b> Delete a lesson and it is gone from the next question.</div>
+        <div><b>Drafts, not decisions.</b> An AI-written runbook stays a draft until a person approves it.</div>
+        <div><b>It survives a new model.</b> Nothing learned is inside the model, so nothing is lost.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ FAST AND STEADY ════════════════════════════════════════════ -->
+<section id="fast" aria-labelledby="t-fast">
+  <div class="sechead">
+    <p class="eyebrow">Performance and stability</p>
+    <h2 id="t-fast">Ten rules that keep it fast and steady</h2>
+    <p>On one real workspace of 1,000 records, each question used to send about 164 KB. After ranking on the PC it sends about 52 KB,
+      and it no longer grows the more you use the app.</p>
+  </div>
+  <div class="rulegrid">
+    <div class="rule"><h3>Answer on the PC when you can</h3><p>No network, no AI, no wait.</p><span class="in">Greetings, counts, "what's new", "which source"</span></div>
+    <div class="rule"><h3>Choose the data with code, not a second AI call</h3><p>A chooser AI must read everything first: two slow calls instead of one.</p><span class="in">5,000 records ranked in about 6 ms; 150 documents searched in about 2 ms</span></div>
+    <div class="rule"><h3>Send the best, count the rest</h3><p>The model needs the relevant rows. Totals keep "how many?" right.</p><span class="in">60 records, plus totals of all</span></div>
+    <div class="rule"><h3>Put a limit on everything that grows</h3><p>Notes, lessons and history grow every day. Without limits every question gets slower.</p><span class="in">10 notes · 30 lessons · 8 messages · 14,000 characters</span></div>
+    <div class="rule"><h3>A fast model for chat, a strong one for hard jobs</h3><p>The strong model is slower and costs more. Use it where it earns it.</p><span class="in">Daily look back, learning a guideline, Diagnose, Think harder</span></div>
+    <div class="rule"><h3>At most one extra round trip</h3><p>Every extra call is another full wait.</p><span class="in">needRecords once; the safety-net retry once</span></div>
+    <div class="rule"><h3>Always set a time limit, and fall back</h3><p>A silent app is worse than a simple answer.</p><span class="in">30 s for chat, about 2 min for hard jobs; the local assistant answers if the flow fails</span></div>
+    <div class="rule"><h3>Never trust the reply: check it</h3><p>A model can send the wrong shape, or an action that does not exist.</p><span class="in">The validator; only the 62 known actions</span></div>
+    <div class="rule"><h3>Never let it change anything by itself</h3><p>A confident mistake must not become a real change.</p><span class="in">Every change waits for your yes</span></div>
+    <div class="rule"><h3>Measure, and show what you measured</h3><p>"It feels slow" cannot be fixed. A number can.</p><span class="in">Time under each answer · Preview of the bytes · the Sources log · tests</span></div>
+  </div>
+  <p class="callout"><b>Steady</b> means the same question gets the same kind of answer: the rules live in one file with checked examples,
+    the reply has a fixed shape, search is plain arithmetic on words (not another AI), and tests run the real app with a stand-in AI
+    that gives scripted replies.</p>
+</section>
+
+<!-- ═══ BLUEPRINT ══════════════════════════════════════════════════ -->
+<section id="blueprint" aria-labelledby="t-bp">
+  <div class="sechead">
+    <p class="eyebrow">Reuse the method</p>
+    <h2 id="t-bp">A blueprint for your own AI assistant</h2>
+    <p>The same nine parts work for a helpdesk bot, an HR policy bot or a sales assistant, with any AI model.
+      Build the checker before the prompt: it protects you from every later mistake.</p>
+  </div>
+  <div class="bp">
+    <ol class="parts">
+      <li><div><b>Front door</b><span>Answer what needs no AI, with plain code.</span></div></li>
+      <li><div><b>Retriever</b><span>Your data → a small, relevant folder for this question, chosen on your own machine.</span></div></li>
+      <li><div><b>Prompt template</b><span>One text file: rules, worked examples, blanks. Kept in version control.</span></div></li>
+      <li><div><b>Gateway</b><span>The only way out: one address, time limits, a fallback.</span></div></li>
+      <li><div><b>Model</b><span>Any provider. Fast for chat, strong for hard jobs. Replies in a fixed JSON shape.</span></div></li>
+      <li><div><b>Checker</b><span>Trust nothing: shape, allowed actions, facts against the sources.</span></div></li>
+      <li><div><b>Human in the loop</b><span>Reading happens at once; every change waits for a yes.</span></div></li>
+      <li class="fb"><div><b>Feedback and log</b><span>Ratings, corrections, and a log with no private text. Feeds the notebook.</span></div></li>
+      <li class="fb"><div><b>Notebook</b><span>Lessons, notes, corrections and tests, readable and deletable. Feeds the retriever.</span></div></li>
+    </ol>
+    <div class="checklist" id="checklist">
+      <h3>Checklist for a new bot <span style="display:flex;gap:8px;align-items:center"><span class="progress" id="cl-count">0 of 22</span><button class="btn" id="cl-copy" type="button">Copy as text</button></span></h3>
+      <div class="cl-group"><p class="eyebrow">Privacy</p>
+        <label class="cl-item"><input type="checkbox" id="c1">Only one part can reach the network, and only one address</label>
+        <label class="cl-item"><input type="checkbox" id="c2">Users can see the exact bytes before they are sent</label>
+        <label class="cl-item"><input type="checkbox" id="c3">Private documents can be marked "stays on this PC"</label>
+        <label class="cl-item"><input type="checkbox" id="c4">Logs record what was searched and cited, never the documents' text</label>
+      </div>
+      <div class="cl-group"><p class="eyebrow">Safety</p>
+        <label class="cl-item"><input type="checkbox" id="c5">The reply has a fixed shape, checked every time</label>
+        <label class="cl-item"><input type="checkbox" id="c6">Unknown actions are refused by name</label>
+        <label class="cl-item"><input type="checkbox" id="c7">Every change waits for a person's yes</label>
+        <label class="cl-item"><input type="checkbox" id="c8">Quotes and figures are checked against the sources</label>
+        <label class="cl-item"><input type="checkbox" id="c9">A bad line is removed; the good answer is still shown</label>
+        <label class="cl-item"><input type="checkbox" id="c10">Anything written for later is a draft</label>
+      </div>
+      <div class="cl-group"><p class="eyebrow">Speed</p>
+        <label class="cl-item"><input type="checkbox" id="c11">Easy questions are answered without the model</label>
+        <label class="cl-item"><input type="checkbox" id="c12">Data is chosen by code, not a second model call</label>
+        <label class="cl-item"><input type="checkbox" id="c13">Everything that grows has a limit</label>
+        <label class="cl-item"><input type="checkbox" id="c14">A fast model for chat, a strong one only where it earns it</label>
+        <label class="cl-item"><input type="checkbox" id="c15">At most one extra round trip, and a time limit on every call</label>
+      </div>
+      <div class="cl-group"><p class="eyebrow">Learning</p>
+        <label class="cl-item"><input type="checkbox" id="c16">Learning is notes you can read and delete, not retraining</label>
+        <label class="cl-item"><input type="checkbox" id="c17">A thumbs down asks for the right answer and keeps it as a test</label>
+        <label class="cl-item"><input type="checkbox" id="c18">A regular look back turns the day's work into lessons and drafts</label>
+      </div>
+      <div class="cl-group"><p class="eyebrow">Quality</p>
+        <label class="cl-item"><input type="checkbox" id="c19">The prompt is one file, read fresh each time</label>
+        <label class="cl-item"><input type="checkbox" id="c20">Every example in the prompt passes the checker</label>
+        <label class="cl-item"><input type="checkbox" id="c21">Tests use made-up data and a stand-in model</label>
+        <label class="cl-item"><input type="checkbox" id="c22">Request size and answer time are measured and shown</label>
+      </div>
+    </div>
+  </div>
+
+  <h3 style="margin:34px 0 12px">Lessons from Resolv's history</h3>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Mistake</th><th>What happens</th><th>Do this instead</th></tr></thead>
+      <tbody>
+        <tr><td>Sending everything with every question</td><td>Answers got slower the more the app was used</td><td>Rank on the PC; send the best, count the rest</td></tr>
+        <tr><td>Using an AI to choose what to send</td><td>The chooser had to read everything first: two slow calls</td><td>Choose with plain code, in milliseconds</td></tr>
+        <tr><td>A document sent with one question only</td><td>The next question had a summary only, and the model filled the gap with "4 hours" from somewhere else</td><td>Keep documents in a searchable store and search them for every question</td></tr>
+        <tr><td>Hiding the whole answer for one bad line</td><td>A correct answer became "not specified"</td><td>Take out only the bad line, and say so</td></tr>
+        <tr><td>Reading page headers as headings</td><td>Citations named "CLASSIFICATION : OFFICIAL" as the section</td><td>Leave out lines repeated at the same place on most pages</td></tr>
+        <tr><td>Orders to the AI written inside the data</td><td>Microsoft's content filter blocked the whole question</td><td>Keep data as facts; keep orders in the prompt</td></tr>
+        <tr><td>Letting the AI change records directly</td><td>One confident mistake changes real data (Resolv never allowed it)</td><td>Every change waits for a yes</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ═══ WORDS ══════════════════════════════════════════════════════ -->
+<section id="words" aria-labelledby="t-words">
+  <div class="sechead">
+    <p class="eyebrow">Plain English</p>
+    <h2 id="t-words">Words used on this page</h2>
+  </div>
+  <dl class="words">
+    <div class="word"><dt>AI model (LLM)</dt><dd>The program that reads text and writes text. It remembers nothing between questions.</dd></div>
+    <div class="word"><dt>Prompt</dt><dd>Everything the model is given for one question: rules, examples, the folder and the question. Built from <code>flow/prompt.txt</code>.</dd></div>
+    <div class="word"><dt>Flow</dt><dd>Your Power Automate flow. It runs the model and sends the reply back.</dd></div>
+    <div class="word"><dt>Relay</dt><dd>The small page that is the only door to the network (<code>flow/relay.html</code>).</dd></div>
+    <div class="word"><dt>Token</dt><dd>A piece of a word. Models count what they read in tokens: more tokens, longer wait.</dd></div>
+    <div class="word"><dt>JSON</dt><dd>A strict text format for data, like <code>{"say":"hello"}</code>, so a reply can be checked.</dd></div>
+    <div class="word"><dt>Action</dt><dd>Something the AI may ask Resolv to do. 62 exist; the 41 that change data always ask first.</dd></div>
+    <div class="word"><dt>Passage</dt><dd>A small piece of a document, about 1,100 characters, with its page, lines and section.</dd></div>
+    <div class="word"><dt>Citation</dt><dd>Where an answer came from: <span class="mono">[Source: document, version, page, lines, section]</span>.</dd></div>
+    <div class="word"><dt>Figure</dt><dd>A number that makes a rule: days or hours, a percentage, a priority or severity, a score.</dd></div>
+    <div class="word"><dt>Taken out / held back</dt><dd>A line removed for an unsupported figure, or a whole reply not shown because it rested on one.</dd></div>
+    <div class="word"><dt>Tier</dt><dd>Which model a question goes to: fast for everyday chat, deep for hard jobs.</dd></div>
+    <div class="word"><dt>Lesson</dt><dd>One line Resolv keeps about you or your work, sent with later questions.</dd></div>
+    <div class="word"><dt>Stand-in model</dt><dd>A fake AI used in tests. It gives scripted replies, so tests repeat exactly.</dd></div>
+  </dl>
+</section>
+
+<footer>
+  <p><b>Read more:</b> the full guide, with every step in detail, is <a href="HOW-THE-AI-WORKS.md">HOW-THE-AI-WORKS.md</a>
+    (in the <code>docs</code> folder, beside this page).</p>
+  <p><b>Where the code is:</b> <code>dossier.html</code> (the app) · <code>chat.js</code> (the local assistant) ·
+    <code>flow.js</code> (packing, sending, checking the shape) · <code>sources.js</code> (documents and the figure check) ·
+    <code>flow/prompt.txt</code> (the prompt) · <code>flow/relay.html</code> (the one door).</p>
+  <p>Numbers on this page are Resolv's own measurements and settings as of version 5.9.2.</p>
+</footer>
+
+</main>
+
+<script>
+/* The checklist remembers its ticks in this browser only; nothing is sent. */
+(function(){
+  var KEY = "resolv-ai-checklist";
+  var boxes = Array.prototype.slice.call(document.querySelectorAll("#checklist input[type=checkbox]"));
+  var count = document.getElementById("cl-count");
+  function load(){ try { return JSON.parse(localStorage.getItem(KEY) || "{}") || {}; } catch(e){ return {}; } }
+  function save(state){ try { localStorage.setItem(KEY, JSON.stringify(state)); } catch(e){} }
+  function paint(){
+    var n = boxes.filter(function(b){ return b.checked; }).length;
+    count.textContent = n + " of " + boxes.length;
+  }
+  var state = load();
+  boxes.forEach(function(b){
+    b.checked = !!state[b.id];
+    b.addEventListener("change", function(){ state[b.id] = b.checked; save(state); paint(); });
+  });
+  paint();
+  var btn = document.getElementById("cl-copy");
+  btn.addEventListener("click", function(){
+    var lines = ["Checklist for a new AI assistant (from Inside Resolv's Assistant)"];
+    document.querySelectorAll("#checklist .cl-group").forEach(function(g){
+      lines.push("", g.querySelector(".eyebrow").textContent.toUpperCase());
+      g.querySelectorAll(".cl-item").forEach(function(l){
+        lines.push((l.querySelector("input").checked ? "[x] " : "[ ] ") + l.textContent.trim());
+      });
+    });
+    var text = lines.join("\n");
+    var done = function(){ btn.textContent = "Copied"; setTimeout(function(){ btn.textContent = "Copy as text"; }, 1600); };
+    var fallback = function(){
+      var ta = document.createElement("textarea"); ta.value = text; ta.setAttribute("readonly", "");
+      ta.style.position = "fixed"; ta.style.opacity = "0"; document.body.appendChild(ta); ta.select();
+      try { document.execCommand("copy"); done(); } catch(e){ btn.textContent = "Select and copy"; }
+      document.body.removeChild(ta);
+    };
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, fallback);
+      else fallback();
+    } catch(e){ fallback(); }
+  });
+})();
+</script>
+</body>
+</html>
