@@ -1,0 +1,177 @@
+# CLAUDE.md — working on Resolv
+
+Read this first. It is the hand-over from earlier Claude Code sessions: what
+this project is, how it is built, the rules the owner has set, how to test,
+and what has been done recently. `README.md` is the full manual,
+`CHANGELOG.md` the release history.
+
+## What Resolv is
+
+A records desk for one application-support engineer: tickets/tasks
+("records"), routines, scripts, runbooks, notes, an incident history, and an
+assistant. It runs **in the browser from a local folder** — no server, no
+account, no cloud. (The app was called *Dossier* until 4.8; many identifiers
+still say `dossier`/`Dossier`. The visible name is **Resolv**.)
+
+The owner uses it at work, on Windows, in Edge/Chrome, started with
+`Resolv.bat`. Their company network blocks unknown outside services and they
+are careful not to attract attention from their security team.
+
+## The pieces
+
+| File | What it is |
+|---|---|
+| `dossier.html` | **The app**: one file, ~27,700 lines of vanilla JS + CSS, no build, no framework. CSP allows only `connect-src http://127.0.0.1:*`. |
+| `chat.js` | The local assistant: plain-English questions answered on the PC (`window.DossierChat`). |
+| `assist.js` | Assist tab arithmetic. |
+| `flow.js` | Client for the optional Power Automate flow (the AI): `ACTIONS` table (every action the model may request), `validate()` of replies, `buildRequest()`, `fillPrompt()`, and `PROMPT_BUILTIN` (an embedded copy of `flow/prompt.txt`). `window.DossierFlow`. |
+| `sources.js` | **New in 5.9** — answering from runbooks/standards: passages, BM25 search, citations, and `ground()`, the check that holds back invented figures. Pure; `window.DossierSources` and `module.exports`. |
+| `ocr.js` | Optional text recogniser for pictures and scanned PDFs. |
+| `flow/relay.html` | The **only** page that touches the network: a sandboxed iframe that posts to the flow URL. |
+| `flow/prompt.txt` | The model's instructions, with `{message} {today} {weekday} {calendar} {workspace} {actions} {history} {memory} {attached} {sources}` filled in per question. A user's own copy can live in the workspace as `dossier-prompt.txt`. |
+| `flow/*.md` | Guides: `CONTRACT.md` (request/reply/actions), `POWER-AUTOMATE.md`, `BAU-RUNBOOKS.md`, `SOURCES.md` (setup + troubleshooting for Sources), `SPEED.md`, `SERVICENOW.md`. |
+| `scripts/bridge/DossierBridge.cs` | The tray program (C# 5, WinForms): serves the page on 127.0.0.1, keeps the workspace in SQL LocalDB when available, runs scripts. `Resolv.bat` compiles it with the Windows `csc.exe` whenever the `.cs` is newer than the `.exe`. |
+| `lang/en.xml`, `lang/km.xml` | Language packs (English, Khmer). Missing keys fall back to the English `STRINGS` table in `dossier.html`. |
+| `tests/` | `sources.test.js` (node:test), `e2e/run.js` + `e2e/sources.scenario.js` (real browser), `fixtures/` (made-up documents; `make-pdf.js` regenerates the PDFs). |
+
+A *workspace* is a folder the user picks (File System Access API):
+`dossier.json` (everything), `backups/`, `tasks/<record>/` attachments,
+`scripts/`, and since 5.9 `sources/` (see below).
+
+## How the code in dossier.html is organised
+
+- Sections are marked with banner comments: `/* ═══ NAME ═══ ... */` (e.g.
+  `ALERTS`, `SOURCES`, `ASKING THROUGH A FLOW`, `THE RUN QUEUE`, `VIEW: LIBRARY`).
+  Search for the banner to find a subsystem.
+- **Strings**: `L("Key", {vars})` / `LE()` (escaped) read `STRINGS` (the
+  English table starting around line 4440) or the active language pack. Every
+  new user-visible text gets a key there. Check for missing keys with a quick
+  script (collect `L("…")`/`LE("…")` keys, compare with `STRINGS`) — about 15
+  "missing" keys are built dynamically and are expected.
+- **State**: `S` (tasks, routines, settings, chats…), saved with `touch()`.
+  `hydrate(d)` loads a document; `openWorkspace(handle, quiet)` opens a folder.
+- **Chat**: `chatAsk(q, opts)` → local answers first (small talk, alerts,
+  Sources intents, "about Resolv", local counting) → `flowAsk()` when a flow is
+  on. `flowContext(q)` builds what goes with a question (taken synchronously
+  before any await). Replies render in `chatRenderBot()`; write actions are
+  confirmed one at a time (`chatQueue` / `ASK`).
+- **About Resolv**: the assistant reads `README.md` and `CHANGELOG.md`
+  (`aboutLoad`, `aboutForFlow`, `aboutLocal`). So **the README is also the
+  assistant's manual**: every new feature needs README sections phrased the
+  way people ask ("How do I …?") and a CHANGELOG entry, or the assistant cannot
+  explain it.
+- Comment style: long, plain-English comments explaining *why*, British
+  spelling. Match it.
+
+## Rules the owner has set (keep to them)
+
+- **Talk to the owner in plain, simple English** (not their first language).
+  Short steps, no jargon without explanation.
+- **New designs are added as selectable presets; existing ones are never
+  removed** (looks: Studio, Quiet, Classic, Nova; chat skins incl. Lumen).
+- **Nothing new may reach the internet.** Only the user's own Power Automate
+  flow, through `flow/relay.html`. Telegram was tried (5.6–5.7) and **removed
+  completely in 5.8** because the company blocks it and it could look
+  suspicious to their security team — do not bring back outside services,
+  idle/lock monitoring, or keep-awake code.
+- **The repository may be public: never commit anything from the owner's
+  company** — no document text, names, emails, screenshots. Test fixtures are
+  made up.
+- Every release: bump `APP_VERSION` in `dossier.html`, add a `CHANGELOG.md`
+  entry at the top, update the README.
+- Commit messages: clear summary + body; no model names in commits, code or
+  docs. Do not open a pull request unless the owner asks.
+- Work so far is on branch `claude/chat-panel-pixel-art-gifs-d822hq`
+  (latest: 5.9.1). Follow the branch instructions of your own session.
+
+## Testing
+
+```
+node --test                                   # 22 unit tests (Sources, grounding, flow reply fields)
+node tests/e2e/run.js                         # the app in headless Chrome/Edge: 39 checks (CHROME=<path> to choose)
+node flow/check-prompt.js                     # after editing flow/prompt.txt ...
+python3 flow/embed-prompt.py                  # ... then copy it into flow.js (PROMPT_BUILTIN)
+node tests/fixtures/make-pdf.js               # regenerate the PDF fixtures
+```
+
+Also useful:
+
+- **Syntax-check the big inline script** in `dossier.html` (extract the
+  `<script>` without `src` and `new Function()` it in Node) after edits.
+- **Bridge**: C# 5 only (no `$""`, no `?.`). Check with
+  `mcs -nologo -target:winexe -langversion:5 -r:System.Windows.Forms.dll -r:System.Drawing.dll -r:System.Data.dll scripts/bridge/DossierBridge.cs`.
+- **Headless browser** (in cloud sessions Chromium is under
+  `/opt/pw-browsers`): serve the repo over `http://127.0.0.1`, open
+  `dossier.html`, drive it over the DevTools protocol. Make a workspace in the
+  browser's private storage: `navigator.storage.getDirectory()` → write a
+  `dossier.json` → `openWorkspace(dirHandle, true)`. Stand in for the AI by
+  replacing `DossierFlow.ask` with a function that builds the real request
+  (`DossierFlow.buildRequest`) and returns a scripted reply through
+  `DossierFlow.validate`. `tests/e2e/run.js` is a working example of all of it.
+
+## Recent history (newest first)
+
+- **5.9.1** — `[study]`/`[teach]`/`[intake]`/look-back replies are never
+  held back; instead draft runbooks/notes/profiles are checked against the
+  document they came from and a figure it does not state is shown on the
+  draft's "Save it?" ("⚠ Not in the document: 4 hours"). PDFs kept from chat
+  are named after their file unless the first line is a real title (a logo
+  like a company acronym is not). A figure whose number and unit are in the
+  cited passage but not adjacent (PDF table read by column) is accepted at
+  Medium confidence.
+- **5.9.0 — Sources: answers from the documents, with citations.** Root cause
+  fixed: an attached guideline used to travel with one question only, `[study]`
+  rewrote it in the model's words, and the model answered a missing
+  remediation timeframe with "4 hours" (Resolv's own P1 target in
+  `workspace.policy`). Now:
+  - **Library → Sources** keeps documents (PDF/MD/DOCX/TXT) in
+    `sources/`: `catalog.json`, `<id>/<original>`, `<id>/text.txt`,
+    `<id>/chunks.json`. Add dialog (name, version, effective date, systems,
+    environment, category, access label, "may go to the assistant"), new
+    version detection (replace → old becomes *superseded* / keep both / separate
+    — never "newest upload wins"), Re-index (diff by passage), Switch off,
+    Remove, diagnostics log ("Recent searches and changes", no document text).
+    Documents attached in chat are kept too (⊕ Sources chip).
+  - Every question searches active, cleared documents (`srcForFlow`) and sends
+    labelled passages S1… in `{sources}`; follow-ups search again with the
+    previous question; a named system/environment/document/version filters.
+  - Prompt section *THEIR DOCUMENTS (SOURCES)*: answer only from passages, no
+    figure not stated, no carrying a P1 target to a vulnerability, show
+    conflicts, `cite` / `confidence` / `suggest` in the reply.
+  - `srcApply` → `DossierSources.ground()`: quotes must be in the cited
+    passage; figures in `say` must be in a cited passage, else the answer is
+    **held back**. UI: Answer / Source (clickable → viewer with lines marked) /
+    Evidence / Confidence / Suggestion / Searched. Local answers to "which
+    source supports this answer?" and "why was it not found?". No flow → the
+    passages themselves.
+  - Search is lexical (BM25 + synonyms), deliberately: no embedding service
+    (nothing new leaves the PC). 150 docs index in ~0.3 s, search ~2 ms.
+- **5.8.0** — Telegram removed completely (relay page, setup, token wiped from
+  workspaces on open, bridge restored to its 5.5.0 content). Bell alerts stay,
+  on screen only.
+- **5.7.0** — Per-record alerts: bell on each row and on the record sheet (at
+  due time, 15 min/1 h before, or a custom time); the assistant can
+  `setAlert` / `clearAlert`.
+- **5.6.0** — The assistant knows Resolv itself (README/CHANGELOG as
+  `workspace.app`, local "what's new?"). (Its Telegram half was removed in 5.8.)
+- **5.5.0 / 5.4.0** — Lumen chat skin and its animated icons.
+- Before that (see CHANGELOG): saving hardened (SQL sections, never emptied),
+  chat branches (Think harder/Retry), copy-ready text cards, AI chat titles,
+  Word document reader and pictures inside PDFs/Word, Nova look, the assistant
+  seeing the open record/selection, rename to Resolv, learning from ratings and
+  fixes, two-model flow, the prompt as a file.
+
+## Known gaps and ideas not done
+
+- The grounding rules are tested with a stand-in flow; the owner confirmed
+  they work with their real flow, but keep testing answers that come from
+  tables in real PDFs (layout varies).
+- The owner mentioned editing the prompt locally. If they edited
+  `flow/prompt.txt` in their Resolv folder, an update will conflict — offer to
+  merge their change into `flow/prompt.txt`, or keep it as `dossier-prompt.txt`
+  (which must keep the SOURCES section and `{sources}`).
+- New strings (Sources, alerts) exist only in English; `lang/km.xml` falls
+  back to English for them.
+- Possible next steps: a `needSources` action (the model asks for a second
+  search, like `needRecords`), per-document "check the answer" workflow,
+  Khmer strings for the new features.
