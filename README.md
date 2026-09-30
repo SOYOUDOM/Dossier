@@ -141,6 +141,8 @@ With the demo copied in you should immediately see:
 | `chat.js` | ~360 KB | optional | The assistant — plain-English questions about your own records. Without it, the Ask box says so and everything else works. |
 | `assist.js` | ~20 KB | optional | The ranking and briefing engine behind the **Assist** tab and the Insight cards. |
 | `flow.js` | ~22 KB | optional | Client for a Power Automate endpoint: builds the request, validates the reply, and owns the relay frame. |
+| `sources.js` | ~40 KB | optional | Answering from your runbooks and standards ([Sources](#answering-from-your-runbooks-and-standards-sources)): cuts a document into passages with page, lines and section, searches them, formats citations, and checks an answer's quotes and figures against what it cites. Pure JavaScript, tested under Node. Without it, questions go without passages, as before 5.9. |
+| `tests/` | — | — | `node --test` runs the Sources and grounding tests; `node tests/e2e/run.js` runs the app in Chrome or Edge against the same scenarios; `tests/fixtures/` holds the sample documents (made up, no real policy). |
 | `flow/relay.html` | ~9 KB | optional | The **only** page allowed to touch the network. Sandboxed, holds no records, pinned to one origin. |
 | `flow/CONTRACT.md` | ~16 KB | — | What your flow receives and must return, generated from `flow.js`. |
 | `flow/POWER-AUTOMATE.md` | ~19 KB | — | How to build the flow: trigger schema, the prompt, knowledge, and the test order. |
@@ -175,9 +177,9 @@ With the demo copied in you should immediately see:
 | `scripts/dossier-sql.bat` | ~7 KB | optional | The launcher: `init`, `push`, `pull`, `check`, `history`, `find`. Defaults to `(localdb)\MSSQLLocalDB`. |
 | `scripts/dossier-bridge.bat` | ~1 KB | — | Kept so nothing that points at it breaks: passes through to `Resolv.bat`, arguments and all. |
 | `scripts/bridge/DossierBridge.cs` | ~45 KB | optional | Resolv, running: the tray icon and its menu, the page, the database (created, migrated, written, and its history kept), the hidden runner. C# 5 and Windows Forms, so `csc.exe` from the .NET Framework builds it with nothing installed. |
-| `flow/prompt.txt` | ~15 KB | **the assistant's instructions** | What the model reads, with nine places Resolv fills in before every question. Edit it in Notepad and the next question uses it — nothing to change in Power Automate. Your own version goes in your records folder as `dossier-prompt.txt`, where updates never touch it. |
+| `flow/prompt.txt` | ~15 KB | **the assistant's instructions** | What the model reads, with ten places Resolv fills in before every question. Edit it in Notepad and the next question uses it — nothing to change in Power Automate. Your own version goes in your records folder as `dossier-prompt.txt`, where updates never touch it. |
 | `flow/embed-prompt.py` | ~1 KB | — | Copies `flow/prompt.txt` into `flow.js`, for a page opened straight from the folder, which cannot read the file beside it. |
-| `flow/check-prompt.js` | ~3 KB | — | Checks `flow/prompt.txt`: every example reply against the validator Resolv uses on real replies, all nine places present, the copy in `flow.js` the same. |
+| `flow/check-prompt.js` | ~3 KB | — | Checks `flow/prompt.txt`: every example reply against the validator Resolv uses on real replies, all ten places present, the copy in `flow.js` the same. |
 | `sql/load-proc.sql` | ~14 KB | optional | `dbo.LoadWorkspace` — the only code that writes the tables, called by both the bridge and `push`. |
 
 Everything is a classic script or plain file. There is **no build step, no
@@ -210,6 +212,12 @@ It looks like this:
     dossier-runner.bat
     restart-app-pool.bat
     queue/                  the runner's mailbox
+  sources/                  your runbooks and standards (see Sources)
+    catalog.json            every document: version, effective date, status, access label, what could not be read
+    src.../                 one folder per document
+      <original file>       exactly as it was added - the source of truth
+      text.txt              the words read out of it ("[page N]" between PDF pages)
+      chunks.json           its passages, with page, lines, section and a stable id
 ```
 
 Rules that matter if anything else writes here:
@@ -225,6 +233,9 @@ Rules that matter if anything else writes here:
 - The folder handle is remembered in **IndexedDB**, never the data. If the
   browser is wiped the worst case is re-picking the folder; the records are
   untouched on disk.
+- **`sources/` is Resolv's too.** To add, replace or remove a document, use
+  **Library → Sources** (or attach it in a conversation); a file dropped into
+  the folder by hand is not in the catalog and is not searched.
 - Saving rewrites **the whole of `dossier.json`**. See
   [§15](#15-automating-dossier-from-outside) for what that means for outside
   writers.
@@ -257,6 +268,7 @@ adds `D-0099` without touching `seq` will not cause a collision.
 | Key | Type | Default | Meaning |
 |---|---|---|---|
 | `owner` | string | `""` | Your name. Used in reports and hand-overs. |
+| `sources` | `{clearance, keepChat, budget}` | `{[], true, 14000}` | Answering from documents ([Sources](#answering-from-your-runbooks-and-standards-sources)). `clearance`: the access labels this workspace may read; `keepChat`: keep documents attached in a conversation; `budget`: characters of passages sent with a question. |
 | `systems` | array of `{name, colour}` | 8 seeded | The applications you support. `colour` is a hex string and drives every chip and bar for that system. |
 | `types` | array of string | `Incident, Service request, Change, Development, Meeting, Admin` | Work types. |
 | `parties` | array of string | 10 seeded | Teams you end up waiting on: *Data team, DBA, Infra, Network, Security, Vendor, Agency ops, Finance, Release management, Business user*. |
@@ -1856,6 +1868,186 @@ to decompose existing `.docx` guidelines into runbooks, and
 its table and team names are deliberately left as placeholders, and every entry
 is a draft.
 
+### Answering from your runbooks and standards (Sources)
+
+**Library → Sources** holds the documents the assistant answers from: your
+runbooks, standards, policies and guidelines, as PDF, Markdown (`.md`), Word
+(`.docx`) or text. Each one is **kept whole** in the workspace folder
+(`sources/`), read into passages that remember their **page, lines and
+section**, and searched again for **every question** — so an answer about what
+a document says comes from the document itself, not from a summary of it, not
+from the conversation, and not from what the model thinks is usual.
+
+Why it exists: before 5.9, a guideline attached to a question went with that
+one question and was gone after it — the next question carried a six-line
+summary of the conversation, a new conversation carried nothing, and
+*studying* a guideline rewrote it into runbooks in the model's own words.
+Asked how long a critical internet-facing application had to be fixed, with a
+standard that gives no timeframe, the assistant answered **"4 hours"** — the
+only 4 hours in the request was Resolv's own target date for a P1 record. Now
+the passages that match travel with every question, the prompt forbids a
+figure no passage states, and the app checks the answer before showing it.
+
+#### How do I add a new PDF runbook (or Markdown, or Word)?
+
+1. **Library → Sources → + Add a PDF, Markdown or Word document**, and pick
+   one or more files.
+2. Resolv reads each one to the end — a PDF page by page (scanned pages
+   through `ocr.js` when it is beside `dossier.html`), a Word document with its
+   headings, Markdown as it is — and says how many pages it read and which, if
+   any, it could not read reliably.
+3. Check the details it found and fill in the rest:
+   - **Name**, **Version** and **Effective date** — read from the document
+     when it says them ("Version: 2.1", "Effective date: 1 March 2026");
+   - **Systems it is about** and **Environment** — leave them empty for a
+     document about everything; set them for a runbook about one system or
+     one environment, and a question naming another one will not read it;
+   - **Category** — for your own sorting;
+   - **Access label** — empty for everyone (see *Access* below);
+   - **Its passages may go to the assistant** — untick to keep a document
+     searchable on this PC only.
+4. **Add**. It is searched from the next question on.
+
+A document **attached to a question** in the chat is kept in Sources too — the
+**⊕ Sources** chip under it in the tray says so, and a click makes it for that
+question only. It is cited in that answer, found again by the next question,
+and by a new conversation next week. (**Library → Sources → Access, and
+documents attached in conversations** switches the default off.)
+
+#### How do I re-index an updated guideline?
+
+- **A new version of the document**: add it (**+ Add**). Resolv sees it is a
+  new version of one already there and asks: **It replaces that version** (the
+  older one is kept, marked *superseded*, and no longer searched), **Keep both
+  active** (their version and effective date decide which is current), or **It
+  is a different document**. The file added last is *never* taken to be the
+  current one just because it came last — only its version or effective date
+  can say that. Two active versions that nothing tells apart are named at the
+  top of Sources, and an answer that reads them shows both.
+- **The same file, edited, or read badly the first time** (say `ocr.js` was
+  added since): **Re-index** on that document, or **Re-index all**. The
+  original is read again and cut again, and Resolv says how many passages are
+  new or changed, gone, and unchanged — passage ids stay the same while their
+  words do.
+- **Switch off** stops a document being searched without deleting it;
+  **Remove** deletes it from the workspace folder.
+- When a new version of Resolv changes how passages are cut, every document
+  is cut again from its kept text the next time the workspace opens —
+  nothing to do.
+
+#### How do I configure document indexing?
+
+There is nothing to install and nothing to set up: no database, no vector
+store, no embedding service, no environment variables. The documents and
+their index are files in the workspace folder, and the search runs in the
+page. What there is to choose, in **Library → Sources → Access, and documents
+attached in conversations**, and in `settings.sources`:
+
+| Setting | Default | What it does |
+|---|---|---|
+| **Access labels this workspace may read** (`clearance`) | none | Which labelled documents are searched. |
+| **Keep … attached in a conversation** (`keepChat`) | on | Whether a document attached to a question is kept in Sources. |
+| `budget` | 14,000 characters | How much of the documents goes with one question — six best passages and the ones around them. A document attached to that very question goes whole, up to 60,000 characters, as an attachment always did. |
+
+Scanned PDFs need `ocr.js` beside `dossier.html` (§12, *Asking with a file*).
+The full setup, storage, access and troubleshooting guide is
+[`flow/SOURCES.md`](flow/SOURCES.md).
+
+#### What an answer from your documents looks like
+
+Under an answer about what a document says:
+
+- **Answer** — the direct answer.
+- **Source** — `[Source: Application Security Standard, version 2.0, page 12,
+  lines 18-27, section "Remediation Timeframe"]` for a PDF, or
+  `[Source: application-security-standard.md, version 2.0, lines 120-138,
+  section "Remediation Timeframe"]` for Markdown; a Word document's names the
+  section. Click it: the document opens at that page, with the cited lines
+  marked, and **Open the original** opens the file itself (a PDF at that page).
+- **Evidence** — the exact words of the passage that support it.
+- **Confidence** — **High** (the passage states it), **Medium** (it follows
+  from several statements, but no one sentence says it), **Not found** (the
+  documents searched do not specify it).
+- **Suggestion — not from your documents**, when the assistant adds advice of
+  its own. It is never mixed into the answer.
+- **Searched N documents**, the closest of them, and any filter the question
+  set (a document, version, system or environment it named).
+
+With no flow set up, a question about your documents is answered on this PC
+with the passages themselves, each with its citation.
+
+#### Which source supports this answer?
+
+The **Source** line under the answer, and **Evidence** under it. Ask *"which
+source supports this answer?"* and Resolv lists the citations and quotes of
+the last answer. A citation is only shown as a source when its quote was found,
+word for word, in the passage it names.
+
+#### Why did Resolv say that the answer was not found?
+
+Because none of the passages it found states it. Ask *"why was it not
+found?"* and Resolv says how many documents it searched, which came closest,
+and which filters the question set. There are three kinds of *not found*:
+
+- **Not found** — the documents do not say it, or say it in words the question
+  did not reach. The answer says what is missing, and what they do say.
+- **Answer held back** — the reply stated a figure — a timeframe, a
+  percentage, a severity — that no passage it cited contains, so Resolv did
+  not show it: it would have been a guess presented as your policy. (This is
+  the "4 hours".)
+- **Not from your documents** — the reply cited nothing, so it is shown as
+  general advice, not as what a document says.
+
+If the answer is in a document: check it is in Sources, **active**, that the
+workspace is cleared for its access label, and that the question names the
+system or environment it is about; after changing a document, **Re-index**.
+
+#### Follow-ups and new conversations
+
+*"that policy"*, *"the previous section"*, *"how about low severity?"* — a
+follow-up is searched again, with the question before it and the documents
+its answer cited; *"the previous section"* adds the section before the one
+cited. The answer still has to come from the passages sent with it, never
+from what an earlier answer said. The same question in a new conversation
+finds the same passages.
+
+#### Access
+
+A document with no **access label** is read by everyone who uses the
+workspace. A labelled one is searched only when **Access labels this
+workspace may read** lists its label; otherwise it is not searched, not
+counted, never named and never sent — the filter runs before anything is
+scored. A document marked to stay on this PC is searched for answers given on
+this PC and never sent to the flow. Documents never mix between workspaces:
+each workspace folder has its own `sources/`. Labels are not a login — for
+teams that must not see each other's documents, keep separate workspace
+folders with Windows permissions on them.
+
+#### Pages that could not be read
+
+Each PDF page is checked as it is read: no text (a scan with no `ocr.js`),
+characters the reader could not decode, or text that is not words. Such pages
+are listed under the document in Sources, their passages are marked when they
+go with a question, and an answer resting only on them cannot be **High**
+confidence — the assistant is told to say the page could not be read
+reliably and point to the original.
+
+#### What is logged
+
+**Library → Sources → Recent searches and changes**, and the browser's
+console (`[sources]`): each question's documents searched, filters, passages
+with their scores and versions, what the answer cited and whether it held,
+answers held back and the figure that held them back, documents added,
+re-indexed, switched off or removed, and anything that could not be read.
+Never the documents' words, and never a token.
+
+#### What leaves the PC
+
+Only the passages that match a question, with it, to your flow — exactly
+what an attached document always sent — and never from a document marked to
+stay on this PC or one the workspace is not cleared for. The originals, the
+catalog and the index stay in the workspace folder.
+
 ### The incident history — for an incident manager
 
 Export your incidents from ServiceNow as CSV, import them in **Setup →
@@ -2311,7 +2503,26 @@ NEVER
 
 ## 16. Testing and measured numbers
 
-There is no test runner in the repository — the suites live outside it and
+Answering from documents has its tests in the repository, and they are the
+first thing to run after changing anything it touches:
+
+```
+node --test                 # tests/sources.test.js: 19 tests - every scenario below
+node tests/e2e/run.js       # the app in Chrome or Edge: 34 checks on the screen
+node flow/check-prompt.js   # the prompt's examples against the reply validator
+```
+
+They cover an answer stated in one document, one that needs several
+passages, one the documents do not give, a model that invents "4 hours"
+(held back, and never shown), two documents that disagree, a newer version
+replacing an older one, a document switched off, a follow-up, a document the
+workspace is not cleared for, a PDF page read badly, citations to the right
+page, section and lines, 150 documents searched at once, look-alike runbooks
+for different systems and environments, and the same question in a new
+conversation. `tests/e2e/run.js` finds Chrome or Edge by itself (set
+`CHROME=<path>` to choose) and skips, passing, when there is none.
+
+The other suites live outside the repository and
 drive the real files in a real browser (Playwright + Chromium), because the
 things that break here are things a unit test cannot see: a stale iframe cache,
 a CSP refusal, a file one folder away from where a manifest says.
@@ -2391,6 +2602,20 @@ model from scratch was tried, measured, and rejected on the numbers.
   runner to watch.
 - **Notifications need `http://`**, not `file://`. Start Resolv with
   `Resolv.bat`, which hands the page out from `127.0.0.1`.
+- **Sources search by words, not by meaning.** Passages are found by the
+  words of the question (with a short list of the words people use for the
+  same thing - *fix* and *remediate*, *how long* and *timeframe*), not by a
+  model's embedding: there is no second service to send your documents to.
+  A question that shares no words with the passage that answers it can miss
+  it - reword it, or name the document.
+- **A PDF's line numbers are its lines of text on the page**, counted as the
+  reader finds them; a Word document has no page or line numbers to give, so
+  its citations name the section. A scanned PDF is read only with `ocr.js`
+  beside `dossier.html`, and a page read badly is flagged, not trusted.
+- **Access labels are not a login.** They keep a document out of every search
+  and every question in a workspace that is not cleared for it, but anyone who
+  can open the workspace folder can open the files in it. Different teams
+  keep different workspace folders, with Windows permissions on them.
 - **Alerts need Resolv open.** The tab can be in the background, but a
   closed browser or a sleeping PC alerts nobody. An alert missed that way goes
   off when Resolv next opens, if it is less than half a day late; older, it is

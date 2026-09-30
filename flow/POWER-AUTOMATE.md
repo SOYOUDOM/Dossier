@@ -483,7 +483,7 @@ Resolv looks for the prompt in this order and uses the first one it finds:
 **Setup → Ask through Power Automate** shows which one is in use, and
 **Preview the request** shows exactly what the model will read, filled in.
 
-The text has nine places that Resolv fills in before sending. Keep them —
+The text has ten places that Resolv fills in before sending. Keep them —
 a prompt without `{message}` cannot answer anything, and Resolv will not use
 one:
 
@@ -497,12 +497,13 @@ one:
 | `{history}` | the conversation so far |
 | `{memory}` | the notes they taught it |
 | `{attached}` | every attached file, read as text |
+| `{sources}` | the passages of their runbooks and standards that match the question, labelled S1, S2… with document, version, page, lines and section (since 5.9) |
 
 Each is filled once, in one pass: a message that happens to contain the
 letters `{workspace}` is sent as those letters.
 
 `node flow/check-prompt.js` checks the file: every example reply in it
-against the validator Resolv applies to real replies, all nine places
+against the validator Resolv applies to real replies, all ten places
 present, the copy in `flow.js` the same as the file.
 
 > **A flow built the older way keeps working.** The request still carries

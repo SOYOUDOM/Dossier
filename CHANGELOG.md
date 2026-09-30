@@ -6,6 +6,64 @@ holds — which is what to paste into a bug report.
 
 ---
 
+## 5.9.0 - 2026-09-30
+
+**Answers from your runbooks and standards come from the documents - with
+the page, the lines and the section - or say they are not there.** A
+standard with no remediation timeframe in it was answered "4 hours": the
+guideline had gone with the one question it was attached to, the next
+question carried only a summary, and the one 4 hours in the request was
+Resolv's own P1 target date. Now:
+
+- **Library → Sources** keeps your runbooks, standards and guidelines -
+  PDF, Markdown, Word, text - whole, in the workspace folder (`sources/`):
+  the original, its text, and its passages, each with page, lines, section
+  and an id that stays while its words do. A PDF is read to the end, scanned
+  pages through `ocr.js`, and a page read badly is flagged. A document
+  attached in a conversation is kept there too (the **⊕ Sources** chip).
+- **Every question searches them** - every active document the workspace is
+  cleared for - and carries the passages that match, labelled S1, S2..., in
+  a new `{sources}` place in the prompt, with the ones around the best, so a
+  table keeps its heading. A system, environment, document or version named
+  in the question narrows the search; look-alike runbooks for other systems
+  drop out. Follow-ups ("how about low severity?", "the previous section")
+  are searched again with the question before them; a new conversation finds
+  the same passages. More than 100 documents: tested with 150.
+- **The prompt answers only from them** for anything a policy, standard,
+  runbook, SLA or procedure says: no figure a passage does not state, no P1
+  target carried over to a vulnerability, both sides of a conflict, advice of
+  its own only in a separate suggestion, and "The provided policy and
+  standard do not specify ..." when they do not.
+- **The answer is checked before it is shown.** Every quote must be in the
+  passage it cites, and every figure - a timeframe, a percentage, a severity
+  - must be in a passage it cites. One that states a figure no cited passage
+  contains is **held back**, not shown.
+- **Under the answer: Answer, Source, Evidence, Confidence** (High / Medium /
+  Not found), a suggestion marked as not from your documents, and which
+  documents were searched. A citation opens the document at that page with
+  the lines marked; "which source supports this answer?" and "why was it not
+  found?" are answered on the spot. With no flow, a question about your
+  documents gets their own words, cited.
+- **Versions**: a new version can replace the old one (kept, no longer
+  searched); two active versions are told apart only by their version or
+  effective date - never by which came last - and are both shown when
+  nothing tells them apart. **Switch off**, **Re-index** (says what changed,
+  by passage), **Re-index all**, **Remove**.
+- **Access labels**: a labelled document is searched only in a workspace
+  cleared for its label - otherwise not searched, counted, named or sent. A
+  document can be kept to this PC: searched, never sent.
+- **Diagnostics**: Library → Sources → Recent searches and changes (and the
+  console, `[sources]`) - documents searched, filters, passages, scores,
+  versions, citations, answers held back. Never a document's words.
+- **Tests in the repository**: `node --test` (19, every scenario above and
+  the "4 hours" regression) and `node tests/e2e/run.js` (the app in Chrome
+  or Edge, 34 checks). Setup and troubleshooting: `flow/SOURCES.md`.
+
+New `sources.js` beside `dossier.html`. No packages, database, vector store,
+embedding service or setting in Power Automate: the search runs in the page.
+
+---
+
 ## 5.8.0 - 2026-09-29
 
 **Telegram is gone; alerts stay, on the screen.** Sending alerts to a phone

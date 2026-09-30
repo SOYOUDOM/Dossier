@@ -1595,6 +1595,75 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
 .alertpop .apdt{display:flex;gap:6px;margin:2px 0 4px 24px}
 .alertpop .apdt .in{flex:1;min-width:0;padding:5px 7px;font-size:12px}
 .alertpop .apf{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
+/* ── Sources: the panel, the dialogs, and what goes under an answer ── */
+.libhd{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);margin:22px 0 10px;font-weight:650}
+.srcpanel{border:1px solid var(--rule-hi);border-radius:12px;padding:14px 16px;margin:0 0 8px;background:var(--paper)}
+.srchd{display:flex;gap:14px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap}
+.srchd h3{margin:0 0 4px;font-size:15px}
+.srcsub{margin:0;font-size:12px;color:var(--ink-2);line-height:1.55;max-width:720px}
+.srcbtns{display:flex;gap:8px;flex-wrap:wrap}
+.srcwarn{font-size:12px;line-height:1.5;margin:10px 0 0;padding:7px 10px;border-radius:8px;
+  background:color-mix(in srgb,var(--p2) 12%,transparent);color:inherit}
+.srcempty{font-size:12.5px;color:var(--ink-2);line-height:1.65;margin:12px 0 2px}
+.srclist{display:flex;flex-direction:column;gap:8px;margin:12px 0 4px}
+.srcdoc{border:1px solid var(--rule);border-radius:10px;padding:9px 11px}
+.srcdoc.superseded,.srcdoc.inactive{opacity:.62}
+.srcdn{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.srcdn b{font-size:13px}
+.srcst{font-size:10.5px;border-radius:999px;padding:1px 8px;border:1px solid var(--rule-hi);color:var(--ink-2)}
+.srcst.active{color:var(--st-done,#2e9d6a);border-color:color-mix(in srgb,var(--st-done,#2e9d6a) 45%,transparent)}
+.srcst.bad{color:var(--p1);border-color:color-mix(in srgb,var(--p1) 45%,transparent)}
+.srcdm{font-size:11.5px;color:var(--ink-3);margin:3px 0 0}
+.srcis{font-size:11.5px;color:var(--ink-2);margin:5px 0 0}
+.srcis summary{cursor:pointer;color:var(--p2)}
+.srcis ul{margin:4px 0 0;padding-left:18px}
+.srcda{display:flex;gap:6px;flex-wrap:wrap;margin:7px 0 0}
+.srchint{font-size:11.5px;color:var(--ink-3);line-height:1.55;margin:6px 0}
+.srcset{margin:10px 0 0;font-size:12px}
+.srcset summary{cursor:pointer;color:var(--ink-2);font-weight:600}
+.srcset .fr{margin-top:8px}
+.srclog{max-height:260px;overflow:auto;margin-top:6px;font-family:var(--f-mono);font-size:10.5px;line-height:1.6}
+.srcle i{color:var(--ink-3);font-style:normal}
+.srcck{display:flex;gap:7px;align-items:flex-start;font-size:12px;line-height:1.45;margin:6px 0;cursor:pointer}
+.srcck input{margin-top:2px}
+.srcdlg,.srcview{position:fixed;inset:0;z-index:95;background:rgba(10,12,18,.42);display:flex;align-items:center;justify-content:center;padding:16px}
+.srcdlgb,.srcvb{background:var(--paper);color:var(--ink);border:1px solid var(--rule-hi);border-radius:14px;
+  box-shadow:0 24px 70px -20px rgba(0,0,0,.55);width:560px;max-width:100%;max-height:calc(100vh - 32px);overflow:auto;padding:16px 18px}
+.srcdlgb h3{margin:0 0 6px;font-size:15px}
+.srcfile{font-size:12px;color:var(--ink-2);margin:0 0 10px;line-height:1.5}
+.srcdlg2{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}
+.srcver{margin:10px 0 4px;padding:9px 11px;border-radius:10px;background:color-mix(in srgb,var(--accent) 8%,transparent);font-size:12px}
+.srcvb{width:820px;padding:0;display:flex;flex-direction:column}
+.srcvh{display:flex;gap:10px;justify-content:space-between;align-items:flex-start;padding:12px 14px;border-bottom:1px solid var(--rule)}
+.srcvm{font-size:11.5px;color:var(--ink-3);margin-left:8px}
+.srcvc{font-size:11.5px;color:var(--ink-2);margin-top:3px}
+.srcva{display:flex;gap:6px}
+.srcvt{font-size:11px;color:var(--ink-3);padding:6px 14px 0}
+.srcvx{overflow:auto;padding:6px 0 14px;font-size:12.5px;line-height:1.55}
+.srcl{display:grid;grid-template-columns:48px 1fr;gap:10px;padding:0 14px}
+.srcl i{font-style:normal;text-align:right;color:var(--ink-3);font-family:var(--f-mono);font-size:10.5px;padding-top:2px}
+.srcl span{white-space:pre-wrap;word-break:break-word}
+.srcl.on{background:color-mix(in srgb,var(--accent) 16%,transparent)}
+.srcl.on i{color:var(--accent);font-weight:700}
+.srclab{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;opacity:.6;font-weight:700;margin:0 0 2px}
+.srcans{margin:10px 0 2px;padding:10px 12px;border-radius:10px;font-size:12.5px;line-height:1.55;
+  background:color-mix(in srgb,currentColor 5%,transparent);border:1px solid color-mix(in srgb,currentColor 14%,transparent)}
+.srcans.blocked,.srcans.unsupported{border-color:color-mix(in srgb,#e0a030 55%,transparent)}
+.srcnone{font-weight:700;margin:0 0 6px;color:#d9902a}
+.srcrow{display:grid;grid-template-columns:86px 1fr;gap:8px;margin:5px 0}
+.srcrow>b{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;opacity:.65;padding-top:2px}
+.srccites{display:flex;flex-direction:column;gap:4px;align-items:flex-start}
+.srccite{all:unset;cursor:pointer;font-size:12px;text-decoration:underline;text-decoration-color:color-mix(in srgb,currentColor 35%,transparent);text-underline-offset:3px}
+.srccite:hover,.srccite:focus-visible{text-decoration-color:currentColor}
+.srcq{margin:0 0 5px;padding:4px 0 4px 10px;border-left:3px solid color-mix(in srgb,currentColor 30%,transparent);font-style:italic}
+.srcq span{font-style:normal;font-size:10.5px;opacity:.6;margin-left:6px}
+.srcconf.high{color:#2fa36b}.srcconf.medium{color:#d9902a}.srcconf.not_found{color:#d9902a}
+.srcsug{margin:8px 0 2px;padding:8px 10px;border-radius:8px;border:1px dashed color-mix(in srgb,currentColor 28%,transparent);font-size:12.5px}
+.srcsug>b{display:block;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;opacity:.65;margin-bottom:3px}
+.srcsearched{font-size:11px;opacity:.62;margin-top:6px}
+.cfsrc{all:unset;cursor:pointer;font-size:10.5px;border-radius:999px;padding:1px 7px;margin-left:4px;opacity:.55;
+  border:1px solid color-mix(in srgb,currentColor 30%,transparent);white-space:nowrap}
+.cfsrc.on{opacity:1;border-color:currentColor}
 .alertpop .aphint{font-size:11px;color:var(--ink-3);line-height:1.5;margin:9px 0 0}
 .schsum{ font-size:11.5px;color:var(--ink-1);background:var(--paper-3);border-radius:var(--r-xs);
   padding:7px 10px;margin:2px 0 12px;line-height:1.5;min-height:16px }
@@ -4307,6 +4376,7 @@ body.chatting .pet[data-corner="br"],body.chatting .pet[data-corner="tr"]{
 <input type="file" id="fileIn" hidden multiple>
 <input type="file" id="jsonIn" accept=".json" hidden>
 <input type="file" id="rbIn" accept=".json" hidden>
+<input type="file" id="srcIn" accept=".pdf,.md,.markdown,.txt,.text,.docx" hidden multiple>
 <input type="file" id="incIn" accept=".csv,.txt" hidden>
 <input type="file" id="scriptIn" hidden multiple>
 
@@ -4323,6 +4393,9 @@ body.chatting .pet[data-corner="br"],body.chatting .pet[data-corner="tr"]{
      It still does not fetch: it drives flow/relay.html, which is sandboxed,
      holds no records, and is the only page with a connect-src that allows
      anything at all. Absent, the Ask box is exactly as it was. -->
+<!-- Your runbooks and standards, searched and cited (sources.js). Absent,
+     questions go without passages, exactly as before. -->
+<script src="sources.js"></script>
 <script src="flow.js"></script>
 <!-- optional: with ocr.js beside this file, a screenshot attached to a question is read here -->
 <script src="ocr.js"></script>
@@ -6035,6 +6108,129 @@ const STRINGS = {
   AlertClearFlow: "Remove the alert on {rec}",
   AlertClearConfirm: "Remove it?",
   AlertNoneOn: "{code} has no alert.",
+  LibRecordDocs: "Documents filed on records",
+  SrcHead: "Sources — the runbooks and standards the assistant answers from",
+  SrcSub: "{a} active · {s} superseded · {i} switched off. Every question searches the active ones; an answer about what they say cites the page, lines and section it came from.",
+  SrcAddBtn: "+ Add a PDF, Markdown or Word document",
+  SrcReindexAll: "Re-index all",
+  SrcEmpty: "Nothing here yet. Add your runbooks, standards and guidelines — PDF, Markdown (.md), Word (.docx) or text — and the assistant answers questions about them from the documents themselves, with the page and lines. A document you attach to a question is kept here too.",
+  SrcUnclear: "More than one version is active and nothing says which is current: {list}. Give each a version or an effective date (Details), or switch the old one off — until then an answer shows both.",
+  SrcPages: "{n} pages",
+  SrcPassages: "{n} passages",
+  SrcLocalOnly: "stays on this PC",
+  SrcFromChat: "from a conversation",
+  SrcMissing: "files missing",
+  SrcIssues: "{n} page(s) could not be read reliably",
+  SrcPage: "Page {n}",
+  SrcView: "View",
+  SrcDetailsBtn: "Details",
+  SrcReindex: "Re-index",
+  SrcDeactivate: "Switch off",
+  SrcActivate: "Switch on",
+  SrcRemove: "Remove",
+  SrcHidden: "{n} document(s) with an access label this workspace is not cleared for are not shown, not searched and never sent.",
+  SrcSettings: "Access, and documents attached in conversations",
+  SrcClearance: "Access labels this workspace may read",
+  SrcClearancePh: "e.g. security-restricted, finance",
+  SrcClearanceHint: "A document with no label is read by everyone. A document with a label is searched only when that label is listed here; otherwise it is not searched, not counted and never named to the assistant. Different teams keep separate workspace folders.",
+  SrcKeepChat: "Keep a PDF, Word or text file attached in a conversation in Sources (you can untick it per file in the tray)",
+  SrcDiag: "Recent searches and changes ({n})",
+  SrcDiagNone: "Nothing yet. Each question that searches your documents is listed here: how many documents, the filters, the passages and their scores, what the answer cited, and any answer held back — never the documents' words.",
+  SrcStatus_active: "active",
+  SrcStatus_superseded: "superseded",
+  SrcStatus_inactive: "switched off",
+  SrcStatus_deleted: "removed",
+  SrcAddTitle: "Add to Sources",
+  SrcEditTitle: "Source details",
+  SrcAddGo: "Add",
+  SrcSave: "Save",
+  SrcName: "Name",
+  SrcVersion: "Version",
+  SrcEffective: "Effective date",
+  SrcEffectiveShort: "effective",
+  SrcSystems: "Systems it is about",
+  SrcSystemsPh: "leave empty if it covers every system",
+  SrcEnv: "Environment",
+  SrcEnvAny: "any",
+  SrcCategory: "Category",
+  SrcCategoryPh: "e.g. security, incident, change",
+  SrcLabel: "Access label",
+  SrcLabelPh: "leave empty for everyone",
+  SrcToAssistant: "Its passages may go to the assistant with a question (untick to keep it searchable on this PC only)",
+  SrcLooksLike: "This looks like a new version of:",
+  SrcModeReplace: "It replaces that version — the older one is kept but no longer searched",
+  SrcModeBoth: "Keep both active — the version and effective date decide which is current",
+  SrcModeSeparate: "It is a different document",
+  SrcDetailsHint: "The version and effective date decide which of two active versions is current — never which one was added last. A system or environment here means a question naming another one does not read this document.",
+  SrcNeedName: "Give it a name.",
+  SrcFoundPdf: "{p} pages read.",
+  SrcFoundDocx: "Word document read, with its headings.",
+  SrcFoundText: "Text read.",
+  SrcFoundLow: "Pages {list} could not be read reliably and will be flagged.",
+  SrcNoModule: "sources.js is not beside dossier.html, so documents cannot be kept or searched.",
+  SrcReading: "Reading {name}…",
+  SrcCouldNotRead: "Could not read {name}.",
+  SrcNoText: "No text could be read from {name}. A scanned PDF needs ocr.js beside dossier.html.",
+  SrcUnchanged: "{name} is already in Sources, unchanged — nothing to re-index.",
+  SrcAdded: "Added {name}: {n} passages, searched from the next question.",
+  SrcAddedIssues: "{n} page(s) could not be read reliably — see the document in Sources.",
+  SrcCouldNotSave: "Could not save {name} in the workspace folder.",
+  SrcReindexed: "Re-indexed {name}: {a} new or changed passages, {r} gone, {k} unchanged.",
+  SrcReindexFailed: "Could not re-index {name}.",
+  SrcReindexedAll: "Re-indexed {n} of {of} documents.",
+  SrcRemoveTitle: "Remove {name} from Sources?",
+  SrcRemoveAsk: "Its original, its text and its passages are deleted from the workspace folder. Answers already given keep their citations, but the document can no longer be opened from them. To stop it being used but keep it, switch it off instead.",
+  SrcRemoveGo: "Remove it",
+  SrcRemoveGoHint: "Deletes sources/<id> from the workspace folder",
+  SrcNotPicture: "A picture has no text to search. Attach it to a question instead.",
+  SrcDocxBad: "An old Word 97-2003 file or a password-protected one cannot be read. Save it as .docx or PDF.",
+  SrcLocked: "The PDF needs a password.",
+  SrcCut: "Only the first {n} pages were read.",
+  SrcNoOcr: "{n} scanned page(s) have no text and could not be read (ocr.js is not beside dossier.html).",
+  SrcTray: "⊕ Sources",
+  SrcTrayOnHint: "Kept in Sources: this answer can cite it, and later questions can find it again. Click to use it for this question only.",
+  SrcTrayOffHint: "For this question only. Click to keep it in Sources as well.",
+  SrcKeptNoFlow: "Kept in Sources: {list}. Ask about it and the passages that answer come up here; with a flow set up, the assistant answers from them.",
+  SrcAttachPointer: "[kept in Sources as \"{name}\" — its passages are in THEIR DOCUMENTS (SOURCES), labelled; cite them]",
+  SrcAnswerLab: "Answer",
+  SrcSourceLab: "Source",
+  SrcRelatedLab: "What they do say",
+  SrcCitedLab: "It cited",
+  SrcEvidenceLab: "Evidence",
+  SrcConfidenceLab: "Confidence",
+  SrcConfHigh: "High — the source states it",
+  SrcConfMedium: "Medium — it follows from what the source says, but no one sentence says it",
+  SrcConfNotFound: "Not found — the documents searched do not specify this",
+  SrcConfpassages: "Passages only — read them; nothing was concluded from them",
+  SrcNoSource: "No supporting source found",
+  SrcHeldBack: "Answer held back — no supporting source",
+  SrcBlockedSay: "The documents searched do not specify this, so there is no answer from them to give. Resolv held back the reply it received: it stated a figure that none of the passages it cited contains, so it may have been invented.",
+  SrcBlockedWhy: "Every figure in an answer about your documents — a timeframe, a percentage, a severity — must be written in a passage the answer cites. This one was not. Ask “why was it not found?” for what was searched.",
+  SrcUnsupportedWhy: "This answer does not cite your documents, so it is not what they say. Treat it as general advice.",
+  SrcLowQuality: "A cited page could not be read reliably — check it in the original.",
+  SrcOpenHint: "Open the document at this place",
+  SrcSuggestLab: "Suggestion — not from your documents",
+  SrcSearched: "Searched {n} documents",
+  SrcFilter_document: "document:",
+  SrcFilter_version: "version:",
+  SrcFilter_system: "system:",
+  SrcFilter_environment: "environment:",
+  SrcFilter_category: "category:",
+  SrcWhichNone: "The last answer did not come from your documents: no passage of the {n} documents searched supported it.",
+  SrcWhichSay: "The last answer rests on {n} passage(s):",
+  SrcWhySay: "For the last answer Resolv searched {n} active documents you may read (closest: {list}; filters: {filters}).",
+  SrcNoFilters: "none",
+  SrcWhyNotFound: "None of the passages found states the answer, so it was reported as not specified. A document either does not say it, or says it in words the question did not reach.",
+  SrcWhyBlocked: "The reply that came back stated a figure that no passage it cited contains, so Resolv held it back rather than show a guess as your policy.",
+  SrcWhyUnsupported: "The reply did not cite any passage, so it was shown as not from your documents.",
+  SrcWhyFound: "It was answered from the passages cited under it.",
+  SrcWhyNext: "If the answer is in a document that is not in Sources, add it (Library → Sources). If it is there, check it is active, that you are cleared for its access label, and that the question names the system or environment it is about; after updating a document, press Re-index.",
+  SrcLocalNone: "None of the {n} documents searched has a passage about this, so the documents do not specify it.",
+  SrcLocalIntro: "Here is what your documents say about it, word for word — no flow is set up to answer from them, so read the passages:",
+  SrcGone: "That document is no longer in Sources.",
+  SrcViewPage: "Page {p} of {of}",
+  SrcViewLines: "Lines {a}–{b} of {of}",
+  SrcOpenOriginal: "Open the original",
   AboutNotThis: "This copy of Resolv is {v}.",
   AboutEarlier: "Earlier releases",
   AboutWhatIn: "What's new in {v}",
@@ -6807,7 +7003,7 @@ const STATUSES = [
    the status bar, and clicking it copies a line you can paste into a bug
    report — build date and flow protocol included, because those are the two
    things that actually differ between copies. */
-const APP_VERSION = "5.8.0";
+const APP_VERSION = "5.9.0";
 const APP_BUILT = "2026-09-27";
 function buildLine(){
   return "Resolv v" + APP_VERSION + " \u00b7 built " + APP_BUILT +
@@ -8770,6 +8966,8 @@ async function openWorkspace(handle, quiet){
   });
   renderAll();
   hideBanner();
+  /* this folder's runbooks and standards, read in the background */
+  srcLoad(true).then(() => { if (S.view === "library") renderLib(); }).catch(() => {});
   if (!quiet) toast((loaded ? S.tasks.length + L("RecordsLoadedFrom") + FS.name
                             : L("NewWorkspaceStartedIn") + FS.name) +
                     (DB.on ? " \u00b7 " + L("StoreSql") : " \u00b7 " + L("StoreFile")));
@@ -10468,18 +10666,22 @@ function renderLib(){
     docs.push({ t, f });
   }));
   docs.sort((a, b) => (b.f.added || "") < (a.f.added || "") ? -1 : 1);
+  /* your runbooks and standards first: what the assistant answers from */
+  const src = FS.ok ? srcPanelHtml() : "";
   if (!docs.length){
-    $("vLib").innerHTML = blank("▤", L("NoDocumentsYet"),
+    $("vLib").innerHTML = src + blank("▤", L("NoDocumentsYet"),
       FS.ok ? L("DragAFileOntoAnyRecord") +
               "<b>" + L("TasksLtRecordGt") + "</b> " + L("InsideYourWorkspaceFolderSoIt")
             : L("LinkAWorkspaceFolderFirstThen"));
+    srcPanelWire();
     return;
   }
-  $("vLib").innerHTML = '<div class="lib">' + docs.map(d =>
+  $("vLib").innerHTML = src + (src ? '<h3 class="libhd">' + LE("LibRecordDocs") + "</h3>" : "") + '<div class="lib">' + docs.map(d =>
     '<div class="doc" data-id="' + d.t.id + '" data-file="' + esc(d.f.name) + '">' +
     '<div class="thumb" data-thumb="' + d.t.id + "|" + esc(d.f.name) + '"><span class="ext">' + extOf(d.f.name) + "</span></div>" +
     '<div class="info"><div class="fn" title="' + esc(d.f.name) + '">' + esc(d.f.name) + "</div>" +
     '<div class="sub">' + bytes(d.f.size || 0) + " · " + esc(d.t.code) + " " + esc(d.t.title.slice(0,30)) + "</div></div></div>").join("") + "</div>";
+  srcPanelWire();
   // lazily swap in real image previews
   docs.forEach(async d => {
     if (!/^image\//.test(d.f.type || "")) return;
@@ -12733,7 +12935,10 @@ function chatRenderBot(r, sourceText, replaying, at){
          '<div class="chts">' + esc(L("ChatHeroSub")) + "</div>" +
          '<div class="chcard"><b>' + esc(L("ChatHeroCard1")) + "</b><span>" + esc(L("ChatHeroCard2")) + "</span></div>";
   } else {
+    const grounded = r.grounding && r.grounding.status !== "general";
+    if (grounded) h += '<div class="srclab">' + LE("SrcAnswerLab") + "</div>";
     h += '<div class="say">' + chatSay(r.say || "") + "</div>";
+    if (grounded || r.suggest) h += srcAnswerHtml(r, id);
   }
   if (r.note) h += '<div class="note">' + esc(r.note) + "</div>";
   if (r.took) h += '<div class="took" title="' + esc(L("FlowTookHint")) + '">' + (r.took / 1000).toFixed(1) + " s" +
@@ -13233,6 +13438,9 @@ function chatAsk(text, opts){
      to do with the second one is not to make it. */
   if ($("chat").classList.contains("busy")) return;
   if (CHAT.files.some(f => f.reading) || CHAT.gridBusy) return chatReadsDone().then(() => chatAsk(q, opts));
+  /* the workspace's documents are still being read: this question waits
+     for them rather than going without its passages */
+  if (SRC.loading && !SRC.done) return SRC.loading.catch(() => {}).then(() => chatAsk(q, opts));
   CHAT.last = q;
   const c = chatThread() || chatNew(true);
   const files = CHAT.files.map(f => ({ name:f.name, type:f.type, size:f.size }));
@@ -13255,6 +13463,10 @@ function chatAsk(text, opts){
   if (al){ chatBot(al, q); chatSide(); return; }
   /* "what's new?", "which version is this?" - from Resolv's own
      CHANGELOG, at once; the flow can still be asked for more */
+  /* "which source supports this answer?", "why was it not found?" - from
+     what the last answer carried, here */
+  const why = !CHAT.files.length && !opts.flow && !opts.tier && !opts.force && srcLocalIntent(q, c);
+  if (why){ chatBot(why, q); chatSide(); return; }
   const own = !CHAT.files.length && !opts.flow && !opts.tier && !opts.force && aboutLocal(q);
   if (own){
     if (flowOn()) own.chips = [{ label:L("LocalAskAi"), act:{ kind:"askflow", text:q } }];
@@ -13276,17 +13488,24 @@ function chatAsk(text, opts){
   /* With a flow configured, it answers instead. The local assistant is still
      here and still knows this workspace — it is what a failed call falls back
      to, and what answers when the flow is switched off. */
+  /* documents in the tray go into Sources now, so this question can cite
+     them and the next ones can find them again */
+  CHAT.pins = srcKeepFromChat(CHAT.files);
   if (flowOn()){
     updCheck();
     const p = flowAsk(q, c, opts);
     /* they went with the question; the tray starts empty for the next one */
-    CHAT.files = []; renderChatFiles();
+    CHAT.files = []; CHAT.pins = []; renderChatFiles();
     return p;
   }
   if (CHAT.files.length){
-    CHAT.files = []; renderChatFiles();
-    chatBot({ say:"", note:L("AttachNeedsFlow") });
+    const kept = CHAT.files.filter(f => f.srcId).map(f => f.srcName);
+    CHAT.files = []; CHAT.pins = []; renderChatFiles();
+    chatBot({ say:"", note:kept.length ? L("SrcKeptNoFlow", { list:kept.join(", ") }) : L("AttachNeedsFlow") });
   }
+  /* no flow: what your documents say about it, passage by passage */
+  const fromDocs = !opts.force && srcLocalAnswer(q, c);
+  if (fromDocs){ chatBot(fromDocs, q); chatSide(); return; }
 
   let r;
   try { r = DossierChat.ask(q, chatApi(c.convo)); }
@@ -13523,9 +13742,9 @@ function aboutSearch(q, n){
   }).filter(x => x.score > 0).sort((a, b) => b.score - a.score).slice(0, n || 3);
 }
 /* is this question about Resolv itself, rather than about their work */
-const ABOUT_OWN = /\b(resolv|this app|the app|in the app|your(self)? (version|features?)|what'?s new|what is new|new (in|feature|version)|release notes?|change ?log|changelog|version|feature|setting|settings|set ?up|preset|skin|theme|lumen|nova|nebula|aurora|carbon|pixel|desk pet|shortcut|keyboard|alerts?|bell|reminders?|notifications?|bridge|power automate|prompt|language|khmer|menu|button|look and behaviou?r)\b/i;
-const ABOUT_HELP = /\b(how (do|can|to|should|does)|where (is|are|do|can)|can (i|you|it)|is there|does it|what does|what is|turn (on|off)|switch (on|off)|enable|disable|configure|change|show me how)\b/i;
-const ABOUT_NEWS = /\b(what'?s new|what is new|what changed|what has changed|new in|release notes?|change ?log|changelog|latest (version|release|update)|which version|what version|version (are you|is this|am i))\b/i;
+const ABOUT_OWN = /\b(resolv|this app|the app|in the app|your(self)? (version|features?)|what'?s new|what is new|new (in|feature|version)|release notes?|change ?log|changelog|version|feature|setting|settings|set ?up|preset|skin|theme|lumen|nova|nebula|aurora|carbon|pixel|desk pet|shortcut|keyboard|alerts?|bell|reminders?|notifications?|bridge|power automate|prompt|language|khmer|menu|button|look and behaviou?r|sources?|document indexing|index(?:ing)?|re-?index(?:ing|ed)?|citations?|pdf runbooks?|(?:add|upload|import|update|replace) (?:a |an |my |the )?(?:new |updated )?(?:pdf|markdown|word|document|runbook|guideline|standard|policy)s?|answer was not found|not found|supports? (?:this|that|the) answer)\b/i;
+const ABOUT_HELP = /\b(how (do|can|to|should|does)|where (is|are|do|can)|can (i|you|it)|is there|does it|what does|what is|turn (on|off)|switch (on|off)|enable|disable|configure|change|show me how|why (did|does|do|is|was)|which (source|document))\b/i;
+const ABOUT_NEWS = /\b(what'?s new|what is new|what changed|what has changed|what (?:was|were|has been|have been|got) (?:added|new|changed|fixed|improved)|new in|release notes?|change ?log|changelog|(?:latest|last|newest|current|this) (?:resolv )?(?:version|release|update)|which version|what version|version (are you|is this|am i))\b/i;
 function aboutForFlow(q){
   if (!ABOUT.loaded){ aboutLoad(); return { name:"Resolv", version:APP_VERSION }; }
   const app = { name:"Resolv", version:APP_VERSION,
@@ -13621,6 +13840,10 @@ function flowContext(q){
     /* Resolv itself: its version and latest releases always, and the parts
        of its README and CHANGELOG that answer a question about it */
     app: aboutForFlow(q),
+    /* their runbooks and standards: the passages that match, labelled and
+       placed, for the answer to cite (see SOURCES) - not with the daily
+       look back or the one-line jobs, which are not about documents */
+    sources: /^\[(reflect|fix|check|brief)\]/.test(String(q || "")) ? undefined : srcForFlow(q, c, CHAT.pins || []),
     focus: flowFocus(),
     thread: threadForFlow(c),
     mentioned: rbIdents(q),
@@ -13636,7 +13859,7 @@ function flowContext(q){
       /* what was read out of it here — the words the endpoint answers
          from — with the page count, and a note when something got in the
          way: scanned, encrypted, cut, partial, empty, unreadable */
-      text:chatDocText(f), pages:f.pages || 0, note:f.note || "",
+      text:f.srcId ? L("SrcAttachPointer", { name:f.srcName || f.name }) : chatDocText(f), pages:f.pages || 0, note:f.srcId ? "" : f.note || "",
       /* pictures inside a document: how many, each marked in text where it sits */
       pictures:(f.pics || []).filter(p => p.why !== "tiny").length })),
     picture: chatPicture().data,
@@ -13757,7 +13980,7 @@ async function flowAsk(q, thread, opts){
         memory:[], memoryIndex:[], memoryTotal:0, lessons:[], runbooks:[], runbookTotal:0,
         runbooksMatched:[], profiles:[], pastFixes:[], incidents:undefined, conversation:[], forceRecords:[],
         attachments:ctx.attachments, picture:ctx.picture, pictureName:ctx.pictureName,
-        promptTemplate:ctx.promptTemplate, promptFrom:ctx.promptFrom
+        promptTemplate:ctx.promptTemplate, promptFrom:ctx.promptFrom, sources:ctx.sources
       }), Object.assign({}, cfg, { scope:"names" }));
     } catch(e){ out3 = null; }
     chatThought(wait3, null);
@@ -13786,7 +14009,7 @@ async function flowAsk(q, thread, opts){
          the tray is empty by now, so they come from the first context */
       out2 = await DossierFlow.ask(q, Object.assign(flowContext(q), {
         attachments: ctx.attachments, picture: ctx.picture, pictureName: ctx.pictureName,
-        promptTemplate: ctx.promptTemplate, promptFrom: ctx.promptFrom,
+        promptTemplate: ctx.promptTemplate, promptFrom: ctx.promptFrom, sources: ctx.sources,
         forceRecords: (opts.force || []).concat(rows),
         followUp: { of:q, wanted:more.args || {}, gave:rows.length }
       }), cfg);
@@ -13832,6 +14055,9 @@ async function flowAsk(q, thread, opts){
   }
 
   const reply = flowReply(out, q);
+  /* answered from the documents? its quotes and figures are checked
+     against the passages it was sent before it is shown */
+  if (out && !fell) srcApply(reply, out, ctx.sources, q, thread);
   if (fell){
     /* even the lean question failed: it is the flow, or the question itself */
     reply.trouble = true;
@@ -16301,6 +16527,8 @@ function chatDo(act){
     }
     /* one action a flow proposed, now that it has been agreed to */
     case "flow":     return flowRun(act.a);
+    /* a citation under an answer: the page, the lines, the quote marked */
+    case "srcview":  return srcView(act.ref);
     case "run":      closeChat(); return runScriptFor(act.id, act.scriptId);
     case "undo":     closeChat(); return doUndo();
     case "routine": {
@@ -20556,6 +20784,736 @@ function alertLocal(q){
 }
 
 
+/* ═══ SOURCES — the documents the assistant answers from ═════════════════
+   Your runbooks, standards and guidelines, kept whole in the workspace
+   folder and searched on every question - so an answer about what a
+   document says comes from the document, with the page and the lines it
+   came from, and not from what a model remembers of a summary.
+
+     sources/catalog.json          every document: name, version, effective
+                                   date, status, who may read it, what could
+                                   not be read
+     sources/<id>/<file name>      the original, exactly as it was added
+     sources/<id>/text.txt         the words read out of it ("[page N]"
+                                   between PDF pages)
+     sources/<id>/chunks.json      its passages, each with page, lines,
+                                   section and an id that stays while the
+                                   words do
+
+   Reading, searching, citing and checking are sources.js (window.
+   DossierSources), which is tested on its own under Node. This is the half
+   that keeps the files, draws the panel, and puts the passages into a
+   question and the citations under its answer.
+
+   Nothing here reaches the network. The passages that match a question go
+   with it to your flow, exactly as an attachment always did - except a
+   document marked to stay on this PC, whose passages never do. */
+const SRC = { cat:null, chunks:new Map(), ix:null, loading:null, texts:new Map(), log:[], at:"" };
+const SRC_DIR = "sources";
+const SRC_ACCEPT = ".pdf,.md,.markdown,.txt,.text,.docx";
+const SRC_MAX_PAGES = 2000, SRC_MAX_CHARS = 4000000, SRC_SCAN_MAX = 60;
+function srcHere(){ return typeof window !== "undefined" && !!window.DossierSources; }
+function srcCfg(){
+  const st = S.settings;
+  if (!st.sources || typeof st.sources !== "object") st.sources = {};
+  const c = st.sources;
+  if (!Array.isArray(c.clearance)) c.clearance = [];
+  if (c.keepChat === undefined) c.keepChat = true;
+  if (!(+c.budget >= 2000)) c.budget = 14000;
+  return c;
+}
+function srcDocs(){ return (SRC.cat && SRC.cat.docs) || []; }
+function srcDoc(id){ return srcDocs().find(d => d.id === id) || null; }
+function srcActive(){ return srcDocs().filter(d => d.status === "active"); }
+function srcNewId(){ return "src" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5); }
+
+/* ── on disk ──────────────────────────────────────────────────────────── */
+async function srcSaveCat(){
+  if (!FS.ok || !SRC.cat) return;
+  const dir = await FS.dir([SRC_DIR], true);
+  SRC.cat.saved = new Date().toISOString();
+  await FS.writeText(dir, "catalog.json", JSON.stringify(SRC.cat, null, 1));
+}
+function srcPrepare(d, text, stats){
+  return DossierSources.prepare({ id:d.id, family:d.family, name:d.name, file:d.file, kind:d.kind, text:text,
+    pages:d.pages || 0, pageStats:stats || d.pageStats || [], version:d.version, effective:d.effective,
+    systems:d.systems, environment:d.environment, category:d.category, label:d.label,
+    assistant:d.assistant, status:d.status });
+}
+function srcRebuild(){
+  if (!srcHere()) return;
+  const docs = srcDocs().filter(d => d.status !== "deleted");
+  const chunks = [];
+  docs.forEach(d => { (SRC.chunks.get(d.id) || []).forEach(c => chunks.push(c)); });
+  SRC.ix = DossierSources.createIndex(docs, chunks);
+}
+/* Read at every workspace open. When the way passages are cut has changed
+   (sources.js ALGO), every document is cut again from the text already
+   kept - nothing is read from the originals twice. */
+async function srcLoad(force){
+  if (SRC.loading && !force) return SRC.loading;
+  SRC.done = false;
+  SRC.loading = (async () => {
+   try {
+    SRC.cat = { version:1, algo:srcHere() ? DossierSources.ALGO : 0, docs:[] };
+    SRC.chunks = new Map(); SRC.texts = new Map(); SRC.ix = null;
+    if (!srcHere() || !FS.ok){ srcRebuild(); return SRC; }
+    let cat = null;
+    try { cat = JSON.parse(await FS.readText(await FS.dir([SRC_DIR], false), "catalog.json")); } catch(e){ cat = null; }
+    if (cat && Array.isArray(cat.docs)) SRC.cat = cat;
+    const stale = SRC.cat.algo !== DossierSources.ALGO;
+    let redone = 0;
+    for (const d of SRC.cat.docs){
+      if (d.status === "deleted") continue;
+      try {
+        const dir = await FS.dir([SRC_DIR, d.id], false);
+        if (stale){
+          const r = srcPrepare(d, await FS.readText(dir, "text.txt"));
+          SRC.chunks.set(d.id, r.chunks); d.chunks = r.chunks.length;
+          await FS.writeText(dir, "chunks.json", JSON.stringify(r.chunks));
+          redone++;
+        } else SRC.chunks.set(d.id, JSON.parse(await FS.readText(dir, "chunks.json")));
+      } catch(e){
+        SRC.chunks.set(d.id, []);
+        d.missing = true;
+      }
+    }
+    if (stale){ SRC.cat.algo = DossierSources.ALGO; try { await srcSaveCat(); } catch(e){} }
+    srcRebuild();
+    SRC.at = new Date().toISOString();
+    if (redone) srcNote({ kind:"reindex", docs:redone, why:"the way passages are cut changed" });
+    return SRC;
+   } finally { SRC.done = true; }
+  })();
+  return SRC.loading;
+}
+async function srcText(d){
+  if (SRC.texts.has(d.id)) return SRC.texts.get(d.id);
+  const t = await FS.readText(await FS.dir([SRC_DIR, d.id], false), "text.txt");
+  SRC.texts.set(d.id, t);
+  return t;
+}
+async function srcSha(buf){
+  try {
+    const h = await crypto.subtle.digest("SHA-256", buf);
+    return Array.prototype.map.call(new Uint8Array(h), b => b.toString(16).padStart(2, "0")).join("");
+  } catch(e){ return ""; }
+}
+
+/* ── reading a file into a source ───────────────────────────────────────
+   The same readers an attachment goes through, but to the end of the
+   document: a PDF page by page (and its scanned pages through ocr.js
+   when it is there), a Word document with its headings, Markdown and text
+   as they are. */
+function srcKindOf(name, type){
+  const k = chatKind(type || chatFileType({ name:name, type:"" }));
+  if (k === "pdf" || k === "docx" || k === "image") return k;
+  return /\.(md|markdown)$/i.test(name) ? "md" : "text";
+}
+async function srcExtract(file){
+  const kind = srcKindOf(file.name, chatFileType(file));
+  if (kind === "image") throw new Error(L("SrcNotPicture"));
+  if (/\.(doc|dot)$/i.test(file.name)) throw new Error(L("SrcDocxBad"));
+  const buf = await file.arrayBuffer();
+  let text = "", pages = 0, stats = [];
+  const issues = [];
+  if (kind === "pdf"){
+    const r = await pdfText(buf, { scans:SRC_SCAN_MAX, pics:0, maxPages:SRC_MAX_PAGES, maxChars:SRC_MAX_CHARS });
+    if (r.note === "encrypted") throw new Error(L("SrcLocked"));
+    text = r.text; pages = r.pages; stats = r.pageStats || [];
+    if (r.note === "cut") issues.push({ page:0, what:L("SrcCut", { n:SRC_MAX_PAGES }) });
+    if (r.scans && r.scans.length){
+      if (chatOcrOn()){
+        const sc = await chatReadScans(r, null);
+        if (sc.text){
+          text = (text ? text + "\n\n" : "") + sc.text;
+          (sc.text.match(/\[page (\d+)\]/g) || []).forEach(m => {
+            const n = +m.replace(/\D/g, ""), st = stats.find(x => x.n === n);
+            if (st) st.ocr = true; else stats.push({ n:n, ocr:true });
+          });
+        }
+      } else issues.push({ page:0, what:L("SrcNoOcr", { n:r.scans.length }) });
+    }
+  } else if (kind === "docx"){
+    const r = await docxText(buf, { pics:0 });
+    if (r.note === "legacy" || r.note === "unreadable") throw new Error(L("SrcDocxBad"));
+    text = r.text; pages = r.pages || 0;
+  } else text = new TextDecoder().decode(buf).replace(/^﻿/, "").replace(/\r\n?/g, "\n");
+  text = text.replace(/\d+\n?/g, "");
+  return { kind:kind, text:text, pages:pages, stats:stats, issues:issues, sha:await srcSha(buf), size:file.size };
+}
+/* write one document's three files and put it in the catalog */
+async function srcStore(file, x, ans, from){
+  const d = { id:srcNewId(), name:ans.name, file:safeFile(file.name || "document"), kind:x.kind,
+    version:ans.version || "", effective:ans.effective || "", systems:ans.systems || [], environment:ans.environment || "",
+    category:ans.category || "", label:ans.label || "", assistant:ans.assistant !== false, status:"active",
+    family:DossierSources.familyKey(ans.name), sha:x.sha, textHash:DossierSources.hash36(DossierSources.norm(x.text)),
+    size:x.size || 0, pages:x.pages || 0, added:new Date().toISOString(), from:from || "you", pageStats:x.stats || [] };
+  const r = srcPrepare(d, x.text, x.stats);
+  d.version = r.doc.version; d.effective = r.doc.effective;
+  d.chunks = r.chunks.length; d.issues = (x.issues || []).concat(r.issues);
+  const dir = await FS.dir([SRC_DIR, d.id], true);
+  await FS.writeBlob(dir, d.file, file);
+  await FS.writeText(dir, "text.txt", x.text);
+  await FS.writeText(dir, "chunks.json", JSON.stringify(r.chunks));
+  /* a new version, said to replace the one before: that one is kept, and
+     no longer searched */
+  (ans.replaces || []).forEach(o => { o.status = "superseded"; o.supersededBy = d.id; o.changed = d.added; });
+  if ((ans.replaces || []).length) d.supersedes = ans.replaces.map(o => o.id);
+  SRC.cat.docs.push(d); SRC.chunks.set(d.id, r.chunks); SRC.texts.set(d.id, x.text);
+  await srcSaveCat();
+  srcRebuild();
+  srcNote({ kind:"added", doc:d.name, version:d.version, passages:d.chunks, from:d.from,
+            replaced:(ans.replaces || []).map(o => o.name + (o.version ? " v" + o.version : "")),
+            problems:d.issues.filter(i => !i.info).map(i => (i.page ? "page " + i.page + ": " : "") + i.what) });
+  return d;
+}
+/* Add from the Sources panel: read, say what was found, and ask - its
+   name, version, effective date, who may read it, and, when it looks like
+   a new version of something already here, whether it replaces it. */
+async function srcAddFiles(list){
+  if (!srcHere()) return toast(L("SrcNoModule"), { bad:true });
+  if (!FS.ok) return toast(L("LinkAWorkspaceFolderFirstThen"), { bad:true });
+  await srcLoad();
+  for (const f of Array.prototype.slice.call(list || [])){
+    let x;
+    toast(L("SrcReading", { name:f.name }));
+    try { x = await srcExtract(f); }
+    catch(e){
+      srcNote({ kind:"error", file:f.name, what:String(e.message || e) });
+      toast(L("SrcCouldNotRead", { name:f.name }) + " " + (e.message || e), { bad:true, life:9000 }); continue;
+    }
+    if (!x.text.trim()){
+      srcNote({ kind:"error", file:f.name, what:"no text" });
+      toast(L("SrcNoText", { name:f.name }), { bad:true, life:9000 }); continue;
+    }
+    const same = srcDocs().find(d => d.status !== "deleted" && ((x.sha && d.sha === x.sha) ||
+                   d.textHash === DossierSources.hash36(DossierSources.norm(x.text))));
+    if (same){ toast(L("SrcUnchanged", { name:same.name })); continue; }
+    const meta = DossierSources.detectMeta(x.text, f.name);
+    const base = f.name.replace(/\.[^.]+$/, "");
+    const pre = { name:(meta.title && meta.title.length <= 90 && x.kind !== "text") ? meta.title.replace(/^#+\s*/, "") : base,
+                  version:meta.version, effective:meta.effective };
+    const ans = await srcDetails(pre, x, f.name);
+    if (!ans) continue;
+    try {
+      const d = await srcStore(f, x, ans, "you");
+      const bad = d.issues.filter(i => !i.info).length;
+      toast(L("SrcAdded", { name:d.name, n:d.chunks }) + (bad ? " " + L("SrcAddedIssues", { n:bad }) : ""), { life:8000 });
+    } catch(e){ toast(L("SrcCouldNotSave", { name:f.name }) + " " + (e.message || e), { bad:true }); }
+  }
+  touch(); renderLib();
+}
+
+/* ── a document handed over in a conversation ───────────────────────────
+   Kept, not forgotten after one answer: a PDF, a Word document or a text
+   file attached to a question goes into Sources at once, from the text the
+   tray has already read, so this question can cite it - and the next
+   question, and a new conversation next week. The original is written
+   beside it and read again to the end, for a document longer than an
+   attachment is read. Switched off with the setting, or per file in the
+   tray. */
+function srcKeepFromChat(files){
+  if (!srcHere() || !FS.ok || !SRC.cat || !SRC.ix) return [];
+  const cfg = srcCfg(), pins = [];
+  (files || []).forEach(f => {
+    if (f.reading || !f.text || chatKind(f.type) === "image") return;
+    if (f.keepSrc === false || (!cfg.keepChat && !f.keepSrc)) return;
+    const text = String(f.text).replace(/\d+\n?/g, "");
+    const th = DossierSources.hash36(DossierSources.norm(text));
+    let d = srcDocs().find(x => x.textHash === th && x.status === "active");
+    if (!d){
+      const kind = srcKindOf(f.name, f.type);
+      const meta = DossierSources.detectMeta(text, f.name);
+      const name = (meta.title && meta.title.length <= 90 && kind !== "text") ? meta.title.replace(/^#+\s*/, "") : f.name.replace(/\.[^.]+$/, "");
+      d = { id:srcNewId(), name:name, file:safeFile(f.name || "document"), kind:kind, version:meta.version, effective:meta.effective,
+            systems:[], environment:"", category:"", label:"", assistant:true, status:"active",
+            family:DossierSources.familyKey(name), textHash:th, size:f.size || 0, pages:f.pages || 0,
+            added:new Date().toISOString(), from:"chat", pageStats:[] };
+      const r = srcPrepare(d, text);
+      d.chunks = r.chunks.length; d.issues = r.issues;
+      SRC.cat.docs.push(d); SRC.chunks.set(d.id, r.chunks); SRC.texts.set(d.id, text);
+      srcRebuild();
+      srcKeepFiles(d, f, text);
+      f.srcNew = true;
+    }
+    f.srcId = d.id; f.srcName = d.name;
+    pins.push(d.id);
+  });
+  return pins;
+}
+async function srcKeepFiles(d, f, text){
+  try {
+    const dir = await FS.dir([SRC_DIR, d.id], true);
+    if (f.file) await FS.writeBlob(dir, d.file, f.file);
+    let x = null;
+    /* read again to the end - a tray read stops at eighty pages - and with
+       each page's quality, which the tray does not keep */
+    if (f.file && (d.kind === "pdf" || f.note === "cut")){ try { x = await srcExtract(f.file); } catch(e){ x = null; } }
+    if (x && x.text.trim()){
+      const r = srcPrepare(d, x.text, x.stats);
+      d.pages = x.pages || d.pages; d.sha = x.sha; d.pageStats = x.stats;
+      d.chunks = r.chunks.length; d.issues = (x.issues || []).concat(r.issues);
+      SRC.chunks.set(d.id, r.chunks); SRC.texts.set(d.id, x.text); text = x.text;
+      srcRebuild();
+    } else if (f.file) d.sha = await srcSha(await f.file.arrayBuffer());
+    await FS.writeText(dir, "text.txt", text);
+    await FS.writeText(dir, "chunks.json", JSON.stringify(SRC.chunks.get(d.id) || []));
+    await srcSaveCat();
+    srcNote({ kind:"added", doc:d.name, version:d.version, passages:d.chunks, from:"chat",
+              problems:(d.issues || []).filter(i => !i.info).map(i => (i.page ? "page " + i.page + ": " : "") + i.what) });
+    if (S.view === "library") renderLib();
+  } catch(e){ srcNote({ kind:"error", file:d.file, what:String(e.message || e) }); }
+}
+
+/* ── changing what is there ──────────────────────────────────────────── */
+async function srcSetStatus(id, status){
+  const d = srcDoc(id); if (!d) return;
+  d.status = status; d.changed = new Date().toISOString();
+  await srcSaveCat(); srcRebuild();
+  srcNote({ kind:"status", doc:d.name, version:d.version, status:status });
+  renderLib();
+}
+/* Read the original again and cut it again: for a document whose words
+   were not read well the first time (ocr.js added since), or after it was
+   edited in place. What changed is said by passage. */
+async function srcReindex(id, quiet){
+  const d = srcDoc(id); if (!d) return;
+  try {
+    const dir = await FS.dir([SRC_DIR, d.id], false);
+    const fh = await dir.getFileHandle(d.file);
+    const x = await srcExtract(await fh.getFile());
+    const before = SRC.chunks.get(d.id) || [];
+    const r = srcPrepare(d, x.text, x.stats);
+    const diff = DossierSources.diffChunks(before, r.chunks);
+    d.pages = x.pages || d.pages; d.sha = x.sha; d.pageStats = x.stats; d.chunks = r.chunks.length;
+    d.issues = (x.issues || []).concat(r.issues); d.textHash = DossierSources.hash36(DossierSources.norm(x.text));
+    d.reindexed = new Date().toISOString(); delete d.missing;
+    await FS.writeText(dir, "text.txt", x.text);
+    await FS.writeText(dir, "chunks.json", JSON.stringify(r.chunks));
+    SRC.chunks.set(d.id, r.chunks); SRC.texts.set(d.id, x.text);
+    await srcSaveCat(); srcRebuild();
+    srcNote({ kind:"reindex", doc:d.name, version:d.version, added:diff.added, removed:diff.removed, kept:diff.kept });
+    if (!quiet) toast(L("SrcReindexed", { name:d.name, a:diff.added, r:diff.removed, k:diff.kept }));
+    return diff;
+  } catch(e){
+    srcNote({ kind:"error", doc:d.name, what:String(e.message || e) });
+    if (!quiet) toast(L("SrcReindexFailed", { name:d.name }) + " " + (e.message || e), { bad:true, life:9000 });
+    return null;
+  }
+}
+async function srcReindexAll(){
+  const list = srcDocs().filter(d => d.status !== "deleted");
+  let ok = 0;
+  for (const d of list){ if (await srcReindex(d.id, true)) ok++; }
+  toast(L("SrcReindexedAll", { n:ok, of:list.length }));
+  renderLib();
+}
+async function srcRemove(id){
+  const d = srcDoc(id); if (!d) return;
+  const a = await askUser(L("SrcRemoveTitle", { name:d.name }), L("SrcRemoveAsk"),
+    [{ label:L("SrcRemoveGo"), hint:L("SrcRemoveGoHint") }, { label:L("Cancel") }]);
+  if (!a || a.choice !== 0) return;
+  try { const dir = await FS.dir([SRC_DIR], false); await dir.removeEntry(d.id, { recursive:true }); } catch(e){}
+  SRC.cat.docs = SRC.cat.docs.filter(x => x !== d);
+  SRC.chunks.delete(d.id); SRC.texts.delete(d.id);
+  await srcSaveCat(); srcRebuild();
+  srcNote({ kind:"removed", doc:d.name, version:d.version });
+  renderLib();
+}
+
+/* ── the details asked when a document is added (and editable after) ─── */
+function srcDetails(pre, x, fileName, existing){
+  return new Promise(resolve => {
+    const fam = DossierSources.familyKey(pre.name);
+    const match = existing ? [] : srcDocs().filter(d => d.family === fam && d.status === "active");
+    const old = document.getElementById("srcDlg"); if (old) old.remove();
+    const el = document.createElement("div");
+    el.id = "srcDlg"; el.className = "srcdlg"; el.setAttribute("role", "dialog");
+    const envs = ["", "production", "uat", "sit", "staging", "development", "test", "dr"];
+    const issues = x ? (x.issues || []).concat([]) : [];
+    const lowPages = x && x.kind === "pdf" ? DossierSources.prepare({ id:"probe", name:pre.name, kind:"pdf", text:x.text, pages:x.pages, pageStats:x.stats })
+                                               .issues.filter(i => !i.info) : [];
+    const note = x ? (x.kind === "pdf" ? L("SrcFoundPdf", { p:x.pages }) : x.kind === "docx" ? L("SrcFoundDocx") : L("SrcFoundText")) +
+                     (lowPages.length ? " " + L("SrcFoundLow", { list:lowPages.slice(0, 8).map(i => i.page).join(", ") }) : "") +
+                     (issues.length ? " " + issues.map(i => i.what).join(" ") : "") : "";
+    el.innerHTML =
+      '<div class="srcdlgb"><h3>' + LE(existing ? "SrcEditTitle" : "SrcAddTitle") + '</h3>' +
+      (fileName ? '<p class="srcfile">' + esc(fileName) + (note ? " · " + esc(note) : "") + "</p>" : "") +
+      fr(L("SrcName"), '<input class="in" id="sdName" value="' + esc(pre.name || "") + '">') +
+      '<div class="srcdlg2">' + fr(L("SrcVersion"), '<input class="in" id="sdVer" value="' + esc(pre.version || "") + '" placeholder="2.1">') +
+      fr(L("SrcEffective"), '<input class="in" id="sdEff" type="date" value="' + esc(pre.effective || "") + '">') + "</div>" +
+      '<div class="srcdlg2">' + fr(L("SrcSystems"), '<input class="in" id="sdSys" value="' + esc((pre.systems || []).join(", ")) + '" placeholder="' + LE("SrcSystemsPh") + '">') +
+      fr(L("SrcEnv"), '<select class="in" id="sdEnv">' + envs.map(e => '<option value="' + e + '"' + ((pre.environment || "") === e ? " selected" : "") + ">" +
+        esc(e ? e : L("SrcEnvAny")) + "</option>").join("") + "</select>") + "</div>" +
+      '<div class="srcdlg2">' + fr(L("SrcCategory"), '<input class="in" id="sdCat" value="' + esc(pre.category || "") + '" placeholder="' + LE("SrcCategoryPh") + '">') +
+      fr(L("SrcLabel"), '<input class="in" id="sdLab" value="' + esc(pre.label || "") + '" placeholder="' + LE("SrcLabelPh") + '">') + "</div>" +
+      '<label class="srcck"><input type="checkbox" id="sdAi"' + (pre.assistant === false ? "" : " checked") + "> " + LE("SrcToAssistant") + "</label>" +
+      (match.length ? '<div class="srcver"><b>' + LE("SrcLooksLike") + "</b> " + match.map(d => esc(d.name + (d.version ? " v" + d.version : "") +
+          (d.effective ? " (" + L("SrcEffectiveShort") + " " + d.effective + ")" : ""))).join("; ") +
+        '<label class="srcck"><input type="radio" name="sdMode" value="replace" checked> ' + LE("SrcModeReplace") + "</label>" +
+        '<label class="srcck"><input type="radio" name="sdMode" value="both"> ' + LE("SrcModeBoth") + "</label>" +
+        '<label class="srcck"><input type="radio" name="sdMode" value="separate"> ' + LE("SrcModeSeparate") + "</label></div>" : "") +
+      '<p class="srchint">' + LE("SrcDetailsHint") + "</p>" +
+      '<div class="brow"><button class="btn pri" id="sdOk" type="button">' + LE(existing ? "SrcSave" : "SrcAddGo") + '</button>' +
+      '<button class="btn" id="sdNo" type="button">' + LE("Cancel") + "</button></div></div>";
+    document.body.appendChild(el);
+    const done = v => { el.remove(); resolve(v); };
+    $("sdNo").onclick = () => done(null);
+    el.addEventListener("keydown", e => { if (e.key === "Escape") done(null); });
+    $("sdOk").onclick = () => {
+      const name = $("sdName").value.trim();
+      if (!name) return toast(L("SrcNeedName"), { bad:true });
+      const mode = (el.querySelector('input[name="sdMode"]:checked') || {}).value || "separate";
+      done({ name:name, version:$("sdVer").value.trim().replace(/^v/i, ""), effective:$("sdEff").value,
+             systems:$("sdSys").value.split(",").map(s => s.trim()).filter(Boolean), environment:$("sdEnv").value,
+             category:$("sdCat").value.trim(), label:$("sdLab").value.trim(), assistant:$("sdAi").checked,
+             replaces:mode === "replace" ? match : [], mode:mode });
+    };
+    setTimeout(() => $("sdName").focus(), 30);
+  });
+}
+async function srcEdit(id){
+  const d = srcDoc(id); if (!d) return;
+  const ans = await srcDetails(d, null, d.file, true);
+  if (!ans) return;
+  Object.assign(d, { name:ans.name, version:ans.version, effective:ans.effective, systems:ans.systems,
+    environment:ans.environment, category:ans.category, label:ans.label, assistant:ans.assistant,
+    family:DossierSources.familyKey(ans.name), changed:new Date().toISOString() });
+  /* the name is part of every passage's search terms */
+  await srcSaveCat(); srcRebuild();
+  srcNote({ kind:"edited", doc:d.name, version:d.version });
+  renderLib();
+}
+
+/* ── searching for a question ─────────────────────────────────────────── */
+/* what a question sends: the passages as the prompt reads them, and each
+   one's label and place, kept so the answer's citations can be checked */
+function srcSearch(q, thread, opts){
+  opts = opts || {};
+  if (!srcHere() || !SRC.ix || !srcDocs().length) return null;
+  const cfg = srcCfg();
+  const prev = thread && thread.convo && thread.convo.src;
+  const fu = DossierSources.followUp(q, prev);
+  const o = { clearance:cfg.clearance, purpose:opts.purpose || "flow", today:today(), k:6, budget:+cfg.budget || 14000,
+              systems:(S.settings.systems || []).map(s => s.name), pinDocs:opts.pin || [],
+              pinBudget:opts.pin && opts.pin.length ? 60000 : 0 };
+  if (fu.follow){ o.context = fu.context; o.boostDocs = fu.boostDocs; }
+  /* the question as it is kept for the next one, without the brackets of a mode */
+  q = String(q || "").replace(/^\[(teach|study|intake)\]\s*/, "");
+  const found = DossierSources.search(SRC.ix, q, o);
+  if (fu.dir && prev && prev.chunks) o.extra = DossierSources.beside(SRC.ix, prev.chunks, fu.dir);
+  const got = DossierSources.gather(SRC.ix, found, o);
+  const f = found.eligible.filters || {};
+  const filterText = Object.keys(f).map(k => k + ": " + [].concat(f[k]).join(", ")).join("; ");
+  const res = { passages:got.passages, searched:found.eligible.docs.length, filters:f, filterText:filterText,
+                unproven:found.eligible.unproven, docQuestion:DossierSources.isDocQuestion(q) && srcActive().length > 0,
+                follow:fu.follow, found:found };
+  res.text = DossierSources.packText(res);
+  /* which documents: the ones that came closest, for "searched" under the answer */
+  res.closest = [...new Set(found.hits.map(h => h.chunk.doc))].map(id => (srcDoc(id) || {}).name).filter(Boolean).slice(0, 8);
+  return res;
+}
+function srcForFlow(q, thread, pin){
+  const r = srcSearch(q, thread, { purpose:"flow", pin:pin });
+  if (!r) return undefined;
+  const out = { text:r.text, searched:r.searched, filters:r.filters, docQuestion:r.docQuestion, unproven:r.unproven,
+                closest:r.closest, follow:r.follow, passages:r.passages };
+  out.diag = DossierSources.diagnose(q, r.found, r, null);
+  return out;
+}
+
+/* ── the answer, checked before it is shown ──────────────────────────────
+   Every quote must be in the passage it cites, and every figure the answer
+   states - a duration, a percentage, a severity - must be in a passage it
+   cites. An answer that states a figure no cited passage contains is not
+   shown: it would be a guess presented as policy, which is the one thing
+   this exists to stop. */
+function srcApply(reply, out, sources, q, thread){
+  if (!srcHere() || !out) return;
+  const pack = sources || { passages:[], docQuestion:false };
+  const g = DossierSources.ground(out, pack, q);
+  /* the search that went with the question, and what became of the answer:
+     which passages it cited and whether they held, and any figure it gave
+     that no cited passage contains - never the documents' words */
+  srcNote(Object.assign({ kind:"answer" }, (sources && sources.diag) || { searched:0, filters:{}, retrieved:[] }, {
+    at:new Date().toISOString(), status:g.status, confidence:g.confidence,
+    cited:g.cites.map(c => ({ chunk:c.id, verified:c.verified, citation:c.citation })),
+    unsupported:g.unsupported.length, unsupportedFigures:g.unsupported.slice(0, 6),
+    noEvidence:!(pack.passages || []).length }));
+  if (g.status === "general"){ if (out.suggest) reply.suggest = out.suggest; return; }
+  reply.grounding = {
+    status:g.status, confidence:g.confidence, notes:g.notes.slice(0, 6), unsupported:g.unsupported.length,
+    searched:(sources && sources.searched) || 0, closest:(sources && sources.closest) || [], filters:(sources && sources.filters) || {},
+    /* kept with the conversation without the passages' text: the words are
+       in sources/, and a conversation is not the place for a copy */
+    cites:g.cites.map(c => ({ s:c.s, id:c.id, doc:c.doc, name:c.name, file:c.file, kind:c.kind, version:c.version,
+      effective:c.effective, page:c.page, lineStart:c.lineStart, lineEnd:c.lineEnd, section:c.section, quote:String(c.quote || "").slice(0, 600),
+      verified:c.verified, quality:c.quality, citation:c.citation }))
+  };
+  if (out.suggest) reply.suggest = out.suggest;
+  if (g.status === "blocked"){
+    reply.say = L("SrcBlockedSay");
+    reply.ask = ""; reply.choices = [];
+  }
+  /* what the next question may lean on: "that policy", "the previous section" */
+  if (thread){
+    thread.convo = thread.convo || {};
+    const cited = g.cites.filter(c => c.verified);
+    thread.convo.src = { query:q, docs:[...new Set((cited.length ? cited : (pack.passages || []).slice(0, 3)).map(c => c.doc))],
+                         chunks:(cited.length ? cited : (pack.passages || []).slice(0, 2)).map(c => c.id) };
+  }
+}
+
+/* ── diagnostics: what was searched and found, with no document text ──── */
+function srcNote(e){
+  const x = Object.assign({ at:new Date().toISOString() }, e);
+  SRC.log.unshift(x);
+  if (SRC.log.length > 200) SRC.log.length = 200;
+  try { console.info("[sources]", JSON.stringify(x)); } catch(err){}
+}
+
+/* ── under an answer: Answer, Source, Evidence, Confidence ────────────── */
+function srcAnswerHtml(r, id){
+  const g = r.grounding;
+  let h = "";
+  if (g && g.status !== "general"){
+    const none = g.status === "not_found" || g.status === "unsupported" || g.status === "blocked";
+    h += '<div class="srcans ' + esc(g.status) + '">';
+    if (none) h += '<div class="srcnone">' + LE(g.status === "blocked" ? "SrcHeldBack" : "SrcNoSource") + "</div>";
+    const good = (g.cites || []).filter(c => c.verified);
+    if (good.length){
+      /* "Source" only when they support the answer; beside a not-found or a
+         held-back answer they are what the documents do say, or what the
+         reply pointed at */
+      const lab = g.status === "grounded" ? "SrcSourceLab" : g.status === "not_found" ? "SrcRelatedLab" : "SrcCitedLab";
+      h += '<div class="srcrow"><b>' + LE(lab) + '</b><div class="srccites">' + good.map((c, k) => {
+        CHAT.acts[id + "sv" + k] = { kind:"srcview", ref:c };
+        return '<button class="srccite" data-act="' + id + "sv" + k + '" title="' + LE("SrcOpenHint") + '">' + esc(c.citation) + "</button>";
+      }).join("") + "</div></div>";
+      h += '<div class="srcrow"><b>' + LE("SrcEvidenceLab") + "</b><div>" +
+           good.filter(c => c.quote).map(c => '<blockquote class="srcq">“' + esc(c.quote) + '”<span>' + esc(c.s) + "</span></blockquote>").join("") + "</div></div>";
+      if (good.some(c => c.quality === "low")) h += '<div class="srcwarn">' + LE("SrcLowQuality") + "</div>";
+    }
+    const conf = { high:"SrcConfHigh", medium:"SrcConfMedium", passages:"SrcConfpassages" }[g.confidence] || "SrcConfNotFound";
+    h += '<div class="srcrow"><b>' + LE("SrcConfidenceLab") + '</b><span class="srcconf ' + esc(g.confidence || "not_found") + '">' + LE(conf) + "</span></div>";
+    if (g.status === "blocked") h += '<div class="srcwarn">' + LE("SrcBlockedWhy") + "</div>";
+    else if (g.status === "unsupported") h += '<div class="srcwarn">' + LE("SrcUnsupportedWhy") + "</div>";
+  }
+  if (r.suggest){
+    h += '<div class="srcsug"><b>' + LE("SrcSuggestLab") + "</b>" + chatSay(r.suggest) + "</div>";
+  }
+  if (g && g.status !== "general"){
+    const f = g.filters || {};
+    const fl = Object.keys(f).map(k => LE("SrcFilter_" + k) + " " + esc([].concat(f[k]).join(", "))).join(" · ");
+    h += '<div class="srcsearched">' + LE("SrcSearched", { n:g.searched }) +
+         ((g.closest || []).length ? ": " + esc(g.closest.join(", ")) : "") + (fl ? " · " + fl : "") + "</div>";
+    h += "</div>";
+  }
+  return h;
+}
+
+/* ── "which source supports this answer?", "why was it not found?" ──────
+   Answered here, from what the last answer carried. */
+function srcLast(thread){
+  const msgs = (thread && thread.msgs) || [];
+  for (let i = msgs.length - 1; i >= 0; i--){
+    const m = msgs[i];
+    if (m.who !== "you" && m.reply && m.reply.grounding) return m.reply;
+  }
+  return null;
+}
+function srcLocalIntent(q, thread){
+  const s = String(q || "").toLowerCase();
+  const which = /\b(which|what) (source|sources|document|documents|passage|passages|page|section)\b.*\b(support|supports|backs?|say|says|said|come|came|from)\b|\bshow (me )?(the )?(source|sources|evidence|citation)s?\b|\bwhere (did|does) (that|this|it) (come from|say)\b/.test(s);
+  const why = /\bwhy\b.*\b(not found|no (supporting )?source|not specified|could ?n[o']?t find|held (it )?back|blocked|no answer)\b/.test(s);
+  if (!which && !why) return null;
+  const last = srcLast(thread);
+  if (!last) return null;
+  const g = last.grounding;
+  const good = (g.cites || []).filter(c => c.verified);
+  if (which){
+    if (!good.length) return { say:L("SrcWhichNone", { n:g.searched }), grounding:g };
+    return { say:L("SrcWhichSay", { n:good.length }) + "\n\n" +
+      good.map(c => "- " + c.citation + (c.quote ? "\n  > " + c.quote : "")).join("\n"),
+      grounding:Object.assign({}, g, { status:"grounded" }) };
+  }
+  const f = g.filters || {};
+  const fl = Object.keys(f).map(k => k + " " + [].concat(f[k]).join(", ")).join("; ");
+  const why2 = g.status === "blocked" ? L("SrcWhyBlocked")
+             : g.status === "unsupported" ? L("SrcWhyUnsupported")
+             : g.status === "not_found" ? L("SrcWhyNotFound") : L("SrcWhyFound");
+  return { say:L("SrcWhySay", { n:g.searched, list:(g.closest || []).join(", ") || "-", filters:fl || L("SrcNoFilters") }) + "\n\n" + why2 +
+    "\n\n" + L("SrcWhyNext") };
+}
+/* No flow: what the documents say, passage by passage, with where. Not an
+   answer written from them - the words themselves, for you to read. */
+function srcLocalAnswer(q, thread){
+  if (!srcHere() || !SRC.ix || !srcActive().length) return null;
+  if (!DossierSources.isDocQuestion(q)) return null;
+  const r = srcSearch(q, thread, { purpose:"local" });
+  if (!r) return null;
+  const hits = r.passages.filter(p => p.role === "match").slice(0, 3);
+  const grounding = { status:hits.length ? "grounded" : "not_found", confidence:hits.length ? "passages" : "not_found",
+    searched:r.searched, closest:r.closest, filters:r.filters, notes:[],
+    cites:hits.map(p => ({ s:p.s, id:p.id, doc:p.doc, name:p.name, file:p.file, kind:p.kind, version:p.version, page:p.page,
+      lineStart:p.lineStart, lineEnd:p.lineEnd, section:p.section, quote:"", verified:true, quality:p.quality,
+      citation:DossierSources.citation(p) })) };
+  srcNote(Object.assign({ kind:"local" }, DossierSources.diagnose(q, r.found, r, null)));
+  if (!hits.length) return { say:L("SrcLocalNone", { n:r.searched }), grounding:grounding };
+  return { say:L("SrcLocalIntro") + "\n\n" + hits.map(p => "**" + DossierSources.citation(p) + "**\n\n" +
+             p.text.split("\n").map(l => "> " + l).join("\n")).join("\n\n"), grounding:grounding, localSrc:true };
+}
+
+/* ── reading a source: the page, the lines, the quote marked ─────────── */
+async function srcView(ref){
+  const d = srcDoc(ref.doc);
+  if (!d) return toast(L("SrcGone"), { bad:true });
+  let text = "";
+  try { text = await srcText(d); } catch(e){ return toast(L("SrcGone"), { bad:true }); }
+  const all = text.split("\n");
+  let rows = [], title = "";
+  const q = DossierSources.norm(ref.quote || "");
+  const hit = (n, t) => ref.lineStart && n >= ref.lineStart && n <= (ref.lineEnd || ref.lineStart);
+  if (d.kind === "pdf"){
+    let page = 1, ln = 0;
+    all.forEach(l => {
+      const m = /^\[page (\d+)\]\s*$/.exec(l);
+      if (m){ page = +m[1]; ln = 0; return; }
+      if (page !== (ref.page || 1)) return;
+      if (!l.trim()){ rows.push({ n:"", t:"" }); return; }
+      ln++; rows.push({ n:ln, t:l, on:hit(ln) });
+    });
+    title = L("SrcViewPage", { p:ref.page || 1, of:d.pages || "?" });
+  } else if (d.kind === "docx"){
+    all.forEach((l, i) => rows.push({ n:"", t:l, on:q && DossierSources.norm(l) && q.indexOf(DossierSources.norm(l)) >= 0 && DossierSources.norm(l).length > 8 }));
+    title = ref.section || "";
+  } else {
+    const from = Math.max(1, (ref.lineStart || 1) - 25), to = Math.min(all.length, (ref.lineEnd || ref.lineStart || 1) + 40);
+    for (let i = from; i <= to; i++) rows.push({ n:i, t:all[i - 1], on:hit(i) });
+    title = L("SrcViewLines", { a:from, b:to, of:all.length });
+  }
+  const old = document.getElementById("srcView"); if (old) old.remove();
+  const el = document.createElement("div");
+  el.id = "srcView"; el.className = "srcview"; el.setAttribute("role", "dialog");
+  el.innerHTML = '<div class="srcvb"><div class="srcvh"><div><b>' + esc(d.name) + "</b>" +
+    '<span class="srcvm">' + esc([d.version ? "v" + d.version : "", d.effective ? L("SrcEffectiveShort") + " " + d.effective : "",
+      L("SrcStatus_" + d.status)].filter(Boolean).join(" · ")) + "</span>" +
+    '<div class="srcvc">' + esc(ref.citation || "") + "</div></div>" +
+    '<div class="srcva">' + (d.kind === "pdf" ? '<button class="btn sm" id="svPrev" type="button">‹</button><button class="btn sm" id="svNext" type="button">›</button>' : "") +
+    '<button class="btn sm" id="svOrig" type="button">' + LE("SrcOpenOriginal") + '</button><button class="btn sm" id="svClose" type="button">✕</button></div></div>' +
+    '<div class="srcvt">' + esc(title) + "</div>" +
+    '<div class="srcvx">' + rows.map(r => '<div class="srcl' + (r.on ? " on" : "") + '"><i>' + esc(String(r.n)) + "</i><span>" + esc(r.t) + "</span></div>").join("") + "</div></div>";
+  document.body.appendChild(el);
+  const close = () => el.remove();
+  $("svClose").onclick = close;
+  el.addEventListener("click", e => { if (e.target === el) close(); });
+  el.addEventListener("keydown", e => { if (e.key === "Escape") close(); });
+  if ($("svPrev")) $("svPrev").onclick = () => srcView(Object.assign({}, ref, { page:Math.max(1, (ref.page || 1) - 1), lineStart:0, lineEnd:0 }));
+  if ($("svNext")) $("svNext").onclick = () => srcView(Object.assign({}, ref, { page:Math.min(d.pages || 9999, (ref.page || 1) + 1), lineStart:0, lineEnd:0 }));
+  $("svOrig").onclick = async () => {
+    try {
+      const f = await (await (await FS.dir([SRC_DIR, d.id], false)).getFileHandle(d.file)).getFile();
+      const url = URL.createObjectURL(f) + (d.kind === "pdf" && ref.page ? "#page=" + ref.page : "");
+      const w = window.open(url, "_blank");
+      if (!w){ const a = document.createElement("a"); a.href = url; a.download = d.file; document.body.appendChild(a); a.click(); a.remove(); }
+    } catch(e){ toast(L("SrcGone"), { bad:true }); }
+  };
+  const on = el.querySelector(".srcl.on");
+  if (on) on.scrollIntoView({ block:"center" });
+  $("svClose").focus();
+}
+
+/* ── the panel, at the top of the Library view ────────────────────────── */
+function srcPanelHtml(){
+  if (!srcHere()) return "";
+  const docs = srcDocs().filter(d => d.status !== "deleted");
+  const cfg = srcCfg();
+  const clear = cfg.clearance.map(x => String(x).toLowerCase());
+  const mine = docs.filter(d => !d.label || clear.indexOf(String(d.label).toLowerCase()) >= 0);
+  const hidden = docs.length - mine.length;
+  const q = S.filters.q || "";
+  const shown = mine.filter(d => !q || (d.name + " " + d.file + " " + (d.systems || []).join(" ")).toLowerCase().indexOf(q) >= 0)
+    .sort((a, b) => (a.status === "active" ? 0 : 1) - (b.status === "active" ? 0 : 1) || a.name.localeCompare(b.name));
+  const count = s => mine.filter(d => d.status === s).length;
+  /* several active versions nobody has told apart */
+  const fams = {};
+  mine.filter(d => d.status === "active").forEach(d => { (fams[d.family] = fams[d.family] || []).push(d); });
+  const unclear = Object.keys(fams).filter(k => fams[k].length > 1 && !DossierSources.currentOf(fams[k], today()).proven);
+  let h = '<section class="srcpanel"><div class="srchd"><div><h3>' + LE("SrcHead") + "</h3>" +
+    '<p class="srcsub">' + LE("SrcSub", { a:count("active"), s:count("superseded"), i:count("inactive") }) + "</p></div>" +
+    '<div class="srcbtns"><button class="btn pri" id="srcAddBtn" type="button">' + LE("SrcAddBtn") + "</button>" +
+    (docs.length ? '<button class="btn" id="srcReAll" type="button">' + LE("SrcReindexAll") + "</button>" : "") + "</div></div>";
+  if (unclear.length) h += '<div class="srcwarn">' + LE("SrcUnclear", { list:esc(unclear.map(k => fams[k].map(d => d.name + (d.version ? " v" + d.version : "")).join(" / ")).join("; ")) }) + "</div>";
+  if (!docs.length) h += '<div class="srcempty">' + L("SrcEmpty") + "</div>";
+  else {
+    h += '<div class="srclist">' + shown.map(d => {
+      const bad = (d.issues || []).filter(i => !i.info);
+      const meta = [d.version ? "v" + d.version : "", d.effective ? L("SrcEffectiveShort") + " " + d.effective : "",
+        d.kind === "pdf" ? L("SrcPages", { n:d.pages || "?" }) : d.kind.toUpperCase(), L("SrcPassages", { n:d.chunks || 0 }),
+        (d.systems || []).join(", "), d.environment || "", d.category || "", d.label ? "\u{1F512} " + d.label : "",
+        d.assistant === false ? L("SrcLocalOnly") : "", d.from === "chat" ? L("SrcFromChat") : ""].filter(Boolean);
+      return '<div class="srcdoc ' + esc(d.status) + '" data-src="' + esc(d.id) + '"><div class="srcdn"><b>' + esc(d.name) + "</b>" +
+        '<span class="srcst ' + esc(d.status) + '">' + LE("SrcStatus_" + d.status) + "</span>" + (d.missing ? '<span class="srcst bad">' + LE("SrcMissing") + "</span>" : "") + "</div>" +
+        '<div class="srcdm">' + esc(meta.join(" · ")) + "</div>" +
+        (bad.length ? '<details class="srcis"><summary>' + LE("SrcIssues", { n:bad.length }) + "</summary><ul>" +
+          bad.slice(0, 30).map(i => "<li>" + (i.page ? LE("SrcPage", { n:i.page }) + ": " : "") + esc(i.what) + "</li>").join("") + "</ul></details>" : "") +
+        '<div class="srcda">' +
+        '<button class="btn sm" data-sa="view" type="button">' + LE("SrcView") + "</button>" +
+        '<button class="btn sm" data-sa="edit" type="button">' + LE("SrcDetailsBtn") + "</button>" +
+        '<button class="btn sm" data-sa="reindex" type="button">' + LE("SrcReindex") + "</button>" +
+        (d.status === "active" ? '<button class="btn sm" data-sa="off" type="button">' + LE("SrcDeactivate") + "</button>"
+                               : '<button class="btn sm" data-sa="on" type="button">' + LE("SrcActivate") + "</button>") +
+        '<button class="btn sm" data-sa="remove" type="button">' + LE("SrcRemove") + "</button></div></div>";
+    }).join("") + "</div>";
+  }
+  if (hidden) h += '<p class="srchint">' + LE("SrcHidden", { n:hidden }) + "</p>";
+  h += '<details class="srcset"><summary>' + LE("SrcSettings") + "</summary>" +
+    fr(L("SrcClearance"), '<input class="in" id="srcClear" value="' + esc(cfg.clearance.join(", ")) + '" placeholder="' + LE("SrcClearancePh") + '">') +
+    '<p class="srchint">' + LE("SrcClearanceHint") + "</p>" +
+    '<label class="srcck"><input type="checkbox" id="srcKeepChat"' + (cfg.keepChat ? " checked" : "") + "> " + LE("SrcKeepChat") + "</label></details>";
+  h += '<details class="srcset"><summary>' + LE("SrcDiag", { n:SRC.log.length }) + '</summary><div class="srclog">' +
+    (SRC.log.length ? SRC.log.slice(0, 40).map(e => '<div class="srcle"><i>' + esc(stamp(e.at)) + "</i> " + esc(srcNoteLine(e)) + "</div>").join("")
+                    : '<p class="srchint">' + LE("SrcDiagNone") + "</p>") + "</div></details>";
+  return h + "</section>";
+}
+function srcNoteLine(e){
+  if (e.kind === "answer" || e.kind === "local"){
+    const r = (e.retrieved || []);
+    return (e.kind === "local" ? "local · " : "") + "searched " + e.searched + " documents" +
+      (Object.keys(e.filters || {}).length ? " (" + Object.keys(e.filters).map(k => k + " " + [].concat(e.filters[k]).join(",")).join("; ") + ")" : "") +
+      " · " + r.length + " passages" + (r.length ? " [" + r.slice(0, 4).map(p => p.doc + (p.version ? " v" + p.version : "") +
+      (p.page ? " p" + p.page : "") + " " + p.score).join("; ") + (r.length > 4 ? "; …" : "") + "]" : "") +
+      (e.status ? " · " + e.status : "") + (e.cited && e.cited.length ? " · cited " + e.cited.filter(c => c.verified).length + "/" + e.cited.length : "") +
+      (e.unsupported ? " · BLOCKED: " + e.unsupported + " unsupported figure(s)" : "") + (e.noEvidence ? " · no evidence found" : "");
+  }
+  if (e.kind === "added") return "added " + e.doc + (e.version ? " v" + e.version : "") + " · " + e.passages + " passages" +
+    (e.from === "chat" ? " (from a conversation)" : "") + ((e.replaced || []).length ? " · replaces " + e.replaced.join(", ") : "") +
+    ((e.problems || []).length ? " · " + e.problems.length + " problem(s): " + e.problems.slice(0, 3).join("; ") : "");
+  if (e.kind === "reindex") return "re-indexed " + (e.doc || e.docs + " documents") + (e.added != null ? " · +" + e.added + " -" + e.removed + " =" + e.kept : "") + (e.why ? " (" + e.why + ")" : "");
+  if (e.kind === "error") return "could not read " + (e.file || e.doc) + ": " + e.what;
+  return e.kind + " " + (e.doc || "") + (e.version ? " v" + e.version : "") + (e.status ? " → " + e.status : "");
+}
+function srcPanelWire(){
+  const box = document.querySelector(".srcpanel"); if (!box) return;
+  const add = $("srcAddBtn");
+  if (add) add.onclick = () => { const i = $("srcIn"); i.value = ""; i.click(); };
+  const all = $("srcReAll"); if (all) all.onclick = () => srcReindexAll();
+  box.querySelectorAll("[data-sa]").forEach(b => b.onclick = () => {
+    const id = b.closest("[data-src]").dataset.src, a = b.dataset.sa, d = srcDoc(id);
+    if (a === "view") return srcView({ doc:id, page:d && d.kind === "pdf" ? 1 : 0, lineStart:0, citation:d ? d.name : "" });
+    if (a === "edit") return srcEdit(id);
+    if (a === "reindex") return srcReindex(id).then(() => renderLib());
+    if (a === "off") return srcSetStatus(id, "inactive");
+    if (a === "on") return srcSetStatus(id, "active");
+    if (a === "remove") return srcRemove(id);
+  });
+  const cl = $("srcClear");
+  if (cl) cl.onchange = () => { srcCfg().clearance = cl.value.split(",").map(s => s.trim()).filter(Boolean); touch(); renderLib(); };
+  const kc = $("srcKeepChat");
+  if (kc) kc.onchange = () => { srcCfg().keepChat = kc.checked; touch(); };
+}
+
 /* ═══ THE RUN QUEUE — actually running the thing ══════════════════════════
    A page in a browser cannot start a program, and that is not going to
    change. But it can write a file, and something outside the browser can
@@ -24118,16 +25076,22 @@ async function pdfText(buffer, opts){
      the order they come, each left as a mark where it sits */
   const wantPics = opts && opts.pics > 0 ? opts.pics : 0;
   const reg = wantPics ? { list:[], map:new Map() } : null, scanned = [];
+  /* a question's attachment stops at eighty pages; a document kept in
+     Sources (opts.maxPages, opts.maxChars) is read to the end */
+  const maxPages = (opts && opts.maxPages) || PDF_MAX_PAGES, maxChars = (opts && opts.maxChars) || PDF_MAX_CHARS;
+  /* how each page read: for Sources, which flags a page too garbled to rely on */
+  const pageStats = [];
   for (let i = 0; i < pages.length; i++){
-    if (i >= PDF_MAX_PAGES || total >= PDF_MAX_CHARS){ note = "cut"; break; }
+    if (i >= maxPages || total >= maxChars){ note = "cut"; break; }
     let tx;
-    try { tx = await doc.pageText(pages[i], reg, i + 1); } catch(e){ failed++; continue; }
+    try { tx = await doc.pageText(pages[i], reg, i + 1); } catch(e){ failed++; pageStats.push({ n:i + 1, failed:true }); continue; }
     images += tx.images; glyphs += tx.glyphs; lost += tx.lost;
     let t = tx.text();
     const words = t.replace(/\uE000\d+\uE001/g, "").trim().length;
+    pageStats.push({ n:i + 1, glyphs:tx.glyphs, lost:tx.lost, images:tx.images, chars:words });
     if (words < 40 && tx.images) scanned.push(i + 1);
     if (t){
-      if (total + t.length > PDF_MAX_CHARS){ t = t.slice(0, PDF_MAX_CHARS - total); note = "cut"; }
+      if (total + t.length > maxChars){ t = t.slice(0, maxChars - total); note = "cut"; }
       out.push((pages.length > 1 ? "[page " + (i + 1) + "]\n" : "") + t); total += t.length;
     }
     if (wantScans && tx.images && words < 40 && scans.length < wantScans){
@@ -24166,7 +25130,7 @@ async function pdfText(buffer, opts){
     else if (images >= pages.length && bare.length < 40 * pages.length) note = "scanned";
     else if (lost > glyphs * 0.2 || failed) note = "partial";
   }
-  return { text:text, pages:pages.length, note:note, scans:scans, pics:pics };
+  return { text:text, pages:pages.length, note:note, scans:scans, pics:pics, pageStats:pageStats };
 }
 /* -- end of the PDF reader -- */
 
@@ -25315,7 +26279,7 @@ async function chatAttach(files){
     let url = "", type = chatFileType(f), size = f.size, from = 0;
     /* on the tray straight away, marked as being read - forty pages take a
        moment, and a moment of nothing looks like a refusal */
-    const entry = { name:f.name, type:type, size:size, from:0, url:"", data:"", text:"", pages:0, note:"", reading:true };
+    const entry = { name:f.name, type:type, size:size, from:0, url:"", data:"", text:"", pages:0, note:"", reading:true, file:f };
     CHAT.files.push(entry); renderChatFiles();
     const drop = () => { const i = CHAT.files.indexOf(entry); if (i >= 0) CHAT.files.splice(i, 1); renderChatFiles(); };
     let read = null;
@@ -25394,6 +26358,7 @@ function chatDocNote(f){
   if (f.note === "unreadable") return { t:L("AttachUnreadable"), c:"warn" };
   return { t:L("AttachNoText"), c:"warn" };
 }
+function chatKeepSrc(f){ return f.keepSrc === undefined ? srcCfg().keepChat : !!f.keepSrc; }
 function renderChatFiles(){
   const box = $("chatFiles");
   if (!box) return;
@@ -25405,6 +26370,10 @@ function renderChatFiles(){
       '<span class="tx"><span class="nm">' + esc(f.name) + "</span>" +
         (note ? '<span class="rd' + (note.c ? " " + note.c : "") + '" title="' + esc(note.t) + '">' + esc(note.t) + "</span>" : "") +
       "</span>" +
+      /* a document is kept in Sources, to be cited now and found again later */
+      (srcHere() && FS.ok && !f.reading && f.text && chatKind(f.type) !== "image"
+        ? '<button class="cfsrc' + (chatKeepSrc(f) ? " on" : "") + '" data-srck="' + i + '" type="button" title="' +
+          LE(chatKeepSrc(f) ? "SrcTrayOnHint" : "SrcTrayOffHint") + '">' + LE("SrcTray") + "</button>" : "") +
       '<span class="sz"' + (f.from ? ' title="' + esc(L("AttachShrunk",
           { from:bytes(f.from), to:bytes(f.size) })) + '"' : "") + ">" +
         bytes(f.size) + (f.from ? " \u2193" : "") + "</span>" +
@@ -25416,6 +26385,9 @@ function renderChatFiles(){
       : "");
   box.querySelectorAll("[data-unclip]").forEach(b => {
     b.onclick = () => { CHAT.files.splice(+b.dataset.unclip, 1); renderChatFiles(); };
+  });
+  box.querySelectorAll("[data-srck]").forEach(b => {
+    b.onclick = () => { const f = CHAT.files[+b.dataset.srck]; if (f){ f.keepSrc = !chatKeepSrc(f); renderChatFiles(); } };
   });
   chatUpdateGrid();
 }
@@ -26349,6 +27321,7 @@ $("incIn").addEventListener("change", e => {
   };
   r.readAsText(f);
 });
+$("srcIn").addEventListener("change", e => { const f = e.target.files; if (f && f.length) srcAddFiles(f); });
 $("rbIn").addEventListener("change", e => {
   const f = e.target.files && e.target.files[0];
   if (!f) return;

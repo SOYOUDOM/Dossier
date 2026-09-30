@@ -434,6 +434,57 @@ same as a procedure that works, and in a regulated shop the difference matters.
 Approving is a human act — never return `saveRunbook` with `status: "approved"`
 unless the person explicitly says they are approving it.
 
+### Sources — the passages of their runbooks and standards
+
+When the workspace has documents in **Library → Sources**, every question
+carries the passages that match it (see the README's *Answering from your
+runbooks and standards*, and [SOURCES.md](SOURCES.md)):
+
+- **`sourcesText`** — the passages as the prompt reads them, in its
+  **`{sources}`** place: a line saying how many documents were searched and
+  with what filters, then each passage under a header line —
+  `[S3] Application Security Standard · version 2.0 · effective 2026-02-01 ·
+  page 12 · lines 18-27 · section "Remediation Timeframe"` — and its words.
+  A passage from a page that could not be read reliably is marked so.
+- **`workspace.sources`** — the same, without the words:
+
+```jsonc
+"sources": {
+  "searched": 12, "found": 5, "documentQuestion": true,
+  "filters": { "system": ["Imaging"] },
+  "passages": [ { "s": "S3", "document": "Application Security Standard", "version": "2.0",
+                  "page": 12, "lines": "18-27", "section": "3.3 Remediation Timeframe" } ]
+}
+```
+
+Only documents the workspace is cleared for, that are active (or asked for
+by version), and that may go to the assistant are searched; the others are
+not counted, named or sent. A prompt of your own without `{sources}` gets
+the words inside `workspace.sources.text` instead.
+
+An answer about what a document says returns, beside `say`:
+
+```jsonc
+{
+  "say": "7 days from the date the vulnerability is confirmed.",
+  "cite": [ { "s": "S3", "quote": "| Critical | 7 days | 14 days |" } ],
+  "confidence": "high",
+  "suggest": "Optional advice of the model's own - shown apart, as not from the documents."
+}
+```
+
+- **`cite`** — up to twelve `{ s, quote }`: the passage label and the exact
+  words of it that support the answer (`sources` and plain labels are read
+  too).
+- **`confidence`** — `high` (a passage states it), `medium` (it follows from
+  several), `not_found` (the passages do not answer it).
+- **`suggest`** — anything that is not from the documents.
+
+Resolv checks it before showing it: a quote must be found in the passage it
+names, and every figure in `say` — a timeframe, a percentage, a severity, a
+score — must be written in a passage it cites. An answer stating a figure no
+cited passage contains is **held back** and not shown.
+
 ### Attachments
 
 `attachments` carries what the person clipped to the question. Each one has
@@ -569,6 +620,9 @@ a filter asking for finished records gets none while *What to send* is
   ]
 }
 ```
+
+An answer from the documents adds `cite`, `confidence` and `suggest` (see
+*Sources*, above).
 
 Everything is optional. `say` alone is a perfectly good reply. Arguments may
 sit at the top level of the action or inside an `args` object — both are read.

@@ -1,0 +1,15 @@
+[page 1]
+DATA RETENTION STANDARD
+Version 3.2
+Effective date: 1 March 2026
+1 Purpose
+This standard sets how long records are kept.
+[page 2]
+2 Retention Periods
+Customer correspondence is kept for 7 years after the account closes.
+System logs are kept for 90 days.
+Audit logs are kept for 2 years.
+[page 3]
+3 Disposal
+Ã¾Ã¾ Ã¾Ã¾Ã¾ ¤¤¤ ¦¦¦ ¬¬¬ Ã¾Ã¾Ã¾ ¤¤ ¦¦ ¬¬ Ã¾Ã¾Ã¾ ¤¤¤ ¦¦¦
+Ã¾Ã¾ ¤¤¤ ¦¦¦ ¬¬¬ Ã¾Ã¾ ¤¤¤ ¦¦¦ ¬¬¬ Ã¾Ã¾ 30 ¤¤ days

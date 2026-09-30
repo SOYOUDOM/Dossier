@@ -1,0 +1,84 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [5 0 R 7 0 R 9 0 R] /Count 3 >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>
+endobj
+4 0 obj
+<< /Length 236 >>
+stream
+BT
+/F1 12 Tf
+72 770 Td
+(DATA RETENTION STANDARD) Tj
+0 -22 Td
+(Version 3.2) Tj
+0 -22 Td
+(Effective date: 1 March 2026) Tj
+0 -22 Td
+(1 Purpose) Tj
+0 -22 Td
+(This standard sets how long records are kept and how they are disposed of.) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R >> >> /Contents 4 0 R >>
+endobj
+6 0 obj
+<< /Length 229 >>
+stream
+BT
+/F1 12 Tf
+72 770 Td
+(2 Retention Periods) Tj
+0 -22 Td
+(Customer correspondence is kept for 7 years after the account closes.) Tj
+0 -22 Td
+(System logs are kept for 90 days.) Tj
+0 -22 Td
+(Audit logs are kept for 2 years.) Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R >> >> /Contents 6 0 R >>
+endobj
+8 0 obj
+<< /Length 188 >>
+stream
+BT
+/F1 12 Tf
+72 770 Td
+(3 Disposal) Tj
+0 -22 Td
+(Records are disposed of within 30 days after the retention period ends.) Tj
+0 -22 Td
+(Disposal is recorded in the disposal register.) Tj
+ET
+endstream
+endobj
+9 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R >> >> /Contents 8 0 R >>
+endobj
+xref
+0 10
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000127 00000 n 
+0000000224 00000 n 
+0000000511 00000 n 
+0000000637 00000 n 
+0000000917 00000 n 
+0000001043 00000 n 
+0000001282 00000 n 
+trailer
+<< /Size 10 /Root 1 0 R >>
+startxref
+1408
+%%EOF

@@ -5,7 +5,7 @@
 //   - every example reply in it passes the validator Dossier applies to real
 //     replies (a model copies its examples; one Dossier would refuse teaches
 //     it to be refused), and uses only actions that exist;
-//   - it still has each of the nine places Dossier fills in;
+//   - it still has each of the places Dossier fills in;
 //   - the copy inside flow.js is the same text (python flow/embed-prompt.py
 //     puts it there), because a page opened from the folder uses that copy;
 //   - filled in with a real request, nothing is left unfilled and the notes
@@ -38,7 +38,7 @@ if (F.PROMPT !== text) say("the copy inside flow.js differs from prompt.txt - ru
 
 const sample = JSON.parse(fs.readFileSync(path.join(here, "sample-request.json"), "utf8"));
 const filled = F.fillPrompt(text, sample);
-const left = filled.match(/\{(message|today|weekday|calendar|workspace|actions|history|memory|attached)\}/g);
+const left = filled.match(new RegExp("\\{(" + F.PROMPT_SLOTS.join("|") + ")\\}", "g"));
 if (left) say("left unfilled: " + left.join(" "));
 const ws = JSON.parse(F.fillPrompt("{workspace}", sample));
 if ("memory" in ws) say("the notes go twice: once in {memory} and again inside {workspace}");
