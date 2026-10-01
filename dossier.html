@@ -1753,7 +1753,9 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
 .srccite:hover,.srccite:focus-visible{text-decoration-color:currentColor}
 .srcq{margin:0 0 5px;padding:4px 0 4px 10px;border-left:3px solid color-mix(in srgb,currentColor 30%,transparent);font-style:italic}
 .srcq span{font-style:normal;font-size:10.5px;opacity:.6;margin-left:6px}
-.srcconf.high{color:#2fa36b}.srcconf.medium{color:#d9902a}.srcconf.not_found{color:#d9902a}
+.srcconf.high{color:#2fa36b}.srcconf.medium{color:#d9902a}.srcconf.not_found{color:#d9902a}.srcconf.own{color:#4a8fd8}
+.srcownmsg{font-size:12px}
+.srcownfig{font-size:11px;opacity:.65}
 .srcsug{margin:8px 0 2px;padding:8px 10px;border-radius:8px;border:1px dashed color-mix(in srgb,currentColor 28%,transparent);font-size:12.5px}
 .srcsug>b{display:block;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;opacity:.65;margin-bottom:3px}
 .srcsearched{font-size:11px;opacity:.62;margin-top:6px}
@@ -6183,6 +6185,7 @@ const STRINGS = {
   RunbookHide: "Hide the procedure",
   ChatLogged: "Logged as {code}.",
   ChatMoved: "{code} is now {to}.",
+  ChatFixKept: "How it was fixed is kept on it.",
   ChatWaiting: "{code} is with {who} from now.",
   ChatScheduled: "Scheduled “{title}”. It will remind you each time.",
   ChatLeftAlone: "Left alone — nothing was changed.",
@@ -6392,7 +6395,7 @@ const STRINGS = {
   SrcConfpassages: "Passages only — read them; nothing was concluded from them",
   SrcNoSource: "No supporting source found",
   SrcHeldBack: "Answer held back — it gave a figure its sources do not state",
-  SrcBlockedSay: "Resolv held back the reply it received: it gave a figure that none of the passages it cited contains, so it may have been invented. Ask “why was it held back?” to see what was searched, or ask again naming the document or the system.",
+  SrcBlockedSay: "Resolv held back the reply it received: it gave a figure that is not in your documents, your matching runbooks or your own message, so it may have been invented. Ask “why was it held back?” to see what was searched, or ask again naming the document or the system.",
   SrcBlockedSayCited: "Resolv held back the reply it received: it gave a figure that the passages it cited do not state, so it may have been invented. What those passages do say is in the sources under this answer — open one to read it in place, or ask again.",
   SrcBlockedWhy: "Every figure in an answer about your documents — a timeframe, a percentage, a severity — must be written in a passage the answer cites. This reply rested on one that was not. Ask “why was it held back?” for what was searched.",
   SrcPartialHead: "Part of the answer was taken out",
@@ -6409,6 +6412,14 @@ const STRINGS = {
   SrcSumConf_passages: "Passages",
   SrcSumConf_not_found: "Not found",
   SrcSumConf_held: "Held back",
+  SrcSumConf_own: "Yours",
+  SrcOwnRunbook: "From your runbook: {name}",
+  SrcOwnMessage: "From what you wrote",
+  SrcOwnLab: "From your own",
+  SrcOwnRunbookCite: "Runbook: {name}",
+  SrcOwnMessageCite: "Your message",
+  SrcOwnOpen: "Open this runbook",
+  SrcConfOwn: "Yours — from your own runbook or your own words, not from a document in Sources",
   SrcShowRefs: "Show the sources, the evidence and what was searched",
   SrcHideRefs: "Fold the sources to one line",
   SrcUnsupportedWhy: "This answer does not cite your documents, so it is not what they say. Treat it as general advice.",
@@ -7223,7 +7234,7 @@ const STATUSES = [
    the status bar, and clicking it copies a line you can paste into a bug
    report — build date and flow protocol included, because those are the two
    things that actually differ between copies. */
-const APP_VERSION = "5.9.4";
+const APP_VERSION = "5.9.5";
 const APP_BUILT = "2026-09-27";
 function buildLine(){
   return "Resolv v" + APP_VERSION + " \u00b7 built " + APP_BUILT +
@@ -14425,7 +14436,7 @@ async function flowAsk(q, thread, opts){
   const reply = flowReply(out, q);
   /* answered from the documents? its quotes and figures are checked
      against the passages it was sent before it is shown */
-  if (out && !fell) srcApply(reply, out, ctx.sources, q, thread);
+  if (out && !fell) srcApply(reply, out, ctx.sources, q, thread, ctx.runbooksMatched);
   if (fell){
     /* even the lean question failed: it is the flow, or the question itself */
     reply.trouble = true;
@@ -14559,6 +14570,7 @@ function flowDescribe(a){
                confirm:"Make that change?" };
     case "setStatus":
       return { say:"Move " + ref() + " to " + stMeta(g.status).label,
+               note:g.resolution ? L("FixLabel") + ": " + String(g.resolution).replace(/\s+/g, " ").slice(0, 300) : "",
                confirm:"Move it?" };
     case "setAlert": {
       const t = findByRef(g.record), spec = alertSpecFromFlow(g);
@@ -15035,14 +15047,20 @@ function flowRun(a, quiet){
       if ("tags" in g) patch.tags = g.tags.slice();
       if ("estimate" in g) patch.estimate = g.estimate;
       updateTask(t.id, patch, "Changed by your flow");
+      if ("resolution" in g && fixSet(t, g.resolution)){ if (FIX.id === t.id) fixClose(); buildModel(); touch(); }
       renderAll();
       return done("Changed " + t.code + ".",
                   [{ label:L("AiOpenRecord"), act:{ kind:"open", id:t.id } }]);
     }
     case "setStatus": {
       const t = need(g.record); if (!t) return null;
+      /* closed with how it was fixed: kept first, so the box that asks for
+         it when a record is closed has nothing left to ask */
+      const fixed = (g.status === "done" || g.status === "cancelled") && g.resolution && fixSet(t, g.resolution);
+      if (fixed){ if (FIX.id === t.id) fixClose(); buildModel(); touch(); }
       setStatus(t.id, g.status); renderAll();
-      return done(L("ChatMoved", { code:t.code, to:stMeta(g.status).label }));
+      return done(L("ChatMoved", { code:t.code, to:stMeta(g.status).label }) + (fixed ? " " + L("ChatFixKept") : ""),
+                  fixed ? [{ label:L("AiOpenRecord"), act:{ kind:"open", id:t.id } }] : undefined);
     }
     case "setAlert": {
       const t = need(g.record); if (!t) return null;
@@ -16897,6 +16915,8 @@ function chatDo(act){
     case "flow":     return flowRun(act.a);
     /* a citation under an answer: the page, the lines, the quote marked */
     case "srcview":  return srcView(act.ref);
+    /* "From your runbook" under an answer: the runbook itself */
+    case "srcrunbook": { const rb = rbFind(act.title); if (rb) chatRunbook(rb); return; }
     case "run":      closeChat(); return runScriptFor(act.id, act.scriptId);
     case "undo":     closeChat(); return doUndo();
     case "routine": {
@@ -21785,7 +21805,19 @@ function srcForFlow(q, thread, pin){
    is the whole reply held back - and then it says so plainly, and shows
    what the passages it cited do say, rather than claiming the documents
    are silent when it cannot know that. */
-function srcApply(reply, out, sources, q, thread){
+/* The actions that work on records - closing one, logging on it, setting
+   its date. A reply that does one of these and cites no document is a job
+   done ("close D-0153 with these steps"), not an answer about what a
+   document says, and it gets no sources box under it. */
+const SRC_JOB_ACTIONS = ["createRecord", "updateRecord", "setStatus", "setDue", "setAlert", "clearAlert", "addLog", "addSteps",
+  "tickStep", "setWait", "clearWait", "chase", "attachScript", "runScript", "logTime", "timer", "block", "unblock", "tags", "deleteRecord"];
+/* their runbooks that matched the question, as the check reads them: a
+   figure in one is theirs, not an invention */
+function srcOwnTexts(runbooks){
+  return (runbooks || []).filter(r => r && r.title).map(r => ({ from:"runbook", name:r.title,
+    text:[r.title].concat(r.steps || [], [r.checks || "", r.escalation || ""]).join("\n") }));
+}
+function srcApply(reply, out, sources, q, thread, runbooks){
   if (!srcHere() || !out) return;
   const pack = sources || { passages:[], docQuestion:false };
   const mode = (String(q || "").match(/^\[(\w+)\]/) || [0, "chat"])[1];
@@ -21800,7 +21832,8 @@ function srcApply(reply, out, sources, q, thread){
     if (out.suggest) reply.suggest = out.suggest;
     return;
   }
-  const g = DossierSources.ground(out, pack, q);
+  const g = DossierSources.ground(out, pack, q, srcOwnTexts(runbooks));
+  const job = !(out.cite || []).length && (out.actions || []).some(a => a && SRC_JOB_ACTIONS.indexOf(a.do) >= 0);
   /* the search that went with the question, and what became of the answer:
      which passages it cited and whether they held, and any figure it gave
      that no cited passage contains - never the documents' words */
@@ -21808,7 +21841,12 @@ function srcApply(reply, out, sources, q, thread){
     at:new Date().toISOString(), status:g.status, confidence:g.confidence,
     cited:g.cites.map(c => ({ chunk:c.id, verified:c.verified, citation:c.citation })),
     unsupported:g.unsupported.length, unsupportedFigures:g.unsupported.slice(0, 6), removed:g.removed || 0,
-    noEvidence:!(pack.passages || []).length }));
+    own:(g.own || []).map(o => o.figure + " (" + (o.from === "runbook" ? "runbook " + o.name : "their message") + ")").slice(0, 6),
+    job:job || undefined, noEvidence:!(pack.passages || []).length }));
+  /* a job done with their own words, nothing taken out: no box under it */
+  if (job && !g.removed && (g.status === "unsupported" || g.status === "own")){
+    if (out.suggest) reply.suggest = out.suggest; return;
+  }
   if (g.status === "general"){ if (out.suggest) reply.suggest = out.suggest; return; }
   /* where a figure that was taken out is written, in a passage the reply
      did not cite - to open and judge, never counted as support */
@@ -21828,6 +21866,8 @@ function srcApply(reply, out, sources, q, thread){
   reply.grounding = {
     status:g.status, confidence:g.confidence, notes:g.notes.slice(0, 6), unsupported:g.unsupported.length,
     removed:g.removed || 0, elsewhere:elsewhere,
+    /* the figures that came from their own runbook or their own message */
+    own:(g.own || []).map(o => ({ figure:o.figure, from:o.from, name:o.name })),
     searched:(sources && sources.searched) || 0, closest:(sources && sources.closest) || [], filters:(sources && sources.filters) || {},
     /* kept with the conversation without the passages' text: the words are
        in sources/, and a conversation is not the place for a copy */
@@ -21892,6 +21932,11 @@ function srcSummary(g){
   const docs = [...new Set(good.map(c => c.doc || c.name))];
   const more = good.length > 1 ? " " + L(docs.length > 1 ? "SrcSumMoreDocs" : "SrcSumMore", { n:docs.length > 1 ? docs.length - 1 : good.length - 1 }) : "";
   if (g.status === "blocked") return { warn:true, text:L("SrcHeldBack"), conf:L("SrcSumConf_held") };
+  if (g.status === "own"){
+    const rb = (g.own || []).find(o => o.from === "runbook");
+    return { warn:!!g.removed, text:(rb ? L("SrcOwnRunbook", { name:rb.name }) : L("SrcOwnMessage")) +
+             (g.removed ? " · " + L("SrcSumTaken", { n:g.removed }) : ""), conf:L("SrcSumConf_own") };
+  }
   if (g.status === "partial") return { warn:true, text:L("SrcPartialHead") + (good.length ? " · " + where(good[0]) + more : ""), conf:L("SrcSumConf_medium") };
   if (g.status === "not_found" || g.status === "unsupported")
     return { warn:true, text:L("SrcNoSource") + (g.removed ? " · " + L("SrcSumTaken", { n:g.removed }) : ""), conf:L("SrcSumConf_not_found") };
@@ -21925,7 +21970,18 @@ function srcAnswerHtml(r, id){
            good.filter(c => c.quote).map(c => '<blockquote class="srcq">“' + esc(c.quote) + '”<span>' + esc(c.s) + "</span></blockquote>").join("") + "</div></div>";
       if (good.some(c => c.quality === "low")) h += '<div class="srcwarn">' + LE("SrcLowQuality") + "</div>";
     }
-    const conf = g.status === "blocked" ? "SrcConfHeld" : g.status === "partial" ? "SrcConfPartial" :
+    /* figures from their own runbook, or from what they wrote: where */
+    if ((g.own || []).length){
+      const rbs = [...new Set(g.own.filter(o => o.from === "runbook").map(o => o.name))];
+      h += '<div class="srcrow"><b>' + LE("SrcOwnLab") + '</b><div class="srccites">' +
+        rbs.map((n, k) => {
+          CHAT.acts[id + "sr" + k] = { kind:"srcrunbook", title:n };
+          return '<button class="srccite" data-act="' + id + "sr" + k + '" title="' + LE("SrcOwnOpen") + '">' + LE("SrcOwnRunbookCite", { name:n }) + "</button>";
+        }).join("") +
+        (g.own.some(o => o.from === "message") ? '<span class="srcownmsg">' + LE("SrcOwnMessageCite") + "</span>" : "") +
+        '<span class="srcownfig">' + esc(g.own.map(o => o.figure).join(", ")) + "</span></div></div>";
+    }
+    const conf = g.status === "blocked" ? "SrcConfHeld" : g.status === "partial" ? "SrcConfPartial" : g.status === "own" ? "SrcConfOwn" :
       ({ high:"SrcConfHigh", medium:"SrcConfMedium", passages:"SrcConfpassages" }[g.confidence] || "SrcConfNotFound");
     h += '<div class="srcrow"><b>' + LE("SrcConfidenceLab") + '</b><span class="srcconf ' + esc(g.confidence || "not_found") + '">' + LE(conf) + "</span></div>";
     if (g.status === "blocked") h += '<div class="srcwarn">' + LE("SrcBlockedWhy") + "</div>";
@@ -22320,6 +22376,7 @@ function srcNoteLine(e){
       (e.unsupported ? (e.status === "blocked" ? " · BLOCKED: " : " · TAKEN OUT (" + (e.removed || 0) + " line(s)): ") +
         (e.unsupportedFigures || []).join(", ") + " - in no passage it cited" : "") +
       ((e.typos || []).length ? " · read " + e.typos.map(t => "\u201c" + t[0] + "\u201d as \u201c" + t[1] + "\u201d").join(", ") : "") +
+      ((e.own || []).length ? " · theirs: " + e.own.join(", ") : "") + (e.job ? " · a job on records" : "") +
       (e.noEvidence ? " · no evidence found" : "");
   }
   if (e.kind === "added") return "added " + e.doc + (e.version ? " v" + e.version : "") + " · " + e.passages + " passages" +
@@ -23289,13 +23346,22 @@ async function fixSuggest(t){
   if (document.activeElement === inp) inp.select();
   fixState(L("FixFromAi"));
 }
+/* how it was fixed, kept on the record and in its work log - from the box
+   that asks when a record is closed, or from the assistant closing it with
+   the fix you gave it ("close D-0153 with these steps") */
+function fixSet(t, v){
+  v = String(v || "").replace(/\s+/g, " ").trim();
+  if (!t || !v) return false;
+  t.resolution = v.slice(0, 500);
+  t.log.push({ at:new Date().toISOString(), kind:"status", text:L("FixLabel") + ": " + t.resolution });
+  return true;
+}
 function fixSave(){
   const t = getTask(FIX.id), inp = $("fixIn");
   const v = inp ? inp.value.replace(/\s+/g, " ").trim() : "";
   fixClose();
   if (!t || !v) return;
-  t.resolution = v.slice(0, 500);
-  t.log.push({ at:new Date().toISOString(), kind:"status", text:L("FixLabel") + ": " + t.resolution });
+  fixSet(t, v);
   buildModel(); touch(); renderAll();
   if (S.open === t.id && typeof renderDrawer === "function") renderDrawer();
   toast(L("FixKept", { p0:t.code }));

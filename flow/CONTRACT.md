@@ -1014,15 +1014,21 @@ Change fields on an existing record. Only the fields you send change.
 | `tags` | list of text | no |
 | `notes` | text | no |
 | `estimate` | int | no |
+| `resolution` | text | no — its *How it was fixed* line (since 5.9.5) |
 
 #### `setStatus`
 
-Move a record to another status.
+Move a record to another status. Closing it (`done`) with how it was fixed:
+send `resolution` — the fix in one or two lines, in their words. It is kept as
+the record's *How it was fixed* (and in its work log), so the box that asks for
+it when a record is closed has nothing left to ask. Steps in full go in
+`addLog`. (Since 5.9.5.)
 
 | argument | shape | required |
 |---|---|---|
 | `record` | ref | **yes** |
 | `status` | open | processing | blocked | done | cancelled | **yes** |
+| `resolution` | text | no |
 
 #### `setDue`
 

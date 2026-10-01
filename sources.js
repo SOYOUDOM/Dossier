@@ -1052,8 +1052,17 @@ const DOC_WORDS = ("policy policies standard standards guideline guidelines guid
   "procedures requirement requirements required mandatory compliance compliant vulnerability vulnerabilities " +
   "remediation remediate document documents documented deadline timeframe severity critical permitted prohibited " +
   "allowed appendix according").split(" ");
+/* "policy" that is not a policy document: an insurance policy, named by
+   its number or its holder - "search for the policy number and the life
+   insured", "policy A018346A10 has no COI letter". Such a message is about
+   a customer's policy and is no more a question about what a policy says
+   than "the change number" is one about change management. */
+const NOT_DOC = new RegExp("\\bpolic(?:y|ies)[ -]?(?:numbers?|nos?\\b\\.?|#|ids?|holders?|owners?|codes?|refs?|references?|records?|" +
+  "premiums?|lapsed?|issued?|start|end|expiry|anniversar(?:y|ies)|year|values?|loans?|benefits?|details?|schedules?)\\b|" +
+  "\\bpolicyholders?\\b|\\b(?:insurance|life|motor|health|medical|travel|customer'?s?|client'?s?|their|his|her) polic(?:y|ies)\\b|" +
+  "\\bpolic(?:y|ies)\\s+(?=[A-Z]{0,4}\\d[A-Z0-9-]{4,}\\b)", "gi");
 function isDocQuestion(q){
-  const s = String(q || "");
+  const s = String(q || "").replace(NOT_DOC, " ");
   if (DOC_Q.test(s)) return true;
   return words(s).some(w => w.length >= 6 && !/\d/.test(w) && !NOT_TYPOS.has(w) &&
     DOC_WORDS.some(d => d[0] === w[0] && d !== w && editWithin(w, d, 1) <= 1));
@@ -1256,13 +1265,28 @@ function substantial(text){
                       and nothing worth showing is left without it
            unsupported  no figure, but no passage it cites holds up either
            general    not an answer about the documents */
-function ground(reply, pack, question){
+/* What the person said themselves, as statements - "add a credit, valid
+   until exactly 5 years after the start date". A figure written there is
+   theirs, not an invention. A figure in a question they asked ("is it 4
+   hours?") is not: that is the very thing they want checked. */
+const ASKING = /^\W*(?:is|are|was|were|does|do|did|can|could|should|would|will|must|may|what|how|when|which|who|whom|whose|why|where)\b/i;
+function statedIn(q){
+  return String(q || "").replace(/^\s*\[\w+\]\s*/, "").replace(/\r\n?/g, "\n").split(/\n+/)
+    .map(l => sentencesOf(l).filter(x => !/\?\s*["”’')\]]*\s*$/.test(x) && !ASKING.test(x)).join(" "))
+    .filter(x => x.trim()).join("\n");
+}
+/* own: what else the person wrote that the reply may lean on - the
+   runbooks of their own that matched the question: [{ from:"runbook",
+   name, text }]. Their runbooks are their procedures; a figure in one is
+   not an invention either. It is never taken for what a document says:
+   such an answer is marked as coming from the runbook, not the document. */
+function ground(reply, pack, question, own){
   const P = (pack && pack.passages) || [];
   const say = String((reply && reply.say) || "");
   const raw = Array.isArray(reply && reply.cite) ? reply.cite : [];
   const conf = String((reply && reply.confidence) || "").toLowerCase().replace(/[^a-z_]/g, "");
   const docMode = !!(pack && pack.docQuestion) || raw.length > 0 || /^(high|medium|not_?found|low)$/.test(conf);
-  const res = { status:"general", confidence:"", cites:[], unsupported:[], uncited:[], loose:[], notes:[], removed:0 };
+  const res = { status:"general", confidence:"", cites:[], unsupported:[], uncited:[], loose:[], notes:[], removed:0, own:[] };
   if (!docMode) return res;
   const bySid = new Map(P.map(p => [String(p.s).toUpperCase(), p]));
   const byId = new Map(P.map(p => [p.id, p]));
@@ -1281,11 +1305,18 @@ function ground(reply, pack, question){
   const good = res.cites.filter(c => c.verified);
   const qFig = figures(question || "").map(f => f.key);
   const notFound = /^not_?found$/.test(conf) || (!good.length && unverifiable(say));
+  /* their own words: their runbooks always; what they wrote in this very
+     message only when the reply cites no document - a figure typed into a
+     question about a standard is not evidence of what the standard says */
+  const mine = (own || []).filter(o => o && o.text).map(o => ({ from:o.from || "runbook", name:o.name || "", text:String(o.text) }));
+  if (!good.length){ const st = statedIn(question); if (st) mine.unshift({ from:"message", name:"", text:st }); }
   const badKeys = [];
   figures(say).forEach(f => {
     if (notFound && qFig.indexOf(f.key) >= 0) return;         /* "the standard does not say 4 hours" */
     if (good.some(c => hasFigure(c.text, f))) return;
     if (good.some(c => hasFigureLoose(c.text, f))){ res.loose.push(f.text); return; }
+    const theirs = mine.find(o => hasFigure(o.text, f));
+    if (theirs){ if (!res.own.some(o => o.figure === f.text)) res.own.push({ figure:f.text, from:theirs.from, name:theirs.name }); return; }
     /* written in a passage the answer did not cite - an incident target
        sitting next to a vulnerability question is not support for it */
     const other = P.filter(p => hasFigure(p.text, f));
@@ -1309,14 +1340,20 @@ function ground(reply, pack, question){
         if (res.loose.length) res.notes.push("a figure is in the cited passage, but not next to its unit - a table read column by column");
         return res;
       }
+      /* what is left rests on their own runbook or their own words */
+      if (res.own.length){ res.status = "own"; res.confidence = "own"; return res; }
     }
     res.status = "blocked"; res.confidence = "not_found"; return res;
   }
   if (notFound){ res.status = "not_found"; res.confidence = "not_found"; return res; }
+  /* from their runbook, or from what they wrote: not a document's word,
+     and not an invention either */
+  if (!good.length && res.own.length){ res.status = "own"; res.confidence = "own"; return res; }
   if (!good.length){ res.status = "unsupported"; res.confidence = "not_found"; return res; }
   res.status = "grounded";
   const lowOnly = good.every(c => c.quality === "low");
-  res.confidence = conf === "high" && !lowOnly && !res.loose.length ? "high" : "medium";
+  res.confidence = conf === "high" && !lowOnly && !res.loose.length && !res.own.length ? "high" : "medium";
+  if (res.own.length) res.notes.push("a figure is from their runbook, not from the cited passage: " + res.own.map(o => o.figure).join(", "));
   if (res.loose.length) res.notes.push("a figure is in the cited passage, but not next to its unit - a table read column by column");
   if (lowOnly) res.notes.push("every cited passage is from a page that could not be read reliably");
   return res;
@@ -1360,7 +1397,7 @@ const API = {
   locate: locate, citation: citation, lastHead: lastHead,
   isDocQuestion: isDocQuestion, followUp: followUp, beside: beside,
   figures: figures, ground: ground, diagnose: diagnose, unsupportedIn: unsupportedIn,
-  trimSay: trimSay, sentencesOf: sentencesOf,
+  trimSay: trimSay, sentencesOf: sentencesOf, statedIn: statedIn,
   nameFor: nameFor, weakTitle: weakTitle, plainTitle: plainTitle, betterName: betterName
 };
 if (typeof module === "object" && module.exports) module.exports = API;

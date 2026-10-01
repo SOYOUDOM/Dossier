@@ -326,6 +326,18 @@ checked*, never as an order. Resolv checks, in this order:
      shown, marked *Part of the answer was taken out*.
    - Only if nothing useful is left is the whole reply **held back** — and then
      Resolv says so honestly and shows what the passages *do* say.
+   - **Your own words are never "invented".** A figure that is in one of *your*
+     runbooks that matched the question, or that you wrote yourself in your
+     message (*"valid until exactly 5 years after the start date — close it
+     with these steps"*), is accepted. The answer is marked **From your
+     runbook** or **From what you wrote**, never as if a document said it. A
+     figure in a *question* you asked (*"is it 4 hours?"*) is still checked.
+   - **A job is not a question.** When you give the content and ask Resolv to
+     do something with it — close a record, log it — and the reply does that
+     and cites nothing, there is no sources box under it at all.
+   - The word **policy** in *"policy number"* or *"policy A018346A10"* means a
+     customer's insurance policy, so it does not make a message a question
+     about policy documents.
 
 ```
  Suppose the AI replied like this (the kind of reply that caused the trouble):
@@ -488,8 +500,8 @@ longer grows as you use the app.
   same passages for the same question, today and next month, and a new
   conversation finds the same passages as the old one.
 - **Tests run the real app** in a browser with a *stand-in* AI that returns
-  scripted replies, so every check is repeatable: `node --test` (32 tests) and
-  `node tests/e2e/run.js` (68 checks).
+  scripted replies, so every check is repeatable: `node --test` (37 tests) and
+  `node tests/e2e/run.js` (73 checks).
 
 ---
 

@@ -2239,6 +2239,66 @@ changes** for the figure that was taken out. Then:
   the password standard say?"*).
 - Open the document from **Source** and read the lines marked.
 
+#### I asked it to close a record with my own steps, and it said "Answer held back" — why?
+
+Fixed in 5.9.5. Two things went wrong together:
+
+1. Your message said **"policy number"** — a customer's insurance policy. Resolv
+   read the word *policy* as a question about a policy **document**, so it
+   checked the reply against your Sources documents.
+2. The reply repeated a figure **you** wrote (*"exactly 5 years after the
+   start date"*). That figure is in no document, so it looked invented.
+
+Now *"policy number"*, *"policy no."*, *"policyholder"* or *"policy
+A018346A10"* do not make a message a question about documents, and **a figure
+you wrote yourself in your message is yours** — it is never taken out or held
+back. A figure in a question you ask (*"is it 5 years?"*) is still checked,
+because that is what you want to know.
+
+When the reply only does the job — closes the record, logs on it — and cites
+no document, there is **no sources box** under it.
+
+#### How do I close a record with the steps I used, in one message?
+
+Write the steps and ask, for example:
+
+> here is the fix for D-0153 · Steps: 1. … 2. … 3. … · please close it with these steps
+
+The assistant:
+
+- moves the record to **Done**;
+- keeps the fix in one or two lines as **How it was fixed** (so the box that
+  asks *"How was it fixed?"* when a record is closed does not need to ask);
+- puts your steps, in full, in the record's **work log**;
+- when none of your runbooks covers it yet, asks whether to keep the steps
+  as a **runbook**, so the next request like it is quicker.
+
+With **Ask before doing anything** on (**◎** in the chat header), you confirm
+each step first; the confirmation shows the *How it was fixed* line.
+
+#### I wrote the procedure in my runbook — why did the assistant not follow it?
+
+Before 5.9.5 the assistant was told that only documents in **Library →
+Sources** count as evidence of what a procedure says, and the check under an
+answer only accepted figures from those documents. So a figure written in
+**your own runbook** (in **Menu → Setup → Runbooks**, or made with *Learn
+from a BAU document*) was treated as invented, and the reply could be held back.
+
+Now:
+
+- your runbooks that match the question go with it, and the assistant is told
+  to **follow them** and say so (*"your runbook 'X' says …"*);
+- a figure in one of those runbooks is accepted, and the answer shows
+  **From your runbook: X** with **Yours** instead of a confidence — press it to
+  open the runbook;
+- documents in **Sources** are still checked as before: an answer that says a
+  *standard* or *policy document* says something must cite it.
+
+If an answer still misses your runbook, check that the runbook's
+**triggers** contain the words people actually type (**Menu → Setup →
+Runbooks**, open the runbook, **Triggers**): only the runbooks that match the
+question go with it.
+
 #### Does it understand a question with a typo?
 
 Yes. A word no document uses, one letter away from one they do (two for a
@@ -2774,8 +2834,8 @@ Answering from documents has its tests in the repository, and they are the
 first thing to run after changing anything it touches:
 
 ```
-node --test                 # tests/sources.test.js: 32 tests - every scenario below
-node tests/e2e/run.js       # the app in Chrome or Edge: 68 checks on the screen
+node --test                 # tests/sources.test.js: 37 tests - every scenario below
+node tests/e2e/run.js       # the app in Chrome or Edge: 73 checks on the screen
 node flow/check-prompt.js   # the prompt's examples against the reply validator
 ```
 

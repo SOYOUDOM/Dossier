@@ -320,6 +320,48 @@
   el = await ask("How fast must an affected host be isolated during a security incident?");
   check("cleared for the label, it is searched", /Isolate the affected host from the network within 15 minutes/.test(sent[sent.length - 1].req.sourcesText));
 
+  /* ── a job done with their own words (5.9.5) ────────────────────────
+     Made up, after a real report: a resolution pasted in full, "policy
+     number" in it, a figure in it, and "please close it with these steps".
+     It was held back as an invented figure; the record was closed anyway. */
+  const job = addTask({ title:"Rewards credit for a member" });
+  const JOBQ = "here is the fix for " + job.code + "\nSteps:\n1. Open the Member Portal, Rewards tab.\n" +
+    "2. Find the member by the policy number in the request.\n" +
+    "3. Add a Credit of the requested amount, valid until exactly 5 years after the start date.\n" +
+    "4. Save, and check the balance.\nplease close it with these steps";
+  plan = req => ({ say:"Done - " + job.code + " is closed, with a Credit valid until exactly 5 years after the start date.",
+    actions:[{ do:"setStatus", record:job.code, status:"done", resolution:"Added a Credit in Member Portal > Rewards, valid until exactly 5 years after the start date." },
+             { do:"addLog", record:job.code, text:"Resolution steps:\n1. Open the Member Portal, Rewards tab.\n3. Add a Credit, valid until exactly 5 years after the start date." }] });
+  el = await ask(JOBQ);
+  check("closing a record with your own steps is not held back, and has no sources box under it",
+        /valid until exactly 5 years/.test(el.textContent) && !/held back/i.test(el.textContent) && !el.querySelector(".srcans"), el.textContent.slice(0, 300));
+  await until(() => ASK.cur, 3000);
+  while (ASK.cur) chatRunAsked(ASK.cur);
+  await sleep(150);
+  check("...and it is closed with how it was fixed kept on it, the steps in its work log",
+        job.status === "done" && /exactly 5 years after the start date/.test(job.resolution) &&
+        job.log.some(l => /Resolution steps/.test(l.text)), job.status + " | " + job.resolution);
+  check("...with no 'How was it fixed?' box left to ask", !document.body.classList.contains("fixing"));
+  await shot("8-job-closed");
+
+  /* their own runbook: a figure in it is theirs, and the answer says so */
+  runbookStore().push(rbNormalise({ title:"Rewards credit for a member", system:"",
+    triggers:["rewards credit", "add a credit for a member"], steps:["Open the Member Portal, Rewards tab.",
+    "Add a Credit of the requested amount, valid until exactly 5 years after the start date.", "Save, and check the balance."] }));
+  plan = req => ({ say:"Your runbook says: add a Credit in the Member Portal, valid until exactly 5 years after the start date, then check the balance." });
+  el = await ask("what is the procedure for a rewards credit for a member?");
+  check("an answer from your own runbook is shown, marked as from that runbook",
+        /exactly 5 years/.test(el.textContent) && el.querySelector(".srcans.own") && /From your runbook: Rewards credit for a member/.test(el.textContent),
+        el.textContent.slice(0, 300));
+  $("chatLog").scrollTop = 1e9; await sleep(150);
+  await shot("8-own-runbook");
+  /* the same figure with no runbook and no word of theirs: still held back */
+  runbookStore().splice(-1, 1);
+  el = await ask("what is the procedure for a rewards credit for a member?");
+  check("...and without the runbook the same reply is held back, its figure never shown",
+        el.querySelector(".srcans.blocked") && !/5 years/.test(el.textContent), el.textContent.slice(0, 300));
+  chatNew(true); chatPaint();
+
   /* ── switched off ─────────────────────────────────────────────────── */
   await srcSetStatus(inc.id, "inactive");
   plan = req => ({ say:"ok" });

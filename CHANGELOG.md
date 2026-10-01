@@ -6,6 +6,61 @@ holds — which is what to paste into a bug report.
 
 ---
 
+## 5.9.5 - 2026-10-01
+
+**Closing a record with your own steps is not "held back" any more, and your
+own runbooks count.**
+
+Reported (shown here with made-up wording): *"here is the fix for D-0153 ·
+Steps: … valid until exactly 5 years after the start date … please close it
+with these steps"* came back as *Answer held back — it gave a figure its
+sources do not state*, while the record was closed and logged anyway. Two
+causes, both general:
+
+- **"policy number" is not a policy document.** The word *policy* made the
+  message look like a question about policy documents, so the reply was
+  checked against Sources. *"policy number"*, *"policy no."*,
+  *"policyholder"*, *"customer/insurance/life policy"* and *"policy
+  A018346A10"* no longer count; *"what does the password policy say?"* still
+  does.
+- **A figure you wrote is yours.** The reply repeated *your* "5 years", which
+  is in no document. Now a figure written in your own message, as a
+  statement, is never taken out or held back. A figure in a question you ask
+  (*"is it 5 years?"*) is still checked, and so is one typed into a question
+  about a standard (*"our target is 14 days - what does the standard say?"*):
+  that is not evidence of what the standard says.
+- **Your own runbooks count.** The assistant was told that only Sources
+  documents are evidence of what a procedure says, and the check agreed, so a
+  figure from a runbook you wrote (or made with *Learn from a BAU document*)
+  was treated as invented. Now the runbooks that match a question are
+  followed, a figure in one is accepted, and the answer says **From your
+  runbook: …** with **Yours** - press it to open the runbook. Documents in
+  Sources are checked exactly as before.
+- **A job is not a question.** A reply that closes, logs or changes a record
+  and cites no document has no sources box under it.
+- **Closing with how it was fixed.** `setStatus` and `updateRecord` take a
+  `resolution`: *"close it with these steps"* now moves the record to Done,
+  keeps the fix in one or two lines as **How it was fixed** (the box that asks
+  for it has nothing left to ask), puts the steps in full in the work log, and
+  offers to keep them as a runbook when none covers it. The confirmation
+  shows the line; the receipt says *How it was fixed is kept on it*.
+- The held-back message no longer says "the passages it cited" when it cited
+  none; it says the figure is not in your documents, your matching runbooks
+  or your own message. (The figure itself is still never shown.)
+- Prompt: their runbooks are their procedures - follow them and say so; a job
+  carrying their own content is done with their words and cites nothing; an
+  insurance policy number is a record, not a policy document; a worked
+  example of closing a record with pasted steps (made up).
+- README: *I asked it to close a record with my own steps, and it said
+  "Answer held back" — why?*, *How do I close a record with the steps I used,
+  in one message?*, *I wrote the procedure in my runbook — why did the
+  assistant not follow it?* `flow/CONTRACT.md`, `flow/SOURCES.md` and the
+  guide in `docs/` updated.
+- Tests: 37 unit tests, 73 browser checks (the close with pasted steps, the
+  answer from a runbook, the same reply held back without the runbook).
+
+---
+
 ## 5.9.4 - 2026-10-01
 
 **Sources for a hundred documents: a list you can search, filter, sort and

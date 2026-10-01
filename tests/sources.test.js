@@ -620,3 +620,79 @@ test("names: a broken name from before is mended when the document is opened; a 
   assert.equal(S.betterName("Backup checks", "first line of the text", "backup.md", "md"), "", "a name somebody typed is kept");
   assert.equal(S.betterName("Access Password Standard", "ACCESS STANDARD", "access-password-standard.pdf", "pdf"), "", "PDF names are left alone");
 });
+
+/* ── 5.9.5: a job done with their own words is not a question ─────────────
+   Made up, after a real report: a resolution pasted in full ("set the
+   valid-until date to exactly 5 years after the start date ... please close
+   it with these steps") was held back as an invented figure - "policy
+   number" (an insurance policy) had made it look like a question about a
+   policy document, and the figure was the person's own. */
+const JOB = "here is the fix for D-0153\nSteps:\n1. Open the Member Portal, Rewards tab.\n" +
+  "2. Find the member by the policy number in the request.\n" +
+  "3. Add a Credit of the requested amount, valid until exactly 5 years after the start date.\n" +
+  "4. Save, and check the balance.\nplease close it with these steps";
+
+test("an insurance policy named by its number is not a question about a policy document", () => {
+  assert.equal(S.isDocQuestion(JOB), false);
+  ["policy A018346A10 has no COI letter", "the policyholder wants a refund", "check the customer policy status",
+   "the policy no. is wrong"].forEach(q => assert.equal(S.isDocQuestion(q), false, q));
+  ["what does the password policy say?", "what is the policy on remediation?", "which policies apply to UAT?",
+   "is it allowed by the policy?"].forEach(q => assert.equal(S.isDocQuestion(q), true, q));
+});
+
+test("a figure they wrote themselves is theirs - but not one they asked about", () => {
+  const lib = mixedLib();
+  const { pack } = ask(lib, JOB);
+  pack.docQuestion = true;                  /* even when it did look like one */
+  const g = S.ground({ say:"Done - D-0153 is closed, with a Credit valid until exactly 5 years after the start date." }, pack, JOB);
+  assert.notEqual(g.status, "blocked");
+  assert.equal(g.status, "own");
+  assert.deepEqual(g.own, [{ figure:"5 years", from:"message", name:"" }]);
+  /* asked, not stated: still checked */
+  const q2 = "Is the credit valid for 5 years?";
+  const g2 = S.ground({ say:"Yes, the credit is valid for 5 years." }, pack, q2);
+  assert.equal(g2.status, "blocked");
+  assert.equal(S.statedIn("Set it to 5 years.\nIs it 30 days?\nwhat about 2 weeks"), "Set it to 5 years.");
+});
+
+test("a figure typed into a question about a standard is not evidence of what the standard says", () => {
+  const lib = mixedLib();
+  const q = "Our target is 14 days. How fast must critical patches go in on internet-facing servers?";
+  const { pack } = ask(lib, q);
+  const s = withText(pack, /within 3 days/)[0].s;
+  const g = S.ground({ say:"Critical patches must be applied within 14 days.", cite:[{ s:s, quote:"must be applied within 3 days" }], confidence:"high" }, pack, q);
+  assert.equal(g.status, "blocked");
+  assert.deepEqual(g.unsupported, ["14 days"]);
+});
+
+test("a figure from their own runbook is theirs, and the answer says it is from the runbook", () => {
+  const lib = mixedLib();
+  const q = "what is the procedure for a rewards credit?";
+  const { pack } = ask(lib, q);
+  assert.ok(pack.docQuestion);
+  const rb = [{ from:"runbook", name:"Rewards credit", text:"Rewards credit\nAdd a Credit valid until exactly 5 years after the start date." }];
+  const g = S.ground({ say:"Add a Credit in the Member Portal, valid until exactly 5 years after the start date." }, pack, q, rb);
+  assert.equal(g.status, "own");
+  assert.deepEqual(g.own, [{ figure:"5 years", from:"runbook", name:"Rewards credit" }]);
+  /* without the runbook, the same reply is held back as before */
+  assert.equal(S.ground({ say:"Add a Credit valid until exactly 5 years after the start date." }, pack, q).status, "blocked");
+  /* beside a cited document it is shown, at medium confidence, never high */
+  const p2 = ask(lib, "critical patch on an internet facing server, how many days?").pack;
+  const s = withText(p2, /within 3 days/)[0].s;
+  const g2 = S.ground({ say:"Critical patches go in within 3 days. Your runbook adds a 5 years retention of the change record.",
+    cite:[{ s:s, quote:"must be applied within 3 days" }], confidence:"high" }, p2, "patch timeframe?",
+    [{ from:"runbook", name:"Patching", text:"Keep the change record for 5 years." }]);
+  assert.equal(g2.status, "grounded");
+  assert.equal(g2.confidence, "medium");
+});
+
+test("closing a record can carry how it was fixed", () => {
+  global.window = { addEventListener(){}, location:{ origin:"http://127.0.0.1" } };
+  global.document = { createElement(){ return { style:{}, setAttribute(){}, addEventListener(){} }; }, body:{ appendChild(){} } };
+  eval(fs.readFileSync(path.join(__dirname, "..", "flow.js"), "utf8"));
+  const F = global.window.DossierFlow;
+  const v = F.validate({ say:"Done.", actions:[{ do:"setStatus", record:"D-0153", status:"done", resolution:"Added the credit; checked the balance." },
+                                              { do:"updateRecord", record:"D-0153", resolution:"Added the credit." }] });
+  assert.equal(v.actions[0].args.resolution, "Added the credit; checked the balance.");
+  assert.equal(v.actions[1].args.resolution, "Added the credit.");
+});

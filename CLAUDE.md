@@ -83,13 +83,13 @@ A *workspace* is a folder the user picks (File System Access API):
 - Commit messages: clear summary + body; no model names in commits, code or
   docs. Do not open a pull request unless the owner asks.
 - Work so far is on branch `claude/chat-panel-pixel-art-gifs-d822hq`
-  (latest: 5.9.4). Follow the branch instructions of your own session.
+  (latest: 5.9.5). Follow the branch instructions of your own session.
 
 ## Testing
 
 ```
-node --test                                   # 32 unit tests (Sources, grounding, flow reply fields)
-node tests/e2e/run.js                         # the app in headless Chrome/Edge: 68 checks (CHROME=<path> to choose)
+node --test                                   # 37 unit tests (Sources, grounding, flow reply fields)
+node tests/e2e/run.js                         # the app in headless Chrome/Edge: 73 checks (CHROME=<path> to choose)
 node flow/check-prompt.js                     # after editing flow/prompt.txt ...
 python3 flow/embed-prompt.py                  # ... then copy it into flow.js (PROMPT_BUILTIN)
 node tests/fixtures/make-pdf.js               # regenerate the PDF fixtures
@@ -112,6 +112,24 @@ Also useful:
 
 ## Recent history (newest first)
 
+- **5.9.5** — Reported (made-up wording here): "here is the fix for D-0153 ·
+  Steps: … exactly 5 years after the start date … please close it with these
+  steps" was
+  *held back* (the record was closed anyway, confirm off). Causes: "policy
+  number" (insurance) made `isDocQuestion` true, and the reply repeated the
+  user's own figure. Now `NOT_DOC` strips insurance-policy phrases before
+  `DOC_Q`; `ground(reply, pack, q, own)` accepts a figure in the user's own
+  message (`statedIn`: statements only, never question sentences; only when
+  the reply cites no passage) or in a matched runbook (`own` from
+  `srcOwnTexts(ctx.runbooksMatched)`), new status `own` ("From your
+  runbook: X" · *Yours*, `srcrunbook` action opens it); a reply with record
+  actions (`SRC_JOB_ACTIONS`) and no cite gets no box. `setStatus` /
+  `updateRecord` take `resolution` → `fixSet()` (also used by `fixSave`), set
+  before the status so `fixAsk` does not pop up. The held-back text never
+  shows the doubted figure (a regression test checks it). Prompt: runbooks
+  are their procedures (follow, say so); a job with their content cites
+  nothing; closing example (made up, "Member Portal", 5 years). The owner's
+  portal URL and wording were never committed.
 - **5.9.4** — Sources for ~100 documents. The panel (`srcPanelHtml`) is a
   table: `srcRowHtml` rows (tick `[data-ss]`, name button `data-sa="view"`,
   meta line, kind, passages, status, `⋯` `[data-sm]`), a sticky header, the
