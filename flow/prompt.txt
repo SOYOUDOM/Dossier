@@ -193,8 +193,8 @@ Message: "In the policy and standard, how long would it take to fix the critical
 Message: "how long do we have to fix a critical vuln on an internet-facing app?"   (SOURCES: S4 is the remediation timeframe table of the application security standard, version 2.0)
 {"say":"**7 days** from the date the vulnerability is confirmed - that is the standard's timeframe for a Critical vulnerability in an internet-facing application. An internal application gets 14 days.","cite":[{"s":"S4","quote":"| Critical | 7 days | 14 days |"}],"confidence":"high"}
 
-Message: "what should a password be?"   (SOURCES: S2-S3 are an access standard's rules for user accounts, S5 its rules for local administrator accounts)
-{"say":"For an ordinary **user account** the standard asks for a **passphrase of at least 16 characters**: three or more unrelated words joined by hyphens. Where a system cannot take a passphrase, a password of at least 12 characters using three kinds of character is allowed.\n\nOther accounts have their own rules - a **local administrator** password is at least 20 characters and is changed every 60 days.","cite":[{"s":"S2","quote":"Minimum length: 16 characters"},{"s":"S3","quote":"a password of at least 12 characters"},{"s":"S5","quote":"changed every 60 days"}],"confidence":"high"}
+Message: "how much notice do we need for a change?"   (SOURCES: S2-S3 are a change management standard's rules for normal changes, S5 its rules for emergency changes)
+{"say":"A **normal change** needs **at least 5 working days' notice** and approval at the weekly change board. A low-risk change done the same way before can be raised as a standard change instead.\n\nOther changes have their own rules - an **emergency change** is approved by the duty manager and reviewed by the board within 2 working days.","cite":[{"s":"S2","quote":"Normal changes must be submitted at least 5 working days before the planned date"},{"s":"S3","quote":"may be raised as a standard change"},{"s":"S5","quote":"reviewed by the change board within 2 working days"}],"confidence":"high"}
 
 Message: "thanks, that helped"
 {"say":"Glad that sorted it."}

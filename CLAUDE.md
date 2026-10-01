@@ -83,13 +83,13 @@ A *workspace* is a folder the user picks (File System Access API):
 - Commit messages: clear summary + body; no model names in commits, code or
   docs. Do not open a pull request unless the owner asks.
 - Work so far is on branch `claude/chat-panel-pixel-art-gifs-d822hq`
-  (latest: 5.9.3). Follow the branch instructions of your own session.
+  (latest: 5.9.4). Follow the branch instructions of your own session.
 
 ## Testing
 
 ```
-node --test                                   # 28 unit tests (Sources, grounding, flow reply fields)
-node tests/e2e/run.js                         # the app in headless Chrome/Edge: 56 checks (CHROME=<path> to choose)
+node --test                                   # 32 unit tests (Sources, grounding, flow reply fields)
+node tests/e2e/run.js                         # the app in headless Chrome/Edge: 68 checks (CHROME=<path> to choose)
 node flow/check-prompt.js                     # after editing flow/prompt.txt ...
 python3 flow/embed-prompt.py                  # ... then copy it into flow.js (PROMPT_BUILTIN)
 node tests/fixtures/make-pdf.js               # regenerate the PDF fixtures
@@ -112,6 +112,25 @@ Also useful:
 
 ## Recent history (newest first)
 
+- **5.9.4** — Sources for ~100 documents. The panel (`srcPanelHtml`) is a
+  table: `srcRowHtml` rows (tick `[data-ss]`, name button `data-sa="view"`,
+  meta line, kind, passages, status, `⋯` `[data-sm]`), a sticky header, the
+  list scrolling inside the panel (`container-type:inline-size`, `@container`
+  640/420). Search box `#srcFind`, chips `[data-sf]`, sort `#srcSort`
+  (`cfg.sort`; category/kind grouped under `.srcgrp`), fold `#srcFold`
+  (`cfg.panelOpen`). Filtering toggles `hidden` (`srcFilter`) - no redraw, so
+  the box keeps its focus. View state in `srcUi()` (`q`, `st`, `sel`). One
+  `#srcMenu` on `<body>` (`srcMenuOpen`, fixed position: a fixed element
+  inside a `container-type` parent is positioned against that parent). Bulk
+  bar `#srcBulk` → `srcBulk(what)`; bulk on/off touch only inactive/active
+  documents, never superseded ones. Several files → `srcAddMany` →
+  `srcDetailsMany` (one dialog, `sm*` ids) → `srcStore(…, batch)` then one
+  save and one rebuild. Names: `plainTitle`, `detectMeta().titleFrom`
+  (front/heading/line; an all-bold first line is a heading), `nameFor(…,
+  from)`, `betterName` mends old names on `srcLoad` (not `d.named`). The
+  worked example in the prompt is change management (it was passwords: the
+  owner asked whether the work was password-only - it never was; tests now
+  include a mixed library).
 - **5.9.3** — A slimmer chat. The sources box under an answer
   (`srcAnswerHtml`) starts folded to one line (`.srcsum`: document · page,
   confidence, chevron); `srcToggle` opens it and stores `r.srcOpen` with the

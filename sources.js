@@ -416,13 +416,35 @@ function detectMeta(text, fileName){
   if (vm) meta.version = vm[1];
   const em = /\b(?:effective|effective date|effective from|valid from|in force from|approved on|date of issue|issue date)\s*[:\-]?\s*([^\n|]{6,40})/i.exec(head);
   if (em) meta.effective = parseDate(em[1]);
+  /* the title: a "title:" at the top of a Markdown file, or its "# heading";
+     failing both, the first line - which says where it came from, because a
+     first line is as often a bullet or a sentence as a title */
+  const fm = /^\s*---[ \t]*\n([\s\S]*?)\n---/.exec(head);
+  const ft = fm && /^[ \t]*title[ \t]*:[ \t]*["']?(.+?)["']?[ \t]*$/mi.exec(fm[1]);
   const h = /^\s*#\s+(.+)$/m.exec(head);
-  if (h) meta.title = h[1].trim();
+  if (ft && plainTitle(ft[1])){ meta.title = plainTitle(ft[1]); meta.titleFrom = "front"; }
+  else if (h){ meta.title = plainTitle(h[1]); meta.titleFrom = "heading"; }
   else {
     const first = head.split("\n").map(s => s.trim()).find(s => s && !/^\[page \d+\]$/.test(s) && s.length <= 100);
-    meta.title = first || "";
+    meta.title = first || ""; meta.titleFrom = "line";
+    /* a first line that is all bold and is not a sentence is a title too -
+       Word documents turned into Markdown write theirs that way */
+    const bold = /^(\*\*|__)([^*_]+)\1$/.exec(first || "");
+    if (bold && !/[.!?:]$/.test(bold[2].trim())){ meta.title = plainTitle(bold[2]); meta.titleFrom = "heading"; }
   }
   return meta;
+}
+/* A line that is to be a name, without its Markdown: "**Data** `Objects`",
+   "- Introduction & Step by Step", "[Setup](setup.md)", "## Scope". */
+function plainTitle(s){
+  return String(s || "")
+    .replace(/^\s*(?:#+|[-*+\u2022>]|\d+[.)])\s+/, "")
+    .replace(/!?\[([^\]]*)\]\([^)]*\)/g, "$1")
+    .replace(/\*\*|__|`|~~/g, "")
+    .replace(/(^|\s)[*_](?=\S)([^*_]*?\S)[*_](?=\s|$|[.,;:!?])/g, "$1$2")
+    .replace(/<[^>]+>/g, "")
+    .replace(/\s+#+\s*$/, "")
+    .replace(/\s+/g, " ").trim();
 }
 const MONTHS = { jan:1, feb:2, mar:3, apr:4, may:5, jun:6, jul:7, aug:8, sep:9, sept:9, oct:10, nov:11, dec:12 };
 function parseDate(s){
@@ -452,7 +474,7 @@ function weakTitle(t){
 }
 function genericFile(name){
   const b = String(name || "").replace(/\.[^.]+$/, "").trim();
-  return !b || /^(document|doc|scan|scanned|file|untitled|download|img|image|new|copy|attachment)[\s_\-\d()]*$/i.test(b) ||
+  return !b || /^(document|doc|scan|scanned|file|untitled|download|img|image|new|copy|attachment|readme|index|default|main)[\s_\-\d()]*$/i.test(b) ||
          b.replace(/[^\p{L}]/gu, "").length < 4;
 }
 function tidyName(s){
@@ -462,16 +484,50 @@ function tidyName(s){
     s = s.toLowerCase().replace(/(^|\s)(\p{L})/gu, (m, a, c) => a + c.toUpperCase());
   return s;
 }
-function nameFor(title, fileName, kind){
+/* from: where the title came from (detectMeta's titleFrom). A heading is
+   trusted; a first line only when the file's own name says nothing - it is
+   "- Introduction & Step by Step" or "**Data Transfer Objects** are used to
+   transfer data between the..." as often as it is a title. */
+function nameFor(title, fileName, kind, from){
   const base = tidyName(String(fileName || "").replace(/\.[^.]+$/, ""));
-  const t = String(title || "").replace(/^#+\s*/, "").trim();
-  if (kind === "md" || kind === "docx") return !weakTitle(t) ? t : base || t || "Untitled";
+  const t = plainTitle(title);
+  if (kind === "md" || kind === "docx"){
+    if (from === "line" && base && !genericFile(fileName)) return base;
+    /* a heading of one word is a title too: "About", "Multi-Tenancy" */
+    const good = from === "heading" || from === "front"
+      ? t.replace(/[^\p{L}]/gu, "").length >= 3 && t.length <= 90
+      : !weakTitle(t) && !(from === "line" && sentenceLike(t));
+    return good ? t : base || t || "Untitled";
+  }
   /* a PDF's first line is too often a logo to be trusted over its file name */
   if (!genericFile(fileName)) return base;
   return !weakTitle(t) ? tidyName(t) : base || t || "Untitled";
 }
 /* what makes two files the same document: its name without the version,
    the year, and words like draft or final */
+/* reads as a sentence rather than a title: many words, or a verb in the
+   middle of it ("... are used to ...") */
+function sentenceLike(t){
+  const ws = String(t || "").split(/\s+/).filter(Boolean);
+  return ws.length >= 9 || /[.!?]$/.test(t) || (ws.length >= 5 && /\b(is|are|was|were|will|can|should|must|used|allows?)\b/i.test(t));
+}
+/* A name given to a document before 5.9.4 that is broken: Markdown marks in
+   it, or the first line of the text taken for a title. firstLine is the first
+   line of the document's text. Returns the better name, or "" to keep it. A
+   name somebody typed is neither, and is kept. */
+function betterName(name, firstLine, fileName, kind){
+  const n = String(name || ""), line = String(firstLine || "").trim();
+  if (kind !== "md" && kind !== "docx" && kind !== "text") return "";
+  const marks = /^\s*(?:#|[-*+\u2022>]\s|\d+[.)]\s)|\*\*|__|`|\[[^\]]*\]\(/.test(n);
+  const pn = plainTitle(n), pl = plainTitle(line);
+  /* the first line, or the start of it - a long one was cut to fit */
+  const fromLine = !!pl && !/^#/.test(line) && (pl === pn || (pn.length >= 20 && pl.indexOf(pn) === 0));
+  if (!marks && !fromLine) return "";
+  /* a first line all in bold is a title, as it is for a document added now */
+  const dm = detectMeta(line, fileName), from = dm.titleFrom === "heading" ? "heading" : "line";
+  const want = fromLine || sentenceLike(pn) ? nameFor(from === "heading" ? dm.title : line || n, fileName, kind, from) : pn;
+  return want && want !== n ? want : "";
+}
 function familyKey(name){
   return String(name || "").toLowerCase()
     .replace(/\.(pdf|md|markdown|txt|docx?)$/i, "")
@@ -1305,7 +1361,7 @@ const API = {
   isDocQuestion: isDocQuestion, followUp: followUp, beside: beside,
   figures: figures, ground: ground, diagnose: diagnose, unsupportedIn: unsupportedIn,
   trimSay: trimSay, sentencesOf: sentencesOf,
-  nameFor: nameFor, weakTitle: weakTitle
+  nameFor: nameFor, weakTitle: weakTitle, plainTitle: plainTitle, betterName: betterName
 };
 if (typeof module === "object" && module.exports) module.exports = API;
 if (root) root.DossierSources = API;

@@ -118,7 +118,13 @@ spelling mistake, exactly like this:
 
 > **"what is the stardard password should be?"**
 
-The workspace has a 17-page password standard (a PDF) in **Library → Sources**.
+The workspace has a 17-page password standard (a PDF) in **Library → Sources**,
+among the other documents kept there.
+
+Nothing in the steps below is about passwords. A question about how long logs
+are kept, how fast a patch must go in or what a P2 target is goes through the
+very same steps, and every question searches **all** the active documents in
+Sources, not one of them.
 
 ### Step 1 — Can Resolv answer it by itself?
 
@@ -482,8 +488,8 @@ longer grows as you use the app.
   same passages for the same question, today and next month, and a new
   conversation finds the same passages as the old one.
 - **Tests run the real app** in a browser with a *stand-in* AI that returns
-  scripted replies, so every check is repeatable: `node --test` (28 tests) and
-  `node tests/e2e/run.js` (56 checks).
+  scripted replies, so every check is repeatable: `node --test` (32 tests) and
+  `node tests/e2e/run.js` (68 checks).
 
 ---
 

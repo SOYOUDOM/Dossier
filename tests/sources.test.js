@@ -548,3 +548,75 @@ test("taking out: sentences, list items, headings, tables and fenced blocks", ()
   assert.equal(S.trimSay("```sql\nselect 1 -- 30 days\n```\nRun that query to see the rows.", ["30 day"]).say, "Run that query to see the rows.");
   assert.deepEqual(S.trimSay("Nothing to take out here.", ["4 hour"]), { say:"Nothing to take out here.", removed:0 });
 });
+
+/* ── the same rules for every document, not one ─────────────────────────
+   The fixes of 5.9.2 were found with a password standard; none of them is
+   about passwords. A mixed library: each question finds its own document,
+   spelling slips included, and a line with a figure no passage gives is
+   taken out of an answer about patching just as it is about passwords. */
+const mixedLib = () => library([
+  { file:"data-retention-standard.pdf.txt", pages:3 },
+  { file:"patching-standard.md" }, { file:"incident-management-guideline.md" }, { file:"security-incident-playbook.md" },
+  { file:"application-security-standard-v2.md" }, { file:"runbook-portal-restart.md" }, { file:"legacy-backup-procedure.md" },
+  { file:"access-password-standard.pdf.txt", text:pdfText("access-password-standard.pdf"), pages:4 }
+]);
+
+test("a mixed library: each question finds its own document's rule", () => {
+  const lib = mixedLib();
+  const want = [
+    ["how long do we keep system logs?", "DATA RETENTION STANDARD", /System logs are kept for 90 days/],
+    ["critical patch on an internet facing server, how many days?", "Server Patching Standard", /within 3 days/],
+    ["what is the resolution target for a P2?", "Incident Management Guideline", /\| P2 \| Major degradation \| 8 hours \|/],
+    ["how fast should we isolat the host in a security incidnet?", "Security Incident Playbook", /within 15 minutes/],
+    ["what is the stardard password should be?", "ACCESS STANDARD", /at least 12 characters/]
+  ];
+  want.forEach(([q, doc, rule]) => {
+    const { pack } = ask(lib, q);
+    assert.equal(pack.passages[0].name, doc, q);
+    assert.ok(withText(pack, rule).length, q + " - the rule itself is sent");
+  });
+});
+
+test("a mixed library: a line with a figure no passage gives is taken out, whatever the subject", () => {
+  const lib = mixedLib();
+  const q = "critical patch on an internet facing server, how many days?";
+  const { pack } = ask(lib, q);
+  const s = withText(pack, /within 3 days/)[0].s;
+  const g = S.ground({ say:"Critical security patches on internet-facing servers must be applied within 3 days of the vendor release. " +
+                           "Routine patches must be applied within 14 days.",
+                       cite:[{ s:s, quote:"must be applied within 3 days" }], confidence:"high" }, pack, q);
+  assert.equal(g.status, "partial");
+  assert.equal(g.removed, 1);
+  assert.equal(g.say, "Critical security patches on internet-facing servers must be applied within 3 days of the vendor release.");
+
+  const q2 = "what is the resolution target for a P2?";
+  const p2 = ask(lib, q2).pack;
+  const s2 = withText(p2, /8 hours/)[0].s;
+  const g2 = S.ground({ say:"A P2 incident has a resolution target of 8 hours.", cite:[{ s:s2, quote:"8 hours" }], confidence:"high" }, p2, q2);
+  assert.equal(g2.status, "grounded");
+});
+
+/* ── names: from the document's own title, never its Markdown marks ───── */
+test("names: a title without its Markdown, and the file's name when the first line is not a title", () => {
+  assert.equal(S.plainTitle("## **Data** `Objects`"), "Data Objects");
+  assert.equal(S.plainTitle("- Introduction & Step by Step"), "Introduction & Step by Step");
+  assert.equal(S.plainTitle("[Setup](setup.md) guide"), "Setup guide");
+  const name = (text, file) => { const m = S.detectMeta(text, file); return S.nameFor(m.title, file, "md", m.titleFrom); };
+  assert.equal(name("# Printer queue: clear a stuck job\n\n1. Stop the spooler.", "printer.md"), "Printer queue: clear a stuck job");
+  assert.equal(name("---\ntitle: \"Change Calendar\"\n---\nbody", "cal.md"), "Change Calendar");
+  assert.equal(name("**Change Freeze Calendar**\n\nNo changes in the last week.", "change-freeze.md"), "Change Freeze Calendar");
+  assert.equal(name("# About\n\ntext", "about.md"), "About", "a one-word heading is a title too");
+  assert.equal(name("- Introduction & Step by Step\n- Next", "getting-started.md"), "Getting Started");
+  assert.equal(name("**Data Transfer Objects** are used to transfer data between the layers.", "data-transfer-objects.md"), "Data Transfer Objects");
+  assert.equal(name("**Do not restart the server.**\n", "restart-rules.md"), "Restart Rules", "a bold sentence is not a title");
+});
+
+test("names: a broken name from before is mended when the document is opened; a typed one is kept", () => {
+  assert.equal(S.betterName("**Change Freeze Calendar**", "**Change Freeze Calendar**", "change-freeze.md", "md"), "Change Freeze Calendar");
+  assert.equal(S.betterName("- Introduction & Step by Step", "- Introduction & Step by Step", "getting-started.md", "md"), "Getting Started");
+  assert.equal(S.betterName("**Data Transfer Objects** are used to transfer data between the",
+    "**Data Transfer Objects** are used to transfer data between the application and presentation layers.", "data-transfer-objects.md", "md"),
+    "Data Transfer Objects", "a long first line cut to fit is mended too");
+  assert.equal(S.betterName("Backup checks", "first line of the text", "backup.md", "md"), "", "a name somebody typed is kept");
+  assert.equal(S.betterName("Access Password Standard", "ACCESS STANDARD", "access-password-standard.pdf", "pdf"), "", "PDF names are left alone");
+});

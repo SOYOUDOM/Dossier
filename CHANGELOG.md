@@ -6,6 +6,61 @@ holds — which is what to paste into a bug report.
 
 ---
 
+## 5.9.4 - 2026-10-01
+
+**Sources for a hundred documents: a list you can search, filter, sort and
+fold, actions for many at once, many files added in one go, and clean
+names.**
+
+- **The Sources panel is a table now**, built for many documents: one row
+  each - the name (click it to open the document), a short line under it
+  (file, version, effective date, pages, systems, category, access), its
+  type, its number of passages and its status - with the header kept in
+  view while the list scrolls inside the panel. With 100 documents the panel
+  is about 650 pixels high instead of a page several screens long.
+- **Find**: a search box narrows the list as you type (name, file, version,
+  system, environment, category, type); chips show **All**, **Active**,
+  **Superseded**, **Switched off** and **Need a look**, each with its count;
+  **Sort** by name, newest first, category or type - the last two grouped
+  under headings. Resolv remembers the sort.
+- **Fold**: the arrow beside *Sources* folds the panel to its title line;
+  Resolv remembers it.
+- **⋯ on each row** holds View, Details, Re-index, Switch off / Switch on and
+  Remove, instead of five buttons on every row.
+- **Several at once**: tick rows (the header box ticks every row shown) and
+  a bar offers **Switch on**, **Switch off**, **Re-index**, **Set
+  category…**, **Remove** and **Clear**. *Switch on* for several never
+  brings back a superseded version - that would put old rules back into
+  answers; an old version is switched on from its own ⋯ menu.
+- **Many files in one go**: choose them all in the file window; Resolv reads
+  them and shows **one** window listing them all with the details they
+  share (systems, environment, category, access, may go to the assistant).
+  Files already in Sources are left out and counted. They are saved and
+  indexed together: 100 Markdown files in about two seconds.
+- **Clean names**: a document is named from its own title - its `# heading`,
+  a `title:` at the top, a one-word heading, or a first line all in bold -
+  and from its file name when the first line is a bullet or a sentence.
+  Markdown marks (`**`, `#`, `` ` ``, links) never end up in a name. Names
+  broken that way before are mended when the workspace opens; a name typed
+  in **Details** is kept.
+- **The same rules for every document**: the worked example in the prompt
+  that showed how to answer when rules differ by case is now about change
+  management rather than passwords, and the guide says plainly that every
+  question searches every active document. New tests ask a mixed library
+  (retention, patching, incidents, a security playbook, passwords) and check
+  each question finds its own document, typos included, and that a line
+  with an unsupported figure is taken out of an answer about patching just
+  as it is about passwords.
+- README: *Does the assistant only answer from one document?*, *How do I
+  add many documents at once?*, *How do I find a document when there are
+  many?*, *How do I open, rename, re-index, switch off or remove a
+  document?*, *How do I switch off, re-index, re-categorise or remove
+  several documents at once?*, *Why did some document names change?*
+- Tests: 32 unit tests, 68 browser checks (search, chips, ticks, several
+  at once, adding several, folding).
+
+---
+
 ## 5.9.3 - 2026-09-30
 
 **A slimmer conversation: sources fold to one line, and the files you send

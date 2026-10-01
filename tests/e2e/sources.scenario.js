@@ -344,5 +344,61 @@
   check("the diagnostics list the searches, with no document text", SRC.log.filter(e => e.kind === "answer").length >= 8 &&
         !SRC.log.some(e => /Isolate the affected host|kept for 90 days|remediated by the application owner/.test(JSON.stringify(e))));
   await shot("7-panel");
+
+  /* ── many documents: find, filter, fold, act on several, add several ── */
+  const rowsShown = () => [...document.querySelectorAll(".srcpanel .srcdoc")].filter(r => !r.hidden);
+  const find = $("srcFind");
+  find.focus(); find.value = "retention"; find.dispatchEvent(new Event("input"));
+  check("the panel's search box narrows the list as you type, and keeps its focus",
+        rowsShown().length === 1 && /Data Retention Standard/.test(rowsShown()[0].textContent) && document.activeElement === find &&
+        !$("srcShown").hidden, rowsShown().map(r => r.dataset.k).join(" | "));
+  find.value = ""; find.dispatchEvent(new Event("input"));
+  document.querySelector('.srcpanel [data-sf="inactive"]').click();
+  check("a filter chip shows only the documents in that state", rowsShown().length && rowsShown().every(r => r.dataset.st === "inactive") &&
+        rowsShown().length === srcDocs().filter(d => d.status === "inactive").length, rowsShown().map(r => r.dataset.st).join());
+  document.querySelector('.srcpanel [data-sf="all"]').click();
+  check("...and All shows every one again", rowsShown().length === document.querySelectorAll(".srcpanel .srcdoc").length);
+
+  /* several at once: switching on never brings back an old version */
+  const tick = id => { const c = document.querySelector('.srcpanel [data-src="' + id + '"] [data-ss]'); c.checked = true; c.dispatchEvent(new Event("change")); };
+  tick(inc.id); tick(v1.id);
+  check("ticking documents shows the bar that acts on them", !$("srcBulk").hidden && /2 selected/.test($("srcBulk").textContent), $("srcBulk").textContent);
+  await srcBulk("on");
+  check("'Switch on' for several switches on the ones switched off, and leaves a replaced version as it is",
+        srcDoc(inc.id).status === "active" && srcDoc(v1.id).status === "superseded", srcDoc(inc.id).status + " " + srcDoc(v1.id).status);
+  srcUi().sel.add(inc.id);
+  await srcBulk("off");
+  check("'Switch off' for several", srcDoc(inc.id).status === "inactive" && srcDoc(v1.id).status === "superseded");
+  srcUi().sel.clear(); renderLib();
+
+  /* several files chosen at once: one window for all of them, one save */
+  const mk = (name, text) => new File([text], name, { type:name.endsWith(".md") ? "text/markdown" : "text/plain" });
+  const nBefore = srcDocs().length;
+  const addingMany = srcAddMany([
+    mk("change-freeze.md", "**Change Freeze Calendar**\n\nNo production changes are made in the last five working days of the quarter.\n"),
+    mk("printer-queue.md", "# Printer queue: clear a stuck job\n\n1. Stop the spooler service.\n2. Delete the files in the spool folder.\n3. Start the spooler service.\n"),
+    mk("printer-queue-copy.md", "# Printer queue: clear a stuck job\n\n1. Stop the spooler service.\n2. Delete the files in the spool folder.\n3. Start the spooler service.\n")
+  ]);
+  await until(() => $("smOk"));
+  check("several files open one window that lists them all, a copy left out", $("smOk") && document.querySelectorAll("#srcDlg .srcmany > div").length === 2 &&
+        /1 already in Sources|same/i.test($("srcDlg").textContent), ($("srcDlg") || {}).textContent);
+  $("smCat").value = "Operations";
+  $("smOk").click();
+  await addingMany;
+  const added = srcDocs().slice(nBefore);
+  check("...and adds them together, with what was chosen once", added.length === 2 && added.every(d => d.category === "Operations" && d.status === "active"),
+        JSON.stringify(added.map(d => [d.name, d.category])));
+  check("...each named cleanly from its own title", added.map(d => d.name).sort().join(" | ") === "Change Freeze Calendar | Printer queue: clear a stuck job",
+        added.map(d => d.name).join(" | "));
+  check("...and found by the next question", DossierSources.search(SRC.ix, "printer spooler stuck job", { today:"2026-10-01" }).hits.some(h => h.chunk.doc === added.find(d => /Printer/.test(d.name)).id),
+        "");
+
+  /* the panel folds to one line, and remembers it */
+  $("srcFold").click();
+  check("the panel folds to its title line, and remembers it", !document.querySelector(".srcpanel").classList.contains("open") && srcCfg().panelOpen === false &&
+        document.querySelector(".srcpanel").getBoundingClientRect().height < 90, document.querySelector(".srcpanel").getBoundingClientRect().height);
+  renderLib();
+  check("...still folded when drawn again", !document.querySelector(".srcpanel").classList.contains("open"));
+  $("srcFold").click();
   return { checks };
 })()

@@ -1597,27 +1597,107 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
 .alertpop .apf{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
 /* ── Sources: the panel, the dialogs, and what goes under an answer ── */
 .libhd{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);margin:22px 0 10px;font-weight:650}
-.srcpanel{border:1px solid var(--rule-hi);border-radius:12px;padding:14px 16px;margin:0 0 8px;background:var(--paper)}
-.srchd{display:flex;gap:14px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap}
-.srchd h3{margin:0 0 4px;font-size:15px}
-.srcsub{margin:0;font-size:12px;color:var(--ink-2);line-height:1.55;max-width:720px}
+/* ── Sources: a heading that folds, and one line per document ─────────── */
+.srcpanel{border:1px solid var(--rule-hi);border-radius:12px;padding:0;margin:0 0 10px;background:var(--paper);container-type:inline-size}
+.srchd{display:flex;gap:10px 14px;align-items:center;justify-content:space-between;flex-wrap:wrap;padding:8px 12px 8px 6px}
+.srcfold{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:8px;min-width:0;cursor:pointer;padding:6px 8px;border-radius:9px}
+.srcfold:hover{background:var(--paper-2)}
+.srcfold:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.srcfold .chev{flex:none;font-size:19px;line-height:1;color:var(--ink-3);transition:transform .16s var(--ease)}
+.srcpanel.open .srcfold .chev{transform:rotate(90deg)}
+.srcht{display:flex;align-items:baseline;gap:4px 12px;flex-wrap:wrap;min-width:0}
+.srcht b{font-size:15px}
+.srccount{font-size:12px;color:var(--ink-2);font-variant-numeric:tabular-nums}
+.srccount .bad{color:var(--p2);font-weight:600}
+.srcpbody{display:none;padding:0 14px 12px}
+.srcpanel.open .srcpbody{display:block}
+.srcsub{margin:0 0 10px;font-size:12px;color:var(--ink-2);line-height:1.55;max-width:760px}
 .srcbtns{display:flex;gap:8px;flex-wrap:wrap}
 .srcwarn{font-size:12px;line-height:1.5;margin:10px 0 0;padding:7px 10px;border-radius:8px;
   background:color-mix(in srgb,var(--p2) 12%,transparent);color:inherit}
-.srcempty{font-size:12.5px;color:var(--ink-2);line-height:1.65;margin:12px 0 2px}
-.srclist{display:flex;flex-direction:column;gap:8px;margin:12px 0 4px}
-.srcdoc{border:1px solid var(--rule);border-radius:10px;padding:9px 11px}
-.srcdoc.superseded,.srcdoc.inactive{opacity:.62}
-.srcdn{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-.srcdn b{font-size:13px}
-.srcst{font-size:10.5px;border-radius:999px;padding:1px 8px;border:1px solid var(--rule-hi);color:var(--ink-2)}
+.srcpbody > .srcwarn{margin:0 0 10px}
+.srcempty{font-size:12.5px;color:var(--ink-2);line-height:1.65;margin:4px 0 2px}
+/* the search, the status chips and the sort */
+.srctools{display:flex;gap:8px 12px;align-items:center;flex-wrap:wrap;margin:0 0 8px}
+.srcfind{flex:1 1 240px;min-width:0;max-width:440px}
+.srcchips{display:flex;gap:6px;flex-wrap:wrap}
+.srcchip{font:inherit;font-size:12px;line-height:1.2;padding:5px 10px;border-radius:999px;border:1px solid var(--rule-hi);
+  background:transparent;color:var(--ink-2);cursor:pointer;transition:border-color .15s,background .15s,color .15s}
+.srcchip i{font-style:normal;opacity:.7;margin-left:3px;font-variant-numeric:tabular-nums}
+.srcchip:hover{border-color:var(--accent);color:var(--ink)}
+.srcchip.on{background:var(--accent-soft);border-color:var(--accent);color:var(--accent);font-weight:600}
+.srcchip.warnc:not(.on){color:var(--p2)}
+.srcchip:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.srcsort{display:flex;align-items:center;gap:6px;margin-left:auto;font-size:12px;color:var(--ink-2);white-space:nowrap}
+.srcsort select{width:auto;padding:4px 26px 4px 8px;font-size:12px}
+/* what the ticks can do */
+.srcbulk{display:flex;gap:6px;align-items:center;flex-wrap:wrap;padding:7px 10px;margin:0 0 8px;border-radius:10px;
+  background:var(--accent-soft);border:1px solid color-mix(in srgb,var(--accent) 30%,transparent);font-size:12px}
+.srcbulk b{margin-right:6px;font-variant-numeric:tabular-nums}
+.srcbulk .danger{color:var(--p1)}
+/* the list: one line a document, a heading row that stays in view */
+.srctable{border:1px solid var(--rule);border-radius:10px;max-height:min(62vh,580px);overflow:auto;overscroll-behavior:contain;background:var(--paper)}
+.srcthead,.srcdoc{display:grid;grid-template-columns:36px minmax(0,1fr) 58px 76px 108px 44px;align-items:center}
+.srcthead{position:sticky;top:0;z-index:2;min-height:32px;background:var(--paper-2);border-bottom:1px solid var(--rule);
+  font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3);font-weight:700}
+.srcc{padding:6px 8px;min-width:0}
+.srcsel{display:flex;justify-content:center;padding-left:10px;padding-right:0}
+.srcsel input{margin:0;cursor:pointer;accent-color:var(--accent)}
+.srcdoc{border-bottom:1px solid var(--rule);min-height:46px;transition:background .12s}
+.srcdoc:last-of-type{border-bottom:0}
+.srcdoc:hover{background:var(--paper-2)}
+.srcdoc.sel{background:var(--accent-soft)}
+.srcdoc.superseded .srcmain,.srcdoc.inactive .srcmain,.srcdoc.superseded .srcnum,.srcdoc.inactive .srcnum{opacity:.58}
+.srcmain{display:flex;flex-direction:column;gap:1px}
+.srcname{all:unset;cursor:pointer;max-width:100%;font-size:13px;font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.srcname:hover{color:var(--accent);text-decoration:underline;text-underline-offset:2px}
+.srcname:focus-visible{outline:2px solid var(--accent);outline-offset:1px;border-radius:3px}
+.srcmeta{font-size:11px;color:var(--ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.srcbad{all:unset;cursor:pointer;color:var(--p2);font-weight:600}
+.srcbad:hover{text-decoration:underline}
+.srcbadt{color:var(--p1)}
+.srcisl{margin:4px 0 2px;padding-left:18px;font-size:11.5px;color:var(--ink-2);white-space:normal}
+.srckind{font:600 10.5px var(--f-mono);letter-spacing:.04em;color:var(--ink-2)}
+.srcnum{text-align:right;padding-right:16px;font-size:12px;color:var(--ink-2);font-variant-numeric:tabular-nums}
+.srcthead .srcnum{font-size:10.5px}
+.srcst{display:inline-block;font-size:10.5px;border-radius:999px;padding:1px 8px;border:1px solid var(--rule-hi);color:var(--ink-2);white-space:nowrap}
 .srcst.active{color:var(--st-done,#2e9d6a);border-color:color-mix(in srgb,var(--st-done,#2e9d6a) 45%,transparent)}
 .srcst.bad{color:var(--p1);border-color:color-mix(in srgb,var(--p1) 45%,transparent)}
-.srcdm{font-size:11.5px;color:var(--ink-3);margin:3px 0 0}
-.srcis{font-size:11.5px;color:var(--ink-2);margin:5px 0 0}
-.srcis summary{cursor:pointer;color:var(--p2)}
-.srcis ul{margin:4px 0 0;padding-left:18px}
-.srcda{display:flex;gap:6px;flex-wrap:wrap;margin:7px 0 0}
+.srcgrp{position:sticky;top:32px;z-index:1;padding:7px 12px 5px;background:var(--paper-2);border-bottom:1px solid var(--rule);
+  font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2)}
+.srcgrp i{font-style:normal;font-weight:600;color:var(--ink-3);margin-left:6px}
+.srcnone2{margin:0;padding:18px 14px;font-size:12.5px;color:var(--ink-3);text-align:center}
+.srcshown{font-size:11.5px;color:var(--ink-3);margin:6px 2px 0}
+/* a document's ⋯ menu - placed against the window, so the list's scrolling never cuts it off */
+.srcact{display:flex;justify-content:center;padding:4px}
+.srcmorebtn{all:unset;cursor:pointer;width:30px;height:28px;display:grid;place-items:center;border-radius:7px;
+  color:var(--ink-2);font-size:17px;line-height:1}
+.srcmorebtn:hover,.srcmorebtn[aria-expanded="true"]{background:var(--paper-3);color:var(--ink)}
+.srcmorebtn:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.srcmenu{position:fixed;z-index:90;min-width:160px;background:var(--paper);border:1px solid var(--rule-hi);border-radius:10px;
+  box-shadow:var(--shadow);padding:4px;display:flex;flex-direction:column}
+.srcmenu button{all:unset;cursor:pointer;padding:7px 11px;border-radius:7px;font-size:12.5px;color:var(--ink)}
+.srcmenu button:hover,.srcmenu button:focus-visible{background:var(--paper-2)}
+.srcmenu .danger{color:var(--p1)}
+/* hidden means hidden, whatever display the rule above gave it */
+.srcbulk[hidden],.srcdoc[hidden],.srcgrp[hidden],.srcnone2[hidden],.srcshown[hidden],.srcisl[hidden]{display:none}
+/* narrow - the assistant docked beside the Library, or a small window */
+@container (max-width:640px){
+  .srcthead,.srcdoc{grid-template-columns:32px minmax(0,1fr) 96px 40px}
+  .srckind,.srcnum{display:none}
+  .srcsort{margin-left:0}
+}
+@container (max-width:420px){
+  .srcthead,.srcdoc{grid-template-columns:30px minmax(0,1fr) 40px}
+  .srcstc{display:none}
+}
+@media (prefers-reduced-motion:reduce){.srcfold .chev,.srcdoc{transition:none}}
+/* several documents added at once: the names each will have */
+.srcmany{max-height:170px;overflow:auto;border:1px solid var(--rule);border-radius:9px;margin:0 0 6px;font-size:12px}
+.srcmany div{display:flex;gap:8px;align-items:baseline;justify-content:space-between;padding:5px 10px;border-bottom:1px solid var(--rule)}
+.srcmany div:last-child{border-bottom:0}
+.srcmany b{font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.srcmany span{color:var(--ink-3);font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 .srchint{font-size:11.5px;color:var(--ink-3);line-height:1.55;margin:6px 0}
 .srcset{margin:10px 0 0;font-size:12px}
 .srcset summary{cursor:pointer;color:var(--ink-2);font-weight:600}
@@ -6152,7 +6232,71 @@ const STRINGS = {
   LibRecordDocs: "Documents filed on records",
   SrcHead: "Sources — the runbooks and standards the assistant answers from",
   SrcSub: "{a} active · {s} superseded · {i} switched off. Every question searches the active ones; an answer about what they say cites the page, lines and section it came from.",
-  SrcAddBtn: "+ Add a PDF, Markdown or Word document",
+  SrcAddBtn: "+ Add documents",
+  SrcTitle: "Sources",
+  SrcCount: "{a} active · {s} superseded · {i} switched off",
+  SrcCountBad: "{n} need a look",
+  SrcFold: "Fold the list of documents",
+  SrcUnfold: "Show the list of documents",
+  SrcSub2: "The runbooks and standards the assistant answers from — PDF, Word, Markdown or text. Every question searches the active ones, and an answer cites the page, lines and section. Choose several files at once to add them together.",
+  SrcFindPh: "Find a document — name, file, system, category",
+  SrcFilterBy: "Show",
+  SrcChipAll: "All",
+  SrcChipActive: "Active",
+  SrcChipSuperseded: "Superseded",
+  SrcChipOff: "Switched off",
+  SrcChipBad: "Need a look",
+  SrcSortLab: "Sort",
+  SrcSortName: "Name A–Z",
+  SrcSortAdded: "Newest first",
+  SrcSortCategory: "By category",
+  SrcSortKind: "By type",
+  SrcColDoc: "Document",
+  SrcColType: "Type",
+  SrcColPassages: "Passages",
+  SrcColStatus: "Status",
+  SrcPassagesHint: "How many passages it was cut into for searching",
+  SrcNoCategory: "No category",
+  SrcNoKind: "Other",
+  SrcNoMatch: "No document matches.",
+  SrcShowing: "Showing {n} of {of}",
+  SrcSelectOne: "Select {name}",
+  SrcSelectShown: "Select all shown",
+  SrcSelN: "{n} selected",
+  SrcOpenDoc: "Open it",
+  SrcMoreActions: "More for {name}",
+  SrcIssuesChip: "{n} page(s) unclear",
+  SrcBulkOn: "Switch on",
+  SrcBulkOff: "Switch off",
+  SrcBulkReindex: "Re-index",
+  SrcBulkCategory: "Set category…",
+  SrcBulkRemove: "Remove",
+  SrcBulkClear: "Clear",
+  SrcNDocs: "{n} documents",
+  SrcBulkOnDone: "{n} document(s) switched on — searched from the next question.",
+  SrcBulkOffDone: "{n} document(s) switched off — kept, but not searched.",
+  SrcBulkOldKept: "{n} old version(s) were left as they are — a newer version replaced them. To use one again, choose Switch on from its own ⋯ menu.",
+  SrcReindexingN: "Re-indexing {n} of {of}…",
+  SrcCatTitle: "Category for {n} document(s)",
+  SrcCatHint: "Leave it empty to clear the category. Sort “By category” to see them grouped.",
+  SrcCatDone: "{n} document(s) now in “{cat}”.",
+  SrcCatCleared: "Category cleared on {n} document(s).",
+  SrcRemoveManyTitle: "Remove {n} documents from Sources?",
+  SrcRemoveGoN: "Remove all {n}",
+  SrcRemovedMany: "{n} document(s) removed.",
+  SrcReadingN: "Reading {n} of {of}: {name}",
+  SrcAddingN: "Adding {n} of {of}…",
+  SrcManyTitle: "Add {n} documents",
+  SrcManyRead: "{n} read",
+  SrcManySkipped: "{n} already in Sources, left out",
+  SrcManyFailed: "{n} could not be read",
+  SrcManyNames: "Each is named from its own title, or its file name. What you choose below applies to all of them — change one later with Details in its ⋯ menu.",
+  SrcManyVersions: "{n} look like new versions of documents already here:",
+  SrcManyGo: "Add {n}",
+  SrcAddedMany: "Added {n} documents.",
+  SrcAddedManyIssues: "{n} have pages that could not be read reliably — filter “Need a look”.",
+  SrcSkippedSame: "{n} were already in Sources.",
+  SrcFailedN: "{n} could not be read.",
   SrcReindexAll: "Re-index all",
   SrcEmpty: "Nothing here yet. Add your runbooks, standards and guidelines — PDF, Markdown (.md), Word (.docx) or text — and the assistant answers questions about them from the documents themselves, with the page and lines. A document you attach to a question is kept here too.",
   SrcUnclear: "More than one version is active and nothing says which is current: {list}. Give each a version or an effective date (Details), or switch the old one off — until then an answer shows both.",
@@ -7079,7 +7223,7 @@ const STATUSES = [
    the status bar, and clicking it copies a line you can paste into a bug
    report — build date and flow protocol included, because those are the two
    things that actually differ between copies. */
-const APP_VERSION = "5.9.3";
+const APP_VERSION = "5.9.4";
 const APP_BUILT = "2026-09-27";
 function buildLine(){
   return "Resolv v" + APP_VERSION + " \u00b7 built " + APP_BUILT +
@@ -21105,6 +21249,16 @@ async function srcLoad(force){
           await FS.writeText(dir, "chunks.json", JSON.stringify(r.chunks));
           redone++;
         } else SRC.chunks.set(d.id, JSON.parse(await FS.readText(dir, "chunks.json")));
+        /* before 5.9.4 a Markdown file with no "# heading" was named after its
+           first line - "- Introduction & Step by Step", "**Data Transfer
+           Objects** are used to..." - and a name kept its Markdown marks.
+           Mended from the file's name, unless the name was typed by hand */
+        if (!d.named){
+          const c0 = (SRC.chunks.get(d.id) || [])[0];
+          const line = c0 ? (String(c0.text).split("\n").find(l => l.trim()) || "") : "";
+          const n = DossierSources.betterName(d.name, line, d.file, d.kind);
+          if (n){ d.name = n; d.family = DossierSources.familyKey(n); renamed++; }
+        }
       } catch(e){
         SRC.chunks.set(d.id, []);
         d.missing = true;
@@ -21175,11 +21329,11 @@ async function srcExtract(file){
   return { kind:kind, text:text, pages:pages, stats:stats, issues:issues, sha:await srcSha(buf), size:file.size };
 }
 /* write one document's three files and put it in the catalog */
-async function srcStore(file, x, ans, from){
+async function srcStore(file, x, ans, from, batch){
   const d = { id:srcNewId(), name:ans.name, file:safeFile(file.name || "document"), kind:x.kind,
     version:ans.version || "", effective:ans.effective || "", systems:ans.systems || [], environment:ans.environment || "",
     category:ans.category || "", label:ans.label || "", assistant:ans.assistant !== false, status:"active",
-    family:DossierSources.familyKey(ans.name), sha:x.sha, textHash:DossierSources.hash36(DossierSources.norm(x.text)),
+    named:!!ans.named, family:DossierSources.familyKey(ans.name), sha:x.sha, textHash:DossierSources.hash36(DossierSources.norm(x.text)),
     size:x.size || 0, pages:x.pages || 0, added:new Date().toISOString(), from:from || "you", pageStats:x.stats || [] };
   const r = srcPrepare(d, x.text, x.stats);
   d.version = r.doc.version; d.effective = r.doc.effective;
@@ -21193,8 +21347,9 @@ async function srcStore(file, x, ans, from){
   (ans.replaces || []).forEach(o => { o.status = "superseded"; o.supersededBy = d.id; o.changed = d.added; });
   if ((ans.replaces || []).length) d.supersedes = ans.replaces.map(o => o.id);
   SRC.cat.docs.push(d); SRC.chunks.set(d.id, r.chunks); SRC.texts.set(d.id, x.text);
-  await srcSaveCat();
-  srcRebuild();
+  /* a hundred documents added together are saved and indexed once, at the
+     end, not a hundred times */
+  if (!batch){ await srcSaveCat(); srcRebuild(); }
   srcNote({ kind:"added", doc:d.name, version:d.version, passages:d.chunks, from:d.from,
             replaced:(ans.replaces || []).map(o => o.name + (o.version ? " v" + o.version : "")),
             problems:d.issues.filter(i => !i.info).map(i => (i.page ? "page " + i.page + ": " : "") + i.what) });
@@ -21207,6 +21362,9 @@ async function srcAddFiles(list){
   if (!srcHere()) return toast(L("SrcNoModule"), { bad:true });
   if (!FS.ok) return toast(L("LinkAWorkspaceFolderFirstThen"), { bad:true });
   await srcLoad();
+  /* several at once: read them all, then ask what they share - once, not
+     once a file (a hundred Markdown files used to be a hundred dialogs) */
+  if ((list || []).length > 1) return srcAddMany(Array.prototype.slice.call(list));
   for (const f of Array.prototype.slice.call(list || [])){
     let x;
     toast(L("SrcReading", { name:f.name }));
@@ -21223,7 +21381,7 @@ async function srcAddFiles(list){
                    d.textHash === DossierSources.hash36(DossierSources.norm(x.text))));
     if (same){ toast(L("SrcUnchanged", { name:same.name })); continue; }
     const meta = DossierSources.detectMeta(x.text, f.name);
-    const pre = { name:DossierSources.nameFor(meta.title, f.name, x.kind), version:meta.version, effective:meta.effective };
+    const pre = { name:DossierSources.nameFor(meta.title, f.name, x.kind, meta.titleFrom), version:meta.version, effective:meta.effective };
     const ans = await srcDetails(pre, x, f.name);
     if (!ans) continue;
     try {
@@ -21233,6 +21391,166 @@ async function srcAddFiles(list){
     } catch(e){ toast(L("SrcCouldNotSave", { name:f.name }) + " " + (e.message || e), { bad:true }); }
   }
   touch(); renderLib();
+}
+
+async function srcAddMany(files){
+  const read = [], skipped = [], failed = [];
+  for (let i = 0; i < files.length; i++){
+    const f = files[i];
+    toast(L("SrcReadingN", { n:i + 1, of:files.length, name:f.name }));
+    let x;
+    try { x = await srcExtract(f); }
+    catch(e){ failed.push(f.name); srcNote({ kind:"error", file:f.name, what:String(e.message || e) }); continue; }
+    if (!x.text.trim()){ failed.push(f.name); srcNote({ kind:"error", file:f.name, what:"no text" }); continue; }
+    const th = DossierSources.hash36(DossierSources.norm(x.text));
+    if (srcDocs().some(d => d.status !== "deleted" && ((x.sha && d.sha === x.sha) || d.textHash === th)) || read.some(r => r.th === th)){
+      skipped.push(f.name); continue;
+    }
+    const meta = DossierSources.detectMeta(x.text, f.name);
+    const name = DossierSources.nameFor(meta.title, f.name, x.kind, meta.titleFrom);
+    const fam = DossierSources.familyKey(name);
+    read.push({ f:f, x:x, th:th, name:name, version:meta.version, effective:meta.effective,
+                match:srcDocs().filter(d => d.family === fam && d.status === "active") });
+  }
+  if (!read.length){
+    toast([skipped.length ? L("SrcSkippedSame", { n:skipped.length }) : "", failed.length ? L("SrcFailedN", { n:failed.length }) : ""].filter(Boolean).join(" ") ||
+          L("SrcAddedMany", { n:0 }), { bad:!!failed.length, life:9000 });
+    return;
+  }
+  const ans = await srcDetailsMany(read, skipped, failed);
+  if (!ans) return;
+  let ok = 0, bad = 0;
+  for (let i = 0; i < read.length; i++){
+    const r = read[i];
+    toast(L("SrcAddingN", { n:i + 1, of:read.length }));
+    try {
+      const d = await srcStore(r.f, r.x, { name:r.name, version:r.version, effective:r.effective, systems:ans.systems,
+        environment:ans.environment, category:ans.category, label:ans.label, assistant:ans.assistant,
+        replaces:ans.mode === "replace" ? r.match : [] }, "you", true);
+      ok++;
+      if ((d.issues || []).some(x => !x.info)) bad++;
+    } catch(e){ failed.push(r.f.name); srcNote({ kind:"error", file:r.f.name, what:String(e.message || e) }); }
+  }
+  try { await srcSaveCat(); } catch(e){}
+  srcRebuild();
+  toast([L("SrcAddedMany", { n:ok }), bad ? L("SrcAddedManyIssues", { n:bad }) : "", skipped.length ? L("SrcSkippedSame", { n:skipped.length }) : "",
+         failed.length ? L("SrcFailedN", { n:failed.length }) : ""].filter(Boolean).join(" "), { life:10000, bad:!!failed.length });
+  touch(); renderLib();
+}
+/* what several documents share, asked once: the names and versions come
+   from each file; systems, environment, category, access and whether they
+   may go to the assistant are the same for all of them */
+function srcDetailsMany(read, skipped, failed){
+  return new Promise(resolve => {
+    const old = document.getElementById("srcDlg"); if (old) old.remove();
+    const el = document.createElement("div");
+    el.id = "srcDlg"; el.className = "srcdlg"; el.setAttribute("role", "dialog");
+    const envs = ["", "production", "uat", "sit", "staging", "development", "test", "dr"];
+    const kinds = {};
+    read.forEach(r => { const k = SRC_KINDS[r.x.kind] || r.x.kind; kinds[k] = (kinds[k] || 0) + 1; });
+    const versions = read.filter(r => r.match.length);
+    const cats = [...new Set(srcDocs().map(d => d.category).filter(Boolean))].sort();
+    el.innerHTML =
+      '<div class="srcdlgb"><h3>' + LE("SrcManyTitle", { n:read.length }) + "</h3>" +
+      '<p class="srcfile">' + esc([L("SrcManyRead", { n:read.length }) + " (" + Object.keys(kinds).map(k => kinds[k] + " " + k).join(", ") + ")",
+        skipped.length ? L("SrcManySkipped", { n:skipped.length }) : "", failed.length ? L("SrcManyFailed", { n:failed.length }) : ""].filter(Boolean).join(" · ")) + "</p>" +
+      '<div class="srcmany">' + read.map(r => '<div><b>' + esc(r.name) + "</b><span>" + esc(r.f.name) + (r.version ? " · v" + esc(r.version) : "") + "</span></div>").join("") + "</div>" +
+      '<p class="srchint">' + LE("SrcManyNames") + "</p>" +
+      '<div class="srcdlg2">' + fr(L("SrcSystems"), '<input class="in" id="smSys" placeholder="' + LE("SrcSystemsPh") + '">') +
+      fr(L("SrcEnv"), '<select class="in" id="smEnv">' + envs.map(e => '<option value="' + e + '">' + esc(e ? e : L("SrcEnvAny")) + "</option>").join("") + "</select>") + "</div>" +
+      '<div class="srcdlg2">' + fr(L("SrcCategory"), '<input class="in" id="smCat" list="smCats" placeholder="' + LE("SrcCategoryPh") + '"><datalist id="smCats">' +
+        cats.map(c => '<option value="' + esc(c) + '">').join("") + "</datalist>") +
+      fr(L("SrcLabel"), '<input class="in" id="smLab" placeholder="' + LE("SrcLabelPh") + '">') + "</div>" +
+      '<label class="srcck"><input type="checkbox" id="smAi" checked> ' + LE("SrcToAssistant") + "</label>" +
+      (versions.length ? '<div class="srcver"><b>' + LE("SrcManyVersions", { n:versions.length }) + "</b> " +
+          esc(versions.slice(0, 6).map(r => r.name + " → " + r.match.map(d => d.name + (d.version ? " v" + d.version : "")).join(", ")).join("; ") + (versions.length > 6 ? "; …" : "")) +
+        '<label class="srcck"><input type="radio" name="smMode" value="replace" checked> ' + LE("SrcModeReplace") + "</label>" +
+        '<label class="srcck"><input type="radio" name="smMode" value="both"> ' + LE("SrcModeBoth") + "</label>" +
+        '<label class="srcck"><input type="radio" name="smMode" value="separate"> ' + LE("SrcModeSeparate") + "</label></div>" : "") +
+      '<div class="brow"><button class="btn pri" id="smOk" type="button">' + LE("SrcManyGo", { n:read.length }) + "</button>" +
+      '<button class="btn" id="smNo" type="button">' + LE("Cancel") + "</button></div></div>";
+    document.body.appendChild(el);
+    const done = v => { el.remove(); resolve(v); };
+    $("smNo").onclick = () => done(null);
+    el.addEventListener("keydown", e => { if (e.key === "Escape") done(null); });
+    $("smOk").onclick = () => done({
+      systems:$("smSys").value.split(",").map(x => x.trim()).filter(Boolean), environment:$("smEnv").value,
+      category:$("smCat").value.trim(), label:$("smLab").value.trim(), assistant:$("smAi").checked,
+      mode:(el.querySelector('input[name="smMode"]:checked') || {}).value || "separate" });
+    setTimeout(() => $("smOk").focus(), 30);
+  });
+}
+
+/* ── several documents at once, from their ticks ────────────────────────── */
+async function srcBulk(what){
+  const ui = srcUi();
+  const ids = [...ui.sel].filter(id => srcDoc(id));
+  if (what === "clear" || !ids.length){ ui.sel.clear(); return renderLib(); }
+  const now = new Date().toISOString();
+  if (what === "on" || what === "off"){
+    /* only switched-off documents are switched on, and only active ones off:
+       "select all, switch on" must not bring back every old version a newer
+       one replaced. A superseded version is switched on by itself, from its
+       own ⋯ menu, when that is really meant. */
+    const st = what === "on" ? "active" : "inactive", from = what === "on" ? "inactive" : "active";
+    const go = ids.filter(id => srcDoc(id).status === from);
+    const old = ids.filter(id => srcDoc(id).status === "superseded").length;
+    go.forEach(id => { const d = srcDoc(id); d.status = st; d.changed = now; });
+    if (go.length){
+      await srcSaveCat(); srcRebuild();
+      srcNote({ kind:"status", doc:L("SrcNDocs", { n:go.length }), status:st });
+    }
+    toast([L(what === "on" ? "SrcBulkOnDone" : "SrcBulkOffDone", { n:go.length }), old ? L("SrcBulkOldKept", { n:old }) : ""].filter(Boolean).join(" "),
+          { life:old ? 9000 : undefined });
+    return renderLib();
+  }
+  if (what === "reindex"){
+    let ok = 0;
+    for (let i = 0; i < ids.length; i++){
+      toast(L("SrcReindexingN", { n:i + 1, of:ids.length }));
+      if (await srcReindex(ids[i], true)) ok++;
+    }
+    toast(L("SrcReindexedAll", { n:ok, of:ids.length }));
+    return renderLib();
+  }
+  if (what === "category"){
+    const cat = await srcAskCategory(ids);
+    if (cat === null) return;
+    ids.forEach(id => { const d = srcDoc(id); d.category = cat; d.changed = now; });
+    await srcSaveCat(); srcRebuild();
+    toast(L(cat ? "SrcCatDone" : "SrcCatCleared", { n:ids.length, cat:cat }));
+    return renderLib();
+  }
+  if (what === "remove"){
+    const a = await askUser(L("SrcRemoveManyTitle", { n:ids.length }), L("SrcRemoveAsk"),
+      [{ label:L("SrcRemoveGoN", { n:ids.length }), hint:L("SrcRemoveGoHint") }, { label:L("Cancel") }]);
+    if (!a || a.choice !== 0) return;
+    for (const id of ids){ const d = srcDoc(id); if (d) await srcRemoveNow(d, true); }
+    ui.sel.clear();
+    await srcSaveCat(); srcRebuild();
+    toast(L("SrcRemovedMany", { n:ids.length }));
+    return renderLib();
+  }
+}
+function srcAskCategory(ids){
+  return new Promise(resolve => {
+    const old = document.getElementById("srcDlg"); if (old) old.remove();
+    const el = document.createElement("div");
+    el.id = "srcDlg"; el.className = "srcdlg"; el.setAttribute("role", "dialog");
+    const cats = [...new Set(srcDocs().map(d => d.category).filter(Boolean))].sort();
+    const same = [...new Set(ids.map(id => (srcDoc(id) || {}).category || ""))];
+    el.innerHTML = '<div class="srcdlgb"><h3>' + LE("SrcCatTitle", { n:ids.length }) + "</h3>" +
+      fr(L("SrcCategory"), '<input class="in" id="scCat" list="scCats" value="' + esc(same.length === 1 ? same[0] : "") + '" placeholder="' + LE("SrcCategoryPh") + '">' +
+        '<datalist id="scCats">' + cats.map(c => '<option value="' + esc(c) + '">').join("") + "</datalist>") +
+      '<p class="srchint">' + LE("SrcCatHint") + "</p>" +
+      '<div class="brow"><button class="btn pri" id="scOk" type="button">' + LE("SrcSave") + '</button><button class="btn" id="scNo" type="button">' + LE("Cancel") + "</button></div></div>";
+    document.body.appendChild(el);
+    const done = v => { el.remove(); resolve(v); };
+    $("scNo").onclick = () => done(null);
+    $("scOk").onclick = () => done($("scCat").value.trim());
+    el.addEventListener("keydown", e => { if (e.key === "Escape") done(null); if (e.key === "Enter" && e.target.id === "scCat") done($("scCat").value.trim()); });
+    setTimeout(() => $("scCat").focus(), 30);
+  });
 }
 
 /* ── a document handed over in a conversation ───────────────────────────
@@ -21255,7 +21573,7 @@ function srcKeepFromChat(files){
     if (!d){
       const kind = srcKindOf(f.name, f.type);
       const meta = DossierSources.detectMeta(text, f.name);
-      const name = DossierSources.nameFor(meta.title, f.name, kind);
+      const name = DossierSources.nameFor(meta.title, f.name, kind, meta.titleFrom);
       d = { id:srcNewId(), name:name, file:safeFile(f.name || "document"), kind:kind, version:meta.version, effective:meta.effective,
             systems:[], environment:"", category:"", label:"", assistant:true, status:"active",
             family:DossierSources.familyKey(name), textHash:th, size:f.size || 0, pages:f.pages || 0,
@@ -21345,12 +21663,15 @@ async function srcRemove(id){
   const a = await askUser(L("SrcRemoveTitle", { name:d.name }), L("SrcRemoveAsk"),
     [{ label:L("SrcRemoveGo"), hint:L("SrcRemoveGoHint") }, { label:L("Cancel") }]);
   if (!a || a.choice !== 0) return;
+  await srcRemoveNow(d);
+}
+async function srcRemoveNow(d, batch){
   try { const dir = await FS.dir([SRC_DIR], false); await dir.removeEntry(d.id, { recursive:true }); } catch(e){}
   SRC.cat.docs = SRC.cat.docs.filter(x => x !== d);
   SRC.chunks.delete(d.id); SRC.texts.delete(d.id);
-  await srcSaveCat(); srcRebuild();
+  if (SRC.ui) SRC.ui.sel.delete(d.id);
   srcNote({ kind:"removed", doc:d.name, version:d.version });
-  renderLib();
+  if (!batch){ await srcSaveCat(); srcRebuild(); renderLib(); }
 }
 
 /* ── the details asked when a document is added (and editable after) ─── */
@@ -21396,7 +21717,7 @@ function srcDetails(pre, x, fileName, existing){
       const name = $("sdName").value.trim();
       if (!name) return toast(L("SrcNeedName"), { bad:true });
       const mode = (el.querySelector('input[name="sdMode"]:checked') || {}).value || "separate";
-      done({ name:name, version:$("sdVer").value.trim().replace(/^v/i, ""), effective:$("sdEff").value,
+      done({ name:name, named:name !== String(pre.name || "").trim(), version:$("sdVer").value.trim().replace(/^v/i, ""), effective:$("sdEff").value,
              systems:$("sdSys").value.split(",").map(s => s.trim()).filter(Boolean), environment:$("sdEnv").value,
              category:$("sdCat").value.trim(), label:$("sdLab").value.trim(), assistant:$("sdAi").checked,
              replaces:mode === "replace" ? match : [], mode:mode });
@@ -21757,48 +22078,119 @@ async function srcView(ref){
   $("svClose").focus();
 }
 
-/* ── the panel, at the top of the Library view ────────────────────────── */
+/* ── the panel, at the top of the Library view ────────────────────────────
+   Built for a hundred documents as much as for three. One line each - its
+   name (which opens it), its file and details under it, its type, how many
+   passages it was cut into, its status - in a list that scrolls inside the
+   panel, so the Library below it is never a long way down. Above the list:
+   a search, a filter by status, and a sort that can also group by category
+   or type. Everything else a document can have done to it is in its ⋯ menu,
+   and ticking several does it to all of them at once. The whole panel folds
+   to its heading and its counts, and stays the way it was left.
+
+   Searching and filtering hide rows in place rather than drawing the panel
+   again, so the search box keeps its focus while you type. */
+const SRC_KINDS = { pdf:"PDF", docx:"Word", md:"MD", text:"TXT" };
+function srcUi(){
+  if (!SRC.ui) SRC.ui = { q:"", st:"all", sel:new Set(), focus:false };
+  return SRC.ui;
+}
+function srcDocBad(d){ return !!d.missing || (d.issues || []).some(i => !i.info); }
+function srcByName(a, b){ return String(a.name).localeCompare(String(b.name), undefined, { sensitivity:"base", numeric:true }); }
+function srcGroupOf(d, by){
+  if (by === "category") return String(d.category || "").trim();
+  if (by === "kind") return SRC_KINDS[d.kind] || String(d.kind || "").toUpperCase();
+  return "";
+}
+function srcRowHtml(d, sel){
+  const bad = (d.issues || []).filter(i => !i.info);
+  const meta = [d.file && d.file !== d.name ? d.file : "", d.version ? "v" + d.version : "",
+    d.effective ? L("SrcEffectiveShort") + " " + d.effective : "", d.kind === "pdf" && d.pages ? L("SrcPages", { n:d.pages }) : "",
+    (d.systems || []).join(", "), d.environment || "", d.category || "", d.label ? "\u{1F512} " + d.label : "",
+    d.assistant === false ? L("SrcLocalOnly") : "", d.from === "chat" ? L("SrcFromChat") : ""].filter(Boolean);
+  const key = [d.name, d.file, d.version ? "v" + d.version : "", (d.systems || []).join(" "), d.environment, d.category, d.label,
+               SRC_KINDS[d.kind] || d.kind].join(" ").toLowerCase();
+  return '<div class="srcdoc ' + esc(d.status) + (sel ? " sel" : "") + '" role="row" data-src="' + esc(d.id) + '" data-k="' + esc(key) +
+      '" data-st="' + esc(d.status) + '" data-bad="' + (srcDocBad(d) ? 1 : 0) + '">' +
+    '<span class="srcc srcsel" role="cell"><input type="checkbox" data-ss' + (sel ? " checked" : "") + ' aria-label="' + LE("SrcSelectOne", { name:d.name }) + '"></span>' +
+    '<span class="srcc srcmain" role="cell"><button class="srcname" type="button" data-sa="view" title="' + LE("SrcOpenDoc") + '">' + esc(d.name) + "</button>" +
+      '<span class="srcmeta">' + (d.missing ? '<b class="srcbadt">' + LE("SrcMissing") + "</b> " : "") +
+        (bad.length ? '<button class="srcbad" type="button" data-sa="issues" aria-expanded="false">⚠ ' + LE("SrcIssuesChip", { n:bad.length }) + "</button> " : "") +
+        esc(meta.join(" · ")) + "</span>" +
+      (bad.length ? '<ul class="srcisl" hidden>' + bad.slice(0, 30).map(i => "<li>" + (i.page ? LE("SrcPage", { n:i.page }) + ": " : "") + esc(i.what) + "</li>").join("") + "</ul>" : "") +
+    "</span>" +
+    '<span class="srcc srckind" role="cell">' + esc(SRC_KINDS[d.kind] || String(d.kind || "").toUpperCase()) + "</span>" +
+    '<span class="srcc srcnum" role="cell">' + (d.chunks || 0) + "</span>" +
+    '<span class="srcc srcstc" role="cell"><span class="srcst ' + esc(d.status) + '">' + LE("SrcStatus_" + d.status) + "</span></span>" +
+    '<span class="srcc srcact" role="cell"><button class="srcmorebtn" type="button" data-sm aria-haspopup="menu" aria-expanded="false" title="' +
+        LE("SrcMoreActions", { name:d.name }) + '" aria-label="' + LE("SrcMoreActions", { name:d.name }) + '">\u22ef</button></span></div>';
+}
 function srcPanelHtml(){
   if (!srcHere()) return "";
   const docs = srcDocs().filter(d => d.status !== "deleted");
-  const cfg = srcCfg();
+  const cfg = srcCfg(), ui = srcUi();
   const clear = cfg.clearance.map(x => String(x).toLowerCase());
   const mine = docs.filter(d => !d.label || clear.indexOf(String(d.label).toLowerCase()) >= 0);
   const hidden = docs.length - mine.length;
-  const q = S.filters.q || "";
-  const shown = mine.filter(d => !q || (d.name + " " + d.file + " " + (d.systems || []).join(" ")).toLowerCase().indexOf(q) >= 0)
-    .sort((a, b) => (a.status === "active" ? 0 : 1) - (b.status === "active" ? 0 : 1) || a.name.localeCompare(b.name));
+  [...ui.sel].forEach(id => { if (!mine.some(d => d.id === id)) ui.sel.delete(id); });
   const count = s => mine.filter(d => d.status === s).length;
+  const nBad = mine.filter(srcDocBad).length;
   /* several active versions nobody has told apart */
   const fams = {};
   mine.filter(d => d.status === "active").forEach(d => { (fams[d.family] = fams[d.family] || []).push(d); });
   const unclear = Object.keys(fams).filter(k => fams[k].length > 1 && !DossierSources.currentOf(fams[k], today()).proven);
-  let h = '<section class="srcpanel"><div class="srchd"><div><h3>' + LE("SrcHead") + "</h3>" +
-    '<p class="srcsub">' + LE("SrcSub", { a:count("active"), s:count("superseded"), i:count("inactive") }) + "</p></div>" +
+  const open = cfg.panelOpen !== false;
+  const sort = ["name", "added", "category", "kind"].indexOf(cfg.sort) >= 0 ? cfg.sort : "name";
+  let h = '<section class="srcpanel' + (open ? " open" : "") + '" aria-labelledby="srcTitle">' +
+    '<div class="srchd"><button class="srcfold" id="srcFold" type="button" aria-expanded="' + open + '" title="' + LE(open ? "SrcFold" : "SrcUnfold") + '">' +
+      '<span class="chev" aria-hidden="true">›</span><span class="srcht"><b id="srcTitle">' + LE("SrcTitle") + "</b>" +
+      '<span class="srccount">' + LE("SrcCount", { a:count("active"), s:count("superseded"), i:count("inactive") }) +
+        (nBad ? ' · <span class="bad">⚠ ' + LE("SrcCountBad", { n:nBad }) + "</span>" : "") + "</span></span></button>" +
     '<div class="srcbtns"><button class="btn pri" id="srcAddBtn" type="button">' + LE("SrcAddBtn") + "</button>" +
-    (docs.length ? '<button class="btn" id="srcReAll" type="button">' + LE("SrcReindexAll") + "</button>" : "") + "</div></div>";
+      (docs.length ? '<button class="btn" id="srcReAll" type="button">' + LE("SrcReindexAll") + "</button>" : "") + "</div></div>" +
+    '<div class="srcpbody"><p class="srcsub">' + LE("SrcSub2") + "</p>";
   if (unclear.length) h += '<div class="srcwarn">' + LE("SrcUnclear", { list:esc(unclear.map(k => fams[k].map(d => d.name + (d.version ? " v" + d.version : "")).join(" / ")).join("; ")) }) + "</div>";
   if (!docs.length) h += '<div class="srcempty">' + L("SrcEmpty") + "</div>";
   else {
-    h += '<div class="srclist">' + shown.map(d => {
-      const bad = (d.issues || []).filter(i => !i.info);
-      const meta = [d.version ? "v" + d.version : "", d.effective ? L("SrcEffectiveShort") + " " + d.effective : "",
-        d.kind === "pdf" ? L("SrcPages", { n:d.pages || "?" }) : d.kind.toUpperCase(), L("SrcPassages", { n:d.chunks || 0 }),
-        (d.systems || []).join(", "), d.environment || "", d.category || "", d.label ? "\u{1F512} " + d.label : "",
-        d.assistant === false ? L("SrcLocalOnly") : "", d.from === "chat" ? L("SrcFromChat") : ""].filter(Boolean);
-      return '<div class="srcdoc ' + esc(d.status) + '" data-src="' + esc(d.id) + '"><div class="srcdn"><b>' + esc(d.name) + "</b>" +
-        '<span class="srcst ' + esc(d.status) + '">' + LE("SrcStatus_" + d.status) + "</span>" + (d.missing ? '<span class="srcst bad">' + LE("SrcMissing") + "</span>" : "") + "</div>" +
-        '<div class="srcdm">' + esc(meta.join(" · ")) + "</div>" +
-        (bad.length ? '<details class="srcis"><summary>' + LE("SrcIssues", { n:bad.length }) + "</summary><ul>" +
-          bad.slice(0, 30).map(i => "<li>" + (i.page ? LE("SrcPage", { n:i.page }) + ": " : "") + esc(i.what) + "</li>").join("") + "</ul></details>" : "") +
-        '<div class="srcda">' +
-        '<button class="btn sm" data-sa="view" type="button">' + LE("SrcView") + "</button>" +
-        '<button class="btn sm" data-sa="edit" type="button">' + LE("SrcDetailsBtn") + "</button>" +
-        '<button class="btn sm" data-sa="reindex" type="button">' + LE("SrcReindex") + "</button>" +
-        (d.status === "active" ? '<button class="btn sm" data-sa="off" type="button">' + LE("SrcDeactivate") + "</button>"
-                               : '<button class="btn sm" data-sa="on" type="button">' + LE("SrcActivate") + "</button>") +
-        '<button class="btn sm" data-sa="remove" type="button">' + LE("SrcRemove") + "</button></div></div>";
-    }).join("") + "</div>";
+    const chip = (st, lab, n) => '<button class="srcchip' + (st === "bad" ? " warnc" : "") + (ui.st === st ? " on" : "") + '" type="button" data-sf="' + st +
+      '" aria-pressed="' + (ui.st === st) + '">' + LE(lab) + " <i>" + n + "</i></button>";
+    h += '<div class="srctools"><input class="in srcfind" id="srcFind" type="search" autocomplete="off" spellcheck="false" placeholder="' +
+        LE("SrcFindPh") + '" aria-label="' + LE("SrcFindPh") + '" value="' + esc(ui.q) + '">' +
+      '<div class="srcchips" role="group" aria-label="' + LE("SrcFilterBy") + '">' + chip("all", "SrcChipAll", mine.length) + chip("active", "SrcChipActive", count("active")) +
+        (count("superseded") || ui.st === "superseded" ? chip("superseded", "SrcChipSuperseded", count("superseded")) : "") +
+        (count("inactive") || ui.st === "inactive" ? chip("inactive", "SrcChipOff", count("inactive")) : "") +
+        (nBad || ui.st === "bad" ? chip("bad", "SrcChipBad", nBad) : "") + "</div>" +
+      '<label class="srcsort">' + LE("SrcSortLab") + ' <select class="in" id="srcSort">' +
+        [["name", "SrcSortName"], ["added", "SrcSortAdded"], ["category", "SrcSortCategory"], ["kind", "SrcSortKind"]]
+          .map(o => '<option value="' + o[0] + '"' + (sort === o[0] ? " selected" : "") + ">" + LE(o[1]) + "</option>").join("") + "</select></label></div>";
+    h += '<div class="srcbulk" id="srcBulk" hidden><b id="srcSelN"></b>' +
+      [["on", "SrcBulkOn"], ["off", "SrcBulkOff"], ["reindex", "SrcBulkReindex"], ["category", "SrcBulkCategory"], ["remove", "SrcBulkRemove"], ["clear", "SrcBulkClear"]]
+        .map(b => '<button class="btn sm' + (b[0] === "remove" ? " danger" : "") + '" type="button" data-sb="' + b[0] + '">' + LE(b[1]) + "</button>").join("") + "</div>";
+    h += '<div class="srctable" role="table" aria-labelledby="srcTitle"><div class="srcthead" role="row">' +
+      '<span class="srcc srcsel" role="columnheader"><input type="checkbox" id="srcSelAll" aria-label="' + LE("SrcSelectShown") + '"></span>' +
+      '<span class="srcc" role="columnheader">' + LE("SrcColDoc") + "</span>" +
+      '<span class="srcc srckind" role="columnheader">' + LE("SrcColType") + "</span>" +
+      '<span class="srcc srcnum" role="columnheader" title="' + LE("SrcPassagesHint") + '">' + LE("SrcColPassages") + "</span>" +
+      '<span class="srcc srcstc" role="columnheader">' + LE("SrcColStatus") + '</span><span class="srcc srcact" role="columnheader"></span></div>';
+    let list = mine.slice().sort(srcByName);
+    if (sort === "added") list.sort((a, b) => String(b.added || "").localeCompare(String(a.added || "")) || srcByName(a, b));
+    if (sort === "category" || sort === "kind"){
+      /* grouped: named groups A to Z, the ones with none last */
+      list.sort((a, b) => { const ga = srcGroupOf(a, sort), gb = srcGroupOf(b, sort);
+        return (ga ? 0 : 1) - (gb ? 0 : 1) || ga.localeCompare(gb, undefined, { sensitivity:"base" }); });
+      let cur = null;
+      list.forEach(d => {
+        const g = srcGroupOf(d, sort);
+        if (g !== cur){
+          cur = g;
+          const n = list.filter(x => srcGroupOf(x, sort) === g).length;
+          h += '<div class="srcgrp" role="row"><span role="cell">' + esc(g || L(sort === "category" ? "SrcNoCategory" : "SrcNoKind")) + " <i>" + n + "</i></span></div>";
+        }
+        h += srcRowHtml(d, ui.sel.has(d.id));
+      });
+    } else h += list.map(d => srcRowHtml(d, ui.sel.has(d.id))).join("");
+    h += '<p class="srcnone2" id="srcNone" hidden>' + LE("SrcNoMatch") + "</p></div>" +
+      '<p class="srcshown" id="srcShown" hidden></p>';
   }
   if (hidden) h += '<p class="srchint">' + LE("SrcHidden", { n:hidden }) + "</p>";
   h += '<details class="srcset"><summary>' + LE("SrcSettings") + "</summary>" +
@@ -21808,7 +22200,90 @@ function srcPanelHtml(){
   h += '<details class="srcset"><summary>' + LE("SrcDiag", { n:SRC.log.length }) + '</summary><div class="srclog">' +
     (SRC.log.length ? SRC.log.slice(0, 40).map(e => '<div class="srcle"><i>' + esc(stamp(e.at)) + "</i> " + esc(srcNoteLine(e)) + "</div>").join("")
                     : '<p class="srchint">' + LE("SrcDiagNone") + "</p>") + "</div></details>";
-  return h + "</section>";
+  return h + "</div></section>";
+}
+/* which rows show: the panel's own search, the filter chip, and the
+   Library's search box above everything */
+function srcFilter(){
+  const box = document.querySelector(".srcpanel"); if (!box) return;
+  const ui = srcUi();
+  const words = (ui.q + " " + (S.filters.q || "")).toLowerCase().split(/\s+/).filter(Boolean);
+  let shown = 0, total = 0;
+  box.querySelectorAll(".srcdoc").forEach(r => {
+    total++;
+    const okSt = ui.st === "all" || (ui.st === "bad" ? r.dataset.bad === "1" : r.dataset.st === ui.st);
+    const ok = okSt && words.every(w => r.dataset.k.indexOf(w) >= 0);
+    r.hidden = !ok;
+    if (ok) shown++;
+  });
+  /* a group heading with nothing left under it goes too */
+  box.querySelectorAll(".srcgrp").forEach(g => {
+    let n = g.nextElementSibling, any = false;
+    while (n && n.classList.contains("srcdoc")){ if (!n.hidden){ any = true; break; } n = n.nextElementSibling; }
+    g.hidden = !any;
+  });
+  box.querySelectorAll("[data-sf]").forEach(c => { const on = c.dataset.sf === ui.st; c.classList.toggle("on", on); c.setAttribute("aria-pressed", String(on)); });
+  const none = $("srcNone"); if (none) none.hidden = !!shown || !total;
+  const sh = $("srcShown");
+  if (sh){ sh.hidden = shown === total; sh.textContent = L("SrcShowing", { n:shown, of:total }); }
+  srcSelPaint();
+}
+/* the ticks: the bar that acts on them, and the tick above them all */
+function srcSelPaint(){
+  const box = document.querySelector(".srcpanel"); if (!box) return;
+  const ui = srcUi();
+  const bar = $("srcBulk"); if (bar) bar.hidden = !ui.sel.size;
+  const n = $("srcSelN"); if (n) n.textContent = L("SrcSelN", { n:ui.sel.size });
+  const rows = [...box.querySelectorAll(".srcdoc")].filter(r => !r.hidden);
+  const on = rows.filter(r => ui.sel.has(r.dataset.src)).length;
+  const all = $("srcSelAll");
+  if (all){ all.checked = !!rows.length && on === rows.length; all.indeterminate = on > 0 && on < rows.length; }
+}
+/* One ⋯ menu for the whole list, put on the page itself when a ⋯ is
+   pressed: a menu inside the scrolling list would be cut off at its edge,
+   and the panel's narrow-width layout would hold a fixed menu inside it. */
+function srcMenuClose(){
+  const m = document.getElementById("srcMenu"); if (m) m.remove();
+  if (SRC.menuBtn){ SRC.menuBtn.setAttribute("aria-expanded", "false"); SRC.menuBtn = null; }
+}
+function srcMenuOpen(btn){
+  const again = SRC.menuBtn === btn;
+  srcMenuClose();
+  if (again) return;
+  const row = btn.closest("[data-src]"), id = row.dataset.src, d = srcDoc(id);
+  if (!d) return;
+  const m = document.createElement("div");
+  m.id = "srcMenu"; m.className = "srcmenu"; m.setAttribute("role", "menu");
+  m.innerHTML = [["view", "SrcView"], ["edit", "SrcDetailsBtn"], ["reindex", "SrcReindex"],
+    d.status === "active" ? ["off", "SrcDeactivate"] : ["on", "SrcActivate"], ["remove", "SrcRemove"]]
+    .map(o => '<button type="button" role="menuitem" data-a="' + o[0] + '"' + (o[0] === "remove" ? ' class="danger"' : "") + ">" + LE(o[1]) + "</button>").join("");
+  document.body.appendChild(m);
+  const r = btn.getBoundingClientRect(), h = m.offsetHeight, w = m.offsetWidth;
+  m.style.left = Math.max(8, Math.min(window.innerWidth - w - 8, r.right - w)) + "px";
+  m.style.top = (r.bottom + h + 8 > window.innerHeight ? Math.max(8, r.top - h - 4) : r.bottom + 4) + "px";
+  btn.setAttribute("aria-expanded", "true");
+  SRC.menuBtn = btn;
+  m.querySelectorAll("button").forEach(b => b.onclick = () => { srcMenuClose(); srcDocAction(id, b.dataset.a, row); });
+  m.addEventListener("keydown", e => {
+    const items = [...m.querySelectorAll("button")], i = items.indexOf(document.activeElement);
+    if (e.key === "ArrowDown"){ e.preventDefault(); items[(i + 1) % items.length].focus(); }
+    if (e.key === "ArrowUp"){ e.preventDefault(); items[(i - 1 + items.length) % items.length].focus(); }
+    if (e.key === "Escape" || e.key === "Tab"){ e.preventDefault(); srcMenuClose(); btn.focus(); }
+  });
+  m.querySelector("button").focus();
+}
+function srcDocAction(id, a, row, btn){
+  const d = srcDoc(id);
+  if (a === "issues"){
+    const ul = row && row.querySelector(".srcisl"); if (!ul) return;
+    ul.hidden = !ul.hidden; if (btn) btn.setAttribute("aria-expanded", String(!ul.hidden)); return;
+  }
+  if (a === "view") return srcView({ doc:id, page:d && d.kind === "pdf" ? 1 : 0, lineStart:0, all:true, citation:d ? d.name : "" });
+  if (a === "edit") return srcEdit(id);
+  if (a === "reindex") return srcReindex(id).then(() => renderLib());
+  if (a === "off") return srcSetStatus(id, "inactive");
+  if (a === "on") return srcSetStatus(id, "active");
+  if (a === "remove") return srcRemove(id);
 }
 function srcWarnLine(a){ return a && (a.srcWarn || []).length ? "\u26a0 " + L("SrcDraftWarn", { list:a.srcWarn.join(", ") }) + "\n\n" : ""; }
 /* Draft runbooks, notes and profiles written from a document: any figure in
@@ -21857,23 +22332,63 @@ function srcNoteLine(e){
 }
 function srcPanelWire(){
   const box = document.querySelector(".srcpanel"); if (!box) return;
+  const ui = srcUi(), cfg = srcCfg();
   const add = $("srcAddBtn");
   if (add) add.onclick = () => { const i = $("srcIn"); i.value = ""; i.click(); };
   const all = $("srcReAll"); if (all) all.onclick = () => srcReindexAll();
+  const fold = $("srcFold");
+  if (fold) fold.onclick = () => {
+    const open = !box.classList.contains("open");
+    box.classList.toggle("open", open);
+    fold.setAttribute("aria-expanded", String(open));
+    fold.title = L(open ? "SrcFold" : "SrcUnfold");
+    cfg.panelOpen = open; touch();
+  };
+  const find = $("srcFind");
+  if (find){
+    find.oninput = () => { ui.q = find.value; srcFilter(); };
+    find.onfocus = () => { ui.focus = true; };
+    find.onblur = () => { ui.focus = false; };
+    find.onkeydown = e => { if (e.key === "Escape" && find.value){ e.stopPropagation(); find.value = ""; ui.q = ""; srcFilter(); } };
+    /* drawn again while you were typing in it: the caret stays where it was */
+    if (ui.focus){ find.focus(); const n = find.value.length; try { find.setSelectionRange(n, n); } catch(e){} }
+  }
+  box.querySelectorAll("[data-sf]").forEach(c => c.onclick = () => { ui.st = c.dataset.sf; srcFilter(); });
+  const sort = $("srcSort");
+  if (sort) sort.onchange = () => { cfg.sort = sort.value; touch(); renderLib(); };
+  box.querySelectorAll("[data-ss]").forEach(c => c.onchange = () => {
+    const row = c.closest("[data-src]"), id = row.dataset.src;
+    if (c.checked) ui.sel.add(id); else ui.sel.delete(id);
+    row.classList.toggle("sel", c.checked);
+    srcSelPaint();
+  });
+  const selAll = $("srcSelAll");
+  if (selAll) selAll.onchange = () => {
+    box.querySelectorAll(".srcdoc").forEach(r => {
+      if (r.hidden) return;
+      const c = r.querySelector("[data-ss]");
+      c.checked = selAll.checked; r.classList.toggle("sel", selAll.checked);
+      if (selAll.checked) ui.sel.add(r.dataset.src); else ui.sel.delete(r.dataset.src);
+    });
+    srcSelPaint();
+  };
+  box.querySelectorAll("[data-sb]").forEach(b => b.onclick = () => srcBulk(b.dataset.sb));
+  box.querySelectorAll("[data-sm]").forEach(b => b.onclick = e => { e.stopPropagation(); srcMenuOpen(b); });
   box.querySelectorAll("[data-sa]").forEach(b => b.onclick = () => {
-    const id = b.closest("[data-src]").dataset.src, a = b.dataset.sa, d = srcDoc(id);
-    if (a === "view") return srcView({ doc:id, page:d && d.kind === "pdf" ? 1 : 0, lineStart:0, citation:d ? d.name : "" });
-    if (a === "edit") return srcEdit(id);
-    if (a === "reindex") return srcReindex(id).then(() => renderLib());
-    if (a === "off") return srcSetStatus(id, "inactive");
-    if (a === "on") return srcSetStatus(id, "active");
-    if (a === "remove") return srcRemove(id);
+    const row = b.closest("[data-src]");
+    srcMenuClose();
+    srcDocAction(row.dataset.src, b.dataset.sa, row, b);
   });
   const cl = $("srcClear");
   if (cl) cl.onchange = () => { srcCfg().clearance = cl.value.split(",").map(s => s.trim()).filter(Boolean); touch(); renderLib(); };
   const kc = $("srcKeepChat");
   if (kc) kc.onchange = () => { srcCfg().keepChat = kc.checked; touch(); };
+  srcFilter();
 }
+/* a click anywhere else, a scroll of the list, Escape: an open ⋯ menu shuts */
+document.addEventListener("click", e => { if (SRC.menuBtn && !e.target.closest("#srcMenu,[data-sm]")) srcMenuClose(); });
+document.addEventListener("scroll", e => { if (SRC.menuBtn && !(e.target && e.target.id === "srcMenu")) srcMenuClose(); }, true);
+window.addEventListener("resize", () => { if (SRC.menuBtn) srcMenuClose(); });
 
 /* ═══ THE RUN QUEUE — actually running the thing ══════════════════════════
    A page in a browser cannot start a program, and that is not going to

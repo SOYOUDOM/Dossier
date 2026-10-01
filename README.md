@@ -1956,8 +1956,8 @@ figure no passage states, and the app checks the answer before showing it.
 
 #### How do I add a new PDF runbook (or Markdown, or Word)?
 
-1. **Library → Sources → + Add a PDF, Markdown or Word document**, and pick
-   one or more files.
+1. **Library → Sources → + Add documents**, and pick one file — or many at
+   once (see *How do I add many documents at once?* below).
 2. Resolv reads each one to the end — a PDF page by page (scanned pages
    through `ocr.js` when it is beside `dossier.html`), a Word document with its
    headings, Markdown as it is — and says how many pages it read and which, if
@@ -2015,7 +2015,7 @@ To check it was learned, in a **new** conversation (not `[study]`):
 
 #### How do I re-index an updated guideline?
 
-- **A new version of the document**: add it (**+ Add**). Resolv sees it is a
+- **A new version of the document**: add it (**+ Add documents**). Resolv sees it is a
   new version of one already there and asks: **It replaces that version** (the
   older one is kept, marked *superseded*, and no longer searched), **Keep both
   active** (their version and effective date decide which is current), or **It
@@ -2033,6 +2033,91 @@ To check it was learned, in a **new** conversation (not `[study]`):
 - When a new version of Resolv changes how passages are cut, every document
   is cut again from its kept text the next time the workspace opens —
   nothing to do.
+
+#### Does the assistant only answer from one document (say, the password standard)?
+
+No. **Every question searches every active document in Sources** — all of
+them, every time — and the passages that match best go with the question,
+from whichever documents they are in. A question about log retention finds
+the retention standard, a question about patching finds the patching
+standard, and a question about passwords finds the password standard. Nothing
+in Resolv is written for one subject: the checks on figures, the spelling
+help, the page headers left out of PDFs and the names of documents work the
+same way for every document.
+
+A document is **not** searched when it is **switched off**, **superseded** by
+a newer version, has an **access label** this workspace is not cleared for,
+or is about another **system or environment** than the one your question
+names. **Library → Sources → Recent searches and changes** shows, for each
+question, how many documents were searched and which passages were found.
+
+#### How do I add many documents at once (50, 100 or more)?
+
+1. **Library → Sources → + Add documents**.
+2. In the file window, select them all (**Ctrl+A** in a folder, or
+   **Ctrl**/**Shift**+click) and press **Open**. PDF, Word, Markdown and text
+   can be mixed.
+3. Resolv reads them one by one, then shows **one** window for all of them:
+   the list of what it read, each with the name it found, and the details
+   they share — **Systems**, **Environment**, **Category**, **Access label**,
+   and whether they **may go to the assistant**. A file that is already in
+   Sources is left out (it says how many); a file it could not read is
+   named.
+4. **Add 102** (or however many). They are saved and indexed together, and
+   searched from the next question. 100 Markdown files take about two
+   seconds.
+
+Each document is named from its **own title** — its `# heading`, a `title:`
+at the top, or a first line in bold — or, when its first line is not a
+title (a bullet, a sentence), from its **file name**. Markdown marks such as
+`**` or `#` never end up in a name. To change one later, **⋯ → Details**.
+
+There is no limit on how many documents Sources can hold; the chat window
+takes up to 5 files per question, so for more than that use Sources.
+
+#### How do I find a document when there are many?
+
+- **The search box** at the top of Sources narrows the list as you type —
+  by name, file name, version, system, environment, category or type
+  (*PDF*, *MD*, *Word*). **Esc** empties it.
+- **The chips** — **All**, **Active**, **Superseded**, **Switched off**,
+  **Need a look** — show only the documents in that state, with how many
+  there are.
+- **Sort**: **Name A–Z**, **Newest first**, **By category** or **By type**.
+  The last two group the list under headings. Resolv remembers your choice.
+- **The arrow beside "Sources"** folds the whole panel to one line, so the
+  Library's own documents are easy to reach; Resolv remembers that too.
+
+#### How do I open, rename, re-index, switch off or remove a document?
+
+- **Click its name** to open it in the viewer.
+- **⋯** at the end of its row opens **View**, **Details** (name, version,
+  date, systems, category, access…), **Re-index**, **Switch off** (or
+  **Switch on**) and **Remove**.
+- **⚠ 2 page(s) unclear** under a name lists the pages that were not read well.
+
+#### How do I switch off, re-index, re-categorise or remove several documents at once?
+
+Tick the box at the start of each row (or the box in the header, which
+ticks every row the list is showing — after a search, only those). A bar
+appears: **Switch on**, **Switch off**, **Re-index**, **Set category…**,
+**Remove**, **Clear**.
+
+- **Switch on** for several switches on the ones that are switched off. It
+  does **not** bring back old versions a newer one replaced (*superseded*) —
+  that would put old rules back into answers. To use an old version again,
+  choose **⋯ → Switch on** on that one document.
+- **Set category…** gives them all one category (empty clears it).
+- **Remove** asks once, for all of them.
+
+#### Why did some document names change after the update?
+
+Before 5.9.4 a Markdown document without a `# heading` was sometimes named
+after its first line — a bullet (*"- Introduction & Step by Step"*), the
+start of a sentence, or a line with `**` marks in it. When a workspace is
+opened, those names are mended: from the document's title when it has one,
+otherwise from its file name. A name you typed yourself in **Details** is
+never changed.
 
 #### How do I configure document indexing?
 
@@ -2689,8 +2774,8 @@ Answering from documents has its tests in the repository, and they are the
 first thing to run after changing anything it touches:
 
 ```
-node --test                 # tests/sources.test.js: 28 tests - every scenario below
-node tests/e2e/run.js       # the app in Chrome or Edge: 56 checks on the screen
+node --test                 # tests/sources.test.js: 32 tests - every scenario below
+node tests/e2e/run.js       # the app in Chrome or Edge: 68 checks on the screen
 node flow/check-prompt.js   # the prompt's examples against the reply validator
 ```
 
@@ -2703,7 +2788,11 @@ page, section and lines, 150 documents searched at once, look-alike runbooks
 for different systems and environments, the same question in a new
 conversation, and a password standard with its header printed on every page,
 asked with a typo, whose right answer carried two lines it could not back
-(those two taken out, the rest shown). `tests/e2e/run.js` finds Chrome or Edge by itself (set
+(those two taken out, the rest shown); a mixed library - retention,
+patching, incidents, a playbook, passwords - where each question must find
+its own document and a line with an unsupported figure is taken out whatever
+the subject; clean document names; and the Sources panel with many documents
+(search, chips, ticks, several at once, adding several, folding). `tests/e2e/run.js` finds Chrome or Edge by itself (set
 `CHROME=<path>` to choose) and skips, passing, when there is none.
 
 The other suites live outside the repository and
