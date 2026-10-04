@@ -84,13 +84,13 @@ A *workspace* is a folder the user picks (File System Access API):
 - Commit messages: clear summary + body; no model names in commits, code or
   docs. Do not open a pull request unless the owner asks.
 - Work so far is on branch `claude/chat-panel-pixel-art-gifs-d822hq`
-  (latest: 5.11.0). Follow the branch instructions of your own session.
+  (latest: 5.11.1). Follow the branch instructions of your own session.
 
 ## Testing
 
 ```
 node --test                                   # 47 unit tests (Sources, grounding, flow reply fields, diagrams)
-node tests/e2e/run.js                         # the app in headless Chrome/Edge: 89 checks (CHROME=<path> to choose)
+node tests/e2e/run.js                         # the app in headless Chrome/Edge: 101 checks (CHROME=<path> to choose)
 node flow/check-prompt.js                     # after editing flow/prompt.txt ...
 python3 flow/embed-prompt.py                  # ... then copy it into flow.js (PROMPT_BUILTIN)
 node tests/fixtures/make-pdf.js               # regenerate the PDF fixtures
@@ -113,6 +113,24 @@ Also useful:
 
 ## Recent history (newest first)
 
+- **5.11.1** — Two reports from the owner. (1) A diagram came back as text
+  ("mermaid\nflowchart TD\nA[…] --> …"): their flow's old *Clean* step
+  `replace(…, '```', '')` strips every backtick fence. `chatMend` now runs
+  `chatFenceDiagram` on the parts outside fences (a "mermaid" line followed
+  by a `DIAG_HEAD`, or a `DIAG_HEAD` at a paragraph start; body = `DIAG_LINE`
+  lines) and mends "``` lang"; the prompt fences diagrams with `~~~mermaid`
+  (the unit test asserts the example has no ```). (2) "I named you elle
+  okay?" was answered about the blank 1×1 placeholder picture, twice, and
+  the chat was titled "Blank image placeholder". Naming is now local
+  (`CHAT_NAME_SET/NOT/RESET/ASK`, `chatNameLocal` in `chatAsk` after small
+  talk, `chatNameSet`, `chatName()`, `chatNameShow()` also from `applyI18n`,
+  `chatUI().name`, the pet takes it, `workspace.yourName` in `buildRequest`
+  and a prompt line). Placeholder retry: keep the scrubbed reply at ≥24
+  chars; retry sends `q + " " + PH_NOTE` ("(no picture attached)" - a fact,
+  not an order: an order is what the content filter refused in 4.6.1); a
+  title about the picture is never used; `PlaceholderLost` points to
+  POWER-AUTOMATE.md §4f (new: a text-only prompt in a `Picture?` Condition
+  when `pictureName` is empty - the lasting fix).
 - **5.11.0** — Diagrams: `chatSay` sends a fence tagged mermaid/diagram/
   flowchart/… (or an untagged one starting `flowchart|graph|sequenceDiagram|
   stateDiagram`, `diagLooks`) to `chatDiagramCard` → `.chdiag` card (Copy

@@ -5475,7 +5475,7 @@ const STRINGS = {
   BriefAdded: "Added to About my work: {p0}",
   BriefAddAlready: "That is already in About my work.",
   BriefOpen: "Open About my work",
-  PlaceholderLost: "It answered the empty picture placeholder instead of your question, twice. Ask it again in other words.",
+  PlaceholderLost: "The AI looked at the blank picture Resolv has to send when nothing is attached, instead of your words \u2014 twice. Ask again in other words. To stop this for good, your flow can skip the picture when there is none: flow/POWER-AUTOMATE.md, \u00a74f.",
   FlowLeanAnswered: "Answered without your notes, lessons, runbooks and records: the full question failed in the flow, and this one went through. If that happens again and again, something in them is the reason - most often Microsoft's content filter reading a note or lesson as orders to the AI.",
   FlowLeanFiltered: "Answered without your notes, lessons, runbooks and records: Microsoft's content filter blocked the full question (\u201cPrompt was filtered\u201d). Something in them reads to the filter like instructions to the AI - look for a note or lesson written as rules (\u201cDo not\u2026\u201d, \u201cAlways\u2026\u201d, \u201cYou must\u2026\u201d) and reword it as plain facts.",
   TierFastTook: "fast model typically {p0} s (last {n})",
@@ -6383,6 +6383,12 @@ const STRINGS = {
   ChatUntitled: "New conversation",
   ChatKeptCount: "{n} kept in this workspace",
   ChatName: "Resolv",
+  ChatNamed: "{name} it is \u2014 nice to meet you! I\u2019ll go by {name} from now on. To change it, say \u201ccall you\u2026\u201d; to go back, say \u201cuse your own name\u201d.",
+  ChatNameReset: "Back to {name}.",
+  ChatNameIs: "I\u2019m {name} \u2014 the assistant built into Resolv.",
+  ChatNameUndo: "Keep {name}",
+  ChatNameKeep: "Keep {name}",
+  ChatAskNamed: "Ask {name}\u2026",
   ChatSkinNew: "New",
   AlertOpen: "Open",
   AlertSetBtn: "Set alert",
@@ -7156,6 +7162,7 @@ function applyI18n(){
   paintFolderName();
   $$("[data-i18n-ph]").forEach(el => { el.placeholder = L(el.getAttribute("data-i18n-ph")); });
   $$("[data-i18n-title]").forEach(el => { el.title = L(el.getAttribute("data-i18n-title")); });
+  if (typeof chatNameShow === "function" && S.settings) chatNameShow();
 }
 
 /* ═══ FONTS ══════════════════════════════════════════════════════════════
@@ -7448,7 +7455,7 @@ const STATUSES = [
    the status bar, and clicking it copies a line you can paste into a bug
    report — build date and flow protocol included, because those are the two
    things that actually differ between copies. */
-const APP_VERSION = "5.11.0";
+const APP_VERSION = "5.11.1";
 const APP_BUILT = "2026-09-27";
 function buildLine(){
   return "Resolv v" + APP_VERSION + " \u00b7 built " + APP_BUILT +
@@ -11917,6 +11924,16 @@ function chatUI(){
   return st.chatUI;
 }
 
+/* a name you gave the assistant: at the top of the panel and in the box
+   you type in (again after a language switch, which rewrites both) */
+function chatNameShow(){
+  const el = $("chat"); if (!el) return;
+  const u = S.settings && S.settings.chatUI, own = u && u.name;
+  const tt = el.querySelector('.chh [data-i18n="ChatTitle"]');
+  if (tt) tt.textContent = own || L("ChatTitle");
+  const qq = $("chatq");
+  if (qq) qq.placeholder = own ? L("ChatAskNamed", { name:own }) : L("ChatPlaceholder");
+}
 function applyChatUI(){
   const el = $("chat"); if (!el) return;
   const u = chatUI();
@@ -11925,7 +11942,8 @@ function applyChatUI(){
   CHAT_FX.forEach(k => el.classList.toggle("fx-" + k, !!u[k]));
   el.style.setProperty("--ch-every", Math.max(4, Math.min(120, +u.every || 12)) + "s");
   /* Lumen writes the assistant's name over each answer, from CSS */
-  el.style.setProperty("--lm-name", JSON.stringify(L("ChatName")));
+  el.style.setProperty("--lm-name", JSON.stringify(chatName()));
+  chatNameShow();
   chatMarkApply();
   chatPixDress();
   lmiWatch();
@@ -13231,12 +13249,59 @@ function chatLooksCode(t){
    Anything that does not clearly look like code is left as prose. Getting
    this wrong in that direction only costs a panel; the other way it would
    swallow a sentence. */
+/* A diagram that lost its fences. A flow whose Clean step still takes
+   every ``` out of the answer (POWER-AUTOMATE.md 6, the older expression)
+   turns ```mermaid into a line that says "mermaid" over the diagram's
+   lines; and a model sometimes writes a diagram with no fence at all,
+   starting "flowchart TD". Either is fenced again here, so it is drawn:
+   from the "mermaid" line (or the diagram's first line, at the start of a
+   paragraph) through every line that reads as part of a diagram. */
+const DIAG_HEAD = /^\s*(?:(?:flowchart|graph)(?:\s+(?:TD|TB|BT|LR|RL))?|sequenceDiagram|stateDiagram(?:-v2)?)\s*;?\s*$/i;
+const DIAG_LINE = /(?:-->|---|==>|-\.->|-\.-|->>|-->>|--\)|-\)|--x|-x\s|<-->|:::)|^\s*(?:participant|actor|note\b|loop\b|alt\b|else\b|opt\b|par\b|and\b|end\s*$|subgraph\b|state\b|classDef|class\b|style\b|linkStyle|click\b|direction\b|autonumber|title\b|%%|\[\*\]|\}\s*$|box\b|rect\b|critical\b|break\b)|^\s*[\w\u00c0-\uffff]+\s*(?:\[|\(|\{|>)[^\]\)\}]*[\]\)\}]\s*$|^\s*[\w\u00c0-\uffff]+\s*:\s*\S/i;
+function chatFenceDiagram(s){
+  if (!s || !/(flowchart|graph|sequenceDiagram|stateDiagram)/i.test(s)) return s;
+  const lines = s.split("\n");
+  for (let i = 0; i < lines.length; i++){
+    let start = -1, head = -1;
+    const t = lines[i].trim();
+    if (/^mermaid\s*:?$/i.test(t)){
+      let k = i + 1;
+      while (k < lines.length && !lines[k].trim()) k++;
+      if (k < lines.length && DIAG_HEAD.test(lines[k])){ start = i; head = k; }
+    } else if (DIAG_HEAD.test(lines[i])){
+      const prev = i ? lines[i - 1].trim() : "";
+      if (!prev || /[:\uff1a]$/.test(prev)){ start = i; head = i; }
+    }
+    if (start < 0) continue;
+    let end = head + 1;
+    while (end < lines.length){
+      if (!lines[end].trim()){
+        let k = end + 1;
+        while (k < lines.length && !lines[k].trim()) k++;
+        if (k < lines.length && DIAG_LINE.test(lines[k]) && !chatIsProse(lines[k])){ end = k; continue; }
+        break;
+      }
+      if (!DIAG_LINE.test(lines[end])) break;
+      end++;
+    }
+    if (end <= head + 1) continue;          /* a heading and nothing under it */
+    const body = lines.slice(head, end);
+    while (body.length && !body[body.length - 1].trim()) body.pop();
+    lines.splice(start, end - start, "```mermaid", ...body, "```");
+    i = start + body.length + 1;
+  }
+  return lines.join("\n");
+}
 function chatMend(src){
   let s = String(src);
   /* ~~~ is a fence too - the one text to paste comes in, because the flow's
      Clean step (POWER-AUTOMATE.md 6) takes every ``` out of the answer */
   s = s.replace(/^[ \t]*~~~+[ \t]*([A-Za-z0-9_+-]*)([^\n]*)$/gm, (x, lang, rest) => "```" + lang + rest);
+  /* "``` mermaid", "``` sql": the language a space after the fence */
+  s = s.replace(/^([ \t]*```)[ \t]+([A-Za-z][\w+-]*)[ \t]*$/gm, "$1$2");
   if ((s.match(/```/g) || []).length % 2) s += "\n```";
+  /* diagrams first, in the stretches between the real fences */
+  s = s.split(/(```[\s\S]*?```)/g).map((p, k) => k % 2 ? p : chatFenceDiagram(p)).join("");
   /* An answer with three queries in it often arrives with the first one
      fenced and the rest not - the model stops bothering once it has shown
      the shape. So the repair runs on every stretch BETWEEN the real fences,
@@ -13743,7 +13808,7 @@ function chatRenderBot(r, sourceText, replaying, at){
          /* Lumen's greeting; the other skins keep the name and the card */
          '<div class="lmhi">' + LE(hr < 12 ? "LmMorning" : hr < 18 ? "LmAfternoon" : "LmEvening") + "</div>" +
          '<div class="lmhs">' + LE("LmHelp") + "</div>" +
-         '<div class="cht">' + esc(L("ChatHeroTitle")) + "</div>" +
+         '<div class="cht">' + esc(chatUI().name || L("ChatHeroTitle")) + "</div>" +
          '<div class="chts">' + esc(L("ChatHeroSub")) + "</div>" +
          '<div class="chcard"><b>' + esc(L("ChatHeroCard1")) + "</b><span>" + esc(L("ChatHeroCard2")) + "</span></div>";
   } else {
@@ -14244,6 +14309,49 @@ function chatSmallTalk(q){
   return "";
 }
 
+/* ── the assistant's name ──────────────────────────────────────────────
+   "I named you Elle", "can I call you Elle?", "your name is Elle": the
+   assistant answers to the name it is given - over each answer, at the top
+   of the panel, in the box you type in, on the desk pet if it has no name of
+   its own, and in what the flow is told (workspace.yourName). Read here, on
+   the PC: it is about the app, not a question, and a short aside like that
+   is just what a small model answers wrongly - it looks at the blank picture
+   it is always handed and talks about that instead. "Use your own name"
+   puts Resolv back. */
+const CHAT_NAME_SET = /^(?:(?:hey|hi|so|ok(?:ay)?|well|and|from now on)[,\s]+)?(?:i(?:'ve| have)?\s+(?:re)?named\s+you|i(?:'ll| will| want to| wanna| would like to|'d like to)?\s+(?:call|name)\s+you|i(?:'m| am)\s+(?:going to|gonna)\s+(?:call|name)\s+you|(?:can|could|may)\s+i\s+(?:call|name)\s+you|let(?:'s| us| me)\s+(?:call|name)\s+you|your\s+(?:new\s+)?name\s+is(?:\s+now)?|you(?:'re| are)\s+(?:now\s+)?(?:called|named)|call\s+yourself|be\s+called)\s+["\u201c'\u2018]?([^\s"\u201d'\u2019,.!?]{1,24})["\u201d'\u2019]?(?:\s*,?\s*(?:ok(?:ay)?|alright|all right|from now on|now|please|then|yeah|right))*\s*[.!?\u{1F642}\u{1F60A}]*$/iu;
+const CHAT_NAME_NOT = /^(a|an|the|not|now|so|too|just|later|back|tomorrow|today|tonight|again|when|after|before|about|at|on|in|if|soon|maybe|then|there|here|something|someone|anything|it|that|this|you|me|him|her|them|whatever|nothing|ok|okay|please|bot|ai|anytime|whenever)$/i;
+const CHAT_NAME_RESET = /^(?:please\s+)?(?:use your (?:own|old|real) name|go back to (?:your (?:own |old )?name|resolv)|reset your name|forget (?:your|the) (?:new )?name|be resolv again|(?:call yourself|your name is) resolv(?: again)?)\s*[.!?]*$/i;
+const CHAT_NAME_ASK = /^(?:what(?:'s| is) your name|who are you|what do i call you|what should i call you|do you have a name)\s*\??$/i;
+function chatName(){ const u = S.settings && S.settings.chatUI; return (u && u.name) || L("ChatName"); }
+function chatNameSet(name){
+  const u = chatUI(), had = u.name || "";
+  if (name) u.name = name; else delete u.name;
+  /* the desk pet is the assistant out of its panel: it takes the name too,
+     unless it was given one of its own */
+  const pet = petCfg();
+  if (!pet.name || pet.name === had) pet.name = name || "";
+  touch(); applyChatUI(); petPaint();
+  return had;
+}
+function chatNameLocal(q){
+  const t = String(q || "").trim();
+  if (!t || t.length > 80) return null;
+  let m;
+  if (CHAT_NAME_RESET.test(t)){
+    const had = chatNameSet("");
+    return { say:L("ChatNameReset", { name:L("ChatName") }),
+             chips:had ? [{ label:L("ChatNameKeep", { name:had }), act:{ kind:"chatname", name:had } }] : [] };
+  }
+  if ((m = CHAT_NAME_SET.exec(t)) && !CHAT_NAME_NOT.test(m[1])){
+    let name = m[1].slice(0, 24);
+    if (name === name.toLowerCase()) name = name.charAt(0).toUpperCase() + name.slice(1);
+    const had = chatNameSet(name);
+    return { say:L("ChatNamed", { name:name }),
+             chips:[{ label:L("ChatNameUndo", { name:had || L("ChatName") }), act:{ kind:"chatname", name:had } }] };
+  }
+  if (CHAT_NAME_ASK.test(t) && chatUI().name) return { say:L("ChatNameIs", { name:chatUI().name }) };
+  return null;
+}
 function chatAsk(text, opts){
   opts = opts || {};
   const q = String(text || "").trim();
@@ -14293,6 +14401,9 @@ function chatAsk(text, opts){
     chatSide();
     return;
   }
+  /* "I named you Elle" - its name, kept here */
+  const named = !CHAT.files.length && !opts.force && chatNameLocal(q);
+  if (named){ chatBot(named, q); chatSide(); return; }
   /* "alert me about D-0101 at 3pm" - read here when it is plain enough,
      and put to you before it is set */
   const al = !CHAT.files.length && !opts.flow && !opts.tier && !opts.force && alertLocal(q);
@@ -14868,12 +14979,17 @@ async function flowAsk(q, thread, opts){
      nothing was attached and the question itself is not about pictures. */
   if (out && !fell && !ctx.pictureName && !phAsked(q) && phTalks([out.say, out.ask].join(" "))){
     const kept = phScrub(out.say);
-    if (kept.length >= 80 && !phTalks(out.ask)) out.say = kept;
+    /* what is left once the sentences about the picture are out is shown
+       when it is a real answer - even a short one ("Elle it is!") */
+    if (kept.length >= 24 && /\s/.test(kept) && !phTalks(out.ask)) out.say = kept;
     else {
       const wait4 = chatThinking(log);
       let out4 = null;
       try {
-        out4 = await DossierFlow.ask(q, ctx, flowCfg().tiers.on ? Object.assign({}, cfg, { tier:"deep" }) : cfg);
+        /* asked again with three words of plain fact after the question -
+           not an order to the model, which is what the content filter
+           refused in 4.6.1, only what is true: nothing was attached */
+        out4 = await DossierFlow.ask(q + " " + PH_NOTE, ctx, flowCfg().tiers.on ? Object.assign({}, cfg, { tier:"deep" }) : cfg);
       } catch(e){ out4 = null; }
       chatThought(wait4, null);
       if (out4 && !flowFellBack(out4) && !phTalks([out4.say, out4.ask].join(" "))) out = out4;
@@ -14907,7 +15023,11 @@ async function flowAsk(q, thread, opts){
   if (out && out.tier) reply.tier = out.tier;
   if (out && out.ms && !sentFiles) flowTimed(out.tier || "fast", out.ms);
   if (out && out.thread && thread){ thread.summary = out.thread; thread.summaryAt = new Date().toISOString(); }
-  if (out && out.title && thread && thread.titleAuto && !thread.titleAi){ thread.title = out.title; thread.titleAi = true; }
+  /* a title about the blank picture ("Blank image placeholder") is not
+     what the conversation is about */
+  if (out && out.title && thread && thread.titleAuto && !thread.titleAi && !phTalks(out.title) && !/\b(placeholder|blank (image|picture))\b/i.test(out.title)){
+    thread.title = out.title; thread.titleAi = true;
+  }
   reply.sumBefore = sumBefore;
   deliver(reply);
   chatSide();
@@ -14926,6 +15046,7 @@ const PH_TALK = [
   /\bno (image|picture|screenshot|photo)\b[^.!?\n]{0,30}\b(attached|visible|came through|was (attached|sent|shared))\b/i
 ];
 function phTalks(s){ const t = String(s || ""); return !!t && PH_TALK.some(re => re.test(t)); }
+const PH_NOTE = "(no picture attached)";
 /* a question that is itself about pictures is left alone */
 function phAsked(q){
   return /\b(image|images|picture|pictures|photo|photos|screenshot|screenshots|screen shot|pic|pics|attach\w*)\b/i.test(String(q || ""));
@@ -17359,6 +17480,10 @@ function chatDo(act){
       const st = (typeof Notification === "undefined") ? "none" : Notification.permission;
       return chatBot({ say:L(act.on ? "ChatNotifyOn" : "ChatNotifyOff"),
                        note: act.on && st !== "granted" ? L("RemindersBlockedHint").replace(/<[^>]+>/g, "") : "" });
+    }
+    case "chatname": {
+      chatNameSet(act.name || "");
+      return chatBot({ say:act.name ? L("ChatNamed", { name:act.name }) : L("ChatNameReset", { name:L("ChatName") }) });
     }
     case "alert": {
       const t = getTask(act.id); if (!t) return;

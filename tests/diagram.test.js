@@ -197,7 +197,10 @@ test("the prompt's own example draws", () => {
   const ex = /Message: "draw how a password reset request is handled"\n(\{.*\})/.exec(prompt);
   assert.ok(ex, "the example is in the prompt");
   const say = JSON.parse(ex[1]).say;
-  const block = /```mermaid\n([\s\S]*?)```/.exec(say)[1];
+  /* tildes, not backticks: a flow's Clean step that strips ``` from the
+     model's reply would leave the diagram as bare text */
+  assert.ok(!/```/.test(say), "the example fences the diagram with ~~~");
+  const block = /~~~mermaid\n([\s\S]*?)~~~/.exec(say)[1];
   const r = D.draw(block);
   assert.equal(r.ok, true);
   assert.equal(r.model.nodes.length, 5);

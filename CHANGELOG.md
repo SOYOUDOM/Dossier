@@ -6,6 +6,44 @@ holds — which is what to paste into a bug report.
 
 ---
 
+## 5.11.1 - 2026-10-04
+
+**Diagrams that arrive as text are drawn, the assistant takes a name, and
+fewer answers about a blank picture.**
+
+- **A diagram that came back as text is drawn.** A flow built from an older
+  copy of the guide strips every ```` ``` ```` from the answer in its *Clean*
+  step, so a diagram arrived as *"mermaid flowchart TD A["User Action"] -->
+  …"* in plain text. Resolv now recognises a diagram without its marks - a
+  line *mermaid*, or a line such as *flowchart TD*, *sequenceDiagram* or
+  *stateDiagram-v2* followed by boxes and arrows - and draws it; the words
+  after it stay ordinary text. A fence written ```` ``` mermaid ```` (with a
+  space) is mended too. Ordinary prose with an arrow in it is left alone.
+- **The prompt asks for diagrams between `~~~` marks**, which the old Clean
+  step leaves alone. (Better still, use the Clean expression in
+  `flow/POWER-AUTOMATE.md` §6.)
+- **Give the assistant a name.** *"I named you Elle"*, *"can I call you
+  Elle?"*, *"your name is Elle"* are answered on your PC - nothing goes to
+  the flow. The name shows at the top of the chat panel, over each answer in
+  Lumen and Crimson, in the box you type in (*Ask Elle…*) and on a desk pet
+  without a name of its own; the AI is told it with every question
+  (`workspace.yourName`). **Keep Resolv** under the reply undoes it; *"use
+  your own name"* goes back later.
+- **Fewer answers about the blank picture.** When nothing is attached,
+  Resolv still has to send the flow one white pixel, and a small model
+  sometimes talks about it instead of your words. Now: a short real answer
+  left after the picture sentences are taken out is shown (it used to need
+  80 characters); the question asked again carries *(no picture attached)*;
+  a conversation is never titled after the picture (*Blank image
+  placeholder*); and when it happens twice the message says how to stop it
+  for good.
+- **New in the flow guide: §4f, "When nothing is attached, send no
+  picture"** - a copy of your prompt without a picture input, run by a
+  Condition when no picture was sent. The model then never sees a picture
+  that is not there. About ten minutes.
+
+---
+
 ## 5.11.0 - 2026-10-04
 
 **Diagrams in the chat, every choice in view, and a one-line suggestion.**

@@ -1929,12 +1929,68 @@ The AI writes the diagram in a text format called *Mermaid*. Most models know
 it, but a small, fast model sometimes makes mistakes on a big diagram; ask it
 to keep the diagram small, or press **Think harder**.
 
+#### I asked for a diagram and got text like "mermaid flowchart TD A --> B" — why?
+
+Fixed in 5.11.1. The diagram's text was there, but the marks around it (three
+backticks, ```` ``` ````) had been taken out on the way back — by the *Clean*
+step of a flow built from an older copy of the guide, which strips every
+```` ``` ```` in the answer. Without the marks, Resolv did not know the text
+was a diagram. Now:
+
+- Resolv recognises a diagram without its marks (a line *mermaid*, or a line
+  like *flowchart TD* or *sequenceDiagram* followed by boxes and arrows) and
+  draws it;
+- the prompt asks for diagrams between `~~~` marks, which the old Clean step
+  leaves alone.
+
+Nothing to do in your flow. To fix the Clean step for good (it also turns
+emails and notes into plain text), use the expression in
+[`flow/POWER-AUTOMATE.md`](flow/POWER-AUTOMATE.md) §6.
+
 #### The choices under an answer are cut off — how do I see them all?
 
 Fixed in 5.11. The choices under an answer used to sit on one line that
 scrolled sideways with no scroll bar, so the third choice and the ones after
 it could not be seen or reached. Now they wrap onto the next line, and a long
 choice wraps its own words. Every choice is always in view.
+
+#### How do I give the assistant a name?
+
+Just tell it: *"I named you Elle"*, *"can I call you Elle?"*, *"your name is
+Elle"*. Resolv answers on your PC (nothing goes to the flow), and from then on
+the name is:
+
+- at the top of the chat panel, and over each of its answers (in the
+  Lumen and Crimson skins, which write a name there);
+- in the box you type in (*Ask Elle…*);
+- on the desk pet, if the pet has no name of its own;
+- told to the AI with every question, so it calls itself Elle.
+
+A **Keep Resolv** button under the reply puts the old name back if you change
+your mind. To go back later, say *"use your own name"*. *"What's your name?"*
+gets the name you gave it. The name is kept with your workspace.
+
+#### The assistant talked about a blank or white picture I never sent — why?
+
+You asked something short, and the answer was *"the image you shared is a blank
+white square"*, or *"The AI looked at the blank picture…"*, or the
+conversation was named *Blank image placeholder*.
+
+**Why:** the prompt in your flow has a picture input, and Power Automate does
+not allow it to be empty. So when you attach nothing, Resolv sends one white
+pixel. A strong model ignores it; a small, fast (*mini*) model sometimes
+talks about the picture instead of your words.
+
+**What Resolv does about it:** it reads every answer before showing it. If
+the answer is about the picture, it takes those sentences out; if nothing
+useful is left, it asks again, adding *(no picture attached)* to your
+question, and — when you have two models — asks the strong one. A title about
+the picture is not used. Since 5.11.1, telling the assistant its name is
+answered on your PC, so that one never reaches the flow.
+
+**The lasting fix is in the flow:** when nothing is attached, run a copy of
+your prompt that has no picture input. About ten minutes, step by step:
+[`flow/POWER-AUTOMATE.md`](flow/POWER-AUTOMATE.md) §4f.
 
 #### How do I see a file I sent with a question? Can I hide it?
 
@@ -1956,7 +2012,7 @@ whether you hid its files.
 
 Answers come back with their line breaks intact. A fenced block becomes a code
 panel with its language and a copy button; `backticks` become inline code; a
-` ```mermaid ` block becomes a diagram card (above), whose words are drawn as
+` ```mermaid ` or `~~~mermaid` block becomes a diagram card (above), whose words are drawn as
 text in a picture made here — a label can never become markup on your page.
 Nothing else in a reply is interpreted — it is not a markdown renderer and
 should not become one, because every feature added to it is another way for
@@ -2925,7 +2981,7 @@ first thing to run after changing anything it touches:
 
 ```
 node --test                 # tests/*.test.js: 47 tests - Sources (every scenario below) and diagrams
-node tests/e2e/run.js       # the app in Chrome or Edge: 89 checks on the screen
+node tests/e2e/run.js       # the app in Chrome or Edge: 101 checks on the screen
 node flow/check-prompt.js   # the prompt's examples against the reply validator
 ```
 

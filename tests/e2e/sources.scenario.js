@@ -500,5 +500,53 @@
   sug.querySelector(".sugsum").click();
   check("...opens with a click, and remembers", sug.classList.contains("open") && /one runbook per request type/.test(sug.textContent) &&
         chatThread().msgs.some(m => m.reply && m.reply.sugOpen === true));
+
+  /* ── a flow that strips ``` from replies, a name, the blank picture (5.11.1) ── */
+  chatNew(true); chatPaint();
+  /* what came back from a flow whose Clean step takes out every ``` */
+  plan = req => ({ say:"Here's a simple diagram:\n\nmermaid\nflowchart TD\nA[\"User Action\"] --> B[\"Application Service\"]\nB --> C[\"Domain Service\"]\nC --> D[\"Entity\"]\n\nThis shows how a user action is handled." });
+  el = await ask("draw a simple flow of a user action through the layers");
+  const bare = el.querySelector(".chdiag");
+  check("a diagram whose ``` fences were stripped on the way back is still drawn", bare && bare.querySelectorAll("svg .dg-node").length === 4 &&
+        [...el.querySelectorAll("p")].some(p => /^This shows how a user action is handled\.$/.test(p.textContent.trim())) &&
+        ![...el.querySelectorAll("p")].some(p => /mermaid|-->/.test(p.textContent)), el.textContent.slice(0, 300));
+  check("the prompt asks for diagrams fenced with ~~~, which a Clean step leaves alone", /~~~mermaid on its own line/.test(sent[sent.length - 1].prompt));
+
+  /* "I named you Elle okay?" - answered on the PC, not by a model looking at the blank picture */
+  const nSent = sent.length, title = () => $("chat").querySelector('.chh [data-i18n="ChatTitle"]').textContent;
+  el = await ask("I named you elle okay?");
+  check("'I named you elle okay?' is answered on the PC, without asking the flow", sent.length === nSent && /Elle it is/.test(el.textContent) && chatName() === "Elle",
+        sent.length - nSent + " " + el.textContent.slice(0, 200));
+  check("...the name is at the top of the panel and in the box you type in", title() === "Elle" && $("chatq").placeholder === "Ask Elle…",
+        title() + " | " + $("chatq").placeholder);
+  applyI18n();
+  check("...and stays there after the language is applied again", title() === "Elle" && $("chatq").placeholder === "Ask Elle…");
+  check("...and the desk pet without a name of its own takes it", petCfg().name === "Elle", petCfg().name);
+  plan = req => ({ say:"ok" });
+  await ask("help me word a reply to the user about their locked account");
+  check("...and the flow is told the name it was given", sent.length === nSent + 1 && sent[sent.length - 1].req.workspace.yourName === "Elle" &&
+        /workspace\.yourName/.test(sent[sent.length - 1].prompt), JSON.stringify(sent[sent.length - 1].req.workspace.yourName));
+  el = await ask("use your own name");
+  check("'use your own name' goes back to Resolv, with a chip to keep Elle", chatName() === "Resolv" && title() === L("ChatTitle") &&
+        !chatUI().name && petCfg().name === "" && /Keep Elle/.test(el.textContent) && sent.length === nSent + 1, el.textContent.slice(0, 200));
+  check("'I'll call you later' is not a name", (await ask("I'll call you later"), chatName() === "Resolv" && !chatUI().name));
+
+  /* a mini model that answers the blank picture instead of the question */
+  chatNew(true); chatPaint();
+  let tries = 0;
+  plan = req => (++tries === 1
+    ? { say:"It looks like the image you shared is a blank white square. Could you try attaching it again?", title:"Blank image placeholder" }
+    : { say:"Monday's patch window is 22:00 to 02:00, so the restart fits after 22:00.", title:"Patch window restart" });
+  const pSent = sent.length;
+  el = await ask("when can I restart the app server on Monday?");
+  check("an answer about the blank picture is asked again, saying no picture was attached",
+        sent.length === pSent + 2 && / \(no picture attached\)$/.test(sent[sent.length - 1].text) && /patch window is 22:00/.test(el.textContent) &&
+        !/blank white square/.test(el.textContent), sent.slice(pSent).map(x => x.text).join(" | "));
+  check("...and the conversation is named after the question, not the picture", chatThread().title === "Patch window restart", chatThread().title);
+  chatNew(true); chatPaint();
+  plan = req => ({ say:"That image appears to be blank.", title:"Blank image placeholder" });
+  el = await ask("what's the restart order for the batch servers?");
+  check("twice about the picture: says what happened and where the lasting fix is, and the title is not about the picture",
+        /blank picture/.test(el.textContent) && /4f/.test(el.textContent) && !/Blank image placeholder/.test(chatThread().title || ""), el.textContent.slice(0, 300) + " | " + chatThread().title);
   return { checks };
 })()

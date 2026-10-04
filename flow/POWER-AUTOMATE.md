@@ -450,9 +450,9 @@ of being read into words on your PC first — which took several seconds per
 picture and made every answer about a picture an answer about its text.
 Several pictures go as one, side by side, each numbered with its name. When
 nothing is attached, `picture` is a single white pixel — the input cannot be
-left empty — and the prompt then ends with a short *NO PICTURE THIS TIME*
-section saying so, right before the image, so a mini model does not start
-describing a blank square instead of answering. The request also stops carrying everything a second
+left empty — and the prompt's *WHAT THEY ATTACHED* says so. A mini model
+still sometimes describes the blank square instead of answering; Resolv
+catches that and asks again, and §4f stops it for good. The request also stops carrying everything a second
 time beside the prompt, which roughly halves it.
 
 > **Only the prompt, no picture input?** Leave **Your flow** on *Reads the
@@ -639,9 +639,9 @@ on your prompt, and the app now makes wiring it a single expression.
 That is all. `picture` is always there: the first picture attached, or the
 first page of a scanned PDF (shrunk to travel), or — when nothing was
 attached — a **blank white pixel**, so the input is never handed `null` and
-the action never fails on a question with no file. The model sees a blank
-square and says nothing about it; if you would rather it knew, add one line to
-the prompt: *"A blank white picture means nothing was attached."*
+the action never fails on a question with no file. A strong model ignores
+the blank square; a *mini* model sometimes answers it instead of your
+question — §4f is the fix.
 
 A PDF that was read as text is not a picture and is not in `picture`; its
 words are in `attached`. If two pictures are attached, the second is described
@@ -1187,6 +1187,71 @@ is being used.
 
 ---
 
+## 4f. When nothing is attached, send no picture
+
+**The symptom:** you ask something short — *"I named you Elle okay?"*,
+*"what is love?"* — and the answer is about a **blank or white picture**,
+or Resolv says *"The AI looked at the blank picture Resolv has to send when
+nothing is attached, instead of your words"* (before 5.11.1: *"It answered
+the empty picture placeholder instead of your question"*), and the
+conversation may even be titled *Blank image placeholder*.
+
+**Why:** your prompt has an **Image** input, and an Image input cannot be
+empty, so when nothing is attached Resolv sends one white pixel. A strong
+model ignores it; a *mini* model sometimes talks about it instead. Telling
+the model to ignore it is not an option — Microsoft's content filter refuses
+a prompt that orders the model to disregard one of its inputs (4.6.1). Resolv
+already catches such an answer and asks again, but the sure fix is in the
+flow: **when nothing is attached, run a copy of your prompt that has no
+picture input at all.** The model then never sees a picture that is not there.
+
+It takes about ten minutes. With two models (§4e), do it in the **If no**
+branch (the fast model) only — the strong one is not fooled.
+
+### Step 1 — A prompt with no picture input
+
+1. Open **AI hub → Prompts** (or open the prompt from your Run a prompt
+   action) and create a **new prompt**, named `Dossier text`.
+2. Give it **one** input, type **Text**, named `prompt`, and insert it into
+   the empty prompt text — nothing else. No Image input.
+3. Choose the same model as your fast prompt. Save.
+
+### Step 2 — A Condition: is there a picture?
+
+1. Just above your (fast) **Run a prompt**: **+ → Control → Condition**.
+   Rename it `Picture?`.
+2. Left box, **Expression** tab:
+
+   ```
+   empty(body('Parse_JSON')?['pictureName'])
+   ```
+
+3. Operator **is equal to**, right box, **Expression** tab: `true`.
+
+### Step 3 — A prompt in each branch
+
+- **If yes** (nothing attached): **+ → AI Builder → Run a prompt**, prompt
+  `Dossier text`, input `prompt` = `body('Parse_JSON')?['prompt']`. Under
+  it, **Set variable** · `answer` · its **Text** token.
+- **If no** (a picture is attached): drag your existing fast **Run a prompt**
+  and its **Set variable** into this branch, as they are.
+
+If you have no `answer` variable yet (one model only), make it first —
+§4e Steps 2 and 5: **Initialize variable** `answer` (String) near the top,
+and **Clean** reads `variables('answer')`.
+
+> As in §4e: **add each Set variable fresh**, picking the **Text** token of
+> the Run a prompt *in its own branch*. A copied one keeps reading the action
+> it was copied from, which is skipped on half the questions.
+
+### Step 4 — Check it
+
+Save, and in Resolv ask a few short things that go to the flow, like
+*"what is love?"* or *"thanks, what next?"*. The answers should be about
+your words, never about a picture. (*"I named you Elle"* no longer goes to the
+flow at all since 5.11.1 — Resolv answers it itself.) Then attach a screenshot and ask *"what is
+in this picture?"* — the **If no** branch runs and the model still sees it.
+
 ## 5. How to give it the knowledge
 
 There are two kinds of knowledge here and they go in different places. Getting
@@ -1256,8 +1321,12 @@ json(substring(trim(<THE AI ACTION'S TEXT OUTPUT>), indexOf(trim(<THE AI ACTION'
 The same token goes in all four places. (An older version of this guide used
 `json(replace(replace(trim(...), '```json', ''), '```', ''))`. That strips
 every ``` in the answer, not only the ones round it — code still showed, but
-an email or a note to copy came through as plain text. Change it to the one
-above.)
+an email or a note to copy came through as plain text, and a diagram came
+through as its Mermaid text (*"mermaid flowchart TD A --> B …"*) instead of a
+picture. Change it to the one above. Since 5.11.1 the prompt fences diagrams
+with `~~~`, which the old expression leaves alone, and Resolv draws a diagram
+whose fences were stripped anyway — but the expression above is still the
+right one.)
 
 Replace `<THE AI ACTION'S TEXT OUTPUT>` with the dynamic-content token your AI
 action provides — *Text* for **Create text with GPT**, *Predicted Text* or
