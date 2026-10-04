@@ -1756,8 +1756,86 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
 .srcconf.high{color:#2fa36b}.srcconf.medium{color:#d9902a}.srcconf.not_found{color:#d9902a}.srcconf.own{color:#4a8fd8}
 .srcownmsg{font-size:12px}
 .srcownfig{font-size:11px;opacity:.65}
-.srcsug{margin:8px 0 2px;padding:8px 10px;border-radius:8px;border:1px dashed color-mix(in srgb,currentColor 28%,transparent);font-size:12.5px}
-.srcsug>b{display:block;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;opacity:.65;margin-bottom:3px}
+.srcsug{margin:8px 0 2px;padding:0;border-radius:8px;border:1px dashed color-mix(in srgb,currentColor 28%,transparent);font-size:12.5px}
+/* folded: one line - the word, the start of it, a chevron */
+.sugsum{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:8px;width:100%;min-width:0;padding:5px 11px;
+  cursor:pointer;font-size:12px;line-height:1.4;border-radius:inherit}
+.sugsum:hover{background:color-mix(in srgb,currentColor 5%,transparent)}
+.sugsum:focus-visible{outline:2px solid color-mix(in srgb,currentColor 45%,transparent);outline-offset:1px}
+.sugsum .ic{flex:none;display:inline-flex;opacity:.6}
+.sugsum .t{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;opacity:.62}
+.sugsum .t b{font-weight:650;margin-right:2px}
+.sugsum .chev{flex:none;font-size:15px;line-height:1;opacity:.5;transition:transform .16s ease}
+.srcsug.open .sugsum .chev{transform:rotate(90deg)}
+.srcsug.open .sugsum .t{opacity:.8}
+.srcsug.open .sugsum .pk{display:none}
+.sugbody{display:none;padding:0 12px 9px}
+.srcsug.open .sugbody{display:block}
+.sugnote{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;opacity:.6;margin-bottom:3px}
+@media (prefers-reduced-motion:reduce){.sugsum .chev{transition:none}}
+/* ═══ DIAGRAMS in the chat (diagram.js) ════════════════════════════════════
+   The colours are the skin's, mixed: boxes a touch of its accent over its
+   background, their edges the accent, a decision a little more of it, the
+   arrows the ink at half strength. Every skin gets a diagram in its own
+   colours, in light and in dark, with no rule per skin. */
+.chat{--dg-bg:var(--ch-bg);--dg-node:color-mix(in srgb,var(--ch-acc) 6%,var(--ch-bg));
+  --dg-stroke:color-mix(in srgb,var(--ch-acc) 50%,var(--ch-line));--dg-dec:color-mix(in srgb,var(--ch-acc) 15%,var(--ch-bg));
+  --dg-text:var(--ch-ink);--dg-dim:var(--ch-dim);--dg-edge:color-mix(in srgb,var(--ch-ink) 55%,var(--ch-bg));
+  --dg-soft:var(--ch-line);--dg-group:color-mix(in srgb,var(--ch-ink) 3%,var(--ch-bg));
+  --dg-note:color-mix(in srgb,#f5c542 16%,var(--ch-bg));--dg-noteline:color-mix(in srgb,#d9a520 55%,var(--ch-line));--dg-accent:var(--ch-acc)}
+.chdiag{margin:12px 0;border:1px solid var(--ch-line);border-radius:12px;background:var(--dg-bg);overflow:hidden;max-width:100%}
+.chdiag .dgh{display:flex;align-items:center;gap:2px;padding:5px 6px 5px 12px;border-bottom:1px solid var(--ch-line);min-height:36px;box-sizing:border-box}
+.chdiag .kind{font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ch-acc);margin-right:4px}
+.chdiag .ttl{flex:1;min-width:0;font-size:12px;color:var(--ch-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dgb{all:unset;box-sizing:border-box;cursor:pointer;font-size:11.5px;font-weight:600;line-height:1.2;padding:5px 8px;border-radius:7px;color:var(--ch-dim);white-space:nowrap}
+.dgb:hover{background:color-mix(in srgb,var(--ch-ink) 7%,transparent);color:var(--ch-ink)}
+.dgb:focus-visible{outline:2px solid var(--ch-acc);outline-offset:1px}
+.dgb.ok{color:var(--ch-acc2)}
+.chdiag .dgv{padding:14px 12px;overflow:auto;max-height:560px;text-align:center;line-height:0}
+.chdiag .dgv svg{max-width:100%;height:auto;display:inline-block;vertical-align:top}
+.chdiag .dgcode{position:relative;border-top:1px solid var(--ch-line);background:var(--ch-panel)}
+.chdiag .dgcode pre{margin:0;padding:10px 70px 10px 12px;font-family:var(--f-mono);font-size:12px;line-height:1.55;white-space:pre-wrap;word-break:break-word;color:var(--ch-ink);max-height:260px;overflow:auto}
+.chdiag .dgcode .dgb{position:absolute;top:6px;right:6px}
+.dgfail{margin:10px 0 -4px;font-size:11.5px;color:var(--ch-dim)}
+/* the picture itself */
+.dg-root{font-family:"Segoe UI",system-ui,-apple-system,"Helvetica Neue",Arial,"Dossier Khmer",sans-serif;font-size:13px}
+.dg-root .dg-node{fill:var(--dg-node);stroke:var(--dg-stroke);stroke-width:1.4}
+.dg-root .dg-node.dec{fill:var(--dg-dec)}
+.dg-root .dg-lid{fill:none}
+.dg-root .dg-t,.dg-root .dg-mt{fill:var(--dg-text)}
+.dg-root .dg-edge{fill:none;stroke:var(--dg-edge);stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.dg-root .dg-edge.dot{stroke-dasharray:5 4}
+.dg-root .dg-edge.thick{stroke-width:3}
+.dg-root .dg-head{fill:var(--dg-edge)}
+.dg-root .dg-cross{fill:none;stroke:var(--dg-edge);stroke-width:1.8}
+.dg-root .dg-lbl{fill:var(--dg-bg);stroke:var(--dg-soft)}
+.dg-root .dg-lt{fill:var(--dg-dim);font-size:12px}
+.dg-root .dg-grp{fill:var(--dg-group);stroke:var(--dg-soft);stroke-dasharray:4 3}
+.dg-root .dg-gt{fill:var(--dg-dim);font-size:12px;font-weight:600}
+.dg-root .dg-start{fill:var(--dg-accent)}
+.dg-root .dg-endring{fill:none;stroke:var(--dg-accent);stroke-width:2}
+.dg-root .dg-life{stroke:var(--dg-soft);stroke-width:1.4;stroke-dasharray:4 4}
+.dg-root .dg-note{fill:var(--dg-note);stroke:var(--dg-noteline)}
+.dg-root .dg-frame{fill:none;stroke:var(--dg-soft);stroke-width:1.3}
+.dg-root .dg-frame.tint{fill:var(--dg-group)}
+.dg-root .dg-ftab{fill:var(--dg-group);stroke:var(--dg-soft)}
+.dg-root .dg-fw{fill:var(--dg-text);font-size:11px;font-weight:700}
+.dg-root .dg-fc{fill:var(--dg-dim);font-size:12px}
+.dg-root .dg-fsplit{stroke:var(--dg-soft);stroke-dasharray:4 3}
+.dg-root .dg-num{fill:var(--dg-accent)}
+.dg-root .dg-numt{fill:#fff;font-size:10.5px;font-weight:700}
+.dg-root .dg-title{fill:var(--dg-text);font-size:14px;font-weight:650}
+/* Larger: the picture over everything, with a zoom */
+.dgview{position:fixed;inset:0;z-index:95;display:grid;place-items:center;padding:24px;background:rgba(10,10,16,.45);backdrop-filter:blur(3px)}
+.dgvb{display:flex;flex-direction:column;width:min(1200px,100%);height:min(860px,100%);background:var(--dg-bg);color:var(--dg-text);
+  border-radius:14px;box-shadow:0 30px 80px -20px rgba(0,0,0,.6);overflow:hidden;border:1px solid var(--dg-soft)}
+.dgvh{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:10px 12px;border-bottom:1px solid var(--dg-soft)}
+.dgvh b{font-size:14px}
+.dgvh .sp{flex:1}
+.dgvh .dgz{font-size:12px;min-width:44px;text-align:center;font-variant-numeric:tabular-nums;opacity:.75}
+.dgvx{flex:1;min-height:0;overflow:auto;padding:16px;text-align:center}
+.dgvx svg{display:inline-block;vertical-align:top}
+
 .srcsearched{font-size:11px;opacity:.62;margin-top:6px}
 .cfsrc{all:unset;cursor:pointer;font-size:10.5px;border-radius:999px;padding:1px 7px;margin-left:4px;opacity:.55;
   border:1px solid color-mix(in srgb,currentColor 30%,transparent);white-space:nowrap}
@@ -2438,6 +2516,11 @@ body.chatting .pet[data-corner="br"],body.chatting .pet[data-corner="tr"]{
 .chat .chf{padding:5px 6px;gap:6px;border:1px solid var(--ch-line);border-radius:18px;
   background:var(--ch-panel);align-items:flex-end;
   transition:border-color .18s,box-shadow .18s,background .18s}
+/* The box you type in is marked as focused by its frame (the rule below,
+   and each skin's own). The Nova look also draws its accent ring round
+   whatever has the keyboard, which here put a second ring inside the
+   first - a box drawn in a box. Inside the composer, the frame is enough. */
+.chat .chf textarea:focus-visible{outline:none}
 .chat .chf:focus-within{border-color:var(--ch-acc);background:var(--ch-bg);
   box-shadow:0 0 0 4px color-mix(in srgb,var(--ch-acc) 15%,transparent)}
 /* six pixels of padding inside the box and six of gap outside it: twelve
@@ -2474,10 +2557,13 @@ body.chatting .pet[data-corner="br"],body.chatting .pet[data-corner="tr"]{
   transition:opacity .2s var(--ease),transform .22s cubic-bezier(.2,.8,.25,1)}
 .chpill.on{opacity:1;pointer-events:auto;transform:translate(-50%,0)}
 
-/* suggestions scroll sideways instead of stacking into a wall */
-.chat .chseed{flex-wrap:nowrap;overflow-x:auto;padding:2px 0 4px;scrollbar-width:none;margin-top:8px}
-.chat .chseed::-webkit-scrollbar{display:none}
-.chat .chseed button{flex:0 0 auto}
+/* the choices under an answer wrap onto the next line. They used to scroll
+   sideways with the scroll bar hidden, which kept a long row tidy and hid
+   the third choice and every one after it: on a mouse with no sideways
+   wheel there was no way to reach them, and nothing said they were there.
+   A long choice wraps its own words rather than running off the edge. */
+.chat .chseed{flex-wrap:wrap;overflow:visible;padding:2px 0 4px;margin-top:8px}
+.chat .chseed button{flex:0 1 auto;max-width:100%;white-space:normal;text-align:left}
 
 /* the whole panel goes still when the machine asks for still */
 :root[data-motion="none"] .chat *,:root[data-motion="none"] .chat *::before,
@@ -3200,6 +3286,14 @@ body.chatting .pet[data-corner="br"],body.chatting .pet[data-corner="tr"]{
 .chat[data-lm] .chtext .csub span{font-size:11px;letter-spacing:.02em;text-transform:none;font-weight:600}
 .chat[data-lm] .chtext .ctb{padding:14px 16px 16px;font-family:var(--lm-font);font-size:14px;line-height:1.7;color:var(--ch-ink)}
 
+/* a diagram: a card like the text card, on the card colour */
+.chat[data-lm]{--dg-bg:var(--lm-card)}
+.chat[data-lm] .chdiag{border-radius:14px;background:var(--lm-card);box-shadow:var(--lm-shadow);margin:12px 0}
+.chat[data-lm] .chdiag .dgh{min-height:42px;padding:6px 6px 6px 14px}
+.chat[data-lm] .chdiag .kind{font-size:11px;font-weight:650;letter-spacing:.02em;text-transform:none;background:var(--lm-soft);border-radius:999px;padding:3px 9px}
+.chat[data-lm] .dgb{border-radius:8px;font-size:12px;font-weight:550;padding:6px 9px}
+.chat[data-lm] .dgb:hover{background:var(--lm-hover)}
+
 /* rows, chips and the suggestions under an answer */
 .chat[data-lm] .chrows{margin-top:12px;border-radius:14px;background:var(--lm-card);box-shadow:var(--lm-shadow)}
 .chat[data-lm] .chrow{padding:10px 12px;gap:10px}
@@ -3216,7 +3310,7 @@ body.chatting .pet[data-corner="br"],body.chatting .pet[data-corner="tr"]{
 .chat[data-lm] .chacts.done button.picked{background:var(--ch-panel);border-color:var(--ch-line);color:var(--ch-dim)}
 .chat[data-lm] .chalt{font-size:12px;margin-top:12px}
 .chat[data-lm] .chseed{gap:8px;margin-top:14px}
-.chat[data-lm] .chseed button{display:inline-flex;align-items:center;gap:7px;height:34px;padding:0 14px 0 11px;border-radius:999px;
+.chat[data-lm] .chseed button{display:inline-flex;align-items:center;gap:7px;height:auto;min-height:34px;padding:6px 14px 6px 11px;border-radius:17px;
   font-size:13px;font-weight:500;background:transparent;border:1px solid var(--ch-line);color:var(--lm-ink2);--ic:var(--lmi-arrow)}
 .chat[data-lm] .chseed button::before{width:14px;height:14px;color:var(--ch-dim)}
 .chat[data-lm] .chseed button:hover{background:var(--lm-hover);border-color:var(--lm-line2);color:var(--ch-ink)}
@@ -4611,6 +4705,9 @@ body.chatting .pet[data-corner="br"],body.chatting .pet[data-corner="tr"]{
 <!-- Your runbooks and standards, searched and cited (sources.js). Absent,
      questions go without passages, exactly as before. -->
 <script src="sources.js"></script>
+<!-- Diagrams the assistant writes as ```mermaid blocks, drawn here as pictures
+     (diagram.js). Absent, they show as code, exactly as before. -->
+<script src="diagram.js"></script>
 <script src="flow.js"></script>
 <!-- optional: with ocr.js beside this file, a screenshot attached to a question is read here -->
 <script src="ocr.js"></script>
@@ -6518,6 +6615,31 @@ const STRINGS = {
   SrcLowQuality: "A cited page could not be read reliably — check it in the original.",
   SrcOpenHint: "Open the document at this place",
   SrcSuggestLab: "Suggestion — not from your documents",
+  DgLabel: "Diagram",
+  DgKind_flowchart: "Flowchart",
+  DgKind_sequence: "Who does what, in order",
+  DgKind_state: "States",
+  DgCopyPic: "Copy picture",
+  DgCopyPicTip: "Copy the diagram as a picture, to paste into Teams, Outlook, Word or a ticket",
+  DgSave: "Save",
+  DgSaveTip: "Save the diagram as a picture (PNG) in your Downloads folder",
+  DgBig: "Larger",
+  DgBigTip: "See the diagram at full size, with a zoom",
+  DgCode: "Code",
+  DgHideCode: "Hide code",
+  DgCodeTip: "Show the text the diagram was drawn from",
+  DgFit: "Fit",
+  DgClose: "Close",
+  DgCopied: "Diagram copied as a picture — paste it where you need it.",
+  DgCopyFailed: "This browser would not copy a picture here. Save it instead, then attach or paste the file.",
+  DgSaved: "Saved {name} to your Downloads folder.",
+  DgSaveFailed: "The picture could not be made. Try Larger, or copy the code.",
+  DgCouldNot: "Resolv could not draw this diagram ({why}), so here is its code.",
+  DgKindUnknown: "Resolv draws flowcharts, sequence and state diagrams; this is a {kind}",
+  DgNoDrawer: "diagram.js is not beside the app",
+  SrcSugShort: "Suggestion",
+  SrcSugShow: "Show the suggestion (it is not from your documents)",
+  SrcSugHide: "Fold the suggestion to one line",
   SrcSearched: "Searched {n} documents",
   SrcFilter_document: "document:",
   SrcFilter_version: "version:",
@@ -7326,7 +7448,7 @@ const STATUSES = [
    the status bar, and clicking it copies a line you can paste into a bug
    report — build date and flow protocol included, because those are the two
    things that actually differ between copies. */
-const APP_VERSION = "5.10.0";
+const APP_VERSION = "5.11.0";
 const APP_BUILT = "2026-09-27";
 function buildLine(){
   return "Resolv v" + APP_VERSION + " \u00b7 built " + APP_BUILT +
@@ -13244,6 +13366,165 @@ function chatTextCard(lang, head, body, id){
     (subject ? '<div class="csub"><span>' + esc(L("TxSubject")) + "</span>" + esc(subject) + "</div>" : "") +
     '<div class="ctb">' + esc(text) + "</div></div>";
 }
+/* ═══ DIAGRAMS ═══════════════════════════════════════════════════════════
+   The assistant draws in text: a ```mermaid block - a flowchart, a
+   sequence of messages, the states something goes through - which
+   diagram.js lays out and draws here as a picture, on this PC. In the chat
+   it is a card like the code block's: the picture, and Copy picture (to
+   paste into Teams, Outlook or Word), Save, Larger and the code it was
+   drawn from. A block it cannot draw - a kind it does not know, or text
+   that is not a diagram - stays the code block it always was, with a line
+   saying so. The picture is coloured by the stylesheet, so it follows the
+   skin and its light and dark modes; a copy or a saved file gets the
+   colours written into it. */
+const DIAG_LANGS = ["mermaid", "diagram", "flowchart", "graph", "sequence", "sequencediagram", "statediagram", "state"];
+const DIAG = { list:new Map(), widths:new Map(), ctx:null };
+function diagMeasure(text, size){
+  const key = size + "|" + text;
+  const had = DIAG.widths.get(key);
+  if (had != null) return had;
+  if (!DIAG.ctx) DIAG.ctx = document.createElement("canvas").getContext("2d");
+  DIAG.ctx.font = size + "px " + DossierDiagram.FONT.family;
+  const w = DIAG.ctx.measureText(text).width;
+  if (DIAG.widths.size > 5000) DIAG.widths.clear();
+  DIAG.widths.set(key, w);
+  return w;
+}
+function diagLooks(lang, body){
+  return DIAG_LANGS.indexOf(lang) >= 0 || (!lang && /^\s*(?:---[\s\S]*?---\s*)?(flowchart|graph|sequenceDiagram|stateDiagram)\b/.test(body));
+}
+/* the card, or { fail } with the reason it could not be drawn */
+function chatDiagramCard(body, id){
+  if (!window.DossierDiagram) return { fail:"" };
+  const r = DossierDiagram.draw(body, { measure:diagMeasure });
+  if (!r.ok) return { fail:r.error === "unsupported" ? L("DgKindUnknown", { kind:r.kind || "" }) : r.error };
+  CHAT.code[id] = body;
+  DIAG.list.set(id, { src:body, kind:r.kind, title:(r.model && r.model.title) || "" });
+  const b = (act, key, tip, extra) => '<button class="dgb" type="button" data-dgact="' + act + '" title="' + LE(tip) + '"' + (extra || "") + ">" + LE(key) + "</button>";
+  return '<div class="chdiag" data-dg="' + id + '"><div class="dgh"><span class="kind">' + LE("DgLabel") + "</span>" +
+    '<span class="ttl">' + esc((r.model && r.model.title) || L("DgKind_" + r.kind)) + "</span>" +
+    b("copy", "DgCopyPic", "DgCopyPicTip") + b("save", "DgSave", "DgSaveTip") + b("big", "DgBig", "DgBigTip") +
+    b("code", "DgCode", "DgCodeTip", ' aria-expanded="false"') + "</div>" +
+    '<div class="dgv">' + r.svg + "</div>" +
+    '<div class="dgcode" hidden><pre>' + esc(body) + '</pre><button class="dgb" type="button" data-copy="' + id + '">' + LE("Copy") + "</button></div></div>";
+}
+/* the colours the picture is drawn in now, resolved, for a copy that
+   leaves the page - read off the card, so it is the skin you are looking at */
+function diagTheme(el){
+  const probe = document.createElement("span");
+  probe.style.display = "none";
+  el.appendChild(probe);
+  const get = v => { probe.style.color = "var(" + v + ")"; return getComputedStyle(probe).color; };
+  const t = { bg:get("--dg-bg"), node:get("--dg-node"), stroke:get("--dg-stroke"), dec:get("--dg-dec"), text:get("--dg-text"),
+              dim:get("--dg-dim"), edge:get("--dg-edge"), soft:get("--dg-soft"), group:get("--dg-group"), note:get("--dg-note"),
+              noteLine:get("--dg-noteline"), accent:get("--dg-accent"), onAccent:"#ffffff" };
+  probe.remove();
+  /* a picture needs a solid background: a see-through one (Nebula's) is
+     laid over white, or over near-black when the text is light */
+  const m = /rgba?\(([\d.]+),\s*([\d.]+),\s*([\d.]+)(?:,\s*([\d.]+))?\)/.exec(t.bg);
+  if (m && m[4] != null && +m[4] < 1){
+    const tx = /rgba?\(([\d.]+),\s*([\d.]+),\s*([\d.]+)/.exec(t.text) || [0, 0, 0, 0];
+    const light = (+tx[1] + +tx[2] + +tx[3]) / 3 > 140;
+    const base = light ? [12, 16, 28] : [255, 255, 255], a = +m[4];
+    t.bg = "rgb(" + [1, 2, 3].map(i => Math.round(+m[i] * a + base[i - 1] * (1 - a))).join(",") + ")";
+  }
+  return t;
+}
+async function diagPng(id, el, scale){
+  const d = DIAG.list.get(id); if (!d) throw new Error("gone");
+  const r = DossierDiagram.draw(d.src, { measure:diagMeasure, theme:diagTheme(el) });
+  if (!r.ok) throw new Error(r.error);
+  const img = new Image();
+  img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(r.svg);
+  await img.decode();
+  const k = scale || 2;
+  const cv = document.createElement("canvas");
+  cv.width = Math.ceil(r.width * k); cv.height = Math.ceil(r.height * k);
+  const g = cv.getContext("2d");
+  g.scale(k, k);
+  g.drawImage(img, 0, 0, r.width, r.height);
+  return await new Promise((res, rej) => cv.toBlob(b => b ? res(b) : rej(new Error("no picture")), "image/png"));
+}
+function diagName(id){
+  const d = DIAG.list.get(id) || {};
+  const base = String(d.title || L("DgKind_" + (d.kind || "flowchart"))).replace(/[^\w\u00c0-\uffff -]+/g, "").trim().replace(/\s+/g, "-").slice(0, 60) || "diagram";
+  return base + "-" + today() + ".png";
+}
+async function diagCopyPic(id, el, btn){
+  try {
+    if (!navigator.clipboard || typeof ClipboardItem === "undefined") throw new Error("no clipboard");
+    await navigator.clipboard.write([new ClipboardItem({ "image/png":diagPng(id, el) })]);
+    if (btn){ btn.textContent = L("Copied"); btn.classList.add("ok"); setTimeout(() => { btn.textContent = L("DgCopyPic"); btn.classList.remove("ok"); }, 1500); }
+    toast(L("DgCopied"));
+  } catch(e){
+    toast(L("DgCopyFailed"), { action:L("DgSave"), onAction:() => diagSave(id, el) });
+  }
+}
+async function diagSave(id, el){
+  try {
+    const blob = await diagPng(id, el);
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob); a.download = diagName(id);
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+    toast(L("DgSaved", { name:a.download }));
+  } catch(e){ toast(L("DgSaveFailed"), { bad:true }); }
+}
+/* the picture at full size, over everything, with a zoom */
+function diagBig(id, el){
+  const d = DIAG.list.get(id); if (!d) return;
+  const r = DossierDiagram.draw(d.src, { measure:diagMeasure });
+  if (!r.ok) return;
+  const old = document.getElementById("dgView"); if (old) old.remove();
+  const ov = document.createElement("div");
+  ov.id = "dgView"; ov.className = "dgview"; ov.setAttribute("role", "dialog"); ov.setAttribute("aria-label", L("DgLabel"));
+  /* outside the chat panel, so the skin's colours are carried over */
+  const t = diagTheme(el);
+  [["--dg-bg", t.bg], ["--dg-node", t.node], ["--dg-stroke", t.stroke], ["--dg-dec", t.dec], ["--dg-text", t.text], ["--dg-dim", t.dim],
+   ["--dg-edge", t.edge], ["--dg-soft", t.soft], ["--dg-group", t.group], ["--dg-note", t.note], ["--dg-noteline", t.noteLine], ["--dg-accent", t.accent]]
+    .forEach(([k, v]) => ov.style.setProperty(k, v));
+  ov.innerHTML = '<div class="dgvb"><div class="dgvh"><b>' + esc(d.title || L("DgKind_" + d.kind)) + "</b>" +
+    '<span class="sp"></span><button class="btn sm" type="button" data-z="-">−</button><span class="dgz" id="dgZ">100%</span>' +
+    '<button class="btn sm" type="button" data-z="+">+</button><button class="btn sm" type="button" data-z="fit">' + LE("DgFit") + "</button>" +
+    '<button class="btn sm" type="button" data-z="copy">' + LE("DgCopyPic") + '</button><button class="btn sm" type="button" data-z="save">' + LE("DgSave") + "</button>" +
+    '<button class="btn sm" type="button" data-z="x" aria-label="' + LE("DgClose") + '">✕</button></div>' +
+    '<div class="dgvx">' + r.svg + "</div></div>";
+  document.body.appendChild(ov);
+  const box = ov.querySelector(".dgvx"), svg = box.querySelector("svg");
+  let z = 1;
+  const zoom = v => {
+    z = Math.max(.25, Math.min(4, v));
+    svg.style.width = Math.round(r.width * z) + "px"; svg.style.height = Math.round(r.height * z) + "px";
+    $("dgZ").textContent = Math.round(z * 100) + "%";
+  };
+  const fit = () => zoom(Math.min((box.clientWidth - 32) / r.width, (box.clientHeight - 32) / r.height, 2));
+  fit();
+  const close = () => { ov.remove(); document.removeEventListener("keydown", key, true); };
+  const key = e => { if (e.key === "Escape"){ e.stopPropagation(); close(); } };
+  document.addEventListener("keydown", key, true);
+  ov.addEventListener("click", e => {
+    if (e.target === ov) return close();
+    const b = e.target.closest("[data-z]"); if (!b) return;
+    const a = b.dataset.z;
+    if (a === "+") zoom(z * 1.25); else if (a === "-") zoom(z / 1.25); else if (a === "fit") fit();
+    else if (a === "copy") diagCopyPic(id, el, null); else if (a === "save") diagSave(id, el); else if (a === "x") close();
+  });
+  ov.querySelector('[data-z="x"]').focus();
+}
+function diagAct(btn){
+  const card = btn.closest("[data-dg]"); if (!card) return;
+  const id = card.dataset.dg, a = btn.dataset.dgact;
+  if (a === "code"){
+    const box = card.querySelector(".dgcode"), open = box.hidden;
+    box.hidden = !open;
+    btn.setAttribute("aria-expanded", String(open));
+    btn.textContent = L(open ? "DgHideCode" : "DgCode");
+    return;
+  }
+  if (a === "big") return diagBig(id, card);
+  if (a === "copy") return diagCopyPic(id, card, btn);
+  if (a === "save") return diagSave(id, card);
+}
 function chatSay(text){
   const src = chatMend(text == null ? "" : text);
   if (!src) return "";
@@ -13266,11 +13547,19 @@ function chatSay(text){
       continue;
     }
     if (head){ raw = head + "\n" + raw; }
+    /* a diagram, drawn - or, when it cannot be, said so over its code */
+    let dgNote = "";
+    if (diagLooks(tag, raw)){
+      const did = "dg" + (++CHAT.n) + "x" + m.index;
+      const card = chatDiagramCard(raw.replace(/\s+$/, ""), did);
+      if (typeof card === "string"){ out += card; i = m.index + m[0].length; continue; }
+      dgNote = '<div class="dgfail">' + LE("DgCouldNot", { why:card.fail || L("DgNoDrawer") }) + "</div>";
+    }
     const lang = m[1] || (chatIsJson(raw) ? "json" : "");
     const body = raw.replace(/\s+$/, "");
     const id = "cc" + (++CHAT.n) + "x" + m.index;
     CHAT.code[id] = body;
-    out += '<div class="chcode"><div class="cch"><span class="lang">' +
+    out += dgNote + '<div class="chcode"><div class="cch"><span class="lang">' +
              esc(lang || "text") + "</span>" +
              '<button class="cpy" data-copy="' + id + '">' + esc(L("Copy")) + "</button></div>" +
            "<pre>" + esc(body) + "</pre></div>";
@@ -13766,6 +14055,8 @@ $("chatLog").addEventListener("click", e => {
   /* the sources under an answer, opened or folded */
   const st = e.target.closest("[data-srctog]");
   if (st) return srcToggle(st);
+  const sg = e.target.closest("[data-sugtog]");
+  if (sg) return sugToggle(sg);
   /* asked again - by the strong model, or the same one - as a branch of
      this answer, and switching between the branches */
   const dp = e.target.closest("[data-deeper],[data-retry]");
@@ -22086,6 +22377,18 @@ function srcNote(e){
    suggestion is not a reference, so it stays outside, in view. */
 const SRC_ICON_DOC = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></svg>';
 const SRC_ICON_WARN = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 2 20h20z"/><path d="M12 10v4M12 17h.01"/></svg>';
+const SRC_ICON_BULB = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 18h5M10.5 21h3"/><path d="M12 3a6 6 0 0 0-3.7 10.7c.8.7 1.2 1.4 1.2 2.3h5c0-.9.4-1.6 1.2-2.3A6 6 0 0 0 12 3z"/></svg>';
+/* open or fold the suggestion under one answer, and remember it */
+function sugToggle(btn){
+  const o = CHAT.acts[btn.dataset.sugtog]; if (!o || !o.r) return;
+  const box = btn.closest(".srcsug"); if (!box) return;
+  const open = !box.classList.contains("open");
+  box.classList.toggle("open", open);
+  btn.setAttribute("aria-expanded", String(open));
+  btn.title = L(open ? "SrcSugHide" : "SrcSugShow");
+  o.r.sugOpen = open;
+  touch();
+}
 function srcIsOpen(r){
   if (r.srcOpen !== undefined) return !!r.srcOpen;
   return !!(r.grounding && r.grounding.status === "blocked");
@@ -22166,7 +22469,18 @@ function srcAnswerHtml(r, id){
     h += "</div></div>";
   }
   if (r.suggest){
-    h += '<div class="srcsug"><b>' + LE("SrcSuggestLab") + "</b>" + chatSay(r.suggest) + "</div>";
+    /* folded to one line, like the sources: advice that is not from their
+       documents is worth a glance, not a box the size of the answer. A
+       click opens it, and the answer remembers (r.sugOpen). */
+    const sopen = !!r.sugOpen;
+    CHAT.acts[id + "sg"] = { kind:"sugtoggle", r:r };
+    const peek = String(r.suggest).replace(/[*_`#>|]+/g, "").replace(/\s+/g, " ").trim();
+    h += '<div class="srcsug' + (sopen ? " open" : "") + '">' +
+         '<button class="sugsum" type="button" data-sugtog="' + id + 'sg" aria-expanded="' + sopen + '" title="' +
+           LE(sopen ? "SrcSugHide" : "SrcSugShow") + '"><span class="ic" aria-hidden="true">' + SRC_ICON_BULB + "</span>" +
+           '<span class="t"><b>' + LE("SrcSugShort") + '</b> <span class="pk">' + esc(peek) + "</span></span>" +
+           '<span class="chev" aria-hidden="true">›</span></button>' +
+         '<div class="sugbody"><div class="sugnote">' + LE("SrcSuggestLab") + "</div>" + chatSay(r.suggest) + "</div></div>";
   }
   return h;
 }
@@ -27622,6 +27936,8 @@ function chatResolve(el, outcome, no){
 }
 
 $("chatLog").addEventListener("click", e => {
+  const dgb = e.target.closest("[data-dgact]");
+  if (dgb) return diagAct(dgb);
   const cs = e.target.closest("[data-copysay]");
   if (cs){
     copyText(CHAT.code[cs.dataset.copysay] || "", L("Copied"));

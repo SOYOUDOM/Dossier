@@ -25,6 +25,7 @@ are careful not to attract attention from their security team.
 | `chat.js` | The local assistant: plain-English questions answered on the PC (`window.DossierChat`). |
 | `assist.js` | Assist tab arithmetic. |
 | `flow.js` | Client for the optional Power Automate flow (the AI): `ACTIONS` table (every action the model may request), `validate()` of replies, `buildRequest()`, `fillPrompt()`, and `PROMPT_BUILTIN` (an embedded copy of `flow/prompt.txt`). `window.DossierFlow`. |
+| `diagram.js` | **New in 5.11** — draws ```` ```mermaid ```` blocks (flowchart / graph TD·LR·BT·RL, sequenceDiagram, stateDiagram-v2) as SVG: `parse()`, layered layout (ranks doubled so arrow labels get their own place), `render(model, {measure, theme})`, `draw()` → `{ok, svg, boxes, kind}` or `{ok:false, error}`. Pure; `window.DossierDiagram` and `module.exports`. |
 | `sources.js` | **New in 5.9** — answering from runbooks/standards: passages, BM25 search, citations, and `ground()`, the check that holds back invented figures. Pure; `window.DossierSources` and `module.exports`. |
 | `ocr.js` | Optional text recogniser for pictures and scanned PDFs. |
 | `flow/relay.html` | The **only** page that touches the network: a sandboxed iframe that posts to the flow URL. |
@@ -33,7 +34,7 @@ are careful not to attract attention from their security team.
 | `scripts/bridge/DossierBridge.cs` | The tray program (C# 5, WinForms): serves the page on 127.0.0.1, keeps the workspace in SQL LocalDB when available, runs scripts. `Resolv.bat` compiles it with the Windows `csc.exe` whenever the `.cs` is newer than the `.exe`. |
 | `lang/en.xml`, `lang/km.xml` | Language packs (English, Khmer). Missing keys fall back to the English `STRINGS` table in `dossier.html`. |
 | `docs/` | `HOW-THE-AI-WORKS.md` (the whole AI pipeline for beginners, plus a reusable blueprint) and `how-the-ai-works.html` (the same as a self-contained picture page). Keep both in step with the code when the pipeline changes (numbers: 60 records, 10 notes, 30 lessons, 14,000 characters, 62 actions / 41 writes). |
-| `tests/` | `sources.test.js` (node:test), `e2e/run.js` + `e2e/sources.scenario.js` (real browser), `fixtures/` (made-up documents; `make-pdf.js` regenerates the PDFs). |
+| `tests/` | `sources.test.js` and `diagram.test.js` (node:test), `e2e/run.js` + `e2e/sources.scenario.js` (real browser), `fixtures/` (made-up documents; `make-pdf.js` regenerates the PDFs). |
 
 A *workspace* is a folder the user picks (File System Access API):
 `dossier.json` (everything), `backups/`, `tasks/<record>/` attachments,
@@ -83,13 +84,13 @@ A *workspace* is a folder the user picks (File System Access API):
 - Commit messages: clear summary + body; no model names in commits, code or
   docs. Do not open a pull request unless the owner asks.
 - Work so far is on branch `claude/chat-panel-pixel-art-gifs-d822hq`
-  (latest: 5.10.0). Follow the branch instructions of your own session.
+  (latest: 5.11.0). Follow the branch instructions of your own session.
 
 ## Testing
 
 ```
-node --test                                   # 37 unit tests (Sources, grounding, flow reply fields)
-node tests/e2e/run.js                         # the app in headless Chrome/Edge: 81 checks (CHROME=<path> to choose)
+node --test                                   # 47 unit tests (Sources, grounding, flow reply fields, diagrams)
+node tests/e2e/run.js                         # the app in headless Chrome/Edge: 89 checks (CHROME=<path> to choose)
 node flow/check-prompt.js                     # after editing flow/prompt.txt ...
 python3 flow/embed-prompt.py                  # ... then copy it into flow.js (PROMPT_BUILTIN)
 node tests/fixtures/make-pdf.js               # regenerate the PDF fixtures
@@ -112,6 +113,19 @@ Also useful:
 
 ## Recent history (newest first)
 
+- **5.11.0** — Diagrams: `chatSay` sends a fence tagged mermaid/diagram/
+  flowchart/… (or an untagged one starting `flowchart|graph|sequenceDiagram|
+  stateDiagram`, `diagLooks`) to `chatDiagramCard` → `.chdiag` card (Copy
+  picture via `ClipboardItem` PNG, Save via a blob download, Larger =
+  `#dgView` overlay with zoom, Code toggle); failure falls back to the code
+  block with `.dgfail`. Colours: `--dg-*` on `.chat` mixed from `--ch-*`
+  (Lumen family uses `--lm-card`); a copy/save resolves them with a probe
+  (`diagTheme`) and `render({theme})` writes a `<style>` into the SVG. Text
+  is measured with a canvas (`diagMeasure`) in `DossierDiagram.FONT`. Prompt:
+  when to draw, three kinds only, small. Also: `.chseed` wraps (was nowrap +
+  hidden scroll bar); the suggestion is folded (`.sugsum`, `r.sugOpen`,
+  `sugToggle`); `.chat .chf textarea:focus-visible{outline:none}` against
+  Nova's global focus ring inside the composer.
 - **5.10.0** — Crimson chat skin: red `#d31145` and white, with a heart
   character. It is named and drawn as Resolv's own — no company name, logo
   or slogan anywhere in the repository; keep it that way. Lumen's layout rules

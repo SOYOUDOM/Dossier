@@ -6,6 +6,48 @@ holds — which is what to paste into a bug report.
 
 ---
 
+## 5.11.0 - 2026-10-04
+
+**Diagrams in the chat, every choice in view, and a one-line suggestion.**
+
+- **The assistant can draw.** A ` ```mermaid ` block in an answer is drawn
+  as a picture, on this PC, by the new `diagram.js` - no library, nothing
+  fetched. Three kinds: **flowcharts** (boxes, decisions, circles,
+  databases, labelled solid / dotted / thick arrows, chains, `&`, groups,
+  top-down or left-right), **sequence diagrams** (participants and people,
+  messages, replies, notes, *alt / else / loop / opt / par* boxes, numbers)
+  and **state diagrams** (start, end, states, labelled changes). The layout
+  is the usual one: ranks, waypoints for long arrows, the order that
+  crosses least, boxes slid towards what they are joined to, smooth arrows;
+  every arrow's label gets a place of its own, so labels never sit on boxes
+  or on each other.
+- **The Diagram card**, like the code block: **Copy picture** (paste into
+  Teams, Outlook, Word or a ticket), **Save** (a PNG in Downloads),
+  **Larger** (full size with zoom) and **Code** (the Mermaid it was drawn
+  from). It takes the chat skin's colours, light and dark; the copy and the
+  saved picture carry the same colours. A kind it does not draw, or text
+  that is not a diagram, stays a code block with a line saying so.
+- The prompt tells the AI when a diagram helps and which three kinds to use,
+  kept small, with an example.
+- **Every choice under an answer is in view.** They used to scroll sideways
+  with a hidden scroll bar, so the third one on was cut off and could not be
+  reached with a mouse; now they wrap onto the next line, and a long choice
+  wraps its own words.
+- **The suggestion under an answer starts folded to one line** -
+  *Suggestion · the start of it* - and opens with a click; each answer
+  remembers.
+- The box you type in no longer shows a second ring inside its frame when
+  the app's look is Nova (Nova's focus ring and the composer's own were both
+  drawn).
+- README: *How do I get a diagram from the assistant?*, *The choices under an
+  answer are cut off - how do I see them all?*
+- Tests: 47 unit tests (10 for diagrams: every arrow form, shapes, groups,
+  sequence frames, no overlaps top-down / left-right / fan-out, no markup
+  from a label, refusing what it cannot draw, the prompt's example), 89
+  browser checks.
+
+---
+
 ## 5.10.0 - 2026-10-04
 
 **Crimson: a red-and-white chat skin with a character of its own - a small

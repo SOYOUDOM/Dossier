@@ -372,7 +372,11 @@ this"* — when they did. Now only the line goes.
   document at those lines), **Evidence** (the exact words), **Confidence**
   (High, Medium, Not found, or None when held back) and what was searched. A
   warning (a line taken out, an answer held back) is always on the short line.
-  A **Suggestion** is kept separate when the AI adds advice of its own.
+  A **Suggestion** is kept separate when the AI adds advice of its own,
+  folded to one line until you open it.
+- A **diagram** the AI wrote as text (a ` ```mermaid ` block) is drawn here, on
+  the PC, as a picture you can copy, save or enlarge (`diagram.js`). The AI
+  only writes the text; the drawing never leaves the PC.
 - Your own question shows each file you sent as a **card**: click it to see
   what was sent, or **Hide** the cards to keep the conversation short.
 - Under every AI answer: the time it took, 👍 / 👎, **Retry**, and **Think
@@ -500,8 +504,8 @@ longer grows as you use the app.
   same passages for the same question, today and next month, and a new
   conversation finds the same passages as the old one.
 - **Tests run the real app** in a browser with a *stand-in* AI that returns
-  scripted replies, so every check is repeatable: `node --test` (37 tests) and
-  `node tests/e2e/run.js` (81 checks).
+  scripted replies, so every check is repeatable: `node --test` (47 tests) and
+  `node tests/e2e/run.js` (89 checks).
 
 ---
 

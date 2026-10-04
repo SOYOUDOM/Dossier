@@ -141,6 +141,7 @@ With the demo copied in you should immediately see:
 | `chat.js` | ~360 KB | optional | The assistant — plain-English questions about your own records. Without it, the Ask box says so and everything else works. |
 | `assist.js` | ~20 KB | optional | The ranking and briefing engine behind the **Assist** tab and the Insight cards. |
 | `flow.js` | ~22 KB | optional | Client for a Power Automate endpoint: builds the request, validates the reply, and owns the relay frame. |
+| `diagram.js` | ~45 KB | optional | Draws the diagrams the assistant writes as ` ```mermaid ` blocks — flowcharts, sequence diagrams, state diagrams — as pictures in the chat, on this PC ([diagrams](#how-do-i-get-a-diagram-from-the-assistant)). Pure JavaScript, tested under Node. Without it, a diagram shows as its code, as before 5.11. |
 | `sources.js` | ~40 KB | optional | Answering from your runbooks and standards ([Sources](#answering-from-your-runbooks-and-standards-sources)): cuts a document into passages with page, lines and section, searches them, formats citations, and checks an answer's quotes and figures against what it cites. Pure JavaScript, tested under Node. Without it, questions go without passages, as before 5.9. |
 | `docs/HOW-THE-AI-WORKS.md` | ~42 KB | — | **How the assistant works, for anyone** — the journey of a question in eight steps, how it learns, how it stays fast, and a reusable blueprint and checklist for building a new AI assistant the same way. |
 | `docs/how-the-ai-works.html` | ~58 KB | — | The same guide as pictures: open it in any browser. Self-contained, nothing loaded from the internet. |
@@ -1901,6 +1902,40 @@ each to open; for what travels as bytes, 2 MB each and 3.5 MB for one
 question; 60,000 characters of text a file. The composer shows the running
 total.
 
+#### How do I get a diagram from the assistant?
+
+Ask for one — *"draw how a password reset is handled"*, *"show this as a
+flowchart"*, *"a sequence diagram of who sends what"*, *"draw the states a
+record goes through"*. The assistant may also draw one by itself when a
+picture says it better than words. It arrives as a **Diagram** card in the
+answer, drawn here on your PC (nothing extra goes anywhere):
+
+| Button | What it does |
+|---|---|
+| **Copy picture** | Copies the diagram as a picture. Paste it into Teams, Outlook, Word or a ticket with `Ctrl`+`V`. |
+| **Save** | Saves it as a PNG picture in your Downloads folder. |
+| **Larger** | Shows it full size over everything, with − / + zoom and **Fit**. `Esc` closes it. |
+| **Code** | Shows the text it was drawn from (Mermaid), with its own **Copy**. |
+
+Three kinds are drawn: **flowcharts** (steps, decisions, arrows with labels,
+groups), **sequence diagrams** (who sends what to whom, in order, with notes
+and *alt* / *loop* boxes) and **state diagrams** (the states something goes
+through). They take the colours of your chat skin, in light and dark. Any
+other kind (a pie chart, a Gantt chart), or text that is not a diagram,
+stays a code block with a line saying it could not be drawn — nothing is
+lost.
+
+The AI writes the diagram in a text format called *Mermaid*. Most models know
+it, but a small, fast model sometimes makes mistakes on a big diagram; ask it
+to keep the diagram small, or press **Think harder**.
+
+#### The choices under an answer are cut off — how do I see them all?
+
+Fixed in 5.11. The choices under an answer used to sit on one line that
+scrolled sideways with no scroll bar, so the third choice and the ones after
+it could not be seen or reached. Now they wrap onto the next line, and a long
+choice wraps its own words. Every choice is always in view.
+
 #### How do I see a file I sent with a question? Can I hide it?
 
 Every file you send shows as a **card** under your question, the way files show
@@ -1920,7 +1955,9 @@ error.png* — and a click on that line opens them again. Each question remember
 whether you hid its files.
 
 Answers come back with their line breaks intact. A fenced block becomes a code
-panel with its language and a copy button; `backticks` become inline code.
+panel with its language and a copy button; `backticks` become inline code; a
+` ```mermaid ` block becomes a diagram card (above), whose words are drawn as
+text in a picture made here — a label can never become markup on your page.
 Nothing else in a reply is interpreted — it is not a markdown renderer and
 should not become one, because every feature added to it is another way for
 text from outside to put markup on your page.
@@ -2213,8 +2250,9 @@ say is then the whole answer. Opened, it shows:
   was taken out, see below), **Not found** (the documents searched do not
   specify it), **None** (the reply was held back).
 - **Suggestion — not from your documents**, when the assistant adds advice of
-  its own. It is never mixed into the answer, and it stays in view under the
-  folded line — it is advice, not a reference.
+  its own. It is never mixed into the answer. Since 5.11 it is **folded to one
+  line** too — *💡 Suggestion · If you are starting from…* — and a click opens
+  it (each answer remembers).
 - **Searched N documents**, the closest of them, and any filter the question
   set (a document, version, system or environment it named).
 
@@ -2886,8 +2924,8 @@ Answering from documents has its tests in the repository, and they are the
 first thing to run after changing anything it touches:
 
 ```
-node --test                 # tests/sources.test.js: 37 tests - every scenario below
-node tests/e2e/run.js       # the app in Chrome or Edge: 81 checks on the screen
+node --test                 # tests/*.test.js: 47 tests - Sources (every scenario below) and diagrams
+node tests/e2e/run.js       # the app in Chrome or Edge: 89 checks on the screen
 node flow/check-prompt.js   # the prompt's examples against the reply validator
 ```
 

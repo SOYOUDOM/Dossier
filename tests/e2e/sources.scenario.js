@@ -470,5 +470,35 @@
   chatUI().skin = "nebula"; applyChatUI(); await sleep(50);
   check("...and a skin without Lumen's layout does not carry it", !("lm" in chatEl.dataset) && pixKey("hero") === "hero");
   chatUI().skin = "lumen"; applyChatUI();
+
+  /* ── diagrams, choices and the suggestion (5.11) ───────────────────── */
+  S.settings.flow.on = true;
+  chatNew(true); chatPaint();
+  plan = req => ({ say:"Here is the path:\n\n```mermaid\nflowchart TD\n  A[\"Request received\"] --> B{\"Identity verified?\"}\n  B -->|Yes| C[\"Reset the password\"]\n  B -->|No| D[\"Ask for the second check\"]\n  D --> B\n```\n\nAnd a kind it does not draw:\n\n```mermaid\npie title Pets\n  \"Dogs\" : 386\n```",
+    ask:"What next?", choices:["Sample code structure", "Checklist for setup", "Draw it as a sequence diagram", "Explain the decision step in more detail", "Something else entirely"],
+    suggest:"Keep one runbook per request type and link it from the record." });
+  el = await ask("draw how a password reset is handled");
+  const dg = el.querySelector(".chdiag");
+  check("a ```mermaid block in an answer is drawn as a diagram card", dg && dg.querySelectorAll("svg .dg-node").length === 4 &&
+        dg.querySelectorAll("svg .dg-lbl").length === 2 && /Identity verified\?/.test(dg.textContent), el.textContent.slice(0, 300));
+  dg.querySelector('[data-dgact="code"]').click();
+  check("...its code is a click away", !dg.querySelector(".dgcode").hidden && /flowchart TD/.test(dg.querySelector(".dgcode").textContent));
+  let dgPng = null; try { dgPng = await diagPng(dg.dataset.dg, dg); } catch (e) {}
+  check("...and it can be made into a picture to copy or save", dgPng && dgPng.type === "image/png" && dgPng.size > 2000, dgPng && dgPng.size);
+  dg.querySelector('[data-dgact="big"]').click(); await sleep(150);
+  check("...and seen larger", !!document.querySelector("#dgView .dgvx svg"));
+  document.querySelector('#dgView [data-z="x"]').click();
+  check("a kind it cannot draw stays code, with a line saying so", el.querySelectorAll(".chcode").length === 1 && /could not draw this diagram/i.test(el.textContent) &&
+        /pie title Pets/.test(el.querySelector(".chcode").textContent));
+  const seeds = [...el.querySelectorAll(".chseed button")], logBox = $("chatLog").getBoundingClientRect();
+  check("every choice under an answer is in view - five choices wrap onto more lines", seeds.length === 5 &&
+        seeds.every(b => { const r = b.getBoundingClientRect(); return r.width > 0 && r.right <= logBox.right + 1 && r.left >= logBox.left - 1; }) &&
+        new Set(seeds.map(b => Math.round(b.getBoundingClientRect().top))).size > 1, seeds.map(b => Math.round(b.getBoundingClientRect().right)).join());
+  const sug = el.querySelector(".srcsug");
+  check("the suggestion starts folded to one line", sug && !sug.classList.contains("open") && getComputedStyle(sug.querySelector(".sugbody")).display === "none" &&
+        sug.getBoundingClientRect().height < 40, sug && sug.getBoundingClientRect().height);
+  sug.querySelector(".sugsum").click();
+  check("...opens with a click, and remembers", sug.classList.contains("open") && /one runbook per request type/.test(sug.textContent) &&
+        chatThread().msgs.some(m => m.reply && m.reply.sugOpen === true));
   return { checks };
 })()
