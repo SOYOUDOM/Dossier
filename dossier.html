@@ -136,7 +136,7 @@ h1,h2,h3,h4,.disp{font-family:var(--f-display);font-weight:600;letter-spacing:.0
 /* The assistant is a dock, so it takes room rather than covering the search
    box and half the masthead. Below 900px there is no room to give, and it
    goes back to sitting on top. */
-body.chatting .app{padding-right:min(452px,96vw)}
+body.chatting .app{padding-right:min(var(--chat-w),96vw)}
 @media (max-width:900px){ body.chatting .app{padding-right:0} }
 /* 450px less masthead has to come from somewhere, and it comes from the
    decoration rather than from the navigation: the wordmark, the shortcut
@@ -211,7 +211,7 @@ body.chatting .find{max-width:190px}
   box-shadow:0 18px 50px rgba(0,0,0,.22);padding:10px 12px;
   transition:transform .2s var(--ease),opacity .2s,visibility 0s .2s}
 .fixbar.on{opacity:1;visibility:visible;pointer-events:auto;transform:translate(-50%,0);transition-delay:0s}
-body.chatting .fixbar{left:calc((100vw - min(452px,96vw)) / 2)}
+body.chatting .fixbar{left:calc((100vw - min(var(--chat-w),96vw)) / 2)}
 body.fixing .toasts{bottom:112px}
 .fixbar .fxh{display:flex;gap:8px;align-items:baseline;font-size:12px;margin-bottom:8px;min-width:0}
 .fixbar .fxq{font-weight:650;white-space:nowrap}
@@ -1891,7 +1891,10 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
 
 /* ── Assist ─────────────────────────────────────────────────────────────── */
 /* ── Ask ────────────────────────────────────────────────────────────────── */
-.chat{position:fixed;top:0;right:0;bottom:0;width:min(452px,96vw);z-index:62;
+/* --chat-w is the docked width: 452px until it is dragged wider or narrower
+   (chatPlaceApply sets it from what was chosen last time) */
+:root{--chat-w:452px}
+.chat{position:fixed;top:0;right:0;bottom:0;width:min(var(--chat-w),96vw);z-index:62;
   display:flex;flex-direction:column;
   background:var(--paper);border-left:1px solid var(--rule-hi);
   box-shadow:-22px 0 60px rgba(0,0,0,.22);
@@ -2499,10 +2502,22 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
 .petsay.on{opacity:1;transform:none}
 .petsay:empty{display:none}
 .petsay b{font-weight:650}
-/* The assistant docks against the right-hand edge and takes 452px of it. A
-   pet parked in a right-hand corner steps aside rather than being sat on. */
-body.chatting .pet[data-corner="br"],body.chatting .pet[data-corner="tr"]{
-  transform:translateX(calc(-1 * min(452px,96vw)))}
+/* it is the assistant talking, so the bubble is something to click */
+.petsay{cursor:pointer}
+.petsay .ptq{display:block;margin-top:3px;color:var(--ink-2);font-style:italic}
+.petsay .pth{display:block;margin-top:4px;font-size:10.5px;color:var(--ink-3)}
+/* news it has not told you yet: a dot, in the accent colour, until clicked */
+.pet.news .petb{position:relative}
+.pet.news .petb::after{content:"";position:absolute;top:2px;right:2px;width:10px;height:10px;border-radius:50%;
+  background:var(--accent);box-shadow:0 0 0 2px var(--paper)}
+:root:not([data-motion="none"]) .pet.news .petb::after{animation:petDot 1.6s ease-in-out infinite}
+@keyframes petDot{50%{transform:scale(.75)}}
+/* The pet IS the assistant, so while the panel is open - docked, floating or
+   full screen - it is in there (the mark in the header, the one that waits
+   with you) and not in its corner as well. It shrinks away towards the
+   panel and comes back out with a wave when the panel closes. */
+.pet.inchat{opacity:0;transform:scale(.55) translateY(10px);pointer-events:none}
+.pet.inchat .petb,.pet.inchat .petsay{pointer-events:none}
 :root[data-motion="none"] .pet{transition:none}
 /* the big one, in the middle of an empty thread: 144 inside the 150 the
    drawn mark uses, so the glow around it lands in the same place */
@@ -2694,7 +2709,7 @@ body.chatting .pet[data-corner="br"],body.chatting .pet[data-corner="tr"]{
   font-family:var(--f-ui);transition:.14s var(--ease)}
 .chcode .cpy:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
 .chcode .cpy.ok{color:var(--teal);border-color:var(--teal)}
-/* The panel is 452px wide and a real query is longer than that, so a line
+/* The panel is 452px wide (unless widened) and a real query is longer than that, so a line
    that does not wrap is a line half of which is behind a scrollbar nobody
    notices. It wraps instead, indentation kept; the copy button still hands
    over the original, unwrapped. */
@@ -3028,6 +3043,7 @@ body.chatting .pet[data-corner="br"],body.chatting .pet[data-corner="tr"]{
   color:#fff;background:var(--ch-acc);border-radius:999px;padding:1px 6px;line-height:1.5}
 
 .chat[data-lm]{
+  --lmi-place:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='16' rx='3.5'/%3E%3Cpath d='M13.5 8.5H16V11M16 8.5l-3.2 3.2M10.5 15.5H8V13M8 15.5l3.2-3.2'/%3E%3C/svg%3E");
   --lmi-panel:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='16' rx='3.5'/%3E%3Cpath d='M9.5 4v16'/%3E%3C/svg%3E");
   --lmi-sliders:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 7h9M17 7h3M4 17h3M11 17h9'/%3E%3Ccircle cx='15' cy='7' r='2.2'/%3E%3Ccircle cx='9' cy='17' r='2.2'/%3E%3C/svg%3E");
   --lmi-book:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 19.5V5.5A2.5 2.5 0 0 1 6.5 3H20v14H6.5A2.5 2.5 0 0 0 4 19.5zm0 0A2.5 2.5 0 0 0 6.5 22H20v-5'/%3E%3Cpath d='M9 7.5h6.5M9 11h4.5'/%3E%3C/svg%3E");
@@ -4319,6 +4335,120 @@ body.chatting .pet[data-corner="br"],body.chatting .pet[data-corner="tr"]{
   :root[data-look="nova"] .nxhead p{white-space:normal}
 }
 /* ═══ /NOVA ═══ */
+
+/* ═══ WHERE THE ASSISTANT SITS ════════════════════════════════════════════
+   Three places, picked from the header (the frame button) or from Look and
+   behaviour, and kept with the workspace like every other choice:
+
+   dock   - against the right-hand edge, taking room from the work rather than
+            covering it (the way it has always been). Its left edge can be
+            dragged: wider for a long answer, a wide table or a diagram,
+            narrower for more of the record. Double-click the edge for 452px.
+   float  - a window of its own over the work: moved by its top bar, resized
+            from any edge or corner, and put back where it was next time.
+   full   - the whole window, the way a chat site looks: the conversations in
+            a column on the left, the thread in a readable column down the
+            middle.
+
+   Below, data-place on the panel says which. These rules come last so they
+   win over every skin's own panel rules without needing !important. */
+.chgrip{display:none;position:absolute;z-index:9;touch-action:none}
+.chgrip:focus-visible{outline:none}
+.chat[data-place="dock"] .chgrip[data-g="w"]{display:block;left:0;top:0;bottom:0;width:7px;cursor:ew-resize}
+/* the line that says "this edge moves": shown on hover, while dragging, and
+   for the keyboard */
+.chat[data-place="dock"] .chgrip[data-g="w"]::after{content:"";position:absolute;left:2px;top:50%;width:3px;height:44px;
+  margin-top:-22px;border-radius:3px;background:var(--ch-acc);opacity:0;transition:opacity .15s}
+.chat[data-place="dock"] .chgrip[data-g="w"]:hover::after,.chat.sizing .chgrip[data-g="w"]::after,
+.chat[data-place="dock"] .chgrip[data-g="w"]:focus-visible::after{opacity:.75}
+
+.chat[data-place="float"] .chgrip{display:block}
+.chgrip[data-g="n"]{top:0;left:12px;right:12px;height:6px;cursor:ns-resize}
+.chgrip[data-g="s"]{bottom:0;left:12px;right:12px;height:6px;cursor:ns-resize}
+.chgrip[data-g="e"]{right:0;top:12px;bottom:12px;width:6px;cursor:ew-resize}
+.chgrip[data-g="w"]{left:0;top:12px;bottom:12px;width:6px;cursor:ew-resize}
+.chgrip[data-g="nw"]{top:0;left:0;width:12px;height:12px;cursor:nwse-resize}
+.chgrip[data-g="ne"]{top:0;right:0;width:12px;height:12px;cursor:nesw-resize}
+.chgrip[data-g="sw"]{bottom:0;left:0;width:12px;height:12px;cursor:nesw-resize}
+.chgrip[data-g="se"]{bottom:0;right:0;width:16px;height:16px;cursor:nwse-resize}
+
+/* floating: a window, with the shadow a window has */
+.chat[data-place="float"]{top:var(--cf-y,72px);left:var(--cf-x,auto);right:auto;bottom:auto;
+  width:var(--cf-w,480px);height:var(--cf-h,640px);max-width:calc(100vw - 16px);max-height:calc(100vh - 16px);
+  border:1px solid var(--ch-line);border-radius:16px;
+  box-shadow:0 34px 90px -24px rgba(0,0,0,.55),0 10px 26px -12px rgba(0,0,0,.3);
+  transform:translateY(14px) scale(.97);opacity:0;
+  transition:transform .22s cubic-bezier(.2,.8,.2,1),opacity .18s,visibility 0s .24s}
+.chat[data-place="float"].on{transform:none;opacity:1;transition:transform .22s cubic-bezier(.2,.8,.2,1),opacity .18s}
+.chat[data-place="float"] .chh{cursor:move}
+/* the lit line down the docked panel's leading edge belongs to that edge */
+.chat[data-place="float"]::before,.chat[data-place="full"]::before{display:none}
+.chat[data-place="float"] .chh button{cursor:pointer}
+
+/* full screen: the whole window */
+.chat[data-place="full"]{inset:0;width:auto;border-left:0;box-shadow:none;
+  transform:translateY(10px);opacity:0;
+  transition:transform .24s cubic-bezier(.2,.8,.2,1),opacity .2s,visibility 0s .26s}
+.chat[data-place="full"].on{transform:none;opacity:1;transition:transform .24s cubic-bezier(.2,.8,.2,1),opacity .2s}
+/* the conversations are a column of their own, like any chat site; the
+   list button shows and hides it */
+.chat[data-place="full"] .chside{position:relative;transform:none;flex:0 0 auto;width:280px;box-shadow:none}
+.chat[data-place="full"]:not(.convos) .chside{display:none}
+.chat[data-place="full"] .chmain::after{display:none}
+/* the thread and the box you type in share one readable column */
+.chat[data-place="full"] .chl{padding-left:max(20px,calc((100% - 860px) / 2));padding-right:max(20px,calc((100% - 860px) / 2))}
+.chat[data-place="full"] .chfw{padding-left:max(12px,calc((100% - 884px) / 2));padding-right:max(12px,calc((100% - 884px) / 2))}
+.chat[data-place="full"] .chhero{max-width:860px;margin-left:auto;margin-right:auto}
+
+/* Floating or full screen, the panel is over the work. A record, a dialogue
+   or the command bar opened from it (or over it) comes up over the panel -
+   docked, they open on the other side and never met. */
+body.chatover .scrim{z-index:63}
+body.chatover .drawer{z-index:64}
+body.chatover .modal,body.chatover .cmd,body.chatover .problem,body.chatover .intake,
+body.chatover .drill,body.chatover .chase{z-index:66}
+
+/* while an edge is being dragged nothing eases after the pointer */
+.chat.sizing,body.chsizing .app,body.chsizing .pet{transition:none!important}
+body.chsizing{user-select:none;-webkit-user-select:none}
+body.chsizing *{cursor:inherit!important}
+
+/* the frame button, and the little menu it opens */
+.chat .ib > svg.plic{display:block;width:15px;height:15px;margin:auto}
+/* the header lines its buttons up by their text, and a picture has none: an
+   invisible character in the same cell gives this one a line to sit on */
+.chat .chh #chatPlace > svg.plic{grid-area:1 / 1}
+.chat:not([data-lm]) .chh #chatPlace::before{content:"\200b";grid-area:1 / 1;width:0;overflow:hidden}
+.chat[data-lm] #chatPlace{--ic:var(--lmi-place)}
+.chat[data-lm] #chatPlace > svg.plic{display:none}
+.chplm{position:absolute;z-index:30;width:286px;max-width:calc(100% - 20px);box-sizing:border-box;padding:6px;
+  border-radius:14px;border:1px solid var(--ch-line);background:var(--ch-bg);color:var(--ch-ink);
+  box-shadow:0 24px 54px -18px rgba(0,0,0,.5);display:flex;flex-direction:column;gap:2px}
+.chplm[hidden]{display:none}
+.chplm button{display:grid;grid-template-columns:34px minmax(0,1fr) 14px;gap:10px;align-items:center;text-align:left;
+  border:0;background:none;color:inherit;font:inherit;padding:8px 9px;border-radius:10px;cursor:pointer}
+.chplm button:hover,.chplm button:focus-visible{background:color-mix(in srgb,var(--ch-acc) 10%,transparent);outline:none}
+.chplm .pli{width:34px;height:24px;display:block}
+.chplm .pli .fr{fill:none;stroke:currentColor;stroke-width:1.4;opacity:.55}
+.chplm .pli .pn{fill:var(--ch-acc);opacity:.85}
+.chplm b{display:block;font-size:12.5px;font-weight:620}
+.chplm small{display:block;font-size:11px;color:var(--ch-dim);line-height:1.4;margin-top:1px}
+.chplm .tk{color:var(--ch-acc);font-size:13px;font-weight:700;opacity:0}
+.chplm button[aria-checked="true"] .tk{opacity:1}
+.chplm hr{border:0;border-top:1px solid var(--ch-line);margin:4px 6px;width:auto}
+.chplm .plr{display:block;font-size:11.5px;color:var(--ch-dim);padding:7px 10px}
+.chplm .plr:hover{color:var(--ch-ink)}
+/* the same three in Look and behaviour */
+.chplaces{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-bottom:6px}
+.chplaces button{display:flex;flex-direction:column;align-items:center;gap:5px;padding:9px 4px 7px;border-radius:10px;
+  border:1px solid var(--ch-line);background:transparent;color:var(--ch-ink);font:inherit;font-size:11.5px;cursor:pointer}
+.chplaces button.on{border-color:var(--ch-acc);box-shadow:0 0 0 1px var(--ch-acc) inset}
+.chplaces .pli{width:34px;height:24px}
+.chplaces .pli .fr{fill:none;stroke:currentColor;stroke-width:1.4;opacity:.55}
+.chplaces .pli .pn{fill:var(--ch-acc);opacity:.85}
+.chplh{font-size:11px;color:var(--ch-dim);margin:0 0 6px;line-height:1.5}
+:root[data-motion="none"] .chat[data-place]{transition:none}
+/* ═══ /WHERE THE ASSISTANT SITS ═══ */
 </style>
 </head>
 <body>
@@ -4504,8 +4634,22 @@ body.chatting .pet[data-corner="br"],body.chatting .pet[data-corner="tr"]{
     <button class="ib" id="chatFx" data-i18n-title="ChatLook" title="Look and behaviour">◎</button>
     <button class="ib" id="chatTeachBtn" data-i18n-title="ChatTaughtBtn" title="What I have taught you">✎</button>
     <button class="ib" id="chatNew" data-i18n-title="ChatNew" title="New conversation">＋</button>
+    <button class="ib" id="chatPlace" data-i18n-title="ChatPlaceBtn" title="Size and position"
+            aria-haspopup="menu" aria-expanded="false"><svg class="plic" viewBox="0 0 24 24" fill="none"
+      stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"
+      focusable="false"><rect x="3" y="4" width="18" height="16" rx="3.5"/><path d="M13.5 8.5H16V11M16 8.5l-3.2 3.2M10.5 15.5H8V13M8 15.5l3.2-3.2"/></svg></button>
     <button class="ib" id="chatX">✕</button>
   </div>
+  <!-- where the panel sits: beside the work, a window of its own, or the
+       whole screen (filled in by chatPlaceMenu) -->
+  <div class="chplm" id="chatPlaceMenu" role="menu" hidden></div>
+  <!-- the edges that can be dragged: the left one when docked, all eight
+       when floating -->
+  <div class="chgrip" data-g="w" role="separator" aria-orientation="vertical" tabindex="0"
+       data-i18n-title="ChatGripTip" title="Drag to make the panel wider or narrower"></div>
+  <div class="chgrip" data-g="e"></div><div class="chgrip" data-g="n"></div><div class="chgrip" data-g="s"></div>
+  <div class="chgrip" data-g="nw"></div><div class="chgrip" data-g="ne"></div>
+  <div class="chgrip" data-g="sw"></div><div class="chgrip" data-g="se"></div>
   <div class="chbody">
     <aside class="chside" id="chatSide"></aside>
     <div class="chmain">
@@ -6389,6 +6533,17 @@ const STRINGS = {
   ChatNameUndo: "Keep {name}",
   ChatNameKeep: "Keep {name}",
   ChatAskNamed: "Ask {name}\u2026",
+  ChatPlaceBtn: "Size and position",
+  ChatPlaceHead: "Where it sits",
+  ChatPlace_dock: "Side panel",
+  ChatPlace_dockWhy: "Beside your work. Drag its left edge to make it wider or narrower.",
+  ChatPlace_float: "Floating window",
+  ChatPlace_floatWhy: "Over your work. Move it by its top bar; resize it from any edge or corner.",
+  ChatPlace_full: "Full screen",
+  ChatPlace_fullWhy: "The whole window, like a chat website. Double-click the top bar to go back.",
+  ChatPlaceReset: "Reset the size and position",
+  ChatPlaceHint: "Also from the frame button at the top of the panel. Your choice and your size are kept for next time.",
+  ChatGripTip: "Drag to make the panel wider or narrower \u00b7 double-click for the usual width",
   ChatSkinNew: "New",
   AlertOpen: "Open",
   AlertSetBtn: "Set alert",
@@ -6861,25 +7016,28 @@ const STRINGS = {
   FxAmbientWhy: "A light crosses the panel every so often.",
   FxEvery: "How often",
   PetHeading: "Desk pet",
-  PetIntro: "The assistant, out of its panel and parked in a corner. It blinks, and otherwise it only moves when something happens: a record finished, something overdue, a save going out. Drag it to whichever corner is out of your way, click it for a line about your day. It reads your records and writes nothing but its own corner and name.",
+  PetIntro: "The assistant itself, out of its panel and parked in a corner \u2014 one character, one name. Click it to talk to it: the chat opens and it goes in there, and it comes back out when you close the chat. Point at it for a line about your day. While an answer is coming it thinks, as it does in the chat; an answer that arrives while the chat is closed, and a bell alert, it tells you from its corner. Otherwise it only moves when something happens: a record finished, something overdue, a save going out. Drag it to whichever corner is out of your way.",
   PetOnOff: "Keep it on screen",
-  PetName: "What you call it",
-  PetNamePh: "Pip",
+  PetName: "Its name (the assistant\u2019s name too)",
+  PetNamePh: "Resolv",
   PetCorner: "Corner",
   PetCornerBR: "Bottom right",
   PetCornerBL: "Bottom left",
   PetCornerTR: "Top right",
   PetCornerTL: "Top left",
-  PetCornerHint: "Or drag it there. With the assistant open it steps aside rather than being sat on.",
+  PetCornerHint: "Or drag it there. While the chat is open it is in the chat, not in its corner.",
   PetMotionOff: "Motion is set to none, so it starts switched off. Turning it on here overrides that — it is your corner.",
-  PetLabel: "Desk pet",
-  PetNamedLabel: "{name}, the desk pet",
+  PetLabel: "The assistant \u2014 click to talk",
+  PetNamedLabel: "{name}, your assistant \u2014 click to talk",
   PetOverdue: "{n} overdue.",
   PetDueToday: "{n} due today.",
   PetNext: "Next: {what}",
   PetClosed: "{n} closed today — good going.",
   PetClear: "Nothing overdue, nothing due. Quiet one.",
-  PetNoName: "I have not got a name yet — Menu → Appearance.",
+  PetNoName: "I have not got a name yet \u2014 tell me in the chat: \u201cI named you \u2026\u201d",
+  PetTalkHint: "Click me to talk.",
+  PetAnswered: "Your answer is ready.",
+  PetOpenHint: "Click to read it.",
   FxIcons: "Lively icons",
   FxIconsWhy: "Lumen's icons move when you point at them or press them - Send flies, Copy turns into a tick, the bin opens - and a few breathe on their own: the new-reply arrow, the mark while an answer is coming.",
   FxPixel: "Sprites",
@@ -7455,7 +7613,7 @@ const STATUSES = [
    the status bar, and clicking it copies a line you can paste into a bug
    report — build date and flow protocol included, because those are the two
    things that actually differ between copies. */
-const APP_VERSION = "5.11.1";
+const APP_VERSION = "5.12.0";
 const APP_BUILT = "2026-09-27";
 function buildLine(){
   return "Resolv v" + APP_VERSION + " \u00b7 built " + APP_BUILT +
@@ -11641,6 +11799,15 @@ function pixFix(el){
 /* ═══ THE DESK PET ═══════════════════════════════════════════════════════
    The assistant, out of its panel and parked in a corner of the window.
 
+   Since 5.12 that is meant literally: the pet and the assistant are one
+   character. One name (the assistant's - chatUI.name - which is what you
+   type under Desk pet as well); click it and you are talking to it, the
+   panel opens and the pet goes in there; close the panel and it comes back
+   out. While an answer is on its way and the panel is shut it shows the
+   same thinking sprite the panel does, and when the answer arrives it says
+   so. Point at it for its line about your day; a bell alert is said by it
+   too.
+
    It is the same character as the one that greets an empty thread and the
    same nine-colour palette, but it answers to the application rather than to
    the conversation: it cheers a record you finished, looks put out while
@@ -11656,7 +11823,7 @@ function pixFix(el){
    takes it away entirely.
 
    It reads the workspace and writes nothing but its own corner and name. */
-const PET = { mood:"", until:0, seen:Date.now(), stretched:"", tip:0, drag:null, said:0 };
+const PET = { mood:"", until:0, seen:Date.now(), stretched:"", tip:0, drag:null, said:0, hov:0, act:null };
 const PET_NAP = 4 * 60000;        /* left alone this long and it sleeps */
 const PET_CORNERS = ["br", "bl", "tr", "tl"];
 /* mood → which sprite. "wave" borrows the one from an empty thread: it is
@@ -11664,7 +11831,10 @@ const PET_CORNERS = ["br", "bl", "tr", "tl"];
    be two drawings to keep in step. */
 const PET_ART = {
   wave:"hero", idle:"pet-idle", cheer:"pet-cheer", worry:"pet-worry",
-  nap:"pet-nap", work:"pet-work", stretch:"pet-stretch", held:"pet-held"
+  nap:"pet-nap", work:"pet-work", stretch:"pet-stretch", held:"pet-held",
+  /* the one the panel shows while an answer is on its way (16 pixels, three
+     times over: as crisp as the 24-pixel ones at twice) */
+  think:"think"
 };
 
 function petCfg(){
@@ -11672,10 +11842,19 @@ function petCfg(){
   if (!st.pet || typeof st.pet !== "object")
     /* A machine that has asked not to be moved at, or an interface already
        set to hold still, does not get a pet without being asked for one. */
-    st.pet = { on: !chatCalm() && st.motion !== "none", name:"", corner:"br" };
+    st.pet = { on: !chatCalm() && st.motion !== "none", corner:"br" };
   if (PET_CORNERS.indexOf(st.pet.corner) < 0) st.pet.corner = "br";
+  /* one character, one name: a name given to the pet before 5.12 becomes the
+     assistant's, unless the assistant already had one of its own */
+  if ("name" in st.pet){
+    const had = String(st.pet.name || "").trim().slice(0, 24);
+    delete st.pet.name;
+    if (had && !chatUI().name) chatUI().name = had;
+  }
   return st.pet;
 }
+/* its name is the assistant's */
+function petName(){ const u = S.settings && S.settings.chatUI; return (u && u.name) || ""; }
 function petOn(){ return !!petCfg().on && !!PIX["pet-idle"]; }
 
 /* ── the element ───────────────────────────────────────────────────────── */
@@ -11695,10 +11874,10 @@ function petPaint(){
     petMood("wave", 2600);
   }
   el.dataset.corner = cfg.corner;
-  const b = $("petBtn");
-  b.title = cfg.name || L("PetLabel");
-  b.setAttribute("aria-label", cfg.name
-    ? L("PetNamedLabel", { name:cfg.name }) : L("PetLabel"));
+  el.classList.toggle("inchat", $("chat").classList.contains("on"));
+  const b = $("petBtn"), name = petName();
+  b.title = name ? L("PetNamedLabel", { name:name }) : L("PetLabel");
+  b.setAttribute("aria-label", b.title);
   /* forced only when there is nothing there yet: setting src to what it
      already is restarts the animation */
   petShow(PET.mood || "idle", !b.querySelector("img.pxl"));
@@ -11731,6 +11910,8 @@ function petMood(mood, ms){
 /* What it would be doing if nothing had just happened. */
 function petRest(){
   if (PET.drag) return "held";
+  /* an answer on its way: the same sprite the panel waits with */
+  if ($("chat").classList.contains("busy")) return "think";
   if (Date.now() - PET.seen > PET_NAP) return "nap";
   return petDay().overdue ? "worry" : "idle";
 }
@@ -11785,24 +11966,64 @@ function petSeen(){
    Clicking it does not open anything. It says one true thing and goes
    quiet again, and clicking it repeatedly walks through the rest. */
 function petSpeak(){
-  const d = petDay(), cfg = petCfg(), lines = [];
+  /* it has news, which stays up until read; or it is in the panel */
+  if (PET.act || $("chat").classList.contains("on")) return;
+  const d = petDay(), name = petName(), lines = [];
   if (d.overdue) lines.push(L("PetOverdue", { n:d.overdue }));
   if (d.due) lines.push(L("PetDueToday", { n:d.due }));
   if (d.next) lines.push(L("PetNext", { what:d.next.code + " · " + d.next.title }));
   if (d.closed) lines.push(L("PetClosed", { n:d.closed }));
   if (!d.overdue && !d.due) lines.push(L("PetClear"));
-  if (!cfg.name) lines.push(L("PetNoName"));
-  const say = $("petSay"); if (!say) return;
+  if (!name) lines.push(L("PetNoName"));
   const line = lines[PET.tip++ % lines.length];
-  say.innerHTML = (cfg.name ? "<b>" + esc(cfg.name) + "</b> · " : "") + esc(line);
-  say.classList.add("on");
-  clearTimeout(PET.said);
-  PET.said = setTimeout(() => {
-    say.classList.remove("on");
-    setTimeout(() => { if (!say.classList.contains("on")) say.textContent = ""; }, 260);
-  }, 4200);
+  petTell(esc(line) + '<small class="pth">' + LE("PetTalkHint") + "</small>", null, 4200);
   petMood(d.overdue ? "worry" : "cheer", 2000);
 }
+/* Something it says out loud, in the bubble over its head: its line about
+   the day, an answer that came while the panel was shut, a bell alert. With
+   act, the bubble (and the pet) does that when clicked, and stays up until
+   then - or until ms, when given. */
+function petTell(html, act, ms){
+  const say = $("petSay"), el = $("pet"); if (!say || !el) return;
+  const name = petName();
+  say.innerHTML = (name ? "<b>" + esc(name) + "</b> · " : "") + html;
+  say.classList.add("on");
+  PET.act = act || null;
+  el.classList.toggle("news", !!act);
+  clearTimeout(PET.said);
+  if (ms) PET.said = setTimeout(petHush, ms);
+}
+function petHush(){
+  const say = $("petSay"), el = $("pet");
+  clearTimeout(PET.said);
+  PET.act = null;
+  if (el) el.classList.remove("news");
+  if (!say) return;
+  say.classList.remove("on");
+  setTimeout(() => { if (!say.classList.contains("on")) say.textContent = ""; }, 260);
+}
+/* Clicking it is talking to it: the panel opens and it goes in there. With
+   news on its bubble, the click does what the news is about instead. */
+function petTalk(){
+  const act = PET.act;
+  clearTimeout(PET.hov);
+  petHush();
+  if (act) return act();
+  openChat();
+}
+/* An answer arrived while the panel was shut (asked, then closed; the
+   morning look-back): it says so, and a click opens the conversation. */
+function petNews(r){
+  if (!petOn() || $("chat").classList.contains("on")) return;
+  const t = String((r && r.say) || "").replace(/```[\s\S]*?```|~~~[\s\S]*?~~~/g, " ").replace(/[*_#>`|]/g, "")
+    .replace(/\s+/g, " ").trim();
+  const lead = t.length > 90 ? t.slice(0, 88).replace(/\s+\S*$/, "") + "\u2026" : t;
+  petTell(LE("PetAnswered") + (lead ? '<span class="ptq">\u201c' + esc(lead) + "\u201d</span>" : "") +
+          '<small class="pth">' + LE("PetOpenHint") + "</small>", () => openChat());
+  petMood("cheer", 2400);
+}
+/* what the panel is doing, shown by the pet when the panel is shut */
+function petSync(){ if (petOn() && $("petBtn") && PET.until <= Date.now()) petShow(petRest()); }
 
 /* ── picking it up ─────────────────────────────────────────────────────
    Drag it to whichever corner is out of your way today. It snaps to the
@@ -11843,7 +12064,7 @@ function petWire(){
     from = null; moved = false; PET.drag = null;
     el.classList.remove("dragging");
     el.style.left = el.style.top = el.style.right = el.style.bottom = "";
-    if (!was) return petSpeak();
+    if (!was) return petTalk();
     const cfg = petCfg();
     cfg.corner = (e.clientY < window.innerHeight / 2 ? "t" : "b") +
                  (e.clientX < window.innerWidth / 2 ? "l" : "r");
@@ -11853,9 +12074,20 @@ function petWire(){
   };
   b.addEventListener("pointerup", drop);
   b.addEventListener("pointercancel", drop);
-  /* a keyboard gets the same two things: the line, and the four corners */
+  /* pointed at (and held there a moment, so passing over it on the way to
+     somewhere else says nothing), or reached with Tab: its line about the
+     day */
+  b.addEventListener("pointerenter", e => {
+    if (e.pointerType === "touch") return;
+    clearTimeout(PET.hov); PET.hov = setTimeout(() => { if (!PET.drag) petSpeak(); }, 450);
+  });
+  b.addEventListener("pointerleave", () => clearTimeout(PET.hov));
+  b.addEventListener("focus", () => { if (b.matches(":focus-visible")) petSpeak(); });
+  /* the bubble is it talking: a click on it is a click on the pet */
+  $("petSay").addEventListener("click", petTalk);
+  /* a keyboard gets the same things: talking to it, and the four corners */
   b.addEventListener("keydown", e => {
-    if (e.key === "Enter" || e.key === " "){ e.preventDefault(); return petSpeak(); }
+    if (e.key === "Enter" || e.key === " "){ e.preventDefault(); return petTalk(); }
     if (e.key !== "ArrowLeft" && e.key !== "ArrowRight" &&
         e.key !== "ArrowUp" && e.key !== "ArrowDown") return;
     e.preventDefault();
@@ -11947,6 +12179,7 @@ function applyChatUI(){
   chatMarkApply();
   chatPixDress();
   lmiWatch();
+  chatPlaceApply();
 }
 
 /* ── Lumen's icons ─────────────────────────────────────────────────────
@@ -12117,6 +12350,13 @@ function renderChatFx(){
         esc(k.name) + (k.fresh && !(u.tried || []).includes(k.id) ? '<em class="nw">' + LE("ChatSkinNew") + "</em>" : "") +
       "</button>").join("") + "</div>" +
 
+    /* the same three places as the frame button in the header */
+    "<h6>" + esc(L("ChatPlaceHead")) + "</h6>" +
+    '<div class="chplaces">' + CHAT_PLACES.map(k =>
+      '<button type="button" class="' + (chatPlace() === k ? "on" : "") + '" data-placepick="' + k + '">' +
+        chatPlacePic(k) + esc(L("ChatPlace_" + k)) + "</button>").join("") + "</div>" +
+    '<p class="chplh">' + esc(L("ChatPlaceHint")) + "</p>" +
+
     "<h6>" + esc(L("ChatMotion")) + "</h6>" +
     sw("reveal",  L("FxReveal"),  L("FxRevealWhy")) +
     sw("glow",    L("FxGlow"),    L("FxGlowWhy")) +
@@ -12143,6 +12383,7 @@ function renderChatFx(){
     sw("confirm", L("FxConfirm"), u.confirm ? L("FxConfirmOn") : L("FxConfirmOff"));
 
   pixFix(box);
+  box.querySelectorAll("[data-placepick]").forEach(b => { b.onclick = () => chatPlaceSet(b.dataset.placepick); });
   box.querySelectorAll("[data-fx]").forEach(b => {
     b.onclick = () => {
       const k = b.dataset.fx;
@@ -12913,9 +13154,12 @@ function openChat(){
   $("chat").classList.add("on");
   /* deliberately no scrim and no focus trap: this is a dock on the right, and
      the whole point of moving it there is that the record on the left stays
-     workable — readable, tabbable, editable — while it is open */
-  document.body.classList.add("chatting");
+     workable — readable, tabbable, editable — while it is open. (Floating, it
+     covers only its own window; full screen, it is the screen.) applyChatUI
+     puts it where it was last time - chatPlaceApply - and the docked panel
+     takes its room from the work there. */
   applyChatUI();
+  petInChat();
   CHAT.stuck = true;            /* opening always lands on the newest thing */
   chatPaint();
   $("chatHint").innerHTML = "<kbd>Enter</kbd> " + esc(L("ChatHintSend")) +
@@ -12927,8 +13171,202 @@ function openChat(){
 function closeChat(){
   $("chat").classList.remove("on");
   $("chatTeach").classList.remove("on");
-  document.body.classList.remove("chatting");
+  document.body.classList.remove("chatting", "chatover");
+  chatPlaceMenu(false);
+  petInChat();
   /* it never took the focus trap or the scrim, so it gives back neither */
+}
+
+/* ═══ WHERE THE ASSISTANT SITS ════════════════════════════════════════════
+   Docked on the right (and as wide as you dragged it), floating as a window
+   of its own, or full screen - see the stylesheet block of the same name.
+   Every choice goes into chatUI with the skin and the switches, so it is
+   saved with the workspace and the panel opens the same way next time:
+     place      "dock" | "float" | "full"
+     dockW      the docked width, in pixels
+     floatBox   { x, y, w, h } of the floating window
+     placeBack  where it was before full screen (a double-click on the top
+                bar goes back there)
+     fullSide   whether the conversations column is showing at full screen
+   What is stored is what you chose; what is shown is that, fitted into the
+   window as it is now - a window made smaller does not lose your size. */
+const CHAT_PLACES = ["dock", "float", "full"];
+const CHAT_DOCK = { def:452, min:360, max:1400, room:340 };     /* room: what the work always keeps */
+const CHAT_FLOAT = { w:480, h:640, minW:340, minH:380, pad:8 };
+const CHAT_SIZE = { drag:null, raf:0 };
+const clampN = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+
+function chatPlace(){
+  const u = S.settings && S.settings.chatUI, p = u && u.place;
+  return CHAT_PLACES.indexOf(p) >= 0 ? p : "dock";
+}
+function chatDockW(w){
+  const want = +(w != null ? w : (S.settings.chatUI || {}).dockW) || CHAT_DOCK.def;
+  const most = Math.max(CHAT_DOCK.min, Math.min(CHAT_DOCK.max, window.innerWidth - CHAT_DOCK.room));
+  return Math.round(clampN(want, CHAT_DOCK.min, most));
+}
+function chatFloatBox(b){
+  b = b || (S.settings.chatUI || {}).floatBox || {};
+  const vw = window.innerWidth, vh = window.innerHeight, P = CHAT_FLOAT.pad;
+  const w = Math.round(clampN(+b.w || CHAT_FLOAT.w, Math.min(CHAT_FLOAT.minW, vw - 2 * P), vw - 2 * P));
+  const h = Math.round(clampN(+b.h || Math.min(CHAT_FLOAT.h, vh - 110), Math.min(CHAT_FLOAT.minH, vh - 2 * P), vh - 2 * P));
+  /* the first time: near the top right, where the docked panel was */
+  const x = Math.round(clampN(b.x == null ? vw - w - 28 : +b.x, P, vw - w - P));
+  const y = Math.round(clampN(b.y == null ? 64 : +b.y, P, vh - h - P));
+  return { x:x, y:y, w:w, h:h };
+}
+function chatBoxSet(el, b){
+  el.style.setProperty("--cf-x", b.x + "px"); el.style.setProperty("--cf-y", b.y + "px");
+  el.style.setProperty("--cf-w", b.w + "px"); el.style.setProperty("--cf-h", b.h + "px");
+}
+function chatPlaceApply(){
+  const el = $("chat"); if (!el || !S.settings) return;
+  const p = chatPlace(), was = el.dataset.place, open = el.classList.contains("on");
+  el.dataset.place = p;
+  document.documentElement.style.setProperty("--chat-w", chatDockW() + "px");
+  if (p === "float") chatBoxSet(el, chatFloatBox());
+  /* only the docked panel takes room from the work; floating or full
+     screen it is over the work, and what it opens comes up over it */
+  document.body.classList.toggle("chatting", open && p === "dock");
+  document.body.classList.toggle("chatover", open && p !== "dock");
+  /* the conversations: a column of their own at full screen (showing unless
+     you hid it), the list that slides over the thread everywhere else */
+  if (was !== p){
+    if (p === "full"){
+      el.classList.toggle("convos", (S.settings.chatUI || {}).fullSide !== false);
+      if (el.classList.contains("convos")) chatSide();
+    } else if (was === "full") el.classList.remove("convos");
+  }
+  const b = $("chatPlace");
+  if (b) b.title = L("ChatPlaceBtn") + " · " + L("ChatPlace_" + p);
+  const g = el.querySelector('.chgrip[data-g="w"]');
+  if (g){ g.setAttribute("aria-valuenow", String(chatDockW())); g.setAttribute("aria-valuemin", String(CHAT_DOCK.min)); }
+}
+function chatPlaceSet(p){
+  if (CHAT_PLACES.indexOf(p) < 0) return;
+  const u = chatUI(), now = chatPlace();
+  if (p === "full" && now !== "full") u.placeBack = now;
+  u.place = p;
+  touch();
+  chatPlaceMenu(false);
+  /* where you were reading stays where you were reading */
+  const log = $("chatLog"), end = chatNear();
+  chatPlaceApply();
+  if (end && log) log.scrollTop = log.scrollHeight;
+  if ($("chatFxPanel") && $("chatFxPanel").classList.contains("on")) renderChatFx();
+}
+/* a little picture of each place: the window, and where the panel is in it */
+function chatPlacePic(k){
+  const pn = k === "dock" ? '<rect class="pn" x="21" y="3" width="10" height="18" rx="1.5"/>'
+           : k === "float" ? '<rect class="pn" x="16" y="6" width="13" height="13" rx="2"/>'
+           : '<rect class="pn" x="3" y="3" width="28" height="18" rx="1.5"/>';
+  return '<svg class="pli" viewBox="0 0 34 24" aria-hidden="true" focusable="false">' +
+         '<rect class="fr" x="1" y="1" width="32" height="22" rx="3"/>' + pn + "</svg>";
+}
+function chatPlaceMenu(show){
+  const m = $("chatPlaceMenu"), b = $("chatPlace"); if (!m || !b) return;
+  if (show === undefined) show = m.hidden;
+  if (!show){
+    if (!m.hidden){ m.hidden = true; b.setAttribute("aria-expanded", "false"); }
+    return;
+  }
+  const p = chatPlace();
+  m.innerHTML = CHAT_PLACES.map(k =>
+    '<button type="button" role="menuitemradio" aria-checked="' + (k === p) + '" data-place="' + k + '">' +
+      chatPlacePic(k) + "<span><b>" + LE("ChatPlace_" + k) + "</b><small>" + LE("ChatPlace_" + k + "Why") + "</small></span>" +
+      '<span class="tk" aria-hidden="true">✓</span></button>').join("") +
+    '<hr><button type="button" class="plr" role="menuitem" data-placereset>' + LE("ChatPlaceReset") + "</button>";
+  const cr = $("chat").getBoundingClientRect(), br = b.getBoundingClientRect();
+  m.style.top = Math.round(br.bottom - cr.top + 6) + "px";
+  m.style.right = Math.round(Math.max(10, cr.right - br.right - 4)) + "px";
+  m.hidden = false;
+  b.setAttribute("aria-expanded", "true");
+  const cur = m.querySelector('[aria-checked="true"]'); if (cur) cur.focus();
+}
+function chatPlaceReset(){
+  const u = chatUI();
+  delete u.dockW; delete u.floatBox;
+  touch(); chatPlaceMenu(false); chatPlaceApply();
+}
+
+/* ── dragging an edge, or the floating window by its top bar ─────────── */
+function chatGripDown(e){
+  const g = e.currentTarget.dataset.g, p = chatPlace(), el = $("chat");
+  if (e.button || p === "full" || (p === "dock" && g !== "w")) return;
+  e.preventDefault();
+  const r = el.getBoundingClientRect();
+  CHAT_SIZE.drag = { g:g, p:p, x0:e.clientX, y0:e.clientY, box:{ x:r.left, y:r.top, w:r.width, h:r.height } };
+  el.classList.add("sizing"); document.body.classList.add("chsizing");
+  document.body.style.cursor = getComputedStyle(e.currentTarget).cursor;
+  try { e.currentTarget.setPointerCapture(e.pointerId); } catch(err){}
+}
+function chatMoveDown(e){
+  if (chatPlace() !== "float" || e.button || e.target.closest("button,input,textarea,select,a,.chplm")) return;
+  const el = $("chat"), r = el.getBoundingClientRect();
+  CHAT_SIZE.drag = { move:true, p:"float", x0:e.clientX, y0:e.clientY, box:{ x:r.left, y:r.top, w:r.width, h:r.height } };
+  el.classList.add("sizing"); document.body.classList.add("chsizing");
+  document.body.style.cursor = "move";
+  try { e.currentTarget.setPointerCapture(e.pointerId); } catch(err){}
+}
+function chatDragMove(e){
+  const d = CHAT_SIZE.drag; if (!d) return;
+  const dx = e.clientX - d.x0, dy = e.clientY - d.y0;
+  if (d.p === "dock"){
+    /* docked against the right-hand edge: the width is how far the pointer
+       is from that edge */
+    d.w = chatDockW(window.innerWidth - e.clientX);
+    document.documentElement.style.setProperty("--chat-w", d.w + "px");
+    return;
+  }
+  const P = CHAT_FLOAT.pad, vw = window.innerWidth, vh = window.innerHeight, o = d.box;
+  let x = o.x, y = o.y, w = o.w, h = o.h;
+  if (d.move){
+    x = clampN(o.x + dx, P, vw - w - P);
+    y = clampN(o.y + dy, P, vh - h - P);
+  } else {
+    /* each edge moves on its own; the one across from it stays put */
+    const R = o.x + o.w, B = o.y + o.h, mw = Math.min(CHAT_FLOAT.minW, R - P), mh = Math.min(CHAT_FLOAT.minH, B - P);
+    if (d.g.indexOf("e") >= 0) w = clampN(R + dx, x + CHAT_FLOAT.minW, vw - P) - x;
+    if (d.g.indexOf("w") >= 0){ x = clampN(o.x + dx, P, R - mw); w = R - x; }
+    if (d.g.indexOf("s") >= 0) h = clampN(B + dy, y + CHAT_FLOAT.minH, vh - P) - y;
+    if (d.g.indexOf("n") >= 0){ y = clampN(o.y + dy, P, B - mh); h = B - y; }
+  }
+  d.b = { x:Math.round(x), y:Math.round(y), w:Math.round(w), h:Math.round(h) };
+  chatBoxSet($("chat"), d.b);
+}
+function chatDragUp(){
+  const d = CHAT_SIZE.drag; if (!d) return;
+  CHAT_SIZE.drag = null;
+  $("chat").classList.remove("sizing"); document.body.classList.remove("chsizing");
+  document.body.style.cursor = "";
+  const u = chatUI();
+  if (d.p === "dock" && d.w){ u.dockW = d.w; touch(); }
+  if (d.p === "float" && d.b){ u.floatBox = d.b; touch(); }
+  chatPlaceApply();
+}
+/* the keyboard can widen the docked panel too: the edge takes the focus,
+   and the arrows move it (left is wider, the way the edge moves) */
+function chatGripKey(e){
+  if (chatPlace() !== "dock") return;
+  const k = e.key, now = chatDockW();
+  let w = null;
+  if (k === "ArrowLeft") w = now + 32;
+  else if (k === "ArrowRight") w = now - 32;
+  else if (k === "Home") w = CHAT_DOCK.def;
+  if (w == null) return;
+  e.preventDefault();
+  chatUI().dockW = chatDockW(w); touch(); chatPlaceApply();
+}
+
+/* The pet is the assistant: while the panel is open it is in there, and
+   when the panel closes it comes back out to its corner and waves. */
+function petInChat(){
+  const el = $("pet"); if (!el) return;
+  const inside = $("chat").classList.contains("on");
+  if (el.classList.contains("inchat") && !inside){ el.classList.remove("inchat"); petMood("wave", 1800); }
+  else el.classList.toggle("inchat", inside);
+  /* whatever it was saying in its corner, it is saying in the panel now */
+  if (inside){ clearTimeout(PET.hov); petHush(); }
 }
 
 /* Scroll to the newest thing only when you were already at the bottom.
@@ -12964,6 +13402,7 @@ function chatThinking(log){
   };
   log.appendChild(w);
   $("chat").classList.add("busy");
+  petSync();
   chatOrbPix("think");
   chatState(L("ChatThinking"), true);
   w._t0 = Date.now();
@@ -12999,6 +13438,7 @@ function chatThought(w, err){
   clearInterval(w._tick);
   const ms = Date.now() - (w._t0 || Date.now());
   $("chat").classList.remove("busy");
+  petSync();
   chatOrbPix("orb");
   const ghost = document.createElement("div");
   ghost.className = "chghost";
@@ -14238,6 +14678,8 @@ function chatBot(r, sourceText){
   chatPush({ who:"bot", reply:r, src:sourceText || "" });
   const c = chatThread();
   chatRenderBot(r, sourceText, false, c ? c.msgs.length - 1 : null);
+  /* the panel was shut when it came: the pet - the same assistant - says so */
+  petNews(r);
 }
 
 /* ── answered here: what the app can count for itself ──────────────────
@@ -14326,10 +14768,8 @@ function chatName(){ const u = S.settings && S.settings.chatUI; return (u && u.n
 function chatNameSet(name){
   const u = chatUI(), had = u.name || "";
   if (name) u.name = name; else delete u.name;
-  /* the desk pet is the assistant out of its panel: it takes the name too,
-     unless it was given one of its own */
-  const pet = petCfg();
-  if (!pet.name || pet.name === had) pet.name = name || "";
+  /* the desk pet is the assistant out of its panel, so this is its name too
+     (petName reads the same setting) */
   touch(); applyChatUI(); petPaint();
   return had;
 }
@@ -20048,7 +20488,7 @@ async function renderModal(){
           ? '<p style="font-size:11.5px;color:var(--ink-3);margin:-6px 0 12px;line-height:1.7">' +
             L("PetMotionOff") + "</p>" : "") +
         fr(L("PetName"), '<input class="in" id="fPetName" maxlength="24" value="' +
-          esc(pc.name || "") + '" placeholder="' + LE("PetNamePh") + '">') +
+          esc(petName()) + '" placeholder="' + LE("PetNamePh") + '">') +
         fr(L("PetCorner"), '<select class="in" id="fPetCorner">' +
           [["br", "PetCornerBR"], ["bl", "PetCornerBL"],
            ["tr", "PetCornerTR"], ["tl", "PetCornerTL"]].map(([v, k]) =>
@@ -20772,9 +21212,10 @@ function wireModal(){
     petCfg().on = $("fPet").value === "1";
     touch(); petPaint(); renderModal();
   };
+  /* the pet's name is the assistant's: the chat panel's title, the box you
+     type in and what the AI is told all change with it */
   if ($("fPetName")) $("fPetName").oninput = () => {
-    petCfg().name = $("fPetName").value.trim().slice(0, 24);
-    touch(); petPaint();
+    chatNameSet($("fPetName").value.trim().slice(0, 24));
   };
   if ($("fPetCorner")) $("fPetCorner").onchange = () => {
     petCfg().corner = $("fPetCorner").value;
@@ -21607,6 +22048,11 @@ function alertFire(t, w){
   toast("\u{1F514} " + head + (body ? " — " + body : ""),
     { life:60000, action:L("AlertOpen"), onAction:() => openDrawer(t.id) });
   notify("\u{1F514} " + t.code + (t.dueTime && t.due === today() ? " · " + t.dueTime : ""), t.title, t.id, "alert" + t.id);
+  /* the assistant says it too, from its corner; a click opens the record */
+  if (petOn() && !$("chat").classList.contains("on")){
+    petTell("\u{1F514} " + esc(head) + (body ? '<small class="pth">' + esc(body) + "</small>" : ""), () => openDrawer(t.id));
+    petMood("worry", 2400);
+  }
   renderAll();
 }
 
@@ -24458,6 +24904,10 @@ async function reflectNow(byHand){
   const n = kept.length + waiting.length;
   toast(n ? L("ReflectToast", { n }) : L("ReflectToastNone"), {
     action:L("ReflectOpen"), onAction:() => { S.chatId = c.id; openChat(); chatPaint(); } });
+  /* it was the assistant that looked back, so the pet says so too */
+  if (petOn() && !$("chat").classList.contains("on"))
+    petTell(esc(n ? L("ReflectToast", { n }) : L("ReflectToastNone")) + '<small class="pth">' + LE("PetOpenHint") + "</small>",
+            () => { S.chatId = c.id; openChat(); chatPaint(); });
   if (typeof Notification !== "undefined" && Notification.permission === "granted" && document.hidden && n){
     try { new Notification("Resolv", { body:L("ReflectToast", { n }) }); } catch(e){}
   }
@@ -25181,11 +25631,52 @@ $("chatX").addEventListener("click", closeChat);
 $("chatMenu").addEventListener("click", () => {
   $("chat").classList.toggle("convos");
   if ($("chat").classList.contains("convos")) chatSide();
+  /* at full screen the list is a column, and showing it or not is a choice
+     that is kept */
+  if (chatPlace() === "full"){ chatUI().fullSide = $("chat").classList.contains("convos"); touch(); }
 });
 $("chatNew").addEventListener("click", () => {
   chatNew();
-  $("chat").classList.remove("convos");
+  if (chatPlace() !== "full") $("chat").classList.remove("convos");
   $("chatq").focus();
+});
+/* where the panel sits: the frame button's menu, the edges, the top bar */
+$("chatPlace").addEventListener("click", e => { e.stopPropagation(); chatPlaceMenu(); });
+$("chatPlaceMenu").addEventListener("click", e => {
+  /* button[...]: the panel itself carries data-place too */
+  const b = e.target.closest("button[data-place]");
+  if (b) return chatPlaceSet(b.dataset.place);
+  if (e.target.closest("[data-placereset]")) chatPlaceReset();
+});
+$("chatPlaceMenu").addEventListener("keydown", e => {
+  if (e.key !== "ArrowDown" && e.key !== "ArrowUp") return;
+  e.preventDefault();
+  const bs = [...$("chatPlaceMenu").querySelectorAll("button")], i = bs.indexOf(document.activeElement);
+  bs[(i + (e.key === "ArrowDown" ? 1 : bs.length - 1)) % bs.length].focus();
+});
+document.addEventListener("pointerdown", e => {
+  if (!$("chatPlaceMenu").hidden && !e.target.closest("#chatPlaceMenu,#chatPlace")) chatPlaceMenu(false);
+}, true);
+document.querySelectorAll("#chat .chgrip").forEach(g => g.addEventListener("pointerdown", chatGripDown));
+document.querySelector('#chat .chgrip[data-g="w"]').addEventListener("keydown", chatGripKey);
+/* a double-click on the docked edge puts the width back */
+document.querySelector('#chat .chgrip[data-g="w"]').addEventListener("dblclick", () => {
+  if (chatPlace() !== "dock") return;
+  delete chatUI().dockW; touch(); chatPlaceApply();
+});
+document.querySelector("#chat .chh").addEventListener("pointerdown", chatMoveDown);
+/* a double-click on the top bar is what it is on any window: full screen,
+   and back again to where it was */
+document.querySelector("#chat .chh").addEventListener("dblclick", e => {
+  if (e.target.closest("button,input,a")) return;
+  chatPlaceSet(chatPlace() === "full" ? (chatUI().placeBack || "dock") : "full");
+});
+document.addEventListener("pointermove", chatDragMove);
+document.addEventListener("pointerup", chatDragUp);
+document.addEventListener("pointercancel", chatDragUp);
+window.addEventListener("resize", () => {
+  cancelAnimationFrame(CHAT_SIZE.raf);
+  CHAT_SIZE.raf = requestAnimationFrame(() => { if (!CHAT_SIZE.drag) chatPlaceApply(); });
 });
 $("chatSide").addEventListener("click", e => {
   const del = e.target.closest("[data-delchat]");
@@ -25195,7 +25686,7 @@ $("chatSide").addEventListener("click", e => {
   const row = e.target.closest("[data-chat]");
   if (row){
     S.chatId = row.dataset.chat;
-    if (chatLm()) $("chat").classList.remove("convos");
+    if (chatLm() && chatPlace() !== "full") $("chat").classList.remove("convos");
     chatPaint(); touch(); $("chatq").focus();
   }
 });
@@ -25206,7 +25697,7 @@ $("chatSide").addEventListener("input", e => {
    it puts the history away, as it does in every chat app */
 document.querySelector("#chat .chmain").addEventListener("click", e => {
   if (e.target.classList.contains("chmain") && $("chat").classList.contains("convos") &&
-      chatLm()) $("chat").classList.remove("convos");
+      chatLm() && chatPlace() !== "full") $("chat").classList.remove("convos");
 });
 $("chatGo").addEventListener("click", () => chatAsk($("chatq").value));
 
@@ -28990,8 +29481,11 @@ document.addEventListener("keydown", e => {
     if ($("keys").classList.contains("on")) return closeKeys();
     if ($("chatFxPanel").classList.contains("on")) return closeChatFx();
     if ($("chatAsk").classList.contains("on")) return chatDeclineAsked();
-    if ($("chat").classList.contains("convos") && chatLm()) return $("chat").classList.remove("convos");
-    if ($("chat").classList.contains("on")) return closeChat();
+    if (!$("chatPlaceMenu").hidden) return chatPlaceMenu(false);
+    if ($("chat").classList.contains("convos") && chatLm() && chatPlace() !== "full") return $("chat").classList.remove("convos");
+    /* over a floating or full-screen panel, what is on top goes first */
+    if ($("chat").classList.contains("on") && !(document.body.classList.contains("chatover") &&
+        document.querySelector(".drawer.on,.modal.on,.cmd.on,.problem.on,.intake.on,.drill.on,.chase.on"))) return closeChat();
     if ($("ask").classList.contains("on")) return closeAsk(null);
     if ($("cmd").classList.contains("on")) return closeCmd();
     if ($("intake").classList.contains("on")) return closeIntake();

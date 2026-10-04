@@ -6,6 +6,46 @@ holds — which is what to paste into a bug report.
 
 ---
 
+## 5.12.0 - 2026-10-04
+
+**The desk pet is the assistant, and the chat can be wider, a floating
+window, or full screen - remembered for next time.**
+
+- **One character.** The desk pet and the assistant are the same person
+  now, with one name:
+  - **click the pet** and you are talking to it: the chat opens and the pet
+    goes in there (it is the one in the header and the one that waits with
+    you); close the chat and it comes back out to its corner and waves;
+  - point at it for its line about your day (that used to be the click);
+  - ask something and close the chat: the pet thinks in its corner with the
+    panel's own sprite, and when the answer arrives it says *Your answer is
+    ready* with the start of it, and a dot - a click opens the chat;
+  - a bell alert and the morning look-back are said by the pet too;
+  - the name under *Menu → Appearance → Desk pet* is the assistant's name
+    (the chat title, the box you type in, what the AI is told). A pet named
+    before 5.12 gives its name to the assistant, unless the assistant
+    already had one.
+- **A wider chat.** Drag the panel's left edge: wider for long answers,
+  wide tables and diagrams, narrower for more of your work. The work makes
+  room rather than being covered. Double-click the edge for the usual
+  452 pixels; the keyboard can move it too (`Tab` to the edge, `←` / `→`).
+- **Floating window or full screen**, from the new frame button at the top
+  of the chat or *Look and behaviour → Where it sits*:
+  - **Floating window** - over your work; move it by its top bar, resize it
+    from any edge or corner;
+  - **Full screen** - the whole window like a chat website: conversations in
+    a column on the left, the conversation in a readable column in the
+    middle;
+  - double-click the top bar to go full screen and back; *Reset the size and
+    position* puts the usual sizes back.
+- **Remembered.** The choice, the width, the window's place and size, and
+  the conversations column are saved with the workspace, and the chat opens
+  the same way next time. A smaller screen fits them in without losing them.
+- A record, a dialogue or the command bar opened over a floating or
+  full-screen chat comes up over it, and `Esc` puts that away first.
+
+---
+
 ## 5.11.1 - 2026-10-04
 
 **Diagrams that arrive as text are drawn, the assistant takes a name, and

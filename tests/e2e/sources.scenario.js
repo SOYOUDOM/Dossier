@@ -521,14 +521,14 @@
         title() + " | " + $("chatq").placeholder);
   applyI18n();
   check("...and stays there after the language is applied again", title() === "Elle" && $("chatq").placeholder === "Ask Elle…");
-  check("...and the desk pet without a name of its own takes it", petCfg().name === "Elle", petCfg().name);
+  check("...and the desk pet - the same assistant - goes by it too", petName() === "Elle", petName());
   plan = req => ({ say:"ok" });
   await ask("help me word a reply to the user about their locked account");
   check("...and the flow is told the name it was given", sent.length === nSent + 1 && sent[sent.length - 1].req.workspace.yourName === "Elle" &&
         /workspace\.yourName/.test(sent[sent.length - 1].prompt), JSON.stringify(sent[sent.length - 1].req.workspace.yourName));
   el = await ask("use your own name");
   check("'use your own name' goes back to Resolv, with a chip to keep Elle", chatName() === "Resolv" && title() === L("ChatTitle") &&
-        !chatUI().name && petCfg().name === "" && /Keep Elle/.test(el.textContent) && sent.length === nSent + 1, el.textContent.slice(0, 200));
+        !chatUI().name && petName() === "" && /Keep Elle/.test(el.textContent) && sent.length === nSent + 1, el.textContent.slice(0, 200));
   check("'I'll call you later' is not a name", (await ask("I'll call you later"), chatName() === "Resolv" && !chatUI().name));
 
   /* a mini model that answers the blank picture instead of the question */
@@ -548,5 +548,99 @@
   el = await ask("what's the restart order for the batch servers?");
   check("twice about the picture: says what happened and where the lasting fix is, and the title is not about the picture",
         /blank picture/.test(el.textContent) && /4f/.test(el.textContent) && !/Blank image placeholder/.test(chatThread().title || ""), el.textContent.slice(0, 300) + " | " + chatThread().title);
+
+  /* ── the pet is the assistant; the panel docked, floating or full screen (5.12) ── */
+  const chatBox = $("chat"), appEl = document.querySelector(".app");
+  const pev = (el, type, x, y) => el.dispatchEvent(new PointerEvent(type, { bubbles:true, clientX:x, clientY:y, pointerId:7, button:0, isPrimary:true, pointerType:"mouse" }));
+  /* a name given to the pet before 5.12 becomes the assistant's */
+  delete chatUI().name; S.settings.pet = Object.assign({}, S.settings.pet || {}, { on:true, corner:"br", name:"Pip" });
+  petCfg();
+  check("a pet named before 5.12: its name becomes the assistant's - one name", chatName() === "Pip" && !("name" in S.settings.pet) && petName() === "Pip");
+  chatNameSet("");
+  petPaint(); await sleep(100);
+  check("while the chat is open the pet is in it, not in its corner", $("pet") && $("pet").classList.contains("inchat"));
+  closeChat(); await sleep(150);
+  check("...and comes back out when the chat closes", !$("pet").classList.contains("inchat"));
+  const pb = $("petBtn").getBoundingClientRect();
+  pev($("petBtn"), "pointerdown", pb.left + 20, pb.top + 20); pev($("petBtn"), "pointerup", pb.left + 20, pb.top + 20);
+  await sleep(150);
+  check("clicking the pet is talking to it: the chat opens", chatBox.classList.contains("on") && $("pet").classList.contains("inchat"));
+  closeChat(); await sleep(100);
+  PET.until = 0; chatBox.classList.add("busy"); petSync();
+  check("an answer on its way with the chat closed: the pet thinks, with the panel's own sprite",
+        ($("petBtn").querySelector("img.pxl") || {}).getAttribute("data-pix") === pixKey("think"), ($("petBtn").querySelector("img.pxl") || {}).getAttribute("data-pix"));
+  chatBox.classList.remove("busy"); petSync();
+  chatBot({ say:"The **restart** finished at 22:14 and the queue is empty.", via:"flow" });
+  check("an answer that arrives while the chat is closed: the pet says so", $("pet").classList.contains("news") &&
+        /Your answer is ready/.test($("petSay").textContent) && /restart finished at 22:14/.test($("petSay").textContent) && !/\*\*/.test($("petSay").textContent),
+        $("petSay").textContent);
+  $("petSay").click(); await sleep(150);
+  check("...a click on what it said opens the chat, and the news is read", chatBox.classList.contains("on") && !$("pet").classList.contains("news") && !PET.act);
+  closeChat(); await sleep(100);
+  const alertT = S.tasks.find(t => LIVE.indexOf(t.status) >= 0);
+  if (alertT){
+    alertFire(alertT, Date.now());
+    check("a bell alert is said by the pet too, and a click opens the record", $("petSay").textContent.includes(alertT.code) && typeof PET.act === "function");
+    petHush();
+  }
+
+  openChat(); await sleep(600);      /* past its slide in */
+  check("the panel opens docked, as wide as ever", chatBox.dataset.place === "dock" && Math.round(chatBox.getBoundingClientRect().width) === 452 &&
+        document.body.classList.contains("chatting"), chatBox.getBoundingClientRect().width);
+  const grip = chatBox.querySelector('.chgrip[data-g="w"]'), r0 = chatBox.getBoundingClientRect();
+  pev(grip, "pointerdown", r0.left + 3, 300); pev(document, "pointermove", r0.left - 120, 300); pev(document, "pointermove", r0.left - 248, 300); pev(document, "pointerup", r0.left - 248, 300);
+  await sleep(350);
+  const wide = Math.round(chatBox.getBoundingClientRect().width);
+  check("dragging its left edge makes it wider, and the work makes room", Math.abs(wide - 700) <= 2 && chatUI().dockW === wide &&
+        Math.round(parseFloat(getComputedStyle(appEl).paddingRight)) === wide, wide + " " + chatUI().dockW + " " + getComputedStyle(appEl).paddingRight);
+  grip.dispatchEvent(new KeyboardEvent("keydown", { key:"ArrowLeft", bubbles:true }));
+  check("...and so does the keyboard on that edge", chatUI().dockW === wide + 32, chatUI().dockW);
+  $("chatPlace").click(); await sleep(100);
+  check("the frame button offers three places, the current one ticked", !$("chatPlaceMenu").hidden &&
+        $("chatPlaceMenu").querySelectorAll("[data-place]").length === 3 &&
+        $("chatPlaceMenu").querySelector('[aria-checked="true"]').dataset.place === "dock");
+  $("chatPlaceMenu").querySelector('[data-place="float"]').click(); await sleep(350);
+  let fr = chatBox.getBoundingClientRect();
+  check("floating: a window over the work, which is not squeezed", chatBox.dataset.place === "float" && $("chatPlaceMenu").hidden &&
+        !document.body.classList.contains("chatting") && Math.round(fr.width) === 480 && parseFloat(getComputedStyle(appEl).paddingRight) === 0, JSON.stringify(fr));
+  const hb = chatBox.querySelector(".chh .chid").getBoundingClientRect();
+  pev(chatBox.querySelector(".chh .chid"), "pointerdown", hb.left + 4, hb.top + 4); pev(document, "pointermove", hb.left - 200, hb.top + 24); pev(document, "pointerup", hb.left - 200, hb.top + 24);
+  const se = chatBox.querySelector('.chgrip[data-g="se"]').getBoundingClientRect();
+  pev(chatBox.querySelector('.chgrip[data-g="se"]'), "pointerdown", se.left + 4, se.top + 4); pev(document, "pointermove", se.left + 84, se.top - 36); pev(document, "pointerup", se.left + 84, se.top - 36);
+  await sleep(300);
+  const fb = chatUI().floatBox, f2 = chatBox.getBoundingClientRect();
+  check("...moved by its top bar and resized from a corner, both kept", fb && fb.x === Math.round(fr.left - 204) && fb.w === 560 &&
+        Math.abs(f2.left - fb.x) < 1 && Math.abs(f2.width - 560) < 1 && Math.abs(f2.height - fb.h) < 1, JSON.stringify(fb) + " " + JSON.stringify(f2));
+  chatPlaceSet("full"); await sleep(350);
+  fr = chatBox.getBoundingClientRect();
+  check("full screen: the whole window, the conversations in a column of their own", chatBox.dataset.place === "full" &&
+        fr.width === innerWidth && fr.height === innerHeight && chatBox.classList.contains("convos") &&
+        getComputedStyle(chatBox.querySelector(".chside")).position === "relative", JSON.stringify(fr));
+  const colL = $("chatLog").getBoundingClientRect(), colPad = parseFloat(getComputedStyle($("chatLog")).paddingLeft);
+  check("...and the thread in a readable column down the middle", colL.width - 2 * colPad <= 862, colL.width + " " + colPad);
+  chatBox.querySelector(".chh .chid").dispatchEvent(new MouseEvent("dblclick", { bubbles:true })); await sleep(250);
+  check("a double-click on the top bar goes back to where it was", chatPlace() === "float" && !chatBox.classList.contains("convos"));
+  chatPlaceSet("full"); await sleep(100);
+  if (typeof saveNow === "function") await saveNow(true);
+  const keptUI = JSON.parse(await (await (await ws.getFileHandle("dossier.json")).getFile()).text()).settings.chatUI;
+  check("the place, the docked width and the window are saved with the workspace", keptUI.place === "full" && keptUI.dockW === wide + 32 &&
+        keptUI.floatBox && keptUI.floatBox.w === 560 && keptUI.placeBack === "float", JSON.stringify({ place:keptUI.place, dockW:keptUI.dockW, floatBox:keptUI.floatBox }));
+  /* as it would be on the next start: the panel put where it was */
+  closeChat(); delete chatBox.dataset.place; chatBox.classList.remove("convos");
+  openChat(); await sleep(300);
+  check("...and the panel opens there next time", chatBox.dataset.place === "full" && chatBox.classList.contains("convos"));
+  const recT = S.tasks[0];
+  if (recT){
+    openDrawer(recT.id); await sleep(300);
+    check("a record opened over the full-screen chat comes up on top of it",
+          +getComputedStyle($("drawer")).zIndex > +getComputedStyle(chatBox).zIndex, getComputedStyle($("drawer")).zIndex);
+    document.dispatchEvent(new KeyboardEvent("keydown", { key:"Escape", bubbles:true })); await sleep(250);
+    check("...and Esc puts the record away first, leaving the chat open", !$("drawer").classList.contains("on") && chatBox.classList.contains("on"));
+  }
+  chatPlaceMenu(true); $("chatPlaceMenu").querySelector("[data-placereset]").click();
+  chatPlaceSet("dock"); await sleep(300);
+  check("'Reset the size and position' puts the usual width back", !("dockW" in chatUI()) && !("floatBox" in chatUI()) &&
+        Math.round(chatBox.getBoundingClientRect().width) === 452 && document.body.classList.contains("chatting"),
+        JSON.stringify({ dockW:chatUI().dockW, floatBox:chatUI().floatBox, w:chatBox.getBoundingClientRect().width, chatting:document.body.classList.contains("chatting") }));
   return { checks };
 })()

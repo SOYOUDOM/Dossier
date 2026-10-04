@@ -84,13 +84,13 @@ A *workspace* is a folder the user picks (File System Access API):
 - Commit messages: clear summary + body; no model names in commits, code or
   docs. Do not open a pull request unless the owner asks.
 - Work so far is on branch `claude/chat-panel-pixel-art-gifs-d822hq`
-  (latest: 5.11.1). Follow the branch instructions of your own session.
+  (latest: 5.12.0). Follow the branch instructions of your own session.
 
 ## Testing
 
 ```
 node --test                                   # 47 unit tests (Sources, grounding, flow reply fields, diagrams)
-node tests/e2e/run.js                         # the app in headless Chrome/Edge: 101 checks (CHROME=<path> to choose)
+node tests/e2e/run.js                         # the app in headless Chrome/Edge: 122 checks (CHROME=<path> to choose)
 node flow/check-prompt.js                     # after editing flow/prompt.txt ...
 python3 flow/embed-prompt.py                  # ... then copy it into flow.js (PROMPT_BUILTIN)
 node tests/fixtures/make-pdf.js               # regenerate the PDF fixtures
@@ -113,6 +113,33 @@ Also useful:
 
 ## Recent history (newest first)
 
+- **5.12.0** — The owner asked for the pet and the assistant to be "the same
+  person", and for a chat panel that can be wider, floating or full screen,
+  remembered. Pet (`THE DESK PET`): one name - `petName()` reads
+  `chatUI.name`; `petCfg()` moves an old `pet.name` into it (only when the
+  assistant has none) and deletes it; the Appearance field calls
+  `chatNameSet`. Click → `petTalk()` opens the chat (or runs `PET.act`, the
+  news on its bubble); hover 450 ms / keyboard focus → `petSpeak()` (the day
+  line, was the click). `petTell(html, act, ms)` / `petHush()` for the
+  bubble (`.pet.news` dot); `petNews(r)` from `chatBot` when the panel is
+  shut; `alertFire` and the look-back say it too; `petRest()` returns
+  `think` (the panel's 16-px sprite, `PET_ART.think`) while `.chat.busy`,
+  `petSync()` from `chatThinking`/`chatThought`. `.pet.inchat` (hidden)
+  while the panel is open (`petInChat()`), replacing the old step-aside
+  transform. Panel (`WHERE THE ASSISTANT SITS`, CSS block at the end of
+  the stylesheet + JS after `closeChat`): `chatUI.place` dock|float|full,
+  `dockW`, `floatBox {x,y,w,h}`, `placeBack`, `fullSide`;
+  `chatPlaceApply()` (from `applyChatUI` and on resize) sets
+  `.chat[data-place]`, `--chat-w` on :root (every old `min(452px,96vw)`
+  now uses it), `--cf-*`, body `chatting` (dock only) / `chatover`
+  (float/full: drawer/modal/cmd… raised above z 62; Esc closes them
+  first). `.chgrip[data-g]` edges (dock: w only; keyboard ←/→; dblclick
+  resets), header drag in float, header dblclick toggles full. Menu
+  `#chatPlaceMenu` from `#chatPlace` (frame icon; Lumen mask
+  `--lmi-place`; non-Lumen an inline SVG with a `::before` zero-width
+  space so the baseline-aligned header row does not move). The panel itself
+  carries `data-place`, so look up menu items with `button[data-place]`.
+  Look and behaviour has "Where it sits" (`data-placepick`).
 - **5.11.1** — Two reports from the owner. (1) A diagram came back as text
   ("mermaid\nflowchart TD\nA[…] --> …"): their flow's old *Clean* step
   `replace(…, '```', '')` strips every backtick fence. `chatMend` now runs

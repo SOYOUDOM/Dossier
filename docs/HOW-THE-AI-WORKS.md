@@ -507,7 +507,7 @@ longer grows as you use the app.
   conversation finds the same passages as the old one.
 - **Tests run the real app** in a browser with a *stand-in* AI that returns
   scripted replies, so every check is repeatable: `node --test` (47 tests) and
-  `node tests/e2e/run.js` (101 checks).
+  `node tests/e2e/run.js` (122 checks).
 
 ---
 

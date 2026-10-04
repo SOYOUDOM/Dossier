@@ -660,11 +660,20 @@ alone, and choosing again afterwards always sticks.
 
 ### 6.6 The desk pet
 
-The character that greets an empty thread, parked in a corner of the window
-for the rest of the day — the robot, or the heart while the chat skin is
-**Crimson**. It is the same drawing and the same sixteen colours
-as [the pixel set](#the-pixel-set); what differs is what it answers to — the
-workspace rather than the conversation.
+**The desk pet is the assistant.** Not a second character: the same one, out
+of its panel and parked in a corner of the window — the robot, or the heart
+while the chat skin is **Crimson**. It is the same drawing and the same
+sixteen colours as [the pixel set](#the-pixel-set), it has the same name, and
+since 5.12 it behaves as the same person:
+
+| You | It |
+|---|---|
+| **click it** | the chat opens and it goes in there — it is the one in the panel's header and the one that waits with you while an answer comes |
+| close the chat | it comes back out to its corner and waves |
+| point at it (hold still a moment) | says one line about your day: what is overdue, what is due, what it would pick up next, what you closed today |
+| ask something, then close the chat | it thinks in its corner, with the same sprite the panel uses — and when the answer arrives it says *Your answer is ready* with the start of it, and a dot; click it (or what it said) to read it |
+| have a bell alert go off | it says the alert too; a click opens the record |
+| get the morning look-back | it tells you; a click opens it |
 
 For the whole of an ordinary afternoon it is a drawing in a corner that
 blinks. Everything else it does is an answer to something that just happened:
@@ -680,15 +689,18 @@ blinks. Everything else it does is an answer to something that just happened:
 
 **Drag it to any of the four corners** — it snaps to the nearest one, and the
 corner is remembered in `dossier.json`. Arrow keys do the same when it has
-focus. **Click it for one line about your day**, and again for the next: what
-is overdue, what is due, what it would pick up next, what you closed today.
-It opens nothing.
+focus; `Enter` opens the chat.
 
 It stays out of the way on purpose. Only the 48-pixel square it occupies
 takes a click. It fades out entirely while a drawer, a dialogue or the menu
-is open over the work, and it steps aside rather than being sat on when the
-assistant docks over the corner it is in. It reads your records and writes
-nothing but its own corner and name.
+is open over the work, and while the chat is open it is in the chat, not in
+its corner. It reads your records and writes nothing but its own corner.
+
+**Its name is the assistant's name.** Name it in the chat (*"I named you
+Elle"*) or under *Menu → Appearance → Desk pet* — either way it is one name:
+over the chat, in the box you type in, on the pet, and told to the AI. A pet
+named before 5.12 gives its name to the assistant, unless the assistant
+already had one.
 
 *Menu → Appearance → Desk pet* holds the switch, the name and the corner. A
 machine that has asked for reduced motion — or an interface already set to
@@ -1662,6 +1674,39 @@ dragging you down. The send button is dim until there is something to send
 and spins while the endpoint works. Everything goes still under *Motion:
 none*.
 
+#### How do I make the chat panel wider?
+
+**Drag its left edge.** Point at the panel's left edge — a coloured line shows
+— and drag left to make it wider (for a long answer, a wide table, a
+diagram), or right to make it narrower. Your work on the left makes room
+rather than being covered. **Double-click the edge** for the usual width
+(452 pixels). With the keyboard: `Tab` to the edge, then `←` / `→`.
+
+Resolv keeps the width with your workspace, so the panel opens the same width
+next time. On a small window it is fitted in (your work always keeps at least
+340 pixels), without forgetting the width you chose.
+
+#### How do I make the chat a floating window, or full screen?
+
+Click the **frame button** at the top of the chat (next to ✕), or open **Look
+and behaviour** (the ◎ or sliders button) → **Where it sits**. Three choices:
+
+| Choice | What it is |
+|---|---|
+| **Side panel** | The usual: on the right, beside your work. Drag its left edge to change the width. |
+| **Floating window** | A window of its own, over your work. **Move it** by its top bar; **resize it** from any edge or corner. |
+| **Full screen** | The whole window, like a chat website: your conversations in a column on the left, the conversation in a readable column in the middle. The ☰ button shows or hides the conversations. |
+
+**Double-click the top bar** of the chat to go full screen, and again to go
+back to where it was. **Reset the size and position** (in the frame button's
+menu) puts the usual width and window back.
+
+Everything is remembered — the choice, the side panel's width, the floating
+window's place and size, and whether the conversations column shows at full
+screen — and the chat opens the same way next time. A record or a dialogue
+you open from a floating or full-screen chat comes up over it, and `Esc`
+puts that away first.
+
 *Chase → Write it with the assistant* has the flow draft the chase from the
 facts and the tone you chose; every notice on the day view can be handed to
 the assistant with one press. A PDF or a log attached to a question is read
@@ -1963,12 +2008,14 @@ the name is:
 - at the top of the chat panel, and over each of its answers (in the
   Lumen and Crimson skins, which write a name there);
 - in the box you type in (*Ask Elle…*);
-- on the desk pet, if the pet has no name of its own;
+- on the desk pet — it is the same assistant, so it has the same name;
 - told to the AI with every question, so it calls itself Elle.
 
 A **Keep Resolv** button under the reply puts the old name back if you change
 your mind. To go back later, say *"use your own name"*. *"What's your name?"*
-gets the name you gave it. The name is kept with your workspace.
+gets the name you gave it. The name is kept with your workspace. You can also
+type it under *Menu → Appearance → Desk pet → Its name*: the pet and the
+assistant are one character with one name.
 
 #### The assistant talked about a blank or white picture I never sent — why?
 
@@ -2981,7 +3028,7 @@ first thing to run after changing anything it touches:
 
 ```
 node --test                 # tests/*.test.js: 47 tests - Sources (every scenario below) and diagrams
-node tests/e2e/run.js       # the app in Chrome or Edge: 101 checks on the screen
+node tests/e2e/run.js       # the app in Chrome or Edge: 122 checks on the screen
 node flow/check-prompt.js   # the prompt's examples against the reply validator
 ```
 
