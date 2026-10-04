@@ -69,7 +69,7 @@ A *workspace* is a folder the user picks (File System Access API):
 - **Talk to the owner in plain, simple English** (not their first language).
   Short steps, no jargon without explanation.
 - **New designs are added as selectable presets; existing ones are never
-  removed** (looks: Studio, Quiet, Classic, Nova; chat skins incl. Lumen).
+  removed** (looks: Studio, Quiet, Classic, Nova; chat skins incl. Lumen and Crimson).
 - **Nothing new may reach the internet.** Only the user's own Power Automate
   flow, through `flow/relay.html`. Telegram was tried (5.6–5.7) and **removed
   completely in 5.8** because the company blocks it and it could look
@@ -83,13 +83,13 @@ A *workspace* is a folder the user picks (File System Access API):
 - Commit messages: clear summary + body; no model names in commits, code or
   docs. Do not open a pull request unless the owner asks.
 - Work so far is on branch `claude/chat-panel-pixel-art-gifs-d822hq`
-  (latest: 5.9.5). Follow the branch instructions of your own session.
+  (latest: 5.10.0). Follow the branch instructions of your own session.
 
 ## Testing
 
 ```
 node --test                                   # 37 unit tests (Sources, grounding, flow reply fields)
-node tests/e2e/run.js                         # the app in headless Chrome/Edge: 73 checks (CHROME=<path> to choose)
+node tests/e2e/run.js                         # the app in headless Chrome/Edge: 81 checks (CHROME=<path> to choose)
 node flow/check-prompt.js                     # after editing flow/prompt.txt ...
 python3 flow/embed-prompt.py                  # ... then copy it into flow.js (PROMPT_BUILTIN)
 node tests/fixtures/make-pdf.js               # regenerate the PDF fixtures
@@ -112,6 +112,21 @@ Also useful:
 
 ## Recent history (newest first)
 
+- **5.10.0** — Crimson chat skin: red `#d31145` and white, with a heart
+  character. It is named and drawn as Resolv's own — no company name, logo
+  or slogan anywhere in the repository; keep it that way. Lumen's layout rules
+  are scoped `.chat[data-lm]` (set by `applyChatUI` for skins with `lm:true`
+  in `CHAT_SKINS`, checked with `chatLm()`); Lumen keeps its colour tokens on
+  that rule, Crimson overrides them in the `CRIMSON` block after `/LUMEN`
+  (marks `--lm-mark*`, heartbeat `--cr-ecg*`, red send/primary). A skin's
+  pixel set: `art:"crimson/"` → `chatArtSet()` → `pixKey(name)` used by
+  `pixArt`, `chatOrbPix`, the slow swap; `petRedress()` and `chatPaint()` on
+  a skin change. Marks: `CHAT_MARKS` + `chatMarkApply()` (Crimson ignores the
+  shipped `assets/assistant-logo.png`; `assets/crimson-mark.png` overrides).
+  `art/make-pixel-art.py`: `gif(…, pal)`, `PAL_CRIMSON`, hand-drawn `HEART`
+  /`HHEAD` (do not reuse the robot's `HEAD` name), `write_set`; robot GIFs
+  must stay byte-identical. The CSS source was generated with marks as SVG
+  data URIs; edit the block in place.
 - **5.9.5** — Reported (made-up wording here): "here is the fix for D-0153 ·
   Steps: … exactly 5 years after the start date … please close it with these
   steps" was

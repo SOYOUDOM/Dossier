@@ -6,6 +6,47 @@ holds — which is what to paste into a bug report.
 
 ---
 
+## 5.10.0 - 2026-10-04
+
+**Crimson: a red-and-white chat skin with a character of its own - a small
+red heart in place of the robot.**
+
+- **New skin, Crimson** (◎ → Skin → Crimson, marked *New*). Lumen's layout,
+  in white with red (`#d31145`) for send, links, switches, the focus ring and
+  the main button; a soft pink bubble for your messages; a thin red line
+  along the top of the panel. In dark mode it turns charcoal with a brighter
+  red (`#ff4d76`). Every other skin is exactly as it was - Lumen's chat panel
+  was compared pixel by pixel before and after.
+- **Its mark** is a white heart with a pulse line through it on a red tile,
+  in the header and over each answer; it beats while an answer is on its way.
+  The greeting has a heartbeat line under *Good morning*, moving while
+  *Passing light* is on and still otherwise.
+- **A new character: the heart.** All sixteen pixel sprites are drawn again
+  for it in a palette of its own (a deep wine outline, the red body, a lit
+  side, pink cheeks): thinking, dozing, the beating header mark, the wave on
+  an empty conversation, and the seven desk-pet moods - cheering, worrying,
+  napping, stamping a record, stretching, being carried. While Crimson is the
+  skin, **the desk pet is the heart too**. Pick another skin and the robot is
+  back, everywhere at once.
+- **Your own mark for it**: a picture at `assets/crimson-mark.png` beside
+  the app is Crimson's mark. The blue star that comes with Resolv is not used
+  by Crimson, which keeps its own heart unless a picture is there for it by
+  name.
+- With *Pixel art* off, the waiting animation is turned to Crimson's red.
+- Under the bonnet: Lumen's layout rules now apply to any skin built on it
+  (`data-lm`), so a skin can share the layout and bring its own colours; a
+  skin can bring its own pixel set (`assets/pixel/<set>/`), picked by
+  `pixKey()`. `art/make-pixel-art.py` draws both characters, each with its
+  own palette (the robot's GIFs are byte for byte the same), and writes
+  `art/contact-sheet-crimson.png`.
+- README: *Crimson* - *How do I make the assistant red, with the heart?*,
+  *Can I use my own picture as Crimson's mark?*
+- Tests: 81 browser checks (picking Crimson, the heart in every sprite, the
+  greeting, the header and the desk pet, its own mark, Lumen and the others
+  unchanged).
+
+---
+
 ## 5.9.5 - 2026-10-01
 
 **Closing a record with your own steps is not "held back" any more, and your

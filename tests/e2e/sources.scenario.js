@@ -442,5 +442,33 @@
   renderLib();
   check("...still folded when drawn again", !document.querySelector(".srcpanel").classList.contains("open"));
   $("srcFold").click();
+
+  /* ── the Crimson skin (5.10): Lumen's layout, its own colours and its own
+     character - a heart in place of the robot, everywhere the robot was ── */
+  openChat(); openChatFx(); await sleep(150);
+  document.querySelector('#chatFxBody [data-skin="crimson"]').click(); await sleep(200);
+  const chatEl = $("chat");
+  check("Crimson is picked from the Look sheet, on Lumen's layout", chatEl.dataset.skin === "crimson" && "lm" in chatEl.dataset &&
+        chatUI().skin === "crimson" && (chatUI().tried || []).includes("crimson"), chatEl.dataset.skin);
+  check("...its character is the heart: every sprite has a Crimson drawing",
+        ["think", "slow", "orb", "hero", "done", "no", "oops", "ask", "new", "pet-idle", "pet-cheer", "pet-worry", "pet-nap", "pet-work", "pet-stretch", "pet-held"]
+          .every(n => pixKey(n) === "crimson/" + n && /^data:image\/gif|\.gif$/.test(PIX[pixKey(n)])), pixKey("think"));
+  closeChatFx(); chatNew(true); chatPaint(); await sleep(200);
+  if (chatPixOn()){
+    const hero = document.querySelector("#chatLog .chhero img.pxl"), orb = document.querySelector("#chatOrb img.pxl");
+    check("...the greeting and the header show the heart", hero && hero.getAttribute("data-pix") === "crimson/hero" &&
+          orb && orb.getAttribute("data-pix") === "crimson/orb", (hero && hero.getAttribute("data-pix")) + " " + (orb && orb.getAttribute("data-pix")));
+  }
+  if (typeof petOn === "function" && petOn() && $("petBtn"))
+    check("...and so does the desk pet", /^crimson\//.test(($("petBtn").querySelector("img.pxl") || {}).getAttribute("data-pix") || ""));
+  check("...the blue star that comes with Resolv does not cover the heart's own mark", !chatEl.classList.contains("ownmark"));
+  check("...and the greeting has its heartbeat line", getComputedStyle(document.querySelector("#chatLog .chhero .lmhs"), "::after").backgroundImage.includes("svg"));
+  /* back to Lumen: the robot, the star, nothing of Crimson left behind */
+  chatUI().skin = "lumen"; applyChatUI(); chatPaint(); await sleep(100);
+  check("Lumen is as it was: its layout, the robot, its mark", "lm" in chatEl.dataset && pixKey("think") === "think" &&
+        chatEl.classList.contains("ownmark") === !!CHAT_MARKS.base);
+  chatUI().skin = "nebula"; applyChatUI(); await sleep(50);
+  check("...and a skin without Lumen's layout does not carry it", !("lm" in chatEl.dataset) && pixKey("hero") === "hero");
+  chatUI().skin = "lumen"; applyChatUI();
   return { checks };
 })()

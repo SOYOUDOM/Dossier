@@ -132,7 +132,7 @@ def blocks(data):
     return bytes(out)
 
 
-def gif(frames, delay_cs, loop=True):
+def gif(frames, delay_cs, loop=True, pal=None):
     """frames: a list of 2-D lists of palette indices, all the same size.
     delay_cs: hundredths of a second, one number or one per frame.
     loop=False leaves the Netscape block out, so the animation plays once and
@@ -146,7 +146,7 @@ def gif(frames, delay_cs, loop=True):
     out = bytearray(b"GIF89a")
     out += struct.pack("<HH", w, h)
     out += bytes([0xF3, 0x00, 0x00])          # global table, 16 colours
-    for _, (r, g, b) in PAL:
+    for _, (r, g, b) in (pal or PAL):
         out += bytes([r, g, b])
     if loop:
         out += b"\x21\xFF\x0BNETSCAPE2.0\x03\x01\x00\x00\x00"
@@ -681,6 +681,415 @@ SPRITES = [
 ]
 
 
+# ═══ the second character: the heart, for the Crimson skin ══════════════════
+# Crimson is red and white, and its assistant is not the robot repainted but a
+# character of its own: a small red heart with a face, two stick arms, and a
+# beat. Same sixteen names, same sizes, same timing as the robot's set, so the
+# app shows whichever set belongs to the skin with no other change.
+#
+# Same sixteen letters as PAL in the same order, so every helper above (and
+# the five shared drawings - done, no, oops, ask, new) works unchanged; only
+# what the letters mean changes. The same rules hold too: no pure black, no
+# pure white, and an outline that is a deep wine rather than black, so the
+# heart reads on Crimson's white and on its charcoal dark mode.
+PAL_CRIMSON = [
+    ("." , (0xD3, 0x11, 0x45)),   # 0  transparent (filled with the body red)
+    ("K" , (0x4A, 0x0A, 0x1E)),   # 1  outline, deep wine
+    ("D" , (0xA0, 0x0E, 0x37)),   # 2  shade
+    ("B" , (0xD3, 0x11, 0x45)),   # 3  body red
+    ("A" , (0xF0, 0x45, 0x6C)),   # 4  bright red, the lit side
+    ("L" , (0xFF, 0xB8, 0xC8)),   # 5  light pink
+    ("W" , (0xFF, 0xF6, 0xF8)),   # 6  white
+    ("C" , (0x2A, 0x22, 0x2B)),   # 7  the eyes and the smile, charcoal
+    ("G" , (0x2F, 0xAE, 0x72)),   # 8  green, a yes
+    ("Y" , (0xFF, 0xC2, 0x4D)),   # 9  amber
+    ("O" , (0xFF, 0x8A, 0x4C)),   # 10 orange
+    ("R" , (0xFF, 0x6B, 0x85)),   # 11 rose
+    ("P" , (0xFF, 0x9D, 0xB5)),   # 12 blush, the cheeks
+    ("S" , (0x8E, 0x8A, 0x93)),   # 13 slate, a left-alone
+    ("E" , (0x1F, 0x7A, 0x52)),   # 14 deep green
+    ("N" , (0x1C, 0x1A, 0x20)),   # 15 deepest
+]
+OUT_CRIMSON = os.path.join(OUT, "crimson")
+
+
+# Drawn by hand rather than from the heart's equation: at this size the
+# equation gives a lobe of one stray pixel and a notch that is not there.
+# Each heart has a beat - a second drawing a pixel bigger all round but the
+# point, which is where a beat pushes out from.
+HEART = grid([
+    "........................",
+    "........................",
+    "......KKKK....KKKK......",
+    ".....KBBBBK..KBBBBK.....",
+    "....KBBBBBBKKBBBBBBK....",
+    "...KBBBBBBBBBBBBBBBBK...",
+    "...KBBBBBBBBBBBBBBBBK...",
+    "...KBBBBBBBBBBBBBBBBK...",
+    "...KBBBBBBBBBBBBBBBBK...",
+    "...KBBBBBBBBBBBBBBBBK...",
+    "....KBBBBBBBBBBBBBBK....",
+    "....KBBBBBBBBBBBBBBK....",
+    ".....KBBBBBBBBBBBBK.....",
+    "......KBBBBBBBBBBK......",
+    ".......KBBBBBBBBK.......",
+    "........KBBBBBBK........",
+    ".........KBBBBK.........",
+    "..........KBBK..........",
+    "...........KK...........",
+    "........................",
+    "........................",
+    "........................",
+    "........................",
+    "........................",
+])
+HEART_BIG = grid([
+    "........................",
+    ".....KKKKK....KKKKK.....",
+    "....KBBBBBK..KBBBBBK....",
+    "...KBBBBBBBKKBBBBBBBK...",
+    "..KBBBBBBBBBBBBBBBBBBK..",
+    "..KBBBBBBBBBBBBBBBBBBK..",
+    "..KBBBBBBBBBBBBBBBBBBK..",
+    "..KBBBBBBBBBBBBBBBBBBK..",
+    "..KBBBBBBBBBBBBBBBBBBK..",
+    "..KBBBBBBBBBBBBBBBBBBK..",
+    "...KBBBBBBBBBBBBBBBBK...",
+    "....KBBBBBBBBBBBBBBK....",
+    ".....KBBBBBBBBBBBBK.....",
+    "......KBBBBBBBBBBK......",
+    ".......KBBBBBBBBK.......",
+    "........KBBBBBBK........",
+    ".........KBBBBK.........",
+    "..........KBBK..........",
+    "...........KK...........",
+    "........................",
+    "........................",
+    "........................",
+    "........................",
+    "........................",
+])
+HHEAD = grid([
+    "................",
+    "...KKK....KKK...",
+    "..KBBBK..KBBBK..",
+    ".KBBBBBKKBBBBBK.",
+    ".KBBBBBBBBBBBBK.",
+    ".KBBBBBBBBBBBBK.",
+    ".KBBBBBBBBBBBBK.",
+    "..KBBBBBBBBBBK..",
+    "...KBBBBBBBBK...",
+    "....KBBBBBBK....",
+    ".....KBBBBK.....",
+    "......KBBK......",
+    ".......KK.......",
+    "................",
+    "................",
+    "................",
+])
+HHEAD_BIG = grid([
+    "..KKKK....KKKK..",
+    ".KBBBBK..KBBBBK.",
+    "KBBBBBBKKBBBBBBK",
+    "KBBBBBBBBBBBBBBK",
+    "KBBBBBBBBBBBBBBK",
+    "KBBBBBBBBBBBBBBK",
+    "KBBBBBBBBBBBBBBK",
+    ".KBBBBBBBBBBBBK.",
+    "..KBBBBBBBBBBK..",
+    "...KBBBBBBBBK...",
+    "....KBBBBBBK....",
+    ".....KBBBBK.....",
+    "......KBBK......",
+    ".......KK.......",
+    "................",
+    "................",
+])
+
+
+def lit(src):
+    """Shade and light for a heart: the inside pixel against the outline on
+    the lower right goes dark, the top of the left lobe catches the light."""
+    g = copy(src)
+    H, W = len(g), len(g[0])
+    mid = W / 2.0
+    for y in range(H):
+        for x in range(W):
+            if g[y][x] != "B":
+                continue
+            right = x + 1 < W and g[y][x + 1] == "K" and x >= mid and y >= H * 0.3
+            below = y + 1 < H and g[y + 1][x] == "K" and x >= mid - 1 and y >= H * 0.4
+            if right or below:
+                g[y][x] = "D"
+    top = min(y for y in range(H) if "K" in "".join(g[y]))
+    # the first lit pixels on the left lobe, a row and two in from its edge
+    for dy, steps in ((1, "AW"), (2, "AW"), (3, "A")):
+        y = top + dy
+        xs = [x for x in range(int(mid)) if g[y][x] == "B"]
+        for i, ch in enumerate(steps):
+            if i < len(xs):
+                g[y][xs[i] + (1 if dy == 1 else 0)] = ch
+    return g
+
+
+HEART_LIT, HEART_BIG_LIT = lit(HEART), lit(HEART_BIG)
+HHEAD_LIT, HHEAD_BIG_LIT = lit(HHEAD), lit(HHEAD_BIG)
+
+
+def heart(g, big=False, dy=0):
+    """The 24-pixel heart onto g, dropped by dy (negative is a hop)."""
+    src = HEART_BIG_LIT if big else HEART_LIT
+    for y, row in enumerate(src):
+        for x, ch in enumerate(row):
+            if ch != "." and 0 <= y + dy < len(g):
+                g[y + dy][x] = ch
+    return g
+
+
+def hface(g, how="open", dy=0, x0=0, mouth=None):
+    """The face of the 24-pixel heart: eyes two wide and three tall with a
+    glint, pink cheeks and a small smile. x0 moves the eyes for a glance."""
+    ex = (8 + x0, 14 + x0)
+    ey = 7 + dy
+    if how == "shut":
+        for x in ex:
+            paste(g, ["CC"], x, ey + 2)
+    elif how == "happy":                     # shut in a smile: an arch each
+        for x in ex:
+            paste(g, ["CC"], x, ey)
+            px(g, x - 1, ey + 1, "C"); px(g, x + 2, ey + 1, "C")
+    elif how == "wide":
+        for x in ex:
+            paste(g, ["WC", "CC", "CC"], x, ey - 1)
+    elif how == "small":
+        for x in ex:
+            paste(g, ["CC", "CC"], x, ey + 1)
+    else:
+        for x in ex:
+            paste(g, ["WC", "CC", "CC"], x, ey)
+    px(g, 6, ey + 3, "P"); px(g, 7, ey + 3, "P")
+    px(g, 16, ey + 3, "P"); px(g, 17, ey + 3, "P")
+    mouth = mouth or ("open" if how in ("happy", "wide") else "smile")
+    if mouth == "open":                      # a laugh: a half moon, a pink tongue
+        paste(g, ["CCCC", ".CR."], 10, ey + 3)
+    elif mouth == "flat":
+        paste(g, ["CC"], 11, ey + 4)
+    elif mouth == "wobble":
+        paste(g, ["C..C", ".CC."], 10, ey + 4)
+        g[ey + 4][10] = "B" if g[ey + 4][10] == "C" else g[ey + 4][10]
+        g[ey + 4][13] = "B" if g[ey + 4][13] == "C" else g[ey + 4][13]
+        paste(g, [".CC."], 10, ey + 4); px(g, 10, ey + 5, "C"); px(g, 13, ey + 5, "C")
+    else:
+        px(g, 10, ey + 3, "C"); px(g, 13, ey + 3, "C")
+        px(g, 11, ey + 4, "C"); px(g, 12, ey + 4, "C")
+
+
+def edge_x(g, y, side):
+    """Where the outline is on one row: the leftmost or rightmost K."""
+    xs = [x for x, ch in enumerate(g[y]) if ch == "K"]
+    if not xs:
+        return 12
+    return min(xs) if side == "L" else max(xs)
+
+
+def harm(g, side, how="down", dy=0):
+    """A stick arm that starts on the outline and a round hand on its end.
+    Down hangs beside the body; out reaches forward to hold something; up is
+    raised over the lobes; wave is raised to the side with the hand open."""
+    L = side == "L"
+    st = -1 if L else 1
+    sy = 10 + dy                              # the shoulder row
+    sx = edge_x(g, sy, side) + st             # one pixel off the outline
+    if how == "down":
+        pts = [(sx, sy), (sx, sy + 1), (sx, sy + 2)]
+        hx, hy = sx, sy + 3
+    elif how == "out":
+        pts = [(sx, sy), (sx, sy + 1), (sx - st, sy + 2)]
+        hx, hy = sx - st * 2, sy + 3
+    elif how == "up":
+        pts = [(sx, sy - 1), (sx + st, sy - 2), (sx + st, sy - 3), (sx + st, sy - 4)]
+        hx, hy = sx + st * 2, sy - 6
+    elif how == "wave":
+        pts = [(sx, sy - 1), (sx + st, sy - 2), (sx + st * 2, sy - 3)]
+        hx, hy = sx + st * 3, sy - 5
+    else:
+        return
+    # in the shade red, not the outline's wine: a wine arm is lost on the
+    # dark mode's charcoal, and this one reads on white and on charcoal
+    for (x, y) in pts:
+        px(g, x, y, "D")
+    # the hand: two by two, lit on the side towards the body
+    x0 = hx - 1 if L else hx
+    paste(g, ["DD", "DD"], x0, hy)
+    px(g, x0 + (1 if L else 0), hy, "A")
+
+
+def hshadow(g, w, y=20):
+    """The floor under it: a short dark bar that shrinks when it hops."""
+    paste(g, ["D" * w], 12 - w // 2, y)
+
+
+def hpose(arms=("down", "down"), look="open", dy=0, big=False, over=None, front=None, glance=0, floor=8, mouth=None):
+    g = blank(24, 24)
+    if floor:
+        hshadow(g, floor)
+    heart(g, big, dy)
+    harm(g, "L", arms[0], dy); harm(g, "R", arms[1], dy)
+    hface(g, look, dy, glance, mouth)
+    if front:
+        paste(g, front[0], front[1], front[2])
+    if over:
+        paste(g, over[0], over[1], over[2])
+    return g
+
+
+def small_heart(look="open", glance=0, beat=False, face=True):
+    """The 16-pixel head: the thinking mark, the slow one and the header's."""
+    g = copy(HHEAD_BIG_LIT if beat else HHEAD_LIT)
+    if not face:
+        return g
+    x0 = 5 + glance
+    if look == "shut":
+        paste(g, ["CC"], x0 - 1, 6); paste(g, ["CC"], x0 + 5, 6)
+    else:
+        paste(g, ["C", "C"], x0, 5); paste(g, ["C", "C"], x0 + 5, 5)
+    px(g, 7, 8, "C"); px(g, 8, 8, "C")
+    return g
+
+
+def cr_think():
+    """Waiting on an answer: it looks one way, then the other, and beats."""
+    return [small_heart(), small_heart(glance=-1, beat=True), small_heart(),
+            small_heart(glance=1, beat=True), small_heart(look="shut"), small_heart()], 15
+
+
+def cr_slow():
+    """Past eight seconds: eyes shut, and the z rises. The head sits a pixel
+    lower and to the left here, so the z has sky to rise in rather than a
+    lobe to write over."""
+    out = []
+    for i in range(4):
+        g = shift(small_heart(look="shut"), -1, 2)
+        if i in (0, 1):
+            paste(g, ["LLL", "..L", ".L.", "LLL"], 12, 1 - i)
+        if i in (1, 2):
+            paste(g, ["WW", ".W", "WW"], 10, 3 - i)
+        out.append(g)
+    return out, 42
+
+
+def cr_orb():
+    """The mark in the header: a heart that beats - lub, dub, and a rest -
+    with its glint. No face: at the header's size a face is a smudge."""
+    beats = (False, True, False, True, False, False, False, False)
+    return [small_heart(beat=b, face=False) for b in beats], [6, 6, 6, 6, 18, 18, 18, 18]
+
+
+def cr_hero():
+    """An empty thread opens on this: the heart, waving."""
+    star = [".W.", "WWW", ".W."]
+    return [
+        hpose(("down", "down")),
+        hpose(("down", "wave"), over=(star, 1, 4)),
+        hpose(("down", "up")),
+        hpose(("down", "wave"), over=(star, 1, 4)),
+        hpose(("down", "up"), "shut"),
+        hpose(("down", "down"), big=True),
+        hpose(("down", "down")),
+        hpose(("down", "down"), over=(star, 1, 4)),
+    ], 18
+
+
+def cr_pet_idle():
+    """Standing about: still, a blink, and every so often a heartbeat - lub,
+    dub - which is the most a thing in the corner of an afternoon should do."""
+    return [hpose(), hpose(big=True), hpose(), hpose(big=True), hpose(), hpose(look="shut"), hpose()], \
+           [150, 7, 7, 7, 120, 12, 60]
+
+
+def cr_pet_cheer():
+    star = [".W.", "WWW", ".W."]
+    return [
+        hpose(("up", "up"), "happy"),
+        hpose(("up", "up"), "happy", dy=-2, over=(star, 1, 2), floor=6),
+        hpose(("up", "up"), "happy", dy=-2, over=(star, 20, 3), floor=6),
+        hpose(("up", "up"), "happy", dy=-2, over=(star, 1, 2), floor=6),
+        hpose(("up", "up"), "happy"),
+        hpose(),
+    ], [10, 10, 10, 10, 12, 30]
+
+
+def cr_pet_worry():
+    """Something is overdue: a small shuffle and one amber mark beside it."""
+    bang = ["YY", "YY", "YY", "..", "YY"]
+    out = []
+    for i, mark in enumerate((True, True, False, True)):
+        out.append(hpose(("out", "out"), "small", glance=(-1 if i % 2 else 0), over=(bang, 21, 1) if mark else None))
+    return out, [26, 26, 20, 26]
+
+
+def cr_pet_nap():
+    zed = ["LLL", "..L", ".L.", "LLL"]
+    return [
+        hpose(look="shut", dy=1, over=(zed, 20, 0)),
+        hpose(look="shut", dy=1, over=(zed, 20, -1)),
+        hpose(look="shut", dy=1, over=(["WW", ".W", "WW"], 20, 1)),
+        hpose(look="shut", dy=1),
+    ], [70, 70, 70, 90]
+
+
+def cr_pet_work():
+    """A save or a script going out: it holds a record and stamps it."""
+    card = ["LLLLL", "LSSSL", "LSSSL", "LLLLL"]
+    done = ["LLLLL", "LSGSL", "LGSGL", "LLLLL"]
+    return [
+        hpose(("out", "out"), front=(card, 9, 15)),
+        hpose(("out", "out"), dy=-1, front=(card, 9, 14)),
+        hpose(("out", "out"), "happy", front=(done, 9, 15)),
+        hpose(("out", "out"), "happy", front=(done, 9, 15)),
+    ], [16, 12, 16, 26]
+
+
+def cr_pet_stretch():
+    return [
+        hpose(),
+        hpose(("up", "up"), "shut"),
+        hpose(("up", "up"), "shut", dy=-1, big=True, over=(["LL", "..", "LL"], 20, 2)),
+        hpose(("up", "up"), "shut", dy=-1, big=True, over=(["LL", "..", "LL"], 20, 1)),
+        hpose(("up", "up")),
+        hpose(),
+    ], [24, 24, 40, 40, 24, 60]
+
+
+def cr_pet_held():
+    return [
+        hpose(("up", "up"), "wide", dy=-1, floor=6),
+        hpose(("up", "up"), "wide", floor=8),
+        hpose(("up", "up"), "wide", dy=-1, floor=6),
+        hpose(("up", "up"), "wide", dy=1, floor=8),
+    ], 9
+
+
+SPRITES_CRIMSON = [
+    ("think", cr_think, True),
+    ("slow",  cr_slow,  True),
+    ("orb",   cr_orb,   True),
+    ("hero",  cr_hero,  True),
+    ("done",  sprite_done, False),
+    ("no",    sprite_no,   False),
+    ("oops",  sprite_oops, True),
+    ("ask",   sprite_ask,  True),
+    ("new",   sprite_new,  True),
+    ("pet-idle",    cr_pet_idle,    True),
+    ("pet-cheer",   cr_pet_cheer,   True),
+    ("pet-worry",   cr_pet_worry,   True),
+    ("pet-nap",     cr_pet_nap,     True),
+    ("pet-work",    cr_pet_work,    True),
+    ("pet-stretch", cr_pet_stretch, True),
+    ("pet-held",    cr_pet_held,    True),
+]
+
+
 # ═══ the contact sheet ══════════════════════════════════════════════════════
 def png(path, w, h, rgb_rows):
     """A plain 8-bit RGB PNG, so every frame can be looked at without a
@@ -699,7 +1108,8 @@ def png(path, w, h, rgb_rows):
         f.write(out)
 
 
-def contact_sheet(path, drawn):
+def contact_sheet(path, drawn, pal=None):
+    pal = pal or PAL
     scale, pad = 8, 6
     cell = 24 * scale + pad
     cols = max(len(fr) for _, fr, _, _ in drawn)
@@ -714,7 +1124,7 @@ def contact_sheet(path, drawn):
         for y in range(fh * scale):
             for x in range(fw * scale):
                 ch = frame[y // scale][x // scale]
-                col = bg if ch == "." else PAL[IDX[ch]][1]
+                col = bg if ch == "." else pal[IDX[ch]][1]
                 px_x, px_y = x0 + x, y0 + y
                 if 0 <= px_y < h and 0 <= px_x < w:
                     rows[px_y][px_x * 3:px_x * 3 + 3] = list(col)
@@ -732,25 +1142,27 @@ def contact_sheet(path, drawn):
 
 
 # ═══ run ════════════════════════════════════════════════════════════════════
-def main():
-    if not os.path.isdir(OUT):
-        os.makedirs(OUT)
-    drawn, b64 = [], []
-    import base64
-    for name, fn, loop in SPRITES:
+def write_set(sprites, out_dir, sheet, pal):
+    if not os.path.isdir(out_dir):
+        os.makedirs(out_dir)
+    drawn, sizes = [], []
+    for name, fn, loop in sprites:
         frames, delay = fn()
-        data = gif([to_indices(f) for f in frames], delay, loop)
-        path = os.path.join(OUT, name + ".gif")
-        with open(path, "wb") as f:
+        data = gif([to_indices(f) for f in frames], delay, loop, pal)
+        with open(os.path.join(out_dir, name + ".gif"), "wb") as f:
             f.write(data)
         drawn.append((name, frames, delay, loop))
-        b64.append((name, base64.b64encode(data).decode("ascii"), len(data)))
-        print("%-6s %2d frames  %4d bytes  %s" %
-              (name, len(frames), len(data), "loop" if loop else "once"))
+        sizes.append(len(data))
+        print("%-12s %2d frames  %4d bytes  %s" %
+              (os.path.relpath(os.path.join(out_dir, name), OUT), len(frames), len(data), "loop" if loop else "once"))
+    contact_sheet(sheet, drawn, pal)
+    return sizes
 
-    contact_sheet(os.path.join(HERE, "contact-sheet.png"), drawn)
 
-    total = sum(s for _, _, s in b64)
+def main():
+    sizes = write_set(SPRITES, OUT, os.path.join(HERE, "contact-sheet.png"), PAL)
+    sizes += write_set(SPRITES_CRIMSON, OUT_CRIMSON, os.path.join(HERE, "contact-sheet-crimson.png"), PAL_CRIMSON)
+    total = sum(sizes)
     print("total %d bytes, %d as base64" % (total, int(total * 4 / 3)))
     print("now: python3 art/embed-pixel-art.py")
 

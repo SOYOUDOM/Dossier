@@ -2918,7 +2918,10 @@ body.chatting .pet[data-corner="br"],body.chatting .pet[data-corner="tr"]{
 /* ── Lumen: the assistant, redrawn ──────────────────────────────────────────
    A chat skin like Nebula or Carbon, picked under Look and behaviour, and
    only ever in effect while it is picked: every rule below is scoped to
-   .chat[data-skin="lumen"], so the other five skins are untouched by it.
+   .chat[data-lm], which the panel carries while Lumen - or a skin built on
+   Lumen's layout, like Crimson - is the one picked (applyChatUI), so the
+   other skins are untouched by it. The colours here are Lumen's; a skin
+   built on it keeps the layout and brings its own (see CRIMSON).
 
    It is a change of layout as much as of colour, after the way the chat
    tools people use every day have settled: an answer is not a bubble but
@@ -2938,7 +2941,7 @@ body.chatting .pet[data-corner="br"],body.chatting .pet[data-corner="tr"]{
 .chskin .nw{font-style:normal;font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
   color:#fff;background:var(--ch-acc);border-radius:999px;padding:1px 6px;line-height:1.5}
 
-.chat[data-skin="lumen"]{
+.chat[data-lm]{
   --lmi-panel:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='16' rx='3.5'/%3E%3Cpath d='M9.5 4v16'/%3E%3C/svg%3E");
   --lmi-sliders:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 7h9M17 7h3M4 17h3M11 17h9'/%3E%3Ccircle cx='15' cy='7' r='2.2'/%3E%3Ccircle cx='9' cy='17' r='2.2'/%3E%3C/svg%3E");
   --lmi-book:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 19.5V5.5A2.5 2.5 0 0 1 6.5 3H20v14H6.5A2.5 2.5 0 0 0 4 19.5zm0 0A2.5 2.5 0 0 0 6.5 22H20v-5'/%3E%3Cpath d='M9 7.5h6.5M9 11h4.5'/%3E%3C/svg%3E");
@@ -2980,7 +2983,7 @@ body.chatting .pet[data-corner="br"],body.chatting .pet[data-corner="tr"]{
   -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;
   background:var(--ch-bg);color:var(--ch-ink);border-left:1px solid var(--ch-line);
   box-shadow:-30px 0 70px -30px rgba(16,18,40,.30)}
-:root[data-mode="dark"] .chat[data-skin="lumen"]{
+:root[data-mode="dark"] .chat[data-lm]{
   --ch-bg:#111114; --ch-panel:#18181c; --ch-line:#26262c; --ch-ink:#ececf1; --ch-dim:#9a9aa6;
   --ch-acc:#8b86ff; --ch-acc2:#34d3bd;
   --ch-glow:rgba(139,134,255,.24); --ch-mesh:rgba(139,134,255,.05);
@@ -2990,356 +2993,356 @@ body.chatting .pet[data-corner="br"],body.chatting .pet[data-corner="tr"]{
   --lm-shadow:0 1px 2px rgba(0,0,0,.3),0 12px 32px -14px rgba(0,0,0,.6);
   --lm-pop:0 24px 60px -18px rgba(0,0,0,.7),0 0 0 1px rgba(255,255,255,.04);
   box-shadow:-30px 0 70px -30px rgba(0,0,0,.7)}
-.chat[data-skin="lumen"].fx-glow{box-shadow:-30px 0 70px -30px rgba(16,18,40,.30),inset 1px 0 0 var(--ch-line),inset 2px 0 22px -14px var(--ch-glow)}
-:root[data-mode="dark"] .chat[data-skin="lumen"].fx-glow{box-shadow:-30px 0 70px -30px rgba(0,0,0,.7),inset 1px 0 0 var(--ch-line),inset 2px 0 22px -14px var(--ch-glow)}
-.chat[data-skin="lumen"] button,.chat[data-skin="lumen"] input,.chat[data-skin="lumen"] textarea{font-family:var(--lm-font)}
-.chat[data-skin="lumen"].dropping{outline:2px dashed var(--ch-acc);outline-offset:-8px}
+.chat[data-lm].fx-glow{box-shadow:-30px 0 70px -30px rgba(16,18,40,.30),inset 1px 0 0 var(--ch-line),inset 2px 0 22px -14px var(--ch-glow)}
+:root[data-mode="dark"] .chat[data-lm].fx-glow{box-shadow:-30px 0 70px -30px rgba(0,0,0,.7),inset 1px 0 0 var(--ch-line),inset 2px 0 22px -14px var(--ch-glow)}
+.chat[data-lm] button,.chat[data-lm] input,.chat[data-lm] textarea{font-family:var(--lm-font)}
+.chat[data-lm].dropping{outline:2px dashed var(--ch-acc);outline-offset:-8px}
 
 /* the icons: one mask each, drawn in currentColor */
-.chat[data-skin="lumen"] .chh .ib,.chat[data-skin="lumen"] .chth .ib,.chat[data-skin="lumen"] .chpin,.chat[data-skin="lumen"] .lmnew{font-size:0}
-.chat[data-skin="lumen"] .chh .ib::before,.chat[data-skin="lumen"] .chth .ib::before,.chat[data-skin="lumen"] .chpin::before,.chat[data-skin="lumen"] #chatGo::after,
-.chat[data-skin="lumen"] .chtools button::before,.chat[data-skin="lumen"] .chrate > button[data-rv]::before,.chat[data-skin="lumen"] .chrate > button .gl,
-.chat[data-skin="lumen"] .chcode .cpy::before,.chat[data-skin="lumen"] .chtext .cpy::before,.chat[data-skin="lumen"] .chsi .x::before,.chat[data-skin="lumen"] .lmnew::before,
-.chat[data-skin="lumen"] .lmq::before,.chat[data-skin="lumen"] .chpill::before,.chat[data-skin="lumen"] .chb.bot .wrong button::before,.chat[data-skin="lumen"] .chseed button::before,
-.chat[data-skin="lumen"] .chbr .gl{
+.chat[data-lm] .chh .ib,.chat[data-lm] .chth .ib,.chat[data-lm] .chpin,.chat[data-lm] .lmnew{font-size:0}
+.chat[data-lm] .chh .ib::before,.chat[data-lm] .chth .ib::before,.chat[data-lm] .chpin::before,.chat[data-lm] #chatGo::after,
+.chat[data-lm] .chtools button::before,.chat[data-lm] .chrate > button[data-rv]::before,.chat[data-lm] .chrate > button .gl,
+.chat[data-lm] .chcode .cpy::before,.chat[data-lm] .chtext .cpy::before,.chat[data-lm] .chsi .x::before,.chat[data-lm] .lmnew::before,
+.chat[data-lm] .lmq::before,.chat[data-lm] .chpill::before,.chat[data-lm] .chb.bot .wrong button::before,.chat[data-lm] .chseed button::before,
+.chat[data-lm] .chbr .gl{
   content:"";display:inline-block;flex:0 0 auto;width:18px;height:18px;background:currentColor;
   -webkit-mask:var(--ic) center / contain no-repeat;mask:var(--ic) center / contain no-repeat}
 
 /* ── the header ──────────────────────────────────────────────────────── */
-.chat[data-skin="lumen"] .chh{align-items:center;gap:6px;padding:10px 10px 10px 12px;min-height:58px;box-sizing:border-box;
+.chat[data-lm] .chh{align-items:center;gap:6px;padding:10px 10px 10px 12px;min-height:58px;box-sizing:border-box;
   border-bottom:1px solid var(--ch-line);
   background:color-mix(in srgb,var(--ch-bg) 86%,transparent);backdrop-filter:blur(14px) saturate(1.4)}
-.chat[data-skin="lumen"] .chh .ib{width:34px;height:34px;border-radius:10px;border:0;background:transparent;color:var(--ch-dim);
+.chat[data-lm] .chh .ib{width:34px;height:34px;border-radius:10px;border:0;background:transparent;color:var(--ch-dim);
   display:grid;place-items:center;padding:0;flex:0 0 auto;transition:background .15s,color .15s}
-.chat[data-skin="lumen"] .chh .ib:hover{background:var(--lm-hover);color:var(--ch-ink)}
-.chat[data-skin="lumen"] .chh .ib:focus-visible{outline:2px solid var(--ch-acc);outline-offset:1px}
-.chat[data-skin="lumen"] #chatMenu{--ic:var(--lmi-panel)}
-.chat[data-skin="lumen"] #chatFx{--ic:var(--lmi-sliders)}
-.chat[data-skin="lumen"] #chatTeachBtn{--ic:var(--lmi-book)}
-.chat[data-skin="lumen"] #chatNew{--ic:var(--lmi-compose)}
-.chat[data-skin="lumen"] #chatX,.chat[data-skin="lumen"] .chth .ib{--ic:var(--lmi-x)}
-.chat[data-skin="lumen"].convos #chatMenu{background:var(--lm-hover);color:var(--ch-ink)}
-.chat[data-skin="lumen"] .chid{gap:1px;margin-left:4px}
-.chat[data-skin="lumen"] .chid .t{display:none}
-.chat[data-skin="lumen"] .chid .ctn{display:block;font-size:14.5px;font-weight:620;letter-spacing:-.011em;color:var(--ch-ink);
+.chat[data-lm] .chh .ib:hover{background:var(--lm-hover);color:var(--ch-ink)}
+.chat[data-lm] .chh .ib:focus-visible{outline:2px solid var(--ch-acc);outline-offset:1px}
+.chat[data-lm] #chatMenu{--ic:var(--lmi-panel)}
+.chat[data-lm] #chatFx{--ic:var(--lmi-sliders)}
+.chat[data-lm] #chatTeachBtn{--ic:var(--lmi-book)}
+.chat[data-lm] #chatNew{--ic:var(--lmi-compose)}
+.chat[data-lm] #chatX,.chat[data-lm] .chth .ib{--ic:var(--lmi-x)}
+.chat[data-lm].convos #chatMenu{background:var(--lm-hover);color:var(--ch-ink)}
+.chat[data-lm] .chid{gap:1px;margin-left:4px}
+.chat[data-lm] .chid .t{display:none}
+.chat[data-lm] .chid .ctn{display:block;font-size:14.5px;font-weight:620;letter-spacing:-.011em;color:var(--ch-ink);
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.chat[data-skin="lumen"] .chh .sub{font-size:11.5px;color:var(--ch-dim);letter-spacing:0}
-.chat[data-skin="lumen"] .chh .sub.live{color:var(--ch-acc);font-weight:550}
+.chat[data-lm] .chh .sub{font-size:11.5px;color:var(--ch-dim);letter-spacing:0}
+.chat[data-lm] .chh .sub.live{color:var(--ch-acc);font-weight:550}
 /* the mark: the gradient, and the star it breathes while an answer is
    coming (that is the same chThink the old dot did - only the dot changed) */
-.chat[data-skin="lumen"] .chorb{width:30px;height:30px;background:var(--lm-grad);box-shadow:0 0 0 1px rgba(255,255,255,.12) inset}
-.chat[data-skin="lumen"] .chorb svg{display:none}
-.chat[data-skin="lumen"] .chorb i{width:15px;height:15px;border-radius:0;box-shadow:none;opacity:1;background:#fff;
+.chat[data-lm] .chorb{width:30px;height:30px;background:var(--lm-grad);box-shadow:0 0 0 1px rgba(255,255,255,.12) inset}
+.chat[data-lm] .chorb svg{display:none}
+.chat[data-lm] .chorb i{width:15px;height:15px;border-radius:0;box-shadow:none;opacity:1;background:#fff;
   -webkit-mask:var(--lmi-spark4) center / contain no-repeat;mask:var(--lmi-spark4) center / contain no-repeat}
-.chat[data-skin="lumen"].fx-glow .chorb{box-shadow:0 0 0 1px rgba(255,255,255,.12) inset,0 0 18px -2px var(--ch-glow)}
-.chat[data-skin="lumen"] .chorb.pixorb{background:none;box-shadow:none}
-.chat[data-skin="lumen"].ownmark .chorb{background:none;box-shadow:none}
-.chat[data-skin="lumen"].ownmark .chorb i{display:none}
+.chat[data-lm].fx-glow .chorb{box-shadow:0 0 0 1px rgba(255,255,255,.12) inset,0 0 18px -2px var(--ch-glow)}
+.chat[data-lm] .chorb.pixorb{background:none;box-shadow:none}
+.chat[data-lm].ownmark .chorb{background:none;box-shadow:none}
+.chat[data-lm].ownmark .chorb i{display:none}
 
 /* ── the history ─────────────────────────────────────────────────────── */
-.chat[data-skin="lumen"] .chside{width:min(300px,82%);padding:12px 10px 10px;box-sizing:border-box;display:flex;flex-direction:column;
+.chat[data-lm] .chside{width:min(300px,82%);padding:12px 10px 10px;box-sizing:border-box;display:flex;flex-direction:column;
   background:var(--ch-bg);border-right:1px solid var(--ch-line);box-shadow:24px 0 60px -24px rgba(16,18,40,.35);
   transition:transform .26s cubic-bezier(.2,.8,.2,1)}
-.chat[data-skin="lumen"] .chmain::after{content:"";position:absolute;inset:0;z-index:2;background:rgba(12,12,20,.26);
+.chat[data-lm] .chmain::after{content:"";position:absolute;inset:0;z-index:2;background:rgba(12,12,20,.26);
   backdrop-filter:blur(2px);opacity:0;pointer-events:none;transition:opacity .22s}
-.chat[data-skin="lumen"].convos .chmain::after{opacity:1;pointer-events:auto;cursor:pointer}
-:root[data-mode="dark"] .chat[data-skin="lumen"] .chmain::after{background:rgba(0,0,0,.45)}
-.chat[data-skin="lumen"] .lmst{display:flex;flex-direction:column;gap:8px;padding:0 2px 8px}
-.chat[data-skin="lumen"] .lmnew{display:flex;align-items:center;gap:9px;height:38px;padding:0 12px;border-radius:11px;cursor:pointer;
+.chat[data-lm].convos .chmain::after{opacity:1;pointer-events:auto;cursor:pointer}
+:root[data-mode="dark"] .chat[data-lm] .chmain::after{background:rgba(0,0,0,.45)}
+.chat[data-lm] .lmst{display:flex;flex-direction:column;gap:8px;padding:0 2px 8px}
+.chat[data-lm] .lmnew{display:flex;align-items:center;gap:9px;height:38px;padding:0 12px;border-radius:11px;cursor:pointer;
   border:1px solid var(--ch-line);background:var(--lm-card);color:var(--ch-ink);box-shadow:0 1px 2px rgba(16,18,40,.05);
   transition:background .15s,border-color .15s;--ic:var(--lmi-compose)}
-.chat[data-skin="lumen"] .lmnew span{font-size:13px;font-weight:580}
-.chat[data-skin="lumen"] .lmnew::before{width:16px;height:16px}
-.chat[data-skin="lumen"] .lmnew:hover{background:var(--lm-hover);border-color:var(--lm-line2)}
-.chat[data-skin="lumen"] .lmq{position:relative;display:flex;align-items:center;--ic:var(--lmi-search)}
-.chat[data-skin="lumen"] .lmq::before{position:absolute;left:11px;width:15px;height:15px;color:var(--ch-dim);pointer-events:none}
-.chat[data-skin="lumen"] .lmq input{width:100%;box-sizing:border-box;height:36px;border-radius:10px;border:1px solid transparent;
+.chat[data-lm] .lmnew span{font-size:13px;font-weight:580}
+.chat[data-lm] .lmnew::before{width:16px;height:16px}
+.chat[data-lm] .lmnew:hover{background:var(--lm-hover);border-color:var(--lm-line2)}
+.chat[data-lm] .lmq{position:relative;display:flex;align-items:center;--ic:var(--lmi-search)}
+.chat[data-lm] .lmq::before{position:absolute;left:11px;width:15px;height:15px;color:var(--ch-dim);pointer-events:none}
+.chat[data-lm] .lmq input{width:100%;box-sizing:border-box;height:36px;border-radius:10px;border:1px solid transparent;
   background:var(--ch-panel);color:var(--ch-ink);padding:0 10px 0 33px;font-size:13px;outline:none;
   transition:border-color .15s,box-shadow .15s,background .15s}
-.chat[data-skin="lumen"] .lmq input::placeholder{color:var(--ch-dim)}
-.chat[data-skin="lumen"] .lmq input:focus{border-color:color-mix(in srgb,var(--ch-acc) 55%,transparent);background:var(--lm-card);
+.chat[data-lm] .lmq input::placeholder{color:var(--ch-dim)}
+.chat[data-lm] .lmq input:focus{border-color:color-mix(in srgb,var(--ch-acc) 55%,transparent);background:var(--lm-card);
   box-shadow:0 0 0 3px var(--lm-ring)}
-.chat[data-skin="lumen"] .lmlist{flex:1;min-height:0;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--ch-line) transparent;margin:0 -4px;padding:0 4px}
-.chat[data-skin="lumen"] .chsh{font-size:11.5px;font-weight:600;letter-spacing:0;text-transform:none;color:var(--ch-dim);padding:12px 10px 5px}
-.chat[data-skin="lumen"] .chsi{grid-template-columns:minmax(0,1fr) auto auto;gap:6px;min-height:36px;padding:0 6px 0 10px;
+.chat[data-lm] .lmlist{flex:1;min-height:0;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--ch-line) transparent;margin:0 -4px;padding:0 4px}
+.chat[data-lm] .chsh{font-size:11.5px;font-weight:600;letter-spacing:0;text-transform:none;color:var(--ch-dim);padding:12px 10px 5px}
+.chat[data-lm] .chsi{grid-template-columns:minmax(0,1fr) auto auto;gap:6px;min-height:36px;padding:0 6px 0 10px;
   border-radius:9px;margin-bottom:1px;box-shadow:none;transition:background .12s}
-.chat[data-skin="lumen"] .chsi .n{font-size:13px;color:var(--lm-ink2)}
-.chat[data-skin="lumen"] .chsi .d{font-family:var(--lm-font);font-size:11px;color:var(--ch-dim);font-variant-numeric:tabular-nums}
-.chat[data-skin="lumen"] .chsi:hover{background:var(--lm-hover)}
-.chat[data-skin="lumen"] .chsi.on{background:var(--lm-soft);box-shadow:none}
-.chat[data-skin="lumen"] .chsi.on .n{color:var(--ch-ink);font-weight:580}
-.chat[data-skin="lumen"] .chsi .x{opacity:0;width:26px;height:26px;border-radius:7px;display:grid;place-items:center;font-size:0;padding:0;
+.chat[data-lm] .chsi .n{font-size:13px;color:var(--lm-ink2)}
+.chat[data-lm] .chsi .d{font-family:var(--lm-font);font-size:11px;color:var(--ch-dim);font-variant-numeric:tabular-nums}
+.chat[data-lm] .chsi:hover{background:var(--lm-hover)}
+.chat[data-lm] .chsi.on{background:var(--lm-soft);box-shadow:none}
+.chat[data-lm] .chsi.on .n{color:var(--ch-ink);font-weight:580}
+.chat[data-lm] .chsi .x{opacity:0;width:26px;height:26px;border-radius:7px;display:grid;place-items:center;font-size:0;padding:0;
   color:var(--ch-dim);--ic:var(--lmi-trash)}
-.chat[data-skin="lumen"] .chsi .x::before{width:15px;height:15px}
-.chat[data-skin="lumen"] .chsi:hover .x{opacity:1}
-.chat[data-skin="lumen"] .chsi .x:hover{color:#e5484d;background:var(--lm-hover)}
-.chat[data-skin="lumen"] .chsi:hover .d{display:none}
-.chat[data-skin="lumen"] .lmnone{padding:26px 12px;text-align:center;font-size:12.5px;color:var(--ch-dim)}
-.chat[data-skin="lumen"] .lmfoot{flex:0 0 auto;padding:10px 10px 2px;border-top:1px solid var(--ch-line);font-size:11px;color:var(--ch-dim)}
+.chat[data-lm] .chsi .x::before{width:15px;height:15px}
+.chat[data-lm] .chsi:hover .x{opacity:1}
+.chat[data-lm] .chsi .x:hover{color:#e5484d;background:var(--lm-hover)}
+.chat[data-lm] .chsi:hover .d{display:none}
+.chat[data-lm] .lmnone{padding:26px 12px;text-align:center;font-size:12.5px;color:var(--ch-dim)}
+.chat[data-lm] .lmfoot{flex:0 0 auto;padding:10px 10px 2px;border-top:1px solid var(--ch-line);font-size:11px;color:var(--ch-dim)}
 
 /* ── the thread ──────────────────────────────────────────────────────── */
-.chat[data-skin="lumen"] .chl{padding:22px 20px 16px;gap:20px;scrollbar-width:thin;scrollbar-color:var(--ch-line) transparent}
-.chat[data-skin="lumen"] .chtime{align-self:stretch;display:flex;align-items:center;gap:12px;background:none;padding:0;margin:0;border-radius:0;
+.chat[data-lm] .chl{padding:22px 20px 16px;gap:20px;scrollbar-width:thin;scrollbar-color:var(--ch-line) transparent}
+.chat[data-lm] .chtime{align-self:stretch;display:flex;align-items:center;gap:12px;background:none;padding:0;margin:0;border-radius:0;
   font-family:var(--lm-font);font-size:11px;font-weight:550;letter-spacing:.02em;color:var(--ch-dim)}
-.chat[data-skin="lumen"] .chtime::before,.chat[data-skin="lumen"] .chtime::after{content:"";flex:1;height:1px;background:var(--ch-line)}
+.chat[data-lm] .chtime::before,.chat[data-lm] .chtime::after{content:"";flex:1;height:1px;background:var(--ch-line)}
 
 /* you: a soft bubble on the right, no border, no gradient */
-.chat[data-skin="lumen"] .chb.you{background:var(--lm-bubble);color:var(--ch-ink);border:0;box-shadow:none;
+.chat[data-lm] .chb.you{background:var(--lm-bubble);color:var(--ch-ink);border:0;box-shadow:none;
   border-radius:20px 20px 6px 20px;padding:10px 15px;max-width:82%;font-size:14px;line-height:1.55}
-.chat[data-skin="lumen"] .chb.you + .chb.you{margin-top:-12px;border-top-right-radius:8px}
-.chat[data-skin="lumen"] .chb.you .cfs{gap:6px;margin-top:8px}
-.chat[data-skin="lumen"] .chb.you .cfcard,.chat[data-skin="lumen"] .chb.you .cfhide,.chat[data-skin="lumen"] .chb.you .cfmin{font-family:var(--lm-font)}
+.chat[data-lm] .chb.you + .chb.you{margin-top:-12px;border-top-right-radius:8px}
+.chat[data-lm] .chb.you .cfs{gap:6px;margin-top:8px}
+.chat[data-lm] .chb.you .cfcard,.chat[data-lm] .chb.you .cfhide,.chat[data-lm] .chb.you .cfmin{font-family:var(--lm-font)}
 
 /* the assistant: the page itself, under its mark and its name */
-.chat[data-skin="lumen"] .chb.bot{font-size:14px}
-.chat[data-skin="lumen"] .chb.bot.ans,.chat[data-skin="lumen"] .chb.bot.thinking{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;column-gap:4px}
-.chat[data-skin="lumen"] .chb.bot.ans > *,.chat[data-skin="lumen"] .chb.bot.thinking > *{grid-column:1 / -1;min-width:0}
-.chat[data-skin="lumen"] .chb.bot.ans::before,.chat[data-skin="lumen"] .chb.bot.thinking::before{content:var(--lm-name,"Resolv");grid-column:1 / -1;
+.chat[data-lm] .chb.bot{font-size:14px}
+.chat[data-lm] .chb.bot.ans,.chat[data-lm] .chb.bot.thinking{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;column-gap:4px}
+.chat[data-lm] .chb.bot.ans > *,.chat[data-lm] .chb.bot.thinking > *{grid-column:1 / -1;min-width:0}
+.chat[data-lm] .chb.bot.ans::before,.chat[data-lm] .chb.bot.thinking::before{content:var(--lm-name,"Resolv");grid-column:1 / -1;
   display:flex;align-items:center;height:24px;padding-left:33px;margin-bottom:8px;
   font-size:13px;font-weight:650;letter-spacing:-.005em;color:var(--ch-ink);
   background:var(--lm-mark) 0 50% / 24px 24px no-repeat}
-.chat[data-skin="lumen"].ownmark .chb.bot.ans::before,.chat[data-skin="lumen"].ownmark .chb.bot.thinking::before{background-image:var(--ch-mark)}
-.chat[data-skin="lumen"] .chb.bot .say{font-size:14px;line-height:1.7;color:var(--ch-ink);letter-spacing:-.003em}
-.chat[data-skin="lumen"] .chb.bot .say p{margin:0 0 12px}
-.chat[data-skin="lumen"] .say h4{font-family:var(--lm-font);font-size:15.5px;font-weight:650;letter-spacing:-.012em;margin:20px 0 8px;color:var(--ch-ink)}
-.chat[data-skin="lumen"] .say h5{font-family:var(--lm-font);font-size:13.5px;font-weight:650;letter-spacing:-.005em;text-transform:none;margin:16px 0 6px;color:var(--ch-ink)}
-.chat[data-skin="lumen"] .say ul,.chat[data-skin="lumen"] .say ol{margin:0 0 12px;padding-left:22px}
-.chat[data-skin="lumen"] .say li{margin:5px 0;padding-left:4px}
-.chat[data-skin="lumen"] .say li::marker{color:var(--ch-dim)}
-.chat[data-skin="lumen"] .say ol li::marker{font-weight:600;font-variant-numeric:tabular-nums}
-.chat[data-skin="lumen"] .say blockquote{margin:0 0 12px;padding:2px 0 2px 14px;border-left:3px solid var(--lm-line2);color:var(--lm-ink2)}
-.chat[data-skin="lumen"] .say hr{border-top-color:var(--ch-line);margin:18px 0}
-.chat[data-skin="lumen"] .say strong{color:var(--ch-ink);font-weight:650}
-.chat[data-skin="lumen"] .say a{color:var(--ch-acc);text-decoration-color:color-mix(in srgb,var(--ch-acc) 40%,transparent);text-underline-offset:3px}
-.chat[data-skin="lumen"] .say .sytab{border:1px solid var(--ch-line);border-radius:12px;margin:4px 0 14px}
-.chat[data-skin="lumen"] .say .sytab table{font-size:13px}
-.chat[data-skin="lumen"] .say .sytab th,.chat[data-skin="lumen"] .say .sytab td{border:0;border-bottom:1px solid var(--ch-line);padding:8px 12px}
-.chat[data-skin="lumen"] .say .sytab tr:last-child td{border-bottom:0}
-.chat[data-skin="lumen"] .say .sytab th{background:var(--ch-panel);font-weight:600;font-size:12px;color:var(--lm-ink2)}
-.chat[data-skin="lumen"] .chb.bot .say code.inl{font-family:var(--lm-mono);font-size:12.5px;background:var(--lm-hover);border:0;
+.chat[data-lm].ownmark .chb.bot.ans::before,.chat[data-lm].ownmark .chb.bot.thinking::before{background-image:var(--ch-mark)}
+.chat[data-lm] .chb.bot .say{font-size:14px;line-height:1.7;color:var(--ch-ink);letter-spacing:-.003em}
+.chat[data-lm] .chb.bot .say p{margin:0 0 12px}
+.chat[data-lm] .say h4{font-family:var(--lm-font);font-size:15.5px;font-weight:650;letter-spacing:-.012em;margin:20px 0 8px;color:var(--ch-ink)}
+.chat[data-lm] .say h5{font-family:var(--lm-font);font-size:13.5px;font-weight:650;letter-spacing:-.005em;text-transform:none;margin:16px 0 6px;color:var(--ch-ink)}
+.chat[data-lm] .say ul,.chat[data-lm] .say ol{margin:0 0 12px;padding-left:22px}
+.chat[data-lm] .say li{margin:5px 0;padding-left:4px}
+.chat[data-lm] .say li::marker{color:var(--ch-dim)}
+.chat[data-lm] .say ol li::marker{font-weight:600;font-variant-numeric:tabular-nums}
+.chat[data-lm] .say blockquote{margin:0 0 12px;padding:2px 0 2px 14px;border-left:3px solid var(--lm-line2);color:var(--lm-ink2)}
+.chat[data-lm] .say hr{border-top-color:var(--ch-line);margin:18px 0}
+.chat[data-lm] .say strong{color:var(--ch-ink);font-weight:650}
+.chat[data-lm] .say a{color:var(--ch-acc);text-decoration-color:color-mix(in srgb,var(--ch-acc) 40%,transparent);text-underline-offset:3px}
+.chat[data-lm] .say .sytab{border:1px solid var(--ch-line);border-radius:12px;margin:4px 0 14px}
+.chat[data-lm] .say .sytab table{font-size:13px}
+.chat[data-lm] .say .sytab th,.chat[data-lm] .say .sytab td{border:0;border-bottom:1px solid var(--ch-line);padding:8px 12px}
+.chat[data-lm] .say .sytab tr:last-child td{border-bottom:0}
+.chat[data-lm] .say .sytab th{background:var(--ch-panel);font-weight:600;font-size:12px;color:var(--lm-ink2)}
+.chat[data-lm] .chb.bot .say code.inl{font-family:var(--lm-mono);font-size:12.5px;background:var(--lm-hover);border:0;
   border-radius:6px;padding:1.5px 6px;color:var(--ch-ink)}
-.chat[data-skin="lumen"] .chb.bot .note{font-size:12.5px;line-height:1.6;color:var(--ch-dim);margin-top:8px}
-.chat[data-skin="lumen"] .chb.bot .hedge,.chat[data-skin="lumen"] .chb.bot .carry{font-size:12px;color:var(--ch-dim);font-style:normal;margin-bottom:8px}
-.chat[data-skin="lumen"] .chb.bot .unused{font-size:12px;border-left-width:3px;padding-left:10px;border-radius:0}
-.chat[data-skin="lumen"] .chb.bot .meta{font-family:var(--lm-font);font-size:11px}
-.chat[data-skin="lumen"] .chb.bot .took{font-family:var(--lm-font);font-size:11px;opacity:1;color:var(--ch-dim);margin-top:10px;font-variant-numeric:tabular-nums}
+.chat[data-lm] .chb.bot .note{font-size:12.5px;line-height:1.6;color:var(--ch-dim);margin-top:8px}
+.chat[data-lm] .chb.bot .hedge,.chat[data-lm] .chb.bot .carry{font-size:12px;color:var(--ch-dim);font-style:normal;margin-bottom:8px}
+.chat[data-lm] .chb.bot .unused{font-size:12px;border-left-width:3px;padding-left:10px;border-radius:0}
+.chat[data-lm] .chb.bot .meta{font-family:var(--lm-font);font-size:11px}
+.chat[data-lm] .chb.bot .took{font-family:var(--lm-font);font-size:11px;opacity:1;color:var(--ch-dim);margin-top:10px;font-variant-numeric:tabular-nums}
 
 /* the tools on an answer: one row under it - copy, the thumbs, retry and
    think harder - there on the newest answer and on the one under the
    pointer, and out of the way on the rest */
-.chat[data-skin="lumen"] .chb.bot.ans > .chtools{grid-column:1;order:9;position:static;opacity:0;transform:none;display:flex;gap:2px;
+.chat[data-lm] .chb.bot.ans > .chtools{grid-column:1;order:9;position:static;opacity:0;transform:none;display:flex;gap:2px;
   padding:0;margin-top:8px;background:none;border:0;border-radius:0}
-.chat[data-skin="lumen"] .chb.bot.ans > .chrate,.chat[data-skin="lumen"] .chb.bot.ans > .wrong{grid-column:2;order:10;margin-top:8px;opacity:0;transition:opacity .16s}
-.chat[data-skin="lumen"] .chb.bot.ans > .chrate.asking{grid-column:1 / -1;order:11}
-.chat[data-skin="lumen"] .chb.bot.ans:is(:hover,:focus-within) > :is(.chtools,.chrate,.wrong),
-.chat[data-skin="lumen"] .chl > .chb.bot.ans:not(:has(~ .chb.bot.ans)) > :is(.chtools,.chrate,.wrong),
-.chat[data-skin="lumen"] .chb.bot.ans > .chrate:has(> button.on),.chat[data-skin="lumen"] .chb.bot.ans > .chrate.asking{opacity:1}
-.chat[data-skin="lumen"] .chb.bot.ans > .chtools{transition:opacity .16s}
-.chat[data-skin="lumen"] .chtools button,.chat[data-skin="lumen"] .chrate > button{width:30px;height:30px;border-radius:8px;border:0;padding:0;display:grid;place-items:center;
+.chat[data-lm] .chb.bot.ans > .chrate,.chat[data-lm] .chb.bot.ans > .wrong{grid-column:2;order:10;margin-top:8px;opacity:0;transition:opacity .16s}
+.chat[data-lm] .chb.bot.ans > .chrate.asking{grid-column:1 / -1;order:11}
+.chat[data-lm] .chb.bot.ans:is(:hover,:focus-within) > :is(.chtools,.chrate,.wrong),
+.chat[data-lm] .chl > .chb.bot.ans:not(:has(~ .chb.bot.ans)) > :is(.chtools,.chrate,.wrong),
+.chat[data-lm] .chb.bot.ans > .chrate:has(> button.on),.chat[data-lm] .chb.bot.ans > .chrate.asking{opacity:1}
+.chat[data-lm] .chb.bot.ans > .chtools{transition:opacity .16s}
+.chat[data-lm] .chtools button,.chat[data-lm] .chrate > button{width:30px;height:30px;border-radius:8px;border:0;padding:0;display:grid;place-items:center;
   background:transparent;color:var(--ch-dim);opacity:1;filter:none;font-size:0;cursor:pointer;transition:background .14s,color .14s}
-.chat[data-skin="lumen"] .chtools button::before,.chat[data-skin="lumen"] .chrate > button[data-rv]::before{width:16px;height:16px}
-.chat[data-skin="lumen"] .chtools button:hover,.chat[data-skin="lumen"] .chrate > button:hover{background:var(--lm-hover);color:var(--ch-ink)}
-.chat[data-skin="lumen"] .chtools button[data-copysay]{--ic:var(--lmi-copy)}
-.chat[data-skin="lumen"] .chtools button[data-copysay].ok{--ic:var(--lmi-check);color:var(--ch-acc2)}
-.chat[data-skin="lumen"] .chtools button:not([data-copysay]){--ic:var(--lmi-flag)}
-.chat[data-skin="lumen"] .chrate{gap:2px;margin-top:0;min-height:30px}
-.chat[data-skin="lumen"] .chrate > button[data-rv="up"]{--ic:var(--lmi-up)}
-.chat[data-skin="lumen"] .chrate > button[data-rv="down"]{--ic:var(--lmi-down)}
-.chat[data-skin="lumen"] .chrate > button.on{background:var(--lm-soft);color:var(--ch-acc);border:0}
-.chat[data-skin="lumen"] .chrate > button.deeper{width:auto;display:inline-flex;gap:6px;padding:0 10px 0 8px;font-size:12.5px;font-weight:550;
+.chat[data-lm] .chtools button::before,.chat[data-lm] .chrate > button[data-rv]::before{width:16px;height:16px}
+.chat[data-lm] .chtools button:hover,.chat[data-lm] .chrate > button:hover{background:var(--lm-hover);color:var(--ch-ink)}
+.chat[data-lm] .chtools button[data-copysay]{--ic:var(--lmi-copy)}
+.chat[data-lm] .chtools button[data-copysay].ok{--ic:var(--lmi-check);color:var(--ch-acc2)}
+.chat[data-lm] .chtools button:not([data-copysay]){--ic:var(--lmi-flag)}
+.chat[data-lm] .chrate{gap:2px;margin-top:0;min-height:30px}
+.chat[data-lm] .chrate > button[data-rv="up"]{--ic:var(--lmi-up)}
+.chat[data-lm] .chrate > button[data-rv="down"]{--ic:var(--lmi-down)}
+.chat[data-lm] .chrate > button.on{background:var(--lm-soft);color:var(--ch-acc);border:0}
+.chat[data-lm] .chrate > button.deeper{width:auto;display:inline-flex;gap:6px;padding:0 10px 0 8px;font-size:12.5px;font-weight:550;
   color:var(--ch-dim);opacity:1}
-.chat[data-skin="lumen"] .chrate > button.deeper .gl{width:15px;height:15px;font-size:0}
-.chat[data-skin="lumen"] .chrate > button[data-retry] .gl{--ic:var(--lmi-retry)}
-.chat[data-skin="lumen"] .chrate > button[data-deeper] .gl{--ic:var(--lmi-spark);color:var(--ch-acc)}
-.chat[data-skin="lumen"] .chrate > button.deeper:hover{color:var(--ch-ink)}
-.chat[data-skin="lumen"] .chrate .rs{font-size:12px;color:var(--ch-dim);margin-left:6px}
-.chat[data-skin="lumen"] .chrate.asking .chfix{justify-content:flex-start;gap:8px;padding:12px;border:1px solid var(--ch-line);border-radius:14px;background:var(--lm-card)}
-.chat[data-skin="lumen"] .chrate.asking .chfix .in{height:38px;border-radius:10px;border:1px solid var(--ch-line);background:var(--ch-panel);
+.chat[data-lm] .chrate > button.deeper .gl{width:15px;height:15px;font-size:0}
+.chat[data-lm] .chrate > button[data-retry] .gl{--ic:var(--lmi-retry)}
+.chat[data-lm] .chrate > button[data-deeper] .gl{--ic:var(--lmi-spark);color:var(--ch-acc)}
+.chat[data-lm] .chrate > button.deeper:hover{color:var(--ch-ink)}
+.chat[data-lm] .chrate .rs{font-size:12px;color:var(--ch-dim);margin-left:6px}
+.chat[data-lm] .chrate.asking .chfix{justify-content:flex-start;gap:8px;padding:12px;border:1px solid var(--ch-line);border-radius:14px;background:var(--lm-card)}
+.chat[data-lm] .chrate.asking .chfix .in{height:38px;border-radius:10px;border:1px solid var(--ch-line);background:var(--ch-panel);
   color:var(--ch-ink);padding:0 12px;font-size:13px;outline:none}
-.chat[data-skin="lumen"] .chrate.asking .chfix .in:focus{border-color:color-mix(in srgb,var(--ch-acc) 55%,transparent);box-shadow:0 0 0 3px var(--lm-ring)}
-.chat[data-skin="lumen"] .chb.bot .wrong{margin-top:8px}
-.chat[data-skin="lumen"] .chb.bot .wrong button{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 10px 0 8px;border-radius:8px;
+.chat[data-lm] .chrate.asking .chfix .in:focus{border-color:color-mix(in srgb,var(--ch-acc) 55%,transparent);box-shadow:0 0 0 3px var(--lm-ring)}
+.chat[data-lm] .chb.bot .wrong{margin-top:8px}
+.chat[data-lm] .chb.bot .wrong button{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 10px 0 8px;border-radius:8px;
   font-size:12.5px;color:var(--ch-dim);--ic:var(--lmi-flag)}
-.chat[data-skin="lumen"] .chb.bot .wrong button::before{width:15px;height:15px}
-.chat[data-skin="lumen"] .chb.bot .wrong button:hover{background:var(--lm-hover);color:var(--ch-ink)}
+.chat[data-lm] .chb.bot .wrong button::before{width:15px;height:15px}
+.chat[data-lm] .chb.bot .wrong button:hover{background:var(--lm-hover);color:var(--ch-ink)}
 
 /* branches of one answer: a segmented switch */
-.chat[data-skin="lumen"] .chbr{display:inline-flex;justify-self:start;align-items:center;gap:2px;padding:3px;margin:0 0 12px;
+.chat[data-lm] .chbr{display:inline-flex;justify-self:start;align-items:center;gap:2px;padding:3px;margin:0 0 12px;
   background:var(--ch-panel);border:1px solid var(--ch-line);border-radius:11px;flex-wrap:wrap}
-.chat[data-skin="lumen"] .chbr .bl{font-size:11.5px;font-weight:550;color:var(--ch-dim);letter-spacing:0;margin:0 6px 0 7px}
-.chat[data-skin="lumen"] .chbr button{display:inline-flex;align-items:center;gap:5px;border:0;background:transparent;color:var(--ch-dim);
+.chat[data-lm] .chbr .bl{font-size:11.5px;font-weight:550;color:var(--ch-dim);letter-spacing:0;margin:0 6px 0 7px}
+.chat[data-lm] .chbr button{display:inline-flex;align-items:center;gap:5px;border:0;background:transparent;color:var(--ch-dim);
   border-radius:8px;height:26px;padding:0 10px;font-size:12px;font-weight:550;transition:background .14s,color .14s}
-.chat[data-skin="lumen"] .chbr button:hover{color:var(--ch-ink);background:var(--lm-hover)}
-.chat[data-skin="lumen"] .chbr button.on{background:var(--lm-card);color:var(--ch-ink);box-shadow:0 1px 2px rgba(16,18,40,.10),0 0 0 1px var(--ch-line)}
-.chat[data-skin="lumen"] .chbr .gl{width:13px;height:13px;font-size:0;--ic:var(--lmi-spark);color:var(--ch-acc)}
+.chat[data-lm] .chbr button:hover{color:var(--ch-ink);background:var(--lm-hover)}
+.chat[data-lm] .chbr button.on{background:var(--lm-card);color:var(--ch-ink);box-shadow:0 1px 2px rgba(16,18,40,.10),0 0 0 1px var(--ch-line)}
+.chat[data-lm] .chbr .gl{width:13px;height:13px;font-size:0;--ic:var(--lmi-spark);color:var(--ch-acc)}
 
 /* code: dark in both modes, with the language and a copy button on top */
-.chat[data-skin="lumen"] .chcode{margin:12px 0;border:1px solid var(--lm-code-line);border-radius:14px;background:var(--lm-code);box-shadow:none}
-.chat[data-skin="lumen"] .chcode .cch{background:var(--lm-code-h);border-bottom:1px solid var(--lm-code-line);padding:6px 6px 6px 14px;min-height:38px;box-sizing:border-box}
-.chat[data-skin="lumen"] .chcode .lang{font-family:var(--lm-font);font-size:11.5px;font-weight:550;letter-spacing:.01em;text-transform:none;color:var(--lm-code-dim)}
-.chat[data-skin="lumen"] .chcode pre{font-family:var(--lm-mono);font-size:12.5px;line-height:1.7;color:var(--lm-code-ink);padding:14px 16px}
-.chat[data-skin="lumen"] .chcode .cpy,.chat[data-skin="lumen"] .chtext .cpy{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 10px 0 8px;border-radius:8px;
+.chat[data-lm] .chcode{margin:12px 0;border:1px solid var(--lm-code-line);border-radius:14px;background:var(--lm-code);box-shadow:none}
+.chat[data-lm] .chcode .cch{background:var(--lm-code-h);border-bottom:1px solid var(--lm-code-line);padding:6px 6px 6px 14px;min-height:38px;box-sizing:border-box}
+.chat[data-lm] .chcode .lang{font-family:var(--lm-font);font-size:11.5px;font-weight:550;letter-spacing:.01em;text-transform:none;color:var(--lm-code-dim)}
+.chat[data-lm] .chcode pre{font-family:var(--lm-mono);font-size:12.5px;line-height:1.7;color:var(--lm-code-ink);padding:14px 16px}
+.chat[data-lm] .chcode .cpy,.chat[data-lm] .chtext .cpy{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 10px 0 8px;border-radius:8px;
   border:0;font-family:var(--lm-font);font-size:12px;font-weight:550;--ic:var(--lmi-copy);transition:background .14s,color .14s}
-.chat[data-skin="lumen"] .chcode .cpy::before,.chat[data-skin="lumen"] .chtext .cpy::before{width:14px;height:14px}
-.chat[data-skin="lumen"] .chcode .cpy{background:transparent;color:var(--lm-code-dim)}
-.chat[data-skin="lumen"] .chcode .cpy:hover{background:rgba(255,255,255,.08);color:#fff;border:0}
-.chat[data-skin="lumen"] .chcode .cpy.ok,.chat[data-skin="lumen"] .chtext .cpy.ok{--ic:var(--lmi-check);color:var(--ch-acc2);border:0}
+.chat[data-lm] .chcode .cpy::before,.chat[data-lm] .chtext .cpy::before{width:14px;height:14px}
+.chat[data-lm] .chcode .cpy{background:transparent;color:var(--lm-code-dim)}
+.chat[data-lm] .chcode .cpy:hover{background:rgba(255,255,255,.08);color:#fff;border:0}
+.chat[data-lm] .chcode .cpy.ok,.chat[data-lm] .chtext .cpy.ok{--ic:var(--lmi-check);color:var(--ch-acc2);border:0}
 
 /* text to paste somewhere else: a card, with what kind of text it is */
-.chat[data-skin="lumen"] .chtext{margin:12px 0;border:1px solid var(--ch-line);border-radius:14px;background:var(--lm-card);box-shadow:var(--lm-shadow)}
-.chat[data-skin="lumen"] .chtext .cth{background:transparent;border-bottom:1px solid var(--ch-line);padding:7px 6px 7px 12px;gap:10px;min-height:42px;box-sizing:border-box}
-.chat[data-skin="lumen"] .chtext .kind{font-size:11px;font-weight:650;letter-spacing:.02em;text-transform:none;color:var(--ch-acc);
+.chat[data-lm] .chtext{margin:12px 0;border:1px solid var(--ch-line);border-radius:14px;background:var(--lm-card);box-shadow:var(--lm-shadow)}
+.chat[data-lm] .chtext .cth{background:transparent;border-bottom:1px solid var(--ch-line);padding:7px 6px 7px 12px;gap:10px;min-height:42px;box-sizing:border-box}
+.chat[data-lm] .chtext .kind{font-size:11px;font-weight:650;letter-spacing:.02em;text-transform:none;color:var(--ch-acc);
   background:var(--lm-soft);border-radius:999px;padding:3px 9px}
-.chat[data-skin="lumen"] .chtext .ttl{font-size:13px;font-weight:600;color:var(--ch-ink)}
-.chat[data-skin="lumen"] .chtext .cpy{background:transparent;color:var(--ch-dim)}
-.chat[data-skin="lumen"] .chtext .cpy:hover{background:var(--lm-hover);color:var(--ch-ink);border:0}
-.chat[data-skin="lumen"] .chtext .csub{padding:10px 16px;font-size:13.5px;border-bottom:1px solid var(--ch-line)}
-.chat[data-skin="lumen"] .chtext .csub span{font-size:11px;letter-spacing:.02em;text-transform:none;font-weight:600}
-.chat[data-skin="lumen"] .chtext .ctb{padding:14px 16px 16px;font-family:var(--lm-font);font-size:14px;line-height:1.7;color:var(--ch-ink)}
+.chat[data-lm] .chtext .ttl{font-size:13px;font-weight:600;color:var(--ch-ink)}
+.chat[data-lm] .chtext .cpy{background:transparent;color:var(--ch-dim)}
+.chat[data-lm] .chtext .cpy:hover{background:var(--lm-hover);color:var(--ch-ink);border:0}
+.chat[data-lm] .chtext .csub{padding:10px 16px;font-size:13.5px;border-bottom:1px solid var(--ch-line)}
+.chat[data-lm] .chtext .csub span{font-size:11px;letter-spacing:.02em;text-transform:none;font-weight:600}
+.chat[data-lm] .chtext .ctb{padding:14px 16px 16px;font-family:var(--lm-font);font-size:14px;line-height:1.7;color:var(--ch-ink)}
 
 /* rows, chips and the suggestions under an answer */
-.chat[data-skin="lumen"] .chrows{margin-top:12px;border-radius:14px;background:var(--lm-card);box-shadow:var(--lm-shadow)}
-.chat[data-skin="lumen"] .chrow{padding:10px 12px;gap:10px}
-.chat[data-skin="lumen"] .chrow:hover{background:var(--lm-hover)}
-.chat[data-skin="lumen"] .chrow .c{font-family:var(--lm-mono);font-size:11px}
-.chat[data-skin="lumen"] .chrow .x b{font-size:13px;font-weight:550}
-.chat[data-skin="lumen"] .chrow .x small{font-size:11.5px}
-.chat[data-skin="lumen"] .chacts{gap:8px;margin-top:14px}
-.chat[data-skin="lumen"] .chacts button{height:34px;padding:0 14px;border-radius:999px;font-size:13px;font-weight:550;
+.chat[data-lm] .chrows{margin-top:12px;border-radius:14px;background:var(--lm-card);box-shadow:var(--lm-shadow)}
+.chat[data-lm] .chrow{padding:10px 12px;gap:10px}
+.chat[data-lm] .chrow:hover{background:var(--lm-hover)}
+.chat[data-lm] .chrow .c{font-family:var(--lm-mono);font-size:11px}
+.chat[data-lm] .chrow .x b{font-size:13px;font-weight:550}
+.chat[data-lm] .chrow .x small{font-size:11.5px}
+.chat[data-lm] .chacts{gap:8px;margin-top:14px}
+.chat[data-lm] .chacts button{height:34px;padding:0 14px;border-radius:999px;font-size:13px;font-weight:550;
   background:var(--lm-card);border:1px solid var(--ch-line);color:var(--ch-ink);box-shadow:0 1px 2px rgba(16,18,40,.05)}
-.chat[data-skin="lumen"] .chacts button:hover{background:var(--lm-hover);border-color:var(--lm-line2);color:var(--ch-ink)}
-.chat[data-skin="lumen"] .chacts button.pri{background:var(--ch-ink);border-color:var(--ch-ink);color:var(--ch-bg)}
-.chat[data-skin="lumen"] .chacts button.pri:hover{background:var(--ch-ink);color:var(--ch-bg);filter:none;opacity:.88}
-.chat[data-skin="lumen"] .chacts.done button.picked{background:var(--ch-panel);border-color:var(--ch-line);color:var(--ch-dim)}
-.chat[data-skin="lumen"] .chalt{font-size:12px;margin-top:12px}
-.chat[data-skin="lumen"] .chseed{gap:8px;margin-top:14px}
-.chat[data-skin="lumen"] .chseed button{display:inline-flex;align-items:center;gap:7px;height:34px;padding:0 14px 0 11px;border-radius:999px;
+.chat[data-lm] .chacts button:hover{background:var(--lm-hover);border-color:var(--lm-line2);color:var(--ch-ink)}
+.chat[data-lm] .chacts button.pri{background:var(--ch-ink);border-color:var(--ch-ink);color:var(--ch-bg)}
+.chat[data-lm] .chacts button.pri:hover{background:var(--ch-ink);color:var(--ch-bg);filter:none;opacity:.88}
+.chat[data-lm] .chacts.done button.picked{background:var(--ch-panel);border-color:var(--ch-line);color:var(--ch-dim)}
+.chat[data-lm] .chalt{font-size:12px;margin-top:12px}
+.chat[data-lm] .chseed{gap:8px;margin-top:14px}
+.chat[data-lm] .chseed button{display:inline-flex;align-items:center;gap:7px;height:34px;padding:0 14px 0 11px;border-radius:999px;
   font-size:13px;font-weight:500;background:transparent;border:1px solid var(--ch-line);color:var(--lm-ink2);--ic:var(--lmi-arrow)}
-.chat[data-skin="lumen"] .chseed button::before{width:14px;height:14px;color:var(--ch-dim)}
-.chat[data-skin="lumen"] .chseed button:hover{background:var(--lm-hover);border-color:var(--lm-line2);color:var(--ch-ink)}
+.chat[data-lm] .chseed button::before{width:14px;height:14px;color:var(--ch-dim)}
+.chat[data-lm] .chseed button:hover{background:var(--lm-hover);border-color:var(--lm-line2);color:var(--ch-ink)}
 
 /* the line while an answer is on its way, under the same name */
-.chat[data-skin="lumen"] .chthink .chwait{font-size:13px;color:var(--ch-dim);gap:10px}
-.chat[data-skin="lumen"] .chthink .el{font-family:var(--lm-font);font-size:12px;font-variant-numeric:tabular-nums}
+.chat[data-lm] .chthink .chwait{font-size:13px;color:var(--ch-dim);gap:10px}
+.chat[data-lm] .chthink .el{font-family:var(--lm-font);font-size:12px;font-variant-numeric:tabular-nums}
 
 /* ── an empty thread: a greeting and four places to start ────────────── */
-.chat[data-skin="lumen"] .chb.chhero{margin:auto 0;padding:10px 0 18px}
-.chat[data-skin="lumen"] .chhero .cht,.chat[data-skin="lumen"] .chhero .chts,.chat[data-skin="lumen"] .chhero .chcard{display:none}
-.chat[data-skin="lumen"] .chhero .lmhi{display:block;margin-top:14px;font-size:28px;line-height:1.2;font-weight:680;letter-spacing:-.03em;
+.chat[data-lm] .chb.chhero{margin:auto 0;padding:10px 0 18px}
+.chat[data-lm] .chhero .cht,.chat[data-lm] .chhero .chts,.chat[data-lm] .chhero .chcard{display:none}
+.chat[data-lm] .chhero .lmhi{display:block;margin-top:14px;font-size:28px;line-height:1.2;font-weight:680;letter-spacing:-.03em;
   background:var(--lm-grad);-webkit-background-clip:text;background-clip:text;color:transparent}
-.chat[data-skin="lumen"] .chhero .lmhs{display:block;margin-top:6px;font-size:15px;color:var(--ch-dim);letter-spacing:-.005em}
-.chat[data-skin="lumen"]:not(.ownmark) .chhero .chorbx:not(:has(.pxl)){width:76px;height:76px;margin-bottom:0;background:var(--lm-mark) center / contain no-repeat;
+.chat[data-lm] .chhero .lmhs{display:block;margin-top:6px;font-size:15px;color:var(--ch-dim);letter-spacing:-.005em}
+.chat[data-lm]:not(.ownmark) .chhero .chorbx:not(:has(.pxl)){width:76px;height:76px;margin-bottom:0;background:var(--lm-mark) center / contain no-repeat;
   filter:drop-shadow(0 10px 26px var(--ch-glow))}
-.chat[data-skin="lumen"] .chhero .chorbx svg{display:none}
-.chat[data-skin="lumen"].ownmark .chhero .chorbx{width:76px;height:76px}
-.chat[data-skin="lumen"] .chhero .chseed{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%;max-width:400px;margin-top:28px;overflow:visible}
-.chat[data-skin="lumen"] .chhero .chseed button{display:block;position:relative;height:auto;min-height:92px;text-align:left;
+.chat[data-lm] .chhero .chorbx svg{display:none}
+.chat[data-lm].ownmark .chhero .chorbx{width:76px;height:76px}
+.chat[data-lm] .chhero .chseed{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%;max-width:400px;margin-top:28px;overflow:visible}
+.chat[data-lm] .chhero .chseed button{display:block;position:relative;height:auto;min-height:92px;text-align:left;
   padding:44px 14px 13px;border-radius:16px;white-space:normal;font-size:13.5px;font-weight:550;line-height:1.35;
   background:var(--lm-card);border:1px solid var(--ch-line);color:var(--ch-ink);box-shadow:var(--lm-shadow)}
-.chat[data-skin="lumen"] .chhero .chseed button::first-letter{text-transform:uppercase}
-.chat[data-skin="lumen"] .chhero .chseed button::before{position:absolute;left:14px;top:14px;width:18px;height:18px;color:var(--ch-acc)}
-.chat[data-skin="lumen"] .chhero .chseed button::after{content:"";position:absolute;right:13px;top:15px;width:14px;height:14px;background:var(--ch-dim);
+.chat[data-lm] .chhero .chseed button::first-letter{text-transform:uppercase}
+.chat[data-lm] .chhero .chseed button::before{position:absolute;left:14px;top:14px;width:18px;height:18px;color:var(--ch-acc)}
+.chat[data-lm] .chhero .chseed button::after{content:"";position:absolute;right:13px;top:15px;width:14px;height:14px;background:var(--ch-dim);
   -webkit-mask:var(--lmi-arrow) center / contain no-repeat;mask:var(--lmi-arrow) center / contain no-repeat;
   opacity:0;transform:translate(-3px,3px);transition:opacity .16s,transform .16s}
-.chat[data-skin="lumen"] .chhero .chseed button:hover{border-color:var(--lm-line2);background:var(--lm-card)}
-.chat[data-skin="lumen"] .chhero .chseed button:hover::after{opacity:1;transform:none}
-.chat[data-skin="lumen"] .chhero .chseed button:nth-child(1){--ic:var(--lmi-target)}
-.chat[data-skin="lumen"] .chhero .chseed button:nth-child(2){--ic:var(--lmi-clock)}
-.chat[data-skin="lumen"] .chhero .chseed button:nth-child(3){--ic:var(--lmi-bulb)}
-.chat[data-skin="lumen"] .chhero .chseed button:nth-child(4){--ic:var(--lmi-help)}
+.chat[data-lm] .chhero .chseed button:hover{border-color:var(--lm-line2);background:var(--lm-card)}
+.chat[data-lm] .chhero .chseed button:hover::after{opacity:1;transform:none}
+.chat[data-lm] .chhero .chseed button:nth-child(1){--ic:var(--lmi-target)}
+.chat[data-lm] .chhero .chseed button:nth-child(2){--ic:var(--lmi-clock)}
+.chat[data-lm] .chhero .chseed button:nth-child(3){--ic:var(--lmi-bulb)}
+.chat[data-lm] .chhero .chseed button:nth-child(4){--ic:var(--lmi-help)}
 
 /* ── the composer: one card, the text on top and the buttons under it ── */
-.chat[data-skin="lumen"] .chfw{padding:6px 16px 14px;background:linear-gradient(transparent,var(--ch-bg) 26%);border-top:0}
-.chat[data-skin="lumen"] .chclip{padding:10px 10px 4px;margin:0;border:1px solid var(--ch-line);border-bottom:0;border-radius:22px 22px 0 0;background:var(--lm-card)}
-.chat[data-skin="lumen"] .chclip .cf{border-radius:12px;border:1px solid var(--ch-line);background:var(--ch-panel);padding:5px 6px 5px 9px;color:var(--lm-ink2);font-size:12px}
-.chat[data-skin="lumen"] .chclip .cf .sz,.chat[data-skin="lumen"] .chclip .cftot{font-family:var(--lm-font)}
-.chat[data-skin="lumen"] .chf{display:grid;grid-template-columns:auto minmax(0,1fr) auto;grid-template-areas:"t t t" "p . g";align-items:center;
+.chat[data-lm] .chfw{padding:6px 16px 14px;background:linear-gradient(transparent,var(--ch-bg) 26%);border-top:0}
+.chat[data-lm] .chclip{padding:10px 10px 4px;margin:0;border:1px solid var(--ch-line);border-bottom:0;border-radius:22px 22px 0 0;background:var(--lm-card)}
+.chat[data-lm] .chclip .cf{border-radius:12px;border:1px solid var(--ch-line);background:var(--ch-panel);padding:5px 6px 5px 9px;color:var(--lm-ink2);font-size:12px}
+.chat[data-lm] .chclip .cf .sz,.chat[data-lm] .chclip .cftot{font-family:var(--lm-font)}
+.chat[data-lm] .chf{display:grid;grid-template-columns:auto minmax(0,1fr) auto;grid-template-areas:"t t t" "p . g";align-items:center;
   gap:2px 6px;padding:6px 8px 8px;border:1px solid var(--ch-line);border-radius:22px;background:var(--lm-card);
   box-shadow:var(--lm-shadow);transition:border-color .18s,box-shadow .18s}
-.chat[data-skin="lumen"] .chclip:not(:empty) + .chf{border-top:0;border-radius:0 0 22px 22px}
-.chat[data-skin="lumen"] .chf.tall{border-radius:22px}
-.chat[data-skin="lumen"] .chclip:not(:empty) + .chf.tall{border-radius:0 0 22px 22px}
-.chat[data-skin="lumen"] .chf:focus-within,.chat[data-skin="lumen"] .chfw:focus-within .chclip{border-color:color-mix(in srgb,var(--ch-acc) 50%,var(--ch-line))}
-.chat[data-skin="lumen"] .chclip:empty + .chf:focus-within{background:var(--lm-card);box-shadow:0 0 0 4px var(--lm-ring),var(--lm-shadow)}
-.chat[data-skin="lumen"] .chf textarea,.chat[data-skin="lumen"] .chf textarea:focus{grid-area:t;width:100%;box-sizing:border-box;padding:9px 8px 6px;font-size:14.5px;line-height:1.55;
+.chat[data-lm] .chclip:not(:empty) + .chf{border-top:0;border-radius:0 0 22px 22px}
+.chat[data-lm] .chf.tall{border-radius:22px}
+.chat[data-lm] .chclip:not(:empty) + .chf.tall{border-radius:0 0 22px 22px}
+.chat[data-lm] .chf:focus-within,.chat[data-lm] .chfw:focus-within .chclip{border-color:color-mix(in srgb,var(--ch-acc) 50%,var(--ch-line))}
+.chat[data-lm] .chclip:empty + .chf:focus-within{background:var(--lm-card);box-shadow:0 0 0 4px var(--lm-ring),var(--lm-shadow)}
+.chat[data-lm] .chf textarea,.chat[data-lm] .chf textarea:focus{grid-area:t;width:100%;box-sizing:border-box;padding:9px 8px 6px;font-size:14.5px;line-height:1.55;
   min-height:44px;background:transparent;border:0;box-shadow:none;color:var(--ch-ink)}
-.chat[data-skin="lumen"] .chf textarea::placeholder{color:var(--ch-dim)}
-.chat[data-skin="lumen"] .chpin{grid-area:p;width:34px;height:34px;margin:0;border-radius:10px;border:0;background:transparent;color:var(--ch-dim);
+.chat[data-lm] .chf textarea::placeholder{color:var(--ch-dim)}
+.chat[data-lm] .chpin{grid-area:p;width:34px;height:34px;margin:0;border-radius:10px;border:0;background:transparent;color:var(--ch-dim);
   display:grid;place-items:center;--ic:var(--lmi-clip);transition:background .14s,color .14s}
-.chat[data-skin="lumen"] .chpin:hover{background:var(--lm-hover);color:var(--ch-ink)}
-.chat[data-skin="lumen"] .chf .btn.pri{grid-area:g;width:34px;height:34px;border-radius:50%;border:0;background:var(--ch-ink);color:var(--ch-bg);
+.chat[data-lm] .chpin:hover{background:var(--lm-hover);color:var(--ch-ink)}
+.chat[data-lm] .chf .btn.pri{grid-area:g;width:34px;height:34px;border-radius:50%;border:0;background:var(--ch-ink);color:var(--ch-bg);
   box-shadow:none;align-self:center}
-.chat[data-skin="lumen"] .chf .btn.pri::after{content:"";width:17px;height:17px;--ic:var(--lmi-send)}
-.chat[data-skin="lumen"] .chf .btn.pri:hover{background:var(--ch-ink);filter:none;opacity:.86}
-.chat[data-skin="lumen"] .chf .btn.pri.empty{opacity:1;background:var(--lm-hover);color:var(--ch-dim)}
-.chat[data-skin="lumen"].busy .chf .btn.pri{opacity:.5;filter:none}
-.chat[data-skin="lumen"] .chhint{text-align:center;font-size:11px;padding:8px 12px 0;color:var(--ch-dim)}
-.chat[data-skin="lumen"] .chhint kbd{font-family:var(--lm-font);font-size:10.5px;border-radius:5px;padding:0 4px}
-.chat[data-skin="lumen"] .chpill{top:-46px;height:34px;padding:0 14px 0 11px;display:inline-flex;align-items:center;gap:6px;border-radius:999px;
+.chat[data-lm] .chf .btn.pri::after{content:"";width:17px;height:17px;--ic:var(--lmi-send)}
+.chat[data-lm] .chf .btn.pri:hover{background:var(--ch-ink);filter:none;opacity:.86}
+.chat[data-lm] .chf .btn.pri.empty{opacity:1;background:var(--lm-hover);color:var(--ch-dim)}
+.chat[data-lm].busy .chf .btn.pri{opacity:.5;filter:none}
+.chat[data-lm] .chhint{text-align:center;font-size:11px;padding:8px 12px 0;color:var(--ch-dim)}
+.chat[data-lm] .chhint kbd{font-family:var(--lm-font);font-size:10.5px;border-radius:5px;padding:0 4px}
+.chat[data-lm] .chpill{top:-46px;height:34px;padding:0 14px 0 11px;display:inline-flex;align-items:center;gap:6px;border-radius:999px;
   background:var(--lm-card);border:1px solid var(--ch-line);color:var(--ch-ink);font-size:0;font-weight:600;
   box-shadow:var(--lm-pop);--ic:var(--lmi-down2)}
-.chat[data-skin="lumen"] .chpill span{font-size:12.5px}
-.chat[data-skin="lumen"] .chpill::before{width:15px;height:15px;color:var(--ch-acc)}
-.chat[data-skin="lumen"] .chpill:has(.pxl)::before{display:none}
+.chat[data-lm] .chpill span{font-size:12.5px}
+.chat[data-lm] .chpill::before{width:15px;height:15px;color:var(--ch-acc)}
+.chat[data-lm] .chpill:has(.pxl)::before{display:none}
 
 /* ── what happened, a draft, a card ──────────────────────────────────── */
-.chat[data-skin="lumen"] .chrcpt{border-radius:12px;padding:9px 12px;font-size:12.5px;background:var(--ch-panel);border-color:var(--ch-line)}
-.chat[data-skin="lumen"] .chrcpt button{font-family:var(--lm-font);font-size:12px}
-.chat[data-skin="lumen"] .chmail,.chat[data-skin="lumen"] .chrb,.chat[data-skin="lumen"] .chrbp,.chat[data-skin="lumen"] .chask{border-radius:14px;border-color:var(--ch-line);background:var(--lm-card);box-shadow:var(--lm-shadow)}
-.chat[data-skin="lumen"] .chmail .mh,.chat[data-skin="lumen"] .chrb .rbh,.chat[data-skin="lumen"] .chrbp .rbph{background:var(--ch-panel);padding-top:10px;padding-bottom:10px}
-.chat[data-skin="lumen"] .chmail .tag,.chat[data-skin="lumen"] .chrb .tag{font-size:11px;letter-spacing:.02em;text-transform:none;font-weight:650;
+.chat[data-lm] .chrcpt{border-radius:12px;padding:9px 12px;font-size:12.5px;background:var(--ch-panel);border-color:var(--ch-line)}
+.chat[data-lm] .chrcpt button{font-family:var(--lm-font);font-size:12px}
+.chat[data-lm] .chmail,.chat[data-lm] .chrb,.chat[data-lm] .chrbp,.chat[data-lm] .chask{border-radius:14px;border-color:var(--ch-line);background:var(--lm-card);box-shadow:var(--lm-shadow)}
+.chat[data-lm] .chmail .mh,.chat[data-lm] .chrb .rbh,.chat[data-lm] .chrbp .rbph{background:var(--ch-panel);padding-top:10px;padding-bottom:10px}
+.chat[data-lm] .chmail .tag,.chat[data-lm] .chrb .tag{font-size:11px;letter-spacing:.02em;text-transform:none;font-weight:650;
   background:var(--lm-soft);border-radius:999px;padding:3px 9px}
-.chat[data-skin="lumen"] .chrb .rbh b{font-size:13.5px}
-.chat[data-skin="lumen"] .chrb .rbsteps,.chat[data-skin="lumen"] .chrb .rbbody,.chat[data-skin="lumen"] .chrb .rbesc{font-size:13.5px}
-.chat[data-skin="lumen"] .chmail .mbody{font-size:13.5px;line-height:1.65}
-.chat[data-skin="lumen"] .chmail .mf button,.chat[data-skin="lumen"] .chrb .rbf button{height:32px;padding:0 13px;border-radius:9px;font-size:12.5px;font-weight:550}
-.chat[data-skin="lumen"] .chrb .rbf button.prim{background:var(--ch-ink);border-color:var(--ch-ink);color:var(--ch-bg)}
-.chat[data-skin="lumen"] .chrb .rbmore{border-radius:10px;border-color:var(--ch-line);color:var(--ch-dim)}
-.chat[data-skin="lumen"] .chrb .rbmore:hover{border-color:var(--ch-acc);color:var(--ch-acc)}
-.chat[data-skin="lumen"] .chstep{border-top-color:var(--ch-line)}
+.chat[data-lm] .chrb .rbh b{font-size:13.5px}
+.chat[data-lm] .chrb .rbsteps,.chat[data-lm] .chrb .rbbody,.chat[data-lm] .chrb .rbesc{font-size:13.5px}
+.chat[data-lm] .chmail .mbody{font-size:13.5px;line-height:1.65}
+.chat[data-lm] .chmail .mf button,.chat[data-lm] .chrb .rbf button{height:32px;padding:0 13px;border-radius:9px;font-size:12.5px;font-weight:550}
+.chat[data-lm] .chrb .rbf button.prim{background:var(--ch-ink);border-color:var(--ch-ink);color:var(--ch-bg)}
+.chat[data-lm] .chrb .rbmore{border-radius:10px;border-color:var(--ch-line);color:var(--ch-dim)}
+.chat[data-lm] .chrb .rbmore:hover{border-color:var(--ch-acc);color:var(--ch-acc)}
+.chat[data-lm] .chstep{border-top-color:var(--ch-line)}
 
 /* ── the confirmation ────────────────────────────────────────────────── */
-.chat[data-skin="lumen"] .chask2{background:rgba(12,12,20,.32);backdrop-filter:blur(4px)}
-.chat[data-skin="lumen"] .chask2 .dlg{border-radius:18px;background:var(--lm-card);border:1px solid var(--ch-line);box-shadow:var(--lm-pop);max-width:360px}
-.chat[data-skin="lumen"] .chask2 .dlgh{background:transparent;border-bottom:0;padding:18px 20px 4px}
-.chat[data-skin="lumen"] .chask2 .dlgt{font-size:15px;font-weight:650;letter-spacing:-.01em}
-.chat[data-skin="lumen"] .chask2 .dlgb{padding:8px 20px 12px;font-size:13.5px;line-height:1.6;color:var(--lm-ink2)}
-.chat[data-skin="lumen"] .chask2 .dlgw{padding:0 20px 14px;font-size:12px}
-.chat[data-skin="lumen"] .chask2 .dlgf{background:transparent;border-top:0;padding:6px 20px 18px;gap:8px}
-.chat[data-skin="lumen"] .chask2 .btn{height:36px;padding:0 16px;border-radius:10px;font-size:13px;font-weight:600;
+.chat[data-lm] .chask2{background:rgba(12,12,20,.32);backdrop-filter:blur(4px)}
+.chat[data-lm] .chask2 .dlg{border-radius:18px;background:var(--lm-card);border:1px solid var(--ch-line);box-shadow:var(--lm-pop);max-width:360px}
+.chat[data-lm] .chask2 .dlgh{background:transparent;border-bottom:0;padding:18px 20px 4px}
+.chat[data-lm] .chask2 .dlgt{font-size:15px;font-weight:650;letter-spacing:-.01em}
+.chat[data-lm] .chask2 .dlgb{padding:8px 20px 12px;font-size:13.5px;line-height:1.6;color:var(--lm-ink2)}
+.chat[data-lm] .chask2 .dlgw{padding:0 20px 14px;font-size:12px}
+.chat[data-lm] .chask2 .dlgf{background:transparent;border-top:0;padding:6px 20px 18px;gap:8px}
+.chat[data-lm] .chask2 .btn{height:36px;padding:0 16px;border-radius:10px;font-size:13px;font-weight:600;
   background:var(--lm-card);border:1px solid var(--ch-line);color:var(--ch-ink)}
-.chat[data-skin="lumen"] .chask2 .btn.pri{background:var(--ch-ink);border-color:var(--ch-ink);color:var(--ch-bg)}
+.chat[data-lm] .chask2 .btn.pri{background:var(--ch-ink);border-color:var(--ch-ink);color:var(--ch-bg)}
 
 /* ── the two sheets: look and behaviour, and what it has been taught ─── */
-.chat[data-skin="lumen"] .chth{align-items:center;min-height:58px;box-sizing:border-box;padding:10px 10px 10px 20px;background:var(--ch-bg);border-bottom:1px solid var(--ch-line)}
-.chat[data-skin="lumen"] .chth .t{font-family:var(--lm-font);font-size:15px;font-weight:650;letter-spacing:-.01em}
-.chat[data-skin="lumen"] .chth .ib{width:34px;height:34px;border-radius:10px;border:0;background:transparent;color:var(--ch-dim);display:grid;place-items:center;padding:0}
-.chat[data-skin="lumen"] .chth .ib:hover{background:var(--lm-hover);color:var(--ch-ink)}
-.chat[data-skin="lumen"] .chfxb{padding:10px 20px 24px}
-.chat[data-skin="lumen"] .chfxb h6{font-size:12px;font-weight:650;letter-spacing:0;text-transform:none;color:var(--ch-ink);margin:22px 0 8px}
-.chat[data-skin="lumen"] .chfxb h6:first-child{margin-top:8px}
-.chat[data-skin="lumen"] .chskins{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-.chat[data-skin="lumen"] .chskin{flex-direction:column;align-items:stretch;gap:8px;padding:8px 8px 9px;border-radius:12px;font-size:12.5px;font-weight:600;
+.chat[data-lm] .chth{align-items:center;min-height:58px;box-sizing:border-box;padding:10px 10px 10px 20px;background:var(--ch-bg);border-bottom:1px solid var(--ch-line)}
+.chat[data-lm] .chth .t{font-family:var(--lm-font);font-size:15px;font-weight:650;letter-spacing:-.01em}
+.chat[data-lm] .chth .ib{width:34px;height:34px;border-radius:10px;border:0;background:transparent;color:var(--ch-dim);display:grid;place-items:center;padding:0}
+.chat[data-lm] .chth .ib:hover{background:var(--lm-hover);color:var(--ch-ink)}
+.chat[data-lm] .chfxb{padding:10px 20px 24px}
+.chat[data-lm] .chfxb h6{font-size:12px;font-weight:650;letter-spacing:0;text-transform:none;color:var(--ch-ink);margin:22px 0 8px}
+.chat[data-lm] .chfxb h6:first-child{margin-top:8px}
+.chat[data-lm] .chskins{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.chat[data-lm] .chskin{flex-direction:column;align-items:stretch;gap:8px;padding:8px 8px 9px;border-radius:12px;font-size:12.5px;font-weight:600;
   background:var(--lm-card);border:1px solid var(--ch-line);color:var(--ch-ink);text-align:left;position:relative}
-.chat[data-skin="lumen"] .chskin .dot{width:auto;height:40px;border-radius:8px}
-.chat[data-skin="lumen"] .chskin.on{border-color:var(--ch-acc);box-shadow:0 0 0 3px var(--lm-ring)}
-.chat[data-skin="lumen"] .chskin .nw{position:absolute;right:13px;top:13px}
-.chat[data-skin="lumen"] .chsw{padding:12px 0;font-size:13px;gap:14px;border-bottom:1px solid var(--ch-line)}
-.chat[data-skin="lumen"] .chsw .lb small{font-size:12px;margin-top:3px;line-height:1.5}
-.chat[data-skin="lumen"] .tgl{width:38px;height:22px;background:var(--lm-line2)}
-.chat[data-skin="lumen"] .tgl::after{width:18px;height:18px;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25)}
-.chat[data-skin="lumen"] .tgl[aria-checked="true"]{background:var(--ch-acc)}
-.chat[data-skin="lumen"] .tgl[aria-checked="true"]::after{transform:translateX(16px)}
-.chat[data-skin="lumen"] .chsw .val{font-family:var(--lm-font);font-size:12px;font-variant-numeric:tabular-nums}
-.chat[data-skin="lumen"] .chfxb .btn{border-radius:10px}
-.chat[data-skin="lumen"] .chtn,.chat[data-skin="lumen"] .chtq,.chat[data-skin="lumen"] .chtb{padding-left:20px;padding-right:20px}
-.chat[data-skin="lumen"] .chtq input{height:38px;border-radius:10px;background:var(--ch-panel);border-color:transparent;color:var(--ch-ink);font-size:13px}
-.chat[data-skin="lumen"] .chtq input:focus{border-color:color-mix(in srgb,var(--ch-acc) 55%,transparent);box-shadow:0 0 0 3px var(--lm-ring);background:var(--lm-card)}
-.chat[data-skin="lumen"] .chtg{font-size:11.5px;font-weight:600;letter-spacing:0;text-transform:none;color:var(--ch-dim)}
-.chat[data-skin="lumen"] .chti{border-radius:10px;padding:10px 12px;font-size:13px;background:var(--lm-card);border-color:var(--ch-line);color:var(--ch-ink)}
-.chat[data-skin="lumen"] .chti:hover{background:var(--lm-hover)}
-.chat[data-skin="lumen"] .chtn .qq,.chat[data-skin="lumen"] .chtb .qq{border-radius:10px;background:var(--ch-panel);border-color:var(--ch-line);color:var(--ch-ink);font-size:13px}
-.chat[data-skin="lumen"] .memn{border-radius:12px;background:var(--lm-card);border-color:var(--ch-line)}
+.chat[data-lm] .chskin .dot{width:auto;height:40px;border-radius:8px}
+.chat[data-lm] .chskin.on{border-color:var(--ch-acc);box-shadow:0 0 0 3px var(--lm-ring)}
+.chat[data-lm] .chskin .nw{position:absolute;right:13px;top:13px}
+.chat[data-lm] .chsw{padding:12px 0;font-size:13px;gap:14px;border-bottom:1px solid var(--ch-line)}
+.chat[data-lm] .chsw .lb small{font-size:12px;margin-top:3px;line-height:1.5}
+.chat[data-lm] .tgl{width:38px;height:22px;background:var(--lm-line2)}
+.chat[data-lm] .tgl::after{width:18px;height:18px;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25)}
+.chat[data-lm] .tgl[aria-checked="true"]{background:var(--ch-acc)}
+.chat[data-lm] .tgl[aria-checked="true"]::after{transform:translateX(16px)}
+.chat[data-lm] .chsw .val{font-family:var(--lm-font);font-size:12px;font-variant-numeric:tabular-nums}
+.chat[data-lm] .chfxb .btn{border-radius:10px}
+.chat[data-lm] .chtn,.chat[data-lm] .chtq,.chat[data-lm] .chtb{padding-left:20px;padding-right:20px}
+.chat[data-lm] .chtq input{height:38px;border-radius:10px;background:var(--ch-panel);border-color:transparent;color:var(--ch-ink);font-size:13px}
+.chat[data-lm] .chtq input:focus{border-color:color-mix(in srgb,var(--ch-acc) 55%,transparent);box-shadow:0 0 0 3px var(--lm-ring);background:var(--lm-card)}
+.chat[data-lm] .chtg{font-size:11.5px;font-weight:600;letter-spacing:0;text-transform:none;color:var(--ch-dim)}
+.chat[data-lm] .chti{border-radius:10px;padding:10px 12px;font-size:13px;background:var(--lm-card);border-color:var(--ch-line);color:var(--ch-ink)}
+.chat[data-lm] .chti:hover{background:var(--lm-hover)}
+.chat[data-lm] .chtn .qq,.chat[data-lm] .chtb .qq{border-radius:10px;background:var(--ch-panel);border-color:var(--ch-line);color:var(--ch-ink);font-size:13px}
+.chat[data-lm] .memn{border-radius:12px;background:var(--lm-card);border-color:var(--ch-line)}
 
 /* ── the icons, and how they move ────────────────────────────────────────
    After the animated icon sets (Lordicon, lucide-animated): an icon moves
@@ -3348,135 +3351,224 @@ body.chatting .pet[data-corner="br"],body.chatting .pet[data-corner="tr"]{
    themselves. Parts turn about the view box, so every origin below is in
    the icon's own 24-unit coordinates. The drawing is outside .fx-icons,
    the motion is inside it. */
-.chat[data-skin="lumen"] .lmi{width:18px;height:18px;display:block;flex:0 0 auto;overflow:visible;pointer-events:none}
-.chat[data-skin="lumen"] .lmi *{transform-box:view-box}
+.chat[data-lm] .lmi{width:18px;height:18px;display:block;flex:0 0 auto;overflow:visible;pointer-events:none}
+.chat[data-lm] .lmi *{transform-box:view-box}
 /* the masked icon each of these replaces steps aside for it (.lmh is
    set on a button when its icon goes in) */
-.chat[data-skin="lumen"] .lmh::before,.chat[data-skin="lumen"] #chatGo.lmh::after{display:none!important}
-.chat[data-skin="lumen"] .gl.lmh{background:none!important;-webkit-mask:none!important;mask:none!important}
-.chat[data-skin="lumen"] .gl > .lmi{width:100%;height:100%}
-.chat[data-skin="lumen"] .chtools .lmi,.chat[data-skin="lumen"] .chrate > button > .lmi{width:16px;height:16px}
-.chat[data-skin="lumen"] .chcode .cpy > .lmi,.chat[data-skin="lumen"] .chtext .cpy > .lmi{width:14px;height:14px}
-.chat[data-skin="lumen"] .chsi .x > .lmi,.chat[data-skin="lumen"] .chb.bot .wrong button > .lmi,.chat[data-skin="lumen"] .chpill > .lmi{width:15px;height:15px}
-.chat[data-skin="lumen"] .lmnew > .lmi{width:16px;height:16px}
-.chat[data-skin="lumen"] .lmq > .lmi{position:absolute;left:11px;width:15px;height:15px;color:var(--ch-dim)}
-.chat[data-skin="lumen"] #chatGo > .lmi{width:17px;height:17px}
-.chat[data-skin="lumen"] .chseed button > .lmi{width:14px;height:14px;color:var(--ch-dim)}
-.chat[data-skin="lumen"] .chpill > .lmi{color:var(--ch-acc)}
-.chat[data-skin="lumen"] .chpill:has(.pxl) > .lmi{display:none}
-.chat[data-skin="lumen"] .chhero .chseed button > .lmi{position:absolute;left:14px;top:14px;width:20px;height:20px;color:var(--ch-acc)}
+.chat[data-lm] .lmh::before,.chat[data-lm] #chatGo.lmh::after{display:none!important}
+.chat[data-lm] .gl.lmh{background:none!important;-webkit-mask:none!important;mask:none!important}
+.chat[data-lm] .gl > .lmi{width:100%;height:100%}
+.chat[data-lm] .chtools .lmi,.chat[data-lm] .chrate > button > .lmi{width:16px;height:16px}
+.chat[data-lm] .chcode .cpy > .lmi,.chat[data-lm] .chtext .cpy > .lmi{width:14px;height:14px}
+.chat[data-lm] .chsi .x > .lmi,.chat[data-lm] .chb.bot .wrong button > .lmi,.chat[data-lm] .chpill > .lmi{width:15px;height:15px}
+.chat[data-lm] .lmnew > .lmi{width:16px;height:16px}
+.chat[data-lm] .lmq > .lmi{position:absolute;left:11px;width:15px;height:15px;color:var(--ch-dim)}
+.chat[data-lm] #chatGo > .lmi{width:17px;height:17px}
+.chat[data-lm] .chseed button > .lmi{width:14px;height:14px;color:var(--ch-dim)}
+.chat[data-lm] .chpill > .lmi{color:var(--ch-acc)}
+.chat[data-lm] .chpill:has(.pxl) > .lmi{display:none}
+.chat[data-lm] .chhero .chseed button > .lmi{position:absolute;left:14px;top:14px;width:20px;height:20px;color:var(--ch-acc)}
 
 /* states, which hold with or without motion */
-.chat[data-skin="lumen"] .lmi-copy .ck{opacity:0}
-.chat[data-skin="lumen"] .ok > .lmi-copy .sh{opacity:0;transform:scale(.5)}
-.chat[data-skin="lumen"] .ok > .lmi-copy .ck{opacity:1}
-.chat[data-skin="lumen"] .lmi-copy .sh{transform-origin:12px 12px}
-.chat[data-skin="lumen"] .chrate > button.on > .lmi .hand{fill:currentColor;fill-opacity:.2}
-.chat[data-skin="lumen"] .lmi-bulb .ry{stroke-dasharray:1;stroke-dashoffset:1}
-.chat[data-skin="lumen"] button:hover > .lmi-bulb .ry{stroke-dashoffset:0}
-.chat[data-skin="lumen"] .lmi-panel .chv{transform-origin:14.5px 12px}
-.chat[data-skin="lumen"].convos #chatMenu > .lmi .chv{transform:rotate(180deg)}
-.chat[data-skin="lumen"] .chsi .x:hover > .lmi .lid{transform:translateY(-1.5px) rotate(12deg)}
-.chat[data-skin="lumen"] .lmi-trash .lid{transform-origin:20px 7px}
+.chat[data-lm] .lmi-copy .ck{opacity:0}
+.chat[data-lm] .ok > .lmi-copy .sh{opacity:0;transform:scale(.5)}
+.chat[data-lm] .ok > .lmi-copy .ck{opacity:1}
+.chat[data-lm] .lmi-copy .sh{transform-origin:12px 12px}
+.chat[data-lm] .chrate > button.on > .lmi .hand{fill:currentColor;fill-opacity:.2}
+.chat[data-lm] .lmi-bulb .ry{stroke-dasharray:1;stroke-dashoffset:1}
+.chat[data-lm] button:hover > .lmi-bulb .ry{stroke-dashoffset:0}
+.chat[data-lm] .lmi-panel .chv{transform-origin:14.5px 12px}
+.chat[data-lm].convos #chatMenu > .lmi .chv{transform:rotate(180deg)}
+.chat[data-lm] .chsi .x:hover > .lmi .lid{transform:translateY(-1.5px) rotate(12deg)}
+.chat[data-lm] .lmi-trash .lid{transform-origin:20px 7px}
 
 /* arriving: a small pop, a beat apart along a row */
-.chat[data-skin="lumen"].fx-icons .lmi.lmin{animation:lmIn .46s cubic-bezier(.34,1.56,.64,1) both}
-.chat[data-skin="lumen"].fx-icons .chtools > button:nth-child(2) > .lmi,.chat[data-skin="lumen"].fx-icons .chrate > button:nth-child(1) > .lmi{animation-delay:.05s}
-.chat[data-skin="lumen"].fx-icons .chrate > button:nth-child(2) > .lmi{animation-delay:.1s}
-.chat[data-skin="lumen"].fx-icons .chrate > button:nth-child(3) .lmi{animation-delay:.15s}
-.chat[data-skin="lumen"].fx-icons .chrate > button:nth-child(4) .lmi{animation-delay:.2s}
-.chat[data-skin="lumen"].fx-icons .chhero .chseed button:nth-child(1) > .lmi{animation-delay:.18s}
-.chat[data-skin="lumen"].fx-icons .chhero .chseed button:nth-child(2) > .lmi{animation-delay:.26s}
-.chat[data-skin="lumen"].fx-icons .chhero .chseed button:nth-child(3) > .lmi{animation-delay:.34s}
-.chat[data-skin="lumen"].fx-icons .chhero .chseed button:nth-child(4) > .lmi{animation-delay:.42s}
+.chat[data-lm].fx-icons .lmi.lmin{animation:lmIn .46s cubic-bezier(.34,1.56,.64,1) both}
+.chat[data-lm].fx-icons .chtools > button:nth-child(2) > .lmi,.chat[data-lm].fx-icons .chrate > button:nth-child(1) > .lmi{animation-delay:.05s}
+.chat[data-lm].fx-icons .chrate > button:nth-child(2) > .lmi{animation-delay:.1s}
+.chat[data-lm].fx-icons .chrate > button:nth-child(3) .lmi{animation-delay:.15s}
+.chat[data-lm].fx-icons .chrate > button:nth-child(4) .lmi{animation-delay:.2s}
+.chat[data-lm].fx-icons .chhero .chseed button:nth-child(1) > .lmi{animation-delay:.18s}
+.chat[data-lm].fx-icons .chhero .chseed button:nth-child(2) > .lmi{animation-delay:.26s}
+.chat[data-lm].fx-icons .chhero .chseed button:nth-child(3) > .lmi{animation-delay:.34s}
+.chat[data-lm].fx-icons .chhero .chseed button:nth-child(4) > .lmi{animation-delay:.42s}
 @keyframes lmIn{from{opacity:0;transform:scale(.5) rotate(-14deg)}to{opacity:1;transform:none}}
 
 /* the header */
-.chat[data-skin="lumen"].fx-icons .lmi-panel .bar,.chat[data-skin="lumen"].fx-icons .lmi-panel .chv{transition:transform .32s cubic-bezier(.34,1.56,.64,1)}
-.chat[data-skin="lumen"].fx-icons #chatMenu:hover > .lmi .bar{transform:translateX(1.5px)}
-.chat[data-skin="lumen"].fx-icons #chatMenu:hover > .lmi .chv{transform:translateX(1.5px)}
-.chat[data-skin="lumen"].fx-icons.convos #chatMenu:hover > .lmi .chv{transform:translateX(-1px) rotate(180deg)}
-.chat[data-skin="lumen"].fx-icons button:hover > .lmi-sliders .k1{animation:lmKnobL .8s cubic-bezier(.45,0,.25,1)}
-.chat[data-skin="lumen"].fx-icons button:hover > .lmi-sliders .k2{animation:lmKnobR .8s cubic-bezier(.45,0,.25,1)}
+.chat[data-lm].fx-icons .lmi-panel .bar,.chat[data-lm].fx-icons .lmi-panel .chv{transition:transform .32s cubic-bezier(.34,1.56,.64,1)}
+.chat[data-lm].fx-icons #chatMenu:hover > .lmi .bar{transform:translateX(1.5px)}
+.chat[data-lm].fx-icons #chatMenu:hover > .lmi .chv{transform:translateX(1.5px)}
+.chat[data-lm].fx-icons.convos #chatMenu:hover > .lmi .chv{transform:translateX(-1px) rotate(180deg)}
+.chat[data-lm].fx-icons button:hover > .lmi-sliders .k1{animation:lmKnobL .8s cubic-bezier(.45,0,.25,1)}
+.chat[data-lm].fx-icons button:hover > .lmi-sliders .k2{animation:lmKnobR .8s cubic-bezier(.45,0,.25,1)}
 @keyframes lmKnobL{45%{transform:translateX(-6px)}}
 @keyframes lmKnobR{45%{transform:translateX(6px)}}
-.chat[data-skin="lumen"].fx-icons button:hover > .lmi-book .l1{animation:lmDraw .42s ease both}
-.chat[data-skin="lumen"].fx-icons button:hover > .lmi-book .l2{animation:lmDraw .42s .2s ease both}
+.chat[data-lm].fx-icons button:hover > .lmi-book .l1{animation:lmDraw .42s ease both}
+.chat[data-lm].fx-icons button:hover > .lmi-book .l2{animation:lmDraw .42s .2s ease both}
 @keyframes lmDraw{from{stroke-dasharray:1;stroke-dashoffset:1}to{stroke-dasharray:1;stroke-dashoffset:0}}
-.chat[data-skin="lumen"] .lmi-compose .pen{transform-origin:9px 15.5px}
-.chat[data-skin="lumen"].fx-icons button:hover > .lmi-compose .pen{animation:lmWrite .75s ease-in-out}
+.chat[data-lm] .lmi-compose .pen{transform-origin:9px 15.5px}
+.chat[data-lm].fx-icons button:hover > .lmi-compose .pen{animation:lmWrite .75s ease-in-out}
 @keyframes lmWrite{25%{transform:translate(-.6px,.6px) rotate(-11deg)}50%{transform:rotate(7deg)}75%{transform:rotate(-4deg)}}
-.chat[data-skin="lumen"] .lmi-x .r{transform-origin:12px 12px}
-.chat[data-skin="lumen"].fx-icons .lmi-x .r{transition:transform .38s cubic-bezier(.34,1.56,.64,1)}
-.chat[data-skin="lumen"].fx-icons button:hover > .lmi-x .r{transform:rotate(90deg)}
+.chat[data-lm] .lmi-x .r{transform-origin:12px 12px}
+.chat[data-lm].fx-icons .lmi-x .r{transition:transform .38s cubic-bezier(.34,1.56,.64,1)}
+.chat[data-lm].fx-icons button:hover > .lmi-x .r{transform:rotate(90deg)}
 
 /* the composer */
-.chat[data-skin="lumen"] .lmi-clip .c{transform-origin:12px 12px}
-.chat[data-skin="lumen"].fx-icons button:hover > .lmi-clip .c,.chat[data-skin="lumen"].fx-icons .lmhit.lmi-clip .c{animation:lmWiggle .6s ease-in-out}
+.chat[data-lm] .lmi-clip .c{transform-origin:12px 12px}
+.chat[data-lm].fx-icons button:hover > .lmi-clip .c,.chat[data-lm].fx-icons .lmhit.lmi-clip .c{animation:lmWiggle .6s ease-in-out}
 @keyframes lmWiggle{25%{transform:rotate(-14deg)}55%{transform:rotate(10deg)}80%{transform:rotate(-4deg)}}
-.chat[data-skin="lumen"].fx-icons #chatGo:not(.empty):hover > .lmi .ar,.chat[data-skin="lumen"].fx-icons #chatGo > .lmi.lmhit .ar{animation:lmFly .56s cubic-bezier(.4,0,.2,1)}
+.chat[data-lm].fx-icons #chatGo:not(.empty):hover > .lmi .ar,.chat[data-lm].fx-icons #chatGo > .lmi.lmhit .ar{animation:lmFly .56s cubic-bezier(.4,0,.2,1)}
 @keyframes lmFly{40%{transform:translateY(-11px);opacity:0}41%{transform:translateY(11px);opacity:0}100%{transform:none;opacity:1}}
 /* something to send: the arrow sits up, once */
-.chat[data-skin="lumen"].fx-icons #chatGo:not(.empty) > .lmi:not(.lmin){animation:lmReady .5s cubic-bezier(.34,1.56,.64,1)}
+.chat[data-lm].fx-icons #chatGo:not(.empty) > .lmi:not(.lmin){animation:lmReady .5s cubic-bezier(.34,1.56,.64,1)}
 @keyframes lmReady{from{transform:translateY(3px) scale(.85)}to{transform:none}}
 
 /* the tools on an answer */
-.chat[data-skin="lumen"].fx-icons .lmi-copy .fr,.chat[data-skin="lumen"].fx-icons .lmi-copy .bk{transition:transform .28s cubic-bezier(.34,1.56,.64,1)}
-.chat[data-skin="lumen"].fx-icons .lmi-copy .sh{transition:opacity .2s,transform .28s cubic-bezier(.34,1.56,.64,1)}
-.chat[data-skin="lumen"].fx-icons button:not(.ok):hover > .lmi-copy .fr{transform:translate(-1.5px,-1.5px)}
-.chat[data-skin="lumen"].fx-icons button:not(.ok):hover > .lmi-copy .bk{transform:translate(1.5px,1.5px)}
-.chat[data-skin="lumen"].fx-icons .ok > .lmi-copy .ck{animation:lmDraw .34s .06s ease both}
-.chat[data-skin="lumen"] .lmi-up .hd,.chat[data-skin="lumen"] .lmi-thumbdown .hd{transform-origin:7px 16px}
-.chat[data-skin="lumen"].fx-icons button:hover > .lmi-up .hd,.chat[data-skin="lumen"].fx-icons button:hover > .lmi-thumbdown .hd{animation:lmNod .55s cubic-bezier(.34,1.56,.64,1)}
+.chat[data-lm].fx-icons .lmi-copy .fr,.chat[data-lm].fx-icons .lmi-copy .bk{transition:transform .28s cubic-bezier(.34,1.56,.64,1)}
+.chat[data-lm].fx-icons .lmi-copy .sh{transition:opacity .2s,transform .28s cubic-bezier(.34,1.56,.64,1)}
+.chat[data-lm].fx-icons button:not(.ok):hover > .lmi-copy .fr{transform:translate(-1.5px,-1.5px)}
+.chat[data-lm].fx-icons button:not(.ok):hover > .lmi-copy .bk{transform:translate(1.5px,1.5px)}
+.chat[data-lm].fx-icons .ok > .lmi-copy .ck{animation:lmDraw .34s .06s ease both}
+.chat[data-lm] .lmi-up .hd,.chat[data-lm] .lmi-thumbdown .hd{transform-origin:7px 16px}
+.chat[data-lm].fx-icons button:hover > .lmi-up .hd,.chat[data-lm].fx-icons button:hover > .lmi-thumbdown .hd{animation:lmNod .55s cubic-bezier(.34,1.56,.64,1)}
 @keyframes lmNod{45%{transform:translateY(-1.5px) rotate(-14deg)}}
-.chat[data-skin="lumen"].fx-icons button > svg.lmhit.lmi-up .hd,.chat[data-skin="lumen"].fx-icons button > svg.lmhit.lmi-thumbdown .hd{animation:lmPop .6s cubic-bezier(.34,1.56,.64,1)}
+.chat[data-lm].fx-icons button > svg.lmhit.lmi-up .hd,.chat[data-lm].fx-icons button > svg.lmhit.lmi-thumbdown .hd{animation:lmPop .6s cubic-bezier(.34,1.56,.64,1)}
 @keyframes lmPop{30%{transform:scale(1.32) rotate(-16deg)}60%{transform:scale(.94)}}
-.chat[data-skin="lumen"] .lmi-retry .rt{transform-origin:12px 12px}
-.chat[data-skin="lumen"].fx-icons button:hover .lmi-retry .rt,.chat[data-skin="lumen"].fx-icons .lmhit.lmi-retry .rt{animation:lmSpinBack .7s cubic-bezier(.45,0,.2,1)}
+.chat[data-lm] .lmi-retry .rt{transform-origin:12px 12px}
+.chat[data-lm].fx-icons button:hover .lmi-retry .rt,.chat[data-lm].fx-icons .lmhit.lmi-retry .rt{animation:lmSpinBack .7s cubic-bezier(.45,0,.2,1)}
 @keyframes lmSpinBack{to{transform:rotate(-360deg)}}
-.chat[data-skin="lumen"] .lmi-spark .s1{transform-origin:12px 9.7px;transition:fill-opacity .25s;fill:currentColor;fill-opacity:0}
-.chat[data-skin="lumen"] .lmi-spark .s2{transform-origin:19px 17.5px}
-.chat[data-skin="lumen"].fx-icons button:hover .lmi-spark .s1{fill-opacity:.28;animation:lmStar .6s cubic-bezier(.34,1.56,.64,1)}
-.chat[data-skin="lumen"].fx-icons button:hover .lmi-spark .s2{animation:lmTwinkle .8s ease-in-out}
+.chat[data-lm] .lmi-spark .s1{transform-origin:12px 9.7px;transition:fill-opacity .25s;fill:currentColor;fill-opacity:0}
+.chat[data-lm] .lmi-spark .s2{transform-origin:19px 17.5px}
+.chat[data-lm].fx-icons button:hover .lmi-spark .s1{fill-opacity:.28;animation:lmStar .6s cubic-bezier(.34,1.56,.64,1)}
+.chat[data-lm].fx-icons button:hover .lmi-spark .s2{animation:lmTwinkle .8s ease-in-out}
 @keyframes lmStar{40%{transform:scale(1.2) rotate(10deg)}}
 @keyframes lmTwinkle{35%{opacity:.1;transform:scale(.4) rotate(45deg)}70%{opacity:1;transform:scale(1.2) rotate(90deg)}100%{transform:rotate(90deg)}}
 /* the one idle star: Think harder, on the newest answer, now and then */
-.chat[data-skin="lumen"].fx-icons .chl > .chb.bot.ans:not(:has(~ .chb.bot.ans)) [data-deeper]:not(:hover) .lmi-spark .s2{animation:lmTwinkleIdle 5s ease-in-out 1.2s infinite}
+.chat[data-lm].fx-icons .chl > .chb.bot.ans:not(:has(~ .chb.bot.ans)) [data-deeper]:not(:hover) .lmi-spark .s2{animation:lmTwinkleIdle 5s ease-in-out 1.2s infinite}
 @keyframes lmTwinkleIdle{0%,82%,100%{transform:none;opacity:1}88%{opacity:.15;transform:scale(.45) rotate(45deg)}94%{opacity:1;transform:scale(1.15) rotate(90deg)}}
-.chat[data-skin="lumen"] .lmi-flag .cl{transform-origin:5px 8.75px}
-.chat[data-skin="lumen"].fx-icons button:hover > .lmi-flag .cl{animation:lmWave .8s ease-in-out}
+.chat[data-lm] .lmi-flag .cl{transform-origin:5px 8.75px}
+.chat[data-lm].fx-icons button:hover > .lmi-flag .cl{animation:lmWave .8s ease-in-out}
 @keyframes lmWave{25%{transform:skewY(-7deg) scaleX(.92)}50%{transform:skewY(5deg) scaleX(.97)}75%{transform:skewY(-3deg)}}
-.chat[data-skin="lumen"].fx-icons .lmi-trash .lid{transition:transform .26s cubic-bezier(.34,1.56,.64,1)}
-.chat[data-skin="lumen"].fx-icons .lmq:focus-within > .lmi .mg{animation:lmSeek .8s ease-in-out}
+.chat[data-lm].fx-icons .lmi-trash .lid{transition:transform .26s cubic-bezier(.34,1.56,.64,1)}
+.chat[data-lm].fx-icons .lmq:focus-within > .lmi .mg{animation:lmSeek .8s ease-in-out}
 @keyframes lmSeek{25%{transform:translate(-1px,-1.5px)}50%{transform:translate(1.5px,-.5px)}75%{transform:translate(-.5px,1px)}}
-.chat[data-skin="lumen"].fx-icons button:hover > .lmi-arrow .ar{animation:lmOut .5s cubic-bezier(.4,0,.2,1)}
+.chat[data-lm].fx-icons button:hover > .lmi-arrow .ar{animation:lmOut .5s cubic-bezier(.4,0,.2,1)}
 @keyframes lmOut{40%{transform:translate(7px,-7px);opacity:0}41%{transform:translate(-7px,7px);opacity:0}100%{transform:none;opacity:1}}
 /* a reply arrived below where you are reading: the arrow keeps pointing */
-.chat[data-skin="lumen"].fx-icons .chpill.on > .lmi .ar{animation:lmBob 1.4s ease-in-out infinite}
+.chat[data-lm].fx-icons .chpill.on > .lmi .ar{animation:lmBob 1.4s ease-in-out infinite}
 @keyframes lmBob{50%{transform:translateY(2.5px)}}
 
 /* the four places to start */
-.chat[data-skin="lumen"] .lmi-target .o,.chat[data-skin="lumen"] .lmi-target .m,.chat[data-skin="lumen"] .lmi-target .d,.chat[data-skin="lumen"] .lmi-clock .mh,.chat[data-skin="lumen"] .lmi-help .q{transform-origin:12px 12px}
-.chat[data-skin="lumen"].fx-icons button:hover > .lmi-target .m{animation:lmRing .6s cubic-bezier(.34,1.56,.64,1)}
-.chat[data-skin="lumen"].fx-icons button:hover > .lmi-target .o{animation:lmRingOut .6s .06s cubic-bezier(.34,1.56,.64,1)}
-.chat[data-skin="lumen"].fx-icons button:hover > .lmi-target .d{animation:lmRing .5s .14s cubic-bezier(.34,1.56,.64,1)}
+.chat[data-lm] .lmi-target .o,.chat[data-lm] .lmi-target .m,.chat[data-lm] .lmi-target .d,.chat[data-lm] .lmi-clock .mh,.chat[data-lm] .lmi-help .q{transform-origin:12px 12px}
+.chat[data-lm].fx-icons button:hover > .lmi-target .m{animation:lmRing .6s cubic-bezier(.34,1.56,.64,1)}
+.chat[data-lm].fx-icons button:hover > .lmi-target .o{animation:lmRingOut .6s .06s cubic-bezier(.34,1.56,.64,1)}
+.chat[data-lm].fx-icons button:hover > .lmi-target .d{animation:lmRing .5s .14s cubic-bezier(.34,1.56,.64,1)}
 @keyframes lmRing{40%{transform:scale(1.3)}}
 @keyframes lmRingOut{40%{transform:scale(.9)}}
-.chat[data-skin="lumen"].fx-icons button:hover > .lmi-clock .mh{animation:lmSpin 1s cubic-bezier(.45,0,.2,1)}
+.chat[data-lm].fx-icons button:hover > .lmi-clock .mh{animation:lmSpin 1s cubic-bezier(.45,0,.2,1)}
 @keyframes lmSpin{to{transform:rotate(360deg)}}
-.chat[data-skin="lumen"] .lmi-bulb .bb{fill:currentColor;fill-opacity:0;transition:fill-opacity .3s}
-.chat[data-skin="lumen"] button:hover > .lmi-bulb .bb{fill-opacity:.2}
-.chat[data-skin="lumen"].fx-icons button:hover > .lmi-bulb .ry{animation:lmDraw .45s .05s ease both}
-.chat[data-skin="lumen"].fx-icons button:hover > .lmi-help .q{animation:lmWiggle .6s ease-in-out}
+.chat[data-lm] .lmi-bulb .bb{fill:currentColor;fill-opacity:0;transition:fill-opacity .3s}
+.chat[data-lm] button:hover > .lmi-bulb .bb{fill-opacity:.2}
+.chat[data-lm].fx-icons button:hover > .lmi-bulb .ry{animation:lmDraw .45s .05s ease both}
+.chat[data-lm].fx-icons button:hover > .lmi-help .q{animation:lmWiggle .6s ease-in-out}
 
 /* the mark, alive: while an answer is on its way, and on an empty thread */
-.chat[data-skin="lumen"].fx-icons:not(.ownmark) .chb.bot.thinking::before{background-image:var(--lm-mark-live)}
-.chat[data-skin="lumen"].fx-icons:not(.ownmark) .chhero .chorbx:not(:has(.pxl)){background-image:var(--lm-mark-idle)}
-:root[data-motion="none"] .chat[data-skin="lumen"]:not(.ownmark) .chb.bot.thinking::before,:root[data-motion="none"] .chat[data-skin="lumen"]:not(.ownmark) .chhero .chorbx:not(:has(.pxl)){background-image:var(--lm-mark)}
+.chat[data-lm].fx-icons:not(.ownmark) .chb.bot.thinking::before{background-image:var(--lm-mark-live)}
+.chat[data-lm].fx-icons:not(.ownmark) .chhero .chorbx:not(:has(.pxl)){background-image:var(--lm-mark-idle)}
+:root[data-motion="none"] .chat[data-lm]:not(.ownmark) .chb.bot.thinking::before,:root[data-motion="none"] .chat[data-lm]:not(.ownmark) .chhero .chorbx:not(:has(.pxl)){background-image:var(--lm-mark)}
 @media (prefers-reduced-motion:reduce){
-  .chat[data-skin="lumen"]:not(.ownmark) .chb.bot.thinking::before,.chat[data-skin="lumen"]:not(.ownmark) .chhero .chorbx:not(:has(.pxl)){background-image:var(--lm-mark)!important}
+  .chat[data-lm]:not(.ownmark) .chb.bot.thinking::before,.chat[data-lm]:not(.ownmark) .chhero .chorbx:not(:has(.pxl)){background-image:var(--lm-mark)!important}
 }
 /* ═══ /LUMEN ═══ */
+/* ═══ CRIMSON
+   Lumen's layout in red and white, with a character of its own. Every rule
+   is scoped to .chat[data-skin="crimson"]; the layout itself is Lumen's
+   (.chat[data-lm] above), so this block is only what is different: the
+   colours, the mark, the greeting's heartbeat line, a red send button, and
+   the heart that stands in for the robot (art/make-pixel-art.py, picked by
+   pixKey()). Red is #d31145 on white in the light mode, a brighter #ff4d76
+   on charcoal in the dark one, where the deeper red would be too dark to
+   read as a link or a ring. The marks and the line are drawn here as SVG,
+   like Lumen's: data, not a fetch. */
+.chat[data-skin="crimson"]{
+  --ch-bg:#ffffff; --ch-panel:#faf6f7; --ch-line:#efe4e8; --ch-ink:#1f1c21; --ch-dim:#6e676d;
+  --ch-acc:#d31145; --ch-acc2:#0f8a6e;
+  --ch-glow:rgba(211,17,69,.22); --ch-mesh:rgba(211,17,69,.045);
+  --lm-ink2:#3e383d; --lm-bubble:#fcebf0; --lm-card:#ffffff; --lm-hover:rgba(211,17,69,.06);
+  --lm-line2:#e7d2da; --lm-ring:rgba(211,17,69,.16); --lm-soft:rgba(211,17,69,.08);
+  --lm-shadow:0 1px 2px rgba(74,10,30,.05),0 10px 30px -14px rgba(74,10,30,.20);
+  --lm-pop:0 18px 50px -18px rgba(74,10,30,.34),0 2px 6px rgba(74,10,30,.06);
+  --lm-grad:linear-gradient(120deg,#d31145 0%,#e5285a 50%,#ff6a5c 100%);
+  --lm-mark:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23e8285a'/%3E%3Cstop offset='1' stop-color='%23c00d3c'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='48' height='48' rx='14' fill='url(%23g)'/%3E%3Cg transform='translate(24 25)'%3E%3Cg%3E%3Cg transform='translate(-13.2 -13.2) scale(1.1)'%3E%3Cpath fill='white' d='M12 20.6C12 20.6 3.2 15.1 3.2 8.9 3.2 6.1 5.3 4 7.8 4 9.6 4 11.1 5 12 6.5 12.9 5 14.4 4 16.2 4 18.7 4 20.8 6.1 20.8 8.9 20.8 15.1 12 20.6 12 20.6Z'/%3E%3Cpath d='M6 11.4h3.2l1.5-2.6 2.1 5 1.5-2.4H18' fill='none' stroke='%23c00d3c' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/g%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  --lm-mark-live:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23e8285a'/%3E%3Cstop offset='1' stop-color='%23c00d3c'/%3E%3CanimateTransform attributeName='gradientTransform' type='rotate' from='0 .5 .5' to='360 .5 .5' dur='3s' repeatCount='indefinite'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='48' height='48' rx='14' fill='url(%23g)'/%3E%3Cg transform='translate(24 25)'%3E%3Cg%3E%3CanimateTransform attributeName='transform' type='scale' values='1;1.13;1;1.1;1' keyTimes='0;.14;.28;.42;1' dur='1.2s' repeatCount='indefinite'/%3E%3Cg transform='translate(-13.2 -13.2) scale(1.1)'%3E%3Cpath fill='white' d='M12 20.6C12 20.6 3.2 15.1 3.2 8.9 3.2 6.1 5.3 4 7.8 4 9.6 4 11.1 5 12 6.5 12.9 5 14.4 4 16.2 4 18.7 4 20.8 6.1 20.8 8.9 20.8 15.1 12 20.6 12 20.6Z'/%3E%3Cpath d='M6 11.4h3.2l1.5-2.6 2.1 5 1.5-2.4H18' fill='none' stroke='%23c00d3c' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/g%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  --lm-mark-idle:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23e8285a'/%3E%3Cstop offset='1' stop-color='%23c00d3c'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='48' height='48' rx='14' fill='url(%23g)'/%3E%3Cg transform='translate(24 25)'%3E%3Cg%3E%3CanimateTransform attributeName='transform' type='scale' values='1;1.13;1;1.1;1' keyTimes='0;.14;.28;.42;1' dur='2.6s' repeatCount='indefinite'/%3E%3Cg transform='translate(-13.2 -13.2) scale(1.1)'%3E%3Cpath fill='white' d='M12 20.6C12 20.6 3.2 15.1 3.2 8.9 3.2 6.1 5.3 4 7.8 4 9.6 4 11.1 5 12 6.5 12.9 5 14.4 4 16.2 4 18.7 4 20.8 6.1 20.8 8.9 20.8 15.1 12 20.6 12 20.6Z'/%3E%3Cpath d='M6 11.4h3.2l1.5-2.6 2.1 5 1.5-2.4H18' fill='none' stroke='%23c00d3c' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/g%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  --cr-ecg:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 240 40'%3E%3Cpath d='M0 20H78l7-9 9 21 10-30 9 25 7-7H240' fill='none' stroke='%23d31145' stroke-opacity='.22' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M0 20H78l7-9 9 21 10-30 9 25 7-7H240' fill='none' stroke='%23d31145' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round' stroke-dasharray='70 330' pathLength='400'%3E%3Canimate attributeName='stroke-dashoffset' from='70' to='-330' dur='2.6s' repeatCount='indefinite'/%3E%3C/path%3E%3C/svg%3E");
+  --cr-ecg-still:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 240 40'%3E%3Cpath d='M0 20H78l7-9 9 21 10-30 9 25 7-7H240' fill='none' stroke='%23d31145' stroke-opacity='.45' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  --cr-heart:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M12 20.6C12 20.6 3.2 15.1 3.2 8.9 3.2 6.1 5.3 4 7.8 4 9.6 4 11.1 5 12 6.5 12.9 5 14.4 4 16.2 4 18.7 4 20.8 6.1 20.8 8.9 20.8 15.1 12 20.6 12 20.6Z'/%3E%3C/svg%3E");
+  box-shadow:-30px 0 70px -30px rgba(74,10,30,.28)}
+:root[data-mode="dark"] .chat[data-skin="crimson"]{
+  --ch-bg:#151316; --ch-panel:#1d1a1e; --ch-line:#2d282d; --ch-ink:#f3eef1; --ch-dim:#a79ea5;
+  --ch-acc:#ff4d76; --ch-acc2:#3fd0a8;
+  --ch-glow:rgba(255,77,118,.26); --ch-mesh:rgba(255,77,118,.05);
+  --lm-ink2:#d8cdd3; --lm-bubble:#35202a; --lm-card:#1b181c; --lm-hover:rgba(255,255,255,.06);
+  --lm-line2:#3b3239; --lm-ring:rgba(255,77,118,.24); --lm-soft:rgba(255,77,118,.14);
+  --lm-code:#0d0b0d; --lm-code-h:#161316; --lm-code-line:#2a2428;
+  --lm-shadow:0 1px 2px rgba(0,0,0,.3),0 12px 32px -14px rgba(0,0,0,.6);
+  --lm-pop:0 24px 60px -18px rgba(0,0,0,.7),0 0 0 1px rgba(255,255,255,.04);
+  --lm-grad:linear-gradient(120deg,#ff3d6e 0%,#ff5a72 50%,#ff8a65 100%);
+  --lm-mark:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23ff4d76'/%3E%3Cstop offset='1' stop-color='%23d31145'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='48' height='48' rx='14' fill='url(%23g)'/%3E%3Cg transform='translate(24 25)'%3E%3Cg%3E%3Cg transform='translate(-13.2 -13.2) scale(1.1)'%3E%3Cpath fill='white' d='M12 20.6C12 20.6 3.2 15.1 3.2 8.9 3.2 6.1 5.3 4 7.8 4 9.6 4 11.1 5 12 6.5 12.9 5 14.4 4 16.2 4 18.7 4 20.8 6.1 20.8 8.9 20.8 15.1 12 20.6 12 20.6Z'/%3E%3Cpath d='M6 11.4h3.2l1.5-2.6 2.1 5 1.5-2.4H18' fill='none' stroke='%23d31145' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/g%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  --lm-mark-live:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23ff4d76'/%3E%3Cstop offset='1' stop-color='%23d31145'/%3E%3CanimateTransform attributeName='gradientTransform' type='rotate' from='0 .5 .5' to='360 .5 .5' dur='3s' repeatCount='indefinite'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='48' height='48' rx='14' fill='url(%23g)'/%3E%3Cg transform='translate(24 25)'%3E%3Cg%3E%3CanimateTransform attributeName='transform' type='scale' values='1;1.13;1;1.1;1' keyTimes='0;.14;.28;.42;1' dur='1.2s' repeatCount='indefinite'/%3E%3Cg transform='translate(-13.2 -13.2) scale(1.1)'%3E%3Cpath fill='white' d='M12 20.6C12 20.6 3.2 15.1 3.2 8.9 3.2 6.1 5.3 4 7.8 4 9.6 4 11.1 5 12 6.5 12.9 5 14.4 4 16.2 4 18.7 4 20.8 6.1 20.8 8.9 20.8 15.1 12 20.6 12 20.6Z'/%3E%3Cpath d='M6 11.4h3.2l1.5-2.6 2.1 5 1.5-2.4H18' fill='none' stroke='%23d31145' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/g%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  --lm-mark-idle:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23ff4d76'/%3E%3Cstop offset='1' stop-color='%23d31145'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='48' height='48' rx='14' fill='url(%23g)'/%3E%3Cg transform='translate(24 25)'%3E%3Cg%3E%3CanimateTransform attributeName='transform' type='scale' values='1;1.13;1;1.1;1' keyTimes='0;.14;.28;.42;1' dur='2.6s' repeatCount='indefinite'/%3E%3Cg transform='translate(-13.2 -13.2) scale(1.1)'%3E%3Cpath fill='white' d='M12 20.6C12 20.6 3.2 15.1 3.2 8.9 3.2 6.1 5.3 4 7.8 4 9.6 4 11.1 5 12 6.5 12.9 5 14.4 4 16.2 4 18.7 4 20.8 6.1 20.8 8.9 20.8 15.1 12 20.6 12 20.6Z'/%3E%3Cpath d='M6 11.4h3.2l1.5-2.6 2.1 5 1.5-2.4H18' fill='none' stroke='%23d31145' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/g%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  --cr-ecg:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 240 40'%3E%3Cpath d='M0 20H78l7-9 9 21 10-30 9 25 7-7H240' fill='none' stroke='%23ff4d76' stroke-opacity='.22' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M0 20H78l7-9 9 21 10-30 9 25 7-7H240' fill='none' stroke='%23ff4d76' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round' stroke-dasharray='70 330' pathLength='400'%3E%3Canimate attributeName='stroke-dashoffset' from='70' to='-330' dur='2.6s' repeatCount='indefinite'/%3E%3C/path%3E%3C/svg%3E");
+  --cr-ecg-still:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 240 40'%3E%3Cpath d='M0 20H78l7-9 9 21 10-30 9 25 7-7H240' fill='none' stroke='%23ff4d76' stroke-opacity='.45' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  box-shadow:-30px 0 70px -30px rgba(0,0,0,.7)}
+.chat[data-skin="crimson"] ::selection{background:rgba(211,17,69,.18)}
+:root[data-mode="dark"] .chat[data-skin="crimson"] ::selection{background:rgba(255,77,118,.3)}
+
+/* the header: a red rule along its top edge, and the mark - a white heart
+   on a red tile, where Lumen has its star */
+.chat[data-skin="crimson"] .chh{box-shadow:inset 0 3px 0 var(--ch-acc)}
+.chat[data-skin="crimson"] .chorb{border-radius:9px;background:var(--lm-grad);box-shadow:0 1px 2px rgba(74,10,30,.2)}
+.chat[data-skin="crimson"] .chorb i{width:16px;height:16px;-webkit-mask:var(--cr-heart) center / contain no-repeat;mask:var(--cr-heart) center / contain no-repeat}
+.chat[data-skin="crimson"].fx-glow .chorb{box-shadow:0 1px 2px rgba(74,10,30,.2),0 0 18px -2px var(--ch-glow)}
+.chat[data-skin="crimson"] .chorb.pixorb{border-radius:0;background:none;box-shadow:none}
+
+/* you: a soft blush bubble */
+.chat[data-skin="crimson"] .chb.you{background:var(--lm-bubble)}
+
+/* red where Lumen is ink: send, and the one button that does the thing */
+.chat[data-skin="crimson"] .chf .btn.pri{background:var(--ch-acc);color:#fff}
+.chat[data-skin="crimson"] .chf .btn.pri:hover{background:var(--ch-acc);opacity:1;filter:brightness(1.08)}
+.chat[data-skin="crimson"] .chf .btn.pri.empty{background:var(--lm-hover);color:var(--ch-dim);filter:none}
+.chat[data-skin="crimson"] .chacts button.pri,.chat[data-skin="crimson"] .chask2 .btn.pri,.chat[data-skin="crimson"] .chrb .rbf button.prim{
+  background:var(--ch-acc);border-color:var(--ch-acc);color:#fff}
+.chat[data-skin="crimson"] .chacts button.pri:hover{background:var(--ch-acc);color:#fff;opacity:1;filter:brightness(1.08)}
+.chat[data-skin="crimson"] .chacts button:hover,.chat[data-skin="crimson"] .chseed button:hover{border-color:color-mix(in srgb,var(--ch-acc) 45%,var(--ch-line));color:var(--ch-ink)}
+.chat[data-skin="crimson"] .chseed button::before,.chat[data-skin="crimson"] .chseed button > .lmi{color:var(--ch-acc)}
+
+/* the greeting: the heart waves over it - five times its size, so every
+   pixel stays square - in a red glow rather than the robot's blue one */
+.chat[data-skin="crimson"] .chhero .chorbx:has(.pxl){width:120px;height:120px;margin-bottom:0;
+  filter:drop-shadow(0 10px 22px var(--ch-glow))}
+.chat[data-skin="crimson"] .chhero .chorbx .pxl.p144{width:120px;height:120px;margin:0 auto}
+/* and a heartbeat runs under the words -
+   moving with Ambient on, still with it off or with motion turned down */
+.chat[data-skin="crimson"] .chhero .lmhs::after{content:"";display:block;width:220px;max-width:70%;height:30px;margin:16px auto 0;
+  background:var(--cr-ecg-still) center / contain no-repeat}
+.chat[data-skin="crimson"].fx-ambient .chhero .lmhs::after{background-image:var(--cr-ecg)}
+:root[data-motion="none"] .chat[data-skin="crimson"] .chhero .lmhs::after{background-image:var(--cr-ecg-still)}
+@media (prefers-reduced-motion:reduce){ .chat[data-skin="crimson"] .chhero .lmhs::after{background-image:var(--cr-ecg-still)!important} }
+.chat[data-skin="crimson"] .chhero .chseed button{border-radius:18px}
+.chat[data-skin="crimson"] .chhero .chseed button:hover{border-color:color-mix(in srgb,var(--ch-acc) 45%,var(--ch-line));
+  box-shadow:0 0 0 3px var(--lm-ring),var(--lm-shadow)}
+
+/* waiting, with the pixel set off: the animation that comes with the app
+   is blue; turned round the colour wheel it is this skin's red */
+.chat[data-skin="crimson"] .chgif{filter:hue-rotate(140deg) saturate(1.25)}
+
+/* the history: the open conversation marked with a red edge */
+.chat[data-skin="crimson"] .chsi.on{box-shadow:inset 3px 0 0 var(--ch-acc)}
+/* ═══ /CRIMSON ═══ */
 /* ═══ NOVA ════════════════════════════════════════════════════════════════
    The fourth look, and the first one designed rather than subtracted.
    Studio's shell underneath — the sidebar grid, the rail it folds to when
@@ -7234,7 +7326,7 @@ const STATUSES = [
    the status bar, and clicking it copies a line you can paste into a bug
    report — build date and flow protocol included, because those are the two
    things that actually differ between copies. */
-const APP_VERSION = "5.9.5";
+const APP_VERSION = "5.10.0";
 const APP_BUILT = "2026-09-27";
 function buildLine(){
   return "Resolv v" + APP_VERSION + " \u00b7 built " + APP_BUILT +
@@ -11264,23 +11356,40 @@ const CHAT_ORB_SVG =
   '</svg>';
 /* your own pictures, if they are beside the app: they replace the drawn ones */
 const CHAT_GIF = "assets/thinking.gif";
+/* The mark pictures found beside the app: the one every skin uses
+   (assets/assistant-logo.png), and one for a skin with a character of its
+   own (assets/crimson-mark.png). A skin that brings its own character keeps
+   its own mark unless a picture is there for it by name - the blue star that
+   comes with Resolv is not a heart's mark. */
+const CHAT_MARKS = { base:"", crimson:"" };
+function chatMarkApply(){
+  const chat = $("chat"); if (!chat) return;
+  const set = chatArtSet().replace(/\/$/, "");
+  const src = set ? CHAT_MARKS[set] : CHAT_MARKS.base;
+  if (src){ chat.style.setProperty("--ch-mark", "url(\"" + src + "\")"); chat.classList.add("ownmark"); }
+  else { chat.style.removeProperty("--ch-mark"); chat.classList.remove("ownmark"); }
+}
 function chatArt(){
   const chat = $("chat"); if (!chat) return;
   let folder = false;
-  [["assets/assistant-bg.jpg", "--ch-photo"], ["assets/assistant-logo.png", "--ch-mark"]].forEach(([src, v]) => {
-    const im = new Image();
-    im.onload = () => {
-      chat.style.setProperty(v, "url(\"" + src + "\")");
-      chat.classList.add(v === "--ch-mark" ? "ownmark" : "ownbg");
-      /* One of the two answered, so there is an assets folder here and a
-         thinking.gif in it is worth asking for. On a copy of dossier.html
-         with no folder beside it nothing is asked for at all, and the
-         animation built into the file is the one you get - which is why
-         there is no way for this to leave a missing file in the console. */
-      if (!folder){ folder = true; chatGifOver(); pixOver(); }
-    };
-    im.src = src;
-  });
+  const found = () => {
+    /* One of them answered, so there is an assets folder here and a
+       thinking.gif in it is worth asking for. On a copy of dossier.html
+       with no folder beside it nothing is asked for at all, and the
+       animation built into the file is the one you get - which is why
+       there is no way for this to leave a missing file in the console. */
+    if (folder) return;
+    folder = true; chatGifOver(); pixOver();
+    const cm = new Image();
+    cm.onload = () => { CHAT_MARKS.crimson = "assets/crimson-mark.png"; chatMarkApply(); };
+    cm.src = "assets/crimson-mark.png";
+  };
+  const bg = new Image();
+  bg.onload = () => { chat.style.setProperty("--ch-photo", "url(\"assets/assistant-bg.jpg\")"); chat.classList.add("ownbg"); found(); };
+  bg.src = "assets/assistant-bg.jpg";
+  const mk = new Image();
+  mk.onload = () => { CHAT_MARKS.base = "assets/assistant-logo.png"; chatMarkApply(); found(); };
+  mk.src = "assets/assistant-logo.png";
 }
 /* your own animation, if you keep one beside the file */
 function chatGifOver(){
@@ -11326,6 +11435,22 @@ const PIX_DATA = {
   "pet-work": "data:image/gif;base64,R0lGODlhGAAYAPMAAE991g4XKSM3X0991m6o/7fc//P5/3/o5FbXm//Ea/+aW/9/kqiM/3uTvi6PbhYgOCH/C05FVFNDQVBFMi4wAwEAAAAh+QQJEAAAACwAAAAAGAAYAAAEchDISau9NyXMq+4gEAQhNZ5oygVD674vebFCbd/1IFs07uuY3mFYGx5yu4qQKDAigwPfL2mCWV3UCcv1w65S4FFJghqLwmBea3uFbWXvV2E+d6/Ja7mtYAeK5mwDBXtugGSAcnR8MYZnJGhpJxdSOGZmEQAh+QQJDAAAACwAAAAAGAAYAAAEdxDISYFSNWt6t69B8GVhaZ5eMKxs24qaKsx0PQ8wOdi8gG8ywWE4Gx5uOdBOSGQefUlKsEf7xVxYVnSiYvFeqZM4NJKWytyxWIfLZrsweKtAp7vgEjmrQCvcV3F0XSt8M34vgnmCc3WHWokAZ2prZxlUNWiZmmURACH5BAkQAAAALAAAAAAYABgAAAR2EMhJq703Jcyr7iAQBCE1nmjKBUPrvi95sUJt3/UgWzTu65jeYVgbHnK7ipAoMCKDA98vaYJZXdQJy/XDrlLgUUmCGovCYF5re4VtZe9XYT53r8lruQAhKNiBInNsAwV8CH4xgmSCcnSIWIpnJGhpJxdSOGZmEQAh+QQJGgAAACwAAAAAGAAYAAAEdhDISau9NyXMq+4gEAQhNZ5oygVD674vebFCbd/1IFs07uuY3mFYGx5yu4qQKDAigwPfL2mCWV3UCcv1w65S4FFJghqLwmBea3uFbWXvV2E+d6/Ja7kAISjYgSJzbAMFfAh+MYJkgnJ0iFiKZyRoaScXUjhmZhEAOw==",
   "pet-stretch": "data:image/gif;base64,R0lGODlhGAAYAPMAAE991g4XKSM3X0991m6o/7fc//P5/3/o5FbXm//Ea/+aW/9/kqiM/3uTvi6PbhYgOCH/C05FVFNDQVBFMi4wAwEAAAAh+QQJGAAAACwAAAAAGAAYAAAEaxDISau9NyXMq+4gEAQhNZ5oygVD674vebFCbd/1IFs07uuY3mFYGx5yu4qQKDAigwPfL2mCWV3UCcv1w65S4FFJghqLwmBea3uFbWVvGGFOcK/JazndDhTl23xwf4BYd2ckaGknF1I4ZmYRACH5BAkYAAAALAAAAAAYABgAAAR2EMhJq703Jcyr7iAQBCE1nmjKBUPrvi95sUJt3/UgWzTu65ie7wacDWqHJFIpKPKOQ+KuwoJZW1PT6+fKBgoFUWo8AoBl3zD1ZDlLqmKyCvvGXq9VtP1F6BNgeXU6MH5/MXQie3eHRXmLgIhscmNxF1E3JZkTEQAh+QQJKAAAACwAAAAAGAAYAAAEfRDISUEpNWt6t69B8GVhaZ4WBg5s67qiFgxCbd/1EHQr7gu6zeyHC8pogoOypjzkYpNdYUi06S4x6ezFZWkl2y3LB/OCWYCTugQwp9EgdsW9Ta/VbWO42w2fdS8EggQvfm+ALoOEZXpefFyGe4+MWSF2dyaXGlU2I56foBQRACH5BAkoAAAALAAAAAAYABgAAAR6EMhJQSk1a3q3r0GgdVlonqgXDGzrugFJrUJt3/UgajTu65ue7wbkDWqHJFIpKE5iBeEwB91VX9hWVbLSuX5alpUFQJlNADGXDEJX1GXy+ZwudrvZ133tdRH+BHpwdy+AgTCDYnlYe3F9i2F2IWVzKW4VUzcfm5ydGxEAIfkECRgAAAAsAAAAABgAGAAABHcQyEmrvTclzKvuIBAEITWeaMoFQ+u+L3mxQm3f9SBbNO7rmN5hWBsecruKkCgwIoMD3y9pglld1AnL9cMqCwVRajwCgGUBMO9kOUu2YrKqhaZfr9u6DkboE2B5b3Yvfn8xdIJ7d4CIIoOLWI1scmNxF1I4JZoTEQAh+QQJPAAAACwAAAAAGAAYAAAEaxDISau9NyXMq+4gEAQhNZ5oygVD674vebFCbd/1IFs07uuY3mFYGx5yu4qQKDAigwPfL2mCWV3UCcv1w65S4FFJghqLwmBea3uFbWVvGGFOcK/JazndDhTl23xwf4BYd2ckaGknF1I4ZmYRADs=",
   "pet-held": "data:image/gif;base64,R0lGODlhGAAYAPMAAE991g4XKSM3X0991m6o/7fc//P5/3/o5FbXm//Ea/+aW/9/kqiM/3uTvi6PbhYgOCH/C05FVFNDQVBFMi4wAwEAAAAh+QQJCQAAACwAAAAAGAAYAAAEgRDISYFSNWt6t69B8GVhaZ5eMKxs24qaKsx0PQ8wOcxHz/sC3EYm6B1+x2AOtCsCjbclIFAoEG02XBVGtbq+rC53pWJhX2RJeXpqhwDp6YpUysTXbjdcKMeBwWVjfi0EhQQugWpkLoaHaHyBf1+JfWWSYXdveW1sUhJYWCOio6QUEQAh+QQJCQAAACwAAAAAGAAYAAAEfxDISau9NyXMq+4gEAQhNZ5oygVD674vebFCbd/1IFu0cPy13yG3q/SEQaBAhzkqkcuiqFDo4XA6qiyghXld3KqEpXtdY61tS5RqjwDp8dp4ssRFa7cbzsSXv15kan8uBIYEMIJyhC2HiGh9goCBd5KTkFtvem1sUhJXVyWiExEAIfkECQkAAAAsAAAAABgAGAAABIEQyEmBUjVrerevQfBlYWmeXjCsbNuKmirMdD0PMDnMR8/7AtxGJugdfsdgDrQrAo23JSBQKBBtNlwVRrW6vqwud6ViYV9kSXl6aocA6emKVMrE1243XCjHgcFlY34tBIUELoFqZC6Gh2h8gX9fiX1lkmF3b3ltbFISWFgjoqOkFBEAIfkECQkAAAAsAAAAABgAGAAABH4QyEmrvThrmtLe3acFgTiRaKpmweC+MFxerWDfuD3MVi0cQBvwoONVfENhULDDIJdJphEQKBR8udzOOqteY+CXt+tqvbKyssRMVblJADXV1UNZ5Oz3O96c78JhZmR/MASGBDGCa2Uxh4hpfYKAYIp+ZpNieHB6bm1TEllZFhEAOw==",
+  "crimson/think": "data:image/gif;base64,R0lGODlhEAAQAPMAANMRRUoKHqAON9MRRfBFbP+4yP/2+CoiKy+ucv/CTf+KTP9rhf+dtY6Kkx96UhwaICH/C05FVFNDQVBFMi4wAwEAAAAh+QQJDwAAACwAAAAAEAAQAAAEOxDISSsN+OY7iAlSMIxg6I0DhpLm6rKAOB4rPQilPNjziE+6148zsw0rwVvJEkMdmTHBExpbUq/Y7DUCACH5BAkPAAAALAAAAAAQABAAAAQ+EIBAg5TV4kHM0MEgflM3fuGJEmorUq4Li8dZj8I83PSZTzGcBjg68H4XogqZVIqYTSU0OhFMqZMhdsvdRgAAIfkECQ8AAAAsAAAAABAAEAAABDsQyEkrDfjmO4gJUjCMYOiNA4aS5uqygDgeKz0IpTzY84hPutePM7MNK8FbyRJDHZkxwRMaW1Kv2Ow1AgAh+QQJDwAAACwAAAAAEAAQAAAEPxCAQIOU1eJBzNDBIH5TN37hiRJqK1KuC58HLQrzWOu3lcYD3OU3OOyCmqFLeFGemE0nMkoNCKDUJiXL7XqjEQAh+QQJDwAAACwAAAAAEAAQAAAEOhDISSsN+OY7iAlSMIxg6I0DhpLm6rKA+K5CKR/Hig/1JM89zmjHK1V+o6AlhlIuYwLnM2acWq9YawQAIfkECQ8AAAAsAAAAABAAEAAABDsQyEkrDfjmO4gJUjCMYOiNA4aS5uqygDgeKz0IpTzY84hPutePM7MNK8FbyRJDHZkxwRMaW1Kv2Ow1AgA7",
+  "crimson/slow": "data:image/gif;base64,R0lGODlhEAAQAPMAANMRRUoKHqAON9MRRfBFbP+4yP/2+CoiKy+ucv/CTf+KTP9rhf+dtY6Kkx96UhwaICH/C05FVFNDQVBFMi4wAwEAAAAh+QQJKgAAACwAAAAAEAAQAAAEQhDISau9Jd9dZvjUFwCdFAyEMQLnMGRdkLrDR7urfO+4ye+CnOtwuBEHQc/PlQzRjshVpUVrXqjWTUCQ3bCk3rAkAgAh+QQJKgAAACwAAAAAEAAQAAAERRDISWW5NdOiqTEANwUkRRqXGAyEEUjr98LtYJN2PgdE7vu7n1AQHBwOvuOAOBLmmKaccjmrrHxQzZXaGQmyXUApTJZEAAAh+QQJKgAAACwAAAAAEAAQAAAEPRDISautxtyta/hUkHkDYQRSMKxoaq7DB7PubNOAes9Cqx+HGXDQm+h2xRBsSGyReE7LMbnJCajVXDSbjQAAIfkECSoAAAAsAAAAABAAEAAABDwQyEmrvTjXwCkP20AYIBAMaGmO6MC1qRQQcB2bdi2U53AcsN9gN+nliJ6WcKhKwpAXIxQTEEwzHY1WEgEAOw==",
+  "crimson/orb": "data:image/gif;base64,R0lGODlhEAAQAPMAANMRRUoKHqAON9MRRfBFbP+4yP/2+CoiKy+ucv/CTf+KTP9rhf+dtY6Kkx96UhwaICH/C05FVFNDQVBFMi4wAwEAAAAh+QQJBgAAACwAAAAAEAAQAAAENhDISSsN+OY7iAlSMIxg6I0DhpLm6rKA+K5CKc9jPd2vzvWlCm/gs8RQRWNMkFTGgs6odBqNAAAh+QQJBgAAACwAAAAAEAAQAAAEORCAQIOU1eJBzNDBIH5TN37hiRJqK1KuC8enMNOiPeGDvsW+S0oVvOxqGqNwVFRiBE0nJimtWq+SCAAh+QQJBgAAACwAAAAAEAAQAAAENhDISSsN+OY7iAlSMIxg6I0DhpLm6rKA+K5CKc9jPd2vzvWlCm/gs8RQRWNMkFTGgs6odBqNAAAh+QQJBgAAACwAAAAAEAAQAAAEORCAQIOU1eJBzNDBIH5TN37hiRJqK1KuC8enMNOiPeGDvsW+S0oVvOxqGqNwVFRiBE0nJimtWq+SCAAh+QQJEgAAACwAAAAAEAAQAAAENhDISSsN+OY7iAlSMIxg6I0DhpLm6rKA+K5CKc9jPd2vzvWlCm/gs8RQRWNMkFTGgs6odBqNAAAh+QQJEgAAACwAAAAAEAAQAAAENhDISSsN+OY7iAlSMIxg6I0DhpLm6rKA+K5CKc9jPd2vzvWlCm/gs8RQRWNMkFTGgs6odBqNAAAh+QQJEgAAACwAAAAAEAAQAAAENhDISSsN+OY7iAlSMIxg6I0DhpLm6rKA+K5CKc9jPd2vzvWlCm/gs8RQRWNMkFTGgs6odBqNAAAh+QQJEgAAACwAAAAAEAAQAAAENhDISSsN+OY7iAlSMIxg6I0DhpLm6rKA+K5CKc9jPd2vzvWlCm/gs8RQRWNMkFTGgs6odBqNAAA7",
+  "crimson/hero": "data:image/gif;base64,R0lGODlhGAAYAPMAANMRRUoKHqAON9MRRfBFbP+4yP/2+CoiKy+ucv/CTf+KTP9rhf+dtY6Kkx96UhwaICH/C05FVFNDQVBFMi4wAwEAAAAh+QQJEgAAACwAAAAAGAAYAAAEcxDISau9OOfAA+2eFgyEMYTjoIZXUKprCp8tMd84O8l4r0s8w2EmnP0AvMMQpoQJjsmlqql6Wp4DBmPKzTKegitvKq0GwpXwGGdFTwQEYM8sIbgBAvd6YJXkRTd9GhUygoOEeUeHO4qLjhl5kZGPlJWWjhEAIfkECRIAAAAsAAAAABgAGAAABHUQyEmrvTjnwAPtnhYMhDGE46CGlQEEpbqm8tkaBlHvfEhIBhpvGBJMhIZDLVnzGI+1g1ImlQkCTyh1qqqqBNnJdcBgdM9kxvUy3nmtLIpROFxbBL/X8BuXZ+l8GhV0doIfcIYXWIWJg32NkBlgk5ORlpeYGhEAIfkECRIAAAAsAAAAABgAGAAABHEQyEmrvTjnwAPtnhYMhDGE46CGV1CqawqfEiFM7qzvnnBLsp0w8MPNDIdjEkasBA9LFRQmaH5mU1h24LNUBwyGdAxmVC9f3VZ19gKCwnZFQAAK2ax5EY7XOHVyfkZ9ghZEgYUfeYmMGj6Pj42Sk5QaEQAh+QQJEgAAACwAAAAAGAAYAAAEdRDISau9OOfAA+2eFgyEMYTjoIaVAQSluqby2RoGUe98SEgGGm8YEkyEhkMtWfMYj7WDUiaVCQJPKHWqqqoE2cl1wGB0z2TG9TLeea0silE4XFsEv9fwG5dn6XwaFXR2gh9whhdYhYmDfY2QGWCTk5GWl5gaEQAh+QQJEgAAACwAAAAAGAAYAAAEbRDISau9OOfAA+2eFgyEMYTjoIZXUKprCp8SIUzurO+ecEuynTDwwwmPpyIQuRMQK8HDYSaF+SzOAYOhmg68W+clq6vOxFhAUIiuCAjLY9tdXKvmGrUOn9ffWX0fPoCBH4SFiBk+i4uJjo+QGhEAIfkECRIAAAAsAAAAABgAGAAABHYQyEmrvSBoTTfHwUAYwxBIYVmeVjCqawqblTvfN4vivKpnvd5PVjIcYMbZcHY4qpowwRIGfTpLUoq0xGCUnM7uQCrQAplX7Kk8YRNxWQBbTpi8ozoCWzA/z+ISfBh+aoMgKoCGLXw/ii2NjpGRfJSUkpeYmZoRACH5BAkSAAAALAAAAAAYABgAAARzEMhJq70458AD7Z4WDIQxhOOghldQqmsKny0x3zg7yXivSzzDYSac/QC8wxCmhAmOyaWqqXpangMGY8rNMp6CK28qrQbClfAYZ0VPBARgzywhuAEC93pgleRFN30aFTKCg4R5R4c7iouOGXmRkY+UlZaOEQAh+QQJEgAAACwAAAAAGAAYAAAEdxDISau9OOfAA+2eFgyEMYTjoIaVAQSluqby2RoGUe88Kxk0ntAnCRoOtWON+KodkLKnTMAMSqPQAdVCHTAYKij0SxVwg+GsqsxtCqceM0VAKL61IYJcItij1yx9IjtbGhY0hYaHfUyKExyOkZIAfZWVk5iZmhoRADs=",
+  "crimson/done": "data:image/gif;base64,R0lGODlhEAAQAPMAANMRRUoKHqAON9MRRfBFbP+4yP/2+CoiKy+ucv/CTf+KTP9rhf+dtY6Kkx96UhwaICH5BAkHAAAALAAAAAAQABAAAAQWEMhJq704680r6hLygSIIlKSprmzrRgAh+QQJBwAAACwAAAAAEAAQAAAEHBDISau9OOvNK+oS8lHjJU5ndqaaWG4vKM90TUUAIfkECQcAAAAsAAAAABAAEAAABCAQyEmrvTgDpCni3QZOo1dKX5Veq6ilbfadcmjfeK4DEQAh+QQJCQAAACwAAAAAEAAQAAAEJxDISau9wGBr+q4G8k2ISJlVaaknmqIspsZb6YLn1mmjxPfAoLASAQAh+QQJKAAAACwAAAAAEAAQAAAEIBDISau9OAOkKeLdBk6jV0pflV6rqKVt9p1yaN94rgMRADs=",
+  "crimson/no": "data:image/gif;base64,R0lGODlhEAAQAPMAANMRRUoKHqAON9MRRfBFbP+4yP/2+CoiKy+ucv/CTf+KTP9rhf+dtY6Kkx96UhwaICH5BAkHAAAALAAAAAAQABAAAAQnEMhJq70YtM3xtl/VeGKmUWOWSmmIvto6yTIIk3cp1rHHuaagEBABACH5BAkHAAAALAAAAAAQABAAAAQoEMhJq70YtM3xtl/VeGKmUWOWSim3nlPbxaj5vmB54Rofgi6eaWiKAAAh+QQJBwAAACwAAAAAEAAQAAAEKRDISau9GLTN8bZf1XhiplFjlkop151T67aoucJkfd0sr/k9l2lIpEQAACH5BAk8AAAALAAAAAAQABAAAAQpEMhJq70YtM3xtl/VeGKmUWOWSinXnVPrtqi5wmR93Syv+T2XaUikRAAAOw==",
+  "crimson/oops": "data:image/gif;base64,R0lGODlhEAAQAPMAANMRRUoKHqAON9MRRfBFbP+4yP/2+CoiKy+ucv/CTf+KTP9rhf+dtY6Kkx96UhwaICH/C05FVFNDQVBFMi4wAwEAAAAh+QQJFAAAACwAAAAAEAAQAAAELRDISau9ONvAu69BIo5kQIUjV54lKpqTm6gpm8qwJJOv/eI+Xu/kKWqOyGQlAgAh+QQJFAAAACwAAAAAEAAQAAAEMBDISau9ONvAu6+BIo5kQIUjV54lKpqAAriKmsYybb+xRJO8iU7HAq5OnqRmyWxWIgAh+QQJFAAAACwAAAAAEAAQAAAEMBDISau9ONvAu6/BIo5kQIUjV54lKprAAriLmsYybb+xRJO8iU7HAq5OnqRmyWxWIgAh+QQJFAAAACwAAAAAEAAQAAAELRDISau9ONvAu6+BIo5kQIUjV54lKpqTq6gpm8qwJJOv/eI+Xu/kKWqOyGQlAgA7",
+  "crimson/ask": "data:image/gif;base64,R0lGODlhEAAQAPMAANMRRUoKHqAON9MRRfBFbP+4yP/2+CoiKy+ucv/CTf+KTP9rhf+dtY6Kkx96UhwaICH/C05FVFNDQVBFMi4wAwEAAAAh+QQJFgAAACwAAAAAEAAQAAAENRDISSsNOOsaiP9gcIFG+YlT5xkfS6CSChIuDMjtOZLhPuupmctju2mOlhsxacEwn9CoNBkBACH5BAkWAAAALAAAAAAQABAAAAQ1EMhJKw046xqI/2BwgUb5iVPnGR9LoJIKEi4MyO05kuE+66mZy2O7aY6WGzFpwTCf0Kg0GQEAIfkECRYAAAAsAAAAABAAEAAABDUQyEmrvTfozWsgYCgG1BcaaEhOJmGc4Cq14kvIAA3adym6I98vyPrxeiWOMhPDeHDOqPQSAQAh+QQJFgAAACwAAAAAEAAQAAAENRDISau9N+jNayBgKAbUFxpoSE4mYZzgKrXiS8gADdp3Kboj3y/I+vF6JY4yE8N4cM6o9BIBADs=",
+  "crimson/new": "data:image/gif;base64,R0lGODlhEAAQAPMAANMRRUoKHqAON9MRRfBFbP+4yP/2+CoiKy+ucv/CTf+KTP9rhf+dtY6Kkx96UhwaICH/C05FVFNDQVBFMi4wAwEAAAAh+QQJCwAAACwAAAAAEAAQAAAEHxDISau9WJJN8uSdB4DiyGVgGlbqhqYiWbplbd84HgEAIfkECQsAAAAsAAAAABAAEAAABB8QyEmrvThnwomWnfeFH0BiYSpWKrelY1ea62zfuBYBACH5BAkLAAAALAAAAAAQABAAAAQhEMhJqwVF5su770RIfIA4fiaZcmZ7Vm4ItqhIlu+t714EACH5BAkLAAAALAAAAAAQABAAAAQfEMhJq71YFp27/xIhEt9IemY5ZmZ7Vq7ItuiqgvgXAQAh+QQJCwAAACwAAAAAEAAQAAAEIRDISasFRebLu+9ESHyAOH4mmXJme1ZuCLaoSJbvre9eBAAh+QQJCwAAACwAAAAAEAAQAAAEHxDISau9OGfCiZad94UfQGJhKlYqt6VjV5rrbN+4FgEAOw==",
+  "crimson/pet-idle": "data:image/gif;base64,R0lGODlhGAAYAPMAANMRRUoKHqAON9MRRfBFbP+4yP/2+CoiKy+ucv/CTf+KTP9rhf+dtY6Kkx96UhwaICH/C05FVFNDQVBFMi4wAwEAAAAh+QQJlgAAACwAAAAAGAAYAAAEcxDISau9OOfAA+2eFgyEMYTjoIZXUKprCp8tMd84O8l4r0s8w2EmnP0AvMMQpoQJjsmlqql6Wp4DBmPKzTKegitvKq0GwpXwGGdFTwQEYM8sIbgBAvd6YJXkRTd9GhUygoOEeUeHO4qLjhl5kZGPlJWWjhEAIfkECQcAAAAsAAAAABgAGAAABHYQyEmrvSBoTTfHwUAYwxBIYVmeVjCqawqblTvfN4vivKpnvd5PVjIcYMbZcHY4qpowwRIGfTpLUoq0xGCUnM7uQCrQAplX7Kk8YRNxWQBbTpi8ozoCWzA/z+ISfBh+aoMgKoCGLXw/ii2NjpGRfJSUkpeYmZoRACH5BAkHAAAALAAAAAAYABgAAARzEMhJq70458AD7Z4WDIQxhOOghldQqmsKny0x3zg7yXivSzzDYSac/QC8wxCmhAmOyaWqqXpangMGY8rNMp6CK28qrQbClfAYZ0VPBARgzywhuAEC93pgleRFN30aFTKCg4R5R4c7iouOGXmRkY+UlZaOEQAh+QQJBwAAACwAAAAAGAAYAAAEdhDISau9IGhNN8fBQBjDEEhhWZ5WMKprCpuVO983i+K8qme93k9WMhxgxtlwdjiqmjDBEgZ9OktSirTEYJSczu5AKtACmVfsqTxhE3FZAFtOmLyjOgJbMD/P4hJ8GH5qgyAqgIYtfD+KLY2OkZF8lJSSl5iZmhEAIfkECXgAAAAsAAAAABgAGAAABHMQyEmrvTjnwAPtnhYMhDGE46CGV1CqawqfLTHfODvJeK9LPMNhJpz9ALzDEKaECY7JpaqpelqeAwZjys0ynoIrbyqtBsKV8BhnRU8EBGDPLCG4AQL3emCV5EU3fRoVMoKDhHlHhzuKi44ZeZGRj5SVlo4RACH5BAkMAAAALAAAAAAYABgAAARtEMhJq70458AD7Z4WDIQxhOOghldQqmsKny0x3zg7yXivS7ze7QcIClUCIu9wmDFhSUtywGComgNsNSmQGp8zrrR4RHq6FAEBeIwCCGiJIG4cuAFz0e2u+UCJfUBzgIFAhIWIGHOLi4mOj5CIEQAh+QQJPAAAACwAAAAAGAAYAAAEcxDISau9OOfAA+2eFgyEMYTjoIZXUKprCp8tMd84O8l4r0s8w2EmnP0AvMMQpoQJjsmlqql6Wp4DBmPKzTKegitvKq0GwpXwGGdFTwQEYM8sIbgBAvd6YJXkRTd9GhUygoOEeUeHO4qLjhl5kZGPlJWWjhEAOw==",
+  "crimson/pet-cheer": "data:image/gif;base64,R0lGODlhGAAYAPMAANMRRUoKHqAON9MRRfBFbP+4yP/2+CoiKy+ucv/CTf+KTP9rhf+dtY6Kkx96UhwaICH/C05FVFNDQVBFMi4wAwEAAAAh+QQJCgAAACwAAAAAGAAYAAAEbBDISau9OOfAA+2eFgyEMYTjoIaTQEhBqa7pfEqEoAOx7f+eHUBQ+xkDAgrRdjgwnTOksgatqqDEpNLIFVZGDMa1CQ0TMcXrwndGc2ftzTsuMtI1PDYLP6nd+TA6e4Afg4SHGTqKioiNjo8aEQAh+QQJCgAAACwAAAAAGAAYAAAEbxDIGWqYwF7M8yDGsAVDKXICmIGmSLYnQAiCYRNw3l60ZLw6XUCAEQAHh0MruSNOjCYlsiSVGp3PoK7XITEY1KT0a+xIjtQFrGz2aAfstnu7kZ/pdg46nqeY+H0UNHWBeoSFiImKi200jliMkZKLEQAh+QQJCgAAACwAAAAAGAAYAAAEbhDIGWqYwF7M8yDGsAVDKXICIQWgKZLuCRBCnRFx7gaGDQgwnc5AnABdhwNSaeJhjiWmNFoCClBCnY9DYjCiSaYX2FnlDosYuezJDtbstnYTN+fgdbsJn9fz+ys1dIBcg4SHiImKbDWNV4uQkZARACH5BAkKAAAALAAAAAAYABgAAARvEMgZapjAXszzIMawBUMpcgKYgaZItidACIJhE3DeXrRkvDpdQIARAAeHQyu5I06MJiWyJJUanc+grtchMRjUpPRr7EiO1AWsbPZoB+y2e7uRn+l2Djqep5j4fRQ0dYF6hIWIiYqLbTSOWIyRkosRACH5BAkMAAAALAAAAAAYABgAAARsEMhJq70458AD7Z4WDIQxhOOghpNASEGprul8SoSgA7Ht/54dQFD7GQMCCtF2ODCdM6SyBq2qoMSk0sgVVkYMxrUJDRMxxevCd0ZzZ+3NOy4y0jU8Ngs/qd35MDp7gB+DhIcZOoqKiI2OjxoRACH5BAkeAAAALAAAAAAYABgAAARzEMhJq70458AD7Z4WDIQxhOOghldQqmsKny0x3zg7yXivSzzDYSac/QC8wxCmhAmOyaWqqXpangMGY8rNMp6CK28qrQbClfAYZ0VPBARgzywhuAEC93pgleRFN30aFTKCg4R5R4c7iouOGXmRkY+UlZaOEQA7",
+  "crimson/pet-worry": "data:image/gif;base64,R0lGODlhGAAYAPMAANMRRUoKHqAON9MRRfBFbP+4yP/2+CoiKy+ucv/CTf+KTP9rhf+dtY6Kkx96UhwaICH/C05FVFNDQVBFMi4wAwEAAAAh+QQJGgAAACwAAAAAGAAYAAAEcBDISau9OKd0gw/UB0qbFQyEMYzn4I5lmLpvS68dce98EEs2nnAUEhpxleDhcFvSBMSJkklzuqAW6IDBcFGpXKggG/RSn4Ex+XhNYwSE8g1KUGfH8gFWYM+UsRkdaIF+fFGEJoeIi4t8jo6MkZKTlBEAIfkECRoAAAAsAAAAABgAGAAABHAQyEmrvTindIMP1AdKmxUMhDGM5+COZZi6b0uvHXHvfBBLNp5wFBIacRXb4XBb3gTEiZJJc9KgFuiAwXBRqVyoIBv0Uq+BMfnoEmMEhPIzQFBnx/IBVmDPlLEZHWiBfnxRhCaHiIuLfI6OjJGSk5QRACH5BAkUAAAALAAAAAAYABgAAARqEMhJq70458AD7Z4WDIQxhOOghldQqmsKny0x3zg7yXivS7ze7QfgHQ6zI0xANCJhShXTwhwwGKrn88oUUIOD6DLg/QrHZSoBPCakKwIvexrXAG9Te0WW1+/jRH5AgYKFF3GIiIaLjI0aEQAh+QQJGgAAACwAAAAAGAAYAAAEcBDISau9OKd0gw/UB0qbFQyEMYzn4I5lmLpvS68dce98EEs2nnAUEhpxFdvhcFveBMSJkklz0qAW6IDBcFGpXKggG/RSr4Ex+egSYwSE8jNAUGfH8gFWYM+UsRkdaIF+fFGEJoeIi4t8jo6MkZKTlBEAOw==",
+  "crimson/pet-nap": "data:image/gif;base64,R0lGODlhGAAYAPMAANMRRUoKHqAON9MRRfBFbP+4yP/2+CoiKy+ucv/CTf+KTP9rhf+dtY6Kkx96UhwaICH/C05FVFNDQVBFMi4wAwEAAAAh+QQJRgAAACwAAAAAGAAYAAAEdRDISWst2OotC/+TpwVkQJUmgInnQBhDGgx0zAVvHc+6beG9oC7VEhqJE54xiJQolzVBE/A8HHTW6FQ6YDBo10HYKxVYuL2srnymQgdSgJkiIDiXcQBhLhHwn1oTfh+AeSBFcFOHVH6Ki1SOIH6Tk4+Wl5iZEQAh+QQJRgAAACwAAAAAGAAYAAAEcRDISasF5eqbt5dFeAVkQJWmFwyEMaTrIKdjK8/x/dZ679OTnG8IlAiHvSLgiJQJlMLDQSe9PS3PAYMhmw6826cAy6zqxNhl02kaUwQEY/MKILglgjtzQAfkVT19H0FWSoNLeYaHS4ofeY+Pi5KTlJURACH5BAlGAAAALAAAAAAYABgAAARyEMhJq70YG5M75VcgBtRIAls4EMZwBkPsZgEru/A9W7Xu36fSb7gTEn3BSe4oEyQly8HhcJs2nwDngMGIUaUxrlNg0eqst3EZEP05sxUBAUp8AwjkiSDPdgf3HW12HkYDg4Qle1iIUIuEe5CQjJOUlZYRACH5BAlaAAAALAAAAAAYABgAAARtEMhJq704682DD9QHasFAGMNYDux4BSfbrnL6EnWuuxOt/zyJ75cLAoZElsDoOxxqTtnSshwwGKznQHtdCqjIaM1LPSaVoC9FQBAmpwCCWiKYIwdwQJ2Uy3PcaH8WAXVGgkeGHHWLi4eOj5CCEQA7",
+  "crimson/pet-work": "data:image/gif;base64,R0lGODlhGAAYAPMAANMRRUoKHqAON9MRRfBFbP+4yP/2+CoiKy+ucv/CTf+KTP9rhf+dtY6Kkx96UhwaICH/C05FVFNDQVBFMi4wAwEAAAAh+QQJEAAAACwAAAAAGAAYAAAEdBDISau9OOfAA+2eFgyEMYTjoIZXUKprCp8tMd84O8l4r0s8w2EmnP0AvMMQpoQJjsmlqql6Wp4DBmPKzTKegitvKq0GwuLeDIwREMZrF/oahg+sgvmmwOdbNRYFDYMFR4AAgoSHF318i4+QeZKSkJWWl48RACH5BAkMAAAALAAAAAAYABgAAARzEMhJq70y6EA3x9lAGMMXDGgJBmNanq5qsXHtfp2ty3lqHK7fbeY6AFPGlAA3gaGSyONgaVkOGIyn9spYCqrOaMx7se6mgW+ZEB6z1NVvG0UVwFeFfJ4KuhQagAVMfRR/gYQYenmIjI2OiHaRkY+UlZZ9EQAh+QQJEAAAACwAAAAAGAAYAAAEdhDISau9OOfAA+2eFgyEMYTjoIZXUKprCp8tMd84O8l4r0u8w2EmnP0AsuFAyVQJjrze7Gl5DhgMlbB4ZTwF1ehycfterFJnAHwmiGFPArsKflMF801hv6dqLAUNCA0FR38ABYMIBYcXfHuNkZJ4lJSSl5iZkREAIfkECRoAAAAsAAAAABgAGAAABHYQyEmrvTjnwAPtnhYMhDGE46CGV1CqawqfLTHfODvJeK9LvMNhJpz9ALLhQMlUCY683uxpeQ4YDJWweGU8BdXocnH7XqxSZwB8JohhTwK7Cn5TBfNNYb+naiwFDQgNBUd/AAWDCAWHF3x7jZGSeJSUkpeYmZERADs=",
+  "crimson/pet-stretch": "data:image/gif;base64,R0lGODlhGAAYAPMAANMRRUoKHqAON9MRRfBFbP+4yP/2+CoiKy+ucv/CTf+KTP9rhf+dtY6Kkx96UhwaICH/C05FVFNDQVBFMi4wAwEAAAAh+QQJGAAAACwAAAAAGAAYAAAEcxDISau9OOfAA+2eFgyEMYTjoIZXUKprCp8tMd84O8l4r0s8w2EmnP0AvMMQpoQJjsmlqql6Wp4DBmPKzTKegitvKq0GwpXwGGdFTwQEYM8sIbgBAvd6YJXkRTd9GhUygoOEeUeHO4qLjhl5kZGPlJWWjhEAIfkECRgAAAAsAAAAABgAGAAABGsQyEmrvTjnwAPtnhYMhDGE46CGk0BIQamu6XxKhKADse3/nh1AUPsZAwIK0cg8JVvFpor4bNkOh2t2Wv0MGAzVdgsmYqIDrM98lg7YmyZcZJxreGvWfVKz72E6en8fgoOGGTqJiYeMjY4aEQAh+QQJKAAAACwAAAAAGAAYAAAEbhBIGWqdwF6MwyDGMASUaJJcBppixZpFIRHqa9skIWR3L8aAncDj6wV2QWIRhxwubUNk8HU4sKosgbQ0YDBE1kHYOximeNSwyXxG+9htNxQV577gdbsIn7fz+xRadIAcG4SHiIkTWoyMio+QkRIRACH5BAkoAAAALAAAAAAYABgAAARvEEgZap3AXozDIMYwBJRoBkXBBaApVu45ERkR33EKEEKG/7KewAP8BXqAYdGIVC5jQ2Qydji4qi6BtDRgMETWQdg7GHK417DJfEb/2G03lBTv4OD1CXFNz6/4fnFHeIErfYWIiYpnWo2Ni5CRkmcRACH5BAkYAAAALAAAAAAYABgAAARxEMhJq70458AD7Z4WDIQxhOOghpNASEGprul8SoSgA7Ht/54dQFD7GQMCCtFmODCdM6SyeICqqjNiUmnDzrwDYWXEYFzPgzIRU7xaVWu20RbfzMMskbGugfn4fX5weYETSICFhoSJjBk6j4+NkpOUGhEAIfkECTwAAAAsAAAAABgAGAAABHMQyEmrvTjnwAPtnhYMhDGE46CGV1CqawqfLTHfODvJeK9LPMNhJpz9ALzDEKaECY7JpaqpelqeAwZjys0ynoIrbyqtBsKV8BhnRU8EBGDPLCG4AQL3emCV5EU3fRoVMoKDhHlHhzuKi44ZeZGRj5SVlo4RADs=",
+  "crimson/pet-held": "data:image/gif;base64,R0lGODlhGAAYAPMAANMRRUoKHqAON9MRRfBFbP+4yP/2+CoiKy+ucv/CTf+KTP9rhf+dtY6Kkx96UhwaICH/C05FVFNDQVBFMi4wAwEAAAAh+QQJCQAAACwAAAAAGAAYAAAEcBDISau9MuhAN8fZQBjDFwxoWQlENqblCasAIdxAQMw8zOEAgQxlOMCKPgFFCDsYU87kcjiIQp8DoXLZ6wIrJwYD5bSKhRgqeTFDp7spN0gNk4NyPfsdX//sO3F+fx03goMdhoeKi4xBN4+NkZKTExEAIfkECQkAAAAsAAAAABgAGAAABHEQyEmrvTjnwAPtnhYMhDGE46CGk0BIQamu6XxKhKADse3/nh1AUBsYDrajLSCgEG0H5Cy6bLaK1Kl0QLS2fmCVsDJiMFTRrJmIKaIXPnY7PJNv6HYROK/hxVl9EzV8gTA6gIUfiImMGTqPj42Sk5QaEQAh+QQJCQAAACwAAAAAGAAYAAAEcBDISau9MuhAN8fZQBjDFwxoWQlENqblCasAIdxAQMw8zOEAgQxlOMCKPgFFCDsYU87kcjiIQp8DoXLZ6wIrJwYD5bSKhRgqeTFDp7spN0gNk4NyPfsdX//sO3F+fx03goMdhoeKi4xBN4+NkZKTExEAIfkECQkAAAAsAAAAABgAGAAABHAQyEmrvTjrzYMP1AdqwUAYw1gO7DgJhBScbLvWqUQIPDDjwCCoBxDcBoYDLokLCChG3EFZmzafr6O1Sh0Ysa+gmEWslBgM1nSLNmKO6gXQ/R7X6Bk4Dk8S8zdwfx13LhwhPIWGIYmKPI6OipGSk5QRADs=",
 };
 /* PIXEL-ART-DATA-END */
 const PIX = Object.assign({}, PIX_DATA);
@@ -11346,7 +11471,14 @@ function pixOver(){
 /* An <img> for one sprite. Inert and out of the accessibility tree: every one
    of these sits beside words that already say what it means, and a screen
    reader reading "picture, tick" after "Done" is noise. */
+/* which drawing a name means now: the skin's own set when it brings one
+   and has this sprite ("crimson/think"), otherwise the robot's */
+function pixKey(name){
+  const set = typeof chatArtSet === "function" ? chatArtSet() : "";
+  return set && PIX[set + name] ? set + name : name;
+}
 function pixArt(name, size){
+  name = pixKey(name);
   if (!PIX[name]) return "";
   /* draggable="false" is not decoration. A browser lets you drag any <img>
      out of a page, and it puts the picture on the drag as a FILE - so
@@ -11443,6 +11575,11 @@ function petPaint(){
   petShow(PET.mood || "idle", !b.querySelector("img.pxl"));
 }
 
+/* the chat skin changed to one with another character: the pet is that
+   character from now on, in whatever mood it was in */
+function petRedress(){
+  if ($("petBtn")) petShow(PET.mood || "idle", true);
+}
 /* Swap the picture only when the mood has actually changed. Setting src to
    what it already is restarts the animation, and a pet that restarts its
    blink every five seconds has a twitch rather than a blink. */
@@ -11617,8 +11754,25 @@ const CHAT_SKINS = [
   { id:"ember",  name:"Ember",  a:"#FB7185", b:"#FBBF24" },
   { id:"paper",  name:"Paper",  a:"var(--accent)", b:"var(--teal)" },
   /* 5.4: a new layout as well as new colours - see LUMEN in the stylesheet */
-  { id:"lumen",  name:"Lumen",  a:"#6366f1", b:"#d946ef", fresh:true }
+  { id:"lumen",  name:"Lumen",  a:"#6366f1", b:"#d946ef", fresh:true, lm:true },
+  /* 5.10: Lumen's layout in red and white, with a character of its own -
+     see CRIMSON in the stylesheet and the heart in art/make-pixel-art.py */
+  { id:"crimson", name:"Crimson", a:"#d31145", b:"#ff6a5c", fresh:true, lm:true, art:"crimson/" }
 ];
+/* the skins built on Lumen's layout: the panel carries data-lm while one is
+   picked, and everything Lumen's layout does (the history, the icons, the
+   greeting) follows that rather than the one name */
+function chatLm(skin){
+  const k = CHAT_SKINS.find(x => x.id === (skin || chatUI().skin));
+  return !!(k && k.lm);
+}
+/* the pixel set a skin brings, if any: "crimson/" for the heart. The robot is
+   the set with no prefix, and every skin that does not bring one shows it. */
+function chatArtSet(){
+  const st = S && S.settings && S.settings.chatUI;
+  const k = st && CHAT_SKINS.find(x => x.id === st.skin);
+  return (k && k.art) || "";
+}
 
 function chatUI(){
   const st = S.settings;
@@ -11645,10 +11799,12 @@ function applyChatUI(){
   const el = $("chat"); if (!el) return;
   const u = chatUI();
   el.dataset.skin = CHAT_SKINS.some(x => x.id === u.skin) ? u.skin : "aurora";
+  if (chatLm(el.dataset.skin)) el.dataset.lm = ""; else delete el.dataset.lm;
   CHAT_FX.forEach(k => el.classList.toggle("fx-" + k, !!u[k]));
   el.style.setProperty("--ch-every", Math.max(4, Math.min(120, +u.every || 12)) + "s");
   /* Lumen writes the assistant's name over each answer, from CSS */
   el.style.setProperty("--lm-name", JSON.stringify(L("ChatName")));
+  chatMarkApply();
   chatPixDress();
   lmiWatch();
 }
@@ -11725,7 +11881,7 @@ function lmiSvg(name){
   }
   return t.cloneNode(true);
 }
-function lmiOn(){ const c = $("chat"); return !!c && c.dataset.skin === "lumen"; }
+function lmiOn(){ const c = $("chat"); return !!c && "lm" in c.dataset; }
 function lmiDress(root, shallow){
   if (!root || root.nodeType !== 1 || !lmiOn() || root.closest("svg")) return;
   const els = shallow ? [] : [...root.querySelectorAll(LMI_NOW.any)];
@@ -11792,6 +11948,8 @@ function chatPixDress(){
     const had = orb.querySelector("img.pxl");
     if (!art){ if (had) had.remove(); }
     else if (!had){ orb.insertAdjacentHTML("beforeend", art); pixFix(orb); }
+    /* the skin changed to one with another character: the mark follows */
+    else if (had.getAttribute("data-pix") !== pixKey("orb")){ had.remove(); orb.insertAdjacentHTML("beforeend", art); pixFix(orb); }
   }
   if (pill){
     const art = chatPix("new");
@@ -11826,7 +11984,7 @@ function renderChatFx(){
     sw("pulse",   L("FxPulse"),   L("FxPulseWhy")) +
     sw("typing",  L("FxTyping"),  L("FxTypingWhy")) +
     sw("chips",   L("FxChips"),   L("FxChipsWhy")) +
-    (u.skin === "lumen" ? sw("icons", L("FxIcons"), L("FxIconsWhy")) : "") +
+    (chatLm(u.skin) ? sw("icons", L("FxIcons"), L("FxIconsWhy")) : "") +
     sw("ambient", L("FxAmbient"), L("FxAmbientWhy")) +
     '<div class="chsw"><span class="lb">' + esc(L("FxEvery")) + "</span>" +
       '<input type="range" id="fxEvery" min="4" max="60" step="2" value="' +
@@ -11859,10 +12017,14 @@ function renderChatFx(){
   });
   box.querySelectorAll("[data-skin]").forEach(b => {
     b.onclick = () => {
+      const was = chatArtSet();
       u.skin = b.dataset.skin; u.skinPicked = true;
       /* a skin marked New stops saying so once it has been tried */
       if (!(u.tried || []).includes(u.skin)) u.tried = (u.tried || []).concat(u.skin);
       applyChatUI(); chatSide(); touch(); renderChatFx();
+      /* a skin with another character: the thread and the desk pet change to
+         it now, not on the next message */
+      if (chatArtSet() !== was){ chatPaint(); petRedress(); }
     };
   });
   const ev = $("fxEvery");
@@ -12480,7 +12642,7 @@ function chatSide(){
   if (!el) return;
   chatNowTitle();
   const list = (S.chats || []).filter(c => c.msgs.length || c.id === S.chatId);
-  if (chatUI().skin === "lumen") return chatSideLumen(el, list);
+  if (chatLm()) return chatSideLumen(el, list);
   el.innerHTML = '<div class="chsh">' + esc(L("ChatConversations")) + "</div>" +
     list.map(c =>
       '<div class="chsi' + (c.id === S.chatId ? " on" : "") + '" data-chat="' + esc(c.id) + '">' +
@@ -12675,7 +12837,8 @@ function chatThinking(log){
     if (sec >= 8 && !w._slow){
       w._slow = true;
       const s = w.querySelector("img.pxl");
-      if (s && PIX.slow){ s.setAttribute("data-pix", "slow"); s.src = PIX.slow; }
+      const k = pixKey("slow");
+      if (s && PIX[k]){ s.setAttribute("data-pix", k); s.src = PIX[k]; }
       chatOrbPix("slow");
     }
   }, 500);
@@ -12686,6 +12849,7 @@ function chatThinking(log){
    answer is on its way, itself again once it has arrived */
 function chatOrbPix(name){
   const im = document.querySelector("#chatOrb img.pxl");
+  name = pixKey(name);
   if (im && PIX[name]){ im.setAttribute("data-pix", name); im.src = PIX[name]; }
 }
 /* The row goes the moment the answer is in, so nothing that counts messages
@@ -24592,7 +24756,7 @@ $("chatSide").addEventListener("click", e => {
   const row = e.target.closest("[data-chat]");
   if (row){
     S.chatId = row.dataset.chat;
-    if (chatUI().skin === "lumen") $("chat").classList.remove("convos");
+    if (chatLm()) $("chat").classList.remove("convos");
     chatPaint(); touch(); $("chatq").focus();
   }
 });
@@ -24603,7 +24767,7 @@ $("chatSide").addEventListener("input", e => {
    it puts the history away, as it does in every chat app */
 document.querySelector("#chat .chmain").addEventListener("click", e => {
   if (e.target.classList.contains("chmain") && $("chat").classList.contains("convos") &&
-      chatUI().skin === "lumen") $("chat").classList.remove("convos");
+      chatLm()) $("chat").classList.remove("convos");
 });
 $("chatGo").addEventListener("click", () => chatAsk($("chatq").value));
 
@@ -28385,7 +28549,7 @@ document.addEventListener("keydown", e => {
     if ($("keys").classList.contains("on")) return closeKeys();
     if ($("chatFxPanel").classList.contains("on")) return closeChatFx();
     if ($("chatAsk").classList.contains("on")) return chatDeclineAsked();
-    if ($("chat").classList.contains("convos") && chatUI().skin === "lumen") return $("chat").classList.remove("convos");
+    if ($("chat").classList.contains("convos") && chatLm()) return $("chat").classList.remove("convos");
     if ($("chat").classList.contains("on")) return closeChat();
     if ($("ask").classList.contains("on")) return closeAsk(null);
     if ($("cmd").classList.contains("on")) return closeCmd();

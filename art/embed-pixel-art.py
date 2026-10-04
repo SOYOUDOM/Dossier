@@ -21,9 +21,12 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 SRC = os.path.join(ROOT, "assets", "pixel")
 HTML = os.path.join(ROOT, "dossier.html")
-NAMES = ["think", "slow", "orb", "hero", "done", "no", "oops", "ask", "new",
-         "pet-idle", "pet-cheer", "pet-worry", "pet-nap", "pet-work",
-         "pet-stretch", "pet-held"]
+BASE = ["think", "slow", "orb", "hero", "done", "no", "oops", "ask", "new",
+        "pet-idle", "pet-cheer", "pet-worry", "pet-nap", "pet-work",
+        "pet-stretch", "pet-held"]
+# the robot, then the heart of the Crimson skin under the same names in its
+# own folder: "crimson/think" is assets/pixel/crimson/think.gif
+NAMES = BASE + ["crimson/" + n for n in BASE]
 
 START = "/* PIXEL-ART-DATA — written by art/embed-pixel-art.py; do not edit by hand */"
 END = "/* PIXEL-ART-DATA-END */"

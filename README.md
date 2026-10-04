@@ -165,9 +165,11 @@ With the demo copied in you should immediately see:
 | `backups/` | — | auto | One snapshot per day, 30 kept, **in your workspace folder**. Git-ignored, and never in this repository. `demo/backup-2026-08-28.json` is a sample of the shape. |
 | `favicon.ico`, `logo.png` | — | optional | The Resolv mark (an R in glossy blue, its stem made of the old D's squares); both fall back to a built-in seal if missing. Replace them with your own and they are picked up. The sources are `art/resolv-logo.svg` (full) and `art/resolv-icon.svg` (for small sizes); the Dossier D is kept as `art/dossier-logo.png` and `art/dossier-favicon.ico`. |
 | `assets/assistant-logo.png`, `assets/assistant-bg.jpg` | — | optional | The assistant's own mark and the picture behind its panel. Each is asked for once when the panel opens and used only if it answers. |
+| `assets/crimson-mark.png` | — | optional, not shipped | Your own mark for the **Crimson** skin. Asked for only when an `assets` folder is there; Crimson otherwise draws its own heart. |
 | `assets/thinking.gif` | 1.5 KB | optional | The animation shown while an answer is on its way, when the pixel set is off. The same file travels inside `dossier.html` as two kilobytes of base64, so a copy on its own still has it; a file here overrides that. |
 | `assets/pixel/*.gif` | 9.7 KB | optional | The pixel set — nine sprites the assistant panel wears when **Pixel art** is on, and seven the desk pet wears. All sixteen also travel inside `dossier.html` as thirteen kilobytes of base64; a file here overrides its copy, one sprite at a time. |
-| `art/make-pixel-art.py` | ~27 KB | — | Where the sprites are drawn: each frame is a picture written out in characters, one per pixel. Stdlib Python — it writes the GIFs itself, LZW and all. Also writes `art/contact-sheet.png`, every frame on a dark band and a light one. |
+| `assets/pixel/crimson/*.gif` | 9.8 KB | optional | The same sixteen for the **Crimson** skin: the heart. Inside `dossier.html` too, as `crimson/<name>`. |
+| `art/make-pixel-art.py` | ~40 KB | — | Where the sprites are drawn: each frame is a picture written out in characters, one per pixel. Stdlib Python — it writes the GIFs itself, LZW and all. Also writes `art/contact-sheet.png` and `art/contact-sheet-crimson.png`, every frame on a dark band and a light one. |
 | `art/embed-pixel-art.py` | 2.2 KB | — | Carries `assets/pixel/*.gif` into `dossier.html` as base64, between two marker comments. Run after the art changes; never otherwise. |
 | `.gitattributes` | 28 B | — | `scripts/*.bat text eol=crlf` — a `.bat` with LF line endings breaks `cmd`'s label parsing. |
 | `.gitignore` | ~1 KB | — | Every path the app writes — `dossier.json`, `backups/`, `tasks/`, the runner's queue. Git must never create, replace or delete one of them. |
@@ -456,8 +458,8 @@ in `dossier.json`:
 
 | | |
 |---|---|
-| **Skin** | Nebula · Aurora · Carbon · Ember · Paper · **Lumen**. Every surface in the panel takes its colour from the skin, not from the app theme — except Lumen, which follows the app's light or dark mode and changes the layout too (below). |
-| **Motion** | Seven switches — answers arriving, edge light, the living background, the orb pulse, thinking dots, springy buttons, and a passing light on an interval you set — and an eighth, *Lively icons*, while Lumen is the skin. Each one genuinely unhooks its animation. |
+| **Skin** | Nebula · Aurora · Carbon · Ember · Paper · **Lumen** · **Crimson**. Every surface in the panel takes its colour from the skin, not from the app theme — except Lumen and Crimson, which follow the app's light or dark mode and change the layout too (below). |
+| **Motion** | Seven switches — answers arriving, edge light, the living background, the orb pulse, thinking dots, springy buttons, and a passing light on an interval you set — and an eighth, *Lively icons*, while Lumen or Crimson is the skin. Each one genuinely unhooks its animation. |
 | **Pixel art** | One switch, for the sprites below. Off leaves the panel exactly as it was: the drawn orb, the old waiting animation, a `✓` on a receipt. |
 | **Ask before doing anything** | On by default: everything is put to you first. Off: it does what you ask straight away and the line says *done without asking*. `Ctrl`+`Z` still undoes it either way. |
 
@@ -468,8 +470,9 @@ rest of the app — the record sheet stays still while you read it.
 #### Lumen
 
 The newest skin, and the only one that changes the layout as well as the
-colours. Pick it under **◎ → Skin → Lumen**; the other five stay exactly as
-they were, and switching back is one click.
+colours (with Crimson, below, which is built on it). Pick it under **◎ →
+Skin → Lumen**; the other skins stay exactly as they were, and switching back
+is one click.
 
 - **Answers are the page, not bubbles.** Each one sits under a small mark and
   the assistant's name, full width, in [Inter](https://rsms.me/inter/) at a
@@ -525,6 +528,46 @@ are either fully there or not at all, so they fray on a dark panel; its
 colour is baked in, so it cannot follow light and dark or a hover; and it
 loops whether you are looking or not.
 
+#### Crimson
+
+A red-and-white skin with **a character of its own**: a small red heart with
+a face, in place of the robot. It uses Lumen's layout (everything in the
+Lumen section above holds for it too), with its own colours, its own mark and
+its own pictures.
+
+**How do I make the assistant red, with the heart?** Open the chat panel,
+press **◎** (Look and behaviour) at the top, and under **Skin** choose
+**Crimson**. To go back, choose any other skin; nothing else changes.
+
+What is different from Lumen:
+
+- **Colours:** white, with red (`#d31145`) for the send button, links, the
+  switches, the focus ring and the one button that does the thing; a soft
+  pink bubble for your messages; a thin red line along the top of the panel.
+  In the app's **dark mode** it turns charcoal with a brighter red
+  (`#ff4d76`), which reads better on a dark background.
+- **The mark:** a white heart with a pulse line through it, on a red tile —
+  in the header and over each answer. While an answer is on its way, the
+  heart beats.
+- **The greeting:** the heart waves over *Good morning*, and a heartbeat
+  line runs under it. The line moves while **Passing light** is on (◎ →
+  Motion) and stays still with it off, or when the PC asks for reduced
+  motion.
+- **The character:** with **Pixel art** on, every sprite is the heart's
+  version — thinking (it looks one way, then the other, and beats), slow
+  (it dozes), the header mark (a beating heart), the greeting (it waves),
+  and the shared ones (done, no, oops, ask, new) in its colours. **The desk
+  pet becomes the heart too** while Crimson is picked: it cheers, worries,
+  naps, stretches and stamps records the same way the robot does.
+
+**Can I use my own picture as Crimson's mark?** Yes, on your own PC: put a
+square picture at `assets/crimson-mark.png` beside `dossier.html`. Crimson
+uses it in the header, on the greeting and over each answer. The blue star
+that comes with Resolv (`assets/assistant-logo.png`) is *not* used by
+Crimson — a skin with its own character keeps its own mark unless a picture
+is there for it by name. Keep a picture like that in your own folder only;
+it does not belong in the repository.
+
 #### The pixel set
 
 Nine sprites, sixteen colours, drawn at sixteen pixels square — twenty-four
@@ -547,8 +590,9 @@ said in words. (Seven more, in the same palette and the same hand, belong to
 
 Three rules hold them together:
 
-1. **They are shown at 16, 32 or 144 pixels and never in between.** One, two
-   and six times the size they were drawn at. A pixel and a half is a blur,
+1. **They are shown at 16, 32 or 144 pixels and never in between** (120 for
+   Crimson's waving heart). One, two, six — or five — times the size they
+   were drawn at. A pixel and a half is a blur,
    and a blurred sprite is the one thing this art cannot survive.
 2. **A picture of your own wins.** `assets/assistant-logo.png` replaces the
    header mark and the one on an empty thread whether the set is on or not,
@@ -559,9 +603,16 @@ Three rules hold them together:
    than leaving a broken-image mark in the thread. A `dossier.html` with no
    folder beside it asks for nothing at all and still has all sixteen.
 
+**Crimson has its own set** under the same sixteen names, in
+`assets/pixel/crimson/` (and inside `dossier.html` as `crimson/<name>`), in a
+palette of its own: a deep wine outline, the red body, a lit side, pink
+cheeks. A skin that brings no set of its own shows the robot.
+
 To change one, edit its picture in `art/make-pixel-art.py` — the frames are
 written out as characters, one per pixel, from a sixteen-colour palette —
-then run it and `art/embed-pixel-art.py`. There is still no build step: the
+then run it and `art/embed-pixel-art.py`. The heart is drawn in the same
+file (`PAL_CRIMSON`, `HEART`, `hpose`); its contact sheet is
+`art/contact-sheet-crimson.png`. There is still no build step: the
 GIFs and the base64 are committed, and the app never generates either.
 
 ### 6.4 Keyboard
@@ -609,7 +660,8 @@ alone, and choosing again afterwards always sticks.
 ### 6.6 The desk pet
 
 The character that greets an empty thread, parked in a corner of the window
-for the rest of the day. It is the same drawing and the same sixteen colours
+for the rest of the day — the robot, or the heart while the chat skin is
+**Crimson**. It is the same drawing and the same sixteen colours
 as [the pixel set](#the-pixel-set); what differs is what it answers to — the
 workspace rather than the conversation.
 
@@ -2835,7 +2887,7 @@ first thing to run after changing anything it touches:
 
 ```
 node --test                 # tests/sources.test.js: 37 tests - every scenario below
-node tests/e2e/run.js       # the app in Chrome or Edge: 73 checks on the screen
+node tests/e2e/run.js       # the app in Chrome or Edge: 81 checks on the screen
 node flow/check-prompt.js   # the prompt's examples against the reply validator
 ```
 
