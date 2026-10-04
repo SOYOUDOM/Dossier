@@ -6,6 +6,67 @@ holds — which is what to paste into a bug report.
 
 ---
 
+## 5.14.0 - 2026-10-04
+
+**The chat panel snaps like a magnet, icons sit in the middle, code no
+longer shows as plain text, and the calendar has special days.**
+
+- **Move the chat like a magnet.** Hold the chat's top bar and drag it,
+  from any place (docked, floating or full screen):
+  - drop it at the **right** or **left** edge of the window and it docks
+    there - your work makes room beside it;
+  - drop it at the **top** and it fills the screen;
+  - drop it anywhere else and it floats where you left it.
+  While you drag, a light outline shows where it will land. Docked left is
+  new: its right edge is the one you drag to make it wider. A click on the
+  top bar that does not move does nothing, so buttons there are safe.
+  *Where it sits* (the frame button, or *Look and behaviour*) now has four
+  choices: Docked right, Docked left, Floating window, Full screen.
+- **The view puts itself right.** A floating chat is kept inside the window
+  when the window gets smaller; the panel never ends up half off the
+  screen.
+- **The Khmer name is no longer beside the wordmark** in the header - the
+  header says KalKech only.
+- **Icons in the middle.** Every icon button in the chat (the header, the
+  paper clip, Send, Copy and the buttons under an answer) is drawn the same
+  way now, in the middle of its button, in every skin. Before, some sat a
+  few pixels low or high, and in Lumen and Crimson the buttons under an
+  answer could wrap onto a second line; they stay on one line now
+  ("◆ KalKech reason" is just **Reason** under an answer).
+- **Three chat skins: Nebula, Lumen and Crimson.** Aurora, Carbon, Ember
+  and Paper were taken out at the owner's request. A workspace that used
+  one of them opens in Nebula.
+- **Code that showed as plain text.** An answer could show a few lines of
+  code as plain text, and the same code again further down in a proper
+  code block. The cause: when a flow's *Clean* step strips the ``` marks,
+  KalKech puts code blocks back - and it took a lone word such as "csharp"
+  on a line of its own for the start of one. Now a block is put back only
+  where code would start (after a line ending with ":", a heading, a bold
+  line or the start of the answer), and never for a single line. The
+  prompt now asks the AI to mark code with `~~~` instead of ```, which a
+  Clean step leaves alone - so with the new prompt this does not happen at
+  all.
+- **Special days on the calendar** - days that matter but are not
+  holidays: a release, a freeze, an audit, a birthday.
+  - In the week or month view, point at a day and click **✦**; give it a
+    name, a note, a colour and an icon; tick *Every year* for a yearly day
+    and *Day off* if you do not work that day (then it counts like a
+    holiday for due dates and the routines).
+  - The day gets a coloured band and its name; click the name to change or
+    delete it. *Setup → Special days* lists them all.
+  - The morning summary says *today* and *tomorrow*.
+  - The assistant knows them: it is sent the special days from a week ago
+    to half a year ahead, can answer "when is the release freeze?", and can
+    mark or unmark a day for you (two new actions, `markDay` and
+    `unmarkDay`, confirmed like any change; 64 actions now, 43 that
+    change something).
+- **How the AI works** (`docs/HOW-THE-AI-WORKS.md` and
+  `docs/how-the-ai-works.html`) is up to date: KalKech reason and its
+  bigger limits, the three models, naming the assistant, special days, the
+  blank-picture and lost-code-mark repairs, and the action count.
+
+---
+
 ## 5.13.0 - 2026-10-04
 
 **Resolv is now KalKech (កាលកិច្ច), and there is a third model: KalKech

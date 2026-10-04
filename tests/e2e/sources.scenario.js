@@ -596,9 +596,9 @@
   grip.dispatchEvent(new KeyboardEvent("keydown", { key:"ArrowLeft", bubbles:true }));
   check("...and so does the keyboard on that edge", chatUI().dockW === wide + 32, chatUI().dockW);
   $("chatPlace").click(); await sleep(100);
-  check("the frame button offers three places, the current one ticked", !$("chatPlaceMenu").hidden &&
-        $("chatPlaceMenu").querySelectorAll("[data-place]").length === 3 &&
-        $("chatPlaceMenu").querySelector('[aria-checked="true"]').dataset.place === "dock");
+  check("the frame button offers four places, the current one ticked", !$("chatPlaceMenu").hidden &&
+        $("chatPlaceMenu").querySelectorAll("[data-place]").length === 4 &&
+        $("chatPlaceMenu").querySelector('[aria-checked="true"]').dataset.place === "dock-right");
   $("chatPlaceMenu").querySelector('[data-place="float"]').click(); await sleep(350);
   let fr = chatBox.getBoundingClientRect();
   check("floating: a window over the work, which is not squeezed", chatBox.dataset.place === "float" && $("chatPlaceMenu").hidden &&
@@ -681,5 +681,55 @@
         sent[sent.length - 1].req.tier + " | " + (($("chatLog").querySelector(".chbr") || {}).textContent || ""));
   check("the hard jobs can go to KalKech reason too", (tz.hard = "reason", flowTier("diagnose") === "reason") && (tz.hard = "deep", flowTier("diagnose") === "deep"));
   tz.pick = "auto"; S.settings.memory = S.settings.memory.filter(n => !/^mbig/.test(n.id)); chatModelPaint();
+
+  /* ── 5.14: three skins, centred icons, code after a heading, the magnet, special days ── */
+  check("three chat skins are kept: Nebula, Lumen, Crimson", CHAT_SKINS.map(x => x.id).join() === "nebula,lumen,crimson");
+  const oldSkin = chatUI().skin; chatUI().skin = "aurora"; chatUI();
+  check("...and a workspace that used one of the others opens in Nebula", chatUI().skin === "nebula");
+  chatUI().skin = oldSkin; applyChatUI();
+  check("a code block whose fence was stripped, straight after a bold heading, is still code",
+        /class="chcode"/.test(chatSay("**Core entities (example in C#)**\ncsharp\npublic sealed record UserId(Guid Value)\n{\npublic static UserId New() => new(Guid.NewGuid());\n}")) &&
+        !/class="chcode"/.test(chatSay("**Which language?**\nPython\nis the one I would pick because it is simple.")));
+  check("the prompt asks for code between ~~~ marks, which survive the old Clean step", !/```/.test(DossierFlow.PROMPT) && /~~~sql/.test(DossierFlow.PROMPT));
+  /* the magnet */
+  chatPlaceSet("dock-right"); await sleep(300);
+  const mpe = (el, type, x, y) => el.dispatchEvent(new PointerEvent(type, { bubbles:true, clientX:x, clientY:y, pointerId:9, button:0, isPrimary:true, pointerType:"mouse" }));
+  const mdrag = async path => {
+    const hb2 = chatBox.querySelector(".chh .chid").getBoundingClientRect();
+    mpe(chatBox.querySelector(".chh .chid"), "pointerdown", hb2.left + 20, hb2.top + 10);
+    for (const [x, y] of path){ mpe(document, "pointermove", x, y); await sleep(20); }
+    mpe(document, "pointerup", path[path.length - 1][0], path[path.length - 1][1]); await sleep(400);
+  };
+  await mdrag([[600, 300], [200, 300], [6, 300]]);
+  check("the magnet: dragged by its top bar to the left edge, the panel docks on the left and the work moves over",
+        chatBox.dataset.place === "dock" && chatBox.dataset.side === "left" && document.body.classList.contains("chatleft") &&
+        Math.round(parseFloat(getComputedStyle(appEl).paddingLeft)) === Math.round(chatBox.getBoundingClientRect().width));
+  await mdrag([[400, 300], [640, 340]]);
+  check("...pulled into the middle it floats, and the work gets its room back", chatBox.dataset.place === "float" &&
+        parseFloat(getComputedStyle(appEl).paddingLeft) === 0 && parseFloat(getComputedStyle(appEl).paddingRight) === 0);
+  await mdrag([[640, 200], [640, 3]]);
+  check("...to the top it fills the screen", chatBox.dataset.place === "full");
+  await mdrag([[500, 300], [innerWidth - 3, 300]]);
+  check("...and to the right edge it docks there again, all of it kept", chatBox.dataset.place === "dock" && chatBox.dataset.side === "right" &&
+        chatUI().side === "right" && chatUI().place === "dock");
+  /* special days */
+  const sd = addDays(today(), 1);
+  spdSave({ d:sd, n:"Month-end close", note:"Finance batch at 22:00 - keep APP02 free.", c:"amber", icon:"\u{1F4B0}" });
+  spdSave({ d:addDays(today(), 2), n:"Team day", note:"Offsite.", c:"green", off:true });
+  setView("day"); await sleep(200);
+  check("a special day is said on the Day view the day before", /Tomorrow:\s*Month-end close/.test($("vDay").textContent));
+  setView("week"); S.settings.calMode = "week"; S.weekStart = mondayOf(sd); renderWeek(); await sleep(200);
+  check("...it is on the week, in its colour, with its note", !!document.querySelector('#vWeek .wc.special[data-day="' + sd + '"] .spd') &&
+        /Finance batch/.test(document.querySelector('#vWeek .wc[data-day="' + sd + '"]').textContent));
+  check("...a special day marked as a day off is not a working day; one that is not, is",
+        isOffDay(addDays(today(), 2)) && (!isOffDay(sd) || [0, 6].indexOf(new Date(sd + "T12:00").getDay()) >= 0));
+  document.querySelector('#vWeek .wc[data-day="' + sd + '"] [data-spadd]').click(); await sleep(150);
+  check("the \u2726 on a day opens the editor for it", !!$("spdPop"));
+  $("spdN").value = "Auditors on site"; $("spdPop").querySelector('[data-spc="blue"]').click(); $("spdPop").querySelector("[data-spok]").click(); await sleep(200);
+  check("...and what is saved there is on the calendar", specialDays().some(x => x.n === "Auditors on site" && x.c === "blue" && x.d === sd));
+  const sreq = DossierFlow.buildRequest("what is on this week?", flowContext("what is on this week?"), flowCfg());
+  check("the assistant is told the special days, with their notes", (sreq.workspace.specialDays || []).some(x => x.name === "Month-end close" && /Finance batch/.test(x.note)) &&
+        !!DossierFlow.ACTIONS.markDay && /specialDays/.test(DossierFlow.PROMPT));
+  setView("day");
   return { checks };
 })()

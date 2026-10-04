@@ -131,7 +131,7 @@ h1,h2,h3,h4,.disp{font-family:var(--f-display);font-weight:600;letter-spacing:.0
    viewport under either reading, so the footer sits on the bottom edge
    whatever the text size, and the document itself never scrolls. */
 .app{position:fixed;inset:0;display:flex;flex-direction:column;
-  transition:padding-right .24s var(--ease)}
+  transition:padding-right .24s var(--ease),padding-left .24s var(--ease)}
 @media screen{ html{overflow:hidden} }
 /* The assistant is a dock, so it takes room rather than covering the search
    box and half the masthead. Below 900px there is no room to give, and it
@@ -167,12 +167,6 @@ body.chatting .find{max-width:190px}
 .brand .wm{display:flex;flex-direction:column;line-height:1.15}
 .brand .wm b{font-family:var(--f-display);font-size:16px;font-weight:600;letter-spacing:.06em;text-transform:uppercase}
 .brand .wm span{font-size:10px;color:var(--ink-3);letter-spacing:.04em}
-/* the name in Khmer, beside the Latin one: in Khmer letters at a size Khmer
-   can be read at (the script is smaller than Latin at the same size), in
-   the interface face, which carries the bundled Khmer font */
-.brand .wm b em{font-style:normal}
-.brand .wm b .wmk{font-style:normal;font-family:var(--f-ui);font-size:12.5px;font-weight:600;letter-spacing:0;
-  text-transform:none;margin-left:7px;color:var(--ink-2);vertical-align:1px}
 
 .wsbtn{
   display:flex;align-items:center;gap:8px;height:34px;padding:0 11px;border-radius:var(--r-sm);
@@ -796,6 +790,61 @@ table.reg td.ttd span{display:block;white-space:normal;overflow-wrap:anywhere;fo
 .hol span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
 .hol.obs{color:var(--teal);background:transparent}
 .hol.obs i{background:var(--teal)}
+/* ── special days (5.14) ──────────────────────────────────────────────
+   A day you marked yourself - a release freeze, month-end, a team day, a
+   birthday - in its own colour, with its icon and its note. Not a holiday:
+   the day still counts as a working day unless you tick "day off". */
+.wc.special{border-top:3px solid var(--spc)}
+.spd{display:flex;align-items:flex-start;gap:6px;margin:6px 7px 0;padding:5px 8px;border-radius:8px;cursor:pointer;
+  width:calc(100% - 14px);box-sizing:border-box;text-align:left;font-family:inherit;font-size:10.5px;line-height:1.35;
+  color:var(--ink);background:color-mix(in srgb,var(--spc) 13%,transparent);
+  border:1px solid color-mix(in srgb,var(--spc) 38%,transparent)}
+.spd:hover{background:color-mix(in srgb,var(--spc) 22%,transparent)}
+.spd:focus-visible{outline:2px solid var(--spc);outline-offset:1px}
+.spd i{font-style:normal;flex:0 0 auto;font-size:12px;line-height:1.15}
+.spd .sx{min-width:0;display:flex;flex-direction:column;gap:1px}
+.spd b{font-weight:650;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:color-mix(in srgb,var(--spc) 72%,var(--ink))}
+.spd em{font-style:normal;color:var(--ink-2);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.spd.c{margin:3px 6px 0;padding:2px 6px;width:calc(100% - 12px);font-size:10px;align-items:center}
+.spd.c i{font-size:10.5px}
+/* the ✦ that marks a day: shown on the cell you point at */
+.spdadd{margin-left:auto;border:0;background:none;color:var(--ink-3);cursor:pointer;font-size:12px;line-height:1;
+  padding:2px 5px;border-radius:6px;opacity:.35;transition:opacity .12s,color .12s,background .12s;font-family:inherit}
+.wch .n ~ .spdadd,.mch .n ~ .spdadd{margin-left:4px}
+.wc:hover .spdadd,.spdadd:focus-visible{opacity:1}
+.spdadd:hover{color:var(--accent);background:var(--accent-soft)}
+/* its editor */
+.spdpop{position:fixed;z-index:92;width:304px;max-width:calc(100vw - 16px);box-sizing:border-box;padding:14px 14px 12px;
+  background:var(--paper);color:var(--ink);border:1px solid var(--rule-hi);border-radius:14px;
+  box-shadow:0 24px 60px -18px rgba(0,0,0,.5)}
+.spdpop h4{margin:0 0 6px;font-size:13px;font-weight:650;display:flex;gap:7px;align-items:baseline}
+.spdpop h4 span{font-size:11px;font-weight:500;color:var(--ink-3)}
+.spdpop .l{display:block;font-size:10.5px;color:var(--ink-3);margin:9px 0 4px;letter-spacing:.02em}
+.spdpop .in{width:100%;box-sizing:border-box}
+.spdpop textarea.in{min-height:56px;resize:vertical;font-family:inherit;line-height:1.45}
+.spdsw{display:flex;gap:7px;flex-wrap:wrap}
+.spdsw button{width:22px;height:22px;border-radius:50%;border:0;background:var(--spc);cursor:pointer;padding:0;
+  box-shadow:0 0 0 2px var(--paper) inset}
+.spdsw button.on{box-shadow:0 0 0 2px var(--paper) inset,0 0 0 2px var(--ink)}
+.spdic{display:flex;gap:4px;flex-wrap:wrap}
+.spdic button{width:30px;height:30px;border-radius:8px;border:1px solid var(--rule);background:var(--paper-2);cursor:pointer;
+  font-size:15px;display:inline-flex;align-items:center;justify-content:center;padding:0;font-family:inherit;color:var(--ink)}
+.spdic button.on{border-color:var(--accent);background:var(--accent-soft)}
+.spdck{display:flex;flex-direction:column;gap:6px;margin-top:11px;font-size:12px}
+.spdck label{display:flex;gap:7px;align-items:center;cursor:pointer}
+.spdbt{display:flex;gap:8px;margin-top:13px;justify-content:flex-end}
+.spdbt [data-spdel]{margin-right:auto}
+/* the list in Setup */
+.spdrow{display:grid;grid-template-columns:96px 20px 1fr auto auto;gap:7px;align-items:center;padding:6px 0;
+  border-bottom:1px solid var(--rule);font-size:12px}
+.spdrow:last-of-type{border-bottom:0}
+.spdrow .hd2{font-family:var(--f-mono);font-size:10.5px;color:var(--ink-3)}
+.spdrow .ic{text-align:center}
+.spdrow .tx{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.spdrow .tx small{color:var(--ink-3);margin-left:6px}
+.spdrow .dot{width:9px;height:9px;border-radius:50%;background:var(--spc);display:inline-block;margin-right:6px}
+.spdrow button{border:0;background:none;color:var(--ink-3);cursor:pointer;font-size:12px;padding:0 3px;font-family:inherit}
+.spdrow button:hover{color:var(--accent)}
 /* month grid — same cells as the week, at a different zoom */
 .mdow{display:grid;grid-template-columns:repeat(7,1fr);gap:7px;padding:0 18px 6px}
 .mdow span{font-family:var(--f-display);font-size:10px;font-weight:600;letter-spacing:.09em;
@@ -1927,13 +1976,8 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
 .chat{ --ch-bg:var(--paper); --ch-panel:var(--paper-2); --ch-line:var(--rule);
   --ch-ink:var(--ink); --ch-dim:var(--ink-3); --ch-acc:var(--accent);
   --ch-acc2:var(--teal); --ch-glow:rgba(139,30,63,.30); --ch-mesh:rgba(139,30,63,.05) }
-.chat[data-skin="aurora"]{ --ch-acc:#7C5CFF; --ch-acc2:#22D3EE;
-  --ch-glow:rgba(124,92,255,.34); --ch-mesh:rgba(124,92,255,.07) }
-.chat[data-skin="carbon"]{ --ch-bg:#0E1116; --ch-panel:#151A21; --ch-line:#232B35;
-  --ch-ink:#E6EDF3; --ch-dim:#7D8896; --ch-acc:#38BDF8; --ch-acc2:#34D399;
-  --ch-glow:rgba(56,189,248,.30); --ch-mesh:rgba(56,189,248,.07) }
-.chat[data-skin="ember"]{ --ch-acc:#FB7185; --ch-acc2:#FBBF24;
-  --ch-glow:rgba(251,113,133,.32); --ch-mesh:rgba(251,113,133,.07) }
+/* (Aurora, Carbon, Ember and Paper were removed in 5.14 at the owner's
+   request: three skins are kept - Nebula, Lumen and Crimson.) */
 /* ── Nebula: a night sky with a planet's rim over a ridge, drawn in SVG so
    nothing is fetched; a photo of your own at assets/assistant-bg.jpg takes
    its place. Everything that holds text is glass over it. */
@@ -3048,7 +3092,9 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
 .chskin .nw{font-style:normal;font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
   color:#fff;background:var(--ch-acc);border-radius:999px;padding:1px 6px;line-height:1.5}
 
-.chat[data-lm]{
+/* the icons, drawn: every skin uses them (5.14 - Nebula used to type them as
+   characters, whose height depends on the font) */
+.chat{
   --lmi-place:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='16' rx='3.5'/%3E%3Cpath d='M13.5 8.5H16V11M16 8.5l-3.2 3.2M10.5 15.5H8V13M8 15.5l3.2-3.2'/%3E%3C/svg%3E");
   --lmi-panel:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='16' rx='3.5'/%3E%3Cpath d='M9.5 4v16'/%3E%3C/svg%3E");
   --lmi-sliders:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 7h9M17 7h3M4 17h3M11 17h9'/%3E%3Ccircle cx='15' cy='7' r='2.2'/%3E%3Ccircle cx='9' cy='17' r='2.2'/%3E%3C/svg%3E");
@@ -3073,6 +3119,8 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
   --lmi-clock:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='8.5'/%3E%3Cpath d='M12 7.5V12l3 2'/%3E%3C/svg%3E");
   --lmi-bulb:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9.5 18h5M10.5 21h3'/%3E%3Cpath d='M12 3a6 6 0 0 0-3.7 10.7c.8.7 1.2 1.4 1.2 2.3h5c0-.9.4-1.6 1.2-2.3A6 6 0 0 0 12 3z'/%3E%3C/svg%3E");
   --lmi-help:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='8.5'/%3E%3Cpath d='M9.6 9.4a2.5 2.5 0 0 1 4.9.8c0 1.7-2.5 2.2-2.5 3.8'/%3E%3Cpath d='M12 17h.01' stroke-width='2.8'/%3E%3C/svg%3E");
+}
+.chat[data-lm]{
   --lm-mark-live:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%236366f1'/%3E%3Cstop offset='.55' stop-color='%238b5cf6'/%3E%3Cstop offset='1' stop-color='%23d946ef'/%3E%3CanimateTransform attributeName='gradientTransform' type='rotate' from='0 .5 .5' to='360 .5 .5' dur='2.4s' repeatCount='indefinite'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='24' cy='24' r='24' fill='url%28%23g%29'/%3E%3Cg transform='translate%2824 24%29'%3E%3Cpath fill='white' d='M0-11c.95 7.6 3.4 10.05 11 11-7.6.95-10.05 3.4-11 11-.95-7.6-3.4-10.05-11-11 7.6-.95 10.05-3.4 11-11z'%3E%3CanimateTransform attributeName='transform' type='scale' values='1%3B0.7%3B1' keyTimes='0%3B.5%3B1' calcMode='spline' keySplines='.45 0 .55 1%3B.45 0 .55 1' dur='1.3s' repeatCount='indefinite'/%3E%3C/path%3E%3C/g%3E%3Cpath fill='white' d='M34.5 10.5c.3 2.3.9 2.9 3.2 3.2-2.3.3-2.9.9-3.2 3.2-.3-2.3-.9-2.9-3.2-3.2 2.3-.3 2.9-.9 3.2-3.2z'%3E%3Canimate attributeName='opacity' values='.85%3B.85%3B.1%3B.85' keyTimes='0%3B0.3%3B.82%3B1' dur='1.3s' repeatCount='indefinite'/%3E%3C/path%3E%3C/svg%3E");
   --lm-mark-idle:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%236366f1'/%3E%3Cstop offset='.55' stop-color='%238b5cf6'/%3E%3Cstop offset='1' stop-color='%23d946ef'/%3E%3CanimateTransform attributeName='gradientTransform' type='rotate' from='0 .5 .5' to='360 .5 .5' dur='14s' repeatCount='indefinite'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='24' cy='24' r='24' fill='url%28%23g%29'/%3E%3Cg transform='translate%2824 24%29'%3E%3Cpath fill='white' d='M0-11c.95 7.6 3.4 10.05 11 11-7.6.95-10.05 3.4-11 11-.95-7.6-3.4-10.05-11-11 7.6-.95 10.05-3.4 11-11z'%3E%3CanimateTransform attributeName='transform' type='scale' values='1%3B0.93%3B1' keyTimes='0%3B.5%3B1' calcMode='spline' keySplines='.45 0 .55 1%3B.45 0 .55 1' dur='4s' repeatCount='indefinite'/%3E%3C/path%3E%3C/g%3E%3Cpath fill='white' d='M34.5 10.5c.3 2.3.9 2.9 3.2 3.2-2.3.3-2.9.9-3.2 3.2-.3-2.3-.9-2.9-3.2-3.2 2.3-.3 2.9-.9 3.2-3.2z'%3E%3Canimate attributeName='opacity' values='.85%3B.85%3B.1%3B.85' keyTimes='0%3B0.7%3B.82%3B1' dur='4s' repeatCount='indefinite'/%3E%3C/path%3E%3C/svg%3E");
   --lm-font:"Resolv Inter","Inter Variable","Inter","Segoe UI Variable Text","Segoe UI",system-ui,-apple-system,"Dossier Khmer",sans-serif;
@@ -4207,7 +4255,6 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
 :root[data-look="nova"] .mast::after{display:none}
 :root[data-look="nova"] .brand .wm b{text-transform:none;letter-spacing:-.02em;font-weight:700;font-size:17px}
 :root[data-look="nova"] .brand .wm span{font-size:11px;letter-spacing:0}
-:root[data-look="nova"] .brand .wm b .wmk{font-size:13.5px;margin-left:6px;vertical-align:0}
 :root[data-look="nova"] .brand .seal{border-radius:10px}
 :root[data-look="nova"] .tabs button{border-radius:9px;font-weight:600}
 :root[data-look="nova"] .tabs button:hover{background:var(--nx-hover)}
@@ -4379,6 +4426,32 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
 .chgrip[data-g="sw"]{bottom:0;left:0;width:12px;height:12px;cursor:nesw-resize}
 .chgrip[data-g="se"]{bottom:0;right:0;width:16px;height:16px;cursor:nwse-resize}
 
+/* docked on the LEFT (5.14): the mirror image - its right edge is the one
+   that drags, and the work makes room on the left instead */
+.chat[data-place="dock"][data-side="left"]{left:0;right:auto;border-left:0;border-right:1px solid var(--ch-line);
+  transform:translateX(-102%)}
+.chat[data-place="dock"][data-side="left"].on{transform:none}
+.chat[data-place="dock"][data-side="left"]::before{left:auto;right:0}
+.chat[data-place="dock"][data-side="left"] .chgrip[data-g="w"]{display:none}
+.chat[data-place="dock"][data-side="left"] .chgrip[data-g="e"]{display:block;right:0;left:auto;top:0;bottom:0;width:7px;cursor:ew-resize}
+.chat[data-place="dock"][data-side="left"] .chgrip[data-g="e"]::after{content:"";position:absolute;right:2px;top:50%;width:3px;
+  height:44px;margin-top:-22px;border-radius:3px;background:var(--ch-acc);opacity:0;transition:opacity .15s}
+.chat[data-place="dock"][data-side="left"] .chgrip[data-g="e"]:hover::after,
+.chat.sizing[data-place="dock"][data-side="left"] .chgrip[data-g="e"]::after,
+.chat[data-place="dock"][data-side="left"] .chgrip[data-g="e"]:focus-visible::after{opacity:.75}
+body.chatting.chatleft .app{padding-right:0;padding-left:min(var(--chat-w),96vw)}
+@media (max-width:900px){ body.chatting.chatleft .app{padding-left:0} }
+body.chatting.chatleft .fixbar{left:calc((100vw + min(var(--chat-w),96vw)) / 2)}
+/* the magnet: while the panel is dragged by its top bar, this shows where
+   it will land if you let go now - docked left, docked right, or the whole
+   screen. Under the panel, so the window you are holding stays in view. */
+.chsnap{position:fixed;z-index:61;pointer-events:none;box-sizing:border-box;border-radius:14px;
+  border:2px solid var(--accent);background:color-mix(in srgb,var(--accent) 13%,transparent);
+  box-shadow:0 0 0 6px color-mix(in srgb,var(--accent) 8%,transparent);opacity:0;
+  transition:opacity .12s,left .14s var(--ease),top .14s var(--ease),width .14s var(--ease),height .14s var(--ease)}
+.chsnap.on{opacity:1}
+.chat.dragging,.chat.dragging .chh{cursor:grabbing}
+
 /* floating: a window, with the shadow a window has */
 .chat[data-place="float"]{top:var(--cf-y,72px);left:var(--cf-x,auto);right:auto;bottom:auto;
   width:var(--cf-w,480px);height:var(--cf-h,640px);max-width:calc(100vw - 16px);max-height:calc(100vh - 16px);
@@ -4421,13 +4494,7 @@ body.chsizing{user-select:none;-webkit-user-select:none}
 body.chsizing *{cursor:inherit!important}
 
 /* the frame button, and the little menu it opens */
-.chat .ib > svg.plic{display:block;width:15px;height:15px;margin:auto}
-/* the header lines its buttons up by their text, and a picture has none: an
-   invisible character in the same cell gives this one a line to sit on */
-.chat .chh #chatPlace > svg.plic{grid-area:1 / 1}
-.chat:not([data-lm]) .chh #chatPlace::before{content:"\200b";grid-area:1 / 1;width:0;overflow:hidden}
-.chat[data-lm] #chatPlace{--ic:var(--lmi-place)}
-.chat[data-lm] #chatPlace > svg.plic{display:none}
+.chat #chatPlace{--ic:var(--lmi-place)}
 .chplm{position:absolute;z-index:30;width:286px;max-width:calc(100% - 20px);box-sizing:border-box;padding:6px;
   border-radius:14px;border:1px solid var(--ch-line);background:var(--ch-bg);color:var(--ch-ink);
   box-shadow:0 24px 54px -18px rgba(0,0,0,.5);display:flex;flex-direction:column;gap:2px}
@@ -4445,12 +4512,40 @@ body.chsizing *{cursor:inherit!important}
 .chplm hr{border:0;border-top:1px solid var(--ch-line);margin:4px 6px;width:auto}
 .chplm .plr{display:block;font-size:11.5px;color:var(--ch-dim);padding:7px 10px}
 .chplm .plr:hover{color:var(--ch-ink)}
+.chplm .plh{margin:2px 10px 4px;font-size:11px;line-height:1.45;color:var(--ch-dim)}
+/* ── every icon in the middle of its button (5.14) ─────────────────────
+   The icon buttons were grids with their label still inside at size 0 - and
+   a label, however small, is a second row: the icon sat in the top one, 3 to
+   4 px above the middle. Flex puts the hidden label beside the icon, where
+   it takes no room. Nebula's header and box you type in drew their icons as
+   characters (◎ ✎ ＋ ✕ ↑), which every font places at its own height; they
+   are the same drawn icons as Lumen's now, in Nebula's round glass buttons. */
+.chat[data-lm] .chh .ib,.chat[data-lm] .chth .ib,.chat[data-lm] .chpin,.chat[data-lm] .chf .btn.pri,
+.chat[data-lm] .chtools button,.chat[data-lm] .chrate > button[data-rv]{
+  display:inline-flex;align-items:center;justify-content:center;gap:0}
+.chat:not([data-lm]) .chh .ib,.chat:not([data-lm]) .chpin,.chat:not([data-lm]) .chf .btn.pri{
+  font-size:0;display:inline-flex;align-items:center;justify-content:center;gap:0;padding:0}
+.chat:not([data-lm]) .chh .ib{align-self:center}
+.chat:not([data-lm]) .chh .ib::before,.chat:not([data-lm]) .chpin::before,.chat:not([data-lm]) .chf .btn.pri::after{
+  content:"";display:block;flex:0 0 auto;width:16px;height:16px;margin:0;background:currentColor;
+  -webkit-mask:var(--ic) center / contain no-repeat;mask:var(--ic) center / contain no-repeat}
+.chat:not([data-lm]) #chatMenu{--ic:var(--lmi-panel)}
+.chat:not([data-lm]) #chatFx{--ic:var(--lmi-sliders)}
+.chat:not([data-lm]) #chatTeachBtn{--ic:var(--lmi-book)}
+.chat:not([data-lm]) #chatNew{--ic:var(--lmi-compose)}
+.chat:not([data-lm]) #chatX,.chat:not([data-lm]) .chth .ib{--ic:var(--lmi-x)}
+.chat:not([data-lm]) .chpin{--ic:var(--lmi-clip)}
+.chat:not([data-lm]) .chf .btn.pri{--ic:var(--lmi-send)}
+/* under an answer the copy button stays on the first line of the row
+   beside it, however many lines that row wraps to */
+.chat[data-lm] .chb.bot.ans > .chtools{align-self:start;margin-top:8px}
+
 /* ── which model answers ──────────────────────────────────────────────
    A small pill beside Send, in every skin: the model you picked for what
    you type here. KalKech reason wears the accent, so a slow answer on its
    way is never a surprise. */
 .chmodel{flex:0 0 auto;align-self:flex-end;display:inline-flex;align-items:center;gap:3px;height:30px;margin:0 0 3px;
-  padding:0 9px 0 11px;border-radius:999px;border:1px solid var(--ch-line);background:transparent;color:var(--ch-dim);
+  padding:1px 10px 0;border-radius:999px;border:1px solid var(--ch-line);background:transparent;color:var(--ch-dim);
   font:inherit;font-size:11.5px;font-weight:600;cursor:pointer;white-space:nowrap;transition:color .15s,border-color .15s,background .15s}
 .chmodel[hidden]{display:none}
 .chmodel:hover,.chmodel[aria-expanded="true"]{color:var(--ch-ink);border-color:color-mix(in srgb,var(--ch-acc) 45%,var(--ch-line))}
@@ -4465,8 +4560,8 @@ body.chsizing *{cursor:inherit!important}
 .chmm .mx{font-size:10.5px;color:var(--ch-dim);padding:6px 10px 2px}
 
 /* the same three in Look and behaviour */
-.chplaces{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-bottom:6px}
-.chplaces button{display:flex;flex-direction:column;align-items:center;gap:5px;padding:9px 4px 7px;border-radius:10px;
+.chplaces{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin-bottom:6px}
+.chplaces button{display:flex;flex-direction:column;align-items:center;gap:5px;padding:9px 3px 7px;border-radius:10px;text-align:center;line-height:1.25;
   border:1px solid var(--ch-line);background:transparent;color:var(--ch-ink);font:inherit;font-size:11.5px;cursor:pointer}
 .chplaces button.on{border-color:var(--ch-acc);box-shadow:0 0 0 1px var(--ch-acc) inset}
 .chplaces .pli{width:34px;height:24px}
@@ -4484,7 +4579,7 @@ body.chsizing *{cursor:inherit!important}
     <div class="brand">
       <span class="seal" id="seal"><img id="brandLogo" src="logo.png" alt=""
             onload="this.parentNode.classList.add('hasimg')" onerror="this.remove()"></span>
-      <span class="wm"><b><em data-i18n="AppName">KalKech</em><i class="wmk" lang="km">កាលកិច្ច</i></b><span data-i18n="AppTagline">Support operations record</span></span>
+      <span class="wm"><b data-i18n="AppName">KalKech</b><span data-i18n="AppTagline">Support operations record</span></span>
     </div>
 
     <button class="wsbtn" id="wsBtn" title="Workspace folder">
@@ -4661,9 +4756,7 @@ body.chsizing *{cursor:inherit!important}
     <button class="ib" id="chatTeachBtn" data-i18n-title="ChatTaughtBtn" title="What I have taught you">✎</button>
     <button class="ib" id="chatNew" data-i18n-title="ChatNew" title="New conversation">＋</button>
     <button class="ib" id="chatPlace" data-i18n-title="ChatPlaceBtn" title="Size and position"
-            aria-haspopup="menu" aria-expanded="false"><svg class="plic" viewBox="0 0 24 24" fill="none"
-      stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"
-      focusable="false"><rect x="3" y="4" width="18" height="16" rx="3.5"/><path d="M13.5 8.5H16V11M16 8.5l-3.2 3.2M10.5 15.5H8V13M8 15.5l3.2-3.2"/></svg></button>
+            aria-haspopup="menu" aria-expanded="false">⤢</button>
     <button class="ib" id="chatX">✕</button>
   </div>
   <!-- where the panel sits: beside the work, a window of its own, or the
@@ -5685,7 +5778,7 @@ const STRINGS = {
   TxSubject: "Subject",
   TxCopySubject: "Copy the subject line",
   TierAgainHint: "Ask this again with the strong model - its answer becomes a branch, and this one stays one press away",
-  TierReasonAgain: "KalKech reason",
+  TierReasonAgain: "Reason",
   TierReasonHint: "Ask this again with KalKech reason - a reasoning model that reads much more of your workspace and thinks it through. Slower: up to two minutes. Its answer becomes a branch; this one stays one press away.",
   TierReasonShort: "KalKech reason",
   TierReasonAsking: "KalKech reason is thinking it through\u2026",
@@ -6595,14 +6688,40 @@ const STRINGS = {
   ChatAskNamed: "Ask {name}\u2026",
   ChatPlaceBtn: "Size and position",
   ChatPlaceHead: "Where it sits",
-  ChatPlace_dock: "Side panel",
-  ChatPlace_dockWhy: "Beside your work. Drag its left edge to make it wider or narrower.",
+  SpdTitle: "Special day",
+  SpdNew: "Mark a special day",
+  SpdEdit: "Special day",
+  SpdName: "What is it?",
+  SpdNamePh: "Month-end close, release freeze, team day\u2026",
+  SpdNote: "Note",
+  SpdNotePh: "What to remember about the day \u2014 who, what to avoid, what to prepare",
+  SpdColour: "Colour",
+  SpdIcon: "Icon",
+  SpdYearly: "Every year on this date",
+  SpdOffLabel: "A day off \u2014 not a working day",
+  SpdSave: "Save",
+  SpdAddTip: "Mark this day as a special day, with a note",
+  SpdAddBtn: "Mark a special day\u2026",
+  SpdDayOff: "day off",
+  SpdOffToday: "\u2014 a day off.",
+  SpdTomorrow: "Tomorrow:",
+  SpdSaved: "{date}: \u201c{name}\u201d is on the calendar.",
+  SpdRemoved: "\u201c{name}\u201d is off the calendar.",
+  SpdUndo: "special day",
+  SpdHeading: "Special days",
+  SpdIntro: "Days that are not holidays but matter to you \u2014 a release freeze, month-end close, a team day, a birthday \u2014 each with its own colour, icon and note. They show on Week and Month (the \u2726 on any day marks one), on the Day view on the day and the day before, and the assistant knows them. They still count as working days unless you tick \u201cday off\u201d.",
+  SpdNone: "None yet. The \u2726 on any day in Week or Month marks one.",
+  ChatPlace_dockR: "Docked right",
+  ChatPlace_dockRWhy: "Beside your work, on the right. Drag its left edge to make it wider or narrower.",
+  ChatPlace_dockL: "Docked left",
+  ChatPlace_dockLWhy: "Beside your work, on the left. Drag its right edge to make it wider or narrower.",
+  ChatPlaceDragHint: "Or drag it by its top bar: to the left or right edge and it docks there, to the top and it fills the screen, anywhere else and it floats.",
   ChatPlace_float: "Floating window",
   ChatPlace_floatWhy: "Over your work. Move it by its top bar; resize it from any edge or corner.",
   ChatPlace_full: "Full screen",
   ChatPlace_fullWhy: "The whole window, like a chat website. Double-click the top bar to go back.",
   ChatPlaceReset: "Reset the size and position",
-  ChatPlaceHint: "Also from the frame button at the top of the panel. Your choice and your size are kept for next time.",
+  ChatPlaceHint: "Or drag the panel by its top bar - like a magnet it docks at the left or right edge, fills the screen at the top, and floats anywhere else. Your choice and your size are kept for next time.",
   ChatGripTip: "Drag to make the panel wider or narrower \u00b7 double-click for the usual width",
   ChatSkinNew: "New",
   AlertOpen: "Open",
@@ -7673,7 +7792,7 @@ const STATUSES = [
    the status bar, and clicking it copies a line you can paste into a bug
    report — build date and flow protocol included, because those are the two
    things that actually differ between copies. */
-const APP_VERSION = "5.13.0";
+const APP_VERSION = "5.14.0";
 const APP_BUILT = "2026-09-27";
 function buildLine(){
   return "KalKech v" + APP_VERSION + " \u00b7 built " + APP_BUILT +
@@ -10899,6 +11018,11 @@ function dayHints(){
   const bad = runnerTrouble();
   if (bad) out.push({ key:"runner", icon:"⚠", html: bad +
     " <button class=\"btn sm\" data-runhelp=\"1\" style=\"margin-left:8px\">" + L("HowToStartIt") + "</button>" });
+  /* special days: today's, and tomorrow's so it is not a surprise */
+  specialOn(k).forEach(x => out.push({ key:"special-" + x.id + "-" + k, icon:x.icon || "\u2605",
+    html: "<b>" + esc(x.n) + "</b>" + (x.note ? " \u2014 " + esc(x.note) : "") + (x.off ? " " + LE("SpdOffToday") : "") }));
+  specialOn(addDays(k, 1)).forEach(x => out.push({ key:"special-" + x.id + "-" + addDays(k, 1), icon:x.icon || "\u2605",
+    html: LE("SpdTomorrow") + " <b>" + esc(x.n) + "</b>" + (x.note ? " \u2014 " + esc(x.note) : "") }));
   const htoday = holidayOn(k);
   if (htoday) out.push({ key:"holiday", icon:"◈",
     html: "<b>" + esc(htoday.n) + "</b>" +
@@ -11192,10 +11316,132 @@ function holidays(){
   return S.settings.holidays;
 }
 function holidayOn(key){ return holidays().find(h => h.d === key) || null; }
-/* a day nobody is expected to be at a desk */
+/* a day nobody is expected to be at a desk: a public holiday, a weekend, or
+   a special day you marked as a day off */
 function isOffDay(key){
   const h = holidayOn(key);
-  return (h && h.k === "public") || [0,6].indexOf(dow(key)) >= 0;
+  return (h && h.k === "public") || [0,6].indexOf(dow(key)) >= 0 || specialOn(key).some(x => x.off);
+}
+
+/* ═══ SPECIAL DAYS ═══════════════════════════════════════════════════════
+   Not every day worth marking is a holiday. A release freeze, month-end
+   close, a team day, someone's birthday, the day the auditors come: a day
+   you want to see coming, with a note on it. They live beside the holidays,
+   in settings.specialDays, each
+     { id, d:"YYYY-MM-DD", n:name, note, c:colour, icon, yearly, off }
+   yearly: the same date every year, from d on (a birthday, an anniversary);
+   off: not a working day (then it moves due dates like a holiday does).
+   Marked from the ✦ on any day of the week or month, listed in Setup under
+   the holidays, said on the Day view on the day and the day before, and
+   sent to the assistant (workspace.specialDays), which can mark one too. */
+const SPD_COLOURS = { violet:"#7c3aed", rose:"#e11d48", amber:"#d97706", green:"#16a34a", teal:"#0d9488", blue:"#2563eb" };
+const SPD_ICONS = ["\u2605", "\u{1F389}", "\u{1F382}", "\u{1F680}", "\u2744", "\u{1F4CC}", "\u{1F4B0}", "\u26A0", "\u{1F393}", "\u2708", "\u2615", "\u{1F6E0}"];
+function specialDays(){
+  if (!Array.isArray(S.settings.specialDays)) S.settings.specialDays = [];
+  return S.settings.specialDays;
+}
+function specialOn(key){
+  if (!S.settings || !key) return [];
+  return specialDays().filter(x => x.d === key || (x.yearly && x.d.slice(5) === key.slice(5) && x.d <= key));
+}
+function spdColour(x){ return SPD_COLOURS[x && x.c] || SPD_COLOURS.violet; }
+/* the marks inside a day cell: a coloured card each, the note under the
+   name in the week (two lines at most) and the name alone in the month */
+function specialMark(key, compact){
+  return specialOn(key).map(x =>
+    '<button type="button" class="spd' + (compact ? " c" : "") + '" data-sped="' + esc(x.id) + '" data-sday="' + key +
+      '" style="--spc:' + spdColour(x) + '" title="' + esc(x.n + (x.note ? " \u2014 " + x.note : "") + (x.off ? " \u00b7 " + L("SpdDayOff") : "")) + '">' +
+      "<i>" + esc(x.icon || "\u2605") + '</i><span class="sx"><b>' + esc(x.n) + "</b>" +
+      (x.note && !compact ? "<em>" + esc(x.note) + "</em>" : "") + "</span></button>").join("");
+}
+function specialAddBtn(key){
+  return '<button type="button" class="spdadd" data-spadd="' + key + '" title="' + LE("SpdAddTip") + '" aria-label="' + LE("SpdAddTip") + '">\u2726</button>';
+}
+/* what the assistant is told: the next half year and the week behind, a
+   yearly day as the date it falls on */
+function spdForFlow(){
+  const k = today(), from = addDays(k, -7), to = addDays(k, 183), out = [];
+  specialDays().forEach(x => {
+    const ds = x.yearly ? [k.slice(0, 4), String(+k.slice(0, 4) + 1)].map(y => y + x.d.slice(4)) : [x.d];
+    ds.forEach(d => { if (d >= from && d <= to && d >= x.d) out.push({ d:d, name:x.n, note:x.note || "", dayOff:!!x.off, everyYear:!!x.yearly }); });
+  });
+  return out.sort((a, b) => a.d < b.d ? -1 : a.d > b.d ? 1 : 0).slice(0, 60);
+}
+/* add or change one: the shared path for the editor and the assistant */
+function spdSave(x){
+  const list = specialDays();
+  const n = { id:x.id || "sp" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5),
+              d:x.d, n:String(x.n || "").trim().slice(0, 60), note:String(x.note || "").trim().slice(0, 400),
+              c:SPD_COLOURS[x.c] ? x.c : "violet", icon:x.icon || "\u2605", yearly:!!x.yearly, off:!!x.off };
+  const i = list.findIndex(y => y.id === n.id);
+  if (i >= 0) list[i] = n; else list.push(n);
+  list.sort((a, b) => a.d < b.d ? -1 : a.d > b.d ? 1 : 0);
+  return n;
+}
+
+/* ── the editor: a small card beside the day you clicked ──────────────── */
+const SPD = { el:null, cur:null, isNew:true };
+function spdClose(){ if (SPD.el){ SPD.el.remove(); SPD.el = null; } }
+function spdOpen(key, id, near){
+  spdClose();
+  const had = id ? specialDays().find(x => x.id === id) : null;
+  const x = had ? Object.assign({}, had) : { d:key, n:"", note:"", c:"violet", icon:"\u2605", yearly:false, off:false };
+  SPD.cur = x; SPD.isNew = !had;
+  const el = document.createElement("div");
+  el.className = "spdpop"; el.id = "spdPop";
+  el.setAttribute("role", "dialog"); el.setAttribute("aria-label", L("SpdTitle"));
+  el.innerHTML =
+    "<h4>" + LE(had ? "SpdEdit" : "SpdNew") + "<span>" + esc(niceDate(x.d)) + "</span></h4>" +
+    '<label class="l" for="spdN">' + LE("SpdName") + "</label>" +
+    '<input class="in" id="spdN" maxlength="60" autocomplete="off" placeholder="' + LE("SpdNamePh") + '" value="' + esc(x.n) + '">' +
+    '<label class="l" for="spdNote">' + LE("SpdNote") + "</label>" +
+    '<textarea class="in" id="spdNote" maxlength="400" placeholder="' + LE("SpdNotePh") + '">' + esc(x.note || "") + "</textarea>" +
+    '<span class="l">' + LE("SpdColour") + '</span><div class="spdsw">' + Object.keys(SPD_COLOURS).map(c =>
+      '<button type="button" data-spc="' + c + '" class="' + (c === x.c ? "on" : "") + '" style="--spc:' + SPD_COLOURS[c] +
+      '" aria-label="' + esc(c) + '" aria-pressed="' + (c === x.c) + '"></button>').join("") + "</div>" +
+    '<span class="l">' + LE("SpdIcon") + '</span><div class="spdic">' + SPD_ICONS.map(i =>
+      '<button type="button" data-spi="' + i + '" class="' + (i === x.icon ? "on" : "") + '" aria-pressed="' + (i === x.icon) + '">' + i + "</button>").join("") + "</div>" +
+    '<div class="spdck"><label><input type="checkbox" id="spdY"' + (x.yearly ? " checked" : "") + "> " + LE("SpdYearly") + "</label>" +
+    '<label><input type="checkbox" id="spdOff"' + (x.off ? " checked" : "") + "> " + LE("SpdOffLabel") + "</label></div>" +
+    '<div class="spdbt">' + (had ? '<button class="btn sm" type="button" data-spdel="1">' + LE("Delete") + "</button>" : "") +
+    '<button class="btn sm" type="button" data-spx="1">' + LE("Cancel") + "</button>" +
+    '<button class="btn sm pri" type="button" data-spok="1">' + LE("SpdSave") + "</button></div>";
+  document.body.appendChild(el);
+  SPD.el = el;
+  /* beside what was clicked, kept inside the window */
+  const r = near ? near.getBoundingClientRect() : { left:window.innerWidth / 2 - 150, right:window.innerWidth / 2, top:120, bottom:120 };
+  const w = el.offsetWidth, h = el.offsetHeight, vw = window.innerWidth, vh = window.innerHeight;
+  let left = r.right + 8; if (left + w > vw - 8) left = r.left - w - 8; if (left < 8) left = Math.max(8, Math.min(vw - w - 8, r.left));
+  let top = r.top; if (top + h > vh - 8) top = Math.max(8, vh - h - 8);
+  el.style.left = Math.round(left) + "px"; el.style.top = Math.round(top) + "px";
+  el.addEventListener("click", e => {
+    const c = e.target.closest("[data-spc]"), i = e.target.closest("[data-spi]");
+    if (c){ SPD.cur.c = c.dataset.spc; el.querySelectorAll("[data-spc]").forEach(b => { const on = b === c; b.classList.toggle("on", on); b.setAttribute("aria-pressed", String(on)); }); return; }
+    if (i){ SPD.cur.icon = i.dataset.spi; el.querySelectorAll("[data-spi]").forEach(b => { const on = b === i; b.classList.toggle("on", on); b.setAttribute("aria-pressed", String(on)); }); return; }
+    if (e.target.closest("[data-spx]")) return spdClose();
+    if (e.target.closest("[data-spdel]")){
+      pushUndo(L("SpdUndo"));
+      S.settings.specialDays = specialDays().filter(y => y.id !== SPD.cur.id);
+      touch(); spdClose(); renderAll();
+      if ($("modal") && $("modal").classList.contains("on")) renderModal();
+      return toast(L("SpdRemoved", { name:SPD.cur.n }));
+    }
+    if (e.target.closest("[data-spok]")) return spdCommit();
+  });
+  el.addEventListener("keydown", e => {
+    if (e.key === "Escape"){ e.preventDefault(); e.stopPropagation(); spdClose(); }
+    if (e.key === "Enter" && e.target.id === "spdN"){ e.preventDefault(); spdCommit(); }
+  });
+  setTimeout(() => { const n = $("spdN"); if (n) n.focus(); }, 0);
+}
+function spdCommit(){
+  const n = ($("spdN").value || "").trim();
+  if (!n){ $("spdN").focus(); $("spdN").classList.add("bad"); return; }
+  pushUndo(L("SpdUndo"));
+  const x = spdSave(Object.assign({}, SPD.cur, { n:n, note:$("spdNote").value, yearly:$("spdY").checked, off:$("spdOff").checked }));
+  touch(); spdClose(); renderAll();
+  if ($("modal") && $("modal").classList.contains("on")) renderModal();
+  toast(L("SpdSaved", { name:x.n, date:niceDate(x.d) }));
 }
 function addMonths(key, n){
   const d = pk(key), day = d.getDate();
@@ -11262,12 +11508,14 @@ function renderWeek7(){
     const d = pk(key), h = holidayOn(key);
     const dn = arr.filter(t => t.status === "done").length;
     tot += arr.length; done += dn; arr.forEach(t => spent += live(t));
+    const sp = specialOn(key);
     cols += '<div class="wc' + (key === k ? " today" : "") + (key < k ? " past" : "") +
       ([0,6].indexOf(d.getDay()) >= 0 ? " weekend" : "") +
-      (h && h.k === "public" ? " holiday" : "") + '" data-day="' + key + '">' +
+      (h && h.k === "public" ? " holiday" : "") + (sp.length ? " special" : "") + '" data-day="' + key + '"' +
+      (sp.length ? ' style="--spc:' + spdColour(sp[0]) + '"' : "") + ">" +
       '<div class="wch"><b>' + DOW[d.getDay()] + "</b><em>" + pad2(d.getDate()) + "/" + pad2(d.getMonth()+1) + "</em>" +
-      (arr.length ? '<span class="n">' + dn + "/" + arr.length + "</span>" : "") + "</div>" +
-      holidayMark(key) +
+      (arr.length ? '<span class="n">' + dn + "/" + arr.length + "</span>" : "") + specialAddBtn(key) + "</div>" +
+      holidayMark(key) + specialMark(key) +
       '<div class="wcb">' + (arr.map(wk).join("") || '<div style="text-align:center;color:var(--ink-3);font-size:10.5px;padding:8px">—</div>') +
       "</div></div>";
   }
@@ -11301,12 +11549,14 @@ function renderMonth(){
     const dn = arr.filter(t => t.status === "done").length;
     if (!out){ tot += arr.length; done += dn; arr.forEach(t => spent += live(t)); }
     const show = arr.slice(0, 3), more = arr.length - show.length;
+    const sp = specialOn(key);
     cells += '<div class="wc mc' + (key === k ? " today" : "") + (key < k ? " past" : "") +
       ([0,6].indexOf(d.getDay()) >= 0 ? " weekend" : "") +
-      (h && h.k === "public" ? " holiday" : "") + (out ? " out" : "") + '" data-day="' + key + '">' +
+      (h && h.k === "public" ? " holiday" : "") + (sp.length ? " special" : "") + (out ? " out" : "") + '" data-day="' + key + '"' +
+      (sp.length ? ' style="--spc:' + spdColour(sp[0]) + '"' : "") + ">" +
       '<div class="mch"><b>' + d.getDate() + "</b>" +
-      (arr.length ? '<span class="n">' + dn + "/" + arr.length + "</span>" : "") + "</div>" +
-      holidayMark(key, true) +
+      (arr.length ? '<span class="n">' + dn + "/" + arr.length + "</span>" : "") + specialAddBtn(key) + "</div>" +
+      holidayMark(key, true) + specialMark(key, true) +
       '<div class="mcb">' + show.map(wkMini).join("") +
       (more > 0 ? '<div class="mmore">+' + more + " " + L("More") + "</div>" : "") + "</div></div>";
   }
@@ -12170,10 +12420,9 @@ function petBoot(){
 
 const CHAT_SKINS = [
   { id:"nebula", name:"Nebula", a:"#6EA8FF", b:"#9AD7FF" },
-  { id:"aurora", name:"Aurora", a:"#7C5CFF", b:"#22D3EE" },
-  { id:"carbon", name:"Carbon", a:"#38BDF8", b:"#34D399" },
-  { id:"ember",  name:"Ember",  a:"#FB7185", b:"#FBBF24" },
-  { id:"paper",  name:"Paper",  a:"var(--accent)", b:"var(--teal)" },
+  /* Aurora, Carbon, Ember and Paper stood here until 5.14; the owner asked
+     for the three special ones only. A workspace that had one picked is
+     moved to Nebula by chatUI(). */
   /* 5.4: a new layout as well as new colours - see LUMEN in the stylesheet */
   { id:"lumen",  name:"Lumen",  a:"#6366f1", b:"#d946ef", fresh:true, lm:true },
   /* 5.10: Lumen's layout in red and white, with a character of its own -
@@ -12205,6 +12454,8 @@ function chatUI(){
   }
   /* the look was redrawn in 3.6; a skin nobody chose by hand follows it */
   if (!st.chatUI.skinPicked && !st.chatUI.nebulaSeen){ st.chatUI.skin = "nebula"; st.chatUI.nebulaSeen = true; }
+  /* 5.14 kept three skins; one of the four taken away becomes Nebula */
+  if (["aurora", "carbon", "ember", "paper"].indexOf(st.chatUI.skin) >= 0) st.chatUI.skin = "nebula";
   /* the pixel set arrived in 3.11, after these settings were first written,
      so a panel set up before it exists has no answer for it rather than a
      no. It gets the same answer a new one would — on, unless this machine
@@ -12229,7 +12480,7 @@ function chatNameShow(){
 function applyChatUI(){
   const el = $("chat"); if (!el) return;
   const u = chatUI();
-  el.dataset.skin = CHAT_SKINS.some(x => x.id === u.skin) ? u.skin : "aurora";
+  el.dataset.skin = CHAT_SKINS.some(x => x.id === u.skin) ? u.skin : "nebula";
   if (chatLm(el.dataset.skin)) el.dataset.lm = ""; else delete el.dataset.lm;
   CHAT_FX.forEach(k => el.classList.toggle("fx-" + k, !!u[k]));
   el.style.setProperty("--ch-every", Math.max(4, Math.min(120, +u.every || 12)) + "s");
@@ -12413,9 +12664,9 @@ function renderChatFx(){
 
     /* the same three places as the frame button in the header */
     "<h6>" + esc(L("ChatPlaceHead")) + "</h6>" +
-    '<div class="chplaces">' + CHAT_PLACES.map(k =>
-      '<button type="button" class="' + (chatPlace() === k ? "on" : "") + '" data-placepick="' + k + '">' +
-        chatPlacePic(k) + esc(L("ChatPlace_" + k)) + "</button>").join("") + "</div>" +
+    '<div class="chplaces">' + CHAT_PLACE_KEYS.map(k =>
+      '<button type="button" class="' + (chatPlaceKey() === k ? "on" : "") + '" data-placepick="' + k + '">' +
+        chatPlacePic(k) + esc(L("ChatPlace_" + CHAT_PLACE_STR[k])) + "</button>").join("") + "</div>" +
     '<p class="chplh">' + esc(L("ChatPlaceHint")) + "</p>" +
 
     "<h6>" + esc(L("ChatMotion")) + "</h6>" +
@@ -13262,6 +13513,17 @@ function chatPlace(){
   const u = S.settings && S.settings.chatUI, p = u && u.place;
   return CHAT_PLACES.indexOf(p) >= 0 ? p : "dock";
 }
+/* docked on which side: "right" (the usual) or "left" (5.14) */
+function chatDockSide(){
+  const u = S.settings && S.settings.chatUI;
+  return u && u.side === "left" ? "left" : "right";
+}
+/* the four places as one word each - what the menus and the magnet speak */
+const CHAT_PLACE_KEYS = ["dock-right", "dock-left", "float", "full"];
+const CHAT_PLACE_STR = { "dock-right":"dockR", "dock-left":"dockL", float:"float", full:"full" };
+function chatPlaceKey(){ const p = chatPlace(); return p === "dock" ? "dock-" + chatDockSide() : p; }
+/* how near an edge the pointer has to be for the magnet to take the panel */
+const CHAT_SNAP = { edge:28, top:12 };
 function chatDockW(w){
   const want = +(w != null ? w : (S.settings.chatUI || {}).dockW) || CHAT_DOCK.def;
   const most = Math.max(CHAT_DOCK.min, Math.min(CHAT_DOCK.max, window.innerWidth - CHAT_DOCK.room));
@@ -13284,12 +13546,15 @@ function chatBoxSet(el, b){
 function chatPlaceApply(){
   const el = $("chat"); if (!el || !S.settings) return;
   const p = chatPlace(), was = el.dataset.place, open = el.classList.contains("on");
+  const side = chatDockSide();
   el.dataset.place = p;
+  el.dataset.side = side;
   document.documentElement.style.setProperty("--chat-w", chatDockW() + "px");
   if (p === "float") chatBoxSet(el, chatFloatBox());
   /* only the docked panel takes room from the work; floating or full
      screen it is over the work, and what it opens comes up over it */
   document.body.classList.toggle("chatting", open && p === "dock");
+  document.body.classList.toggle("chatleft", open && p === "dock" && side === "left");
   document.body.classList.toggle("chatover", open && p !== "dock");
   /* the conversations: a column of their own at full screen (showing unless
      you hid it), the list that slides over the thread everywhere else */
@@ -13300,15 +13565,25 @@ function chatPlaceApply(){
     } else if (was === "full") el.classList.remove("convos");
   }
   const b = $("chatPlace");
-  if (b) b.title = L("ChatPlaceBtn") + " · " + L("ChatPlace_" + p);
-  const g = el.querySelector('.chgrip[data-g="w"]');
-  if (g){ g.setAttribute("aria-valuenow", String(chatDockW())); g.setAttribute("aria-valuemin", String(CHAT_DOCK.min)); }
+  if (b) b.title = L("ChatPlaceBtn") + " · " + L("ChatPlace_" + CHAT_PLACE_STR[chatPlaceKey()]);
+  /* the edge that drags is the one facing the work */
+  el.querySelectorAll('.chgrip[data-g="w"],.chgrip[data-g="e"]').forEach(g => {
+    const live = p === "dock" && (g.dataset.g === "w") === (side === "right");
+    if (live){ g.setAttribute("role", "separator"); g.setAttribute("aria-orientation", "vertical"); g.tabIndex = 0;
+               g.setAttribute("aria-valuenow", String(chatDockW())); g.setAttribute("aria-valuemin", String(CHAT_DOCK.min));
+               g.title = L("ChatGripTip"); }
+    else if (g.dataset.g === "e"){ g.removeAttribute("role"); g.tabIndex = -1; g.removeAttribute("title"); }
+  });
 }
-function chatPlaceSet(p){
+/* key: one of CHAT_PLACE_KEYS (or "dock", which keeps the side it had) */
+function chatPlaceSet(key){
+  let p = key, side = "";
+  if (key === "dock-left" || key === "dock-right"){ p = "dock"; side = key.slice(5); }
   if (CHAT_PLACES.indexOf(p) < 0) return;
-  const u = chatUI(), now = chatPlace();
+  const u = chatUI(), now = chatPlaceKey();
   if (p === "full" && now !== "full") u.placeBack = now;
   u.place = p;
+  if (side) u.side = side;
   touch();
   chatPlaceMenu(false);
   /* where you were reading stays where you were reading */
@@ -13319,7 +13594,8 @@ function chatPlaceSet(p){
 }
 /* a little picture of each place: the window, and where the panel is in it */
 function chatPlacePic(k){
-  const pn = k === "dock" ? '<rect class="pn" x="21" y="3" width="10" height="18" rx="1.5"/>'
+  const pn = k === "dock-right" || k === "dock" ? '<rect class="pn" x="21" y="3" width="10" height="18" rx="1.5"/>'
+           : k === "dock-left" ? '<rect class="pn" x="3" y="3" width="10" height="18" rx="1.5"/>'
            : k === "float" ? '<rect class="pn" x="16" y="6" width="13" height="13" rx="2"/>'
            : '<rect class="pn" x="3" y="3" width="28" height="18" rx="1.5"/>';
   return '<svg class="pli" viewBox="0 0 34 24" aria-hidden="true" focusable="false">' +
@@ -13332,11 +13608,12 @@ function chatPlaceMenu(show){
     if (!m.hidden){ m.hidden = true; b.setAttribute("aria-expanded", "false"); }
     return;
   }
-  const p = chatPlace();
-  m.innerHTML = CHAT_PLACES.map(k =>
+  const p = chatPlaceKey();
+  m.innerHTML = CHAT_PLACE_KEYS.map(k =>
     '<button type="button" role="menuitemradio" aria-checked="' + (k === p) + '" data-place="' + k + '">' +
-      chatPlacePic(k) + "<span><b>" + LE("ChatPlace_" + k) + "</b><small>" + LE("ChatPlace_" + k + "Why") + "</small></span>" +
+      chatPlacePic(k) + "<span><b>" + LE("ChatPlace_" + CHAT_PLACE_STR[k]) + "</b><small>" + LE("ChatPlace_" + CHAT_PLACE_STR[k] + "Why") + "</small></span>" +
       '<span class="tk" aria-hidden="true">✓</span></button>').join("") +
+    '<p class="plh">' + LE("ChatPlaceDragHint") + "</p>" +
     '<hr><button type="button" class="plr" role="menuitem" data-placereset>' + LE("ChatPlaceReset") + "</button>";
   const cr = $("chat").getBoundingClientRect(), br = b.getBoundingClientRect();
   m.style.top = Math.round(br.bottom - cr.top + 6) + "px";
@@ -13413,29 +13690,74 @@ function chatModelSet(p){
 /* ── dragging an edge, or the floating window by its top bar ─────────── */
 function chatGripDown(e){
   const g = e.currentTarget.dataset.g, p = chatPlace(), el = $("chat");
-  if (e.button || p === "full" || (p === "dock" && g !== "w")) return;
+  if (e.button || p === "full" || (p === "dock" && g !== (chatDockSide() === "left" ? "e" : "w"))) return;
   e.preventDefault();
   const r = el.getBoundingClientRect();
-  CHAT_SIZE.drag = { g:g, p:p, x0:e.clientX, y0:e.clientY, box:{ x:r.left, y:r.top, w:r.width, h:r.height } };
+  CHAT_SIZE.drag = { g:g, p:p, side:chatDockSide(), x0:e.clientX, y0:e.clientY, box:{ x:r.left, y:r.top, w:r.width, h:r.height } };
   el.classList.add("sizing"); document.body.classList.add("chsizing");
   document.body.style.cursor = getComputedStyle(e.currentTarget).cursor;
   try { e.currentTarget.setPointerCapture(e.pointerId); } catch(err){}
 }
+/* The top bar is the handle, wherever the panel is (5.14): hold it and
+   move, and a docked or full-screen panel comes away as a window under the
+   pointer; bring it to the left or right edge and the magnet docks it there,
+   to the top edge and it fills the screen, anywhere else and it floats
+   where you let go. Nothing moves until the pointer has travelled a few
+   pixels, so a click or a double-click on the bar is still just that. */
 function chatMoveDown(e){
-  if (chatPlace() !== "float" || e.button || e.target.closest("button,input,textarea,select,a,.chplm")) return;
+  if (e.button || e.target.closest("button,input,textarea,select,a,.chplm")) return;
   const el = $("chat"), r = el.getBoundingClientRect();
-  CHAT_SIZE.drag = { move:true, p:"float", x0:e.clientX, y0:e.clientY, box:{ x:r.left, y:r.top, w:r.width, h:r.height } };
-  el.classList.add("sizing"); document.body.classList.add("chsizing");
-  document.body.style.cursor = "move";
+  CHAT_SIZE.drag = { move:true, p:chatPlace(), live:false, x0:e.clientX, y0:e.clientY,
+                     box:{ x:r.left, y:r.top, w:r.width, h:r.height },
+                     fx:(e.clientX - r.left) / Math.max(1, r.width), fy:e.clientY - r.top, zone:"" };
   try { e.currentTarget.setPointerCapture(e.pointerId); } catch(err){}
+}
+/* where the panel would land if let go here: a place key, or "" to float */
+function chatSnapZone(x, y){
+  if (x <= CHAT_SNAP.edge) return "dock-left";
+  if (x >= window.innerWidth - CHAT_SNAP.edge) return "dock-right";
+  if (y <= CHAT_SNAP.top) return "full";
+  return "";
+}
+function chatSnapShow(zone){
+  let el = $("chatSnap");
+  if (!el){ el = document.createElement("div"); el.id = "chatSnap"; el.className = "chsnap"; el.setAttribute("aria-hidden", "true"); document.body.appendChild(el); }
+  if (!zone){ el.classList.remove("on"); return; }
+  const m = 8, vw = window.innerWidth, vh = window.innerHeight, w = chatDockW();
+  const box = zone === "dock-left" ? [m, m, w - 2 * m, vh - 2 * m]
+            : zone === "dock-right" ? [vw - w + m, m, w - 2 * m, vh - 2 * m]
+            : [m, m, vw - 2 * m, vh - 2 * m];
+  el.style.left = box[0] + "px"; el.style.top = box[1] + "px"; el.style.width = box[2] + "px"; el.style.height = box[3] + "px";
+  el.classList.add("on");
 }
 function chatDragMove(e){
   const d = CHAT_SIZE.drag; if (!d) return;
+  const el = $("chat");
+  if (d.move && !d.live){
+    if (Math.abs(e.clientX - d.x0) + Math.abs(e.clientY - d.y0) < 6) return;
+    d.live = true;
+    el.classList.add("sizing", "dragging"); document.body.classList.add("chsizing");
+    document.body.style.cursor = "grabbing";
+    chatPlaceMenu(false); chatModelMenu(false);
+    if (d.p !== "float"){
+      /* out of the dock, or out of full screen: a window the size it had the
+         last time it floated, held at the same point of its top bar - and
+         the work takes its room back at once */
+      const fb = chatFloatBox();
+      d.box = { x:e.clientX - d.fx * fb.w, y:e.clientY - Math.min(d.fy, 40), w:fb.w, h:fb.h };
+      d.x0 = e.clientX; d.y0 = e.clientY;
+      el.dataset.place = "float";
+      if (d.p === "full") el.classList.remove("convos");
+      document.body.classList.remove("chatting", "chatleft");
+      document.body.classList.add("chatover");
+      chatBoxSet(el, d.box);
+    }
+  }
   const dx = e.clientX - d.x0, dy = e.clientY - d.y0;
-  if (d.p === "dock"){
-    /* docked against the right-hand edge: the width is how far the pointer
-       is from that edge */
-    d.w = chatDockW(window.innerWidth - e.clientX);
+  if (!d.move && d.p === "dock"){
+    /* docked: the width is how far the pointer is from the edge it is
+       docked against */
+    d.w = chatDockW(d.side === "left" ? e.clientX : window.innerWidth - e.clientX);
     document.documentElement.style.setProperty("--chat-w", d.w + "px");
     return;
   }
@@ -13444,6 +13766,9 @@ function chatDragMove(e){
   if (d.move){
     x = clampN(o.x + dx, P, vw - w - P);
     y = clampN(o.y + dy, P, vh - h - P);
+    /* the magnet: near an edge, show where it will land */
+    d.zone = chatSnapZone(e.clientX, e.clientY);
+    chatSnapShow(d.zone);
   } else {
     /* each edge moves on its own; the one across from it stays put */
     const R = o.x + o.w, B = o.y + o.h, mw = Math.min(CHAT_FLOAT.minW, R - P), mh = Math.min(CHAT_FLOAT.minH, B - P);
@@ -13458,9 +13783,21 @@ function chatDragMove(e){
 function chatDragUp(){
   const d = CHAT_SIZE.drag; if (!d) return;
   CHAT_SIZE.drag = null;
-  $("chat").classList.remove("sizing"); document.body.classList.remove("chsizing");
+  /* the top bar pressed and let go without moving: a click, not a drag */
+  if (d.move && !d.live) return;
+  $("chat").classList.remove("sizing", "dragging"); document.body.classList.remove("chsizing");
   document.body.style.cursor = "";
+  chatSnapShow("");
   const u = chatUI();
+  if (d.move){
+    /* let go near an edge: docked there, or the whole screen; anywhere
+       else: a window, where it was let go */
+    if (d.zone) return chatPlaceSet(d.zone);
+    u.place = "float";
+    if (d.b) u.floatBox = d.b;
+    touch();
+    return chatPlaceApply();
+  }
   if (d.p === "dock" && d.w){ u.dockW = d.w; touch(); }
   if (d.p === "float" && d.b){ u.floatBox = d.b; touch(); }
   chatPlaceApply();
@@ -13469,10 +13806,10 @@ function chatDragUp(){
    and the arrows move it (left is wider, the way the edge moves) */
 function chatGripKey(e){
   if (chatPlace() !== "dock") return;
-  const k = e.key, now = chatDockW();
+  const k = e.key, now = chatDockW(), out = chatDockSide() === "left" ? "ArrowRight" : "ArrowLeft";
   let w = null;
-  if (k === "ArrowLeft") w = now + 32;
-  else if (k === "ArrowRight") w = now - 32;
+  if (k === out) w = now + 32;
+  else if (k === "ArrowLeft" || k === "ArrowRight") w = now - 32;
   else if (k === "Home") w = CHAT_DOCK.def;
   if (w == null) return;
   e.preventDefault();
@@ -13880,8 +14217,7 @@ function chatFenceJson(lines){
   for (let i = 0; i < lines.length; i++){
     const t = lines[i].trim();
     if (t.charAt(0) !== "{" && t.charAt(0) !== "[") continue;
-    const prev = i ? lines[i - 1].trim() : "";
-    if (prev && !/[:\uff1a]$/.test(prev)) continue;
+    if (!chatFenceOpener(i ? lines[i - 1].trim() : "")) continue;
     let end = i + 1;
     while (end < lines.length && lines[end].trim()) end++;
     if (!chatIsJson(lines.slice(i, end).join("\n"))) continue;
@@ -13909,8 +14245,7 @@ function chatFenceText(lines){
   for (let i = 0; i < lines.length - 1; i++){
     const m = CHAT_TEXT_LABEL.exec(lines[i].trim());
     if (!m) continue;
-    const prev = i ? lines[i - 1].trim() : "";
-    if (prev && !/[:\uff1a]$/.test(prev)) continue;
+    if (!chatFenceOpener(i ? lines[i - 1].trim() : "")) continue;
     if (!lines[i + 1].trim()) continue;
     let end = -1;
     for (let j = i + 1; j + 1 < lines.length; j++)
@@ -13931,16 +14266,27 @@ function chatFenceText(lines){
   }
   return lines;
 }
+/* what a fence can come straight after: nothing (a blank line), a sentence
+   that ends in a colon - "run this:" - or a heading, ## or **bold** on a
+   line of its own. The last is how "**Core entities (example in C#)**"
+   then "csharp" then the code arrived, and was left as prose (5.14). */
+function chatFenceOpener(prev){
+  return !prev || /[:\uff1a]$/.test(prev) || /^#{1,6}\s/.test(prev) ||
+    /^\*\*[^*].*\*\*:?$/.test(prev) || /^__[^_].*__:?$/.test(prev);
+}
 function chatFenceBare(s){
   if (!s || s.indexOf("\n") < 0) return s;
   const lines = chatFenceJson(chatFenceText(s.split("\n")));
   for (let i = 0; i < lines.length; i++){
     const tok = lines[i].trim().toLowerCase();
     if (!tok || CHAT_LANGS.indexOf(tok) < 0) continue;
-    /* it has to start something: a blank line before it, or a sentence that
-       ended in a colon - "run this:" then "sql" then the query */
+    /* it has to start something: a blank line before it, a sentence that
+       ended in a colon - "run this:" then "sql" then the query - or a
+       heading. After anything else, only when two or more lines of plain
+       code follow it: a word like that on a line of its own, over code, is
+       the label a stripped fence left behind */
     const prev = i ? lines[i - 1].trim() : "";
-    if (prev && !/[:\uff1a]$/.test(prev)) continue;
+    const opener = chatFenceOpener(prev);
     /* A blank line ends the block, unless what comes after it is more of
        the same script - a SQL batch or a C# body has blank lines in it. The
        old test asked whether the next line read like a whole sentence, so a
@@ -13953,7 +14299,9 @@ function chatFenceBare(s){
       if (k >= lines.length || chatIsProse(lines[k]) || !chatCodeLine(lines[k])){ end = j; break; }
     }
     if (end <= i + 1) continue;
-    if (!chatLooksCode(lines.slice(i + 1, end).join("\n"))) continue;
+    const body = lines.slice(i + 1, end);
+    if (!chatLooksCode(body.join("\n"))) continue;
+    if (!opener && body.filter(x => x.trim()).length < 2) continue;
     lines[i] = "```" + tok;
     lines.splice(end, 0, "```");
     i = end + 1;   /* carry on after the block just fenced, not back into it */
@@ -15363,6 +15711,8 @@ function flowContext(q, opts){
        it keeps the payload honest about its size */
     holidays: hols.map(h => ({ d:h.d, n:h.n, k:h.k })),
     holidaysTotal: holidays().length,
+    /* the days they marked themselves, with their notes (SPECIAL DAYS) */
+    specialDays: spdForFlow(),
     memory: memoryForFlow(q, big),
     promptTemplate: PROMPT.text || "",
     promptFrom: PROMPT.from || "",
@@ -15831,6 +16181,12 @@ function flowDescribe(a){
     case "runRoutine":
       return { say:"Raise the record for \u201c" + g.routine + "\u201d now",
                confirm:"Raise it now?" };
+    case "markDay":
+      return { say:"Mark " + g.date + " as a special day: \u201c" + g.name + "\u201d",
+               note:[g.note || "", g.yearly ? "Every year." : "", g.off ? "A day off \u2014 not a working day." : ""].filter(Boolean).join(" "),
+               confirm:"Put it on the calendar?" };
+    case "unmarkDay":
+      return { say:"Take \u201c" + (g.name || "the special day") + "\u201d off " + g.date, confirm:"Remove it?" };
     case "addHoliday":
       return { say:"Mark " + g.date + " as \u201c" + g.name + "\u201d",
                note:(g.kind === "office" ? "An office closure \u2014 marked, but it still counts as a working day."
@@ -16465,6 +16821,22 @@ function flowRun(a, quiet){
       renderAll();
       return done(made ? "Raised the record for \u201c" + r.title + "\u201d."
                        : "\u201c" + r.title + "\u201d is paused, so nothing was raised.");
+    }
+    case "markDay": {
+      pushUndo(L("SpdUndo"));
+      const ic = SPD_ICONS.indexOf(g.icon) >= 0 ? g.icon : "\u2605";
+      const x = spdSave({ d:g.date, n:g.name, note:g.note || "", c:g.colour || "violet", icon:ic, yearly:!!g.yearly, off:!!g.off });
+      touch(); renderAll();
+      return done(niceDate(x.d) + " is marked: \u201c" + x.n + "\u201d.");
+    }
+    case "unmarkDay": {
+      const all = specialOn(g.date);
+      const hit = all.filter(x => !g.name || x.n.toLowerCase() === String(g.name).toLowerCase());
+      if (!hit.length) return flowNeed(a, g.date + " has no special day" + (g.name ? " called \u201c" + g.name + "\u201d" : "") + ".");
+      pushUndo(L("SpdUndo"));
+      S.settings.specialDays = specialDays().filter(x => hit.indexOf(x) < 0);
+      touch(); renderAll();
+      return done("Taken off " + niceDate(g.date) + ": " + hit.map(x => "\u201c" + x.n + "\u201d").join(", ") + ".");
     }
     case "addHoliday": {
       pushUndo("holiday");
@@ -20862,6 +21234,21 @@ async function renderModal(){
           '<span id="hpMsg" class="hmsg"></span>' +
         "</div></div>") +
 
+    /* special days: not holidays, days you marked yourself */
+    "<h5 class=\"eyebrow\" style=\"margin:20px 0 8px\">" + LE("SpdHeading") + "</h5>" +
+    '<p style="font-size:11.5px;color:var(--ink-2);line-height:1.7;margin:0 0 10px">' + LE("SpdIntro") + "</p>" +
+    '<div style="max-height:220px;overflow-y:auto;border:1px solid var(--rule);border-radius:var(--r-sm);padding:2px 10px">' +
+      (specialDays().length ? specialDays().map(x =>
+        '<div class="spdrow" style="--spc:' + spdColour(x) + '"><span class="hd2">' + esc(x.d) + (x.yearly ? " \u21BB" : "") + "</span>" +
+        '<span class="ic">' + esc(x.icon || "\u2605") + "</span>" +
+        '<span class="tx"><i class="dot"></i>' + esc(x.n) + (x.note ? "<small>" + esc(x.note) + "</small>" : "") + "</span>" +
+        '<button data-spsedit="' + esc(x.id) + '" title="' + LE("SpdEdit") + '">\u270E</button>' +
+        '<button data-spsdel="' + esc(x.id) + '" title="' + LE("Delete") + '">\u2715</button></div>').join("")
+        : '<div style="font-size:11.5px;color:var(--ink-3);padding:8px 0">' + LE("SpdNone") + "</div>") +
+    "</div>" +
+    '<div style="display:flex;gap:6px;margin-top:9px"><input class="in" type="date" id="spdNewD" style="max-width:150px" value="' + today() + '">' +
+      '<button class="btn sm" id="spdNewB">' + LE("SpdAddBtn") + "</button></div>" +
+
     "<h5 class=\"eyebrow\" style=\"margin:20px 0 8px\">" + L("Behaviour") + "</h5>" +
     fr(L("RememberFilters"), '<select class="in" id="sMem"><option value="1"' + (st.rememberFilters ? " selected" : "") +
       L("YesComeBackToTheSame") + (!st.rememberFilters ? " selected" : "") +
@@ -21597,6 +21984,19 @@ function wireModal(){
     if (!r || r.choice !== 0) return;
     S.settings.holidays = []; touch(); renderModal(); renderAll();
     toast(L("Cleared"));
+  });
+  /* special days, in the list under the holidays */
+  on("spdNewB", e => spdOpen(($("spdNewD").value || today()), null, e.target));
+  $$("[data-spsedit]").forEach(b => b.onclick = () => {
+    const x = specialDays().find(y => y.id === b.dataset.spsedit);
+    if (x) spdOpen(x.d, x.id, b);
+  });
+  $$("[data-spsdel]").forEach(b => b.onclick = () => {
+    const x = specialDays().find(y => y.id === b.dataset.spsdel); if (!x) return;
+    pushUndo(L("SpdUndo"));
+    S.settings.specialDays = specialDays().filter(y => y.id !== x.id);
+    touch(); renderModal(); renderAll();
+    toast(L("SpdRemoved", { name:x.n }));
   });
   $$("[data-hold]").forEach(b => b.onclick = () => {
     const h = holidays()[+b.dataset.hold];
@@ -25835,6 +26235,7 @@ $("chatPlaceMenu").addEventListener("keydown", e => {
   bs[(i + (e.key === "ArrowDown" ? 1 : bs.length - 1)) % bs.length].focus();
 });
 document.addEventListener("pointerdown", e => {
+  if (SPD.el && !e.target.closest("#spdPop,[data-spadd],[data-sped],[data-spsedit],#spdNewB")) spdClose();
   if (!$("chatPlaceMenu").hidden && !e.target.closest("#chatPlaceMenu,#chatPlace")) chatPlaceMenu(false);
   if (!$("chatModelMenu").hidden && !e.target.closest("#chatModelMenu,#chatModel")) chatModelMenu(false);
 }, true);
@@ -25850,18 +26251,20 @@ $("chatModelMenu").addEventListener("keydown", e => {
   bs[(i + (e.key === "ArrowDown" ? 1 : bs.length - 1)) % bs.length].focus();
 });
 document.querySelectorAll("#chat .chgrip").forEach(g => g.addEventListener("pointerdown", chatGripDown));
-document.querySelector('#chat .chgrip[data-g="w"]').addEventListener("keydown", chatGripKey);
-/* a double-click on the docked edge puts the width back */
-document.querySelector('#chat .chgrip[data-g="w"]').addEventListener("dblclick", () => {
-  if (chatPlace() !== "dock") return;
-  delete chatUI().dockW; touch(); chatPlaceApply();
+document.querySelectorAll('#chat .chgrip[data-g="w"],#chat .chgrip[data-g="e"]').forEach(g => {
+  g.addEventListener("keydown", chatGripKey);
+  /* a double-click on the docked edge puts the width back */
+  g.addEventListener("dblclick", () => {
+    if (chatPlace() !== "dock") return;
+    delete chatUI().dockW; touch(); chatPlaceApply();
+  });
 });
 document.querySelector("#chat .chh").addEventListener("pointerdown", chatMoveDown);
 /* a double-click on the top bar is what it is on any window: full screen,
    and back again to where it was */
 document.querySelector("#chat .chh").addEventListener("dblclick", e => {
   if (e.target.closest("button,input,a")) return;
-  chatPlaceSet(chatPlace() === "full" ? (chatUI().placeBack || "dock") : "full");
+  chatPlaceSet(chatPlace() === "full" ? (chatUI().placeBack || "dock-right") : "full");
 });
 document.addEventListener("pointermove", chatDragMove);
 document.addEventListener("pointerup", chatDragUp);
@@ -28949,6 +29352,11 @@ $("main").addEventListener("click", e => {
     if (arr.every(t => S.sel.has(t.id))) S.sel.clear(); else arr.forEach(t => S.sel.add(t.id));
     return renderAll();
   }
+  /* a special day: ✦ marks one, a mark opens it */
+  const spa = e.target.closest("[data-spadd]");
+  if (spa) return spdOpen(spa.dataset.spadd, null, spa);
+  const spe = e.target.closest("[data-sped]");
+  if (spe) return spdOpen(spe.dataset.sday, spe.dataset.sped, spe);
   const step = calMode() === "month" ? (n => addMonths(S.weekStart, n)) : (n => addDays(S.weekStart, n*7));
   if (e.target.id === "wkP"){ S.weekStart = step(-1); return renderWeek(); }
   if (e.target.id === "wkN"){ S.weekStart = step(1); return renderWeek(); }

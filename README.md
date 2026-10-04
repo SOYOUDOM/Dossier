@@ -1,4 +1,4 @@
-# KalKech (កាលកិច្ច)
+# KalKech
 
 > **KalKech was called Resolv from 4.8 to 5.12, and Dossier before that.**
 > Only the name you see changed. The files keep their names — `dossier.html`,
@@ -297,7 +297,7 @@ adds `D-0099` without touching `seq` will not cause a collision.
 | `chatLearn` | object | — | Everything you have taught the assistant. See [§10.8](#108-teaching-it). |
 | `flow` | `{on, url, scope, deep, cap, timeout, fallback}` | `{on:false,…}` | The Power Automate endpoint. See [§12](#12-asking-through-a-power-automate-flow). |
 | `hushed` | array of string | `[]` | Keys of the Day-sheet notices you have silenced. Cleared from **Setup → Hidden notices**. |
-| `chatUI` | `{skin, confirm, every, reveal, glow, grid, pulse, typing, chips, ambient}` | all on, `aurora`, ask-first | How the assistant panel looks and behaves. Set from **◎** in the chat header. |
+| `chatUI` | `{skin, confirm, every, reveal, glow, grid, pulse, typing, chips, ambient, place, side, dockW, floatBox, name}` | all on, `nebula`, ask-first, docked right | How the assistant panel looks and behaves. Set from **◎** in the chat header. |
 | `memory` | array of `{id, title, body, tags, system, created, updated, uses, lastUsed}` | `[]` | What you have taught the assistant: how something is done, what caused something, what to check next time. See [§12](#12-asking-through-a-power-automate-flow). |
 
 ### 5.3 `tasks` — a record
@@ -406,7 +406,7 @@ Switch with **1**–**7**, or by clicking the tab.
 | **1** | **Day** | Today, in the order you would actually work it: **overdue** first, then **due today**, then what is **in progress**, then what is **blocked**, then the rest. The **Noticed** block lives here too — including "nothing is running your scripts". Each notice carries a ✕: worth saying once, wallpaper by the thirtieth morning, so any of them can be silenced for good and brought back from **Menu → Setup → Hidden notices**. |
 | **2** | **Board** | Five columns, one per status, drag between them. |
 | **3** | **Register** | The full table: every column, sortable, filterable, bulk-editable. |
-| **4** | **Week** | A calendar. `settings.calMode` switches between a 7-day week and a whole month. Holidays are marked. |
+| **4** | **Week** | A calendar. `settings.calMode` switches between a 7-day week and a whole month. Holidays are marked, and so are your **special days** — the ✦ on any day marks one, with a note (below). |
 | **5** | **Library** | Every attachment across every record, searchable by file name or record title — the answer to "where did I put that screenshot". |
 | **6** | **Insight** | Counted, not guessed: throughput this week and month, average turnaround, worst system, who raises the most, and the recurring-problem cases written for you. |
 | **7** | **Assist** | The ranked queue and the brief, from `assist.js`. The filter rail is hidden here on purpose — Assist reads closed records too, because that is where its baselines are. |
@@ -460,7 +460,7 @@ in `dossier.json`:
 
 | | |
 |---|---|
-| **Skin** | Nebula · Aurora · Carbon · Ember · Paper · **Lumen** · **Crimson**. Every surface in the panel takes its colour from the skin, not from the app theme — except Lumen and Crimson, which follow the app's light or dark mode and change the layout too (below). |
+| **Skin** | **Nebula** · **Lumen** · **Crimson** — the three kept in 5.14 (Aurora, Carbon, Ember and Paper were taken away at the owner's request; a workspace that used one opens in Nebula). Nebula's surfaces take their colour from the skin, not from the app theme; Lumen and Crimson follow the app's light or dark mode and change the layout too (below). |
 | **Motion** | Seven switches — answers arriving, edge light, the living background, the orb pulse, thinking dots, springy buttons, and a passing light on an interval you set — and an eighth, *Lively icons*, while Lumen or Crimson is the skin. Each one genuinely unhooks its animation. |
 | **Pixel art** | One switch, for the sprites below. Off leaves the panel exactly as it was: the drawn orb, the old waiting animation, a `✓` on a receipt. |
 | **Ask before doing anything** | On by default: everything is put to you first. Off: it does what you ask straight away and the line says *done without asking*. `Ctrl`+`Z` still undoes it either way. |
@@ -711,6 +711,43 @@ sprites are two switches over one set of drawings: neither takes the other
 away.
 
 ---
+
+### Special days on the calendar
+
+Not every day worth marking is a holiday. A **special day** is one you mark
+yourself — a release freeze, month-end close, a team day, the day the
+auditors come, a birthday — with **a note** on it.
+
+#### How do I mark a special day?
+
+In **Week** or **Month**, click the faint **✦** at the top of the day (it
+lights up when you point at the day). A small card opens:
+
+- **What is it?** — a short name, like *Month-end close*;
+- **Note** — what to remember: who, what to avoid, what to prepare;
+- **Colour** and **icon** — so you can tell your days apart at a glance;
+- **Every year on this date** — for birthdays and anniversaries;
+- **A day off** — tick it only if you will not be working (then it counts
+  like a holiday: due dates move past it).
+
+**Save**, and the day shows a card in its colour, with its icon and note (the
+note's first two lines in the week, the name alone in the month), and a
+coloured bar across the top of the day. Click the card to change or delete it.
+You can also ask the assistant: *"mark next Friday as release freeze, no
+deployments"* — it asks before it does.
+
+#### Where else do special days show?
+
+- **Day** view: today's special day, and tomorrow's (*Tomorrow: Month-end
+  close — finance batch at 22:00*), in the **Noticed** block.
+- **Menu → Setup → Special days**: every one in a list, to change or delete,
+  and **Mark a special day…** for any date.
+- **The assistant** is told the special days of the next half year, with their
+  notes, so "can I deploy on Friday?" gets "Friday is the release freeze".
+
+A special day is **not a holiday**: it still counts as a working day unless
+you ticked **A day off**. Holidays stay in **Setup → Holidays and festivals**,
+as before.
 
 ### 6.7 Alerts on the records you choose
 
@@ -1677,24 +1714,46 @@ none*.
 
 #### How do I make the chat panel wider?
 
-**Drag its left edge.** Point at the panel's left edge — a coloured line shows
-— and drag left to make it wider (for a long answer, a wide table, a
-diagram), or right to make it narrower. Your work on the left makes room
-rather than being covered. **Double-click the edge** for the usual width
-(452 pixels). With the keyboard: `Tab` to the edge, then `←` / `→`.
+**Drag its inner edge** — the left edge when it is docked on the right, the
+right edge when it is docked on the left. Point at it — a coloured line shows —
+and drag towards your work to make it wider (for a long answer, a wide table, a
+diagram), or back to make it narrower. Your work makes room rather than being
+covered. **Double-click the edge** for the usual width (452 pixels). With the
+keyboard: `Tab` to the edge, then `←` / `→`.
 
 KalKech keeps the width with your workspace, so the panel opens the same width
 next time. On a small window it is fitted in (your work always keeps at least
 340 pixels), without forgetting the width you chose.
 
+#### How do I move the chat panel? (It snaps like a magnet)
+
+**Drag it by its top bar**, wherever it is — docked, floating or full screen.
+It comes away as a window under your pointer, and where you let go decides
+where it sits:
+
+| Let go… | It becomes |
+|---|---|
+| at the **left edge** of the screen | **docked on the left** — your work moves over to the right |
+| at the **right edge** | **docked on the right** (the usual) — your work makes room on the left |
+| at the **top edge** | **full screen** |
+| **anywhere else** | a **floating window**, right there |
+
+While you drag, a coloured outline shows where it will land if you let go. A
+plain click or double-click on the top bar does not move it. Everything
+corrects itself: your work takes back its room the moment the panel leaves a
+dock, a floating window is kept inside the screen, and a smaller window fits
+the panel in without forgetting your size.
+
 #### How do I make the chat a floating window, or full screen?
 
-Click the **frame button** at the top of the chat (next to ✕), or open **Look
-and behaviour** (the ◎ or sliders button) → **Where it sits**. Three choices:
+Drag it (above), or click the **frame button** at the top of the chat (next to
+✕), or open **Look and behaviour** (the sliders button) → **Where it sits**.
+Four choices:
 
 | Choice | What it is |
 |---|---|
-| **Side panel** | The usual: on the right, beside your work. Drag its left edge to change the width. |
+| **Docked right** | The usual: on the right, beside your work. Drag its left edge to change the width. |
+| **Docked left** | The same on the left. Drag its right edge to change the width. |
 | **Floating window** | A window of its own, over your work. **Move it** by its top bar; **resize it** from any edge or corner. |
 | **Full screen** | The whole window, like a chat website: your conversations in a column on the left, the conversation in a readable column in the middle. The ☰ button shows or hides the conversations. |
 
@@ -2028,6 +2087,17 @@ lost.
 The AI writes the diagram in a text format called *Mermaid*. Most models know
 it, but a small, fast model sometimes makes mistakes on a big diagram; ask it
 to keep the diagram small, or press **Think harder**.
+
+#### Code showed as plain text, and further down it was a proper code block — why?
+
+Fixed in 5.14. Same cause as the diagrams below: your flow's old *Clean* step
+takes out the ```` ``` ```` marks, and KalKech puts a code block back together
+from the language word left on its own line (*csharp*, *sql*…). It used to do
+that only after a blank line or a colon — so a block straight after a bold
+title (**Core entities (example in C#)**) stayed as text, while the blocks
+lower down, after a blank line, were code. Now a heading or a bold title before
+the language word works too, and the prompt asks for code between `~~~`
+marks, which the old Clean step leaves alone.
 
 #### I asked for a diagram and got text like "mermaid flowchart TD A --> B" — why?
 
@@ -3083,7 +3153,7 @@ first thing to run after changing anything it touches:
 
 ```
 node --test                 # tests/*.test.js: 47 tests - Sources (every scenario below) and diagrams
-node tests/e2e/run.js       # the app in Chrome or Edge: 132 checks on the screen
+node tests/e2e/run.js       # the app in Chrome or Edge: 146 checks on the screen
 node flow/check-prompt.js   # the prompt's examples against the reply validator
 ```
 

@@ -13,7 +13,8 @@ assistant. It runs **in the browser from a local folder** — no server, no
 account, no cloud. (The app was called *Dossier* until 4.8 and *Resolv* from
 4.8 to 5.12; many identifiers still say `dossier`/`Dossier`, and code
 comments still say Resolv. The visible name is **KalKech**, in Khmer
-**កាលកិច្ច** — shown beside the wordmark, `.wm .wmk`.)
+**កាលកិច្ច**. The Khmer name was shown beside the wordmark in 5.13 and taken
+out of the header in 5.14 at the owner's request.)
 
 The owner uses it at work, on Windows, in Edge/Chrome, started with
 `KalKech.bat` (`Resolv.bat` and `Dossier.bat` pass through to it). Their company network blocks unknown outside services and they
@@ -35,7 +36,7 @@ are careful not to attract attention from their security team.
 | `flow/*.md` | Guides: `CONTRACT.md` (request/reply/actions), `POWER-AUTOMATE.md`, `BAU-RUNBOOKS.md`, `SOURCES.md` (setup + troubleshooting for Sources), `SPEED.md`, `SERVICENOW.md`. |
 | `scripts/bridge/DossierBridge.cs` | The tray program (C# 5, WinForms): serves the page on 127.0.0.1, keeps the workspace in SQL LocalDB when available, runs scripts. `KalKech.bat` compiles it with the Windows `csc.exe` whenever the `.cs` is newer than the `.exe`. |
 | `lang/en.xml`, `lang/km.xml` | Language packs (English, Khmer). Missing keys fall back to the English `STRINGS` table in `dossier.html`. |
-| `docs/` | `HOW-THE-AI-WORKS.md` (the whole AI pipeline for beginners, plus a reusable blueprint) and `how-the-ai-works.html` (the same as a self-contained picture page). Keep both in step with the code when the pipeline changes (numbers: 60 records, 10 notes, 30 lessons, 14,000 characters, 62 actions / 41 writes). |
+| `docs/` | `HOW-THE-AI-WORKS.md` (the whole AI pipeline for beginners, plus a reusable blueprint) and `how-the-ai-works.html` (the same as a self-contained picture page). Keep both in step with the code when the pipeline changes (numbers: 60 records, 10 notes, 30 lessons, 14,000 characters, 64 actions / 43 writes). |
 | `tests/` | `sources.test.js` and `diagram.test.js` (node:test), `e2e/run.js` + `e2e/sources.scenario.js` (real browser), `fixtures/` (made-up documents; `make-pdf.js` regenerates the PDFs). |
 
 A *workspace* is a folder the user picks (File System Access API):
@@ -72,7 +73,11 @@ A *workspace* is a folder the user picks (File System Access API):
 - **Talk to the owner in plain, simple English** (not their first language).
   Short steps, no jargon without explanation.
 - **New designs are added as selectable presets; existing ones are never
-  removed** (looks: Studio, Quiet, Classic, Nova; chat skins incl. Lumen and Crimson).
+  removed** (looks: Studio, Quiet, Classic, Nova; chat skins: Nebula, Lumen,
+  Crimson). The one exception so far was the owner's own request in 5.14:
+  the chat skins Aurora, Carbon, Ember and Paper were removed (`chatUI()`
+  moves a workspace that used one to Nebula). Do not remove anything else
+  unless the owner asks.
 - **Nothing new may reach the internet.** Only the user's own Power Automate
   flow, through `flow/relay.html`. Telegram was tried (5.6–5.7) and **removed
   completely in 5.8** because the company blocks it and it could look
@@ -86,13 +91,13 @@ A *workspace* is a folder the user picks (File System Access API):
 - Commit messages: clear summary + body; no model names in commits, code or
   docs. Do not open a pull request unless the owner asks.
 - Work so far is on branch `claude/chat-panel-pixel-art-gifs-d822hq`
-  (latest: 5.13.0). Follow the branch instructions of your own session.
+  (latest: 5.14.0). Follow the branch instructions of your own session.
 
 ## Testing
 
 ```
 node --test                                   # 47 unit tests (Sources, grounding, flow reply fields, diagrams)
-node tests/e2e/run.js                         # the app in headless Chrome/Edge: 132 checks (CHROME=<path> to choose)
+node tests/e2e/run.js                         # the app in headless Chrome/Edge: 146 checks (CHROME=<path> to choose)
 node flow/check-prompt.js                     # after editing flow/prompt.txt ...
 python3 flow/embed-prompt.py                  # ... then copy it into flow.js (PROMPT_BUILTIN)
 node tests/fixtures/make-pdf.js               # regenerate the PDF fixtures
@@ -114,6 +119,40 @@ Also useful:
   `DossierFlow.validate`. `tests/e2e/run.js` is a working example of all of it.
 
 ## Recent history (newest first)
+
+- **5.14.0** — Eight requests from the owner in one go:
+  - *Magnet dock*: `chatMoveDown` drags from any place (header, not its
+    buttons). After 6 px the panel comes loose as a float under the pointer.
+    `chatSnapZone(x,y)` (`CHAT_SNAP` edge 28 / top 12) gives
+    `dock-left` / `dock-right` / `full` or "", previewed by `#chatSnap`
+    (`.chsnap`). `chatDragUp` → `chatPlaceSet(zone)` or float; a press with
+    no movement does nothing. New left dock: `chatUI.side`,
+    `chatDockSide()`, `.chat[data-side="left"]`, body `chatleft` (padding on
+    the left of `.app`), the `e` grip. Place keys `CHAT_PLACE_KEYS`
+    (dock-right, dock-left, float, full), `chatPlaceKey()`,
+    `CHAT_PLACE_STR` for the string names.
+  - *Wordmark*: the Khmer `.wmk` span and its CSS removed.
+  - *Icons*: every chat icon button is a flex box with a 16 px mask
+    (`--ic`); the `--lmi-*` masks are on `.chat` for every skin now, not
+    only Lumen. Nebula's header/clip/send glyphs became masks
+    (`font-size:0`, `::before` / `::after`). `#chatPlace` uses
+    `--lmi-place` everywhere. Lumen answer tools: `align-self:start`;
+    `TierReasonAgain` is "Reason" so the row fits on one line. Checked by
+    measuring pixels in screenshots (icon centre vs button centre, ≤1 px).
+  - *Skins*: only nebula/lumen/crimson in `CHAT_SKINS` and the CSS.
+  - *Code as text*: `chatFenceOpener(prev)` - a bare language word,
+    `text` or `json` line is a lost fence only after an empty line, a line
+    ending ":", a heading or a bold line; `chatFenceBare` also needs 2+
+    code lines without one. The prompt fences code with `~~~` (no ```
+    anywhere in `flow/prompt.txt`; the e2e test checks).
+  - *Special days* (`SPECIAL DAYS` banner): `settings.specialDays`
+    `[{id,d,n,note,c,icon,yearly,off}]`, `specialOn(key)` (yearly by
+    month-day), `isOffDay` counts `off`. Week/month cells: `.wc.special`
+    band `--spc`, `specialMark`, `✦` `specialAddBtn` → `spdOpen` popover
+    (`#spdPop`). Setup → Special days. `dayHints` today/tomorrow.
+    `spdForFlow()` → `workspace.specialDays` (−7 … +183 days, ≤60).
+    flow.js `markDay` / `unmarkDay` (64 actions, 43 writes).
+  - Docs: both AI guides updated (reason tier, special days, repairs).
 
 - **5.13.0** — Renamed to KalKech (កាលកិច្ច) and a third model. Rename: every
   *visible* "Resolv" (strings only - code comments were left alone; the

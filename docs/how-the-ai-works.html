@@ -438,8 +438,13 @@ footer{margin-top:56px;padding-top:20px;border-top:1px solid var(--rule);font-si
     <div class="tile"><span class="big">14,000</span><span class="what">characters of documents</span><span class="why">the best passages from Library → Sources, and their neighbours</span></div>
     <div class="tile"><span class="big">8</span><span class="what">recent messages</span><span class="why">each cut to 1,200 characters, plus a short running summary</span></div>
     <div class="tile"><span class="big">30</span><span class="what">days of incidents</span><span class="why">a summary of the recent incident history</span></div>
-    <div class="tile"><span class="big">62</span><span class="what">allowed actions</span><span class="why">the only things it may ask KalKech to do; 41 of them change something and always ask you first</span></div>
+    <div class="tile"><span class="big">64</span><span class="what">allowed actions</span><span class="why">the only things it may ask KalKech to do; 43 of them change something and always ask you first</span></div>
+    <div class="tile"><span class="big">½ yr</span><span class="what">of special days</span><span class="why">the days you marked yourself (a freeze, month-end, a team day) with their notes</span></div>
   </div>
+  <p class="callout"><b>With KalKech reason</b> — the reasoning model, only when you choose it — the folder is far bigger:
+    <b>240</b> records with their notes and log · <b>30</b> notes · <b>80</b> lessons · <b>6</b> runbooks and past fixes ·
+    <b>16</b> passages, about <b>48,000</b> characters of documents · the last <b>40</b> messages, 6,000 characters each ·
+    <b>90</b> days of incidents. It is told it was chosen, so it reads all of it and writes as much as the question needs.</p>
   <p class="callout">Also in the folder: today's date, the next working day and holidays (dates are where AI most often goes wrong),
     the record you have open, and any file you attached. KalKech shows you the exact bytes before they go: Menu → Setup → Ask through Power Automate → Preview.</p>
 </section>
@@ -532,7 +537,9 @@ footer{margin-top:56px;padding-top:20px;border-top:1px solid var(--rule);font-si
     <h3>Everything the check looks at, in order</h3>
     <ol class="rules">
       <li><b>The shape.</b> The reply must be JSON. A short plain-text reply is shown as plain text; anything else unusable is dropped, with a reason.</li>
-      <li><b>The actions.</b> Only the 62 in KalKech's own list, each with the right details. Anything else is refused by name.</li>
+      <li><b>The actions.</b> Only the 64 in KalKech's own list, each with the right details. Anything else is refused by name.</li>
+      <li><b>The blank picture.</b> The flow is always handed a picture, a blank one when you attached nothing, and a small model sometimes answers <i>that</i>. KalKech spots it, takes those sentences out, and asks once more, saying plainly that no picture was attached. Telling it your name for the assistant ("I named you Elle") is answered on your PC and never goes to the flow.</li>
+      <li><b>Marks put back.</b> A flow built from an older guide strips <code>```</code> from the reply, so code, diagrams and emails used to arrive as plain text. The prompt now asks for <code>~~~</code> marks, which survive, and KalKech recognises a block whose marks are gone (a line <i>csharp</i> or <i>mermaid</i> over code) and draws it properly.</li>
       <li><b>A failed flow.</b> If the flow's safety net answered instead of the AI, KalKech asks once more with only the essentials.</li>
       <li><b>More records.</b> The AI may ask for more records (<code>needRecords</code>). KalKech finds them on your PC and asks once more.</li>
       <li><b>The documents.</b> Every quote must be in its passage, word for word. A line with an unsupported figure is taken out.
@@ -623,11 +630,11 @@ footer{margin-top:56px;padding-top:20px;border-top:1px solid var(--rule);font-si
     <div class="rule"><h3>Answer on the PC when you can</h3><p>No network, no AI, no wait.</p><span class="in">Greetings, counts, "what's new", "which source"</span></div>
     <div class="rule"><h3>Choose the data with code, not a second AI call</h3><p>A chooser AI must read everything first: two slow calls instead of one.</p><span class="in">5,000 records ranked in about 6 ms; 150 documents searched in about 2 ms</span></div>
     <div class="rule"><h3>Send the best, count the rest</h3><p>The model needs the relevant rows. Totals keep "how many?" right.</p><span class="in">60 records, plus totals of all</span></div>
-    <div class="rule"><h3>Put a limit on everything that grows</h3><p>Notes, lessons and history grow every day. Without limits every question gets slower.</p><span class="in">10 notes · 30 lessons · 8 messages · 14,000 characters</span></div>
-    <div class="rule"><h3>A fast model for chat, a strong one for hard jobs</h3><p>The strong model is slower and costs more. Use it where it earns it.</p><span class="in">Daily look back, learning a guideline, Diagnose, Think harder</span></div>
+    <div class="rule"><h3>Put a limit on everything that grows</h3><p>Notes, lessons and history grow every day. Without limits every question gets slower.</p><span class="in">10 notes · 30 lessons · 8 messages · 14,000 characters (more for KalKech reason)</span></div>
+    <div class="rule"><h3>Fast for chat, strong for hard jobs, reasoning when you choose</h3><p>Stronger models are slower and cost more. Use each where it earns it, and let the person choose.</p><span class="in">The pill beside Send: Auto · Fast · Strong · Reason; Think harder; ◆ KalKech reason</span></div>
     <div class="rule"><h3>At most one extra round trip</h3><p>Every extra call is another full wait.</p><span class="in">needRecords once; the safety-net retry once</span></div>
-    <div class="rule"><h3>Always set a time limit, and fall back</h3><p>A silent app is worse than a simple answer.</p><span class="in">30 s for chat, about 2 min for hard jobs; the local assistant answers if the flow fails</span></div>
-    <div class="rule"><h3>Never trust the reply: check it</h3><p>A model can send the wrong shape, or an action that does not exist.</p><span class="in">The validator; only the 62 known actions</span></div>
+    <div class="rule"><h3>Always set a time limit, and fall back</h3><p>A silent app is worse than a simple answer.</p><span class="in">30 s for chat, up to 115 s for the strong and reasoning models; the local assistant answers if the flow fails</span></div>
+    <div class="rule"><h3>Never trust the reply: check it</h3><p>A model can send the wrong shape, or an action that does not exist.</p><span class="in">The validator; only the 64 known actions</span></div>
     <div class="rule"><h3>Never let it change anything by itself</h3><p>A confident mistake must not become a real change.</p><span class="in">Every change waits for your yes</span></div>
     <div class="rule"><h3>Measure, and show what you measured</h3><p>"It feels slow" cannot be fixed. A number can.</p><span class="in">Time under each answer · Preview of the bytes · the Sources log · tests</span></div>
   </div>
@@ -704,6 +711,9 @@ footer{margin-top:56px;padding-top:20px;border-top:1px solid var(--rule);font-si
         <tr><td>Hiding the whole answer for one bad line</td><td>A correct answer became "not specified"</td><td>Take out only the bad line, and say so</td></tr>
         <tr><td>Reading page headers as headings</td><td>Citations named "CLASSIFICATION : OFFICIAL" as the section</td><td>Leave out lines repeated at the same place on most pages</td></tr>
         <tr><td>Orders to the AI written inside the data</td><td>Microsoft's content filter blocked the whole question</td><td>Keep data as facts; keep orders in the prompt</td></tr>
+        <tr><td>A flow that strips <code>```</code> from replies</td><td>Code, diagrams and emails arrived as plain text, and one block after a heading was missed</td><td>Ask for <code>~~~</code> marks, and repair a block whose marks are gone</td></tr>
+        <tr><td>Handing a small model a blank picture</td><td>It answered the picture ("a white square") instead of the question</td><td>Answer simple things on the PC; ask again with a plain fact; give the flow a text-only prompt</td></tr>
+        <tr><td>One size of folder for every model</td><td>A reasoning model was given as little as the quick one</td><td>Give the big folder only to the model chosen for big questions</td></tr>
         <tr><td>Letting the AI change records directly</td><td>One confident mistake changes real data (KalKech never allowed it)</td><td>Every change waits for a yes</td></tr>
       </tbody>
     </table>
@@ -723,7 +733,10 @@ footer{margin-top:56px;padding-top:20px;border-top:1px solid var(--rule);font-si
     <div class="word"><dt>Relay</dt><dd>The small page that is the only door to the network (<code>flow/relay.html</code>).</dd></div>
     <div class="word"><dt>Token</dt><dd>A piece of a word. Models count what they read in tokens: more tokens, longer wait.</dd></div>
     <div class="word"><dt>JSON</dt><dd>A strict text format for data, like <code>{"say":"hello"}</code>, so a reply can be checked.</dd></div>
-    <div class="word"><dt>Action</dt><dd>Something the AI may ask KalKech to do. 62 exist; the 41 that change data always ask first.</dd></div>
+    <div class="word"><dt>Action</dt><dd>Something the AI may ask KalKech to do. 64 exist; the 43 that change data always ask first.</dd></div>
+    <div class="word"><dt>Reasoning model</dt><dd>A model that thinks a problem through before it answers. Slower and dearer; KalKech asks it (KalKech reason) only when you choose it.</dd></div>
+    <div class="word"><dt>Tier</dt><dd>Which model a question goes to: fast, deep (the strong one) or reason.</dd></div>
+    <div class="word"><dt>Special day</dt><dd>A day you marked yourself, with a note, that is not a holiday. The assistant is told about the next half year of them.</dd></div>
     <div class="word"><dt>Passage</dt><dd>A small piece of a document, about 1,100 characters, with its page, lines and section.</dd></div>
     <div class="word"><dt>Citation</dt><dd>Where an answer came from: <span class="mono">[Source: document, version, page, lines, section]</span>.</dd></div>
     <div class="word"><dt>Figure</dt><dd>A number that makes a rule: days or hours, a percentage, a priority or severity, a score.</dd></div>
