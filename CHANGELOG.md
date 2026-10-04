@@ -6,6 +6,37 @@ holds — which is what to paste into a bug report.
 
 ---
 
+## 5.14.1 - 2026-10-04
+
+**The chat panel moves smoothly, and cards open inside the window at any
+text size.**
+
+- **Floating and docking were slow.** Every little move of a drag made the
+  browser restyle everything inside the chat - in a long conversation,
+  thousands of pieces, 15 to 30 thousandths of a second each time on a fast
+  PC (more on a work laptop). Now:
+  - the window's place is kept where only the panel reads it, so a move
+    restyles the panel and nothing inside it;
+  - while you carry it, the panel is moved as one picture (no new layout),
+    and it is put down properly once, when you let go - about half a
+    thousandth of a second a move, smooth at 60 frames a second;
+  - dragging the edge of the docked panel changes only the panel while you
+    drag; your work makes its room once, when you let go;
+  - starting and ending a drag no longer restyles the whole page (a clear
+    sheet over the window holds the cursor instead);
+  - let go at the left or right edge and the panel slides the last bit into
+    its dock instead of jumping (not with *Motion: none*).
+- **The special-day card went off the right of the screen.** With **Text
+  size** above 100% the page is zoomed, and cards were placed as if it were
+  not - at 120% they landed a fifth too far right and down. The special-day
+  card, the bell (alert) card, the Sources ⋯ menu, the formatting bar, the
+  chat's own menus, the pet you carry and the chat panel itself now allow
+  for the zoom. The floating chat stays under the pointer at any text size.
+- A card taller than the window (a short window, a big text size) scrolls
+  inside itself instead of running off the bottom.
+
+---
+
 ## 5.14.0 - 2026-10-04
 
 **The chat panel snaps like a magnet, icons sit in the middle, code no

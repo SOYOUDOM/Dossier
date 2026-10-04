@@ -733,6 +733,8 @@ lights up when you point at the day). A small card opens:
 **Save**, and the day shows a card in its colour, with its icon and note (the
 note's first two lines in the week, the name alone in the month), and a
 coloured bar across the top of the day. Click the card to change or delete it.
+The card opens beside the day and always inside the window, at any text size;
+in a short window it scrolls.
 You can also ask the assistant: *"mark next Friday as release freeze, no
 deployments"* — it asks before it does.
 
@@ -1743,6 +1745,24 @@ plain click or double-click on the top bar does not move it. Everything
 corrects itself: your work takes back its room the moment the panel leaves a
 dock, a floating window is kept inside the screen, and a smaller window fits
 the panel in without forgetting your size.
+
+It moves smoothly however long the conversation is, and it stays under your
+pointer at any text size (*Menu → Appearance → Text size*). When you drag the
+edge of the docked panel, the panel follows your pointer and your work makes
+its room when you let go.
+
+#### The chat panel was slow to drag, or a card opened half off the screen — why?
+
+Fixed in 5.14.1. Two causes:
+
+- **Slow:** each little move of the drag made the browser redraw everything
+  inside the chat (thousands of pieces in a long conversation). Now the panel
+  is moved as one picture while you drag, and is redrawn once when you let go.
+- **Off the screen:** with **Text size** above 100%, the whole page is
+  zoomed. Cards and menus were placed as if it were not, so at 120% they
+  landed a fifth further right and lower — the special-day card went off the
+  right edge. They now allow for the zoom, and a card taller than the window
+  scrolls inside itself.
 
 #### How do I make the chat a floating window, or full screen?
 
@@ -3153,7 +3173,7 @@ first thing to run after changing anything it touches:
 
 ```
 node --test                 # tests/*.test.js: 47 tests - Sources (every scenario below) and diagrams
-node tests/e2e/run.js       # the app in Chrome or Edge: 146 checks on the screen
+node tests/e2e/run.js       # the app in Chrome or Edge: 151 checks on the screen
 node flow/check-prompt.js   # the prompt's examples against the reply validator
 ```
 

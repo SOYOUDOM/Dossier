@@ -814,7 +814,7 @@ table.reg td.ttd span{display:block;white-space:normal;overflow-wrap:anywhere;fo
 .wc:hover .spdadd,.spdadd:focus-visible{opacity:1}
 .spdadd:hover{color:var(--accent);background:var(--accent-soft)}
 /* its editor */
-.spdpop{position:fixed;z-index:92;width:304px;max-width:calc(100vw - 16px);box-sizing:border-box;padding:14px 14px 12px;
+.spdpop{position:fixed;z-index:92;width:304px;max-width:calc(100vw - 16px);box-sizing:border-box;padding:14px 14px 12px;overflow:auto;
   background:var(--paper);color:var(--ink);border:1px solid var(--rule-hi);border-radius:14px;
   box-shadow:0 24px 60px -18px rgba(0,0,0,.5)}
 .spdpop h4{margin:0 0 6px;font-size:13px;font-weight:650;display:flex;gap:7px;align-items:baseline}
@@ -1638,7 +1638,7 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
 /* choosing when */
 .alertpop{position:fixed;z-index:90;width:310px;max-width:calc(100vw - 24px);box-sizing:border-box;
   background:var(--paper);color:var(--ink);border:1px solid var(--rule-hi);border-radius:12px;
-  box-shadow:0 18px 50px -16px rgba(0,0,0,.45);padding:12px 14px 12px;font-size:12.5px}
+  box-shadow:0 18px 50px -16px rgba(0,0,0,.45);padding:12px 14px 12px;font-size:12.5px;overflow:auto}
 .alertpop .aph{display:flex;align-items:center;gap:7px;color:var(--accent)}
 .alertpop .aph b{color:var(--ink);font-size:13px;font-weight:650}
 .alertpop .aph .bellsvg{width:16px;height:16px}
@@ -4413,7 +4413,7 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
    for the keyboard */
 .chat[data-place="dock"] .chgrip[data-g="w"]::after{content:"";position:absolute;left:2px;top:50%;width:3px;height:44px;
   margin-top:-22px;border-radius:3px;background:var(--ch-acc);opacity:0;transition:opacity .15s}
-.chat[data-place="dock"] .chgrip[data-g="w"]:hover::after,.chat.sizing .chgrip[data-g="w"]::after,
+.chat[data-place="dock"] .chgrip[data-g="w"]:hover::after,.chat .chgrip[data-g="w"].on::after,
 .chat[data-place="dock"] .chgrip[data-g="w"]:focus-visible::after{opacity:.75}
 
 .chat[data-place="float"] .chgrip{display:block}
@@ -4437,7 +4437,7 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
 .chat[data-place="dock"][data-side="left"] .chgrip[data-g="e"]::after{content:"";position:absolute;right:2px;top:50%;width:3px;
   height:44px;margin-top:-22px;border-radius:3px;background:var(--ch-acc);opacity:0;transition:opacity .15s}
 .chat[data-place="dock"][data-side="left"] .chgrip[data-g="e"]:hover::after,
-.chat.sizing[data-place="dock"][data-side="left"] .chgrip[data-g="e"]::after,
+.chat[data-place="dock"][data-side="left"] .chgrip[data-g="e"].on::after,
 .chat[data-place="dock"][data-side="left"] .chgrip[data-g="e"]:focus-visible::after{opacity:.75}
 body.chatting.chatleft .app{padding-right:0;padding-left:min(var(--chat-w),96vw)}
 @media (max-width:900px){ body.chatting.chatleft .app{padding-left:0} }
@@ -4450,7 +4450,10 @@ body.chatting.chatleft .fixbar{left:calc((100vw + min(var(--chat-w),96vw)) / 2)}
   box-shadow:0 0 0 6px color-mix(in srgb,var(--accent) 8%,transparent);opacity:0;
   transition:opacity .12s,left .14s var(--ease),top .14s var(--ease),width .14s var(--ease),height .14s var(--ease)}
 .chsnap.on{opacity:1}
-.chat.dragging,.chat.dragging .chh{cursor:grabbing}
+/* while anything is dragged: a clear sheet over the window that holds the
+   cursor (see chatDragStart) */
+.chcover{position:fixed;inset:0;z-index:2147483000;background:transparent}
+.chcover[hidden]{display:none}
 
 /* floating: a window, with the shadow a window has */
 .chat[data-place="float"]{top:var(--cf-y,72px);left:var(--cf-x,auto);right:auto;bottom:auto;
@@ -4488,10 +4491,17 @@ body.chatover .drawer{z-index:64}
 body.chatover .modal,body.chatover .cmd,body.chatover .problem,body.chatover .intake,
 body.chatover .drill,body.chatover .chase{z-index:66}
 
-/* while an edge is being dragged nothing eases after the pointer */
-.chat.sizing,body.chsizing .app,body.chsizing .pet{transition:none!important}
-body.chsizing{user-select:none;-webkit-user-select:none}
-body.chsizing *{cursor:inherit!important}
+/* while an edge is being dragged nothing eases after the pointer (the
+   panel's own transition is switched off on the panel itself) */
+body.chsizing .app,body.chsizing .pet{transition:none!important}
+/* The floating window's place and size are set on the panel and read by
+   the panel alone. Registered as not inherited, so changing them restyles
+   the panel and none of the thousands of things inside it - which, when
+   they were inherited, was every move of a drag (5.14.1). */
+@property --cf-x{syntax:"*";inherits:false}
+@property --cf-y{syntax:"*";inherits:false}
+@property --cf-w{syntax:"*";inherits:false}
+@property --cf-h{syntax:"*";inherits:false}
 
 /* the frame button, and the little menu it opens */
 .chat #chatPlace{--ic:var(--lmi-place)}
@@ -7572,6 +7582,25 @@ function applyFeel(){
   r.style.zoom = pc === 100 ? "" : (pc / 100);
   r.style.setProperty("--z", pc === 100 ? "1" : String(pc / 100));
 }
+/* That zoom has a price for anything placed by hand (5.14.1). The pointer,
+   the window's size and getBoundingClientRect() are in screen pixels; a
+   length written into a style is in the page's own pixels, and drawn that
+   many times larger. At a text size of 120% a pop-up put at "1200px" is
+   drawn at 1440 - off the right of the window, which is how the special-day
+   card was found. So whatever is placed from a measurement goes through
+   these: work it out on the screen, divide by the zoom when writing it. */
+function pageZoom(){ const z = parseFloat(document.documentElement.style.zoom); return z > 0 ? z : 1; }
+function viewW(){ return window.innerWidth / pageZoom(); }
+function viewH(){ return window.innerHeight / pageZoom(); }
+/* a pop-up's size as drawn, in screen pixels (offsetWidth is the page's) */
+function popSize(el){ const r = el.getBoundingClientRect(); return { w:r.width, h:r.height }; }
+/* and the pop-up put at a point on the screen */
+function popAt(el, left, top){
+  const z = pageZoom();
+  /* never taller than the window: the rest scrolls inside it */
+  el.style.maxHeight = Math.floor((window.innerHeight - 16) / z) + "px";
+  el.style.left = Math.round(left / z) + "px"; el.style.top = Math.round(top / z) + "px";
+}
 
 /* Nova was drawn in a neo-grotesque. With the fonts left on automatic it
    asks for one, and takes the usual choice where the machine has none. */
@@ -7792,7 +7821,7 @@ const STATUSES = [
    the status bar, and clicking it copies a line you can paste into a bug
    report — build date and flow protocol included, because those are the two
    things that actually differ between copies. */
-const APP_VERSION = "5.14.0";
+const APP_VERSION = "5.14.1";
 const APP_BUILT = "2026-09-27";
 function buildLine(){
   return "KalKech v" + APP_VERSION + " \u00b7 built " + APP_BUILT +
@@ -11409,11 +11438,11 @@ function spdOpen(key, id, near){
   document.body.appendChild(el);
   SPD.el = el;
   /* beside what was clicked, kept inside the window */
-  const r = near ? near.getBoundingClientRect() : { left:window.innerWidth / 2 - 150, right:window.innerWidth / 2, top:120, bottom:120 };
-  const w = el.offsetWidth, h = el.offsetHeight, vw = window.innerWidth, vh = window.innerHeight;
+  const vw = window.innerWidth, vh = window.innerHeight, sz = popSize(el), w = sz.w, h = sz.h;
+  const r = near ? near.getBoundingClientRect() : { left:vw / 2 - w / 2, right:vw / 2, top:120, bottom:120 };
   let left = r.right + 8; if (left + w > vw - 8) left = r.left - w - 8; if (left < 8) left = Math.max(8, Math.min(vw - w - 8, r.left));
   let top = r.top; if (top + h > vh - 8) top = Math.max(8, vh - h - 8);
-  el.style.left = Math.round(left) + "px"; el.style.top = Math.round(top) + "px";
+  popAt(el, left, top);
   el.addEventListener("click", e => {
     const c = e.target.closest("[data-spc]"), i = e.target.closest("[data-spi]");
     if (c){ SPD.cur.c = c.dataset.spc; el.querySelectorAll("[data-spc]").forEach(b => { const on = b === c; b.classList.toggle("on", on); b.setAttribute("aria-pressed", String(on)); }); return; }
@@ -12364,8 +12393,8 @@ function petWire(){
     }
     /* while it is in the air it goes where the pointer goes; the corner it
        had is put back, or taken away, on the way down */
-    el.style.left = (e.clientX - 24) + "px";
-    el.style.top = (e.clientY - 24) + "px";
+    el.style.left = (e.clientX / pageZoom() - 24) + "px";
+    el.style.top = (e.clientY / pageZoom() - 24) + "px";
     el.style.right = "auto"; el.style.bottom = "auto";
   });
   const drop = e => {
@@ -13526,12 +13555,12 @@ function chatPlaceKey(){ const p = chatPlace(); return p === "dock" ? "dock-" + 
 const CHAT_SNAP = { edge:28, top:12 };
 function chatDockW(w){
   const want = +(w != null ? w : (S.settings.chatUI || {}).dockW) || CHAT_DOCK.def;
-  const most = Math.max(CHAT_DOCK.min, Math.min(CHAT_DOCK.max, window.innerWidth - CHAT_DOCK.room));
+  const most = Math.max(CHAT_DOCK.min, Math.min(CHAT_DOCK.max, viewW() - CHAT_DOCK.room));
   return Math.round(clampN(want, CHAT_DOCK.min, most));
 }
 function chatFloatBox(b){
   b = b || (S.settings.chatUI || {}).floatBox || {};
-  const vw = window.innerWidth, vh = window.innerHeight, P = CHAT_FLOAT.pad;
+  const vw = viewW(), vh = viewH(), P = CHAT_FLOAT.pad;
   const w = Math.round(clampN(+b.w || CHAT_FLOAT.w, Math.min(CHAT_FLOAT.minW, vw - 2 * P), vw - 2 * P));
   const h = Math.round(clampN(+b.h || Math.min(CHAT_FLOAT.h, vh - 110), Math.min(CHAT_FLOAT.minH, vh - 2 * P), vh - 2 * P));
   /* the first time: near the top right, where the docked panel was */
@@ -13549,7 +13578,10 @@ function chatPlaceApply(){
   const side = chatDockSide();
   el.dataset.place = p;
   el.dataset.side = side;
-  document.documentElement.style.setProperty("--chat-w", chatDockW() + "px");
+  /* --chat-w is on the root, so a change restyles the whole page: only
+     when it is a change */
+  const cw = chatDockW() + "px", rs = document.documentElement.style;
+  if (rs.getPropertyValue("--chat-w") !== cw) rs.setProperty("--chat-w", cw);
   if (p === "float") chatBoxSet(el, chatFloatBox());
   /* only the docked panel takes room from the work; floating or full
      screen it is over the work, and what it opens comes up over it */
@@ -13615,9 +13647,9 @@ function chatPlaceMenu(show){
       '<span class="tk" aria-hidden="true">✓</span></button>').join("") +
     '<p class="plh">' + LE("ChatPlaceDragHint") + "</p>" +
     '<hr><button type="button" class="plr" role="menuitem" data-placereset>' + LE("ChatPlaceReset") + "</button>";
-  const cr = $("chat").getBoundingClientRect(), br = b.getBoundingClientRect();
-  m.style.top = Math.round(br.bottom - cr.top + 6) + "px";
-  m.style.right = Math.round(Math.max(10, cr.right - br.right - 4)) + "px";
+  const cr = $("chat").getBoundingClientRect(), br = b.getBoundingClientRect(), z = pageZoom();
+  m.style.top = Math.round((br.bottom - cr.top + 6) / z) + "px";
+  m.style.right = Math.round(Math.max(10, cr.right - br.right - 4) / z) + "px";
   m.hidden = false;
   b.setAttribute("aria-expanded", "true");
   const cur = m.querySelector('[aria-checked="true"]'); if (cur) cur.focus();
@@ -13672,10 +13704,10 @@ function chatModelMenu(show){
     '<button type="button" role="menuitemradio" aria-checked="' + (k === p) + '" data-model="' + k + '">' +
       "<span><b>" + LE("ChatModel_" + k) + "</b><small>" + LE("ChatModel_" + k + "Why") + "</small></span>" +
       '<span class="tk" aria-hidden="true">\u2713</span></button>').join("");
-  const cr = $("chat").getBoundingClientRect(), br = b.getBoundingClientRect();
+  const cr = $("chat").getBoundingClientRect(), br = b.getBoundingClientRect(), z = pageZoom();
   m.style.top = "auto";
-  m.style.bottom = Math.round(cr.bottom - br.top + 8) + "px";
-  m.style.right = Math.round(Math.max(10, cr.right - br.right - 4)) + "px";
+  m.style.bottom = Math.round((cr.bottom - br.top + 8) / z) + "px";
+  m.style.right = Math.round(Math.max(10, cr.right - br.right - 4) / z) + "px";
   m.hidden = false;
   b.setAttribute("aria-expanded", "true");
   const cur = m.querySelector('[aria-checked="true"]'); if (cur) cur.focus();
@@ -13687,15 +13719,52 @@ function chatModelSet(p){
   $("chatq").focus();
 }
 
-/* ── dragging an edge, or the floating window by its top bar ─────────── */
+/* ── dragging an edge, or the panel by its top bar ───────────────────────
+   Made light in 5.14.1: on a work laptop the panel lagged behind the
+   pointer, floating and on its way to the magnet. A move used to
+   - set the window's place as custom properties (--cf-x and the rest),
+     which every one of the two thousand elements of a long conversation
+     inherits, so each pixel restyled all of them. They are registered as
+     not inherited now (@property in the stylesheet), and while the panel
+     is carried it moves by a transform: the picture it already has is
+     moved, and nothing is laid out again until you let go;
+   - widen the docked panel through --chat-w on the root, which restyles the
+     whole page and lays the work out again: now the panel's own width
+     follows the pointer, and the work makes its room once, when you let go;
+   - begin and end by changing classes and the cursor on <body> that
+     restyled every element on the page. A clear sheet over the window
+     holds the cursor instead, and nothing under the pointer lights up on
+     the way across.
+   Everything here is in the page's own pixels (pageZoom), so at a text
+   size above 100% the panel stays under the pointer. */
+function chatDragStart(cursor){
+  let c = $("chatCover");
+  if (!c){
+    c = document.createElement("div"); c.id = "chatCover"; c.className = "chcover";
+    c.setAttribute("aria-hidden", "true"); document.body.appendChild(c);
+  }
+  c.style.cursor = cursor || "";
+  c.hidden = false;
+  /* nothing eases after the pointer (the panel's own transitions, the
+     work's room, the pet) */
+  $("chat").style.transition = "none";
+  document.body.classList.add("chsizing");
+}
+function chatDragEnd(){
+  const c = $("chatCover"); if (c) c.hidden = true;
+  const el = $("chat");
+  void el.offsetWidth;          /* settled where it is before the easing comes back */
+  el.style.transition = "";
+  document.body.classList.remove("chsizing");
+}
 function chatGripDown(e){
   const g = e.currentTarget.dataset.g, p = chatPlace(), el = $("chat");
   if (e.button || p === "full" || (p === "dock" && g !== (chatDockSide() === "left" ? "e" : "w"))) return;
   e.preventDefault();
-  const r = el.getBoundingClientRect();
-  CHAT_SIZE.drag = { g:g, p:p, side:chatDockSide(), x0:e.clientX, y0:e.clientY, box:{ x:r.left, y:r.top, w:r.width, h:r.height } };
-  el.classList.add("sizing"); document.body.classList.add("chsizing");
-  document.body.style.cursor = getComputedStyle(e.currentTarget).cursor;
+  const r = el.getBoundingClientRect(), z = pageZoom();
+  CHAT_SIZE.drag = { g:g, p:p, side:chatDockSide(), grip:e.currentTarget, live:false, cursor:getComputedStyle(e.currentTarget).cursor,
+                     x0:e.clientX / z, y0:e.clientY / z, box:{ x:r.left / z, y:r.top / z, w:r.width / z, h:r.height / z } };
+  e.currentTarget.classList.add("on");
   try { e.currentTarget.setPointerCapture(e.pointerId); } catch(err){}
 }
 /* The top bar is the handle, wherever the panel is (5.14): hold it and
@@ -13706,13 +13775,14 @@ function chatGripDown(e){
    pixels, so a click or a double-click on the bar is still just that. */
 function chatMoveDown(e){
   if (e.button || e.target.closest("button,input,textarea,select,a,.chplm")) return;
-  const el = $("chat"), r = el.getBoundingClientRect();
-  CHAT_SIZE.drag = { move:true, p:chatPlace(), live:false, x0:e.clientX, y0:e.clientY,
-                     box:{ x:r.left, y:r.top, w:r.width, h:r.height },
-                     fx:(e.clientX - r.left) / Math.max(1, r.width), fy:e.clientY - r.top, zone:"" };
+  const el = $("chat"), r = el.getBoundingClientRect(), z = pageZoom();
+  CHAT_SIZE.drag = { move:true, p:chatPlace(), live:false, x0:e.clientX / z, y0:e.clientY / z,
+                     box:{ x:r.left / z, y:r.top / z, w:r.width / z, h:r.height / z },
+                     fx:(e.clientX - r.left) / Math.max(1, r.width), fy:(e.clientY - r.top) / z, zone:"" };
   try { e.currentTarget.setPointerCapture(e.pointerId); } catch(err){}
 }
-/* where the panel would land if let go here: a place key, or "" to float */
+/* where the panel would land if let go here (screen pixels, as the pointer
+   gives them): a place key, or "" to float */
 function chatSnapZone(x, y){
   if (x <= CHAT_SNAP.edge) return "dock-left";
   if (x >= window.innerWidth - CHAT_SNAP.edge) return "dock-right";
@@ -13722,8 +13792,11 @@ function chatSnapZone(x, y){
 function chatSnapShow(zone){
   let el = $("chatSnap");
   if (!el){ el = document.createElement("div"); el.id = "chatSnap"; el.className = "chsnap"; el.setAttribute("aria-hidden", "true"); document.body.appendChild(el); }
+  /* the same as a moment ago: nothing to do (this runs on every move) */
+  if (el.dataset.zone === zone) return;
+  el.dataset.zone = zone;
   if (!zone){ el.classList.remove("on"); return; }
-  const m = 8, vw = window.innerWidth, vh = window.innerHeight, w = chatDockW();
+  const m = 8, vw = viewW(), vh = viewH(), w = chatDockW();
   const box = zone === "dock-left" ? [m, m, w - 2 * m, vh - 2 * m]
             : zone === "dock-right" ? [vw - w + m, m, w - 2 * m, vh - 2 * m]
             : [m, m, vw - 2 * m, vh - 2 * m];
@@ -13732,75 +13805,101 @@ function chatSnapShow(zone){
 }
 function chatDragMove(e){
   const d = CHAT_SIZE.drag; if (!d) return;
-  const el = $("chat");
+  const el = $("chat"), z = pageZoom(), X = e.clientX / z, Y = e.clientY / z;
   if (d.move && !d.live){
-    if (Math.abs(e.clientX - d.x0) + Math.abs(e.clientY - d.y0) < 6) return;
+    if (Math.abs(X - d.x0) + Math.abs(Y - d.y0) < 6 / z) return;
     d.live = true;
-    el.classList.add("sizing", "dragging"); document.body.classList.add("chsizing");
-    document.body.style.cursor = "grabbing";
     chatPlaceMenu(false); chatModelMenu(false);
+    chatDragStart("grabbing");
     if (d.p !== "float"){
       /* out of the dock, or out of full screen: a window the size it had the
          last time it floated, held at the same point of its top bar - and
          the work takes its room back at once */
       const fb = chatFloatBox();
-      d.box = { x:e.clientX - d.fx * fb.w, y:e.clientY - Math.min(d.fy, 40), w:fb.w, h:fb.h };
-      d.x0 = e.clientX; d.y0 = e.clientY;
+      d.box = { x:X - d.fx * fb.w, y:Y - Math.min(d.fy, 40), w:fb.w, h:fb.h };
+      d.x0 = X; d.y0 = Y;
       el.dataset.place = "float";
       if (d.p === "full") el.classList.remove("convos");
       document.body.classList.remove("chatting", "chatleft");
       document.body.classList.add("chatover");
-      chatBoxSet(el, d.box);
     }
+    /* where it is carried from: set once, then only the transform moves */
+    d.box = { x:Math.round(d.box.x), y:Math.round(d.box.y), w:Math.round(d.box.w), h:Math.round(d.box.h) };
+    chatBoxSet(el, d.box);
   }
-  const dx = e.clientX - d.x0, dy = e.clientY - d.y0;
+  /* an edge: the sheet goes over the window once it really moves, so a
+     press or a double-click on the edge is left alone */
+  if (!d.move && !d.live){ d.live = true; chatDragStart(d.cursor); }
+  const dx = X - d.x0, dy = Y - d.y0;
   if (!d.move && d.p === "dock"){
     /* docked: the width is how far the pointer is from the edge it is
-       docked against */
-    d.w = chatDockW(d.side === "left" ? e.clientX : window.innerWidth - e.clientX);
-    document.documentElement.style.setProperty("--chat-w", d.w + "px");
+       docked against - the panel's own, until you let go */
+    d.w = chatDockW(d.side === "left" ? X : viewW() - X);
+    el.style.width = d.w + "px";
     return;
   }
-  const P = CHAT_FLOAT.pad, vw = window.innerWidth, vh = window.innerHeight, o = d.box;
+  const P = CHAT_FLOAT.pad, vw = viewW(), vh = viewH(), o = d.box;
   let x = o.x, y = o.y, w = o.w, h = o.h;
   if (d.move){
     x = clampN(o.x + dx, P, vw - w - P);
     y = clampN(o.y + dy, P, vh - h - P);
+    d.b = { x:Math.round(x), y:Math.round(y), w:o.w, h:o.h };
+    el.style.transform = "translate3d(" + (d.b.x - o.x) + "px," + (d.b.y - o.y) + "px,0)";
     /* the magnet: near an edge, show where it will land */
     d.zone = chatSnapZone(e.clientX, e.clientY);
     chatSnapShow(d.zone);
-  } else {
-    /* each edge moves on its own; the one across from it stays put */
-    const R = o.x + o.w, B = o.y + o.h, mw = Math.min(CHAT_FLOAT.minW, R - P), mh = Math.min(CHAT_FLOAT.minH, B - P);
-    if (d.g.indexOf("e") >= 0) w = clampN(R + dx, x + CHAT_FLOAT.minW, vw - P) - x;
-    if (d.g.indexOf("w") >= 0){ x = clampN(o.x + dx, P, R - mw); w = R - x; }
-    if (d.g.indexOf("s") >= 0) h = clampN(B + dy, y + CHAT_FLOAT.minH, vh - P) - y;
-    if (d.g.indexOf("n") >= 0){ y = clampN(o.y + dy, P, B - mh); h = B - y; }
+    return;
   }
+  /* each edge moves on its own; the one across from it stays put */
+  const R = o.x + o.w, B = o.y + o.h, mw = Math.min(CHAT_FLOAT.minW, R - P), mh = Math.min(CHAT_FLOAT.minH, B - P);
+  if (d.g.indexOf("e") >= 0) w = clampN(R + dx, x + CHAT_FLOAT.minW, vw - P) - x;
+  if (d.g.indexOf("w") >= 0){ x = clampN(o.x + dx, P, R - mw); w = R - x; }
+  if (d.g.indexOf("s") >= 0) h = clampN(B + dy, y + CHAT_FLOAT.minH, vh - P) - y;
+  if (d.g.indexOf("n") >= 0){ y = clampN(o.y + dy, P, B - mh); h = B - y; }
   d.b = { x:Math.round(x), y:Math.round(y), w:Math.round(w), h:Math.round(h) };
-  chatBoxSet($("chat"), d.b);
+  chatBoxSet(el, d.b);
 }
 function chatDragUp(){
   const d = CHAT_SIZE.drag; if (!d) return;
   CHAT_SIZE.drag = null;
   /* the top bar pressed and let go without moving: a click, not a drag */
   if (d.move && !d.live) return;
-  $("chat").classList.remove("sizing", "dragging"); document.body.classList.remove("chsizing");
-  document.body.style.cursor = "";
+  const el = $("chat"), u = chatUI();
+  if (d.grip) d.grip.classList.remove("on");
   chatSnapShow("");
-  const u = chatUI();
-  if (d.move){
-    /* let go near an edge: docked there, or the whole screen; anywhere
-       else: a window, where it was let go */
-    if (d.zone) return chatPlaceSet(d.zone);
+  if (d.move && d.zone){
+    /* let go near an edge: docked there, or the whole screen - and the
+       last few pixels of the way there are travelled, not jumped */
+    const was = el.getBoundingClientRect();
+    el.style.transform = "";
+    chatPlaceSet(d.zone);
+    chatSnapLand(was);
+  } else if (d.move){
+    /* anywhere else: a window, where it was let go. The transform that
+       carried it becomes its place, in the same frame, so nothing jumps */
+    el.style.transform = "";
     u.place = "float";
     if (d.b) u.floatBox = d.b;
     touch();
-    return chatPlaceApply();
+    chatPlaceApply();
+  } else {
+    el.style.width = "";
+    if (d.p === "dock" && d.w){ u.dockW = d.w; touch(); }
+    if (d.p === "float" && d.b){ u.floatBox = d.b; touch(); }
+    chatPlaceApply();
   }
-  if (d.p === "dock" && d.w){ u.dockW = d.w; touch(); }
-  if (d.p === "float" && d.b){ u.floatBox = d.b; touch(); }
-  chatPlaceApply();
+  chatDragEnd();
+}
+/* the magnet's last bit: from where you let go into the dock, sliding -
+   by a transform, so it costs the page nothing. Not with motion off. */
+function chatSnapLand(was){
+  const el = $("chat");
+  if (!el.animate || chatPlace() !== "dock" || document.documentElement.getAttribute("data-motion") === "none" ||
+      (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches)) return;
+  const dx = (was.left - el.getBoundingClientRect().left) / pageZoom();
+  if (Math.abs(dx) < 2) return;
+  el.animate([{ transform:"translateX(" + Math.round(dx) + "px)" }, { transform:"none" }],
+             { duration:190, easing:"cubic-bezier(.2,.8,.2,1)" });
 }
 /* the keyboard can widen the docked panel too: the edge takes the focus,
    and the arrows move it (left is wider, the way the edge moves) */
@@ -22695,11 +22794,11 @@ function alertPop(id, anchor){
   document.body.appendChild(el);
   /* beside the bell, kept inside the window */
   const r = anchor && anchor.getBoundingClientRect ? anchor.getBoundingClientRect() : { left:innerWidth / 2, right:innerWidth / 2, top:innerHeight / 3, bottom:innerHeight / 3 };
-  const w = el.offsetWidth, h = el.offsetHeight;
+  const sz = popSize(el), w = sz.w, h = sz.h;
   let x = Math.min(innerWidth - w - 12, Math.max(12, r.right - w));
   let y = r.bottom + 8;
   if (y + h > innerHeight - 12) y = Math.max(12, r.top - h - 8);
-  el.style.left = x + "px"; el.style.top = y + "px";
+  popAt(el, x, y);
   const dt = () => { const a = el.querySelector('input[value="at"]'); if (a) a.checked = true; };
   $("apDate").addEventListener("input", dt); $("apTime").addEventListener("input", dt);
   el.addEventListener("keydown", e => { if (e.key === "Escape"){ e.stopPropagation(); alertPopClose(); } });
@@ -23943,9 +24042,9 @@ function srcMenuOpen(btn){
     d.status === "active" ? ["off", "SrcDeactivate"] : ["on", "SrcActivate"], ["remove", "SrcRemove"]]
     .map(o => '<button type="button" role="menuitem" data-a="' + o[0] + '"' + (o[0] === "remove" ? ' class="danger"' : "") + ">" + LE(o[1]) + "</button>").join("");
   document.body.appendChild(m);
-  const r = btn.getBoundingClientRect(), h = m.offsetHeight, w = m.offsetWidth;
-  m.style.left = Math.max(8, Math.min(window.innerWidth - w - 8, r.right - w)) + "px";
-  m.style.top = (r.bottom + h + 8 > window.innerHeight ? Math.max(8, r.top - h - 4) : r.bottom + 4) + "px";
+  const r = btn.getBoundingClientRect(), sz = popSize(m), h = sz.h, w = sz.w;
+  popAt(m, Math.max(8, Math.min(window.innerWidth - w - 8, r.right - w)),
+        r.bottom + h + 8 > window.innerHeight ? Math.max(8, r.top - h - 4) : r.bottom + 4);
   btn.setAttribute("aria-expanded", "true");
   SRC.menuBtn = btn;
   m.querySelectorAll("button").forEach(b => b.onclick = () => { srcMenuClose(); srcDocAction(id, b.dataset.a, row); });
@@ -25811,11 +25910,11 @@ const RT = (() => {
       b.classList.toggle("on", isOn(k));
     });
     bar.classList.add("on");
-    const w = bar.offsetWidth, h = bar.offsetHeight;
+    const sz = popSize(bar), w = sz.w, h = sz.h;
     let x = rect.left + (rect.width || 0) / 2 - w / 2, y = rect.top - h - 8;
     if (y < 6) y = (rect.bottom || rect.top) + 8;
     x = Math.max(6, Math.min(x, innerWidth - w - 6));
-    bar.style.left = x + "px"; bar.style.top = y + "px";
+    popAt(bar, x, y);
   }
   function hideBar(){
     pinned = false;
@@ -26269,6 +26368,8 @@ document.querySelector("#chat .chh").addEventListener("dblclick", e => {
 document.addEventListener("pointermove", chatDragMove);
 document.addEventListener("pointerup", chatDragUp);
 document.addEventListener("pointercancel", chatDragUp);
+/* a press on the top bar or an edge starts no text selection */
+document.addEventListener("selectstart", e => { if (CHAT_SIZE.drag) e.preventDefault(); });
 window.addEventListener("resize", () => {
   cancelAnimationFrame(CHAT_SIZE.raf);
   CHAT_SIZE.raf = requestAnimationFrame(() => { if (!CHAT_SIZE.drag) chatPlaceApply(); });

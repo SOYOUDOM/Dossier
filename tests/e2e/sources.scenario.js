@@ -730,6 +730,41 @@
   const sreq = DossierFlow.buildRequest("what is on this week?", flowContext("what is on this week?"), flowCfg());
   check("the assistant is told the special days, with their notes", (sreq.workspace.specialDays || []).some(x => x.name === "Month-end close" && /Finance batch/.test(x.note)) &&
         !!DossierFlow.ACTIONS.markDay && /specialDays/.test(DossierFlow.PROMPT));
+  /* ── 5.14.1: at a text size above 100% things land where they are put,
+     and a drag moves the panel without restyling what is inside it ── */
+  closeChat(); S.settings.textScale = 125; applyFeel(); await sleep(250);
+  renderWeek(); await sleep(200);
+  const adds = [...document.querySelectorAll("#vWeek .wc [data-spadd]")];
+  const lastAdd = adds.reduce((a, b) => b.getBoundingClientRect().right > a.getBoundingClientRect().right ? b : a);
+  lastAdd.click(); await sleep(150);
+  const zp = $("spdPop").getBoundingClientRect();
+  check("at text size 125%, the special-day card of the right-hand day is inside the window, beside the day",
+        zp.left >= 0 && zp.top >= 0 && zp.right <= innerWidth && zp.bottom <= innerHeight && zp.right <= lastAdd.getBoundingClientRect().left,
+        JSON.stringify({ l:zp.left, r:zp.right, t:zp.top, b:zp.bottom, w:innerWidth, h:innerHeight }));
+  spdClose();
+  chatUI().floatBox = { x:300, y:60, w:480, h:400 }; openChat(); chatPlaceSet("float"); await sleep(350);
+  const zr1 = chatBox.getBoundingClientRect(), zh = chatBox.querySelector(".chh .chid").getBoundingClientRect();
+  mpe(chatBox.querySelector(".chh .chid"), "pointerdown", zh.left + 20, zh.top + 8);
+  mpe(document, "pointermove", zh.left - 40, zh.top + 28); mpe(document, "pointermove", zh.left - 80, zh.top + 48);
+  const zmid = chatBox.getBoundingClientRect();
+  check("carried by its top bar, the window moves by a transform; its place is not inherited by what is inside",
+        /translate3d/.test(chatBox.style.transform) && getComputedStyle(chatBox.querySelector(".chh")).getPropertyValue("--cf-x") === "" &&
+        Math.abs(zmid.left - (zr1.left - 100)) <= 1, chatBox.style.transform + " " + zmid.left + " " + zr1.left);
+  mpe(document, "pointerup", zh.left - 80, zh.top + 48); await sleep(300);
+  const zr2 = chatBox.getBoundingClientRect();
+  check("...and at 125% it stays under the pointer: let go, it is where the pointer put it",
+        !chatBox.style.transform && Math.abs(zr2.left - (zr1.left - 100)) <= 1 && Math.abs(zr2.top - (zr1.top + 40)) <= 1,
+        JSON.stringify({ before:[zr1.left, zr1.top], after:[zr2.left, zr2.top] }));
+  chatPlaceSet("dock-right"); await sleep(350);
+  const zd = chatBox.getBoundingClientRect(), zg = chatBox.querySelector('.chgrip[data-g="w"]');
+  mpe(zg, "pointerdown", zd.left + 3, 300); mpe(document, "pointermove", zd.left - 50, 300); mpe(document, "pointermove", zd.left - 97, 300);
+  check("...the docked edge: only the panel follows the pointer, the work makes room when you let go",
+        Math.abs(chatBox.getBoundingClientRect().width - (zd.width + 97)) <= 2 && Math.abs(parseFloat(getComputedStyle(appEl).paddingRight) * 1.25 - zd.width) <= 2);
+  mpe(document, "pointerup", zd.left - 97, 300); await sleep(350);
+  const zw = chatBox.getBoundingClientRect().width;
+  check("...and then it has", Math.abs(zw - (zd.width + 97)) <= 2 && Math.abs(parseFloat(getComputedStyle(appEl).paddingRight) * 1.25 - zw) <= 2 &&
+        !chatBox.style.width && !document.body.classList.contains("chsizing") && $("chatCover").hidden, zw + " " + getComputedStyle(appEl).paddingRight);
+  S.settings.textScale = 100; applyFeel(); chatUI().dockW = 452; chatPlaceApply(); await sleep(200);
   setView("day");
   return { checks };
 })()

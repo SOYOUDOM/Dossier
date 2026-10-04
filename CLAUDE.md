@@ -91,13 +91,13 @@ A *workspace* is a folder the user picks (File System Access API):
 - Commit messages: clear summary + body; no model names in commits, code or
   docs. Do not open a pull request unless the owner asks.
 - Work so far is on branch `claude/chat-panel-pixel-art-gifs-d822hq`
-  (latest: 5.14.0). Follow the branch instructions of your own session.
+  (latest: 5.14.1). Follow the branch instructions of your own session.
 
 ## Testing
 
 ```
 node --test                                   # 47 unit tests (Sources, grounding, flow reply fields, diagrams)
-node tests/e2e/run.js                         # the app in headless Chrome/Edge: 146 checks (CHROME=<path> to choose)
+node tests/e2e/run.js                         # the app in headless Chrome/Edge: 151 checks (CHROME=<path> to choose)
 node flow/check-prompt.js                     # after editing flow/prompt.txt ...
 python3 flow/embed-prompt.py                  # ... then copy it into flow.js (PROMPT_BUILTIN)
 node tests/fixtures/make-pdf.js               # regenerate the PDF fixtures
@@ -119,6 +119,32 @@ Also useful:
   `DossierFlow.validate`. `tests/e2e/run.js` is a working example of all of it.
 
 ## Recent history (newest first)
+
+- **5.14.1** — Owner: "the dialog of calendar appears out of the screen;
+  float is so laggy and auto dock so laggy".
+  - *Zoom*: Text size is `zoom` on `<html>` (`applyFeel`). Pointer,
+    `innerWidth` and `getBoundingClientRect()` are screen px; a style length
+    is page px, drawn ×zoom. Helpers after `applyFeel`: `pageZoom()`,
+    `viewW()`/`viewH()`, `popSize(el)` (screen size), `popAt(el, x, y)`
+    (screen point → style, also `max-height` = the window). Used by
+    `spdOpen`, the alert card, `srcMenuOpen`, the rich-text bar, the pet in
+    the air, `chatPlaceMenu`/`chatModelMenu` (divided), and all of the chat
+    drag code (works in page px: `X = clientX / z`). Anything new placed
+    from a measurement must go through them.
+  - *Drag speed* (measured: a move cost 15–30 ms, now ~0.4 ms):
+    `@property --cf-x/y/w/h {inherits:false}` (inherited custom properties
+    restyled the ~2,000 elements inside the chat); a move-drag sets
+    `transform: translate3d` and commits `--cf-*` on pointer-up; a docked
+    edge drag sets the panel's inline `width` and `--chat-w` (root, restyles
+    everything) only on pointer-up; `chatPlaceApply` sets `--chat-w` only
+    when it changed; `chatDragStart`/`chatDragEnd` (inline
+    `transition:none` on the panel, `#chatCover` `.chcover` sheet holds the
+    cursor) replace `body.chsizing *{cursor}` / `user-select` and the
+    `.chat.sizing/.dragging` classes; the live grip is `.chgrip.on`;
+    `selectstart` is cancelled during a drag; `chatSnapShow` only acts on a
+    zone change; `chatSnapLand(was)` slides the last bit into a dock (WAAPI,
+    not with motion none).
+  - e2e: 5 checks at text size 125% (they fail on 5.14.0).
 
 - **5.14.0** — Eight requests from the owner in one go:
   - *Magnet dock*: `chatMoveDown` drags from any place (header, not its
