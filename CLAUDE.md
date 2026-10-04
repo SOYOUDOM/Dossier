@@ -153,6 +153,9 @@ Also useful:
     `spdForFlow()` → `workspace.specialDays` (−7 … +183 days, ≤60).
     flow.js `markDay` / `unmarkDay` (64 actions, 43 writes).
   - Docs: both AI guides updated (reason tier, special days, repairs).
+  - The owner pushed KalKech's logo (`logo.png`, `favicon.ico`) and removed
+    `assets/assistant-logo.png` (optional; the panel falls back to its
+    built-in mark). There is no SVG source for the new logo in `art/`.
 
 - **5.13.0** — Renamed to KalKech (កាលកិច្ច) and a third model. Rename: every
   *visible* "Resolv" (strings only - code comments were left alone; the

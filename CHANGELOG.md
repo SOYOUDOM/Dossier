@@ -60,6 +60,10 @@ longer shows as plain text, and the calendar has special days.**
     mark or unmark a day for you (two new actions, `markDay` and
     `unmarkDay`, confirmed like any change; 64 actions now, 43 that
     change something).
+- **KalKech's own logo** (`logo.png`, `favicon.ico`) replaces Resolv's R
+  in the header and the browser tab. The assistant's panel uses its
+  built-in mark (the optional `assets/assistant-logo.png` is no longer
+  shipped; put your own there and it is still used).
 - **How the AI works** (`docs/HOW-THE-AI-WORKS.md` and
   `docs/how-the-ai-works.html`) is up to date: KalKech reason and its
   bigger limits, the three models, naming the assistant, special days, the
