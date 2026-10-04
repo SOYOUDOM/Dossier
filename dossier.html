@@ -11,7 +11,7 @@
      These are same-folder files, so nothing is fetched over the network. -->
 <link rel="icon" href="favicon.ico">
 <link rel="apple-touch-icon" href="logo.png">
-<title>Resolv — Support Operations Record</title>
+<title>KalKech — Support Operations Record</title>
 <style>
 /* ═══════════════════════════════════════════════════════════════════════════
    DOSSIER
@@ -167,6 +167,12 @@ body.chatting .find{max-width:190px}
 .brand .wm{display:flex;flex-direction:column;line-height:1.15}
 .brand .wm b{font-family:var(--f-display);font-size:16px;font-weight:600;letter-spacing:.06em;text-transform:uppercase}
 .brand .wm span{font-size:10px;color:var(--ink-3);letter-spacing:.04em}
+/* the name in Khmer, beside the Latin one: in Khmer letters at a size Khmer
+   can be read at (the script is smaller than Latin at the same size), in
+   the interface face, which carries the bundled Khmer font */
+.brand .wm b em{font-style:normal}
+.brand .wm b .wmk{font-style:normal;font-family:var(--f-ui);font-size:12.5px;font-weight:600;letter-spacing:0;
+  text-transform:none;margin-left:7px;color:var(--ink-2);vertical-align:1px}
 
 .wsbtn{
   display:flex;align-items:center;gap:8px;height:34px;padding:0 11px;border-radius:var(--r-sm);
@@ -3199,7 +3205,7 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
 .chat[data-lm] .chb.bot{font-size:14px}
 .chat[data-lm] .chb.bot.ans,.chat[data-lm] .chb.bot.thinking{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;column-gap:4px}
 .chat[data-lm] .chb.bot.ans > *,.chat[data-lm] .chb.bot.thinking > *{grid-column:1 / -1;min-width:0}
-.chat[data-lm] .chb.bot.ans::before,.chat[data-lm] .chb.bot.thinking::before{content:var(--lm-name,"Resolv");grid-column:1 / -1;
+.chat[data-lm] .chb.bot.ans::before,.chat[data-lm] .chb.bot.thinking::before{content:var(--lm-name,"KalKech");grid-column:1 / -1;
   display:flex;align-items:center;height:24px;padding-left:33px;margin-bottom:8px;
   font-size:13px;font-weight:650;letter-spacing:-.005em;color:var(--ch-ink);
   background:var(--lm-mark) 0 50% / 24px 24px no-repeat}
@@ -4201,6 +4207,7 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
 :root[data-look="nova"] .mast::after{display:none}
 :root[data-look="nova"] .brand .wm b{text-transform:none;letter-spacing:-.02em;font-weight:700;font-size:17px}
 :root[data-look="nova"] .brand .wm span{font-size:11px;letter-spacing:0}
+:root[data-look="nova"] .brand .wm b .wmk{font-size:13.5px;margin-left:6px;vertical-align:0}
 :root[data-look="nova"] .brand .seal{border-radius:10px}
 :root[data-look="nova"] .tabs button{border-radius:9px;font-weight:600}
 :root[data-look="nova"] .tabs button:hover{background:var(--nx-hover)}
@@ -4438,6 +4445,25 @@ body.chsizing *{cursor:inherit!important}
 .chplm hr{border:0;border-top:1px solid var(--ch-line);margin:4px 6px;width:auto}
 .chplm .plr{display:block;font-size:11.5px;color:var(--ch-dim);padding:7px 10px}
 .chplm .plr:hover{color:var(--ch-ink)}
+/* ── which model answers ──────────────────────────────────────────────
+   A small pill beside Send, in every skin: the model you picked for what
+   you type here. KalKech reason wears the accent, so a slow answer on its
+   way is never a surprise. */
+.chmodel{flex:0 0 auto;align-self:flex-end;display:inline-flex;align-items:center;gap:3px;height:30px;margin:0 0 3px;
+  padding:0 9px 0 11px;border-radius:999px;border:1px solid var(--ch-line);background:transparent;color:var(--ch-dim);
+  font:inherit;font-size:11.5px;font-weight:600;cursor:pointer;white-space:nowrap;transition:color .15s,border-color .15s,background .15s}
+.chmodel[hidden]{display:none}
+.chmodel:hover,.chmodel[aria-expanded="true"]{color:var(--ch-ink);border-color:color-mix(in srgb,var(--ch-acc) 45%,var(--ch-line))}
+.chmodel:focus-visible{outline:2px solid var(--ch-acc);outline-offset:1px}
+.chmodel .mc{font-size:9px;opacity:.7}
+.chmodel[data-model="reason"]{color:var(--ch-acc);border-color:color-mix(in srgb,var(--ch-acc) 55%,var(--ch-line));
+  background:color-mix(in srgb,var(--ch-acc) 9%,transparent)}
+.chat[data-lm] .chmodel{grid-row:2;grid-column:2;justify-self:end;align-self:center;margin:0 6px 0 0}
+/* its menu opens upwards, from the bottom of the panel */
+.chmm .pli{display:none}
+.chmm button{grid-template-columns:minmax(0,1fr) 14px}
+.chmm .mx{font-size:10.5px;color:var(--ch-dim);padding:6px 10px 2px}
+
 /* the same three in Look and behaviour */
 .chplaces{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-bottom:6px}
 .chplaces button{display:flex;flex-direction:column;align-items:center;gap:5px;padding:9px 4px 7px;border-radius:10px;
@@ -4458,7 +4484,7 @@ body.chsizing *{cursor:inherit!important}
     <div class="brand">
       <span class="seal" id="seal"><img id="brandLogo" src="logo.png" alt=""
             onload="this.parentNode.classList.add('hasimg')" onerror="this.remove()"></span>
-      <span class="wm"><b data-i18n="AppName">Resolv</b><span data-i18n="AppTagline">Support operations record</span></span>
+      <span class="wm"><b><em data-i18n="AppName">KalKech</em><i class="wmk" lang="km">កាលកិច្ច</i></b><span data-i18n="AppTagline">Support operations record</span></span>
     </div>
 
     <button class="wsbtn" id="wsBtn" title="Workspace folder">
@@ -4627,7 +4653,7 @@ body.chsizing *{cursor:inherit!important}
     <button class="ib" id="chatMenu" data-i18n-title="ChatConversations" title="Conversations">☰</button>
     <span class="chorb" id="chatOrb" aria-hidden="true"><i></i></span>
     <span class="chid">
-      <span class="t" data-i18n="ChatTitle">Resolv Assistant</span>
+      <span class="t" data-i18n="ChatTitle">KalKech Assistant</span>
       <span class="ctn" id="chatNow"></span>
       <span class="sub" id="chatState" data-i18n="ChatSub">your workspace copilot · nothing leaves this folder</span>
     </span>
@@ -4643,6 +4669,8 @@ body.chsizing *{cursor:inherit!important}
   <!-- where the panel sits: beside the work, a window of its own, or the
        whole screen (filled in by chatPlaceMenu) -->
   <div class="chplm" id="chatPlaceMenu" role="menu" hidden></div>
+  <!-- the models to choose from (filled in by chatModelMenu) -->
+  <div class="chplm chmm" id="chatModelMenu" role="menu" hidden></div>
   <!-- the edges that can be dragged: the left one when docked, all eight
        when floating -->
   <div class="chgrip" data-g="w" role="separator" aria-orientation="vertical" tabindex="0"
@@ -4661,7 +4689,11 @@ body.chsizing *{cursor:inherit!important}
           <button class="ib chpin" id="chatPin" data-i18n-title="AttachAFile"
                   title="Attach a file">&#128206;</button>
           <textarea id="chatq" rows="1" data-i18n-ph="ChatPlaceholder"
-                    placeholder="Ask Resolv…" spellcheck="false"></textarea>
+                    placeholder="Ask KalKech…" spellcheck="false"></textarea>
+          <!-- which model answers what you type: shown once the flow has
+               more than one (Setup → Models in your flow) -->
+          <button class="chmodel" id="chatModel" type="button" aria-haspopup="menu" aria-expanded="false" hidden
+                  data-i18n-title="ChatModelBtn" title="Which model answers"><span class="ml"></span><span class="mc" aria-hidden="true">▾</span></button>
           <button class="btn pri" id="chatGo" data-i18n="ChatAsk">Ask</button>
         </div>
         <div class="chhint" id="chatHint" aria-hidden="true"></div>
@@ -4901,7 +4933,7 @@ const STRINGS = {
   Week: "Week",
   Library: "Library",
   Insight: "Insight",
-  AppName: "Resolv",
+  AppName: "KalKech",
   AppTagline: "Support operations record",
   SearchEverything: "Search everything…",
   TodaysCompletion: "Today's completion",
@@ -4956,7 +4988,7 @@ const STRINGS = {
   Group_ComingUp: "Coming up",
   Group_ClosedToday: "Closed today",
   NothingOnTheSheet: "Nothing on the sheet",
-  NothingOnTheSheetHint: "Type what you're working on in the bar above. Try <b>check nightly job failures p2 @Imaging 30m today</b> — the pieces get pulled out automatically, and Resolv starts learning your patterns from the first record.",
+  NothingOnTheSheetHint: "Type what you're working on in the bar above. Try <b>check nightly job failures p2 @Imaging 30m today</b> — the pieces get pulled out automatically, and KalKech starts learning your patterns from the first record.",
   Foot_Records: "records",
   Foot_ClosedToday: "closed today",
   Foot_Documents: "documents",
@@ -4976,7 +5008,7 @@ const STRINGS = {
   Tab_Help: "Help",
   Language: "Language",
   LanguageHeading: "Language",
-  LanguageIntro: "Phrases live in <b>lang/</b> in your workspace, one XML file per language. Resolv reads every file it finds there when it opens.",
+  LanguageIntro: "Phrases live in <b>lang/</b> in your workspace, one XML file per language. KalKech reads every file it finds there when it opens.",
   LanguageAddHint: "Type a code and press <b>Write or top up a language file</b>. A new file lists every phrase with a blank value; an existing one keeps every translation you have already done and adds only what is new. Anything left blank stays English, so you can translate in passes.",
   WriteLanguageFile: "Write or top up a language file",
   RefreshLanguages: "Reload the language files",
@@ -4993,12 +5025,12 @@ const STRINGS = {
   ALaptopRebuild: "a laptop rebuild.</p>",
   ANameRunsUntilAWord: "A name runs until a word that cannot be part of one — <code>~Sok Dara today</code> is Sok Dara, due today. ",
   APageInABrowserCannot: "A page in a browser cannot start a program, and a browser that could would be one you ",
-  APageInABrowserCannot2: "A page in a browser cannot start a program. So Resolv writes the request to a file instead, ",
+  APageInABrowserCannot2: "A page in a browser cannot start a program. So KalKech writes the request to a file instead, ",
   APublicHolidayAnythingDueToday: " — a public holiday. Anything due today was scheduled onto a day off.",
   ARecordCannotWaitForItself: "A record cannot wait for itself",
   ARecordIsOneOccurrenceThe: "A record is one occurrence. The thing that keeps producing them is a <b>problem</b>, and six ",
   ARecordItWasWaitingFor: "A record it was waiting for was deleted",
-  ARecordWithNoDueDate: "A record with no due date never appears in Day and never counts as Slipping, so Resolv fills one ",
+  ARecordWithNoDueDate: "A record with no due date never appears in Day and never counts as Slipping, so KalKech fills one ",
   ARoutineCanNameAFile: "A routine can name a file from <b>scripts/</b>. The record it raises each morning then arrives ",
   ARoutineSetToRunOn: "A routine set to <b>run on its own</b> needs nobody at all. The runner reads the routines out ",
   ASetPickedFromInsight: "a set picked from Insight",
@@ -5070,7 +5102,7 @@ const STRINGS = {
   ChooseWorkspaceFolder: "Choose workspace folder…",
   ChooseWorkspaceFolder2: "Choose workspace folder",
   Cleared: "Cleared",
-  ClickOneAndDossierWritesThe: "Click one and Resolv writes the case: the dates, the cost, every occurrence, and what you did ",
+  ClickOneAndDossierWritesThe: "Click one and KalKech writes the case: the dates, the cost, every occurrence, and what you did ",
   ClickOneForTheCaseTo: " — click one for the case to fix it properly</div>",
   ClickToApplyIgnoreToDismiss: "Click to apply, ignore to dismiss.</div></div>",
   ClipboardAndRecordsTheChaseAgainst: "clipboard and records the chase against every record it covered, so the count stays honest.</p>",
@@ -5133,23 +5165,23 @@ const STRINGS = {
   DayOff: "day off",
   DaySLostWaitingOn: " day(s) lost waiting on ",
   DaySSoFar: " day(s) so far",
-  DaysARecordCanSitWith: "Days a record can sit with someone else before Resolv reminds you to chase them.</p>",
+  DaysARecordCanSitWith: "Days a record can sit with someone else before KalKech reminds you to chase them.</p>",
   DaysLostWaitingOnOthers: "Days lost waiting on others",
   DaysStillMoving: " days. Still moving?",
   DeleteTheFileToo: "Delete the file too",
   Deleted: "Deleted ",
   DeletedTheFoldersStayOnDisk: " deleted — the folders stay on disk",
   Dependencies: "Dependencies",
-  DeriveThemFromSoDossierAsks: "derive them from, so Resolv asks you for them rather than guessing and being quietly wrong. ",
+  DeriveThemFromSoDossierAsks: "derive them from, so KalKech asks you for them rather than guessing and being quietly wrong. ",
   DesktopAlertsUnavailableHereInApp: "Desktop alerts unavailable here — in-app reminders ",
   DidNotGiveTypeOneOr: "did not give — type one, or paste a message that names one, and yours wins. A record with ",
   DiscardsTheCurrentRecords: "discards the current records",
   DocumentsFiled: "| Documents filed | ",
   DocumentsTasks: "Documents (tasks/",
-  DossierIsFallingBackToThe: "Resolv is falling back to the system font.</p>",
+  DossierIsFallingBackToThe: "KalKech is falling back to the system font.</p>",
   DossierJsonEveryRecordNoteAnd: "  dossier.json              every record, note and work log\n",
-  DossierRemembersYourFolderBrowsersRequire: "Resolv remembers your folder <b>{p0}</b>. Browsers require one click before handing access back.",
-  DossierStillNeverExecutesAnythingA: "Resolv still never executes anything — a browser cannot, and this one does not try. It hands you ",
+  DossierRemembersYourFolderBrowsersRequire: "KalKech remembers your folder <b>{p0}</b>. Browsers require one click before handing access back.",
+  DossierStillNeverExecutesAnythingA: "KalKech still never executes anything — a browser cannot, and this one does not try. It hands you ",
   DotBad: "dot bad",
   DotWarn: "dot warn",
   DragAFileOntoAnyRecord: "Drag a file onto any record — a meeting deck, an incident email, a screenshot. It gets copied into ",
@@ -5161,7 +5193,7 @@ const STRINGS = {
   DueToday: "due today",
   EachOfTheseWasClosedOn: "Each of these was closed on its own, so the cause is still in place. At the rate above, the next {p0} will cost about the same again. Requesting time for a permanent fix.",
   EachTimeWhichIsUsuallyThe: "each time — which is usually the proof it was worked around rather than fixed. Copy it into a ",
-  EchoOffRemBuiltByDossier: "@echo off\r\nrem Built by Resolv for ",
+  EchoOffRemBuiltByDossier: "@echo off\r\nrem Built by KalKech for ",
   Enter: "Enter",
   Estimate: "Estimate",
   EvenTheOnesNotDueA: "Even the ones not due a chase yet",
@@ -5184,7 +5216,7 @@ const STRINGS = {
   FiltersCleared: "Filters cleared",
   FiltersResetOnEveryOpen: "Filters reset on every open",
   FiltersWillBeWaitingForYou: "Filters will be waiting for you next time",
-  FinishedAfterDossierStoppedWaiting: "— finished after Resolv stopped waiting",
+  FinishedAfterDossierStoppedWaiting: "— finished after KalKech stopped waiting",
   FixedDatesAddedFor: " fixed dates added for ",
   FixedDatesAddedForTheLunar: " fixed dates added for {p0} — the lunar ones are still yours to add",
   FocusTheComposeBar: "Focus the compose bar",
@@ -5231,8 +5263,8 @@ const STRINGS = {
   IncidentsThatEachTookNinetyMinutes: "incidents that each took ninety minutes look like six ordinary days until you add them up. ",
   InsightGroupsRecordsByHowAlike: "Insight groups records by how alike their titles are and shows the total — how many times, how ",
   InstructionTheBrowserEnforcesNoFetch: "instruction the browser enforces: no fetch, no XHR, no WebSocket, no form post. Open F12 → Network and you ",
-  IntoTheComposeBarAnythingWith: "into the compose bar — anything with a line break in it, or longer than a line — and Resolv reads ",
-  IsDossierForgetsWhichFolderIt: "is Resolv forgets which folder it was, and you point it back. Keep the folder in OneDrive and it survives ",
+  IntoTheComposeBarAnythingWith: "into the compose bar — anything with a line break in it, or longer than a line — and KalKech reads ",
+  IsDossierForgetsWhichFolderIt: "is KalKech forgets which folder it was, and you point it back. Keep the folder in OneDrive and it survives ",
   IsThereAnythingYouNeedFrom: "Is there anything you need from me to move {p0} along? If not, when can I expect ",
   IsUnblocked: " is unblocked — ",
   ItAddsNothingNewToA: "It adds nothing new to a record. A step is a work-log entry and a screenshot is an attachment, so a ",
@@ -5241,7 +5273,7 @@ const STRINGS = {
   ItHasBeenWithYouSince: "It has been with you since ",
   ItInsteadOfPastingItThe: "it instead of pasting it: the ticket number, which of your systems it names, who is asking, how ",
   ItIsPausedResumeItFirst: "It is paused — resume it first",
-  ItIsRaisedOnceForThe: "It is raised <b>once for the day it is due</b>. Close Resolv and open it again and nothing is ",
+  ItIsRaisedOnceForThe: "It is raised <b>once for the day it is due</b>. Close KalKech and open it again and nothing is ",
   ItLooksOnceASecondAt: "It looks once a second — at the queue and at your routines both — so <b>$</b> and ",
   ItOnlyEverRunsAFile: "It only ever runs a file that is <b>already in scripts/</b>. The request names a file, never a ",
   ItStands: "it stands",
@@ -5269,8 +5301,8 @@ const STRINGS = {
   LinkAWorkspaceFolderFirst: "Link a workspace folder first",
   LinkAWorkspaceFolderFirst2: "link a workspace folder first",
   LinkAWorkspaceFolderFirstThen: "Link a workspace folder first, then drag files onto a record.",
-  LinkItAndThisOneMoves: "Link it and this one moves to Blocked; when the other closes, Resolv reopens it and says so.</dd>",
-  LinkingARecordThatIsStill: "Linking a record that is still open moves this one to Blocked. When the last one closes, Resolv reopens this by itself and tells you.</div>",
+  LinkItAndThisOneMoves: "Link it and this one moves to Blocked; when the other closes, KalKech reopens it and says so.</dd>",
+  LinkingARecordThatIsStill: "Linking a record that is still open moves this one to Blocked. When the last one closes, KalKech reopens this by itself and tells you.</div>",
   ListeningTheDaySheetSaysSo: "listening, the Day sheet says so rather than leaving you to find out at 8:30.</p>",
   LogThisAnywayOrOpenThat: "). Log this anyway, or open that one.</div>",
   Logged: "Logged",
@@ -5355,7 +5387,7 @@ const STRINGS = {
   NothingDueToday: "Nothing due today",
   NothingHasComeBackOftenEnough: "Nothing has come back often enough to call a pattern yet.",
   NothingHasGoneQuietYetMenu: "Nothing has gone quiet yet — Menu → Chase everyone waiting to write anyway",
-  NothingIsBeingSavedYetPick: "Nothing is being saved yet. Pick a folder and Resolv keeps every record, note and document there — clearing your browser can never touch it.",
+  NothingIsBeingSavedYetPick: "Nothing is being saved yet. Pick a folder and KalKech keeps every record, note and document there — clearing your browser can never touch it.",
   NothingIsHoldingThisAnyMore: "\nNothing is holding this any more.",
   NothingIsRunningYourScriptsA: "Nothing is running your scripts. A routine set to <b>run itself</b> will raise its record on time and then do nothing, because the runner is not started.",
   NothingIsRunningYourScriptsMenu: "Nothing is running your scripts. Menu → Setup → Running a script.",
@@ -5371,7 +5403,7 @@ const STRINGS = {
   NothingSelectedToChase: "Nothing selected to chase",
   NowWaitsFor: " now waits for ",
   OccurrenceSPinnedResetClearsIt: " occurrence(s) pinned — Reset clears it",
-  OfDossierJsonAndAtThe: "of dossier.json, and at the routine's time it runs the script — <b>whether Resolv is open or ",
+  OfDossierJsonAndAtThe: "of dossier.json, and at the routine's time it runs the script — <b>whether KalKech is open or ",
   OfThemStillOpen: " of them {p0} still open.",
   OfTrackedTime: " of tracked time",
   OffersToMakeThoseIntoRoutines: "offers to make those into routines. A problem is the opposite: unplanned, irregular, and not ",
@@ -5396,7 +5428,7 @@ const STRINGS = {
   PartlyFromWhoRaisedItThat: "Partly from who raised it — that is the pattern in your own records. ",
   PastItsDueDate: "past its due date",
   PasteItIntoATerminalIt: "Paste it into a terminal — it starts the runner at every logon",
-  PasteItIntoTheComposeBar: "Paste it into the compose bar with Ctrl+V and Resolv will read it",
+  PasteItIntoTheComposeBar: "Paste it into the compose bar with Ctrl+V and KalKech will read it",
   PastedMessage: "Pasted message",
   Pause: "Pause",
   PausedItWillNotRaiseAnything: "Paused — it will not raise anything",
@@ -5484,7 +5516,7 @@ const STRINGS = {
   ResumedNextDue: "Resumed — next due ",
   ResumedTodaysRecordIsOnThe: "Resumed — today's record is on the sheet",
   ReuseThisWording: " · reuse this wording",
-  RightsDayPeaceDayThoseFall: "Rights Day, Peace Day. Those fall on the same date every year, so Resolv can work them out for ",
+  RightsDayPeaceDayThoseFall: "Rights Day, Peace Day. Those fall on the same date every year, so KalKech can work them out for ",
   RoughlyEvery: " — roughly every ",
   RoutineAddedNextDue: "Routine added — next due ",
   RoutineAddedTodaysRecordIsOn: "Routine added — today's record is on the sheet",
@@ -5506,7 +5538,7 @@ const STRINGS = {
   SavedAt: "saved",
   SaveClickHint: "Not written yet \u2014 click to save now",
   SaveRetryIn: "not saved yet \u00b7 trying again in {p0}s",
-  SaveKeepsTrying: "Resolv keeps trying by itself.",
+  SaveKeepsTrying: "KalKech keeps trying by itself.",
   SaveNoBridge: "the bridge is not answering",
   SaveBridgeSlow: "the database had not finished after two and a half minutes",
   SaveStuck: "a save never came back, so it was let go of and is being tried again",
@@ -5557,7 +5589,7 @@ const STRINGS = {
   TierLabel: "Models in your flow",
   TierOne: "One model answers everything",
   TierTwo: "Two: a fast one for chat, a stronger one for hard jobs",
-  TierHint: "Every request says tier \"fast\" or \"deep\". Choose Two only after your flow has its second prompt action (flow/POWER-AUTOMATE.md, section 4e) - a flow without it simply answers everything with its one model.",
+  TierHint: "Every request says tier \"fast\", \"deep\" or \"reason\". Choose Two only after your flow has its second prompt action (flow/POWER-AUTOMATE.md, section 4e), and Three only after it has KalKech reason as well (section 4g) - a flow without them answers with what it has.",
   TierWait: "Wait for the strong model (seconds)",
   TierWhich: "Strong model for",
   TierModeReflect: "the daily look back",
@@ -5574,7 +5606,7 @@ const STRINGS = {
   NovaOn: "Nova is on. The \u25d0 button switches light and dark; Menu \u2192 Appearance \u2192 Look brings any other design back.",
   NovaInvite: "There is a new design, Nova - a clearer layout, quick actions on every record, light and dark. Your current look stays one click away.",
   NovaTry: "Try Nova",
-  UpdReady: "Resolv {v} is in the folder, and this window is still running {now}. Reload to use it - your work is saved first.",
+  UpdReady: "KalKech {v} is in the folder, and this window is still running {now}. Reload to use it - your work is saved first.",
   UpdReload: "Reload now",
   NxGroupWork: "Work",
   NxGroupKnow: "Knowledge",
@@ -5619,13 +5651,15 @@ const STRINGS = {
   BriefAdded: "Added to About my work: {p0}",
   BriefAddAlready: "That is already in About my work.",
   BriefOpen: "Open About my work",
-  PlaceholderLost: "The AI looked at the blank picture Resolv has to send when nothing is attached, instead of your words \u2014 twice. Ask again in other words. To stop this for good, your flow can skip the picture when there is none: flow/POWER-AUTOMATE.md, \u00a74f.",
+  PlaceholderLost: "The AI looked at the blank picture KalKech has to send when nothing is attached, instead of your words \u2014 twice. Ask again in other words. To stop this for good, your flow can skip the picture when there is none: flow/POWER-AUTOMATE.md, \u00a74f.",
   FlowLeanAnswered: "Answered without your notes, lessons, runbooks and records: the full question failed in the flow, and this one went through. If that happens again and again, something in them is the reason - most often Microsoft's content filter reading a note or lesson as orders to the AI.",
   FlowLeanFiltered: "Answered without your notes, lessons, runbooks and records: Microsoft's content filter blocked the full question (\u201cPrompt was filtered\u201d). Something in them reads to the filter like instructions to the AI - look for a note or lesson written as rules (\u201cDo not\u2026\u201d, \u201cAlways\u2026\u201d, \u201cYou must\u2026\u201d) and reword it as plain facts.",
   TierFastTook: "fast model typically {p0} s (last {n})",
   TierFastTookNone: "fast model not measured yet",
   TierDeepTook: "strong model typically {p0} s (last {n})",
   TierDeepTookNone: "strong model not measured yet",
+  TierReasonTook: "KalKech reason typically {p0} s (last {n})",
+  TierReasonTookNone: "KalKech reason not measured yet",
   TierSame: "About the same: most of the time is Power Automate itself, not the model. The strong model then costs AI Builder credits rather than time - tick \u201cevery chat question\u201d below if you would rather have its answers everywhere.",
   TierAgain: "Think harder",
   Retry: "Retry",
@@ -5634,6 +5668,7 @@ const STRINGS = {
   BranchHint: "Each answer is a branch of this conversation and keeps its own follow-ups. Press one to switch.",
   BranchNormal: "Normal",
   BranchHarder: "Harder",
+  BranchReason: "Reason",
   BranchRetry: "Retry",
   BranchFailed: "Asking again did not work, so the answer you had is back.",
   BranchNoFiles: "Asked again without the files that went with the question: they are only kept until the app is closed. Attach them again to ask with them.",
@@ -5650,6 +5685,31 @@ const STRINGS = {
   TxSubject: "Subject",
   TxCopySubject: "Copy the subject line",
   TierAgainHint: "Ask this again with the strong model - its answer becomes a branch, and this one stays one press away",
+  TierReasonAgain: "KalKech reason",
+  TierReasonHint: "Ask this again with KalKech reason - a reasoning model that reads much more of your workspace and thinks it through. Slower: up to two minutes. Its answer becomes a branch; this one stays one press away.",
+  TierReasonShort: "KalKech reason",
+  TierReasonAsking: "KalKech reason is thinking it through\u2026",
+  TierReasonStill: "Still reasoning \u2014 KalKech reason can take up to two minutes\u2026",
+  TierThree: "Three: fast, strong, and KalKech reason (a reasoning model)",
+  TierReasonWait: "Wait for KalKech reason (seconds)",
+  TierHard: "The ticked jobs go to",
+  TierHardDeep: "the strong model",
+  TierHardReason: "KalKech reason (slowest, most thorough)",
+  TierReasonSetupHint: "KalKech reason is the third prompt action in your flow (flow/POWER-AUTOMATE.md, section 4g) \u2014 GPT-5 reasoning, or the strongest reasoning model you have. It is given far more of your workspace than the other two: more of the conversation, records with their notes, more notes, lessons, runbooks and document passages. It can take up to two minutes, so it answers only when you choose it: the pill beside Send, \u25c6 KalKech reason under an answer, or the ticked jobs here.",
+  ChatModelBtn: "Which model answers",
+  ChatModelHead: "Answer what I type with",
+  ChatModel_auto: "Auto",
+  ChatModel_autoWhy: "The fast model for chat; the strong one for the jobs ticked in Setup.",
+  ChatModel_fast: "Fast",
+  ChatModel_fastWhy: "The quick model, for everyday questions.",
+  ChatModel_deep: "Strong",
+  ChatModel_deepWhy: "A stronger model: better answers, a few seconds slower.",
+  ChatModel_reason: "KalKech reason",
+  ChatModel_reasonWhy: "A reasoning model (GPT-5 reasoning) that thinks it through and reads the most of your workspace. Slowest \u2014 up to two minutes.",
+  ChatModelShort_auto: "Auto",
+  ChatModelShort_fast: "Fast",
+  ChatModelShort_deep: "Strong",
+  ChatModelShort_reason: "Reason",
   LocalFirstLabel: "Simple questions",
   LocalFirstOn: "Answer them on this PC, instantly",
   LocalFirstOff: "Send everything to the flow",
@@ -5705,7 +5765,7 @@ const STRINGS = {
   SetATargetDate: "Set a target date",
   SetTo: " set to ",
   Settings: "Settings",
-  ShouldNotInstallSoDossierWrites: "should not install. So Resolv writes the request to a file instead, and a small batch file ",
+  ShouldNotInstallSoDossierWrites: "should not install. So KalKech writes the request to a file instead, and a small batch file ",
   ShowAll: "Show all ",
   ShowTheLastOnly: "Show the last 6 only",
   Signed: "Signed ",
@@ -5723,7 +5783,7 @@ const STRINGS = {
   Standup: "Standup",
   StandupNote: "Standup note",
   Start: "Start",
-  StartItDoubleClickScriptsDossier: "Start it: double-click <b>scripts\\dossier-runner.bat</b>. Its window must say it is watching <b>this</b> folder — if it names a different path, you have two copies of the workspace and Resolv is pointed at the other one.",
+  StartItDoubleClickScriptsDossier: "Start it: double-click <b>scripts\\dossier-runner.bat</b>. Its window must say it is watching <b>this</b> folder — if it names a different path, you have two copies of the workspace and KalKech is pointed at the other one.",
   StartTheClock: "Start the clock",
   Status: "Status    : ",
   Status2: "Status",
@@ -5740,7 +5800,7 @@ const STRINGS = {
   SwitchFolder: "Switch folder…",
   ThisBrowser: "this browser",
   KeepRecordsInThisBrowser: "Keep records in this browser",
-  NothingIsBeingKeptYetBrowser: "Nothing is being kept yet. This browser cannot open a folder on disk, so Resolv can keep every record, note and document inside the browser instead. Clearing the browser\u2019s data would remove them, so export a copy from Setup now and then \u2014 or open this file in Edge or Chrome to use a folder.",
+  NothingIsBeingKeptYetBrowser: "Nothing is being kept yet. This browser cannot open a folder on disk, so KalKech can keep every record, note and document inside the browser instead. Clearing the browser\u2019s data would remove them, so export a copy from Setup now and then \u2014 or open this file in Edge or Chrome to use a folder.",
   KeptInThisBrowserInstead: "no folder on disk in this browser \u2014 records are kept inside the browser; export a copy now and then",
   System: "System",
   System2: "System    : ",
@@ -5760,13 +5820,13 @@ const STRINGS = {
   ThatScriptIsAlreadyInThe: "That script is already in the folder",
   The: "The ",
   TheBrowserIsNeverToldThe: "The browser is never told the real path of the folder you picked — that is part of the sandbox. ",
-  TheBrowserIsNotAllowedTo: "The browser is not allowed to run anything on your machine, and Resolv does not try. It keeps the file in <b>scripts/</b>, fills in the blanks, and gives you the command or a ready copy in this record's own folder.</div>",
+  TheBrowserIsNotAllowedTo: "The browser is not allowed to run anything on your machine, and KalKech does not try. It keeps the file in <b>scripts/</b>, fills in the blanks, and gives you the command or a ready copy in this record's own folder.</div>",
   TheBrowserWouldNotHandOver: "The browser would not hand over the clipboard — paste into the box with Ctrl+V instead",
   TheCalendarReadsAtTwoZooms: "The calendar reads at two zooms. <b>Week</b> is for working — the whole record on the card, ",
   TheCaseIsOnTheClipboard: "The case is on the clipboard",
   TheClipboardStampsTheScriptAs: "the clipboard, stamps the script as used, and writes <i>Ran &lt;script&gt;</i> into the record's ",
   TheClosedRecordsThisAverageIs: "The {p0} closed records this average is built from",
-  TheCommandForSomethingThatMust: "the command. For something that must fire at a fixed hour whether or not Resolv is open, that is ",
+  TheCommandForSomethingThatMust: "the command. For something that must fire at a fixed hour whether or not KalKech is open, that is ",
   TheConsoleCouldNotOpenClick: "The console could not open — click the button again",
   TheFileIsLeftAlone: "the file is left alone",
   TheFileStaysInTheFolder: "the file stays in the folder",
@@ -5784,10 +5844,10 @@ const STRINGS = {
   TheSignOff: "the sign-off",
   TheSubjectLine: "the subject line",
   TheTeamsOutsideYourPermissionWhen: "The teams outside your permission. When the agency is not found and the data team has to sync first, ",
-  TheWaitClockIsEvidenceAnd: "The wait clock is evidence, and evidence on its own does not move work — so Resolv writes the ",
+  TheWaitClockIsEvidenceAnd: "The wait clock is evidence, and evidence on its own does not move work — so KalKech writes the ",
   TheWholeMessageIsKeptAs: "The whole message is kept as the notes, so the evidence stays with the record. ",
   TheWholePathAndSaysWhich: "the whole path and says which step stopped.</p>",
-  ThenYouPasteItDossierCannot: "Then you paste it. Resolv cannot execute anything — no page in a browser can, and a file that ",
+  ThenYouPasteItDossierCannot: "Then you paste it. KalKech cannot execute anything — no page in a browser can, and a file that ",
   ThereIsAlsoPasteAMessage: "There is also <b>Paste a message</b> beside the compose bar, and Ctrl+V anywhere on the page.</p>",
   TheseAreNotMovingBecauseSomeone: "These are not moving because someone else has to act first.",
   TheyAreAllThereAlready: "They are all there already",
@@ -5822,7 +5882,7 @@ const STRINGS = {
   TurnATeamsMessageOrA: "Turn a Teams message or a mail into a record",
   Turnaround: "Turnaround",
   Type: "Type",
-  TypeItOnceHereAndEvery: "Type it once here and every command Resolv copies becomes a full path you can paste straight into a ",
+  TypeItOnceHereAndEvery: "Type it once here and every command KalKech copies becomes a full path you can paste straight into a ",
   TypedInRoutinesRaisesTodaysAgain: "typed. In Routines, <b>↻</b> raises today's again for the round you have to do twice, and each ",
   Unassigned: "Unassigned",
   Unblocked: "Unblocked · ",
@@ -5850,11 +5910,11 @@ const STRINGS = {
   WaitsFor3: "Waits for : ",
   WaitsFor4: "Waits for",
   WarnBefore: "Warn before",
-  WatchesScriptsQueueRunsTheScript: "watches <b>scripts/queue/</b>, runs the script, and writes the output back. Resolv picks that ",
+  WatchesScriptsQueueRunsTheScript: "watches <b>scripts/queue/</b>, runs the script, and writes the output back. KalKech picks that ",
   WatchingPidRoutineSSetTo: "Watching {p0} (pid {p1}), {p2} routine(s) set to run themselves.",
   WaterFestivalAreSetAgainstThe: "Water Festival are set against the Khmer calendar and move every year — there is no formula to ",
   WayRunDoesInTaskScheduler: "way Run does in Task Scheduler. If nothing happens, <b>Setup → Test it end to end</b> walks ",
-  WebFontsWouldMeanDownloadingFrom: "A web font would mean fetching from someone else's server, which this app will never do. The Latin faces below are the ones Resolv found already installed on this machine — ",
+  WebFontsWouldMeanDownloadingFrom: "A web font would mean fetching from someone else's server, which this app will never do. The Latin faces below are the ones KalKech found already installed on this machine — ",
   Weekdays: "Weekdays",
   Weekly: "Weekly",
   WhatKeepsComingBackAndWhat: "What keeps coming back, and what it cost",
@@ -5864,7 +5924,7 @@ const STRINGS = {
   WhenTheTabIsClosedNothing: "When the tab is <b>closed</b>, nothing in it runs; no web page can wake itself up, and the ones that ",
   WhereEverythingIsStored: "Where everything is stored",
   WhereTheHoursActuallyGo: "Where the hours actually go",
-  WhileDossierIsOpenEvenHidden: "While Resolv is open — even hidden behind Outlook — it raises real Windows notifications. ",
+  WhileDossierIsOpenEvenHidden: "While KalKech is open — even hidden behind Outlook — it raises real Windows notifications. ",
   Who: "Who",
   WhoAsksTheMost: "Who asks the most",
   WhoRaisedIt: "Who raised it",
@@ -5872,7 +5932,7 @@ const STRINGS = {
   WillSeeNothingLeaveThereAre: "will see nothing leave. There are no fonts, scripts or images loaded from anywhere. The suggestions come ",
   WindowsKeepsAboveEverythingAndThat: "Windows keeps <b>above everything</b>, and that you drag and size like any other. Change status in ",
   WindowsTaskSchedulersJobGiveThe: "Windows Task Scheduler's job; give the script a stamp file so it does its work once a day and ",
-  WindowsToastRemindersWhileDossierIs: "Windows toast reminders while Resolv is closed",
+  WindowsToastRemindersWhileDossierIs: "Windows toast reminders while KalKech is closed",
   WithThatScriptAlreadyAttachedAnd: "with that script already attached and its command ready to copy — so the round is a click, not a ",
   WithYouSince: "With you since ",
   WorkByType: "Work by type",
@@ -6054,8 +6114,8 @@ const STRINGS = {
   VaultBackups: "Backups on disk",
   VaultBackupsIntro: "One snapshot a day, in backups/ beside your records. Restoring writes what is on the sheet now out to a file first, so a restore is never a one-way door.",
   VaultNoBackups: "None yet. The first one is written the next time this workspace saves.",
-  VaultEmpty: "<b>This folder has no records in it</b>, and this PC remembers <b>{p1}</b> from {p2}. Nothing has been written \u2014 choose before Resolv saves anything.",
-  VaultFewer: "<b>This folder has {p0} record(s)</b>; this PC remembers <b>{p1}</b>, saved {p2}. Nothing has been written \u2014 choose before Resolv saves anything.",
+  VaultEmpty: "<b>This folder has no records in it</b>, and this PC remembers <b>{p1}</b> from {p2}. Nothing has been written \u2014 choose before KalKech saves anything.",
+  VaultFewer: "<b>This folder has {p0} record(s)</b>; this PC remembers <b>{p1}</b>, saved {p2}. Nothing has been written \u2014 choose before KalKech saves anything.",
   VaultRestore: "Restore what this PC remembers",
   VaultRestoreTitle: "Restore from this PC?",
   VaultKeep: "Keep the folder as it is",
@@ -6084,10 +6144,10 @@ const STRINGS = {
   NoIWillPressRun: "No \u2014 I will press Run",
   YesTheRunnerFiresItAt: "Yes \u2014 the runner fires it at the time above",
   ScriptsDossierRunnerPs: "scripts/dossier-runner.bat",
-  FiresItAtThatTimeWhether: "fires it at that time whether Resolv is open or not \u2014",
+  FiresItAtThatTimeWhether: "fires it at that time whether KalKech is open or not \u2014",
   AddRoutine: "Add routine",
   CreateTodaysNow: "Create today's now",
-  DossierDoesNotRunThem: "Resolv does not run them.",
+  DossierDoesNotRunThem: "KalKech does not run them.",
   APageInABrowserIs: "A page in a browser is not allowed to start a program on your",
   AddScriptFiles: "Add script files\u2026",
   PickUpNewFilesInScripts: "Pick up new files in scripts/",
@@ -6097,64 +6157,64 @@ const STRINGS = {
   WhereTheCommandsPoint: "Where the commands point",
   BestAvailable: "Best available (",
   Detected: "detected",
-  DossierSupportOperationsRecord: "Resolv \u2014 Support Operations Record",
+  DossierSupportOperationsRecord: "KalKech \u2014 Support Operations Record",
   ImagingNightlySyncFailedSqlTimeout: "Imaging nightly sync failed; SQL timeout on GetPendingAsync. Escalated to the DBA team at 02:40.",
   DIncMs: "D-0042  INC0012345  02:14:07  \u2192  30,021 ms",
   NoExtraFacesWereDetected: "No extra faces were detected.",
   Palette: "Palette",
   Off: "Off",
   On: "On",
-  GitFolderWarning: "<b>{p0}</b> is a git checkout as well as your workspace. A <b>git pull</b> or <b>git checkout</b> replaces every file git tracks \u2014 which can take your records and your backups with it. Nothing in the Resolv repository tracks a workspace file any more; if yours was cloned before that, run <b>git rm --cached dossier.json</b> once, and keep the backups out too.",
+  GitFolderWarning: "<b>{p0}</b> is a git checkout as well as your workspace. A <b>git pull</b> or <b>git checkout</b> replaces every file git tracks \u2014 which can take your records and your backups with it. Nothing in the KalKech repository tracks a workspace file any more; if yours was cloned before that, run <b>git rm --cached dossier.json</b> once, and keep the backups out too.",
   GitFolderProtect: "Write a .gitignore for me",
   GitFolderUnderstood: "I understand",
   GitFolderWrote: "Added {n} line(s) to .gitignore. Anything git already tracks still needs git rm --cached.",
-  GitFolderAlready: ".gitignore already covers every path Resolv writes.",
+  GitFolderAlready: ".gitignore already covers every path KalKech writes.",
   GitFolderFailed: "Could not write .gitignore: ",
   Store: "Records kept in",
   DiagRun: "Check the bridge",
-  DiagApp: "Resolv v{p0}",
+  DiagApp: "KalKech v{p0}",
   DiagNoFolder: "No workspace folder is open.",
   DiagFolder: "Folder: {p0}",
-  DiagServed: "This page is served by Resolv on 127.0.0.1:{p0}.",
+  DiagServed: "This page is served by KalKech on 127.0.0.1:{p0}.",
   DiagStarting: "Its database is still starting.",
   DiagNoDb: "It has no database: {p0}",
   DiagBridgeFolder: "Its workspace folder (for scripts): {p0}",
   DiagMarked: "This folder keeps its records in the database (since {p0}).",
   DiagNoHandshake: "No .bridge.json in this folder.",
-  DiagNoHandshakeFix: "Resolv's database is not set to THIS folder. Icon by the clock \u2192 Workspace folder\u2026 \u2192 choose it.",
+  DiagNoHandshakeFix: "KalKech's database is not set to THIS folder. Icon by the clock \u2192 Workspace folder\u2026 \u2192 choose it.",
   DiagBadHandshake: ".bridge.json is here but unreadable. Stop the bridge, delete it, start the bridge again.",
   DiagHandshake: ".bridge.json says port {p0}, written {p1}",
   DiagNoAnswer: "Nothing answered on 127.0.0.1:{p0}.",
-  DiagNoAnswerFix: "Resolv wrote that file and then stopped. Start Resolv.bat again.",
+  DiagNoAnswerFix: "KalKech wrote that file and then stopped. Start KalKech.bat again.",
   DiagRefused: "The bridge answered {p0} \u2014 a stale token. Reopen the workspace.",
   DiagBridge: "Bridge is up: database {p0} on {p1}, schema {p2}",
   DiagHolds: "The database holds {p0} record(s).",
-  DiagOldSchema: "That schema is older than this build needs \u2014 quit Resolv from the icon by the clock and start it again; it brings the tables up to date itself.",
+  DiagOldSchema: "That schema is older than this build needs \u2014 quit KalKech from the icon by the clock and start it again; it brings the tables up to date itself.",
   DiagUsingIt: "This workspace is reading and writing SQL Server.",
   DiagNotUsingIt: "The bridge is up but this workspace was opened before it \u2014 reopen the folder (Menu \u2192 Workspace \u2192 Switch folder) and it will use it.",
   StoreSql: "SQL Server",
   StoreSqlWhy: "database {p0} on {p1}, through the bridge. dossier.json is written as an export.",
   StoreFile: "dossier.json",
-  StoreFileWhy: "the file in this folder. To keep them in SQL Server instead, start Resolv.bat and choose THIS folder from the icon by the clock \u2192 Workspace folder\u2026, then reopen the workspace.",
-  DbStopped: "<b>Resolv's database is not answering</b>, and this workspace keeps its records there rather than in a file. Nothing has been opened and nothing will be written. Start <b>Resolv.bat</b> (or the icon by the clock) and press Try again. {p0}",
+  StoreFileWhy: "the file in this folder. To keep them in SQL Server instead, start KalKech.bat and choose THIS folder from the icon by the clock \u2192 Workspace folder\u2026, then reopen the workspace.",
+  DbStopped: "<b>KalKech's database is not answering</b>, and this workspace keeps its records there rather than in a file. Nothing has been opened and nothing will be written. Start <b>KalKech.bat</b> (or the icon by the clock) and press Try again. {p0}",
   DbStoppedPlain: "",
   DbRetry: "Try again",
   DbHowTo: "What is this?",
-  DbHowToSay: "Resolv is a page in a browser and cannot talk to SQL Server itself. Resolv.bat starts one small program that can \u2014 the same one that hands out this page. It has no window: it is the Resolv icon by the clock, where Quit stops it and Start with Windows keeps it there every morning.",
-  DbStillStopped: "Still nothing on 127.0.0.1. Is the Resolv icon by the clock there?",
+  DbHowToSay: "KalKech is a page in a browser and cannot talk to SQL Server itself. KalKech.bat starts one small program that can \u2014 the same one that hands out this page. It has no window: it is the KalKech icon by the clock, where Quit stops it and Start with Windows keeps it there every morning.",
+  DbStillStopped: "Still nothing on 127.0.0.1. Is the KalKech icon by the clock there?",
   DbOn: "records in {p0} on {p1}",
   DbStarting: "<b>Starting the database\u2026</b> LocalDB takes a few seconds to wake. Nothing is opened, and nothing written, until it answers.",
   DbStartingSlow: "the database is still starting after two minutes \u2014 the log (icon by the clock \u2192 Show log) says why",
   DbSeeded: "The database was empty, so {n} record(s) were brought in from {p0}. That file is untouched.",
   DbCaughtUp: "dossier.json was newer than the database ({p0}, against {p1}) \u2014 changes made while the database was off. Opened those and wrote them to the database. What it held before is in Menu \u2192 Workspace \u2192 Database history.",
-  DbOther: "<b>The database already holds another workspace</b> \u2014 {n} record(s), last saved {p0}. This folder keeps its records in its own dossier.json, and nothing in the database was touched. To put THIS folder in the database, choose it from the Resolv icon by the clock \u2192 Workspace folder\u2026",
+  DbOther: "<b>The database already holds another workspace</b> \u2014 {n} record(s), last saved {p0}. This folder keeps its records in its own dossier.json, and nothing in the database was touched. To put THIS folder in the database, choose it from the KalKech icon by the clock \u2192 Workspace folder\u2026",
   DbWhose: "The database holds a workspace",
   DbWhoseAsk: "{n} record(s), last saved {p0}. This folder has no records of its own. Is that workspace this one?",
   DbWhoseYes: "Yes \u2014 open it here",
   DbWhoseYesHint: "Its records appear in this folder, and every save goes to the database.",
   DbWhoseNo: "No \u2014 keep this folder separate",
   DbWhoseNoHint: "This folder starts on its own dossier.json. The database is not touched.",
-  EmptyRefused: "<b>Nothing was saved.</b> This save would leave the workspace with no records, and it had {n}. That is exactly what a workspace that failed to load looks like, so Resolv stopped before writing anything.",
+  EmptyRefused: "<b>Nothing was saved.</b> This save would leave the workspace with no records, and it had {n}. That is exactly what a workspace that failed to load looks like, so KalKech stopped before writing anything.",
   EmptyReload: "Reload what is saved",
   EmptyMeantIt: "I deleted them \u2014 save it empty",
   ShrinkTitle: "Save {p1} record(s) over {p0}?",
@@ -6324,7 +6384,7 @@ const STRINGS = {
   Held: "Held",
   TimeLogged2: "Time logged",
   NothingMatchesTheCurrentFilters: "Nothing matches the current filters.",
-  DossierOfflineSupportOperationsRecord: "Resolv \u00b7 offline support operations record \u00b7",
+  DossierOfflineSupportOperationsRecord: "KalKech \u00b7 offline support operations record \u00b7",
   OpenedOn: "opened {p0}",
   HidingX: "hiding {p0}",
   NRecords: "{p0} records",
@@ -6333,7 +6393,7 @@ const STRINGS = {
   LastSeenX: "last {p0}",
   EstimatedAt: "estimated {p0}",
   KhmerText: "Khmer text",
-  BundledWithDossier: "bundled with Resolv",
+  BundledWithDossier: "bundled with KalKech",
   KhmerFontNote: "Khmer is the one exception. Windows ships only Khmer UI and DaunPenh, and a machine without them draws Khmer as empty boxes \u2014 so <b>Noto Sans Khmer</b> is carried inside this file. It is still not a download: nothing is fetched. Pick another below if you have a Khmer face you prefer.",
 
   /* cron scheduling */
@@ -6361,7 +6421,7 @@ const STRINGS = {
   AnnualLeaveOfficeClosed: "Annual leave, office closed\u2026",
   AddThesePastedDays: "Add these days",
   CopyWhatIsMarkedNow: "Copy what is marked now",
-  PasteHolidaysHelp: "JSON with <b>date</b>, <b>name</b> and <b>kind</b>, or one a line as <b>date, name, kind</b>. Dates may be <b>2027-01-01</b> or <b>01/01/2027</b>. <b>kind</b> is either <b>public</b> \u2014 a day off, tinted on the calendar and kept clear of target dates \u2014 or <b>observance</b>, marked on the day but still a working day. Leave it off and it counts as a day off. The short <b>d</b>/<b>n</b>/<b>k</b> spelling Resolv used to write is still read. Anything unreadable is listed rather than swallowed.",
+  PasteHolidaysHelp: "JSON with <b>date</b>, <b>name</b> and <b>kind</b>, or one a line as <b>date, name, kind</b>. Dates may be <b>2027-01-01</b> or <b>01/01/2027</b>. <b>kind</b> is either <b>public</b> \u2014 a day off, tinted on the calendar and kept clear of target dates \u2014 or <b>observance</b>, marked on the day but still a working day. Leave it off and it counts as a day off. The short <b>d</b>/<b>n</b>/<b>k</b> spelling KalKech used to write is still read. Anything unreadable is listed rather than swallowed.",
   HolidaysAdded: "{added} added, {replaced} replaced",
   HolidaysNothingRead: "Nothing could be read from that",
   HolidaysSomeBad: "{n} line(s) could not be read: {p0}",
@@ -6393,7 +6453,7 @@ const STRINGS = {
   DensityCompact: "Compact \u2014 more on screen",
   TextSize: "Text size",
   ResetToDefaults: "Reset to defaults",
-  FeelIntro: "How the app behaves, rather than how it is lettered. If your system asks for reduced motion, Resolv follows it unless you pick <b>Full</b> here on purpose.",
+  FeelIntro: "How the app behaves, rather than how it is lettered. If your system asks for reduced motion, KalKech follows it unless you pick <b>Full</b> here on purpose.",
   KeyboardShortcuts: "Keyboard shortcuts",
   PressQuestionAnyTime: "Press ? at any time to see this.",
   Typeface: "Typeface",
@@ -6418,18 +6478,18 @@ const STRINGS = {
   KeySearch: "Search everything",
   KeyNewRecord: "New record",
   KeyCommandPalette: "Command palette",
-  ClosedTabBatAdvice: "There is no way round that from a web page, and this machine has no PowerShell to fall back on. If something genuinely must happen while Resolv is shut, point <b>Windows Task Scheduler</b> straight at your <b>.bat</b> file \u2014 that is exactly what it is for, and it needs nothing from Resolv. Keep the tab open, even behind Outlook, and reminders work on their own.",
+  ClosedTabBatAdvice: "There is no way round that from a web page, and this machine has no PowerShell to fall back on. If something genuinely must happen while KalKech is shut, point <b>Windows Task Scheduler</b> straight at your <b>.bat</b> file \u2014 that is exactly what it is for, and it needs nothing from KalKech. Keep the tab open, even behind Outlook, and reminders work on their own.",
 
   /* why a reminder did or did not appear */
   RemindersAreOff: "Reminders are off",
   RemindersOnWindowsToo: "Reminders on \u2014 Windows will show them too",
-  RemindersOnInAppOnly: "Reminders on \u2014 this browser has no Windows notifications, so they appear in Resolv",
+  RemindersOnInAppOnly: "Reminders on \u2014 this browser has no Windows notifications, so they appear in KalKech",
   RemindersOnButBlocked: "Reminders on, but Windows notifications are blocked for this page",
   AllowThem: "Allow them",
   RemindersOffHint: "Nothing will remind you. Turn this on, or press the bell in the top right.",
-  RemindersGrantedHint: "Reminders appear in Resolv and as Windows notifications, even when the tab is behind Outlook.",
-  RemindersNoneHint: "This browser cannot raise Windows notifications, so reminders appear inside Resolv only.",
-  RemindersBlockedHint: "Windows notifications are blocked for this page, so reminders only appear inside Resolv. Click the padlock beside the address and set Notifications to Allow. Opening dossier.html straight from the folder blocks them too \u2014 run <b>dossier-bridge.bat</b>, which hands the page out from 127.0.0.1 where permission can be given.",
+  RemindersGrantedHint: "Reminders appear in KalKech and as Windows notifications, even when the tab is behind Outlook.",
+  RemindersNoneHint: "This browser cannot raise Windows notifications, so reminders appear inside KalKech only.",
+  RemindersBlockedHint: "Windows notifications are blocked for this page, so reminders only appear inside KalKech. Click the padlock beside the address and set Notifications to Allow. Opening dossier.html straight from the folder blocks them too \u2014 run <b>dossier-bridge.bat</b>, which hands the page out from 127.0.0.1 where permission can be given.",
   ScheduleDoesNothingElse: "It will raise a record on the sheet and nothing more \u2014 no notification, no script. Set <b>Remind me</b> to be told each time, or attach a script under <b>What it does</b>.",
   Assist: "Assist",
   AiNoEngine: "assist.js is not in this folder. Put it next to dossier.html and reload — everything else works without it.",
@@ -6494,13 +6554,13 @@ const STRINGS = {
   AiRoutineWhy: "{n} times, and regular enough to schedule",
   Ask: "Ask",
   KeyAskTheAssistant: "Ask the assistant",
-  ChatTitle: "Resolv Assistant",
+  ChatTitle: "KalKech Assistant",
   ChatSub: "your workspace copilot \u00b7 nothing leaves this folder",
-  ChatHeroTitle: "Resolv Assistant",
+  ChatHeroTitle: "KalKech Assistant",
   ChatHeroSub: "Your workspace copilot",
   ChatHeroCard1: "Turn tasks into progress.",
   ChatHeroCard2: "Ask. Analyze. Create. Get more done.",
-  ChatPlaceholder: "Ask Resolv\u2026",
+  ChatPlaceholder: "Ask KalKech\u2026",
   ChatAsk: "Ask",
   ChatYes: "Yes, do it",
   ChatNo: "No",
@@ -6526,10 +6586,10 @@ const STRINGS = {
   ChatNew: "New conversation",
   ChatUntitled: "New conversation",
   ChatKeptCount: "{n} kept in this workspace",
-  ChatName: "Resolv",
+  ChatName: "KalKech",
   ChatNamed: "{name} it is \u2014 nice to meet you! I\u2019ll go by {name} from now on. To change it, say \u201ccall you\u2026\u201d; to go back, say \u201cuse your own name\u201d.",
   ChatNameReset: "Back to {name}.",
-  ChatNameIs: "I\u2019m {name} \u2014 the assistant built into Resolv.",
+  ChatNameIs: "I\u2019m {name} \u2014 the assistant built into KalKech.",
   ChatNameUndo: "Keep {name}",
   ChatNameKeep: "Keep {name}",
   ChatAskNamed: "Ask {name}\u2026",
@@ -6556,9 +6616,9 @@ const STRINGS = {
   AlertBeforeDue: "{n} before it is due",
   AlertAtCustom: "At a date and time of my own",
   AlertRemove: "Remove alert",
-  AlertHint: "At that moment you get a Windows notification and a note here in Resolv.",
-  AlertHintNoWin: "At that moment a note shows here in Resolv. Windows notifications are not allowed for Resolv yet \u2014 turn them on under <b>Setup \u2192 Reminders</b>.",
-  AlertHintShort: "A Windows notification and a note in Resolv, at that moment.",
+  AlertHint: "At that moment you get a Windows notification and a note here in KalKech.",
+  AlertHintNoWin: "At that moment a note shows here in KalKech. Windows notifications are not allowed for KalKech yet \u2014 turn them on under <b>Setup \u2192 Reminders</b>.",
+  AlertHintShort: "A Windows notification and a note in KalKech, at that moment.",
   AlertNeedTime: "Choose a date and a time.",
   AlertPast: "That time has already gone.",
   AlertSetToast: "\ud83d\udd14 Alert set on {code} for {when}.",
@@ -6566,7 +6626,7 @@ const STRINGS = {
   AlertSetLog: "Alert set for {when}",
   AlertByAssistant: "by the assistant",
   AlertClearedLog: "Alert removed",
-  AlertMissedLog: "Alert for {when} was missed \u2014 Resolv was not open",
+  AlertMissedLog: "Alert for {when} was missed \u2014 KalKech was not open",
   AlertUndo: "alert",
   AlertBefore: "{n} before due",
   AlertAtDueShort: "at its due time",
@@ -6745,11 +6805,11 @@ const STRINGS = {
   SrcConfpassages: "Passages only — read them; nothing was concluded from them",
   SrcNoSource: "No supporting source found",
   SrcHeldBack: "Answer held back — it gave a figure its sources do not state",
-  SrcBlockedSay: "Resolv held back the reply it received: it gave a figure that is not in your documents, your matching runbooks or your own message, so it may have been invented. Ask “why was it held back?” to see what was searched, or ask again naming the document or the system.",
-  SrcBlockedSayCited: "Resolv held back the reply it received: it gave a figure that the passages it cited do not state, so it may have been invented. What those passages do say is in the sources under this answer — open one to read it in place, or ask again.",
+  SrcBlockedSay: "KalKech held back the reply it received: it gave a figure that is not in your documents, your matching runbooks or your own message, so it may have been invented. Ask “why was it held back?” to see what was searched, or ask again naming the document or the system.",
+  SrcBlockedSayCited: "KalKech held back the reply it received: it gave a figure that the passages it cited do not state, so it may have been invented. What those passages do say is in the sources under this answer — open one to read it in place, or ask again.",
   SrcBlockedWhy: "Every figure in an answer about your documents — a timeframe, a percentage, a severity — must be written in a passage the answer cites. This reply rested on one that was not. Ask “why was it held back?” for what was searched.",
   SrcPartialHead: "Part of the answer was taken out",
-  SrcTrimmedWhy: "Resolv took out {n} line(s) of this answer: each gave a figure — a time, a percentage, a severity — that no passage it cited contains, so it may have been invented. Everything left is checked against the sources shown.",
+  SrcTrimmedWhy: "KalKech took out {n} line(s) of this answer: each gave a figure — a time, a percentage, a severity — that no passage it cited contains, so it may have been invented. Everything left is checked against the sources shown.",
   SrcElsewhereLab: "Figure seen in",
   SrcElsewhereHint: "The figure that was taken out is written here, in a passage the answer did not cite. Open it to judge whether it applies — it was not counted as support.",
   SrcSumOne: "Source: {src}",
@@ -6795,8 +6855,8 @@ const STRINGS = {
   DgCopyFailed: "This browser would not copy a picture here. Save it instead, then attach or paste the file.",
   DgSaved: "Saved {name} to your Downloads folder.",
   DgSaveFailed: "The picture could not be made. Try Larger, or copy the code.",
-  DgCouldNot: "Resolv could not draw this diagram ({why}), so here is its code.",
-  DgKindUnknown: "Resolv draws flowcharts, sequence and state diagrams; this is a {kind}",
+  DgCouldNot: "KalKech could not draw this diagram ({why}), so here is its code.",
+  DgKindUnknown: "KalKech draws flowcharts, sequence and state diagrams; this is a {kind}",
   DgNoDrawer: "diagram.js is not beside the app",
   SrcSugShort: "Suggestion",
   SrcSugShow: "Show the suggestion (it is not from your documents)",
@@ -6809,11 +6869,11 @@ const STRINGS = {
   SrcFilter_category: "category:",
   SrcWhichNone: "The last answer did not come from your documents: no passage of the {n} documents searched supported it.",
   SrcWhichSay: "The last answer rests on {n} passage(s):",
-  SrcWhySay: "For the last answer Resolv searched {n} active documents you may read (closest: {list}; filters: {filters}).",
+  SrcWhySay: "For the last answer KalKech searched {n} active documents you may read (closest: {list}; filters: {filters}).",
   SrcNoFilters: "none",
   SrcWhyNotFound: "None of the passages found states the answer, so it was reported as not specified. A document either does not say it, or says it in words the question did not reach.",
-  SrcWhyBlocked: "The reply that came back rested on a figure that no passage it cited contains, so Resolv held it back rather than show a guess as your policy.",
-  SrcWhyPartial: "{n} line(s) of the reply gave a figure that no passage it cited contains, so Resolv took them out rather than show a guess as your policy; the rest was shown with its sources. If that figure is in your documents, ask about it directly and the answer will cite it.",
+  SrcWhyBlocked: "The reply that came back rested on a figure that no passage it cited contains, so KalKech held it back rather than show a guess as your policy.",
+  SrcWhyPartial: "{n} line(s) of the reply gave a figure that no passage it cited contains, so KalKech took them out rather than show a guess as your policy; the rest was shown with its sources. If that figure is in your documents, ask about it directly and the answer will cite it.",
   SrcWhyUnsupported: "The reply did not cite any passage, so it was shown as not from your documents.",
   SrcWhyFound: "It was answered from the passages cited under it.",
   SrcWhyNext: "If the answer is in a document that is not in Sources, add it (Library → Sources). If it is there, check it is active, that you are cleared for its access label, and that the question names the system or environment it is about; after updating a document, press Re-index.",
@@ -6823,10 +6883,10 @@ const STRINGS = {
   SrcViewPage: "Page {p} of {of}",
   SrcViewLines: "Lines {a}–{b} of {of}",
   SrcOpenOriginal: "Open the original",
-  AboutNotThis: "This copy of Resolv is {v}.",
+  AboutNotThis: "This copy of KalKech is {v}.",
   AboutEarlier: "Earlier releases",
   AboutWhatIn: "What's new in {v}",
-  AboutFrom: "From Resolv's CHANGELOG.md, beside the app.",
+  AboutFrom: "From KalKech's CHANGELOG.md, beside the app.",
   LmSearch: "Search conversations",
   LmToday: "Today",
   LmYesterday: "Yesterday",
@@ -6977,7 +7037,7 @@ const STRINGS = {
   RunbookImport: "Import library",
   RunbookImported: "Imported {a} runbook(s) and {b} system profile(s).",
   RunbookExported: "Library exported.",
-  RunbookBadFile: "That file is not a Resolv runbook library.",
+  RunbookBadFile: "That file is not a KalKech runbook library.",
   RunbookNothing: "Nothing to export yet.",
   RunbookForget: "Delete",
   RunbookSaved: "Saved.",
@@ -7019,7 +7079,7 @@ const STRINGS = {
   PetIntro: "The assistant itself, out of its panel and parked in a corner \u2014 one character, one name. Click it to talk to it: the chat opens and it goes in there, and it comes back out when you close the chat. Point at it for a line about your day. While an answer is coming it thinks, as it does in the chat; an answer that arrives while the chat is closed, and a bell alert, it tells you from its corner. Otherwise it only moves when something happens: a record finished, something overdue, a save going out. Drag it to whichever corner is out of your way.",
   PetOnOff: "Keep it on screen",
   PetName: "Its name (the assistant\u2019s name too)",
-  PetNamePh: "Resolv",
+  PetNamePh: "KalKech",
   PetCorner: "Corner",
   PetCornerBR: "Bottom right",
   PetCornerBL: "Bottom left",
@@ -7108,15 +7168,15 @@ const STRINGS = {
   MemorySaved: "Saved.",
   NoticeHushed: "Hidden. {what}",
   HiddenNotices: "Hidden notices",
-  HiddenNoticesHint: "Notices you told Resolv to stop showing. Bring one back and it will appear again the next time it is true.",
+  HiddenNoticesHint: "Notices you told KalKech to stop showing. Bring one back and it will appear again the next time it is true.",
   NothingHidden: "Nothing hidden \u2014 every notice still shows.",
   ShowAgain: "Show again",
   ShowAllAgain: "Show all of them again",
 
   FlowHead: "Ask through Power Automate",
-  FlowBlurb: "The assistant answers from your own records, with no network and no model, and it is right about 97 times in 100 on the questions it knows. This is the other route: your message and a description of your workspace go to an endpoint you own — a Power Automate flow with a “When an HTTP request is received” trigger — and whatever that flow decides comes back as a list of things to do. Resolv checks every one of them and does the ones it recognises.",
-  FlowWarn: "This is the only part of Resolv that sends anything anywhere. Your records leave this folder when you use it. Choose below how much goes, and press “Show me exactly what would be sent” before you trust it with anything real.",
-  FlowNetwork: "Resolv itself still cannot reach the network — the policy in its head forbids it and that does not change. The request is made by flow/relay.html in a hidden frame: a page that holds none of your records, is pinned to your endpoint’s address and no other, and can do nothing but post text there and hand the reply back.",
+  FlowBlurb: "The assistant answers from your own records, with no network and no model, and it is right about 97 times in 100 on the questions it knows. This is the other route: your message and a description of your workspace go to an endpoint you own — a Power Automate flow with a “When an HTTP request is received” trigger — and whatever that flow decides comes back as a list of things to do. KalKech checks every one of them and does the ones it recognises.",
+  FlowWarn: "This is the only part of KalKech that sends anything anywhere. Your records leave this folder when you use it. Choose below how much goes, and press “Show me exactly what would be sent” before you trust it with anything real.",
+  FlowNetwork: "KalKech itself still cannot reach the network — the policy in its head forbids it and that does not change. The request is made by flow/relay.html in a hidden frame: a page that holds none of your records, is pinned to your endpoint’s address and no other, and can do nothing but post text there and hand the reply back.",
   FlowUse: "Use a flow",
   FlowOff: "Off",
   FlowOn: "On",
@@ -7145,7 +7205,7 @@ const STRINGS = {
   FlowNoUrl: "No endpoint yet. Paste your flow’s URL above.",
   FlowBytes: "{n} would be sent",
   FlowAnswered: "answered in {ms} ms",
-  FlowRefused: "Resolv would not do this:",
+  FlowRefused: "KalKech would not do this:",
   FlowNothing: "Your flow answered, but with nothing to say and nothing to do.",
   FlowFellBack: "Your flow did not answer, so this was worked out here instead.",
   FlowFailed: "The flow could not be asked.",
@@ -7167,7 +7227,7 @@ function L(name, vars){
   const pack = I18N.packs[I18N.code];
   /* the app was called Dossier until 4.8; a language file written before
      then still says so, and the name is not something a translation keeps */
-  let s = (pack && pack.texts[name] && String(pack.texts[name]).replace(/\bDossier\b/g, "Resolv")) || STRINGS[name] || name;
+  let s = (pack && pack.texts[name] && String(pack.texts[name]).replace(/\b(?:Dossier|Resolv)\b/g, "KalKech")) || STRINGS[name] || name;
   if (vars) for (const k in vars) s = s.split("{" + k + "}").join(String(vars[k]));
   return s;
 }
@@ -7233,10 +7293,10 @@ function buildLangXml(code, name, texts){
     '" value="' + at(texts[k] || "") + '" />');
   return '<?xml version="1.0" encoding="utf-8"?>\n' +
     "<!--\n" +
-    "  Resolv language file.\n" +
+    "  KalKech language file.\n" +
     "  Fill in each value=\"\" using the source=\"\" beside it as the English.\n" +
     "  Leave a value empty and that phrase stays English — translating in\n" +
-    "  passes is fine. {name} in a phrase is a number or word Resolv drops\n" +
+    "  passes is fine. {name} in a phrase is a number or word KalKech drops\n" +
     "  in; keep it exactly as it is, but move it wherever the sentence needs.\n" +
     "  Save the file, then press Reload in Menu → Appearance.\n" +
     "-->\n" +
@@ -7613,10 +7673,10 @@ const STATUSES = [
    the status bar, and clicking it copies a line you can paste into a bug
    report — build date and flow protocol included, because those are the two
    things that actually differ between copies. */
-const APP_VERSION = "5.12.0";
+const APP_VERSION = "5.13.0";
 const APP_BUILT = "2026-09-27";
 function buildLine(){
-  return "Resolv v" + APP_VERSION + " \u00b7 built " + APP_BUILT +
+  return "KalKech v" + APP_VERSION + " \u00b7 built " + APP_BUILT +
          " \u00b7 flow protocol " + (window.DossierFlow ? DossierFlow.version : "\u2014") +
          " \u00b7 " + S.tasks.length + " records, " +
          runbookStore().length + " runbooks, " + memoryStore().length + " notes";
@@ -9797,7 +9857,7 @@ async function markStore(){
       store:"sql", wsId:S.wsId,
       database:(DB.info && DB.info.database) || "", server:(DB.info && DB.info.server) || "",
       since:(was && was.since) || new Date().toISOString(),
-      note:"This folder's records are kept in SQL Server by Resolv. dossier.json beside it is an export, written on every save."
+      note:"This folder's records are kept in SQL Server by KalKech. dossier.json beside it is an export, written on every save."
     }, null, 2));
   } catch(e){}
 }
@@ -12180,6 +12240,7 @@ function applyChatUI(){
   chatPixDress();
   lmiWatch();
   chatPlaceApply();
+  chatModelPaint();
 }
 
 /* ── Lumen's icons ─────────────────────────────────────────────────────
@@ -12235,7 +12296,7 @@ const LMI_AT = [
   ["#chatX", "x"], [".chth .ib", "x"], ["#chatPin", "clip"], ["#chatGo", "send"], ["#chatPill", "down2"],
   [".chtools [data-copysay]", "copy"], [".chtools button:not([data-copysay])", "flag"],
   ['.chrate > button[data-rv="up"]', "up"], ['.chrate > button[data-rv="down"]', "thumbdown"],
-  [".chrate [data-retry] .gl", "retry"], [".chrate [data-deeper] .gl", "spark"], [".chbr .gl", "spark"],
+  [".chrate [data-retry] .gl", "retry"], ['.chrate [data-deeper="reason"] .gl', "bulb"], [".chrate [data-deeper] .gl", "spark"], [".chbr .gl", "spark"],
   [".chcode .cpy", "copy"], [".chtext .cpy", "copy"], [".chb.bot .wrong button", "flag"],
   [".chsi .x", "trash"], [".lmnew", "compose"], [".lmq", "search"],
   [".chhero .chseed button", el => ["target", "clock", "bulb", "help"][[...el.parentNode.children].indexOf(el) % 4]],
@@ -13173,6 +13234,7 @@ function closeChat(){
   $("chatTeach").classList.remove("on");
   document.body.classList.remove("chatting", "chatover");
   chatPlaceMenu(false);
+  chatModelMenu(false);
   petInChat();
   /* it never took the focus trap or the scrim, so it gives back neither */
 }
@@ -13289,6 +13351,65 @@ function chatPlaceReset(){
   touch(); chatPlaceMenu(false); chatPlaceApply();
 }
 
+/* ═══ WHICH MODEL ANSWERS ═════════════════════════════════════════════════
+   The pill beside Send. With more than one model in the flow (Setup →
+   Models in your flow) you choose which one answers what you type here:
+     auto    what Setup says: the fast one for chat, the strong one for
+             the jobs ticked there
+     fast    the quick one
+     deep    the strong one
+     reason  KalKech reason - a reasoning model, given far more of your
+             workspace (flowContext's big side) and up to two minutes
+   Kept in flow.tiers.pick, with the workspace. Think harder and KalKech
+   reason under an answer ask once, whatever is picked here. */
+const CHAT_MODELS = ["auto", "fast", "deep", "reason"];
+function chatModelsOn(){
+  const t = flowCfg().tiers;
+  return flowOn() && t.on ? (t.reason ? CHAT_MODELS.slice() : CHAT_MODELS.slice(0, 3)) : [];
+}
+/* the model picked for what you type, or "" for auto (Setup decides) */
+function chatModelPick(){
+  const list = chatModelsOn(), p = flowCfg().tiers.pick;
+  /* KalKech reason picked, and the flow back to two models: the strong one
+     is the nearest thing to what was asked for */
+  if (p === "reason" && list.length && list.indexOf("reason") < 0) return "deep";
+  return list.indexOf(p) > 0 ? p : "";
+}
+function chatModelPaint(){
+  const b = $("chatModel"); if (!b || !S.settings) return;
+  const list = chatModelsOn(), p = chatModelPick() || "auto";
+  b.hidden = !list.length;
+  b.dataset.model = p;
+  b.querySelector(".ml").textContent = L("ChatModelShort_" + p);
+  b.title = L("ChatModelBtn") + " \u00b7 " + L("ChatModel_" + p);
+}
+function chatModelMenu(show){
+  const m = $("chatModelMenu"), b = $("chatModel"); if (!m || !b) return;
+  if (show === undefined) show = m.hidden;
+  if (!show){
+    if (!m.hidden){ m.hidden = true; b.setAttribute("aria-expanded", "false"); }
+    return;
+  }
+  const p = chatModelPick() || "auto";
+  m.innerHTML = '<div class="mx">' + LE("ChatModelHead") + "</div>" + chatModelsOn().map(k =>
+    '<button type="button" role="menuitemradio" aria-checked="' + (k === p) + '" data-model="' + k + '">' +
+      "<span><b>" + LE("ChatModel_" + k) + "</b><small>" + LE("ChatModel_" + k + "Why") + "</small></span>" +
+      '<span class="tk" aria-hidden="true">\u2713</span></button>').join("");
+  const cr = $("chat").getBoundingClientRect(), br = b.getBoundingClientRect();
+  m.style.top = "auto";
+  m.style.bottom = Math.round(cr.bottom - br.top + 8) + "px";
+  m.style.right = Math.round(Math.max(10, cr.right - br.right - 4)) + "px";
+  m.hidden = false;
+  b.setAttribute("aria-expanded", "true");
+  const cur = m.querySelector('[aria-checked="true"]'); if (cur) cur.focus();
+}
+function chatModelSet(p){
+  if (CHAT_MODELS.indexOf(p) < 0) return;
+  flowCfg().tiers.pick = p;
+  touch(); chatModelMenu(false); chatModelPaint();
+  $("chatq").focus();
+}
+
 /* ── dragging an edge, or the floating window by its top bar ─────────── */
 function chatGripDown(e){
   const g = e.currentTarget.dataset.g, p = chatPlace(), el = $("chat");
@@ -13382,7 +13503,7 @@ function chatNear(){
    One line, where the answer is about to start: the animation, what it is
    doing, and — after two seconds, because silence past that point reads as
    a hang — how long it has been doing it. */
-function chatThinking(log){
+function chatThinking(log, tier){
   const w = document.createElement("div");
   w.className = "chb bot thinking";
   /* With the pixel set on it is the pixel one that waits with you; with it
@@ -13390,7 +13511,7 @@ function chatThinking(log){
   const pix = chatPix("think", "p32");
   w.innerHTML = '<div class="chthink"><div class="chwait">' +
     (pix || (CHAT.gif ? '<img class="chgif" alt="" src="' + esc(CHAT.gif) + '">' : "")) +
-    '<span class="tx">' + esc(L("FlowAsking")) +
+    '<span class="tx">' + esc(L(tier === "reason" ? "TierReasonAsking" : "FlowAsking")) +
     '</span><span class="el"></span></div></div>';
   /* if a folder copy ever stops loading, the row falls back to the one built
      into the file rather than showing the browser's broken-picture mark */
@@ -13410,7 +13531,7 @@ function chatThinking(log){
     const sec = Math.round((Date.now() - w._t0) / 1000);
     const el = w.querySelector(".el"), tx = w.querySelector(".tx");
     if (el && sec >= 2) el.textContent = sec + "s";
-    if (tx && sec >= 8) tx.textContent = L("ChatStill");
+    if (tx && sec >= 8) tx.textContent = L(tier === "reason" ? "TierReasonStill" : "ChatStill");
     /* past eight seconds the line already says the wait is the news; the
        sprite says the same thing and settles in for it */
     if (sec >= 8 && !w._slow){
@@ -14259,7 +14380,7 @@ function chatRenderBot(r, sourceText, replaying, at){
   }
   if (r.note) h += '<div class="note">' + esc(r.note) + "</div>";
   if (r.took) h += '<div class="took" title="' + esc(L("FlowTookHint")) + '">' + (r.took / 1000).toFixed(1) + " s" +
-    (r.tier === "deep" ? " \u00b7 " + esc(L("TierDeepShort")) : "") + "</div>";
+    (r.tier === "deep" ? " \u00b7 " + esc(L("TierDeepShort")) : r.tier === "reason" ? " \u00b7 " + esc(L("TierReasonShort")) : "") + "</div>";
 
   /* the conditions it read out of the question, said back so a misread one is
      visible rather than silently changing the answer */
@@ -14419,14 +14540,15 @@ function chatRenderBot(r, sourceText, replaying, at){
 const CHAT_MAX_VERS = 6;
 function chatBranchLabel(m, k){
   const kind = (m.vers[k] || {}).kind || "first";
-  const key = kind === "deep" ? "BranchHarder" : kind === "retry" ? "BranchRetry" : "BranchNormal";
+  const key = kind === "deep" ? "BranchHarder" : kind === "reason" ? "BranchReason" : kind === "retry" ? "BranchRetry" : "BranchNormal";
   const same = m.vers.slice(0, k + 1).filter(v => (v.kind || "first") === kind).length;
   return L(key) + (same > 1 ? " " + same : "");
 }
 function chatBranchBar(m){
   return '<div class="chbr" title="' + LE("BranchHint") + '"><span class="bl">' + LE("BranchHead") + "</span>" +
-    m.vers.map((v, k) => '<button data-br="' + k + '" class="' + (k === m.v ? "on" : "") + (v.kind === "deep" ? " deep" : "") +
-      '" aria-pressed="' + (k === m.v) + '">' + (v.kind === "deep" ? '<i class="gl">\u2726</i> ' : "") + esc(chatBranchLabel(m, k)) + "</button>").join("") +
+    m.vers.map((v, k) => '<button data-br="' + k + '" class="' + (k === m.v ? "on" : "") + (v.kind === "deep" || v.kind === "reason" ? " deep" : "") +
+      '" aria-pressed="' + (k === m.v) + '">' + (v.kind === "deep" ? '<i class="gl">\u2726</i> ' : v.kind === "reason" ? '<i class="gl">\u25c6</i> ' : "") +
+      esc(chatBranchLabel(m, k)) + "</button>").join("") +
     "</div>";
 }
 function chatRetryBtn(){
@@ -14449,7 +14571,8 @@ async function chatBranch(at, kind){
   const q = m.src || (you && you.who === "you" ? you.text : "");
   if (!q) return;
   if (!m.vers){
-    m.vers = [{ kind:(m.reply && m.reply.tier === "deep") ? "deep" : "first", reply:m.reply, src:m.src, at:m.at, tail:[] }];
+    const was = m.reply && m.reply.tier;
+    m.vers = [{ kind:(was === "deep" || was === "reason") ? was : "first", reply:m.reply, src:m.src, at:m.at, tail:[] }];
     m.v = 0;
   }
   const cur = chatBranchStash(c, m, at);
@@ -14459,7 +14582,10 @@ async function chatBranch(at, kind){
   chatReplay(); chatScroll(true);
   const files = you && CHAT.sentFiles[you.at];
   const lostFiles = you && (you.files || []).length && !files;
-  const tier = kind === "deep" ? "deep" : (m.reply && m.reply.tier === "deep" ? "deep" : undefined);
+  /* Think harder and KalKech reason ask that model; Retry asks the one that
+     answered (the strong one or KalKech reason again, if it was either) */
+  const had = m.reply && m.reply.tier;
+  const tier = kind === "deep" || kind === "reason" ? kind : (had === "deep" || had === "reason" ? had : undefined);
   await flowAsk(q, c, { tier:tier, flow:true, files:files || null, onReply:reply => {
     /* asked again and failed again: put things back as they were */
     if (reply.trouble && !(cur.reply && cur.reply.trouble)){
@@ -14473,7 +14599,7 @@ async function chatBranch(at, kind){
     /* an answer that never arrived is not worth keeping as a branch */
     if (cur.reply && cur.reply.trouble && !cur.tail.length){ m.vers.splice(m.v, 1); }
     /* the first answer that actually arrived is the normal one */
-    m.vers.push({ kind:m.vers.length ? kind : (kind === "deep" ? "deep" : "first"), reply:reply, src:q, at:now, tail:[] });
+    m.vers.push({ kind:m.vers.length ? kind : (kind === "deep" || kind === "reason" ? kind : "first"), reply:reply, src:q, at:now, tail:[] });
     while (m.vers.length > CHAT_MAX_VERS) m.vers.splice(0, 1);
     m.v = m.vers.length - 1;
     m.reply = reply; m.src = q; m.at = now;
@@ -14512,8 +14638,14 @@ function chatRateInner(r){
   const up = r.rate === "up", down = r.rate === "down";
   const b = (v, on, face, tip) => '<button data-rv="' + v + '" class="' + (on ? "on" : "") + '" aria-pressed="' + on +
     '" title="' + LE(tip) + '">' + face + "</button>";
-  const harder = r.tier !== "deep" && flowCfg().tiers.on
-    ? '<button data-deeper="1" class="deeper" title="' + LE("TierAgainHint") + '"><i class="gl">\u2726</i> ' + LE("TierAgain") + "</button>" : "";
+  /* a stronger model than the one that answered: Think harder (the strong
+     one) under a fast answer; KalKech reason under any answer it did not
+     give, once the flow has it */
+  const tz = flowCfg().tiers;
+  const harder = (tz.on && r.tier !== "deep" && r.tier !== "reason"
+    ? '<button data-deeper="1" class="deeper" title="' + LE("TierAgainHint") + '"><i class="gl">\u2726</i> ' + LE("TierAgain") + "</button>" : "") +
+    (tz.on && tz.reason && r.tier !== "reason"
+    ? '<button data-deeper="reason" class="deeper" title="' + LE("TierReasonHint") + '"><i class="gl">\u25c6</i> ' + LE("TierReasonAgain") + "</button>" : "");
   return b("up", up, "\u{1F44D}", "RateUp") + b("down", down, "\u{1F44E}", "RateDown") + chatRetryBtn() + harder +
     (down && r.fixText ? '<span class="rs">' + LE("RateFixed") + " <i>" + esc(r.fixText) + "</i></span>"
      : down ? '<span class="rs">' + LE("RateNoted") + "</span>"
@@ -14567,7 +14699,7 @@ $("chatLog").addEventListener("click", e => {
   const dp = e.target.closest("[data-deeper],[data-retry]");
   if (dp){
     const at = chatAtOf(dp); if (at < 0) return;
-    return chatBranch(at, dp.hasAttribute("data-deeper") ? "deep" : "retry");
+    return chatBranch(at, dp.dataset.deeper === "reason" ? "reason" : dp.hasAttribute("data-deeper") ? "deep" : "retry");
   }
   const br = e.target.closest("[data-br]");
   if (br){
@@ -14762,7 +14894,7 @@ function chatSmallTalk(q){
    puts Resolv back. */
 const CHAT_NAME_SET = /^(?:(?:hey|hi|so|ok(?:ay)?|well|and|from now on)[,\s]+)?(?:i(?:'ve| have)?\s+(?:re)?named\s+you|i(?:'ll| will| want to| wanna| would like to|'d like to)?\s+(?:call|name)\s+you|i(?:'m| am)\s+(?:going to|gonna)\s+(?:call|name)\s+you|(?:can|could|may)\s+i\s+(?:call|name)\s+you|let(?:'s| us| me)\s+(?:call|name)\s+you|your\s+(?:new\s+)?name\s+is(?:\s+now)?|you(?:'re| are)\s+(?:now\s+)?(?:called|named)|call\s+yourself|be\s+called)\s+["\u201c'\u2018]?([^\s"\u201d'\u2019,.!?]{1,24})["\u201d'\u2019]?(?:\s*,?\s*(?:ok(?:ay)?|alright|all right|from now on|now|please|then|yeah|right))*\s*[.!?\u{1F642}\u{1F60A}]*$/iu;
 const CHAT_NAME_NOT = /^(a|an|the|not|now|so|too|just|later|back|tomorrow|today|tonight|again|when|after|before|about|at|on|in|if|soon|maybe|then|there|here|something|someone|anything|it|that|this|you|me|him|her|them|whatever|nothing|ok|okay|please|bot|ai|anytime|whenever)$/i;
-const CHAT_NAME_RESET = /^(?:please\s+)?(?:use your (?:own|old|real) name|go back to (?:your (?:own |old )?name|resolv)|reset your name|forget (?:your|the) (?:new )?name|be resolv again|(?:call yourself|your name is) resolv(?: again)?)\s*[.!?]*$/i;
+const CHAT_NAME_RESET = /^(?:please\s+)?(?:use your (?:own|old|real) name|go back to (?:your (?:own |old )?name|resolv|kalkech)|reset your name|forget (?:your|the) (?:new )?name|be (?:resolv|kalkech) again|(?:call yourself|your name is) (?:resolv|kalkech)(?: again)?)\s*[.!?]*$/i;
 const CHAT_NAME_ASK = /^(?:what(?:'s| is) your name|who are you|what do i call you|what should i call you|do you have a name)\s*\??$/i;
 function chatName(){ const u = S.settings && S.settings.chatUI; return (u && u.name) || L("ChatName"); }
 function chatNameSet(name){
@@ -14923,7 +15055,18 @@ function flowCfg(){
   if (!st.flow.shape) st.flow.shape = "classic";
   /* two models in the flow, or one: off until the flow has been given its
      second prompt action (POWER-AUTOMATE.md 4e) */
-  st.flow.tiers = Object.assign({ on:false, auto:["reflect", "study", "teach", "diagnose"], timeout:110 }, st.flow.tiers || {});
+  /* 5.13: a third prompt action, KalKech reason (POWER-AUTOMATE.md 4g) -
+     reason: the flow has it; reasonTimeout: how long to wait for it (Power
+     Automate's own limit is two minutes, so 115 at most); hard: which model
+     the ticked jobs go to ("deep" or "reason"); pick: the model chosen in
+     the chat for what you type ("auto", "fast", "deep", "reason").
+     Missing ones are filled in where they are, not by making a new object:
+     anything holding the settings from an earlier call keeps holding the
+     real ones. */
+  if (!st.flow.tiers || typeof st.flow.tiers !== "object") st.flow.tiers = {};
+  const tdef = { on:false, auto:["reflect", "study", "teach", "diagnose"], timeout:110,
+                 reason:false, reasonTimeout:115, hard:"deep", pick:"auto" };
+  Object.keys(tdef).forEach(k => { if (st.flow.tiers[k] === undefined) st.flow.tiers[k] = tdef[k]; });
   /* simple questions answered on this PC, instantly, instead of a round trip */
   if (st.flow.localFirst === undefined) st.flow.localFirst = true;
   /* Four hundred was the right number when the four hundred were the newest
@@ -15107,7 +15250,7 @@ function aboutReleases(md){
 }
 const ABOUT_STOP = new Set(("the a an and or of to in on for is are be it this that with from as at by can do does did how what when where which who why " +
   "i me my you your we our they them their there here not no yes if so about into out up down just get got use using make want need " +
-  "resolv app please would could should will have has had any some all more most very").split(" "));
+  "resolv kalkech app please would could should will have has had any some all more most very").split(" "));
 function aboutWords(q){
   return [...new Set(String(q || "").toLowerCase().match(/[a-z0-9][a-z0-9.+#-]{2,}/g) || [])].filter(w => !ABOUT_STOP.has(w));
 }
@@ -15126,12 +15269,12 @@ function aboutSearch(q, n){
   }).filter(x => x.score > 0).sort((a, b) => b.score - a.score).slice(0, n || 3);
 }
 /* is this question about Resolv itself, rather than about their work */
-const ABOUT_OWN = /\b(resolv|this app|the app|in the app|your(self)? (version|features?)|what'?s new|what is new|new (in|feature|version)|release notes?|change ?log|changelog|version|feature|setting|settings|set ?up|preset|skin|theme|lumen|nova|nebula|aurora|carbon|pixel|desk pet|shortcut|keyboard|alerts?|bell|reminders?|notifications?|bridge|power automate|prompt|language|khmer|menu|button|look and behaviou?r|sources?|document indexing|index(?:ing)?|re-?index(?:ing|ed)?|citations?|pdf runbooks?|(?:add|upload|import|update|replace) (?:a |an |my |the )?(?:new |updated )?(?:pdf|markdown|word|document|runbook|guideline|standard|policy)s?|answer was not found|not found|supports? (?:this|that|the) answer)\b/i;
+const ABOUT_OWN = /\u1780\u17b6\u179b\u1780\u17b7\u1785\u17d2\u1785|\b(resolv|kalkech|kal kech|this app|the app|in the app|your(self)? (version|features?)|what'?s new|what is new|new (in|feature|version)|release notes?|change ?log|changelog|version|feature|setting|settings|set ?up|preset|skin|theme|lumen|nova|nebula|aurora|carbon|pixel|desk pet|shortcut|keyboard|alerts?|bell|reminders?|notifications?|bridge|power automate|prompt|language|khmer|menu|button|look and behaviou?r|sources?|document indexing|index(?:ing)?|re-?index(?:ing|ed)?|citations?|pdf runbooks?|(?:add|upload|import|update|replace) (?:a |an |my |the )?(?:new |updated )?(?:pdf|markdown|word|document|runbook|guideline|standard|policy)s?|answer was not found|not found|supports? (?:this|that|the) answer)\b/i;
 const ABOUT_HELP = /\b(how (do|can|to|should|does)|where (is|are|do|can)|can (i|you|it)|is there|does it|what does|what is|turn (on|off)|switch (on|off)|enable|disable|configure|change|show me how|why (did|does|do|is|was)|which (source|document))\b/i;
 const ABOUT_NEWS = /\b(what'?s new|what is new|what changed|what has changed|what (?:was|were|has been|have been|got) (?:added|new|changed|fixed|improved)|new in|release notes?|change ?log|changelog|(?:latest|last|newest|current|this) (?:resolv )?(?:version|release|update)|which version|what version|version (are you|is this|am i))\b/i;
 function aboutForFlow(q){
-  if (!ABOUT.loaded){ aboutLoad(); return { name:"Resolv", version:APP_VERSION }; }
-  const app = { name:"Resolv", version:APP_VERSION,
+  if (!ABOUT.loaded){ aboutLoad(); return { name:"KalKech", version:APP_VERSION }; }
+  const app = { name:"KalKech", version:APP_VERSION,
     recent:ABOUT.changes.slice(0, 6).map(r => ({ version:r.version, date:r.date, headline:r.headline })),
     contents:(ABOUT.chapters || []).slice() };
   const t = String(q || "");
@@ -15140,7 +15283,7 @@ function aboutForFlow(q){
     const pick = asked.length ? asked : ABOUT.changes.slice(0, 2);
     app.releases = pick.slice(0, 3).map(r => ({ version:r.version, date:r.date, text:r.text.slice(0, 4500) }));
   }
-  if (ABOUT_OWN.test(t) && (ABOUT_HELP.test(t) || /\b(resolv|lumen|nova|this app|the app)\b/i.test(t))){
+  if (ABOUT_OWN.test(t) && (ABOUT_HELP.test(t) || /\u1780\u17b6\u179b\u1780\u17b7\u1785\u17d2\u1785|\b(resolv|kalkech|kal kech|lumen|nova|this app|the app)\b/i.test(t))){
     /* the best match, and the next ones only if they are nearly as good -
        a chapter that merely mentions the word is not an answer */
     const all = aboutSearch(t, 3), best = all.length ? all[0].score : 0;
@@ -15160,7 +15303,7 @@ function aboutLocal(q){
   if (body.length > 1800) body = body.slice(0, 1800).replace(/\s+\S*$/, "") + "…";
   const older = ABOUT.changes.filter(x => x !== r).slice(0, 4);
   return {
-    say:"## Resolv " + r.version + " · " + r.date + (mine ? "" : "\n\n" + L("AboutNotThis", { v:APP_VERSION })) +
+    say:"## KalKech " + r.version + " · " + r.date + (mine ? "" : "\n\n" + L("AboutNotThis", { v:APP_VERSION })) +
         "\n\n" + body + (older.length ? "\n\n### " + L("AboutEarlier") + "\n" +
         older.map(x => "- **" + x.version + "** — " + x.headline).join("\n") : ""),
     seeds:older.slice(0, 3).map(x => L("AboutWhatIn", { v:x.version })),
@@ -15169,16 +15312,27 @@ function aboutLocal(q){
   };
 }
 
-function flowContext(q){
+/* the kind of question, from the word in brackets it starts with */
+function flowModeOf(q){
+  return (String(q || "").match(/^\[(teach|study|reflect|fix|check|intake|brief)\]/) || [0, "chat"])[1];
+}
+/* KalKech reason gets far more of the workspace than the everyday models:
+   it is a reasoning model, it reads all of it, and it is asked only when it
+   was chosen. Everything here is the "big" side of a limit below. */
+const FLOW_BIG = { msgs:40, msgChars:6000, notes:30, noteChars:6000, lessons:80, fixes:12,
+                   runbooks:6, pastFixes:6, incidentDays:90, srcK:16, srcBudget:48000 };
+function flowContext(q, opts){
   const st = S.settings;
   const c = chatThread();
+  const big = !!(opts && opts.big);
   /* Six turns back, and a turn is capped: what the last answer SAID matters,
      the whole of a two-thousand-word answer does not, and the history is
-     otherwise the one part of a question that grows all afternoon. */
-  const msgs = ((c && c.msgs) || []).slice(-8).map(m => ({
+     otherwise the one part of a question that grows all afternoon. (For
+     KalKech reason, forty turns and most of each.) */
+  const msgs = ((c && c.msgs) || []).slice(big ? -FLOW_BIG.msgs : -8).map(m => ({
     who: m.who === "you" ? "person" : "dossier",
     text: (m.who === "you" ? String(m.text || "")
-                           : String((m.reply && m.reply.say) || "")).slice(0, 1200)
+                           : String((m.reply && m.reply.say) || "")).slice(0, big ? FLOW_BIG.msgChars : 1200)
   })).filter(m => m.text);
   const live = S.tasks.filter(t => LIVE.indexOf(t.status) >= 0);
   const k = today();
@@ -15209,17 +15363,17 @@ function flowContext(q){
        it keeps the payload honest about its size */
     holidays: hols.map(h => ({ d:h.d, n:h.n, k:h.k })),
     holidaysTotal: holidays().length,
-    memory: memoryForFlow(q),
+    memory: memoryForFlow(q, big),
     promptTemplate: PROMPT.text || "",
     promptFrom: PROMPT.from || "",
-    lessons: lessonsForFlow(q),
-    mode: (String(q || "").match(/^\[(teach|study|reflect|fix|check|intake|brief)\]/) || [0, "chat"])[1],
+    lessons: lessonsForFlow(q, big),
+    mode: flowModeOf(q),
     memoryIndex: memoryIndexForFlow(q),
     memoryTotal: memoryStore().length,
     runbooks: runbooksForFlow(q),
     runbookTotal: runbookStore().length,
-    runbooksMatched: runbooksMatchedForFlow(q),
-    pastFixes: pastFixesFor(q),
+    runbooksMatched: runbooksMatchedForFlow(q, big),
+    pastFixes: pastFixesFor(q, big ? FLOW_BIG.pastFixes : undefined),
     brief: briefForFlow(),
     /* Resolv itself: its version and latest releases always, and the parts
        of its README and CHANGELOG that answer a question about it */
@@ -15227,11 +15381,11 @@ function flowContext(q){
     /* their runbooks and standards: the passages that match, labelled and
        placed, for the answer to cite (see SOURCES) - not with the daily
        look back or the one-line jobs, which are not about documents */
-    sources: /^\[(reflect|fix|check|brief)\]/.test(String(q || "")) ? undefined : srcForFlow(q, c, CHAT.pins || []),
+    sources: /^\[(reflect|fix|check|brief)\]/.test(String(q || "")) ? undefined : srcForFlow(q, c, CHAT.pins || [], big),
     focus: flowFocus(),
     thread: threadForFlow(c),
     mentioned: rbIdents(q),
-    incidents: incidentsForFlow(30),
+    incidents: incidentsForFlow(big ? FLOW_BIG.incidentDays : 30),
     profiles: profilesForFlow(q),
     settable: flowSettable(),
     attachments: (CHAT.files || []).filter(f => !f.reading).map(f => ({
@@ -15292,20 +15446,25 @@ function flowContext(q){
 
 async function flowAsk(q, thread, opts){
   opts = opts || {};
-  const cfg = opts.tier ? Object.assign({}, flowCfg(), { tier:opts.tier }) : flowCfg();
+  /* which model: the one asked for (Think harder, KalKech reason, a branch
+     asked again), else for what you type here the one picked in the chat,
+     else what Setup says for this kind of job */
+  const want = opts.tier || (flowModeOf(q) === "chat" ? chatModelPick() : "");
+  const cfg = want ? Object.assign({}, flowCfg(), { tier:want }) : flowCfg();
+  const tier = DossierFlow.tierOf(flowModeOf(q), cfg);
   /* remembered before the tray is emptied, so a failure can say whether the
      size of the question was likely to be the reason for it */
   const sentFiles = CHAT.files.length;
   const sentBytes = Math.round(chatSentBytes() * 3 / 4);
   const log = $("chatLog");
-  const wait = chatThinking(log);
+  const wait = chatThinking(log, tier);
   let out = null, err = null;
   /* The context is taken NOW, before anything is awaited. chatAsk empties
      the attachment tray the moment this function first waits, so a context
      built after an await is built without the files - which is how 4.3.0
      sent every PDF and picture as "None." and the answer was "I can't see
-     any file". */
-  const ctx = flowContext(q);
+     any file". KalKech reason is given the big context. */
+  const ctx = flowContext(q, { big:tier === "reason" });
   if (opts.force) ctx.forceRecords = opts.force.slice();
   /* where the answer goes: into the thread as the next message, or - asked
      again from Retry or Think harder - to the branch waiting for it */
@@ -15357,7 +15516,7 @@ async function flowAsk(q, thread, opts){
      what it was answered without; if not, what to look at in the flow. */
   let fell = !err && flowFellBack(out);
   if (fell && !opts.lean){
-    const wait3 = chatThinking(log);
+    const wait3 = chatThinking(log, tier);
     let out3 = null;
     try {
       out3 = await DossierFlow.ask(q, Object.assign(flowContext(q), {
@@ -15386,12 +15545,12 @@ async function flowAsk(q, thread, opts){
   const more = flowNeeds(out);
   if (more){
     const rows = flowFind(more.args || {});
-    const wait2 = chatThinking(log);
+    const wait2 = chatThinking(log, tier);
     let out2 = null, err2 = null;
     try {
       /* the files went with the first question and go with this one too -
          the tray is empty by now, so they come from the first context */
-      out2 = await DossierFlow.ask(q, Object.assign(flowContext(q), {
+      out2 = await DossierFlow.ask(q, Object.assign(flowContext(q, { big:tier === "reason" }), {
         attachments: ctx.attachments, picture: ctx.picture, pictureName: ctx.pictureName,
         promptTemplate: ctx.promptTemplate, promptFrom: ctx.promptFrom, sources: ctx.sources,
         forceRecords: (opts.force || []).concat(rows),
@@ -15423,13 +15582,14 @@ async function flowAsk(q, thread, opts){
        when it is a real answer - even a short one ("Elle it is!") */
     if (kept.length >= 24 && /\s/.test(kept) && !phTalks(out.ask)) out.say = kept;
     else {
-      const wait4 = chatThinking(log);
+      const wait4 = chatThinking(log, tier);
       let out4 = null;
       try {
         /* asked again with three words of plain fact after the question -
            not an order to the model, which is what the content filter
            refused in 4.6.1, only what is true: nothing was attached */
-        out4 = await DossierFlow.ask(q + " " + PH_NOTE, ctx, flowCfg().tiers.on ? Object.assign({}, cfg, { tier:"deep" }) : cfg);
+        out4 = await DossierFlow.ask(q + " " + PH_NOTE, ctx,
+          tier !== "reason" && flowCfg().tiers.on ? Object.assign({}, cfg, { tier:"deep" }) : cfg);
       } catch(e){ out4 = null; }
       chatThought(wait4, null);
       if (out4 && !flowFellBack(out4) && !phTalks([out4.say, out4.ask].join(" "))) out = out4;
@@ -17024,9 +17184,9 @@ function runbooksForFlow(q){
    checks, escalation. This is the block the endpoint answers from. Matching
    happens here because it is cheap and local; only the winners travel, so
    the request stays small however large the library grows. */
-function runbooksMatchedForFlow(q){
+function runbooksMatchedForFlow(q, big){
   if (!q) return [];
-  return rbMatch(q, "", 3).map(({ rb, score }) => ({
+  return rbMatch(q, "", big ? FLOW_BIG.runbooks : 3).map(({ rb, score }) => ({
     title: rb.title, system: rb.system, severity: rb.severity || "P3",
     why: (rb.triggers || []).filter(t => rbTriggerHit(t, q)).slice(0, 4),
     confidence: score >= 32 ? "high" : score >= 16 ? "fair" : "weak",
@@ -17099,14 +17259,14 @@ function memScore(n, q){
   if (n.system && low.indexOf(String(n.system).toLowerCase()) >= 0) s += 8;
   return s;
 }
-function memoryForFlow(q){
+function memoryForFlow(q, big){
   const all = memoryStore().slice();
   const sc = {};
   all.forEach(n => { sc[n.id || n.title] = memScore(n, q); });
   all.sort((a, b) => (sc[b.id || b.title] - sc[a.id || a.title]) ||
                      String(b.updated || "").localeCompare(String(a.updated || "")));
-  return all.slice(0, 10).map(n => ({
-    title: n.title, body: String(n.body || "").slice(0, 1500),
+  return all.slice(0, big ? FLOW_BIG.notes : 10).map(n => ({
+    title: n.title, body: String(n.body || "").slice(0, big ? FLOW_BIG.noteChars : 1500),
     tags: (n.tags || []).slice(), system: n.system || "",
     updated: String(n.updated || "").slice(0, 10)
   }));
@@ -17171,7 +17331,7 @@ function flowGetSetting(k){
 /* one value, coerced to the shape the setting actually is */
 function flowSetSetting(k, raw){
   const d = FLOW_SET[k];
-  if (!d) return { bad:"“" + k + "” is not a setting Resolv will change from here. " +
+  if (!d) return { bad:"“" + k + "” is not a setting KalKech will change from here. " +
                         "It accepts: " + Object.keys(FLOW_SET).join(", ") };
   const st = S.settings;
   let v = raw;
@@ -17623,20 +17783,33 @@ function renderFlow(){
   h += '<div class="fr" style="margin-top:10px"><label>' + esc(L("TierLabel")) + "</label>" +
        '<select class="in" id="flTiers">' +
        '<option value="0"' + (c.tiers.on ? "" : " selected") + ">" + esc(L("TierOne")) + "</option>" +
-       '<option value="1"' + (c.tiers.on ? " selected" : "") + ">" + esc(L("TierTwo")) + "</option>" +
+       '<option value="1"' + (c.tiers.on && !c.tiers.reason ? " selected" : "") + ">" + esc(L("TierTwo")) + "</option>" +
+       '<option value="2"' + (c.tiers.on && c.tiers.reason ? " selected" : "") + ">" + esc(L("TierThree")) + "</option>" +
        "</select></div>" +
        '<p class="hint2">' + esc(L("TierHint")) + "</p>" +
        (() => {
-         const f = flowTypical("fast"), d = flowTypical("deep");
-         if (!f && !d) return "";
+         const f = flowTypical("fast"), d = flowTypical("deep"), r = flowTypical("reason");
+         if (!f && !d && !r) return "";
          const one = (x, k) => x ? L(k, { p0:(x.ms / 1000).toFixed(1), n:x.n }) : L(k + "None");
          return '<p class="hint2" style="margin-top:-2px"><b>' + esc(L("TierMeasured")) + "</b> " +
            esc(one(f, "TierFastTook")) + " \u00b7 " + esc(one(d, "TierDeepTook")) +
+           (c.tiers.reason ? " \u00b7 " + esc(one(r, "TierReasonTook")) : "") +
            (f && d && d.ms < f.ms * 1.4 ? " " + esc(L("TierSame")) : "") + "</p>";
        })() +
        (c.tiers.on
          ? '<div class="fr"><label>' + esc(L("TierWait")) + "</label>" +
            '<input class="in" id="flTierTmo" type="number" min="30" max="115" value="' + (+c.tiers.timeout || 110) + '"></div>' +
+           /* KalKech reason: how long to wait for it, and whether the ticked
+              jobs go to it instead of the strong model */
+           (c.tiers.reason
+             ? '<div class="fr"><label>' + esc(L("TierReasonWait")) + "</label>" +
+               '<input class="in" id="flReasonTmo" type="number" min="30" max="115" value="' + (+c.tiers.reasonTimeout || 115) + '"></div>' +
+               '<div class="fr"><label>' + esc(L("TierHard")) + "</label>" +
+               '<select class="in" id="flHard"><option value="deep"' + (c.tiers.hard === "reason" ? "" : " selected") + ">" +
+               esc(L("TierHardDeep")) + '</option><option value="reason"' + (c.tiers.hard === "reason" ? " selected" : "") + ">" +
+               esc(L("TierHardReason")) + "</option></select></div>" +
+               '<p class="hint2">' + esc(L("TierReasonSetupHint")) + "</p>"
+             : "") +
            '<div class="fr"><label>' + esc(L("TierWhich")) + "</label>" +
            '<div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;font-size:12px">' +
            [["reflect", "TierModeReflect"], ["study", "TierModeStudy"], ["teach", "TierModeTeach"],
@@ -17706,13 +17879,15 @@ function renderFlow(){
   if (!PROMPT.text) promptLoad().then(() => { if (PROMPT.text) renderFlow(); });
 
   const on = (id, fn, ev) => { const el = $(id); if (el) el[ev || "onclick"] = fn; };
-  const save = () => { touch(); renderFlow(); };
+  const save = () => { touch(); renderFlow(); chatModelPaint(); };
   on("flOn", e => { c.on = e.target.value === "1"; save(); }, "onchange");
   on("flScope", e => { c.scope = e.target.value; save(); }, "onchange");
   on("flDeep", e => { c.deep = e.target.value === "1"; save(); }, "onchange");
   on("flFb", e => { c.fallback = e.target.value === "1"; save(); }, "onchange");
   on("flShape", e => { c.shape = e.target.value; CHAT.grid = null; save(); }, "onchange");
-  on("flTiers", e => { c.tiers.on = e.target.value === "1"; save(); }, "onchange");
+  on("flTiers", e => { c.tiers.on = e.target.value !== "0"; c.tiers.reason = e.target.value === "2"; chatModelPaint(); save(); }, "onchange");
+  on("flReasonTmo", e => { c.tiers.reasonTimeout = Math.max(30, Math.min(115, +e.target.value || 115)); touch(); }, "onchange");
+  on("flHard", e => { c.tiers.hard = e.target.value === "reason" ? "reason" : "deep"; touch(); }, "onchange");
   on("flTierTmo", e => { c.tiers.timeout = Math.max(30, Math.min(115, +e.target.value || 110)); touch(); }, "onchange");
   on("flLocal", e => { c.localFirst = e.target.value === "1"; save(); }, "onchange");
   on("flIntake", e => { c.intakeAi = e.target.value === "1"; save(); }, "onchange");
@@ -19598,7 +19773,9 @@ function flowTypical(tier){
 /* which model a job asks for, by the switches in Setup */
 function flowTier(kind){
   const t = flowCfg().tiers;
-  return t.on && t.auto.indexOf(kind) >= 0 ? "deep" : "fast";
+  if (!t.on || t.auto.indexOf(kind) < 0) return "fast";
+  /* with three models, the ticked jobs can go to KalKech reason instead */
+  return t.reason && t.hard === "reason" ? "reason" : "deep";
 }
 function recAi(kind, id){
   const t = getTask(id); if (!t) return;
@@ -20442,7 +20619,7 @@ async function renderModal(){
       : "<div style=\"font-size:12.5px;color:var(--ink-3);margin-bottom:14px\">" + L("NothingInTheLibraryYet") + "</div>") +
     "<h5 class=\"eyebrow\" style=\"margin:18px 0 8px\">" + L("WhereTheCommandsPoint") + "</h5>" +
     fr(L("FolderPath"), '<input class="in mono" id="scRoot" style="font-size:11px" value="' + esc(S.settings.rootPath || "") +
-      '" placeholder="D:\\Work\\Resolv">') +
+      '" placeholder="D:\\Work\\KalKech">') +
     '<p style="font-size:11.5px;color:var(--ink-2);line-height:1.7;margin-top:8px">' +
       L("TheBrowserIsNeverToldThe") +
       L("TypeItOnceHereAndEvery") +
@@ -22793,7 +22970,10 @@ function srcSearch(q, thread, opts){
   const cfg = srcCfg();
   const prev = thread && thread.convo && thread.convo.src;
   const fu = DossierSources.followUp(q, prev);
-  const o = { clearance:cfg.clearance, purpose:opts.purpose || "flow", today:today(), k:6, budget:+cfg.budget || 14000,
+  /* KalKech reason: more passages, and room for them */
+  const o = { clearance:cfg.clearance, purpose:opts.purpose || "flow", today:today(),
+              k:opts.big ? FLOW_BIG.srcK : 6,
+              budget:opts.big ? Math.max(+cfg.budget || 14000, FLOW_BIG.srcBudget) : +cfg.budget || 14000,
               systems:(S.settings.systems || []).map(s => s.name), pinDocs:opts.pin || [],
               pinBudget:opts.pin && opts.pin.length ? 60000 : 0 };
   if (fu.follow){ o.context = fu.context; o.boostDocs = fu.boostDocs; }
@@ -22812,8 +22992,8 @@ function srcSearch(q, thread, opts){
   res.closest = [...new Set(found.hits.map(h => h.chunk.doc))].map(id => (srcDoc(id) || {}).name).filter(Boolean).slice(0, 8);
   return res;
 }
-function srcForFlow(q, thread, pin){
-  const r = srcSearch(q, thread, { purpose:"flow", pin:pin });
+function srcForFlow(q, thread, pin, big){
+  const r = srcSearch(q, thread, { purpose:"flow", pin:pin, big:big });
   if (!r) return undefined;
   const out = { text:r.text, searched:r.searched, filters:r.filters, docQuestion:r.docQuestion, unproven:r.unproven,
                 closest:r.closest, follow:r.follow, passages:r.passages, pinned:(pin || []).slice(), kept:(CHAT.kept || []).slice() };
@@ -23522,20 +23702,20 @@ function runnerScript(){
     "rem ===========================================================================",
     "rem  dossier-runner.bat",
     "rem",
-    "rem  Runs the scripts Resolv asks for. No PowerShell anywhere.",
+    "rem  Runs the scripts KalKech asks for. No PowerShell anywhere.",
     "rem",
     "rem  Put this in   <your workspace>\\scripts\\   and double-click it.",
     "rem  Leave the window open. Closing it stops the runner.",
     "rem",
     "rem  HOW IT TALKS TO DOSSIER",
-    "rem  Resolv cannot start a program, so it leaves a note in scripts\\queue\\ and",
+    "rem  KalKech cannot start a program, so it leaves a note in scripts\\queue\\ and",
     "rem  this reads it. Everything passed between them is plain text, one value a",
     "rem  line - no JSON parsing in batch, which is where these things go wrong.",
     "rem",
     "rem    <id>.run.txt    line 1: the script to run.  line 2: its arguments.",
     "rem    <id>.done.txt   line 1: the exit code it finished with.",
     "rem    <id>.out.txt    everything the script printed.",
-    "rem    .runner.txt     written every few seconds so Resolv knows this is alive.",
+    "rem    .runner.txt     written every few seconds so KalKech knows this is alive.",
     "rem",
     "rem  SAFETY",
     "rem  It will only run a file that is already sitting in this scripts\\ folder.",
@@ -23549,7 +23729,7 @@ function runnerScript(){
     "set \"QUEUE=%SCRIPTS%\\queue\"",
     "if not exist \"%QUEUE%\" mkdir \"%QUEUE%\"",
     "",
-    "echo  Resolv runner",
+    "echo  KalKech runner",
     "echo  watching \"%QUEUE%\"",
     "echo  Leave this window open. Close it to stop.",
     "echo.",
@@ -23905,7 +24085,7 @@ async function writeLauncher(t, sc, vals){
   const out = "run-" + splitExt(sc.file)[0] + ".cmd";
   const body = [
     "@echo off",
-    "rem Written by Resolv for " + t.code + " - " + t.title.replace(/[\r\n]/g, " "),
+    "rem Written by KalKech for " + t.code + " - " + t.title.replace(/[\r\n]/g, " "),
     "rem Double-click this file to run the script. The transcript is kept beside it.",
     "setlocal",
     'set "LOG=%~dp0' + splitExt(out)[0] + '.log"',
@@ -24135,7 +24315,7 @@ window.addEventListener("afterprint", () => { printMode = null; });
    it, say so once, and offer to write the .gitignore that keeps every path
    the app owns out of git's reach. */
 const GIT_IGNORE_LINES = [
-  "# Written by Resolv. These are the paths the app owns; git must never",
+  "# Written by KalKech. These are the paths the app owns; git must never",
   "# create, replace or delete one of them.",
   "/dossier.json",
   "/backups/",
@@ -24250,9 +24430,9 @@ function lessonSave(text, kind, replaces, source){
   return { lesson:l, replaced:false };
 }
 /* newest first, thirty at most, one line each: a few hundred tokens */
-function lessonsForFlow(q){
+function lessonsForFlow(q, big){
   const all = lessonStore();
-  const plain = all.filter(l => l.kind !== "correction").slice(0, 30);
+  const plain = all.filter(l => l.kind !== "correction").slice(0, big ? FLOW_BIG.lessons : 30);
   /* Corrections could fill the list by themselves, so they travel by
      relevance: the ones that share words with this question, plus the
      three newest. The rest are still kept - and still asked about by the
@@ -24262,7 +24442,7 @@ function lessonsForFlow(q){
   if (fixes.length){
     const w = new Set(fixWords(q));
     pick = fixes.map((l, i) => ({ l, i, s:fixWords(l.text).filter(x => w.has(x)).length }))
-      .filter(x => x.s > 1).sort((a, b) => (b.s - a.s) || (a.i - b.i)).slice(0, 6).map(x => x.l);
+      .filter(x => x.s > 1).sort((a, b) => (b.s - a.s) || (a.i - b.i)).slice(0, big ? FLOW_BIG.fixes : 6).map(x => x.l);
     fixes.slice(0, 3).forEach(l => { if (pick.indexOf(l) < 0) pick.push(l); });
   }
   return pick.concat(plain).map(l => "[" + l.kind + "] " + l.text);
@@ -24698,7 +24878,7 @@ async function briefDraft(){
   try {
     await promptLoad();
     const q = "[brief] " + L("BriefAskAi");
-    const ctx = Object.assign(flowContext(q), { mode:"brief", conversation:[], focus:undefined, thread:undefined,
+    const ctx = Object.assign(flowContext(q, { big:flowTier("study") === "reason" }), { mode:"brief", conversation:[], focus:undefined, thread:undefined,
       attachments:[{ name:"what-the-workspace-knows.txt", type:"text/plain", size:0, data:"", kind:"text",
                      text:briefMaterial(), pages:0, note:"" }],
       picture:CHAT_BLANK_PNG, pictureName:"", promptTemplate:PROMPT.text, promptFrom:PROMPT.from });
@@ -24856,7 +25036,7 @@ async function reflectNow(byHand){
   paintReflect();
   await promptLoad();
   const q = "[reflect] " + L("ReflectAsk", { p0:stamp(since), n1:mat.closed, n2:mat.raised });
-  const ctx = Object.assign(flowContext(q), {
+  const ctx = Object.assign(flowContext(q, { big:flowTier("reflect") === "reason" }), {
     mode:"reflect", conversation:[],
     attachments:[{ name:"work-since-" + since.slice(0, 10) + ".txt", type:"text/plain", size:mat.text.length,
                    data:"", kind:"text", text:mat.text || "(nothing since the last look)", pages:0, note:"" }],
@@ -24909,7 +25089,7 @@ async function reflectNow(byHand){
     petTell(esc(n ? L("ReflectToast", { n }) : L("ReflectToastNone")) + '<small class="pth">' + LE("PetOpenHint") + "</small>",
             () => { S.chatId = c.id; openChat(); chatPaint(); });
   if (typeof Notification !== "undefined" && Notification.permission === "granted" && document.hidden && n){
-    try { new Notification("Resolv", { body:L("ReflectToast", { n }) }); } catch(e){}
+    try { new Notification("KalKech", { body:L("ReflectToast", { n }) }); } catch(e){}
   }
 }
 
@@ -25656,7 +25836,19 @@ $("chatPlaceMenu").addEventListener("keydown", e => {
 });
 document.addEventListener("pointerdown", e => {
   if (!$("chatPlaceMenu").hidden && !e.target.closest("#chatPlaceMenu,#chatPlace")) chatPlaceMenu(false);
+  if (!$("chatModelMenu").hidden && !e.target.closest("#chatModelMenu,#chatModel")) chatModelMenu(false);
 }, true);
+$("chatModel").addEventListener("click", e => { e.stopPropagation(); chatModelMenu(); });
+$("chatModelMenu").addEventListener("click", e => {
+  const b = e.target.closest("button[data-model]");
+  if (b) chatModelSet(b.dataset.model);
+});
+$("chatModelMenu").addEventListener("keydown", e => {
+  if (e.key !== "ArrowDown" && e.key !== "ArrowUp") return;
+  e.preventDefault();
+  const bs = [...$("chatModelMenu").querySelectorAll("button")], i = bs.indexOf(document.activeElement);
+  bs[(i + (e.key === "ArrowDown" ? 1 : bs.length - 1)) % bs.length].focus();
+});
 document.querySelectorAll("#chat .chgrip").forEach(g => g.addEventListener("pointerdown", chatGripDown));
 document.querySelector('#chat .chgrip[data-g="w"]').addEventListener("keydown", chatGripKey);
 /* a double-click on the docked edge puts the width back */
@@ -29482,6 +29674,7 @@ document.addEventListener("keydown", e => {
     if ($("chatFxPanel").classList.contains("on")) return closeChatFx();
     if ($("chatAsk").classList.contains("on")) return chatDeclineAsked();
     if (!$("chatPlaceMenu").hidden) return chatPlaceMenu(false);
+    if (!$("chatModelMenu").hidden){ chatModelMenu(false); return $("chatModel").focus(); }
     if ($("chat").classList.contains("convos") && chatLm() && chatPlace() !== "full") return $("chat").classList.remove("convos");
     /* over a floating or full-screen panel, what is on top goes first */
     if ($("chat").classList.contains("on") && !(document.body.classList.contains("chatover") &&

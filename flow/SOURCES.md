@@ -1,6 +1,6 @@
 # Sources — setup, configuration and troubleshooting
 
-How Resolv answers from your runbooks and standards, what it needs, where it
+How KalKech answers from your runbooks and standards, what it needs, where it
 keeps things, and what to do when an answer is not what you expected. The
 everyday how-to is in the README
 ([Answering from your runbooks and standards](../README.md#answering-from-your-runbooks-and-standards-sources));
@@ -68,7 +68,7 @@ The pieces, by file:
 | Embeddings | None. | Passages are found by words (BM25), not by a model's embedding — which would mean sending every document to one more service. See *Search configuration*. |
 | Environment variables | None for the app. `CHROME` (optional) tells `tests/e2e/run.js` which browser to drive. | |
 | Secrets | None. | Nothing in Sources needs a key, a token or a password; do not put any in `sources/`. |
-| Browser | Chrome or Edge, opened through `Resolv.bat` (a workspace folder is needed to keep files). | |
+| Browser | Chrome or Edge, opened through `KalKech.bat` (a workspace folder is needed to keep files). | |
 | OCR (optional) | `ocr.js` beside `dossier.html`. | Only for scanned PDFs. |
 | Model | The flow you already have. | The prompt carries the passages and the rules; nothing in Power Automate changes. |
 
@@ -122,7 +122,7 @@ environment is only taken from a plain mention (*in UAT*, *PROD*, *the
 production servers*), never from every "test" in a sentence.
 
 **Access control** — labels, filtered before anything is scored (see the
-README's *Access*). Resolv has no user accounts: the workspace folder is the
+README's *Access*). KalKech has no user accounts: the workspace folder is the
 boundary, and Windows permissions on it are the protection of the files
 themselves.
 
@@ -145,9 +145,9 @@ node tests/fixtures/make-pdf.js   # remakes the PDF fixture
 
 ## 5. Deployment and migration
 
-1. Update the Resolv folder (the new `sources.js` sits beside `dossier.html`).
-2. Quit Resolv from its tray icon and start `Resolv.bat` again, then reload
-   any open Resolv tab.
+1. Update the KalKech folder (the new `sources.js` sits beside `dossier.html`).
+2. Quit KalKech from its tray icon and start `KalKech.bat` again, then reload
+   any open KalKech tab.
 3. Nothing to migrate: a workspace with no `sources/` folder simply has no
    documents yet. Add your runbooks and standards from **Library → Sources**.
 4. If you use your own `dossier-prompt.txt`, copy the *THEIR DOCUMENTS
@@ -160,7 +160,7 @@ node tests/fixtures/make-pdf.js   # remakes the PDF fixture
 |---|---|
 | A new version of a document | **+ Add documents**; choose *It replaces that version*. |
 | The same file changed, or `ocr.js` added since | **Re-index** on it, or **Re-index all**. |
-| Resolv's way of cutting passages changed | Nothing: every document is cut again from `text.txt` on the next open. |
+| KalKech's way of cutting passages changed | Nothing: every document is cut again from `text.txt` on the next open. |
 | A document must stop being used | **Switch off** (kept) or **Remove** (deleted). |
 | Many documents at once | Tick them (the header box ticks every row shown), then **Switch off**, **Re-index**, **Set category…** or **Remove** in the bar above the list. **Switch on** for several never switches on a superseded version. |
 | Many new documents | **+ Add documents** and select them all in the file window: one window for all of them, saved and indexed together. |
@@ -183,7 +183,7 @@ node tests/fixtures/make-pdf.js   # remakes the PDF fixture
 | Two versions in answers | Both are active and nothing proves which is current: give each a version or effective date (**Details**), or switch the old one off. |
 | "*n* page(s) could not be read reliably" | A scan without `ocr.js`, a font the reader could not decode, or garbled text. Add `ocr.js` and **Re-index**, or add a text version of the document. |
 | "No text could be read" | A scanned PDF without `ocr.js`, or an image-only document. |
-| "files missing" on a document | `sources/<id>` was changed outside Resolv. **Re-index** it if the original is still there; otherwise remove it and add it again. |
+| "files missing" on a document | `sources/<id>` was changed outside KalKech. **Re-index** it if the original is still there; otherwise remove it and add it again. |
 | A document added by dropping it into `sources/` is not searched | Only documents in `catalog.json` are searched — use **+ Add documents**. |
 | The wrong runbook for a look-alike system | Set **Systems** and **Environment** on each (**Details**), and name the system in the question. |
 | What was searched, exactly | **Library → Sources → Recent searches and changes**, or the browser console (`[sources]`): documents, filters, passages, scores, versions, citations, held-back answers. |

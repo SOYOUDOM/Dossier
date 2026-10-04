@@ -6,6 +6,52 @@ holds — which is what to paste into a bug report.
 
 ---
 
+## 5.13.0 - 2026-10-04
+
+**Resolv is now KalKech (កាលកិច្ច), and there is a third model: KalKech
+reason.**
+
+- **The new name, everywhere you see it**: the title and the header (with
+  the Khmer name **កាលកិច្ច** beside it), the assistant ("KalKech
+  Assistant", "Ask KalKech…"), every message and hint, the build line,
+  Windows notifications, the tray icon's menu and messages ("Open KalKech",
+  "Quit KalKech"), the log window, the prompt, the flow relay, the language
+  files and the docs. "what is KalKech?" is understood too.
+- **KalKech.bat starts it.** `Resolv.bat` and `Dossier.bat` are still there
+  and pass straight through, so shortcuts keep working. The first start
+  after updating rebuilds the tray program (it says so); quit the running
+  one from its icon first.
+- **Nothing that holds your work was renamed** — `dossier.html`,
+  `dossier.json`, `.dossier-store.json`, `dossier-prompt.txt`, the SQL
+  Server database `Dossier`, the start-up entry — so no data moves. A name
+  you gave the assistant is kept. The logo is still Resolv's R until
+  KalKech's own replaces it (`logo.png`, `favicon.ico`).
+- **KalKech reason: a third model.** A reasoning model (GPT-5 reasoning) as
+  a third prompt action in your flow — step by step in
+  `flow/POWER-AUTOMATE.md` §4g, then **Setup → Models in your flow →
+  Three**. It thinks a problem through before it answers, and it is sent
+  far more of your workspace than the other two: 40 messages of the
+  conversation (6,000 characters each, was 8 and 1,200), 240 records with
+  their notes and log (was 60, short), 30 notes (was 10), 80 lessons (was
+  30), 16 document passages and about 48,000 characters (was 6 and 14,000),
+  6 runbooks and past fixes (was 3), 90 days of incidents (was 30). It is
+  told it was chosen, so it reads everything, checks each step and figure,
+  and writes as long an answer as the question needs. KalKech waits up to
+  115 seconds for it — the most Power Automate allows.
+- **Choose the model in the chat**: a pill beside **Send** — Auto, Fast,
+  Strong, Reason — remembered with the workspace. Under an answer,
+  **◆ KalKech reason** asks it once (as a branch, like Think harder). The
+  time under an answer says which model gave it.
+- **Setup**: *Three models*, how long to wait for KalKech reason, and
+  whether the ticked jobs (look back, BAU documents, runbook interviews,
+  Diagnose) go to the strong model or to KalKech reason.
+- KalKech never asks a flow for a model it has not been given: until
+  *Three* is chosen, a pick of Reason goes to the strong model.
+- A model setting changed in one place could be lost by another part of the
+  app that still held the old settings; they are now filled in place.
+
+---
+
 ## 5.12.0 - 2026-10-04
 
 **The desk pet is the assistant, and the chat can be wider, a floating

@@ -1,6 +1,6 @@
-# How Resolv's assistant works — and how to build one like it
+# How KalKech's assistant works — and how to build one like it
 
-*A guide for everyone: the person who uses Resolv, a colleague who wants to
+*A guide for everyone: the person who uses KalKech, a colleague who wants to
 understand it, and anyone who wants to build a new AI assistant the same
 way. You do not need to know how to program to read Parts 1 to 3.*
 
@@ -33,8 +33,8 @@ clever colleague who has read a huge amount about the world, but:
 3. **sometimes says wrong things with confidence** — when they do not know, they
    may fill the gap with something that *sounds* right.
 
-You cannot fix these three things inside the model. So Resolv does not try to.
-Instead, Resolv acts like a **good team lead** working with that colleague:
+You cannot fix these three things inside the model. So KalKech does not try to.
+Instead, KalKech acts like a **good team lead** working with that colleague:
 
 - before each question, it **prepares a small folder** with exactly the papers
   the question needs — no more, no less;
@@ -52,7 +52,7 @@ That is the whole design. Everything else in this guide is detail.
           ▼
  ┌──────────────────────────┐  yes  ┌───────────────────────────────────┐
  │ 1. ANSWER HERE?          │──────►│ answered at once, on your PC      │
- │   can Resolv answer it   │       │ ("hi", "what's overdue?",         │
+ │   can KalKech answer it   │       │ ("hi", "what's overdue?",         │
  │   by itself?             │       │  "what's new?") — no AI, no wait  │
  └────────────┬─────────────┘       └───────────────────────────────────┘
               │ no
@@ -98,10 +98,10 @@ That is the whole design. Everything else in this guide is detail.
 
 ### Five promises the design keeps
 
-These are the rules every part of Resolv's assistant is built around. If you
+These are the rules every part of KalKech's assistant is built around. If you
 build your own assistant, keep them too (Part 5).
 
-| Promise | What it means | How Resolv keeps it |
+| Promise | What it means | How KalKech keeps it |
 |---|---|---|
 | **Your data stays yours** | Nothing leaves the PC except what a question (or the daily look back) needs, and only to *your own* flow | The app page cannot reach the internet at all; one small page, the *relay*, can talk to exactly one address — yours |
 | **It never changes anything without you** | The AI can only *suggest* a change | Every change is shown to you and waits for your yes, one at a time |
@@ -126,9 +126,9 @@ are kept, how fast a patch must go in or what a P2 target is goes through the
 very same steps, and every question searches **all** the active documents in
 Sources, not one of them.
 
-### Step 1 — Can Resolv answer it by itself?
+### Step 1 — Can KalKech answer it by itself?
 
-Many questions do not need an AI at all. Resolv checks those first, on your PC,
+Many questions do not need an AI at all. KalKech checks those first, on your PC,
 in a few milliseconds:
 
 | Question | Answered by | Why it stays on the PC |
@@ -136,7 +136,7 @@ in a few milliseconds:
 | "hi", "thanks", "ok" | a greeting | Sending "hi" through the AI used to cost seven seconds |
 | "what's overdue?", "what should I do next?", "how many did I close today?" | counting your own records | The PC can count exactly and instantly; an AI can only count what it was sent |
 | "alert me about D-0101 at 3pm" | the alert reader | Plain enough to read without an AI; still asks you before it sets it |
-| "what's new?", "which version is this?" | Resolv's own README and CHANGELOG | Resolv knows its own manual |
+| "what's new?", "which version is this?" | KalKech's own README and CHANGELOG | KalKech knows its own manual |
 | "which source supports this answer?", "why was it taken out?" | what the last answer carried | The facts are already on the PC |
 
 The counting answers and the "what's new" answers carry a button, **Ask the
@@ -152,7 +152,7 @@ questions about your documents are answered with the passages themselves.
 The AI knows nothing about your work, so something must go with the question.
 But **the model reads every word it is sent before it starts to answer**. Send
 too much and every answer is slow; send the wrong things and the answer is
-wrong. So Resolv *chooses*, on your PC, what this question needs.
+wrong. So KalKech *chooses*, on your PC, what this question needs.
 
 | What | Where it comes from | How much goes with one question |
 |---|---|---|
@@ -168,7 +168,7 @@ wrong. So Resolv *chooses*, on your PC, what this question needs.
 | The conversation | this chat | the last **8** messages (each cut to 1,200 characters) and a short running summary |
 | What you are doing | the screen | the open record, anything selected, what you did today |
 | Attachments | the chat tray | each file's text (up to 80,000 characters); a picture at the size the model reads |
-| The allowed actions | `flow.js` | the list of the **62** things it may ask Resolv to do |
+| The allowed actions | `flow.js` | the list of the **62** things it may ask KalKech to do |
 
 #### How the right passages of a document are found
 
@@ -242,17 +242,17 @@ Three things make it work well:
   from.*
 - **Worked examples.** The model copies its examples more than it follows its
   rules. So every example must be a perfect answer, and a checker
-  (`flow/check-prompt.js`) makes sure each one would pass Resolv's own checks.
+  (`flow/check-prompt.js`) makes sure each one would pass KalKech's own checks.
 - **It is a file, read fresh before every question.** Change the file, ask the
   next question, and the new behaviour is already there. Your own version can
-  live in your workspace folder as `dossier-prompt.txt`; Resolv uses the first
+  live in your workspace folder as `dossier-prompt.txt`; KalKech uses the first
   it finds: yours, then `flow/prompt.txt`, then the copy built into `flow.js`.
 
 ### Step 4 — Send it through one door
 
 ```
  ┌───────────────────────┐        ┌──────────────────────┐        ┌────────────────┐
- │ Resolv (dossier.html) │question│ the relay            │question│ YOUR Power     │
+ │ KalKech (dossier.html) │question│ the relay            │question│ YOUR Power     │
  │ holds your records;   │───────►│ (flow/relay.html)    │───────►│ Automate flow  │
  │ CANNOT reach the      │        │ holds no records;    │        │ (in your       │
  │ internet - the        │ reply  │ can reach ONE        │ reply  │ company's      │
@@ -266,7 +266,7 @@ Three things make it work well:
 - The relay is a small page in a locked-down frame. It can send text to **one**
   address — the flow address you typed in Setup — and refuses anything else,
   even a redirect.
-- Resolv waits up to **30 seconds** for an everyday question, and up to about
+- KalKech waits up to **30 seconds** for an everyday question, and up to about
   **2 minutes** for a hard job (Power Automate itself gives up at 2 minutes).
 
 ### Step 5 — The AI thinks (inside your flow)
@@ -282,12 +282,18 @@ The flow in Power Automate is six simple steps:
  ⑥ Response "Fallback"                 if anything failed, say so instead of going silent
 ```
 
-Optionally, step ③ becomes **two models**:
+Optionally, step ③ becomes **two or three models**:
 
 - a **fast** model (usually one with *mini* in its name) for everyday chat;
 - a **strong**, slower model for the jobs that need thinking: the daily look
   back, learning a guideline, interviewing you about a runbook, *Diagnose* on a
-  record, and **Think harder** under any answer.
+  record, and **Think harder** under any answer;
+- **KalKech reason**, a *reasoning* model (GPT-5 reasoning), only when you
+  choose it: the pill beside Send, or **◆ KalKech reason** under an answer.
+  It is sent far more of the workspace than the other two — 40 messages of
+  the conversation, 240 records with their notes, 30 notes, 80 lessons, 16
+  document passages (about 48,000 characters) — and KalKech waits up to 115
+  seconds for it.
 
 The model must reply in a fixed shape (JSON), for example:
 
@@ -299,24 +305,24 @@ The model must reply in a fixed shape (JSON), for example:
 ```
 
 `say` is the answer, `cite` the passages it rests on (with the exact words),
-`confidence` how sure it is, and `actions` anything it would like Resolv to do.
+`confidence` how sure it is, and `actions` anything it would like KalKech to do.
 
 ### Step 6 — Check the reply before you see it
 
 **Nothing the AI sends is trusted.** It is treated as a *suggestion to be
-checked*, never as an order. Resolv checks, in this order:
+checked*, never as an order. KalKech checks, in this order:
 
 1. **Is it the right shape?** A short reply in plain text (not JSON) is shown
    as a plain answer; anything else unusable is dropped, with a reason.
-2. **Is every action allowed?** Only the 62 actions in Resolv's own list are
+2. **Is every action allowed?** Only the 62 actions in KalKech's own list are
    accepted, each with the right kind of details (a date must be a date, a
    record must exist). Anything else is refused *by name*, so you can see what
    was refused and why.
 3. **Did the flow fail?** If the flow's safety net answered instead of the AI
-   (often because Microsoft's content filter blocked something), Resolv asks
+   (often because Microsoft's content filter blocked something), KalKech asks
    **once** more with only the essentials.
 4. **Did it ask for more records?** The AI may answer "I need the records about
-   X" (`needRecords`). Resolv finds them on the PC and asks **once** more.
+   X" (`needRecords`). KalKech finds them on the PC and asks **once** more.
 5. **Is an answer about your documents really in your documents?**
 
    - Every **quote** must be found, word for word, in the passage it names.
@@ -325,14 +331,14 @@ checked*, never as an order. Resolv checks, in this order:
    - A line that breaks this rule is **taken out**. The rest of the answer is
      shown, marked *Part of the answer was taken out*.
    - Only if nothing useful is left is the whole reply **held back** — and then
-     Resolv says so honestly and shows what the passages *do* say.
+     KalKech says so honestly and shows what the passages *do* say.
    - **Your own words are never "invented".** A figure that is in one of *your*
      runbooks that matched the question, or that you wrote yourself in your
      message (*"valid until exactly 5 years after the start date — close it
      with these steps"*), is accepted. The answer is marked **From your
      runbook** or **From what you wrote**, never as if a document said it. A
      figure in a *question* you asked (*"is it 4 hours?"*) is still checked.
-   - **A job is not a question.** When you give the content and ask Resolv to
+   - **A job is not a question.** When you give the content and ask KalKech to
      do something with it — close a record, log it — and the reply does that
      and cites nothing, there is no sources box under it at all.
    - The word **policy** in *"policy number"* or *"policy A018346A10"* means a
@@ -346,18 +352,18 @@ checked*, never as an order. Resolv checks, in this order:
     For local administrators the password is changed every 30 days.
     Passwords should also be changed every 90 days."
 
- Resolv checks every figure:
+ KalKech checks every figure:
    "30 days"  in a passage it cited?  no  → line taken out
               (it IS on page 10, a passage it did not cite → "Figure seen in")
    "90 days"  in any passage?         no  → line taken out (probably invented)
 
  You see:
    the user-account answer, Source and Evidence under it,
-   Confidence: Medium — and "Resolv took out 2 lines of this answer"
+   Confidence: Medium — and "KalKech took out 2 lines of this answer"
 ```
 
 This is the step that went wrong before version 5.9.2: one unsupported line
-made Resolv hide the *whole* answer and say *"the documents do not specify
+made KalKech hide the *whole* answer and say *"the documents do not specify
 this"* — when they did. Now only the line goes.
 
 ### Step 7 — Show the answer, and ask before any change
@@ -381,8 +387,9 @@ this"* — when they did. Now only the line goes.
   recognised and drawn anyway.
 - Your own question shows each file you sent as a **card**: click it to see
   what was sent, or **Hide** the cards to keep the conversation short.
-- Under every AI answer: the time it took, 👍 / 👎, **Retry**, and **Think
-  harder** (asks the strong model).
+- Under every AI answer: the time it took (and which model, when it was not
+  the fast one), 👍 / 👎, **Retry**, **Think harder** (asks the strong model)
+  and, with three models, **◆ KalKech reason**.
 
 ### Step 8 — Learn for next time
 
@@ -411,19 +418,19 @@ when it is not needed.**
 
 People often imagine an AI "learning" by changing its brain. **That does not
 happen here, and it does not need to.** The model is the same every day.
-What changes is **the notebook** — what Resolv keeps in your workspace and
+What changes is **the notebook** — what KalKech keeps in your workspace and
 puts into the folder for the next question.
 
 ```
  ┌──────────┐   ┌────────────────┐   ┌──────────────┐   ┌───────────────┐
- │ you ask  │──►│ Resolv gathers │──►│ the model    │──►│ you see the   │
+ │ you ask  │──►│ KalKech gathers │──►│ the model    │──►│ you see the   │
  │ a        │   │ the notebook   │   │ answers      │   │ answer, and   │
  │ question │   │ pages it needs │   │ (the model   │   │ react         │
  └──────────┘   └───────▲────────┘   │ never        │   └───────┬───────┘
                         │            │ changes)     │           │
                         │            └──────────────┘           ▼
                 ┌───────┴──────────────────────────────────────────────────┐
-                │ Resolv writes in its NOTEBOOK (kept in your workspace):  │
+                │ KalKech writes in its NOTEBOOK (kept in your workspace):  │
                 │ lessons · notes · how things were fixed · draft runbooks │
                 │ · corrections, and the checks that test them             │
                 └──────────────────────────────────────────────────────────┘
@@ -449,7 +456,7 @@ This has big advantages:
 | **Lessons** (`learn`) | during a conversation, when something lasting about you shows | one line: a style, a preference, a habit, a person, a system, a gap | the 30 newest travel with every question |
 | **Notes** (`remember`) | you say "remember how we fixed…" | the method, in your words | the 10 that match a question travel in full |
 | **"How was it fixed?"** | you close a record by hand | one line: the cause and the fix | the 3 closed records most like a new question travel with it: *"This looks like D-0142 — that was the SSO cache"* |
-| **The daily look back** (`[reflect]`) | at noon (you choose the time), or the next time Resolv is open | new lessons, notes worth keeping, draft runbooks for problems that repeat | as above; it also asks you one question it would like answered |
+| **The daily look back** (`[reflect]`) | at noon (you choose the time), or the next time KalKech is open | new lessons, notes worth keeping, draft runbooks for problems that repeat | as above; it also asks you one question it would like answered |
 | **Interview me** (`[teach]`) | you press it on a runbook | a better draft runbook | the runbook travels when a question matches it |
 | **Learn from a document** (`[study]`) | you hand it a guideline | draft runbooks, checked against the document; the document itself kept in Sources | runbooks and passages travel when a question matches |
 | **"Not what I meant"** | under an answer from the local assistant | the *shape* of your question | the local assistant reads that kind of question right from then on |
@@ -475,7 +482,7 @@ This has big advantages:
 ### Where the time goes
 
 The model **reads every word it is sent before it starts to answer**. A folder
-twice as thick is read twice as long. This is why Resolv's speed work has
+twice as thick is read twice as long. This is why KalKech's speed work has
 always been about *what not to send*.
 
 In one release (3.x), a workspace of 1,000 records used to send about
@@ -484,7 +491,7 @@ longer grows as you use the app.
 
 ### Ten rules that keep it fast and steady
 
-| # | Rule | Why | In Resolv |
+| # | Rule | Why | In KalKech |
 |---|---|---|---|
 | 1 | **Answer on the PC when you can** | no network, no AI, no wait | greetings, counts, "what's new", "which source" |
 | 2 | **Choose the data on the PC, not with a second AI call** | a "chooser AI" must read everything first: two slow calls instead of one | ranking 5,000 records takes about 6 ms; searching 150 documents about 2 ms |
@@ -507,14 +514,14 @@ longer grows as you use the app.
   conversation finds the same passages as the old one.
 - **Tests run the real app** in a browser with a *stand-in* AI that returns
   scripted replies, so every check is repeatable: `node --test` (47 tests) and
-  `node tests/e2e/run.js` (122 checks).
+  `node tests/e2e/run.js` (132 checks).
 
 ---
 
 ## Part 5 — A blueprint for your own AI assistant
 
 Everything above can be reused for a different assistant — a helpdesk bot, an
-HR policy bot, a sales assistant. Here is the method without the Resolv
+HR policy bot, a sales assistant. Here is the method without the KalKech
 details.
 
 ### The nine parts
@@ -562,7 +569,7 @@ details.
                           └──────────────────────┘
 ```
 
-| Part | Its one job | Resolv's version |
+| Part | Its one job | KalKech's version |
 |---|---|---|
 | 1 Front door | answer what needs no AI | `chatSmallTalk`, `chatLocalFirst`, `chat.js` |
 | 2 Retriever | choose the small folder for this question | record ranking in `flow.js`; `sources.js` for documents |
@@ -635,9 +642,9 @@ QUALITY
 [ ] I measure request size and answer time, and show them
 ```
 
-### Lessons from Resolv's history
+### Lessons from KalKech's history
 
-Most of these are mistakes Resolv really made and then fixed; the rest are
+Most of these are mistakes KalKech really made and then fixed; the rest are
 traps its design was built to avoid.
 
 | Mistake | What happens | What to do instead |
@@ -647,7 +654,7 @@ traps its design was built to avoid.
 | A document sent with one question only | The next question had only a summary, and the model filled the gap with "4 hours" (a figure from somewhere else) | Keep documents in a searchable store; search them for every question |
 | Hiding the whole answer for one bad line | A correct answer was replaced by "not specified" — when it was specified | Take out only the bad line, and say you did |
 | Reading page headers as headings | Citations said section "CLASSIFICATION : OFFICIAL" | Detect lines repeated on most pages and leave them out |
-| Letting the AI change records directly | One confident mistake changes real data (Resolv never allowed it) | Every change waits for a yes |
+| Letting the AI change records directly | One confident mistake changes real data (KalKech never allowed it) | Every change waits for a yes |
 | Rules written as orders inside the data | Microsoft's content filter blocked the whole question | Keep data as facts; keep orders in the prompt |
 | Changing data kept in a "knowledge base" | It went stale within a day | Send changing data with each request; keep only standing rules in the prompt |
 
@@ -658,24 +665,24 @@ traps its design was built to avoid.
 | Word | Plain meaning |
 |---|---|
 | **AI model** / **LLM** | The program that reads text and writes text — the "brain" in the flow. It does not remember anything between questions. |
-| **Prompt** | Everything the model is given for one question: the rules, the examples, the folder of information and the question. In Resolv it is built from the file `flow/prompt.txt`. |
+| **Prompt** | Everything the model is given for one question: the rules, the examples, the folder of information and the question. In KalKech it is built from the file `flow/prompt.txt`. |
 | **Flow** | Your Power Automate flow: it receives the prompt, runs the AI model, and sends the reply back. |
 | **Relay** | The small page (`flow/relay.html`) that is the only door to the network. |
 | **Token** | A piece of a word; models measure how much they read in tokens. More tokens = longer wait and higher cost. |
 | **JSON** | A simple, strict text format for data, like `{"say":"hello"}`. The reply must be JSON so it can be checked. |
-| **Action** | Something the AI may ask Resolv to do, like `find` or `createRecord`. Only 62 exist; the ones that change data always ask first. |
+| **Action** | Something the AI may ask KalKech to do, like `find` or `createRecord`. Only 62 exist; the ones that change data always ask first. |
 | **Retrieval** | Finding the pieces of your data that a question needs. |
 | **Passage** | A small piece of a document (about 1,100 characters), with its page, lines and section — an "index card". |
 | **Index** | A list of which words are on which passage, so search is instant. |
-| **BM25** | The well-known formula Resolv uses to score passages: rare words count more, and a word repeated many times stops counting more after a while. |
+| **BM25** | The well-known formula KalKech uses to score passages: rare words count more, and a word repeated many times stops counting more after a while. |
 | **Citation** | Where an answer came from: `[Source: document, version, page, lines, section]`. |
 | **Grounding** | Checking that an answer really comes from the sources it cites. |
 | **Figure** | A number that makes a rule: a time (days, hours), a percentage, a priority or severity, a score. |
-| **Held back** | Resolv did not show a reply because it rested on a figure its sources do not state. |
-| **Taken out** | Resolv removed one line of a reply for that reason and showed the rest. |
+| **Held back** | KalKech did not show a reply because it rested on a figure its sources do not state. |
+| **Taken out** | KalKech removed one line of a reply for that reason and showed the rest. |
 | **Local answer** | An answer worked out on your PC, without the AI. |
-| **Tier** | Which model a question goes to: *fast* for everyday chat, *deep* for hard jobs. |
-| **Lesson** | One line Resolv keeps about you or your work, sent with later questions. |
+| **Tier** | Which model a question goes to: *fast* for everyday chat, *deep* for hard jobs, *reason* for KalKech reason when you choose it. |
+| **Lesson** | One line KalKech keeps about you or your work, sent with later questions. |
 | **Check** | A saved correction that can be asked again later, judged PASS or FAIL. |
 | **Stand-in model** | A fake AI used in tests that returns scripted replies, so the tests are repeatable. |
 
@@ -696,4 +703,4 @@ traps its design was built to avoid.
 | `flow/SOURCES.md` | Setting up and troubleshooting documents. |
 | `flow/SPEED.md` | The story of making it fast, with the numbers. |
 | `tests/` | Unit tests and the browser test with a stand-in AI and made-up documents. |
-| `README.md` | The full manual — also what the assistant reads to explain Resolv. |
+| `README.md` | The full manual — also what the assistant reads to explain KalKech. |

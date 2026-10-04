@@ -1,20 +1,22 @@
-# CLAUDE.md — working on Resolv
+# CLAUDE.md — working on KalKech (កាលកិច្ច)
 
 Read this first. It is the hand-over from earlier Claude Code sessions: what
 this project is, how it is built, the rules the owner has set, how to test,
 and what has been done recently. `README.md` is the full manual,
 `CHANGELOG.md` the release history.
 
-## What Resolv is
+## What KalKech is
 
 A records desk for one application-support engineer: tickets/tasks
 ("records"), routines, scripts, runbooks, notes, an incident history, and an
 assistant. It runs **in the browser from a local folder** — no server, no
-account, no cloud. (The app was called *Dossier* until 4.8; many identifiers
-still say `dossier`/`Dossier`. The visible name is **Resolv**.)
+account, no cloud. (The app was called *Dossier* until 4.8 and *Resolv* from
+4.8 to 5.12; many identifiers still say `dossier`/`Dossier`, and code
+comments still say Resolv. The visible name is **KalKech**, in Khmer
+**កាលកិច្ច** — shown beside the wordmark, `.wm .wmk`.)
 
 The owner uses it at work, on Windows, in Edge/Chrome, started with
-`Resolv.bat`. Their company network blocks unknown outside services and they
+`KalKech.bat` (`Resolv.bat` and `Dossier.bat` pass through to it). Their company network blocks unknown outside services and they
 are careful not to attract attention from their security team.
 
 ## The pieces
@@ -31,7 +33,7 @@ are careful not to attract attention from their security team.
 | `flow/relay.html` | The **only** page that touches the network: a sandboxed iframe that posts to the flow URL. |
 | `flow/prompt.txt` | The model's instructions, with `{message} {today} {weekday} {calendar} {workspace} {actions} {history} {memory} {attached} {sources}` filled in per question. A user's own copy can live in the workspace as `dossier-prompt.txt`. |
 | `flow/*.md` | Guides: `CONTRACT.md` (request/reply/actions), `POWER-AUTOMATE.md`, `BAU-RUNBOOKS.md`, `SOURCES.md` (setup + troubleshooting for Sources), `SPEED.md`, `SERVICENOW.md`. |
-| `scripts/bridge/DossierBridge.cs` | The tray program (C# 5, WinForms): serves the page on 127.0.0.1, keeps the workspace in SQL LocalDB when available, runs scripts. `Resolv.bat` compiles it with the Windows `csc.exe` whenever the `.cs` is newer than the `.exe`. |
+| `scripts/bridge/DossierBridge.cs` | The tray program (C# 5, WinForms): serves the page on 127.0.0.1, keeps the workspace in SQL LocalDB when available, runs scripts. `KalKech.bat` compiles it with the Windows `csc.exe` whenever the `.cs` is newer than the `.exe`. |
 | `lang/en.xml`, `lang/km.xml` | Language packs (English, Khmer). Missing keys fall back to the English `STRINGS` table in `dossier.html`. |
 | `docs/` | `HOW-THE-AI-WORKS.md` (the whole AI pipeline for beginners, plus a reusable blueprint) and `how-the-ai-works.html` (the same as a self-contained picture page). Keep both in step with the code when the pipeline changes (numbers: 60 records, 10 notes, 30 lessons, 14,000 characters, 62 actions / 41 writes). |
 | `tests/` | `sources.test.js` and `diagram.test.js` (node:test), `e2e/run.js` + `e2e/sources.scenario.js` (real browser), `fixtures/` (made-up documents; `make-pdf.js` regenerates the PDFs). |
@@ -53,11 +55,11 @@ A *workspace* is a folder the user picks (File System Access API):
 - **State**: `S` (tasks, routines, settings, chats…), saved with `touch()`.
   `hydrate(d)` loads a document; `openWorkspace(handle, quiet)` opens a folder.
 - **Chat**: `chatAsk(q, opts)` → local answers first (small talk, alerts,
-  Sources intents, "about Resolv", local counting) → `flowAsk()` when a flow is
+  Sources intents, "about KalKech", local counting) → `flowAsk()` when a flow is
   on. `flowContext(q)` builds what goes with a question (taken synchronously
   before any await). Replies render in `chatRenderBot()`; write actions are
   confirmed one at a time (`chatQueue` / `ASK`).
-- **About Resolv**: the assistant reads `README.md` and `CHANGELOG.md`
+- **About KalKech**: the assistant reads `README.md` and `CHANGELOG.md`
   (`aboutLoad`, `aboutForFlow`, `aboutLocal`). So **the README is also the
   assistant's manual**: every new feature needs README sections phrased the
   way people ask ("How do I …?") and a CHANGELOG entry, or the assistant cannot
@@ -84,13 +86,13 @@ A *workspace* is a folder the user picks (File System Access API):
 - Commit messages: clear summary + body; no model names in commits, code or
   docs. Do not open a pull request unless the owner asks.
 - Work so far is on branch `claude/chat-panel-pixel-art-gifs-d822hq`
-  (latest: 5.12.0). Follow the branch instructions of your own session.
+  (latest: 5.13.0). Follow the branch instructions of your own session.
 
 ## Testing
 
 ```
 node --test                                   # 47 unit tests (Sources, grounding, flow reply fields, diagrams)
-node tests/e2e/run.js                         # the app in headless Chrome/Edge: 122 checks (CHROME=<path> to choose)
+node tests/e2e/run.js                         # the app in headless Chrome/Edge: 132 checks (CHROME=<path> to choose)
 node flow/check-prompt.js                     # after editing flow/prompt.txt ...
 python3 flow/embed-prompt.py                  # ... then copy it into flow.js (PROMPT_BUILTIN)
 node tests/fixtures/make-pdf.js               # regenerate the PDF fixtures
@@ -113,6 +115,34 @@ Also useful:
 
 ## Recent history (newest first)
 
+- **5.13.0** — Renamed to KalKech (កាលកិច្ច) and a third model. Rename: every
+  *visible* "Resolv" (strings only - code comments were left alone; the
+  STRINGS table, chat.js answers, flow.js messages and ACTIONS text,
+  relay, prompt, bridge strings, lang packs, docs); done with a string-only
+  scanner so comments/regexes/identifiers were untouched; `"Resolv Inter"`
+  (font-family) kept. Packs: `.replace(/\b(?:Dossier|Resolv)\b/g,
+  "KalKech")` for old pack texts. Name recognised in questions:
+  `CHAT_NAME_RESET`, `ABOUT_OWN`, `ABOUT_STOP`, chat.js `about` probe (also
+  the Khmer spelling, outside `\b`). `KalKech.bat` is the real starter (CRLF;
+  `scripts/check-bat.py` passes); `Resolv.bat`/`Dossier.bat` pass through.
+  Logo files unchanged (the owner will supply one). KalKech reason:
+  `tier:"reason"` (flow.js `TIERS`, `tierOf` falls back to deep/fast unless
+  `tiers.on && tiers.reason`; `BIG` records 240 with notes, conversation
+  40; `workspace.tier`; timeout `tiers.reasonTimeout` ≤ 115). App:
+  `flowCfg().tiers` now filled IN PLACE (`reason`, `reasonTimeout`, `hard`,
+  `pick`) - it used to be replaced by a new object on every call;
+  `flowModeOf(q)`; `flowAsk` picks the tier first (`opts.tier` ||
+  `chatModelPick()` for chat) and builds `flowContext(q, {big})`;
+  `FLOW_BIG` (msgs 40×6000, notes 30×6000, lessons 80, fixes 12, runbooks
+  6, pastFixes 6, incidents 90 days, Sources k 16 / 48,000 chars via
+  `srcSearch(opts.big)`); `flowTier(kind)` → reason when `hard:"reason"`;
+  `chatThinking(log, tier)` text; answer footer and branches (`kind:"reason"`,
+  ◆, `BranchReason`); `[data-deeper="reason"]` button (Lumen icon `bulb`).
+  Composer pill `#chatModel` + `#chatModelMenu` (`.chplm.chmm`), Lumen grid
+  cell row 2 / col 2; `chatModelsOn/Pick/Paint/Menu/Set`. Setup: One/Two/
+  Three, `flReasonTmo`, `flHard`. Prompt line for `workspace.tier "reason"`.
+  POWER-AUTOMATE.md §4g (Condition `Reason?` around the existing `Deep?`).
+  mcs was not available in that session; the bridge diff is string-only.
 - **5.12.0** — The owner asked for the pet and the assistant to be "the same
   person", and for a chat panel that can be wider, floating or full screen,
   remembered. Pet (`THE DESK PET`): one name - `petName()` reads

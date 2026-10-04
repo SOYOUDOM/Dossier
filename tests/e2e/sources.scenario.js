@@ -63,7 +63,7 @@
     const prompt = DossierFlow.fillPrompt(ctx.promptTemplate || DossierFlow.PROMPT, req);
     sent.push({ text, req, prompt });
     await sleep(20);
-    const o = DossierFlow.validate(plan ? plan(req) : { say:"ok" }); o.ms = 5; return o;
+    const o = DossierFlow.validate(plan ? plan(req) : { say:"ok" }); o.ms = 5; o.tier = req.tier; return o;
   };
   const label = (req, re) => {
     const hit = String(req.sourcesText || "").split(/\n(?=\[S\d+\] )/).find(p => re.test(p));
@@ -461,7 +461,7 @@
   }
   if (typeof petOn === "function" && petOn() && $("petBtn"))
     check("...and so does the desk pet", /^crimson\//.test(($("petBtn").querySelector("img.pxl") || {}).getAttribute("data-pix") || ""));
-  check("...the blue star that comes with Resolv does not cover the heart's own mark", !chatEl.classList.contains("ownmark"));
+  check("...the blue star that comes with KalKech does not cover the heart's own mark", !chatEl.classList.contains("ownmark"));
   check("...and the greeting has its heartbeat line", getComputedStyle(document.querySelector("#chatLog .chhero .lmhs"), "::after").backgroundImage.includes("svg"));
   /* back to Lumen: the robot, the star, nothing of Crimson left behind */
   chatUI().skin = "lumen"; applyChatUI(); chatPaint(); await sleep(100);
@@ -527,9 +527,9 @@
   check("...and the flow is told the name it was given", sent.length === nSent + 1 && sent[sent.length - 1].req.workspace.yourName === "Elle" &&
         /workspace\.yourName/.test(sent[sent.length - 1].prompt), JSON.stringify(sent[sent.length - 1].req.workspace.yourName));
   el = await ask("use your own name");
-  check("'use your own name' goes back to Resolv, with a chip to keep Elle", chatName() === "Resolv" && title() === L("ChatTitle") &&
+  check("'use your own name' goes back to KalKech, with a chip to keep Elle", chatName() === "KalKech" && title() === L("ChatTitle") &&
         !chatUI().name && petName() === "" && /Keep Elle/.test(el.textContent) && sent.length === nSent + 1, el.textContent.slice(0, 200));
-  check("'I'll call you later' is not a name", (await ask("I'll call you later"), chatName() === "Resolv" && !chatUI().name));
+  check("'I'll call you later' is not a name", (await ask("I'll call you later"), chatName() === "KalKech" && !chatUI().name));
 
   /* a mini model that answers the blank picture instead of the question */
   chatNew(true); chatPaint();
@@ -642,5 +642,44 @@
   check("'Reset the size and position' puts the usual width back", !("dockW" in chatUI()) && !("floatBox" in chatUI()) &&
         Math.round(chatBox.getBoundingClientRect().width) === 452 && document.body.classList.contains("chatting"),
         JSON.stringify({ dockW:chatUI().dockW, floatBox:chatUI().floatBox, w:chatBox.getBoundingClientRect().width, chatting:document.body.classList.contains("chatting") }));
+
+  /* ── KalKech reason: a third model, chosen in the chat (5.13) ──────── */
+  chatNew(true); chatPaint(); await sleep(200);
+  const tz = flowCfg().tiers;
+  tz.on = true; tz.reason = false; tz.pick = "auto"; chatModelPaint();
+  chatModelMenu(true);
+  check("with two models in the flow, the pill beside Send offers Auto, Fast and Strong", !$("chatModel").hidden &&
+        [...$("chatModelMenu").querySelectorAll("[data-model]")].map(b => b.dataset.model).join() === "auto,fast,deep");
+  chatModelMenu(false);
+  tz.pick = "reason";
+  plan = req => ({ say:"Restart DB01 first, then APP02, then APP01." });
+  await ask("what is the restart order for the batch servers?");
+  check("KalKech reason is never asked of a flow that has not been given it - the strong model answers instead",
+        sent[sent.length - 1].req.tier === "deep", sent[sent.length - 1].req.tier);
+  tz.reason = true; chatModelPaint();
+  check("with three models the pill says Reason, in the accent", $("chatModel").dataset.model === "reason" && /Reason/.test($("chatModel").textContent));
+  for (let i = 0; i < 24; i++) memoryStore().push({ id:"mbig" + i, title:"Batch server note " + i, body:"Restart order for the batch servers, case " + i + ".", updated:"2026-10-01" });
+  el = await ask("what is the restart order for the batch servers, and why that order?");
+  const rq = sent[sent.length - 1];
+  check("picked in the chat: the question goes to KalKech reason, and the answer says which model gave it",
+        rq.req.tier === "reason" && rq.req.workspace.tier === "reason" && /KalKech reason/.test(el.querySelector(".took") ? el.querySelector(".took").textContent : ""),
+        rq.req.tier + " | " + (el.querySelector(".took") || {}).textContent);
+  check("...with far more of the workspace than the everyday models get", rq.req.workspace.memory.length > 10, rq.req.workspace.memory.length);
+  check("...and the prompt says what KalKech reason is for", /workspace\.tier is "reason"/.test(rq.prompt));
+  tz.pick = "fast"; chatModelPaint();
+  el = await ask("what is the restart order for the batch servers?");
+  const rf = sent[sent.length - 1];
+  check("Fast: the quick model, with the everyday amount", rf.req.tier === "fast" && rf.req.workspace.memory.length <= 10, rf.req.workspace.memory.length);
+  check("under a fast answer: Think harder, and KalKech reason", !!el.querySelector('.chrate [data-deeper="1"]') && !!el.querySelector('.chrate [data-deeper="reason"]'),
+        (el.querySelector(".chrate") || el).outerHTML.slice(0, 600));
+  const nReason = sent.length;
+  const reasonBtn = el.querySelector('.chrate [data-deeper="reason"]');
+  if (reasonBtn) reasonBtn.click();
+  await until(() => sent.length > nReason && !$("chat").classList.contains("busy"), 15000); await sleep(300);
+  check("...KalKech reason under an answer asks it once, and keeps the first answer as a branch",
+        sent[sent.length - 1].req.tier === "reason" && /Reason/.test(($("chatLog").querySelector(".chbr") || {}).textContent || ""),
+        sent[sent.length - 1].req.tier + " | " + (($("chatLog").querySelector(".chbr") || {}).textContent || ""));
+  check("the hard jobs can go to KalKech reason too", (tz.hard = "reason", flowTier("diagnose") === "reason") && (tz.hard = "deep", flowTier("diagnose") === "deep"));
+  tz.pick = "auto"; S.settings.memory = S.settings.memory.filter(n => !/^mbig/.test(n.id)); chatModelPaint();
   return { checks };
 })()

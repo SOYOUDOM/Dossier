@@ -3,11 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Inside Resolv's Assistant</title>
+<title>Inside KalKech's Assistant</title>
 <style>
 /* Layout: one reading column (max 1080px) of sections; each section pairs a
    short explanation with one diagram. Colour tells you WHERE a step runs:
-   teal = on your PC, amber = in your flow. Resolv's own palettes (Archive
+   teal = on your PC, amber = in your flow. KalKech's own palettes (Archive
    light, Vault dark) and its Windows font stacks; nothing is loaded from the
    internet, so the page works offline. */
 :root{
@@ -263,7 +263,7 @@ footer{margin-top:56px;padding-top:20px;border-top:1px solid var(--rule);font-si
 
 <header class="bar">
   <div class="wrap">
-    <div class="brand">Resolv <b>AI</b></div>
+    <div class="brand">KalKech <b>AI</b></div>
     <nav class="nav" aria-label="Sections">
       <a href="#idea">The idea</a>
       <a href="#journey">8 steps</a>
@@ -283,10 +283,10 @@ footer{margin-top:56px;padding-top:20px;border-top:1px solid var(--rule);font-si
 
 <!-- ═══ HERO ═══════════════════════════════════════════════════════ -->
 <section class="hero" id="idea" aria-labelledby="t-idea">
-  <p class="eyebrow">A guide for everyone · Resolv 5.9.3</p>
-  <h1 id="t-idea">How Resolv's assistant thinks, checks and learns</h1>
+  <p class="eyebrow">A guide for everyone · KalKech 5.9.3</p>
+  <h1 id="t-idea">How KalKech's assistant thinks, checks and learns</h1>
   <p class="lead">The AI model is clever, but it knows nothing about your work, forgets everything after each question,
-    and sometimes guesses. Resolv does not try to change the model. It prepares the right papers for each question,
+    and sometimes guesses. KalKech does not try to change the model. It prepares the right papers for each question,
     checks the answer before you see it, and keeps a notebook for next time.</p>
   <div class="legend" aria-label="Colour key">
     <span><span class="dot pc"></span>runs on your PC: instant, private</span>
@@ -303,7 +303,7 @@ footer{margin-top:56px;padding-top:20px;border-top:1px solid var(--rule);font-si
       </ol>
     </div>
     <div class="panel lead-panel">
-      <p class="eyebrow">So Resolv acts like a good team lead</p>
+      <p class="eyebrow">So KalKech acts like a good team lead</p>
       <h3>Three jobs, around every question</h3>
       <ol>
         <li><b>Prepare a small folder</b> with only the papers this question needs.</li>
@@ -326,7 +326,7 @@ footer{margin-top:56px;padding-top:20px;border-top:1px solid var(--rule);font-si
     <li class="step s1">
       <span class="num">STEP 1</span>
       <h3>Answer here?</h3>
-      <p>Can Resolv answer by itself? Greetings, counts like "what's overdue?", "what's new?".</p>
+      <p>Can KalKech answer by itself? Greetings, counts like "what's overdue?", "what's new?".</p>
       <p class="side"><b>Yes:</b> answered at once, with no AI and no waiting.</p>
       <div class="chips"><span class="chip">your PC</span><span class="chip plain">milliseconds</span></div>
     </li>
@@ -416,7 +416,7 @@ footer{margin-top:56px;padding-top:20px;border-top:1px solid var(--rule);font-si
       "Figure seen in" links to page 10, where the 30 days really is.</p></div></li>
     <li><span class="n">8</span><div><h3>Learn</h3><p>If the answer had been wrong, a thumbs down with the right line would be kept as a correction and as a check to re-run later.</p></div></li>
   </ol>
-  <p class="callout">Before version 5.9.2, lines like those made Resolv hide the whole answer and say "the documents do not specify this",
+  <p class="callout">Before version 5.9.2, lines like those made KalKech hide the whole answer and say "the documents do not specify this",
     when they did. The fix: take out only the line, and say so.</p>
 </section>
 
@@ -426,7 +426,7 @@ footer{margin-top:56px;padding-top:20px;border-top:1px solid var(--rule);font-si
     <p class="eyebrow">Step 2 in detail</p>
     <h2 id="t-folder">What goes into the folder</h2>
     <p>The model reads every word it is sent before it starts to answer. Too much, and every answer is slow. The wrong things, and the answer is wrong.
-      So Resolv chooses on your PC, and puts a limit on everything that grows.</p>
+      So KalKech chooses on your PC, and puts a limit on everything that grows.</p>
   </div>
   <div class="tiles">
     <div class="tile"><span class="big">60</span><span class="what">records</span><span class="why">the ones that best match the question, plus totals of all of them, so "how many?" stays right</span></div>
@@ -438,10 +438,10 @@ footer{margin-top:56px;padding-top:20px;border-top:1px solid var(--rule);font-si
     <div class="tile"><span class="big">14,000</span><span class="what">characters of documents</span><span class="why">the best passages from Library → Sources, and their neighbours</span></div>
     <div class="tile"><span class="big">8</span><span class="what">recent messages</span><span class="why">each cut to 1,200 characters, plus a short running summary</span></div>
     <div class="tile"><span class="big">30</span><span class="what">days of incidents</span><span class="why">a summary of the recent incident history</span></div>
-    <div class="tile"><span class="big">62</span><span class="what">allowed actions</span><span class="why">the only things it may ask Resolv to do; 41 of them change something and always ask you first</span></div>
+    <div class="tile"><span class="big">62</span><span class="what">allowed actions</span><span class="why">the only things it may ask KalKech to do; 41 of them change something and always ask you first</span></div>
   </div>
   <p class="callout">Also in the folder: today's date, the next working day and holidays (dates are where AI most often goes wrong),
-    the record you have open, and any file you attached. Resolv shows you the exact bytes before they go: Menu → Setup → Ask through Power Automate → Preview.</p>
+    the record you have open, and any file you attached. KalKech shows you the exact bytes before they go: Menu → Setup → Ask through Power Automate → Preview.</p>
 </section>
 
 <!-- ═══ DOCUMENTS ══════════════════════════════════════════════════ -->
@@ -523,7 +523,7 @@ footer{margin-top:56px;padding-top:20px;border-top:1px solid var(--rule);font-si
         <div class="row"><b>Source</b><span class="cite">[Source: Password Standard v1, version 1.0, page 8, line 38, section "CSP-PWD-02"]</span></div>
         <div class="row"><b>Evidence</b><span><i>"Minimum Length: 17 characters"</i> <span class="muted mono">S4</span></span></div>
         <div class="row"><b>Confidence</b><span style="color:var(--cloud)">Medium: what is left is supported by the source</span></div>
-        <div class="warn">Resolv took out 2 lines of this answer: each gave a figure that no passage it cited contains.</div>
+        <div class="warn">KalKech took out 2 lines of this answer: each gave a figure that no passage it cited contains.</div>
         <div class="row"><b>Figure seen in</b><span class="cite">[Source: …, page 10, line 40, section "CSP-PWD-04"]</span></div>
       </div>
     </div>
@@ -532,11 +532,11 @@ footer{margin-top:56px;padding-top:20px;border-top:1px solid var(--rule);font-si
     <h3>Everything the check looks at, in order</h3>
     <ol class="rules">
       <li><b>The shape.</b> The reply must be JSON. A short plain-text reply is shown as plain text; anything else unusable is dropped, with a reason.</li>
-      <li><b>The actions.</b> Only the 62 in Resolv's own list, each with the right details. Anything else is refused by name.</li>
-      <li><b>A failed flow.</b> If the flow's safety net answered instead of the AI, Resolv asks once more with only the essentials.</li>
-      <li><b>More records.</b> The AI may ask for more records (<code>needRecords</code>). Resolv finds them on your PC and asks once more.</li>
+      <li><b>The actions.</b> Only the 62 in KalKech's own list, each with the right details. Anything else is refused by name.</li>
+      <li><b>A failed flow.</b> If the flow's safety net answered instead of the AI, KalKech asks once more with only the essentials.</li>
+      <li><b>More records.</b> The AI may ask for more records (<code>needRecords</code>). KalKech finds them on your PC and asks once more.</li>
       <li><b>The documents.</b> Every quote must be in its passage, word for word. A line with an unsupported figure is taken out.
-        Only if nothing useful is left is the whole reply held back, and then Resolv says so honestly and shows what the passages do say.</li>
+        Only if nothing useful is left is the whole reply held back, and then KalKech says so honestly and shows what the passages do say.</li>
       <li><b>Your own words.</b> A figure in one of your runbooks that matched, or one you wrote yourself in your message, is never treated as invented: the answer is marked <i>From your runbook</i> or <i>From what you wrote</i>. A job you give it (close this record with these steps) gets no sources box at all.</li>
     </ol>
   </div>
@@ -554,7 +554,7 @@ footer{margin-top:56px;padding-top:20px;border-top:1px solid var(--rule);font-si
     <div class="loop">
       <svg viewBox="0 0 460 460" role="img" aria-labelledby="loop-t loop-d">
         <title id="loop-t">The learning loop</title>
-        <desc id="loop-d">You ask. Resolv gathers pages from the notebook. The model answers. You react, and your reactions are written into the notebook in the middle. Then the next question. The model never changes; the notebook grows.</desc>
+        <desc id="loop-d">You ask. KalKech gathers pages from the notebook. The model answers. You react, and your reactions are written into the notebook in the middle. Then the next question. The model never changes; the notebook grows.</desc>
         <defs>
           <marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
             <path d="M0 0L10 5L0 10z" class="lp-head"/>
@@ -693,7 +693,7 @@ footer{margin-top:56px;padding-top:20px;border-top:1px solid var(--rule);font-si
     </div>
   </div>
 
-  <h3 style="margin:34px 0 12px">Lessons from Resolv's history</h3>
+  <h3 style="margin:34px 0 12px">Lessons from KalKech's history</h3>
   <div class="tablewrap">
     <table>
       <thead><tr><th>Mistake</th><th>What happens</th><th>Do this instead</th></tr></thead>
@@ -704,7 +704,7 @@ footer{margin-top:56px;padding-top:20px;border-top:1px solid var(--rule);font-si
         <tr><td>Hiding the whole answer for one bad line</td><td>A correct answer became "not specified"</td><td>Take out only the bad line, and say so</td></tr>
         <tr><td>Reading page headers as headings</td><td>Citations named "CLASSIFICATION : OFFICIAL" as the section</td><td>Leave out lines repeated at the same place on most pages</td></tr>
         <tr><td>Orders to the AI written inside the data</td><td>Microsoft's content filter blocked the whole question</td><td>Keep data as facts; keep orders in the prompt</td></tr>
-        <tr><td>Letting the AI change records directly</td><td>One confident mistake changes real data (Resolv never allowed it)</td><td>Every change waits for a yes</td></tr>
+        <tr><td>Letting the AI change records directly</td><td>One confident mistake changes real data (KalKech never allowed it)</td><td>Every change waits for a yes</td></tr>
       </tbody>
     </table>
   </div>
@@ -723,13 +723,13 @@ footer{margin-top:56px;padding-top:20px;border-top:1px solid var(--rule);font-si
     <div class="word"><dt>Relay</dt><dd>The small page that is the only door to the network (<code>flow/relay.html</code>).</dd></div>
     <div class="word"><dt>Token</dt><dd>A piece of a word. Models count what they read in tokens: more tokens, longer wait.</dd></div>
     <div class="word"><dt>JSON</dt><dd>A strict text format for data, like <code>{"say":"hello"}</code>, so a reply can be checked.</dd></div>
-    <div class="word"><dt>Action</dt><dd>Something the AI may ask Resolv to do. 62 exist; the 41 that change data always ask first.</dd></div>
+    <div class="word"><dt>Action</dt><dd>Something the AI may ask KalKech to do. 62 exist; the 41 that change data always ask first.</dd></div>
     <div class="word"><dt>Passage</dt><dd>A small piece of a document, about 1,100 characters, with its page, lines and section.</dd></div>
     <div class="word"><dt>Citation</dt><dd>Where an answer came from: <span class="mono">[Source: document, version, page, lines, section]</span>.</dd></div>
     <div class="word"><dt>Figure</dt><dd>A number that makes a rule: days or hours, a percentage, a priority or severity, a score.</dd></div>
     <div class="word"><dt>Taken out / held back</dt><dd>A line removed for an unsupported figure, or a whole reply not shown because it rested on one.</dd></div>
     <div class="word"><dt>Tier</dt><dd>Which model a question goes to: fast for everyday chat, deep for hard jobs.</dd></div>
-    <div class="word"><dt>Lesson</dt><dd>One line Resolv keeps about you or your work, sent with later questions.</dd></div>
+    <div class="word"><dt>Lesson</dt><dd>One line KalKech keeps about you or your work, sent with later questions.</dd></div>
     <div class="word"><dt>Stand-in model</dt><dd>A fake AI used in tests. It gives scripted replies, so tests repeat exactly.</dd></div>
   </dl>
 </section>
@@ -740,7 +740,7 @@ footer{margin-top:56px;padding-top:20px;border-top:1px solid var(--rule);font-si
   <p><b>Where the code is:</b> <code>dossier.html</code> (the app) · <code>chat.js</code> (the local assistant) ·
     <code>flow.js</code> (packing, sending, checking the shape) · <code>sources.js</code> (documents and the figure check) ·
     <code>flow/prompt.txt</code> (the prompt) · <code>flow/relay.html</code> (the one door).</p>
-  <p>Numbers on this page are Resolv's own measurements and settings as of version 5.9.3.</p>
+  <p>Numbers on this page are KalKech's own measurements and settings as of version 5.9.3.</p>
 </footer>
 
 </main>
@@ -765,7 +765,7 @@ footer{margin-top:56px;padding-top:20px;border-top:1px solid var(--rule);font-si
   paint();
   var btn = document.getElementById("cl-copy");
   btn.addEventListener("click", function(){
-    var lines = ["Checklist for a new AI assistant (from Inside Resolv's Assistant)"];
+    var lines = ["Checklist for a new AI assistant (from Inside KalKech's Assistant)"];
     document.querySelectorAll("#checklist .cl-group").forEach(function(g){
       lines.push("", g.querySelector(".eyebrow").textContent.toUpperCase());
       g.querySelectorAll(".cl-item").forEach(function(l){

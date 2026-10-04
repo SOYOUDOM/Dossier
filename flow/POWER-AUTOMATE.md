@@ -65,7 +65,7 @@ into **Menu → Setup → Ask through Power Automate → Endpoint URL**.
 
 ### Leave the Request Body JSON Schema empty
 
-This is the part that surprises people. Resolv posts with
+This is the part that surprises people. KalKech posts with
 `Content-Type: text/plain`, deliberately — `application/json` earns a CORS
 preflight, the request trigger does not answer `OPTIONS`, and the call would
 die before your flow ever ran, **with nothing in the run history to look at**.
@@ -401,11 +401,11 @@ Add your AI action — **AI Builder → Run a prompt**, or whatever you have. Pi
 a model that can see images (the GPT-4o / GPT-4.1 family can), and the
 fastest one offered — usually the one with *mini* in its name.
 
-**It has two inputs and no text of its own.** Resolv writes the whole prompt
+**It has two inputs and no text of its own.** KalKech writes the whole prompt
 — instructions, your workspace, the conversation, your notes, what you
 attached — and sends it ready to run as `prompt`, with the picture beside it.
 
-1. **Parse JSON → Schema**: replace it with this short one. Resolv sends
+1. **Parse JSON → Schema**: replace it with this short one. KalKech sends
    only these fields in this setup, so a long schema would only slow the step
    down, and one generated from a sample would refuse the smaller request.
 
@@ -440,7 +440,7 @@ attached — and sends it ready to run as `prompt`, with the picture beside it.
    | `prompt` | `body('Parse_JSON')?['prompt']` |
    | `picture` | `base64ToBinary(body('Parse_JSON')?['picture'])` |
 
-5. Save, then in Resolv: **Setup → Ask through Power Automate → Your flow →
+5. Save, then in KalKech: **Setup → Ask through Power Automate → Your flow →
    Reads the prompt and SEES the picture**.
 
 **You will not need to open the prompt action again.**
@@ -451,7 +451,7 @@ picture and made every answer about a picture an answer about its text.
 Several pictures go as one, side by side, each numbered with its name. When
 nothing is attached, `picture` is a single white pixel — the input cannot be
 left empty — and the prompt's *WHAT THEY ATTACHED* says so. A mini model
-still sometimes describes the blank square instead of answering; Resolv
+still sometimes describes the blank square instead of answering; KalKech
 catches that and asks again, and §4f stops it for good. The request also stops carrying everything a second
 time beside the prompt, which roughly halves it.
 
@@ -461,7 +461,7 @@ time beside the prompt, which roughly halves it.
 > as before. It works; it is slower and it can only talk about what the
 > description says.
 
-The seconds under each answer in Resolv are how long Power Automate took.
+The seconds under each answer in KalKech are how long Power Automate took.
 If that number is high for a plain question, the model is the thing to
 change: a *mini* model, never a *reasoning* one, for chat.
 
@@ -472,28 +472,28 @@ The instructions live in a text file, **`flow/prompt.txt`**, beside
 ask uses it. There is nothing to reload and nothing to change in Power
 Automate.
 
-Resolv looks for the prompt in this order and uses the first one it finds:
+KalKech looks for the prompt in this order and uses the first one it finds:
 
 | | |
 |---|---|
-| `dossier-prompt.txt` **in your records folder** | Your own version. Updates to Resolv never touch that folder, so this is the place for changes you make yourself. **Setup → Ask through Power Automate → Copy the template** gives you the current text to start from. Delete the file to go back to the one that ships. |
-| `flow/prompt.txt` beside `dossier.html` | The one that ships with Resolv, and the one updated when the prompt is improved. Read when Resolv.bat hands out the page. |
+| `dossier-prompt.txt` **in your records folder** | Your own version. Updates to KalKech never touch that folder, so this is the place for changes you make yourself. **Setup → Ask through Power Automate → Copy the template** gives you the current text to start from. Delete the file to go back to the one that ships. |
+| `flow/prompt.txt` beside `dossier.html` | The one that ships with KalKech, and the one updated when the prompt is improved. Read when KalKech.bat hands out the page. |
 | the copy inside `flow.js` | Always there, for a page opened straight from the folder, which is not allowed to read a file beside it. `python flow/embed-prompt.py` refreshes it after `flow/prompt.txt` changes. |
 
 **Setup → Ask through Power Automate** shows which one is in use, and
 **Preview the request** shows exactly what the model will read, filled in.
 
-The text has ten places that Resolv fills in before sending. Keep them —
-a prompt without `{message}` cannot answer anything, and Resolv will not use
+The text has ten places that KalKech fills in before sending. Keep them —
+a prompt without `{message}` cannot answer anything, and KalKech will not use
 one:
 
-| In the text | Resolv puts there |
+| In the text | KalKech puts there |
 |---|---|
 | `{message}` | what they just typed |
 | `{today}`, `{weekday}` | the date, and the day's name |
 | `{calendar}` | the working days worked out: next working day, this week, holidays near |
 | `{workspace}` | the workspace: systems, people, lessons, runbooks, records, counts |
-| `{actions}` | the complete list of actions Resolv accepts |
+| `{actions}` | the complete list of actions KalKech accepts |
 | `{history}` | the conversation so far |
 | `{memory}` | the notes they taught it |
 | `{attached}` | every attached file, read as text |
@@ -503,7 +503,7 @@ Each is filled once, in one pass: a message that happens to contain the
 letters `{workspace}` is sent as those letters.
 
 `node flow/check-prompt.js` checks the file: every example reply in it
-against the validator Resolv applies to real replies, all ten places
+against the validator KalKech applies to real replies, all ten places
 present, the copy in `flow.js` the same as the file.
 
 > **A flow built the older way keeps working.** The request still carries
@@ -525,10 +525,10 @@ a second, tiny one whose body is
 
 ```json
 { "dossier": 1, "probe": true,
-  "why": "Reachability check from Resolv, not a question. Answer 200 and stop." }
+  "why": "Reachability check from KalKech, not a question. Answer 200 and stop." }
 ```
 
-That is Resolv working out **why** the first one failed. A blocked host, a
+That is KalKech working out **why** the first one failed. A blocked host, a
 dead host and a host that answered without the CORS header all arrive in the
 browser as the identical `Failed to fetch`; the only way to tell them apart is
 to ask again in a way that does not need to read the reply. So:
@@ -682,7 +682,7 @@ If you do have an image input, wire it to the first attachment's data:
 body('Parse_JSON')?['attachments']?[0]?['data']
 ```
 
-This is base64 **without** any `data:image/png;base64,` prefix — Resolv
+This is base64 **without** any `data:image/png;base64,` prefix — KalKech
 strips it, because that is the form these inputs normally want. If yours
 rejects it and asks for a data URI, build one instead:
 
@@ -729,7 +729,7 @@ than the file it encodes, so a 4 MB screenshot arrives as 5.2 MB of JSON —
 enough that a question with a screenshot on it fails while the same question
 typed out succeeds, which is a maddening symptom to chase.
 
-So Resolv shrinks images before they go: redrawn at 1600px on the longest
+So KalKech shrinks images before they go: redrawn at 1600px on the longest
 edge and re-encoded, dropping through 1280, 1000 and 800px if it is still
 large. A screenshot of an error dialog ends up around 80 KB. An 11 MB image
 in testing came out at 163 KB — 69× smaller — and the whole request at
@@ -871,7 +871,7 @@ text of a long error is better read than looked at.
 it are in `flow/prompt.txt` like everything else.
 
 At the time set in **Setup → What I have learned about you** (noon by
-default — the lunch break), Resolv sends one question that starts with
+default — the lunch break), KalKech sends one question that starts with
 `[reflect]`. `workspace.mode` is `"reflect"`, and the `{attached}` part of the prompt holds
 everything since the last look: records **closed** with how they were
 resolved, records **raised** with who raised them and against what, the
@@ -880,7 +880,7 @@ tells the model what to do with it: a few `learn` lessons, a `remember` note
 for each resolution worth reusing, a draft `saveRunbook` when a problem keeps
 coming back — and one question it would like you to answer.
 
-If Resolv is closed at noon it happens the next time it is open after noon.
+If KalKech is closed at noon it happens the next time it is open after noon.
 A morning with nothing in it costs no call at all.
 
 What comes back is kept without a dialog, because nobody is at the desk to
@@ -915,7 +915,7 @@ The app side is done for you: a picture is sent at the size the model reads
 that before looking), and a picture the app has already read travels once, as
 `picture`, not twice. On the flow side, in order of how much they save:
 
-1. **Use the one-input prompt action** (§4). The prompt Resolv sends is
+1. **Use the one-input prompt action** (§4). The prompt KalKech sends is
    about six thousand tokens shorter than the old pasted one, and it no
    longer carries your notes twice.
 2. **Pick a fast model for the prompt.** Chat wants the quickest general model
@@ -943,8 +943,9 @@ learning a BAU document, runbook interviews, **Diagnose** on a record, and
 stronger model's price and wait only where it earns it.
 
 **What changes.** One new prompt (a copy of the one you have, with a
-different model), one Condition, one variable. About fifteen minutes. Your
-existing flow keeps working the whole time: until Resolv is switched to
+different model), one Condition, one variable. About fifteen minutes. (Want a
+third, reasoning model as well? Do this first, then §4g.) Your
+existing flow keeps working the whole time: until KalKech is switched to
 *Two*, every request says `tier: "fast"`.
 
 ```
@@ -952,7 +953,7 @@ existing flow keeps working the whole time: until Resolv is switched to
 ② Parse JSON
    Initialize variable  answer                              ← new
    Condition  "Deep?"  tier is equal to deep                ← new
-     If yes:  Run a prompt  (Resolv deep)   → Set variable answer   ← new
+     If yes:  Run a prompt  (KalKech deep)   → Set variable answer   ← new
      If no:   Run a prompt  (your prompt)    → Set variable answer   ← moved in
 ④ Compose — "Clean"        now reads variables('answer')    ← one edit
 ⑤ Response                 unchanged
@@ -1097,7 +1098,7 @@ tick that catches it.)
 
 **Save** the flow.
 
-### Step 7 — Switch Resolv to two models
+### Step 7 — Switch KalKech to two models
 
 **Menu → Setup → Ask through Power Automate**:
 
@@ -1147,12 +1148,12 @@ me failed*; it never says what. To see what:
 | **Set variable** in either branch | `… of type 'String' cannot be … with value of type 'Object'` (or `'Null'`) | The wrong token was picked (*Response*, *body*…). Delete it and pick **Text** from that branch's Run a prompt |
 | **Run a prompt** in the False branch | `… required …` / `… input …` / `BadRequest` | Moving it cleared its inputs, or it points at the wrong prompt. Open it: **Prompt** = your original prompt; `prompt` = `body('Parse_JSON')?['prompt']`; `picture` = `base64ToBinary(body('Parse_JSON')?['picture'])` |
 | **Run a prompt deep** in the True branch | any | The same three checks on the deep side: prompt `Dossier deep`, the two inputs as above, and a model that takes images |
-| **Run a prompt** (either) | `InputContentFiltered` · *Prompt was filtered. [105]* · `DependencyHttpStatusCode 400` | Nothing is wrong with the flow: Microsoft's content filter refused the prompt before the model read it. It blocks text that looks like an attempt to give the model orders — rules appended after the content, "ignore…", "do not look at…", "you must…". Resolv 4.6.1 appended exactly such a block to every question without a picture; **4.6.3 removed it** — reload Resolv. Resolv also asks a blocked question once more without your notes, lessons, runbooks and records, and says so under the answer if that one got through: then a note or lesson written as rules for the AI is the trigger — reword it as plain facts |
+| **Run a prompt** (either) | `InputContentFiltered` · *Prompt was filtered. [105]* · `DependencyHttpStatusCode 400` | Nothing is wrong with the flow: Microsoft's content filter refused the prompt before the model read it. It blocks text that looks like an attempt to give the model orders — rules appended after the content, "ignore…", "do not look at…", "you must…". KalKech 4.6.1 appended exactly such a block to every question without a picture; **4.6.3 removed it** — reload KalKech. KalKech also asks a blocked question once more without your notes, lessons, runbooks and records, and says so under the answer if that one got through: then a note or lesson written as rules for the AI is the trigger — reword it as plain facts |
 
-Fix, **Save**, and ask Resolv something again — no need to reload it.
+Fix, **Save**, and ask KalKech something again — no need to reload it.
 
-**Let Resolv show the error itself.** Give the Fallback response's **Body**
-this expression instead of the plain sentence, and Resolv puts the failing
+**Let KalKech show the error itself.** Give the Fallback response's **Body**
+this expression instead of the plain sentence, and KalKech puts the failing
 prompt action's error under the answer (and recognises a content-filter
 block by name):
 
@@ -1163,11 +1164,11 @@ concat('I could not work that one out. ', coalesce(actions('Run_a_prompt')?['out
 With only one prompt action, leave out the `Run_a_prompt_deep` part:
 `concat('I could not work that one out. ', coalesce(actions('Run_a_prompt')?['outputs']?['body']?['error']?['message'], ''))`.
 Use your actions' own names, spaces as `_`. If it will not save, keep the
-plain sentence — Resolv still recognises it.
+plain sentence — KalKech still recognises it.
 
 | what you see | what it is | fix |
 |---|---|---|
-| Everything still says `1.x s`, never *strong model* | Resolv is still on *One model*, or the Condition never matches | Setup → Models in your flow → *Two*. In the Condition the right box must be `deep` exactly — no quotes, lower case |
+| Everything still says `1.x s`, never *strong model* | KalKech is still on *One model*, or the Condition never matches | Setup → Models in your flow → *Two*. In the Condition the right box must be `deep` exactly — no quotes, lower case |
 | `InvalidTemplate` mentioning `variables('answer')` | the variable is not initialized, or initialized inside the Condition | Initialize variable must be at the top level, **before** the Condition |
 | A strong-model question ends in "went quiet" / timeout | the strong model took longer than the wait, or than Power Automate's two minutes | Pick a non-reasoning model for `Dossier deep`; open the run and look at how long *Run a prompt deep* took |
 | The strong model's answer ignores the picture | `Dossier deep` has no Image input, or its model cannot see images | Add the `picture` input (step 1.3) and a model that takes images |
@@ -1191,16 +1192,16 @@ is being used.
 
 **The symptom:** you ask something short — *"I named you Elle okay?"*,
 *"what is love?"* — and the answer is about a **blank or white picture**,
-or Resolv says *"The AI looked at the blank picture Resolv has to send when
+or KalKech says *"The AI looked at the blank picture KalKech has to send when
 nothing is attached, instead of your words"* (before 5.11.1: *"It answered
 the empty picture placeholder instead of your question"*), and the
 conversation may even be titled *Blank image placeholder*.
 
 **Why:** your prompt has an **Image** input, and an Image input cannot be
-empty, so when nothing is attached Resolv sends one white pixel. A strong
+empty, so when nothing is attached KalKech sends one white pixel. A strong
 model ignores it; a *mini* model sometimes talks about it instead. Telling
 the model to ignore it is not an option — Microsoft's content filter refuses
-a prompt that orders the model to disregard one of its inputs (4.6.1). Resolv
+a prompt that orders the model to disregard one of its inputs (4.6.1). KalKech
 already catches such an answer and asks again, but the sure fix is in the
 flow: **when nothing is attached, run a copy of your prompt that has no
 picture input at all.** The model then never sees a picture that is not there.
@@ -1246,11 +1247,160 @@ and **Clean** reads `variables('answer')`.
 
 ### Step 4 — Check it
 
-Save, and in Resolv ask a few short things that go to the flow, like
+Save, and in KalKech ask a few short things that go to the flow, like
 *"what is love?"* or *"thanks, what next?"*. The answers should be about
 your words, never about a picture. (*"I named you Elle"* no longer goes to the
-flow at all since 5.11.1 — Resolv answers it itself.) Then attach a screenshot and ask *"what is
+flow at all since 5.11.1 — KalKech answers it itself.) Then attach a screenshot and ask *"what is
 in this picture?"* — the **If no** branch runs and the model still sees it.
+
+## 4g. A third model: KalKech reason (GPT-5 reasoning)
+
+**What it gets you.** A *reasoning* model — one that thinks a problem through
+before it answers — for the questions where the others are not enough. You
+choose it in KalKech for a question (the pill beside **Send**, or **◆
+KalKech reason** under an answer), or for the hard jobs. KalKech sends it far
+more of your workspace than the other two (the conversation further back,
+records with their notes, more notes, lessons, runbooks and document
+passages) and waits up to 115 seconds for it. Everyday questions stay on the
+fast model.
+
+**What changes.** One new prompt (a copy of `Dossier deep` with a reasoning
+model) and one new Condition around the one you have. About fifteen minutes.
+**Do §4e first** — this builds on it. Your flow keeps working the whole time:
+until KalKech is switched to *Three*, no request says `tier: "reason"`.
+
+```
+① When an HTTP request is received
+② Parse JSON
+   Initialize variable  answer
+   Condition  "Reason?"  tier is equal to reason                     ← new
+     If yes:  Run a prompt (KalKech reason) → Set variable answer     ← new
+     If no:   Condition "Deep?"  … everything you had, as it was      ← moved in
+④ Compose — "Clean"        unchanged (reads variables('answer'))
+⑤ Response                 unchanged
+⑥ Response — "Fallback"    unchanged (runs after Clean)
+```
+
+### Step 1 — Make the KalKech reason prompt
+
+1. Open your prompts (**AI hub → Prompts**, as in §4e step 1) and open
+   `Dossier deep`. Use **Save as** / **Duplicate** if it is there; otherwise
+   make a **+ New prompt** and set it up exactly like `Dossier deep`: the
+   same inputs with the same names (`prompt`, and `picture` if you have it),
+   inserted into the empty instruction box and nothing else.
+2. Name it `KalKech reason`.
+3. **Pick the model:** **GPT-5 reasoning** (sometimes shown as *GPT-5
+   (reasoning)* or with *Reasoning* in the name). If it is not in the list,
+   pick the strongest *reasoning* model offered (for example *o3*), or ask
+   your Power Platform admin to allow GPT-5 for your environment. Microsoft
+   changes these names often — choose by the word *reasoning*.
+4. **Settings, set to the most:**
+   - if the editor shows a **reasoning effort** / **thinking** level, choose
+     **High**;
+   - **Temperature** is not offered for reasoning models — that is normal;
+   - **Output**: *Text*, like your other prompts (the Clean step handles
+     the JSON).
+5. **Pictures:** if the model will not take the `picture` input, delete that
+   input from this prompt only; in Step 4 below you then fill only `prompt`.
+6. **Test it** in the editor: `Reply with exactly {"say":"reason ok"}` in the
+   `prompt` box. It takes longer than the others — that is the thinking.
+7. **Save.**
+
+### Step 2 — The Condition "Reason?"
+
+1. Directly **under Initialize variable `answer`** (above your `Deep?`
+   Condition): **+ → Control → Condition**. Rename it `Reason?`.
+2. Left box, **Expression** tab:
+
+   ```
+   body('Parse_JSON')?['tier']
+   ```
+
+3. Operator **is equal to**. Right box: `reason` — lower case, no quotes.
+
+### Step 3 — Move `Deep?` into "If no"
+
+Drag your existing **`Deep?`** Condition by its title bar onto the **+**
+inside `Reason?`'s **If no** branch. The whole Condition moves with
+everything in it — both prompts and both Set variables (and the `Picture?`
+Condition from §4f, if you made it) — and they keep reading their own
+prompts, so there is nothing to pick again.
+
+> If the new designer will not let you drag it, switch to the classic
+> designer (the **New designer** switch at the top right) and drag it there,
+> then switch back. Do not copy and paste it: a pasted Set variable keeps
+> reading the action it was copied from (the same trap as in §4e).
+
+### Step 4 — The reasoning prompt in "If yes"
+
+1. In **If yes**: **+ → AI Builder → Run a prompt**. Rename it `Run a prompt
+   reason`.
+2. **Prompt**: `KalKech reason`.
+3. Its inputs, on the **Expression** tab:
+
+   | input | value |
+   |---|---|
+   | `prompt` | `body('Parse_JSON')?['prompt']` |
+   | `picture` | `base64ToBinary(body('Parse_JSON')?['picture'])` — only if this prompt has the input |
+
+4. Under it, still in **If yes**: **+ → Variables → Set variable** · `answer` ·
+   the **Text** token of *Run a prompt reason*. Add it fresh — never a copy.
+
+**Clean**, **Response** and **Fallback** stay exactly as they are: Clean
+reads `variables('answer')` whichever prompt ran, and Fallback still runs
+after Clean. If your Fallback shows the failing action's error (§4e, "Let
+KalKech show the error itself"), add the third prompt to its list:
+
+```
+concat('I could not work that one out. ', coalesce(actions('Run_a_prompt')?['outputs']?['body']?['error']?['message'], actions('Run_a_prompt_deep')?['outputs']?['body']?['error']?['message'], actions('Run_a_prompt_reason')?['outputs']?['body']?['error']?['message'], ''))
+```
+
+**Save** the flow.
+
+### Step 5 — Switch KalKech to three models
+
+**Menu → Setup → Ask through Power Automate**:
+
+1. **Models in your flow** → *Three: fast, strong, and KalKech reason*.
+2. **Wait for KalKech reason** — 115 seconds, the most there is: **Power
+   Automate gives up on an HTTP request after two minutes**, so anything
+   longer could never come back.
+3. **The ticked jobs go to** — *the strong model* (the default), or *KalKech
+   reason* if you want the daily look back, learning a BAU document, runbook
+   interviews and Diagnose to use it too. They will be slower.
+
+### Step 6 — Check it works
+
+1. In the chat, click the pill beside **Send** and pick **KalKech reason**.
+   Ask something real. While it works it says *KalKech reason is thinking it
+   through…*; under the answer: a time like `41.2 s · KalKech reason`.
+2. Put the pill back on **Auto**, ask something ordinary, and press **◆
+   KalKech reason** under the answer: the same question goes again, and the
+   row above says *Answers: Normal · ◆ Reason*.
+3. In Power Automate, **Run history** → the latest run → **Reason?**: the
+   **If yes** branch has the green ticks. An ordinary question goes through
+   **If no** and on into `Deep?` as before.
+
+### When it goes wrong
+
+| what you see | what it is | fix |
+|---|---|---|
+| A Reason question is answered quickly, by *strong model* | KalKech is still on *Two* | Setup → Models in your flow → *Three* |
+| The run never enters **If yes** | the Condition does not match | Right box must be `reason` exactly: lower case, no quotes |
+| *went quiet* / timed out after about two minutes | the reasoning model took longer than Power Automate allows | Set the reasoning effort to **Medium**, ask about less at once, or open the run to see how long *Run a prompt reason* took |
+| `Reason?` fails with *ActionFailed* | something inside a branch failed | Open the branch that ran and the action with the red **!** — the table in §4e, *When it goes wrong*, applies here too |
+| `InvalidTemplate` mentioning `Run_a_prompt_reason` | an expression uses another name | Pick the **Text** token from the list instead of typing; names use `_` for spaces |
+| `InputContentFiltered` | Microsoft's content filter, not the flow | As in §4e: the question or a note reads like orders to the model |
+
+### What it costs
+
+Reasoning models cost the most per call — several times the strong model —
+and for users without a Microsoft 365 Copilot licence GPT-5 reasoning is
+counted as a premium feature. KalKech only asks it when you choose it, so the
+cost is the questions you send it. **Power Platform admin center → Capacity**
+shows what is being used.
+
+---
 
 ## 5. How to give it the knowledge
 
@@ -1261,7 +1411,7 @@ this the wrong way round is the second most common reason these flows fail.
 
 Your systems, your people, your scripts, your records, today's date, and the
 list of actions the app accepts. **All of this arrives in the request body**,
-already assembled by Resolv, already current. It goes into the prompt as the
+already assembled by KalKech, already current. It goes into the prompt as the
 `{workspace}` and `{actions}` inputs.
 
 Do **not** put any of it in a knowledge base, a SharePoint file, or a
@@ -1269,7 +1419,7 @@ Dataverse table. It would be stale within a day, and you would be maintaining
 by hand a list the app already generates from its own running code.
 
 The `can` array is the important one. It is generated from `flow.js` itself,
-so when Resolv gains an action your flow can use it immediately, with the
+so when KalKech gains an action your flow can use it immediately, with the
 correct argument names, without you editing anything.
 
 There is now a third place, and over time it is the one that matters most:
@@ -1298,7 +1448,7 @@ Either works. The prompt is simpler and there is no indexing delay.
 
 Attach only the standing rules, never the workspace data. And keep §4's
 rule 1 and rule 2 intact: a knowledge source that tells the model about an
-action Resolv does not have will produce actions the app refuses by name, and
+action KalKech does not have will produce actions the app refuses by name, and
 you will spend an afternoon wondering why.
 
 ---
@@ -1324,7 +1474,7 @@ every ``` in the answer, not only the ones round it — code still showed, but
 an email or a note to copy came through as plain text, and a diagram came
 through as its Mermaid text (*"mermaid flowchart TD A --> B …"*) instead of a
 picture. Change it to the one above. Since 5.11.1 the prompt fences diagrams
-with `~~~`, which the old expression leaves alone, and Resolv draws a diagram
+with `~~~`, which the old expression leaves alone, and KalKech draws a diagram
 whose fences were stripped anyway — but the expression above is still the
 right one.)
 
@@ -1337,7 +1487,7 @@ action versions.
 ### Response
 
 Add **Request → Response**. This is the action that makes any of it visible to
-Resolv.
+KalKech.
 
 | Field | Value |
 |---|---|
@@ -1348,11 +1498,11 @@ Resolv.
 
 **The `Access-Control-Allow-Origin` header is not optional.** Without it your
 flow runs perfectly, its run history says *Succeeded*, and the browser refuses
-to let Resolv read a single byte of the reply. Resolv detects this case
+to let KalKech read a single byte of the reply. KalKech detects this case
 specifically and tells you so by name — but it costs you a round trip to find
 out, and without the header nothing will ever work.
 
-`*` is right here. Resolv may be running from `file://`, whose origin is the
+`*` is right here. KalKech may be running from `file://`, whose origin is the
 string `null`, or from `http://127.0.0.1:5500` if you serve it — so there is
 no single origin to name.
 
@@ -1368,7 +1518,7 @@ Add another **Response** at the end, named `Fallback`. Then on it:
 | | `Access-Control-Allow-Origin` : `*` |
 | **Body** | `I could not work that one out.` |
 
-Resolv accepts plain text as the answer, so this turns "the model returned
+KalKech accepts plain text as the answer, so this turns "the model returned
 something unparseable" from a 30-second timeout into an immediate, readable
 sentence. Ten seconds of setup that pays for itself the first week.
 
@@ -1385,7 +1535,7 @@ trigger and one Response returning:
 { "say": "I can hear you." }
 ```
 
-Save. Paste the URL into Resolv. Press **Test the connection**. Get all six
+Save. Paste the URL into KalKech. Press **Test the connection**. Get all six
 rungs green. If you cannot, the answer is on the rung that failed and no
 amount of prompt work will help.
 
@@ -1395,7 +1545,7 @@ amount of prompt work will help.
 { "say": "Switching to Day.", "actions": [ { "do": "view", "view": "day" } ] }
 ```
 
-Ask the assistant anything. Resolv should switch tabs. The contract is now
+Ask the assistant anything. KalKech should switch tabs. The contract is now
 proved end to end.
 
 **Round 3 — add the AI action.** Now the only thing that can be wrong is the
@@ -1415,16 +1565,16 @@ something it needs, change **What to send** rather than editing the prompt.
 | *not allowed to read the reply* | the missing `Access-Control-Allow-Origin` header. §6. |
 | *needs a Response action* | the flow has no Response, or the branch that ran did not reach it. Add the Fallback in §6. |
 | *did not answer within N seconds* | the flow is slower than the timeout. Raise **Give up after** in Setup, or move slow work after the Response. |
-| *"x" is not something Resolv can do* | the model invented an action. Tighten rule 1; check `{actions}` is actually reaching the prompt. |
+| *"x" is not something KalKech can do* | the model invented an action. Tighten rule 1; check `{actions}` is actually reaching the prompt. |
 | *must be one of …* | the model used a value outside the enum. The exact allowed values are in the `args` of that action in `{actions}`. |
 | *there is no record "D-9999" here* | the model invented a code. Rule 3. Also check **What to send** is not set to *Names only*. |
 | *there is no script called "…"* | the name is not one of `workspace.scripts`. The message lists the ones that are. |
-| a run that succeeds but Resolv says nothing | the model returned prose, not JSON. Check the `Clean` step, and that the prompt ends with *JSON only*. |
+| a run that succeeds but KalKech says nothing | the model returned prose, not JSON. Check the `Clean` step, and that the prompt ends with *JSON only*. |
 | nothing at all in the run history | the request never arrived. Almost always the URL. |
-| **two runs, the second tiny with `"probe": true`** | the first one failed. Open that one — the probe is Resolv asking *why*, not the question. See above. |
+| **two runs, the second tiny with `"probe": true`** | the first one failed. Open that one — the probe is KalKech asking *why*, not the question. See above. |
 | `Invalid input: Input parameters are invalid for your model` **with no attachment** | a required text input got **null**. Almost always `attached` wired to `attachments?[0]?['data']`, which is null when nothing is clipped. Wire it to `attachmentsText`, which is never null — it says `None.` |
 | `This model's maximum context length is 128000 tokens` **with an attachment** | the base64 went into a **text** input. A 400 KB file is ~136,000 tokens on its own. Text inputs get `attachmentsText` (~1 token); the base64 only ever goes into an **Image/File** input. |
-| **a question works until you attach something** | size. Check the request body's length in the failed run; Resolv now shrinks images, so if it is still large it will be a PDF. The reply in the chat tells you how much the question weighed. |
+| **a question works until you attach something** | size. Check the request body's length in the failed run; KalKech now shrinks images, so if it is still large it will be a PDF. The reply in the chat tells you how much the question weighed. |
 
 ---
 
@@ -1469,6 +1619,6 @@ and all, can run your flow. It is stored in `settings.flow.url` inside
 `dossier.json` in your workspace folder — so do not commit that file to a
 public repository, and if it gets out, regenerate the trigger's signature.
 
-Resolv masks the signature in the relay transcript for exactly this reason:
+KalKech masks the signature in the relay transcript for exactly this reason:
 the transcript is the thing you paste into a chat window when asking someone
 for help.

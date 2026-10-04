@@ -1,14 +1,15 @@
 @echo off
 rem ===========================================================================
-rem  Dossier.bat - the old name, kept so that nothing that points here breaks:
-rem  shortcuts, a pinned taskbar icon, habit. The app is called Resolv now and
-rem  Resolv.bat, beside this file, starts it. This passes you straight on.
+rem  Dossier.bat - an old name (until 4.8), kept so that nothing that points
+rem  here breaks: shortcuts, a pinned taskbar icon, habit. The app is called
+rem  KalKech now and KalKech.bat, beside this file, starts it. This passes you
+rem  straight on.
 rem ===========================================================================
-if exist "%~dp0Resolv.bat" (
-  call "%~dp0Resolv.bat" %*
+if exist "%~dp0KalKech.bat" (
+  call "%~dp0KalKech.bat" %*
   exit /b
 )
-echo   Resolv.bat is missing from this folder - it starts everything now.
+echo   KalKech.bat is missing from this folder - it starts everything now.
 echo   Get it back with "git pull", or copy it in beside dossier.html.
 pause
 exit /b 9

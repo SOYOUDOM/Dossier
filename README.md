@@ -1,9 +1,10 @@
-# Resolv
+# KalKech (កាលកិច្ច)
 
-> **Resolv was called Dossier until 4.8.** Only the name you see changed. The
-> files keep their names — `dossier.html`, `dossier.json`, `.dossier-store.json`
-> — as does the SQL Server database (`Dossier`), so nothing has to move.
-> `Resolv.bat` starts it; `Dossier.bat` still works and passes straight through.
+> **KalKech was called Resolv from 4.8 to 5.12, and Dossier before that.**
+> Only the name you see changed. The files keep their names — `dossier.html`,
+> `dossier.json`, `.dossier-store.json` — as does the SQL Server database
+> (`Dossier`), so nothing has to move. `KalKech.bat` starts it; `Resolv.bat`
+> and `Dossier.bat` still work and pass straight through.
 
 **A support-operations record that runs as one HTML file, with no install, no
 server and no network.** Everything it knows lives in a folder you choose, as
@@ -14,10 +15,10 @@ service requests, changes, the scripts you run against them, the people you
 are waiting on, and the question *what should I be doing right now*.
 
 This README is the complete reference. It is written to be read end to end by
-a person **or by an automation agent** that has to drive Resolv's files from
+a person **or by an automation agent** that has to drive KalKech's files from
 outside — every schema, every enumeration, every on-disk protocol and every
 invariant is stated in full, with no "see the code" hand-waving.
-[Automating Resolv from outside](#15-automating-dossier-from-outside) is the
+[Automating KalKech from outside](#15-automating-dossier-from-outside) is the
 section to start from if you are wiring this into Power Automate, a scheduled
 job, or a script.
 
@@ -41,7 +42,7 @@ job, or a script.
 | 12 | [Asking through a Power Automate flow](#12-asking-through-a-power-automate-flow) |
 | 13 | [Languages](#13-languages) |
 | 14 | [Privacy and safety](#14-privacy-and-safety) |
-| 15 | [Automating Resolv from outside](#15-automating-dossier-from-outside) |
+| 15 | [Automating KalKech from outside](#15-automating-dossier-from-outside) |
 | 16 | [Testing and measured numbers](#16-testing-and-measured-numbers) |
 | 17 | [Known limits](#17-known-limits) |
 | 18 | [Glossary](#18-glossary) |
@@ -50,19 +51,19 @@ job, or a script.
 
 ## 1. The rules that never bend
 
-These are design invariants, not preferences. Anything built on top of Resolv
+These are design invariants, not preferences. Anything built on top of KalKech
 — including an automation agent — should preserve them.
 
 | # | Rule | Enforced by |
 |---|---|---|
 | 1 | **`dossier.html` can reach exactly one thing: `http://127.0.0.1`.** Not the internet, not `localhost` by name, not any other origin, and no form post anywhere. | A `Content-Security-Policy` meta tag: `connect-src http://127.0.0.1:*; form-action 'none'`. The browser enforces it; you can verify it in F12 → Network. **This was `connect-src 'none'` until v4.0**, when the database bridge arrived — it is the one loosening in the file's history, it is a loopback address, and nothing on the far side of it leaves the machine. |
 | 2 | **Your records never leave the folder** unless you configure an endpoint and switch it on. No telemetry, no sync, no account, no cloud, and nothing at all by default. | Rule 1, plus there is no server component. The one exception is [§12](#12-asking-through-a-power-automate-flow), which is off until you paste in a URL, states what it sends, and shows you the bytes first. |
-| 3 | **The data outlives the app.** Every save writes `dossier.json` — human-readable, indented, openable in Notepad on a machine with no SQL Server and no Resolv on it. In database mode that file is an export rather than the store, written a few seconds after each save commits (the latest state each time), for exactly this reason. | `exportSoon()` runs only after the transaction commits, and only into the folder it was meant for. |
+| 3 | **The data outlives the app.** Every save writes `dossier.json` — human-readable, indented, openable in Notepad on a machine with no SQL Server and no KalKech on it. In database mode that file is an export rather than the store, written a few seconds after each save commits (the latest state each time), for exactly this reason. | `exportSoon()` runs only after the transaction commits, and only into the folder it was meant for. |
 | 4 | **Nothing is written while you ask a question.** Reading is read-only, down to not creating an empty object in settings. | `chatApi()` builds its view without mutating state. |
 | 5 | **Anything that writes asks first.** Log, close, hand over, chase, run, remind — each is proposed and confirmed, whether it arrived as a sentence or a button. | `chatDo()` refuses `act.confirm` unless the action carries `__ok`. |
 | 6 | **Nothing an endpoint returns is trusted.** A reply is data to be validated, never a command. An unknown action, a wrong-shaped argument, or a record reference that resolves to nothing is refused by name. | `flow.js` `validate()` and `checkAction()`. |
 | 7 | **The runner only ever runs a file already in `scripts\`.** A name containing `\`, `/`, `:` or `..` is refused. | `dossier-runner.bat`, before it executes anything. |
-| 8 | **A promise Resolv cannot keep is said out loud.** If a routine is set to run itself and no runner is listening, the Day sheet says so rather than failing silently. | The runner heartbeat, `.runner.txt`. |
+| 8 | **A promise KalKech cannot keep is said out loud.** If a routine is set to run itself and no runner is listening, the Day sheet says so rather than failing silently. | The runner heartbeat, `.runner.txt`. |
 
 ---
 
@@ -87,7 +88,7 @@ These are design invariants, not preferences. Anything built on top of Resolv
 > git rm -r --cached backups
 > ```
 >
-> Resolv also notices for itself: open a workspace with a `.git` in it and it
+> KalKech also notices for itself: open a workspace with a `.git` in it and it
 > says so, once, and offers to write the `.gitignore` for you.
 
 ```
@@ -97,7 +98,7 @@ git clone https://github.com/SOYOUDOM/Resolv
 1. **Make a folder for your records**, anywhere but the clone —
    `Documents\Dossier` will do. To start with the demo rather than an empty
    sheet, copy `demo\dossier.json` into it as `dossier.json`.
-2. **Double-click `Resolv.bat`** in the clone. The first time it takes a
+2. **Double-click `KalKech.bat`** in the clone. The first time it takes a
    few seconds to set itself up; after that it opens
    `http://127.0.0.1:5500/dossier.html` in your browser and sits as an icon
    by the clock — no window. It asks once which folder holds your records
@@ -116,16 +117,16 @@ With the demo copied in you should immediately see:
 - **Menu → Scripts** — the scripts, already registered
 - **Insight** — a recurring problem, with the case already written
 
-> **Browser support.** In **Edge or Chrome on desktop** Resolv keeps every
+> **Browser support.** In **Edge or Chrome on desktop** KalKech keeps every
 > record, note and document in a folder you choose, as ordinary files. In
 > **Firefox, Safari, or anything else** there is no way for a page to open a
-> folder, so Resolv keeps the same files inside the browser's own store
+> folder, so KalKech keeps the same files inside the browser's own store
 > (IndexedDB) — records, backups and attachments alike, surviving reloads and
 > restarts. Clearing that browser's site data would remove them, so use
 > Setup → export now and then, and prefer a folder where one is possible.
 
 > **Windows notifications need `http://`.** Chrome and Edge refuse the
-> Notification API on `file://` with no way to allow it. `Resolv.bat` hands
+> Notification API on `file://` with no way to allow it. `KalKech.bat` hands
 > the page out at `http://127.0.0.1:5500/dossier.html` - the same program that
 > keeps your records in the database, with no window of its own - so there is
 > only ever one thing to start. With no SQL Server on the PC it serves the
@@ -156,15 +157,15 @@ With the demo copied in you should immediately see:
 | `lang/km.xml` | ~125 KB | optional | The same 1,343 keys, **values empty**: a translation template for Khmer. |
 | `fonts/NotoSansKhmer-*.woff2` | ~33 KB | optional | Bundled Khmer typeface, so Khmer renders without fetching a webfont. `OFL.txt` is its licence. |
 | `fonts/Inter-latin.woff2` | ~48 KB | optional | Inter, the typeface of the Lumen chat skin, embedded in `dossier.html` the same way. `Inter-OFL.txt` is its licence. |
-| `scripts/dossier-runner.bat` | 3.4 KB | optional | The runner. Executes what Resolv queues. No PowerShell anywhere. |
-| `Resolv.bat` | ~6 KB | **start here** | **The one thing to double-click.** Builds and starts Resolv as an icon by the clock — the page at `http://127.0.0.1:5500/dossier.html`, the database created and migrated by itself, your scripts' runner hidden. `startup` / `startup off` for starting with Windows. |
-| `Dossier.bat` | ~1 KB | — | The old name, kept so shortcuts and habits keep working: passes straight through to `Resolv.bat`. |
-| `scripts/dossier-serve.bat` | ~1 KB | — | Kept so nothing that points at it breaks: passes through to `Resolv.bat`. |
+| `scripts/dossier-runner.bat` | 3.4 KB | optional | The runner. Executes what KalKech queues. No PowerShell anywhere. |
+| `KalKech.bat` | ~6 KB | **start here** | **The one thing to double-click.** Builds and starts KalKech as an icon by the clock — the page at `http://127.0.0.1:5500/dossier.html`, the database created and migrated by itself, your scripts' runner hidden. `startup` / `startup off` for starting with Windows. |
+| `Resolv.bat`, `Dossier.bat` | ~1 KB | — | The old names, kept so shortcuts and habits keep working: they pass straight through to `KalKech.bat`. |
+| `scripts/dossier-serve.bat` | ~1 KB | — | Kept so nothing that points at it breaks: passes through to `KalKech.bat`. |
 | `scripts/open-morning-tabs.bat` | 1.8 KB | demo | Opens the tabs you start the day with, once a day. |
-| `scripts/restart-app-pool.bat` | 1.4 KB | demo | A **parameter template** — the `{{server}}` / `{{pool}}` marks become boxes in Resolv. |
-| `scripts/queue/` | — | required for the runner | The mailbox between Resolv and the runner. |
+| `scripts/restart-app-pool.bat` | 1.4 KB | demo | A **parameter template** — the `{{server}}` / `{{pool}}` marks become boxes in KalKech. |
+| `scripts/queue/` | — | required for the runner | The mailbox between KalKech and the runner. |
 | `backups/` | — | auto | One snapshot per day, 30 kept, **in your workspace folder**. Git-ignored, and never in this repository. `demo/backup-2026-08-28.json` is a sample of the shape. |
-| `favicon.ico`, `logo.png` | — | optional | The Resolv mark (an R in glossy blue, its stem made of the old D's squares); both fall back to a built-in seal if missing. Replace them with your own and they are picked up. The sources are `art/resolv-logo.svg` (full) and `art/resolv-icon.svg` (for small sizes); the Dossier D is kept as `art/dossier-logo.png` and `art/dossier-favicon.ico`. |
+| `favicon.ico`, `logo.png` | — | optional | The mark (still Resolv's R in glossy blue, its stem made of the old D's squares, until KalKech's own logo replaces it); both fall back to a built-in seal if missing. Replace them with your own and they are picked up. The sources are `art/resolv-logo.svg` (full) and `art/resolv-icon.svg` (for small sizes); the Dossier D is kept as `art/dossier-logo.png` and `art/dossier-favicon.ico`. |
 | `assets/assistant-logo.png`, `assets/assistant-bg.jpg` | — | optional | The assistant's own mark and the picture behind its panel. Each is asked for once when the panel opens and used only if it answers. |
 | `assets/crimson-mark.png` | — | optional, not shipped | Your own mark for the **Crimson** skin. Asked for only when an `assets` folder is there; Crimson otherwise draws its own heart. |
 | `assets/thinking.gif` | 1.5 KB | optional | The animation shown while an answer is on its way, when the pixel set is off. The same file travels inside `dossier.html` as two kilobytes of base64, so a copy on its own still has it; a file here overrides that. |
@@ -180,11 +181,11 @@ With the demo copied in you should immediately see:
 | `sql/check-json-paths.py` | ~3 KB | — | Walks every JSON path the loader reads against a workspace holding one of everything. A wrong path loads nothing, quietly. |
 | `scripts/check-bat.py` | ~4 KB | — | The five things that have actually gone wrong in a `.bat`: an argument used as a path (`%1` stops at the first space, and a work folder is `OneDrive - Contoso Ltd`), a redirect on an `if` line (cmd performs it whether the condition holds or not), LF line endings, a byte over 7 bits, a call to PowerShell. |
 | `scripts/dossier-sql.bat` | ~7 KB | optional | The launcher: `init`, `push`, `pull`, `check`, `history`, `find`. Defaults to `(localdb)\MSSQLLocalDB`. |
-| `scripts/dossier-bridge.bat` | ~1 KB | — | Kept so nothing that points at it breaks: passes through to `Resolv.bat`, arguments and all. |
-| `scripts/bridge/DossierBridge.cs` | ~45 KB | optional | Resolv, running: the tray icon and its menu, the page, the database (created, migrated, written, and its history kept), the hidden runner. C# 5 and Windows Forms, so `csc.exe` from the .NET Framework builds it with nothing installed. |
-| `flow/prompt.txt` | ~15 KB | **the assistant's instructions** | What the model reads, with ten places Resolv fills in before every question. Edit it in Notepad and the next question uses it — nothing to change in Power Automate. Your own version goes in your records folder as `dossier-prompt.txt`, where updates never touch it. |
+| `scripts/dossier-bridge.bat` | ~1 KB | — | Kept so nothing that points at it breaks: passes through to `KalKech.bat`, arguments and all. |
+| `scripts/bridge/DossierBridge.cs` | ~45 KB | optional | KalKech, running: the tray icon and its menu, the page, the database (created, migrated, written, and its history kept), the hidden runner. C# 5 and Windows Forms, so `csc.exe` from the .NET Framework builds it with nothing installed. |
+| `flow/prompt.txt` | ~15 KB | **the assistant's instructions** | What the model reads, with ten places KalKech fills in before every question. Edit it in Notepad and the next question uses it — nothing to change in Power Automate. Your own version goes in your records folder as `dossier-prompt.txt`, where updates never touch it. |
 | `flow/embed-prompt.py` | ~1 KB | — | Copies `flow/prompt.txt` into `flow.js`, for a page opened straight from the folder, which cannot read the file beside it. |
-| `flow/check-prompt.js` | ~3 KB | — | Checks `flow/prompt.txt`: every example reply against the validator Resolv uses on real replies, all ten places present, the copy in `flow.js` the same. |
+| `flow/check-prompt.js` | ~3 KB | — | Checks `flow/prompt.txt`: every example reply against the validator KalKech uses on real replies, all ten places present, the copy in `flow.js` the same. |
 | `sql/load-proc.sql` | ~14 KB | optional | `dbo.LoadWorkspace` — the only code that writes the tables, called by both the bridge and `push`. |
 
 Everything is a classic script or plain file. There is **no build step, no
@@ -194,8 +195,8 @@ bundler, no package manager and no `node_modules`**.
 
 ## 4. The workspace on disk
 
-A *workspace* is any folder you point Resolv at — and it should be a folder
-of its own, not a git checkout. **Only Resolv writes these files.** Nothing
+A *workspace* is any folder you point KalKech at — and it should be a folder
+of its own, not a git checkout. **Only KalKech writes these files.** Nothing
 else should create, replace or delete one of them, which is exactly what a
 `git pull` into the folder does if the folder is a clone (see
 [§2](#2-quick-start)).
@@ -238,7 +239,7 @@ Rules that matter if anything else writes here:
 - The folder handle is remembered in **IndexedDB**, never the data. If the
   browser is wiped the worst case is re-picking the folder; the records are
   untouched on disk.
-- **`sources/` is Resolv's too.** To add, replace or remove a document, use
+- **`sources/` is KalKech's too.** To add, replace or remove a document, use
   **Library → Sources** (or attach it in a conversation); a file dropped into
   the folder by hand is not in the catalog and is not searched.
 - Saving rewrites **the whole of `dossier.json`**. See
@@ -264,7 +265,7 @@ Rules that matter if anything else writes here:
 }
 ```
 
-`seq` is advisory. On load Resolv recomputes it as
+`seq` is advisory. On load KalKech recomputes it as
 `max(seq, highest numeric part of any task.code)`, so an outside writer that
 adds `D-0099` without touching `seq` will not cause a collision.
 
@@ -301,7 +302,7 @@ adds `D-0099` without touching `seq` will not cause a collision.
 
 ### 5.3 `tasks` — a record
 
-Every field, in the order Resolv writes them:
+Every field, in the order KalKech writes them:
 
 | Field | Type | Meaning |
 |---|---|---|
@@ -361,7 +362,7 @@ Every field, in the order Resolv writes them:
 | `notes` | string | Copied onto the raised record. |
 | `message` | string | If set, the routine only *nudges* you at its time instead of raising a record. |
 | `scripts` | array of string | Script ids to attach — and, with `autoRun`, to execute. |
-| `autoRun` | boolean | `true` = "runs itself": Resolv queues `scripts[0]` at the scheduled minute. Requires a live runner. |
+| `autoRun` | boolean | `true` = "runs itself": KalKech queues `scripts[0]` at the scheduled minute. Requires a live runner. |
 | `paused` | boolean | Skipped entirely while true. |
 
 ### 5.5 `scripts` — a registered script
@@ -564,7 +565,7 @@ What is different from Lumen:
 **Can I use my own picture as Crimson's mark?** Yes, on your own PC: put a
 square picture at `assets/crimson-mark.png` beside `dossier.html`. Crimson
 uses it in the header, on the greeting and over each answer. The blue star
-that comes with Resolv (`assets/assistant-logo.png`) is *not* used by
+that comes with KalKech (`assets/assistant-logo.png`) is *not* used by
 Crimson — a skin with its own character keeps its own mark unless a picture
 is there for it by name. Keep a picture like that in your own folder only;
 it does not belong in the repository.
@@ -739,15 +740,15 @@ you before it is set, like every change the assistant makes. A flow can do the
 same with `setAlert` and `clearAlert` (see [§12](#12-asking-through-a-power-automate-flow)).
 *"Every day at 3"* is a routine, not an alert.
 
-**When it goes off** you get a Windows notification and a note in Resolv, with
+**When it goes off** you get a Windows notification and a note in KalKech, with
 **Open** to go straight to the record. Windows notifications need permission
-once (**Setup → Reminders**); without it, the note in Resolv still shows.
+once (**Setup → Reminders**); without it, the note in KalKech still shows.
 
 | | |
 |---|---|
-| **Never twice** | Each alert goes off once. A reload or a second window does not repeat it; only one Resolv window watches the alerts, and another takes over when it closes. |
-| **Resolv was closed** | Up to half a day late it still goes off, saying when it was for; older than that it is only noted in the record's log — a morning of stale alerts helps nobody. |
-| **Nothing leaves the PC** | An alert is worked out and shown inside Resolv. It sends nothing anywhere. |
+| **Never twice** | Each alert goes off once. A reload or a second window does not repeat it; only one KalKech window watches the alerts, and another takes over when it closes. |
+| **KalKech was closed** | Up to half a day late it still goes off, saying when it was for; older than that it is only noted in the record's log — a morning of stale alerts helps nobody. |
+| **Nothing leaves the PC** | An alert is worked out and shown inside KalKech. It sends nothing anywhere. |
 
 ## 7. How a record behaves
 
@@ -795,18 +796,18 @@ selection.
 
 What is saved is Markdown text in the same field as always — readable in
 Notepad, read by the assistant like anything else, and a workspace from an
-older Resolv opens unchanged.
+older KalKech opens unchanged.
 
 ### Three copies, and what each is for
 
 | | Where | Survives | Read it with |
 |---|---|---|---|
 | **The folder** | `dossier.json` beside your records | anything but the file being replaced or deleted | any text editor — this is the record |
-| **This PC remembers** | the browser's own database, on this machine | the folder being wiped, replaced, or pulled over | Resolv, which compares it on every open |
-| **A JSON export** | wherever you put it | a new PC, a new browser, a rebuild | Resolv on the other machine — Import |
+| **This PC remembers** | the browser's own database, on this machine | the folder being wiped, replaced, or pulled over | KalKech, which compares it on every open |
+| **A JSON export** | wherever you put it | a new PC, a new browser, a rebuild | KalKech on the other machine — Import |
 
 **What this PC remembers** is written on every save and read on every open. If
-the folder comes back with fewer records than this machine remembers, Resolv
+the folder comes back with fewer records than this machine remembers, KalKech
 **writes nothing** and puts the difference to you — both numbers, both dates —
 with three ways out: restore what the PC remembers, keep the folder as it is,
 or download the remembered copy as a file and decide later. That check is the
@@ -829,17 +830,17 @@ are files in `tasks/`; copy the folder for those.
 
 ### 4.1 The database as the store
 
-**Double-click `Resolv.bat`.** That is the whole of it. There is no window
-afterwards: Resolv is the icon beside the clock, and its menu is how you
+**Double-click `KalKech.bat`.** That is the whole of it. There is no window
+afterwards: KalKech is the icon beside the clock, and its menu is how you
 open it, see what it is doing, make it start with Windows, and quit it.
 
 | On the icon's menu | |
 |---|---|
-| **Open Resolv** (or double-click the icon) | `http://127.0.0.1:5500/dossier.html` — bookmark it |
+| **Open KalKech** (or double-click the icon) | `http://127.0.0.1:5500/dossier.html` — bookmark it |
 | **Show log** | what it did and why, including why there is no database if there is none |
 | **Start with Windows** | the per-user Run key: no console at login, no administrator, and it shows in Task Manager's Startup tab |
 | **Workspace folder…** | the folder your records are in — used to run your scripts |
-| **Quit Resolv** | stops everything it started, the script runner included |
+| **Quit KalKech** | stops everything it started, the script runner included |
 
 What that one program does:
 
@@ -865,19 +866,19 @@ What that one program does:
   saves go to the database one at a time, a waiting one skipped when a newer
   one has overtaken it. If a save cannot go through — the bridge restarting,
   the database waking up — your changes stay on screen, the status bar says
-  *not saved yet · trying again in 4s*, and Resolv keeps trying on its own
+  *not saved yet · trying again in 4s*, and KalKech keeps trying on its own
   (2 s, 4 s, 8 s … up to a minute) until it is green again. Click that text
   to try straight away. A save that is slow counts its seconds (*saving… 12
   s*); one that never comes back is let go of and tried again; and when a
   question at the top of the window is what saving waits for, the status
   line says *not saved · answer the question at the top*.
 - **runs your scripts, hidden.** The runner for your workspace's `scripts\`
-  folder starts with no window and stops when Resolv quits.
+  folder starts with no window and stops when KalKech quits.
 - **is only ever one.** A second double-click opens the page the first one is
   serving.
 
 `dossier-bridge.bat` and `dossier-serve.bat` still exist, so nothing that
-points at them breaks; both pass straight through to `Resolv.bat`.
+points at them breaks; both pass straight through to `KalKech.bat`.
 
 ### Your work cannot be emptied by accident
 
@@ -939,8 +940,8 @@ the clone. Nor is anything whose name begins with a dot, nor `..`, nor
 | `GET /hello` | the token, to a page the bridge served itself and nothing else |
 | `POST`/`GET`/`DELETE /attachment` | document bytes, as rows |
 
-**What it costs you.** Resolv will not open a database-backed workspace when
-Resolv's database is not answering, and will not write one either — not even the
+**What it costs you.** KalKech will not open a database-backed workspace when
+KalKech's database is not answering, and will not write one either — not even the
 export, because a file ahead of the database is two versions of the truth.
 It says so and offers to try again. That is the trade for having one copy of
 your work instead of two that can disagree.
@@ -1040,10 +1041,10 @@ At its scheduled minute a routine either:
 - **nudges you** — if `message` is set, no record is created.
 
 With `autoRun:true` it also **queues `scripts[0]`** for the runner. That is the
-one promise Resolv cannot keep by itself, so:
+one promise KalKech cannot keep by itself, so:
 
 > A routine marked *runs itself* while no runner is listening will raise its
-> record on time and then do nothing. Resolv detects this and says so on the
+> record on time and then do nothing. KalKech detects this and says so on the
 > Day sheet rather than letting it look like a broken app.
 
 ### 8.2 Cron
@@ -1072,7 +1073,7 @@ than surprising.
 
 Two differences from a server cron, both deliberate:
 
-- Resolv raises **one record per day**, timed at that day's first occurrence —
+- KalKech raises **one record per day**, timed at that day's first occurrence —
   a sheet with 96 copies of the same check would be unreadable.
 - The **runner fires the script at every occurrence**, which is where the extra
   precision is actually useful.
@@ -1087,12 +1088,12 @@ An invalid expression is rejected with the reason, before it is saved.
 ### 9.1 Why there is a runner at all
 
 A page in a browser cannot start a program, and nothing here should need
-installing. So Resolv writes a request into a folder, and a small process of
+installing. So KalKech writes a request into a folder, and a small process of
 yours picks it up, runs the script, and writes the result back — which lands
 in that record's work log.
 
 **No PowerShell.** The runner is `scripts\dossier-runner.bat`. Everything
-passed between Resolv and it is plain text, one value per line: a batch file
+passed between KalKech and it is plain text, one value per line: a batch file
 reads that with `set /p` and writes it with `echo`, and never has to parse or
 escape JSON — which is exactly where these arrangements normally break.
 
@@ -1102,11 +1103,11 @@ Everything lives in `<workspace>\scripts\queue\`.
 
 | File | Written by | Contents |
 |---|---|---|
-| `<id>.run.txt` | Resolv | Line 1: the script's **file name**. Line 2: its arguments, already quoted. CRLF endings. |
+| `<id>.run.txt` | KalKech | Line 1: the script's **file name**. Line 2: its arguments, already quoted. CRLF endings. |
 | `<id>.out.txt` | the runner | Everything the script printed, stdout and stderr merged. |
 | `<id>.done.txt` | the runner | Line 1: the exit code. Its *existence* is the completion signal. |
 | `.runner.txt` | the runner | Line 1: the `scripts` folder it is watching. Line 2: the local date and time. Rewritten about every 10 seconds. |
-| `.<id>.txt` | Resolv | A marker meaning "this scheduled slot has already been queued", so a routine cannot double-fire. |
+| `.<id>.txt` | KalKech | A marker meaning "this scheduled slot has already been queued", so a routine cannot double-fire. |
 
 Request ids:
 
@@ -1115,14 +1116,14 @@ Request ids:
 
 The sequence:
 
-1. Resolv writes `<id>.run.txt`.
+1. KalKech writes `<id>.run.txt`.
 2. The runner sees it on its next pass — it loops about once a second.
 3. **It deletes the request before running it** — so killing the window
    mid-script cannot make the job run again on restart.
 4. It validates the name (see below), runs it from inside `scripts\` with
    output redirected to `<id>.out.txt`.
 5. It writes the exit code to `<id>.done.txt`.
-6. Resolv polls every 250 ms for up to 60 seconds, then appends the first
+6. KalKech polls every 250 ms for up to 60 seconds, then appends the first
    4,000 characters of output to the record's work log and stamps `started` if
    it was not already set.
 
@@ -1146,7 +1147,7 @@ To start it at every logon: put the workspace's full path into
 **Menu → Scripts → Folder path**, then **Menu → Setup → Running a script →
 Copy the schtasks line** and run that once.
 
-Resolv tells you the truth about it at all times. The footer reads `runner on`
+KalKech tells you the truth about it at all times. The footer reads `runner on`
 or `runner off`, and three states are told apart because the fix differs:
 
 | State | Meaning |
@@ -1315,7 +1316,7 @@ always proposes and waits, `nav` moves the app, `social` is conversation.
 | `clock` | The time | *the time* |
 | `dateToday` | The date | *what is the date* |
 | `howTo` | How to do something | *how do i* |
-| `about` | About Resolv | *what is this* |
+| `about` | About KalKech | *what is this* |
 | `steps` | What is left to do | *what is left* |
 | `why` | Why it is stuck | *why is* |
 | `history` | What happened on it | *what happened* |
@@ -1600,14 +1601,14 @@ The full explanation, for anyone (no programming needed), is
 #### Does the AI learn? Is it retrained?
 
 It is never retrained, and it does not need to be. The model is the same every
-day; what grows is Resolv's notebook in your workspace — lessons, notes, how
+day; what grows is KalKech's notebook in your workspace — lessons, notes, how
 things were fixed, draft runbooks, corrections — and the right pages of it go
 with each question. You can read every line of it in Setup and delete any
 of it. Change the model and nothing learned is lost.
 
 #### Why is it fast, and why does it not get slower as I use it?
 
-Nearly all of the wait is the AI reading what it is sent, so Resolv sends
+Nearly all of the wait is the AI reading what it is sent, so KalKech sends
 less: it answers easy questions itself, chooses the data on your PC (about 6
 ms for 5,000 records, 2 ms to search 150 documents) instead of with a second
 AI call, sends the best 60 records and counts the rest, puts a limit on
@@ -1617,13 +1618,13 @@ hard jobs, and makes at most one extra round trip. See *Fast and steady* in
 
 #### Can we build another assistant the same way?
 
-Yes: `docs/HOW-THE-AI-WORKS.md` Part 5 is the method without the Resolv
+Yes: `docs/HOW-THE-AI-WORKS.md` Part 5 is the method without the KalKech
 details — nine parts, the order to build them, a checklist, and the mistakes
-Resolv made on the way.
+KalKech made on the way.
 
 The local assistant ([§10](#10-the-assistant-chatjs)) answers from your own
 records with no network and no model. This is the other route, and it is the
-only feature in Resolv that sends anything anywhere. It is **off until you
+only feature in KalKech that sends anything anywhere. It is **off until you
 paste in an endpoint URL and switch it on**, in
 **Menu → Setup → Ask through Power Automate**.
 
@@ -1642,7 +1643,7 @@ redirects rather than following one to a host you did not choose.
 
 ### The exchange
 
-Resolv posts one JSON object — your message, the date, the last few turns,
+KalKech posts one JSON object — your message, the date, the last few turns,
 your workspace's vocabulary, a slice of your records, and `can`: the full list
 of actions the flow may ask for, generated from the running code. The flow
 returns `say`, `ask`, and `actions`.
@@ -1682,7 +1683,7 @@ diagram), or right to make it narrower. Your work on the left makes room
 rather than being covered. **Double-click the edge** for the usual width
 (452 pixels). With the keyboard: `Tab` to the edge, then `←` / `→`.
 
-Resolv keeps the width with your workspace, so the panel opens the same width
+KalKech keeps the width with your workspace, so the panel opens the same width
 next time. On a small window it is fitted in (your work always keeps at least
 340 pixels), without forgetting the width you chose.
 
@@ -1732,7 +1733,7 @@ them all — editable in place, with how often each has been asked for.
 ### The prompt is a file, not a Power Automate setting
 
 The assistant's instructions are **`flow/prompt.txt`**. Before every question
-Resolv reads it, fills in the workspace, the conversation, your notes and
+KalKech reads it, fills in the workspace, the conversation, your notes and
 what you attached, and sends the finished text as one field, `prompt`. The
 prompt action in your flow holds nothing but that one input
 (`body('Parse_JSON')?['prompt']`), so **changing how the assistant behaves is
@@ -1755,14 +1756,14 @@ on this PC, so nothing in Power Automate changes:
   them, and the flow writes them with the `learn` action. **Setup → What I
   have learned about you** lists them; ✕ forgets one.
 - **The daily look back.** At noon (the time is yours to set), while you are at
-  lunch, Resolv sends the flow everything since the last look: records closed
+  lunch, KalKech sends the flow everything since the last look: records closed
   and how they were resolved, records raised and by whom, the conversations,
   and every answer you marked *not what I meant*. What comes back — lessons,
   resolutions worth keeping, draft runbooks for problems that keep recurring —
   is kept, and reported in a conversation called **What I learned** with one
   question it would like you to answer. Anything that would change a system
   profile or a record waits there as a button; nothing like that happens by
-  itself. Missed noon because Resolv was closed? It runs the next time it is
+  itself. Missed noon because KalKech was closed? It runs the next time it is
   open. A morning with nothing in it costs no call.
 - **👍 / 👎 under every answer.** A thumb down asks for one line — what it
   should have said. That line is kept as a `[correction]` lesson, so the next
@@ -1873,6 +1874,60 @@ interviews and **Diagnose** go to the stronger one, and every answer gets a
 under an answer says *strong model* when it was. Which jobs go where is
 ticked in the same place.
 
+#### How do I choose which model answers?
+
+With two or three models in your flow, a small pill sits beside **Send** in
+the chat: **Auto**, **Fast**, **Strong** or **Reason**. Click it and pick:
+
+| Choice | What answers what you type |
+|---|---|
+| **Auto** | The fast model for chat; the strong one for the jobs ticked in Setup (the usual) |
+| **Fast** | The quick model, for everyday questions |
+| **Strong** | The stronger model: better answers, a few seconds slower |
+| **KalKech reason** | A reasoning model (GPT-5 reasoning) that thinks it through and reads the most of your workspace. The slowest — up to two minutes |
+
+KalKech remembers your choice. It is for what you type in the chat; under
+any answer, **✦ Think harder** (the strong model) and **◆ KalKech reason**
+ask that one question again with a stronger model, whatever the pill says.
+The time under an answer says which model gave it — *41.2 s · KalKech
+reason*.
+
+#### What is KalKech reason, and when should I use it?
+
+**KalKech reason** is a third model in your flow: a *reasoning* model
+(GPT-5 reasoning, or the strongest reasoning model your Power Automate
+offers). It thinks a problem through before it answers, so it is the one for
+a difficult problem, a long document, a "why does this keep happening", or
+anything where the fast answer was not good enough.
+
+It is also given **far more of your workspace** than the other two:
+
+| | Fast / Strong | KalKech reason |
+|---|---|---|
+| The conversation | the last 8 messages, 1,200 characters each | the last 40 messages, 6,000 characters each |
+| Records | 60, short | 240, with their notes and log |
+| Your notes | 10 | 30, longer |
+| Lessons | 30 | 80 |
+| Document passages (Sources) | 6, about 14,000 characters | 16, about 48,000 characters |
+| Matched runbooks · past fixes · incident history | 3 · 3 · 30 days | 6 · 6 · 90 days |
+
+And it is told that you chose it, so it reads everything, checks each step
+and figure, and writes as long an answer as the question needs. Because it
+takes longer (KalKech waits up to 115 seconds — the most Power Automate
+allows) and costs more AI Builder credits per question, it answers only when
+you choose it: the pill, **◆ KalKech reason** under an answer, or — if you
+tick it in Setup — the hard jobs (the daily look back, learning a BAU
+document, runbook interviews, Diagnose).
+
+#### How do I add KalKech reason to my flow?
+
+It is one more prompt and one more Condition in your Power Automate flow —
+about fifteen minutes, step by step in
+[`flow/POWER-AUTOMATE.md` §4g](flow/POWER-AUTOMATE.md). Then in KalKech:
+**Menu → Setup → Ask through Power Automate → Models in your flow → Three**.
+Until you choose *Three*, KalKech never asks for it (a pick of *Reason* goes
+to the strong model instead), so your flow keeps working while you build it.
+
 **Branches, not copies.** **✦ Think harder** and **↻ Retry** (under every
 answer from the flow, and under one that failed) ask the same question again
 *in the same conversation*: the new answer takes the old one's place, and a
@@ -1979,10 +2034,10 @@ to keep the diagram small, or press **Think harder**.
 Fixed in 5.11.1. The diagram's text was there, but the marks around it (three
 backticks, ```` ``` ````) had been taken out on the way back — by the *Clean*
 step of a flow built from an older copy of the guide, which strips every
-```` ``` ```` in the answer. Without the marks, Resolv did not know the text
+```` ``` ```` in the answer. Without the marks, KalKech did not know the text
 was a diagram. Now:
 
-- Resolv recognises a diagram without its marks (a line *mermaid*, or a line
+- KalKech recognises a diagram without its marks (a line *mermaid*, or a line
   like *flowchart TD* or *sequenceDiagram* followed by boxes and arrows) and
   draws it;
 - the prompt asks for diagrams between `~~~` marks, which the old Clean step
@@ -2002,7 +2057,7 @@ choice wraps its own words. Every choice is always in view.
 #### How do I give the assistant a name?
 
 Just tell it: *"I named you Elle"*, *"can I call you Elle?"*, *"your name is
-Elle"*. Resolv answers on your PC (nothing goes to the flow), and from then on
+Elle"*. KalKech answers on your PC (nothing goes to the flow), and from then on
 the name is:
 
 - at the top of the chat panel, and over each of its answers (in the
@@ -2011,7 +2066,7 @@ the name is:
 - on the desk pet — it is the same assistant, so it has the same name;
 - told to the AI with every question, so it calls itself Elle.
 
-A **Keep Resolv** button under the reply puts the old name back if you change
+A **Keep KalKech** button under the reply puts the old name back if you change
 your mind. To go back later, say *"use your own name"*. *"What's your name?"*
 gets the name you gave it. The name is kept with your workspace. You can also
 type it under *Menu → Appearance → Desk pet → Its name*: the pet and the
@@ -2024,11 +2079,11 @@ white square"*, or *"The AI looked at the blank picture…"*, or the
 conversation was named *Blank image placeholder*.
 
 **Why:** the prompt in your flow has a picture input, and Power Automate does
-not allow it to be empty. So when you attach nothing, Resolv sends one white
+not allow it to be empty. So when you attach nothing, KalKech sends one white
 pixel. A strong model ignores it; a small, fast (*mini*) model sometimes
 talks about the picture instead of your words.
 
-**What Resolv does about it:** it reads every answer before showing it. If
+**What KalKech does about it:** it reads every answer before showing it. If
 the answer is about the picture, it takes those sentences out; if nothing
 useful is left, it asks again, adding *(no picture attached)* to your
 question, and — when you have two models — asks the strong one. A title about
@@ -2048,9 +2103,9 @@ what you sent:
 
 - a document kept in Sources opens in the Sources viewer, page by page, with
   **Open the original** for the file itself — today, tomorrow, or next month;
-- any other file, while Resolv stays open, shows the words that were read out of
+- any other file, while KalKech stays open, shows the words that were read out of
   it and sent with the question, or the picture as it went;
-- after Resolv is restarted, a picture shows the small copy kept with the
+- after KalKech is restarted, a picture shows the small copy kept with the
   conversation (about 200 pixels); a file that was not kept anywhere says so.
 
 **Hide** (after the cards) folds them to one line — *📎 2 attached: runbook.pdf,
@@ -2142,7 +2197,7 @@ summary of the conversation, a new conversation carried nothing, and
 *studying* a guideline rewrote it into runbooks in the model's own words.
 Asked how long a critical internet-facing application had to be fixed, with a
 standard that gives no timeframe, the assistant answered **"4 hours"** — the
-only 4 hours in the request was Resolv's own target date for a P1 record. Now
+only 4 hours in the request was KalKech's own target date for a P1 record. Now
 the passages that match travel with every question, the prompt forbids a
 figure no passage states, and the app checks the answer before showing it.
 
@@ -2150,7 +2205,7 @@ figure no passage states, and the app checks the answer before showing it.
 
 1. **Library → Sources → + Add documents**, and pick one file — or many at
    once (see *How do I add many documents at once?* below).
-2. Resolv reads each one to the end — a PDF page by page (scanned pages
+2. KalKech reads each one to the end — a PDF page by page (scanned pages
    through `ocr.js` when it is beside `dossier.html`), a Word document with its
    headings, Markdown as it is — and says how many pages it read and which, if
    any, it could not read reliably.
@@ -2207,7 +2262,7 @@ To check it was learned, in a **new** conversation (not `[study]`):
 
 #### How do I re-index an updated guideline?
 
-- **A new version of the document**: add it (**+ Add documents**). Resolv sees it is a
+- **A new version of the document**: add it (**+ Add documents**). KalKech sees it is a
   new version of one already there and asks: **It replaces that version** (the
   older one is kept, marked *superseded*, and no longer searched), **Keep both
   active** (their version and effective date decide which is current), or **It
@@ -2217,12 +2272,12 @@ To check it was learned, in a **new** conversation (not `[study]`):
   top of Sources, and an answer that reads them shows both.
 - **The same file, edited, or read badly the first time** (say `ocr.js` was
   added since): **Re-index** on that document, or **Re-index all**. The
-  original is read again and cut again, and Resolv says how many passages are
+  original is read again and cut again, and KalKech says how many passages are
   new or changed, gone, and unchanged — passage ids stay the same while their
   words do.
 - **Switch off** stops a document being searched without deleting it;
   **Remove** deletes it from the workspace folder.
-- When a new version of Resolv changes how passages are cut, every document
+- When a new version of KalKech changes how passages are cut, every document
   is cut again from its kept text the next time the workspace opens —
   nothing to do.
 
@@ -2233,7 +2288,7 @@ them, every time — and the passages that match best go with the question,
 from whichever documents they are in. A question about log retention finds
 the retention standard, a question about patching finds the patching
 standard, and a question about passwords finds the password standard. Nothing
-in Resolv is written for one subject: the checks on figures, the spelling
+in KalKech is written for one subject: the checks on figures, the spelling
 help, the page headers left out of PDFs and the names of documents work the
 same way for every document.
 
@@ -2249,7 +2304,7 @@ question, how many documents were searched and which passages were found.
 2. In the file window, select them all (**Ctrl+A** in a folder, or
    **Ctrl**/**Shift**+click) and press **Open**. PDF, Word, Markdown and text
    can be mixed.
-3. Resolv reads them one by one, then shows **one** window for all of them:
+3. KalKech reads them one by one, then shows **one** window for all of them:
    the list of what it read, each with the name it found, and the details
    they share — **Systems**, **Environment**, **Category**, **Access label**,
    and whether they **may go to the assistant**. A file that is already in
@@ -2276,9 +2331,9 @@ takes up to 5 files per question, so for more than that use Sources.
   **Need a look** — show only the documents in that state, with how many
   there are.
 - **Sort**: **Name A–Z**, **Newest first**, **By category** or **By type**.
-  The last two group the list under headings. Resolv remembers your choice.
+  The last two group the list under headings. KalKech remembers your choice.
 - **The arrow beside "Sources"** folds the whole panel to one line, so the
-  Library's own documents are easy to reach; Resolv remembers that too.
+  Library's own documents are easy to reach; KalKech remembers that too.
 
 #### How do I open, rename, re-index, switch off or remove a document?
 
@@ -2371,22 +2426,22 @@ keeps the way you left it.
 #### Which source supports this answer?
 
 The **Source** line under the answer (open it for **Evidence**). Ask *"which
-source supports this answer?"* and Resolv lists the citations and quotes of
+source supports this answer?"* and KalKech lists the citations and quotes of
 the last answer. A citation is only shown as a source when its quote was found,
 word for word, in the passage it names.
 
-#### Why did Resolv say that the answer was not found?
+#### Why did KalKech say that the answer was not found?
 
 Because none of the passages it found states it. Ask *"why was it not
-found?"* and Resolv says how many documents it searched, which came closest,
+found?"* and KalKech says how many documents it searched, which came closest,
 and which filters the question set. There are three kinds of *not found*:
 
 - **Not found** — the documents do not say it, or say it in words the question
   did not reach. The answer says what is missing, and what they do say.
 - **Answer held back** — the whole reply rested on a figure — a timeframe,
-  a percentage, a severity — that no passage it cited contains, so Resolv did
+  a percentage, a severity — that no passage it cited contains, so KalKech did
   not show it: it would have been a guess presented as your policy. (This is
-  the "4 hours".) Resolv says it held the reply back — it does not claim the
+  the "4 hours".) KalKech says it held the reply back — it does not claim the
   documents are silent, because it cannot know that — and shows under it what
   the cited passages do say.
 - **Not from your documents** — the reply cited nothing, so it is shown as
@@ -2399,7 +2454,7 @@ system or environment it is about; after changing a document, **Re-index**.
 #### Why was part of the answer taken out?
 
 Because one line of it gave a figure — a time, a percentage, a severity —
-that none of the passages it cited states. Resolv takes out that line (and a
+that none of the passages it cited states. KalKech takes out that line (and a
 heading or an introduction left with nothing under it) and shows the rest,
 which is checked like any answer. Under it:
 
@@ -2419,7 +2474,7 @@ Before 5.9.2 the whole answer was held back instead, with *"The documents
 searched do not specify this"* — even when they did, and the rest of the
 answer was right.
 
-#### The answer is in my document, but Resolv said it was not found or held it back — am I wrong or is the AI wrong?
+#### The answer is in my document, but KalKech said it was not found or held it back — am I wrong or is the AI wrong?
 
 Usually neither: the answer is in the document, and the reply added
 something the passages it cited do not say. Look at **Evidence** under the
@@ -2436,7 +2491,7 @@ changes** for the figure that was taken out. Then:
 
 Fixed in 5.9.5. Two things went wrong together:
 
-1. Your message said **"policy number"** — a customer's insurance policy. Resolv
+1. Your message said **"policy number"** — a customer's insurance policy. KalKech
    read the word *policy* as a question about a policy **document**, so it
    checked the reply against your Sources documents.
 2. The reply repeated a figure **you** wrote (*"exactly 5 years after the
@@ -2503,7 +2558,7 @@ an answer still has to be in their words.
 #### Which passages does a broad question get?
 
 *"What should a password be?"* in a password standard matches every page —
-they all say "password". Resolv then prefers the passages that set a rule — a
+they all say "password". KalKech then prefers the passages that set a rule — a
 minimum or a maximum, a *must* or *must not*, a number of characters, days or
 attempts — over ones that only talk about the subject, and sends the rows
 around them. When the rules differ by case (user, administrator, service
@@ -2603,17 +2658,17 @@ to 2.4 KB, and 3,000 would summarise to about the same.
 which columns to add to the export and how to connect the Table API through
 Power Automate once you have a service account.
 
-### It knows Resolv itself
+### It knows KalKech itself
 
-Ask the assistant about Resolv — *how do I set an alert on a record?*,
+Ask the assistant about KalKech — *how do I set an alert on a record?*,
 *where do I change the look of the chat?*, *what's new?*, *which version is
-this?* — and it answers from Resolv's own **README.md** and **CHANGELOG.md**,
+this?* — and it answers from KalKech's own **README.md** and **CHANGELOG.md**,
 which sit beside `dossier.html`:
 
 - every question carries the version, the headlines of the latest releases
   and the README's chapters (`workspace.app`), so the assistant always knows
   what it is and what it can do;
-- a question about Resolv also carries the two or three README sections and
+- a question about KalKech also carries the two or three README sections and
   the release notes that answer it, and the prompt tells the model to answer
   those from them only — menus and buttons named as the manual names them,
   and never a setting that does not exist;
@@ -2621,7 +2676,7 @@ which sit beside `dossier.html`:
   CHANGELOG, with or without a flow — with the earlier releases underneath to
   ask about next.
 
-Update Resolv and the assistant knows the new version the next time the page
+Update KalKech and the assistant knows the new version the next time the page
 is loaded. A copy opened from the folder (`file://`) cannot read the files
 and sends only the version.
 
@@ -2654,7 +2709,7 @@ will actually honour:
 purpose:
 
 - **`settings.flow` — the endpoint URL.** A flow that could rewrite the address
-  Resolv posts to could point it somewhere else of its own choosing, and
+  KalKech posts to could point it somewhere else of its own choosing, and
   nothing downstream would notice. It is a credential — see *Switching it on*,
   below — so no action reaches it. This holds *even with confirmation turned
   off*: the refusal is in the executor, not in the dialogue.
@@ -2680,7 +2735,7 @@ is the normal case, because you are the one who knows who it goes to, and a
 line that silently is not there reads as a bug rather than as a blank to fill
 in.
 
-**Nothing is sent.** Resolv has no mail credentials, no outbound connection
+**Nothing is sent.** KalKech has no mail credentials, no outbound connection
 and no CSP permission to make one, and it does not pretend otherwise — the
 draft is text until you send it yourself. That is also why `draftEmail` counts
 as a read and does not sit behind a confirmation: writing you a draft changes
@@ -2700,9 +2755,9 @@ you do.
 1. **No Response action** in the flow, so it never answers.
 2. **No `Access-Control-Allow-Origin: *`** header on that Response — the flow
    runs perfectly, the run history says success, and the browser still refuses
-   to let Resolv read the reply.
+   to let KalKech read the reply.
 
-Both look identical from the outside ("Failed to fetch"), so Resolv tells
+Both look identical from the outside ("Failed to fetch"), so KalKech tells
 them apart: after a failure it retries opaquely, and if the host answered
 that way it reports the missing header **by name** instead of guessing.
 
@@ -2766,7 +2821,7 @@ Every phrase in the interface is a key, resolved through `lang/<culture>.xml`:
 - `name` is the key, `source` is the English, `value` is the translation.
 - **Leave a `value` empty and that phrase stays English** — translating in
   passes is fine, and a half-finished file is never a broken interface.
-- `{p0}`, `{name}` are values Resolv drops in. Keep them exactly, but move
+- `{p0}`, `{name}` are values KalKech drops in. Keep them exactly, but move
   them wherever the sentence needs.
 - Save the file, then **Menu → Appearance → Reload**.
 
@@ -2800,9 +2855,9 @@ To add a language: copy `en.xml` to `lang/<culture>.xml`, change `culture` and
 
 ---
 
-## 15. Automating Resolv from outside
+## 15. Automating KalKech from outside
 
-Resolv has **no API and no server** — on purpose. The integration surface is
+KalKech has **no API and no server** — on purpose. The integration surface is
 the folder: a JSON file you can read and write, and a queue directory that
 already accepts requests from anything that can write a text file.
 
@@ -2812,7 +2867,7 @@ run scripts without corrupting anything.
 
 ### 15.1 The one rule that matters
 
-> **Resolv rewrites the whole of `dossier.json` when it saves.** It saves 700 ms
+> **KalKech rewrites the whole of `dossier.json` when it saves.** It saves 700 ms
 > after any change, and on `Ctrl`+`S`. It reads the file **once**, when the
 > folder is attached.
 
@@ -2820,12 +2875,12 @@ So there is no merge and no file locking. Two safe patterns, one unsafe one:
 
 | Pattern | Safe? |
 |---|---|
-| Write `dossier.json` **while the Resolv tab is closed** | ✅ yes — it is read fresh on next attach |
-| Write only into `scripts/queue/` and `tasks/<folder>/` | ✅ yes — Resolv never rewrites those wholesale |
+| Write `dossier.json` **while the KalKech tab is closed** | ✅ yes — it is read fresh on next attach |
+| Write only into `scripts/queue/` and `tasks/<folder>/` | ✅ yes — KalKech never rewrites those wholesale |
 | Read `dossier.json` at any time | ✅ yes |
 | Write `dossier.json` **while the tab is open** | ❌ your write is lost at the next save |
 
-If an automation must add records while someone might have Resolv open, prefer
+If an automation must add records while someone might have KalKech open, prefer
 a **drop folder** of your own that a person imports, or write at a time the tab
 is known to be closed (overnight, a logon task).
 
@@ -2868,7 +2923,7 @@ Notes for whoever writes the queries:
 ### 15.3 Writing work in
 
 If you add a record, produce **every** field in [§5.3](#53-tasks--a-record).
-Resolv normalises what it loads, but an automation that omits `log`, `files`
+KalKech normalises what it loads, but an automation that omits `log`, `files`
 or `tags` produces records that behave subtly differently from hand-made ones.
 
 ```powershell
@@ -2923,7 +2978,7 @@ Rules for a writer:
 
 ### 15.4 Running a script from outside
 
-You do not need Resolv for this at all. The runner takes requests from
+You do not need KalKech for this at all. The runner takes requests from
 anything that can write two lines of text.
 
 ```powershell
@@ -2985,7 +3040,7 @@ committing to an answer.
 
 ```
 BEFORE WRITING dossier.json
-  [ ] the Resolv tab is closed
+  [ ] the KalKech tab is closed
   [ ] a dated copy exists in backups/
   [ ] the file parses as JSON and app == "dossier"
 
@@ -3028,7 +3083,7 @@ first thing to run after changing anything it touches:
 
 ```
 node --test                 # tests/*.test.js: 47 tests - Sources (every scenario below) and diagrams
-node tests/e2e/run.js       # the app in Chrome or Edge: 122 checks on the screen
+node tests/e2e/run.js       # the app in Chrome or Edge: 132 checks on the screen
 node flow/check-prompt.js   # the prompt's examples against the reply validator
 ```
 
@@ -3114,7 +3169,7 @@ away, because 93% of the test half contained a phrase that had been added to
 the vocabulary verbatim. A benchmark you tuned against stops being a benchmark.
 
 The from-scratch model experiment is also worth stating plainly: training a
-classifier on Resolv's own generated corpus reached **38.8%** on unseen
+classifier on KalKech's own generated corpus reached **38.8%** on unseen
 phrasing families, against `chat.js`'s **97.1%** on the same split. Writing a
 model from scratch was tried, measured, and rejected on the numbers.
 
@@ -3126,8 +3181,8 @@ model from scratch was tried, measured, and rejected on the numbers.
   inside the browser, which is theirs to clear; export a copy now and then.
   Scripts cannot run from a browser store, since there is no folder for the
   runner to watch.
-- **Notifications need `http://`**, not `file://`. Start Resolv with
-  `Resolv.bat`, which hands the page out from `127.0.0.1`.
+- **Notifications need `http://`**, not `file://`. Start KalKech with
+  `KalKech.bat`, which hands the page out from `127.0.0.1`.
 - **Sources search by words, not by meaning.** Passages are found by the
   words of the question (with a short list of the words people use for the
   same thing - *fix* and *remediate*, *how long* and *timeframe*), not by a
@@ -3142,18 +3197,18 @@ model from scratch was tried, measured, and rejected on the numbers.
   and every question in a workspace that is not cleared for it, but anyone who
   can open the workspace folder can open the files in it. Different teams
   keep different workspace folders, with Windows permissions on them.
-- **Alerts need Resolv open.** The tab can be in the background, but a
+- **Alerts need KalKech open.** The tab can be in the background, but a
   closed browser or a sleeping PC alerts nobody. An alert missed that way goes
-  off when Resolv next opens, if it is less than half a day late; older, it is
+  off when KalKech next opens, if it is less than half a day late; older, it is
   only noted in the record's log.
-- **The daily look back needs Resolv open** at some point after the time set.
+- **The daily look back needs KalKech open** at some point after the time set.
   It is the page that sends it; with every tab closed all day, it waits for
-  the next time Resolv is open after that time.
-- **With the tab closed, nothing is queued.** Resolv schedules its own
+  the next time KalKech is open after that time.
+- **With the tab closed, nothing is queued.** KalKech schedules its own
   automatic runs, so a routine marked *runs itself* needs the tab open *and* a
   live runner. For something that must fire regardless of whether anyone is
   looking, point Windows Task Scheduler straight at your `.bat` — it needs
-  nothing from Resolv.
+  nothing from KalKech.
 - **The batch runner has no single-instance guard and no per-script timeout.**
   Two runner windows open on the same folder will both claim requests, and a
   script that hangs blocks the queue behind it until you close the window.
@@ -3176,7 +3231,7 @@ model from scratch was tried, measured, and rejected on the numbers.
 
 | Term | Meaning |
 |---|---|
-| **Workspace** | The folder Resolv is pointed at. Holds `dossier.json` and everything else. |
+| **Workspace** | The folder KalKech is pointed at. Holds `dossier.json` and everything else. |
 | **Record** | One piece of work. Called `tasks` in the JSON, *record* everywhere a person can see. |
 | **Code** | A record's human reference, `D-0001`. |
 | **Live** | Status `open`, `processing` or `blocked` — anything not finished. |
@@ -3185,8 +3240,8 @@ model from scratch was tried, measured, and rejected on the numbers.
 | **Script** | A `.bat` registered in `dossier.json` and living in `scripts\`. |
 | **Parameter** | A `{{mark}}` in a script, which becomes a box on any record it is attached to. |
 | **The runner** | `dossier-runner.bat`, watching `scripts\queue\`. |
-| **Queue** | `scripts\queue\` — the plain-text mailbox between Resolv and the runner. |
-| **Heartbeat** | `.runner.txt`, rewritten every ~10 seconds so Resolv knows the runner is alive. |
+| **Queue** | `scripts\queue\` — the plain-text mailbox between KalKech and the runner. |
+| **Heartbeat** | `.runner.txt`, rewritten every ~10 seconds so KalKech knows the runner is alive. |
 | **Intent** | One of the 79 questions the assistant can answer. |
 | **Slot** | A value read out of a sentence — a system, a person, a date range. |
 | **Modifier** | A condition hung off a question — *except*, *only*, *more than*. |
@@ -3199,6 +3254,6 @@ model from scratch was tried, measured, and rejected on the numbers.
 
 ---
 
-*Resolv is one HTML file, some sidecar scripts, and a folder. That is the
+*KalKech is one HTML file, some sidecar scripts, and a folder. That is the
 whole architecture, and it is the point: in ten years the folder will still
 open, whatever happened to this app.*

@@ -1,6 +1,6 @@
-# The contract between Resolv and your flow
+# The contract between KalKech and your flow
 
-This is what Resolv sends, what it expects back, and what it will refuse.
+This is what KalKech sends, what it expects back, and what it will refuse.
 It is generated from `flow.js`, which is the code that actually enforces it,
 so the two cannot drift apart.
 
@@ -14,7 +14,7 @@ connection**, and it will tell you which rung is broken. You need it to
 ## 1. The shape of it
 
 ```
-Resolv                    flow/relay.html              your flow
+KalKech                    flow/relay.html              your flow
    │  message + workspace        │                           │
    ├────────────────────────────>│  POST text/plain          │
    │                             ├──────────────────────────>│
@@ -38,14 +38,14 @@ endpoint's origin and no other, and refuses redirects.
 
 ### 2.1 Return a **Response** action
 
-A flow with no Response action never answers. Resolv waits, times out, and
+A flow with no Response action never answers. KalKech waits, times out, and
 says so. Add **Response** as the last step.
 
 ### 2.2 Put `Access-Control-Allow-Origin: *` on that Response
 
 This is the one that catches everybody. Without it your flow **runs
 perfectly** — you will see it succeed in the run history — and the browser
-still refuses to let Resolv read the reply. It looks like a network failure
+still refuses to let KalKech read the reply. It looks like a network failure
 and it is not.
 
 In the Response action's **Headers**:
@@ -55,12 +55,12 @@ In the Response action's **Headers**:
 | `Content-Type` | `application/json` |
 | `Access-Control-Allow-Origin` | `*` |
 
-Resolv's connection test names this case specifically rather than reporting
+KalKech's connection test names this case specifically rather than reporting
 "failed to fetch", because the difference is not guessable from the outside.
 
 ### 2.3 A note on the request's content type
 
-Resolv posts with `Content-Type: text/plain`, deliberately. A POST of
+KalKech posts with `Content-Type: text/plain`, deliberately. A POST of
 `application/json` is not a "simple" cross-origin request, so the browser
 sends an `OPTIONS` preflight first, and the Power Automate request trigger
 does not answer `OPTIONS` — the call dies before your flow ever runs, with
@@ -72,7 +72,7 @@ generate schema**.
 
 ---
 
-## 3. What Resolv sends
+## 3. What KalKech sends
 
 One JSON object, POSTed as the body.
 
@@ -101,7 +101,7 @@ fast model or the strong one.
   "protocol": "1.3",
   "mode": "chat",
   "tier": "fast",
-  "prompt": "You are the assistant inside Resolv … (the whole prompt, filled in)",
+  "prompt": "You are the assistant inside KalKech … (the whole prompt, filled in)",
   "promptFrom": "flow/prompt.txt",
   "askedAt": "2026-09-03T04:12:00.000Z",
   "today": "2026-09-03",
@@ -175,7 +175,7 @@ fast model or the strong one.
 
 **`can` is the important one.** It is the full list of what your flow may ask
 for, generated from the running code, with every argument and its shape. Feed
-it to your model rather than hard-coding a list — when Resolv gains an action
+it to your model rather than hard-coding a list — when KalKech gains an action
 your flow gets it for free, and it can never ask for one that does not exist.
 
 ### Memory — what the person taught it
@@ -244,15 +244,15 @@ nothing to say.
 
 "This", "it", "the ticket" with nothing else to go on mean `focus.record`.
 
-**`workspace.app`** — Resolv describing itself, from its own README.md and
+**`workspace.app`** — KalKech describing itself, from its own README.md and
 CHANGELOG.md (5.6.0). Always: `version`, `recent` (the latest releases,
 newest first: `version`, `date`, `headline`) and `contents` (the README's
-chapters). When the question is about Resolv — a feature, a setting, where
+chapters). When the question is about KalKech — a feature, a setting, where
 something is, what is new — also `docs` (up to three README sections:
 `from`, `section`, `text`) and, for what's-new and version questions,
 `releases` (`version`, `date`, `text`). Answer questions about the app from
 these only; never invent a setting or a button. Absent sections mean the
-question was not about Resolv, or the page could not read the files
+question was not about KalKech, or the page could not read the files
 (opened from `file://`), in which case only `name` and `version` are sent.
 
 **`workspace.brief`** — their own "About my work" page (Setup → About my
@@ -328,7 +328,7 @@ on either without reaching into the workspace:
 | top-level field | values | |
 |---|---|---|
 | `mode` | `chat` `reflect` `teach` `study` `fix` `check` `intake` `brief` | as below |
-| `tier` | `fast` `deep` | which model the question wants. `deep` for the jobs ticked in **Setup → Models in your flow** (by default the look back, study, teach and **Diagnose**) and for **✦ Think harder**; everything else is `fast`. Always `fast` while that setting is *One model*. POWER-AUTOMATE.md §4e builds the branch |
+| `tier` | `fast` `deep` `reason` | which model the question wants. `deep` for the jobs ticked in **Setup → Models in your flow** (by default the look back, study, teach and **Diagnose**) and for **✦ Think harder**; `reason` (KalKech reason, a reasoning model) when it is picked in the chat, for **◆ KalKech reason**, or for the ticked jobs when Setup sends them there — never while that setting is not *Three*; everything else is `fast`. Always `fast` while that setting is *One model*. POWER-AUTOMATE.md §4e builds the two-way branch, §4g the third. The same value is in `workspace.tier`, for the prompt |
 
 Both are in the short request (the picture setup) as well as the full one.
 
@@ -480,7 +480,7 @@ An answer about what a document says returns, beside `say`:
   several), `not_found` (the passages do not answer it).
 - **`suggest`** — anything that is not from the documents.
 
-Resolv checks it before showing it: a quote must be found in the passage it
+KalKech checks it before showing it: a quote must be found in the passage it
 names, and every figure in `say` — a timeframe, a percentage, a severity, a
 score — must be written in a passage it cites. An answer stating a figure no
 cited passage contains is **held back** and not shown.
@@ -546,7 +546,7 @@ nothing was clipped. Capped at 80,000 characters, with the cut marked.
 ### The probe
 
 A second, tiny request may follow a failed one, with `"probe": true` in its
-body. It is Resolv telling a blocked host apart from a missing CORS header —
+body. It is KalKech telling a blocked host apart from a missing CORS header —
 both of which reach the browser as the same error. It **only ever follows a
 failure**, so the request before it is the real one. Answer it with a 200 and
 stop; see `POWER-AUTOMATE.md` §4.
@@ -590,7 +590,7 @@ line. `runbooksMatched` is unchanged.
 ### Asking for records you were not sent
 
 `needRecords` is a read action with the same filter vocabulary as `find`.
-Return it **alone** — no `say`, no other action — and Resolv runs the filter
+Return it **alone** — no `say`, no other action — and KalKech runs the filter
 over every record it has, then asks the same question again with what it found
 at the front of `records`. The second request carries `followUp`:
 
@@ -632,7 +632,7 @@ answer, and pressing one sends that text as the next message — so a guided
 check (*is there a row? — A row with a file_path / No row / Cannot run it*)
 moves at the speed of a click.
 
-Resolv is forgiving about the wrapper, because Power Automate's Response
+KalKech is forgiving about the wrapper, because Power Automate's Response
 action produces several shapes depending on how it was built. All of these
 work:
 
@@ -645,7 +645,7 @@ work:
 
 ---
 
-## 5. What Resolv will refuse
+## 5. What KalKech will refuse
 
 Nothing coming back is trusted. This matters more than it sounds: the moment
 your flow's prompt reads a mail, a ticket, or an attachment, the text driving
@@ -653,7 +653,7 @@ it is written by somebody else.
 
 | Refused | What happens |
 |---|---|
-| an action not in `can` | dropped, named on screen: *"dropDatabase" is not something Resolv can do* |
+| an action not in `can` | dropped, named on screen: *"dropDatabase" is not something KalKech can do* |
 | a missing required argument | dropped: *setStatus needs status, and it was not there* |
 | an argument of the wrong shape | dropped: *status must be one of open, processing, … — got "finished"* |
 | a record reference that resolves to nothing | refused at the moment of running: *there is no record "D-9999" here* |
@@ -674,7 +674,7 @@ are at the moment). The list is built in the app, so it cannot drift from what
 the app will actually take.
 
 **`settings.flow` is deliberately not in it.** A flow that could rewrite the
-endpoint URL could point Resolv at a different address, and nothing
+endpoint URL could point KalKech at a different address, and nothing
 downstream would notice. `memory`, `chatLearn`, `hushed`, `chatUI` and
 `palettes` are excluded too — the first two have their own actions with their
 own confirmations, and a generic setter would walk straight past them.
@@ -682,7 +682,7 @@ own confirmations, and a generic setter would walk straight past them.
 ### Email
 
 `draftEmail` writes a message and shows it as a draft with **Copy** and **Open
-in my mail app**. Nothing is sent: Resolv has no way to send mail and should
+in my mail app**. Nothing is sent: KalKech has no way to send mail and should
 not grow one, since that would be a second thing in the application allowed to
 reach the outside, for a job a mail client already does. It counts as a read —
 it changes nothing, so it is not confirmed.
@@ -953,7 +953,7 @@ Write what is known about a system. facts is what it does; quirks is what it doe
 
 #### `draftEmail`
 
-Write an email and show it as a draft they can copy or open in their mail app. Nothing is sent — Resolv cannot send mail and does not try. Put the whole message in body, with real line breaks. Use this for a chase, a hand-over, an incident summary, anything they ask you to write to somebody.
+Write an email and show it as a draft they can copy or open in their mail app. Nothing is sent — KalKech cannot send mail and does not try. Put the whole message in body, with real line breaks. Use this for a chase, a hand-over, an incident summary, anything they ask you to write to somebody.
 
 | argument | shape | required |
 |---|---|---|
@@ -1042,7 +1042,7 @@ Set or clear a target date. Send due as "" to clear it.
 
 #### `setAlert`
 
-Alert them about one record at a moment they choose: due:true for its due time (before: minutes earlier, e.g. 15 or 60), or date and time. At that moment they get a Windows notification and a note in Resolv. Replaces any alert the record had. Not setDue - the target date stays as it is.
+Alert them about one record at a moment they choose: due:true for its due time (before: minutes earlier, e.g. 15 or 60), or date and time. At that moment they get a Windows notification and a note in KalKech. Replaces any alert the record had. Not setDue - the target date stays as it is.
 
 | argument | shape | required |
 |---|---|---|
@@ -1385,7 +1385,7 @@ Two things worth doing on day one:
   **Test the connection** to go green. Every other problem is easier to find
   once the plumbing is proved.
 - Then add one action — `{"do":"view","view":"day"}` is harmless — and watch
-  Resolv switch tabs. Now the contract is proved too.
+  KalKech switch tabs. Now the contract is proved too.
 
 ---
 
@@ -1403,7 +1403,7 @@ rungs and names the one that broke:
 | The relay frame loaded | `flow/relay.html` is not next to `dossier.html` |
 | Something answers at that address | blocked by this network, wrong URL, or the flow is off |
 | The reply can be read | almost always the missing CORS header — §2.2 |
-| The reply is the shape Resolv expects | it answered, but with nothing usable |
+| The reply is the shape KalKech expects | it answered, but with nothing usable |
 
 **Show the relay** puts the frame on screen with its transcript, timed to a
 tenth of a second. The signature in the URL is masked there, so it is safe to
