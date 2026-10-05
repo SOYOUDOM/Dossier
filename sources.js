@@ -842,6 +842,30 @@ function queryTerms(q, weight, fix, common){
   for (let k = 0; k + 1 < base.length; k++) add(base[k] + "_" + base[k + 1], weight * 0.8);
   return { terms:out, base:[...new Set(base)] };
 }
+/* The words of a long text - an email, a screenshot's words, the last
+   answer - that would find something in these documents: the rarest ones
+   that occur in them, most distinctive first. A request that says "please
+   generate the monthly listing of dormant accounts for September" becomes
+   the few words a guideline about that report is written in, not forty
+   words of greeting and signature (5.16). */
+function keyTerms(ix, text, n){
+  if (!ix || !ix.chunks || !ix.chunks.length || !text) return "";
+  const N = ix.chunks.length;
+  const best = new Map();
+  words(text).forEach(w => {
+    if (STOP.has(w) || w.length < 3 || (/^\d+$/.test(w) && w.length < 4)) return;
+    const t = stem(w);
+    if (!ix.post.has(t)) return;
+    const e = best.get(t);
+    if (e) e.count++; else best.set(t, { word:w, count:1 });
+  });
+  return [...best.entries()].map(([t, e]) => {
+    const df = ix.post.get(t).length;
+    /* in a third of all passages: it says nothing about which one */
+    if (N >= 10 && df / N > 0.3) return null;
+    return { word:e.word, score:Math.log(1 + (N - df + 0.5) / (df + 0.5)) * Math.min(3, e.count) };
+  }).filter(Boolean).sort((a, b) => b.score - a.score).slice(0, n || 12).map(x => x.word).join(" ");
+}
 function search(ix, q, opts){
   opts = opts || {};
   const el = eligible(ix, q + " " + (opts.context || ""), opts);
@@ -899,7 +923,10 @@ function search(ix, q, opts){
     return { i:i, chunk:c, score:s * (boost.has(c.doc) ? 1.5 : 1) * quality * rule, coverage:cov, matched:[...got] };
   }).sort((a, b) => b.score - a.score);
   const top = ranked.length ? ranked[0].score : 0;
-  const minCov = base.length >= 4 ? 0.25 : base.length ? 1 / base.length - 0.01 : 1;
+  /* a question made of the words of what it is about (a vague one, with
+     the words of its picture or of the conversation added) covers less of
+     them in any one passage: it says so with minCov */
+  const minCov = opts.minCov != null ? opts.minCov : base.length >= 4 ? 0.25 : base.length ? 1 / base.length - 0.01 : 1;
   ranked = ranked.filter(r => r.score >= top * (opts.floor || 0.3) && r.coverage >= minCov);
   /* spread: no more than four from one document before the others get a turn */
   const k = opts.k || 6, per = new Map(), primary = [];
@@ -1085,7 +1112,10 @@ function followUp(q, prev){
   const ana = /\b(that|this|those|these|same|above|previous|prior|preceding|next|following|it|its|there)\b/.test(s) &&
               /\b(polic(y|ies)|standard|guideline|document|doc|section|runbook|procedure|table|page|part|clause|one|rule|it)\b/.test(s);
   const lead = /^(and|also|what about|how about|and for|for|same for|what if|then|so|but)\b/.test(s);
-  const follow = ana || lead || n <= 5;
+  /* "what do you mean by step two?", "explain step 3", "more detail on
+     that" - about the answer just given (5.16) */
+  const more = /\bstep\s*(\d+|one|two|three|four|five|six|seven|eight|nine|ten)\b|\bwhat (do|did) you mean\b|\bexplain\b|\bmore detail|\belaborate\b|\bwhich (sql|query|script|one)\b/.test(s);
+  const follow = ana || lead || more || n <= 5;
   if (!follow) return { follow:false };
   const dir = /\b(previous|prior|preceding|earlier) (section|part|clause|page)|section before\b/.test(s) ? "prev"
             : /\b(next|following) (section|part|clause|page)|section after\b/.test(s) ? "next" : "";
@@ -1477,19 +1507,74 @@ function unknownNames(say, evidence){
   });
 }
 
+/* ── where a block of code came from (5.16) ──────────────────────────────
+   "Run the SQL" and then a query nobody wrote: the model filled a gap with
+   a query of its own, and nothing on the screen said so. Every code block
+   in an answer is now compared with what it was given - the passages of
+   their documents, their scripts, their runbooks, their own words - and
+   labelled with where it came from, or as written by the assistant.
+   Compared as runs of four tokens after the values are taken out (strings,
+   numbers, dates, {{param}}, @var, <placeholder>), so the guideline's query
+   with September filled in for August, laid out on other lines, is still
+   the guideline's query. */
+const CODE_TEXT_KINDS = /^(?:email|mail|message|msg|note|text|txt|teams|chat|mermaid|diagram|flowchart|markdown|md)$/;
+function codeBlocks(say){
+  const out = [], re = /(~~~|```)([^\n]*)\n([\s\S]*?)\n\1/g;
+  let m;
+  while ((m = re.exec(String(say || "")))){
+    const lang = (m[2].trim().split(/\s+/)[0] || "").toLowerCase();
+    if (CODE_TEXT_KINDS.test(lang)) continue;
+    out.push({ lang:lang, body:m[3].replace(/\s+$/, "") });
+  }
+  return out;
+}
+function codeTokens(text){
+  return String(text || "").toLowerCase()
+    .replace(/\{\{[^}\n]*\}\}|<[^<>\n]{1,40}>|@\w+|'[^'\n]*'|"[^"\n]*"|\b\d+(?:[.:\/-]\d+)*\b/g, " ? ")
+    .match(/[a-z_][\w.$#]*|\?|[^\s\w]/g) || [];
+}
+function codeShingles(tokens, k){
+  const out = new Set();
+  if (tokens.length < k){ if (tokens.length) out.add(tokens.join(" ")); return out; }
+  for (let i = 0; i + k <= tokens.length; i++) out.add(tokens.slice(i, i + k).join(" "));
+  return out;
+}
+/* sources: [{kind, name, text}] - the best one that holds most of the
+   block (60% of its runs of four), or null: written by the assistant */
+function codeOrigin(body, sources){
+  const bt = codeTokens(body);
+  if (bt.length < 3) return null;
+  const mine = codeShingles(bt, 4);
+  let best = null;
+  (sources || []).forEach(s => {
+    if (!s || !s.text) return;
+    const st = codeTokens(s.text);
+    const theirs = codeShingles(st, 4);
+    let hit = 0;
+    if (bt.length < 4){ if (st.join(" ").indexOf(bt.join(" ")) >= 0) hit = mine.size; }
+    else mine.forEach(x => { if (theirs.has(x)) hit++; });
+    const share = hit / (mine.size || 1);
+    if (share >= 0.6 && (!best || share > best.share)) best = { kind:s.kind, name:s.name || "", share:Math.round(share * 100) / 100 };
+  });
+  return best;
+}
+/* the same key for a block on both sides: here, and where the app draws it */
+function codeKey(body){ return hash36(String(body || "").replace(/\s+/g, " ").trim()); }
+
 const API = {
   VERSION: VERSION, ALGO: ALGO, BUDGET: BUDGET,
   stem: stem, terms: terms, norm: norm, hash36: hash36,
   readLines: readLines, chunkDocument: chunkDocument, detectMeta: detectMeta, parseDate: parseDate,
   familyKey: familyKey, cmpVersion: cmpVersion, currentOf: currentOf, textQuality: textQuality,
   prepare: prepare, diffChunks: diffChunks, envsIn: envsIn,
-  createIndex: createIndex, eligible: eligible, search: search, gather: gather, packText: packText,
+  createIndex: createIndex, eligible: eligible, search: search, gather: gather, packText: packText, keyTerms: keyTerms,
   locate: locate, citation: citation, lastHead: lastHead,
   isDocQuestion: isDocQuestion, followUp: followUp, beside: beside,
   figures: figures, ground: ground, diagnose: diagnose, unsupportedIn: unsupportedIn,
   trimSay: trimSay, sentencesOf: sentencesOf, statedIn: statedIn,
   nameFor: nameFor, weakTitle: weakTitle, plainTitle: plainTitle, betterName: betterName,
-  namesIn: namesIn, unknownNames: unknownNames, inScope: inScope
+  namesIn: namesIn, unknownNames: unknownNames, inScope: inScope,
+  codeBlocks: codeBlocks, codeOrigin: codeOrigin, codeKey: codeKey
 };
 if (typeof module === "object" && module.exports) module.exports = API;
 if (root) root.DossierSources = API;

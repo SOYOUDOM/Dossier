@@ -849,6 +849,66 @@
         !/gen_partner_sync/.test(nw.textContent), nw ? nw.textContent : el.textContent.slice(-200));
   $("chatLog").scrollTop = 1e9; await sleep(250);
   await shot("15-names-warning");
+
+  /* ── 5.16: a vague request finds its guideline through its picture and
+        its conversation; one more search when the model asks; every query
+        says where it came from. All made up. ── */
+  const imgGuide = "# Reporting BAU guide\nVersion 1\n\n## Monthly dormant accounts listing\n" +
+    "When operations ask for the dormant accounts listing for a month, run this on the RPT database:\n\n" +
+    "~~~sql\nSELECT account_no, last_login FROM rpt.dormant_log WHERE report_month = '2026-08';\n~~~\n\n" +
+    "Export the result to Excel named Dormant accounts <Mon YYYY>.xlsx and reply to the requester.\n\n" +
+    "## Restart the reporting service\nRecycle the reporting app pool on APP02 and check the queue drains.";
+  const gf = new File([imgGuide], "imaging-bau-guide.md", { type:"text/markdown" });
+  const gx = await srcExtract(gf);
+  await srcStore(gf, gx, { name:"Reporting BAU guide", version:"1", assistant:true }, "you");
+  openChat(); chatNew(true); chatPaint(); await sleep(150);
+  /* a screenshot of an email: the flow sees the picture, and its words were read here (matchText) */
+  const ecv = document.createElement("canvas"); ecv.width = 400; ecv.height = 120;
+  const ecg = ecv.getContext("2d"); ecg.fillStyle = "#fff"; ecg.fillRect(0, 0, 400, 120);
+  const epng = await new Promise(r => ecv.toBlob(r, "image/png"));
+  await chatAttach([new File([epng], "email.png", { type:"image/png" })]);
+  await until(() => CHAT.files.length && !CHAT.files[0].reading, 8000);
+  CHAT.files[0].text = ""; CHAT.files[0].note = "vision";
+  CHAT.files[0].matchText = "Hi team, please help to generate the Dormant Accounts Listing for September 2026 for our monthly review. Thanks, Operations";
+  plan = req => ({ say:"The email asks for the dormant accounts listing for September 2026. From your guide:\n\n~~~sql\nSELECT account_no, last_login\nFROM rpt.dormant_log\nWHERE report_month = '2026-09';\n~~~\n\nThen export it to Excel and reply.",
+                   cite:[{ s:label(req, /rpt\.dormant_log/), quote:"When operations ask for the dormant accounts listing for a month" }], confidence:"high" });
+  el = await ask("help me to support this");
+  check("\"help me to support this\" with a picture of an email: the guideline it asks about goes with the question",
+        /rpt\.dormant_log/.test(sent[sent.length - 1].req.sourcesText || ""), (sent[sent.length - 1].req.sourcesText || "").slice(0, 200));
+  const okFrom = el.querySelector(".chcode .ccfrom.ok");
+  check("...the guideline's query, with the month filled in, is labelled as from their document",
+        okFrom && /From your document: Reporting BAU guide/.test(okFrom.textContent), el.querySelector(".chcode") ? el.querySelector(".chcode").textContent.slice(0, 160) : "no code");
+  $("chatLog").scrollTop = 1e9; await sleep(200);
+  await shot("16-query-from-guide");
+  /* the follow-up about a step */
+  plan = req => ({ say:"Step two pulls the listing:\n\n~~~sql\nSELECT p.AccountNo, a.LoginDate FROM dbo.Account p JOIN dbo.LoginHistory a ON a.AccountId = p.Id WHERE MONTH(a.LoginDate) = 9;\n~~~" });
+  el = await ask("may I know what do you mean by the step two?");
+  check("\"what do you mean by step two?\" carries the same guideline again", /rpt\.dormant_log/.test(sent[sent.length - 1].req.sourcesText || ""));
+  const warnFrom = el.querySelector(".chcode .ccfrom.warn");
+  check("...a query the assistant made up is marked: not from your documents, check it before you run it",
+        warnFrom && /written by the assistant/.test(warnFrom.textContent));
+  $("chatLog").scrollTop = 1e9; await sleep(200);
+  await shot("17-query-made-up");
+  /* "run the SQL" with no SQL */
+  plan = req => ({ say:"1. Open SSMS on the imaging server.\n2. Run the SQL for the month.\n3. Export to Excel." });
+  el = await ask("ok and for October?");
+  check("an answer that says \"run the SQL\" but gives none is marked under it", el.querySelector(".namewarn") &&
+        /does not show it or name one of your scripts/.test(el.querySelector(".namewarn").textContent));
+  /* needSources: the model asks for one more search, with the words it read */
+  openChat(); chatNew(true); chatPaint();
+  const nNeed = sent.length;
+  plan = req => (req.workspace.followUp && req.workspace.followUp.searched)
+    ? { say:"Your Reporting BAU guide covers this listing.", cite:[{ s:label(req, /rpt\.dormant_log/), quote:"When operations ask for the dormant accounts listing for a month" }], confidence:"high" }
+    : { actions:[{ do:"needSources", text:"dormant accounts listing" }] };
+  el = await ask("help me to support this");
+  const second = sent[sent.length - 1];
+  check("needSources: the words it asked for are searched, and the question goes once more with what was found",
+        sent.length === nNeed + 2 && second.req.workspace.followUp.searched === "dormant accounts listing" &&
+        /rpt\.dormant_log/.test(second.req.sourcesText || "") && /Your Reporting BAU guide covers this listing/.test(el.textContent) &&
+        /Searched your documents, runbooks and scripts again for: dormant accounts listing/.test(el.textContent),
+        JSON.stringify({ calls:sent.length - nNeed, text:el.textContent.slice(0, 200) }));
+  check("the prompt: queries are copied from their sources, never written for a support task", /QUERIES, COMMANDS AND SCRIPTS come from their documents/.test(DossierFlow.PROMPT) &&
+        /=== A REQUEST TO SUPPORT, AND QUESTIONS ABOUT A STEP ===/.test(DossierFlow.PROMPT) && !!DossierFlow.ACTIONS.needSources);
   setView("day");
   return { checks };
 })()

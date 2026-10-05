@@ -736,3 +736,47 @@ test("a name found nowhere in what the model was given is reported; one that was
   assert.deepEqual(S.unknownNames("Run `gen_partner_sync` now.", "gen partner sync"), []);
   assert.deepEqual(S.unknownNames("Nothing to check here.", ""), []);
 });
+
+/* ── 5.16: a vague question finds the guideline its picture or its
+      conversation is about; and every query says where it came from ──── */
+const IMG_GUIDE = "# Reporting BAU guide\nVersion 1\n\n## Monthly dormant accounts listing\n" +
+  "When operations ask for the dormant accounts listing for a month, run this on the RPT database:\n\n" +
+  "SELECT account_no, last_login FROM rpt.dormant_log WHERE report_month = '2026-08';\n\n" +
+  "Export the result to Excel named Dormant accounts <Mon YYYY>.xlsx and reply to the requester.\n\n" +
+  "## Restart the reporting service\nRecycle the reporting app pool on APP02 and check the queue drains.";
+
+test("the telling words of an email are the few that occur in their documents", () => {
+  const lib = library([{ file:"g.md", text:IMG_GUIDE }, { file:"c.md", text:"# Change standard\n\nEvery production change needs an approved change record." }]);
+  const k = S.keyTerms(lib.ix, "Hi team, please help to generate the Dormant Accounts Listing for September 2026 for our monthly review. Thanks, Ops", 12);
+  assert.match(k, /dormant/); assert.match(k, /listing/);
+  assert.doesNotMatch(k, /\b(hi|team|please|thanks)\b/);
+});
+
+test("\"help me to support this\" finds nothing by its own words, and the right section with its picture's", () => {
+  const lib = library([{ file:"g.md", text:IMG_GUIDE }, { file:"c.md", text:"# Change standard\n\nEvery production change needs an approved change record." }]);
+  const own = ask(lib, "help me to support this");
+  assert.ok(!own.pack.passages.some(p => /rpt\.dormant_log/.test(p.text)), "the typed words alone do not find it");
+  const words = S.keyTerms(lib.ix, "please generate the dormant accounts listing for September for the monthly review", 12);
+  const got = ask(lib, "help me to support this " + words, { minCov:0.15 });
+  assert.ok(got.pack.passages.some(p => /rpt\.dormant_log/.test(p.text)), "with the picture's words it does");
+});
+
+test("\"what do you mean by step two?\" is a follow-up", () => {
+  for (const q of ["may I know what do you mean by the step two?", "explain step 3 please", "which SQL do I run there?"])
+    assert.equal(S.followUp(q, { query:"dormant accounts listing" }).follow, true, q);
+});
+
+test("a query copied from their guideline or script is theirs; one the assistant made up is not", () => {
+  const src = [{ kind:"doc", name:"Reporting BAU guide", text:IMG_GUIDE },
+               { kind:"script", name:"gen partner sync", text:"DECLARE @run_date date = '{{run_date}}';\nEXEC sync.build_partner_file @run_date;" }];
+  /* the guideline's query, with September for August and on three lines */
+  const mine = S.codeOrigin("SELECT account_no, last_login\nFROM rpt.dormant_log\nWHERE report_month = '2026-09';", src);
+  assert.deepEqual([mine.kind, mine.name], ["doc", "Reporting BAU guide"]);
+  /* the script with its blank filled in */
+  assert.equal(S.codeOrigin("DECLARE @run_date date = '2026-10-03';\nEXEC sync.build_partner_file @run_date;", src).kind, "script");
+  /* a query nobody wrote */
+  assert.equal(S.codeOrigin("SELECT p.AccountNo, a.LoginDate FROM dbo.Account p JOIN dbo.LoginHistory a ON a.AccountId = p.Id WHERE MONTH(a.LoginDate) = 9;", src), null);
+  /* an email or a diagram is not code */
+  assert.deepEqual(S.codeBlocks("~~~email Re: listing\nHi\n~~~\n~~~mermaid\nflowchart TD\nA-->B\n~~~").length, 0);
+  assert.equal(S.codeKey("SELECT 1\n  FROM x"), S.codeKey("SELECT 1 FROM x"));
+});

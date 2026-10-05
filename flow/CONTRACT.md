@@ -604,6 +604,25 @@ at the front of `records`. The second request carries `followUp`:
 a filter asking for finished records gets none while *What to send* is
 *Unfinished records*.
 
+### Asking for another search of their documents (5.16)
+
+`needSources` is the same idea for their documents (Sources), runbooks and
+scripts. What went with a question is what its words — and the telling words
+of its attachments and, for a follow-up, of the conversation — found. When the
+model can see what a request is about and nothing that was sent is about it (a
+screenshot of an email asking for a report), it returns `needSources` **alone**
+with the words to search for. KalKech searches them on the PC and asks the same
+question once more with the new `sources`, `runbooksMatched` and
+`scriptsMatched`. The second request carries, inside `workspace`:
+
+```jsonc
+"followUp": { "of": "help me to support this",
+              "searched": "monthly listing of dormant accounts",
+              "found": 4 }
+```
+
+One extra round per question in all: `needRecords` or `needSources`.
+
 ---
 
 ## 4. What your flow returns
@@ -784,6 +803,19 @@ Read one record in full — its notes, every checklist step, its work log and it
 | argument | shape | required |
 |---|---|---|
 | `record` | ref | **yes** |
+
+#### `needSources`
+
+Ask for another search of their documents, runbooks and scripts. Return this
+**alone**, with `text` = the words to search for as the request writes them
+(the report, task, system, error) and `document` = a document's name when you
+know it. The same question comes back once with what was found
+(`workspace.followUp.searched`).
+
+| argument | shape | required |
+|---|---|---|
+| `text` | string | yes (in practice) |
+| `document` | string | no |
 
 #### `needRecords`
 

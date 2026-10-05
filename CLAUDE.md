@@ -36,7 +36,7 @@ are careful not to attract attention from their security team.
 | `flow/*.md` | Guides: `CONTRACT.md` (request/reply/actions), `POWER-AUTOMATE.md`, `BAU-RUNBOOKS.md`, `SOURCES.md` (setup + troubleshooting for Sources), `SPEED.md`, `SERVICENOW.md`. |
 | `scripts/bridge/DossierBridge.cs` | The tray program (C# 5, WinForms): serves the page on 127.0.0.1, keeps the workspace in SQL LocalDB when available, runs scripts. `KalKech.bat` compiles it with the Windows `csc.exe` whenever the `.cs` is newer than the `.exe`. |
 | `lang/en.xml`, `lang/km.xml` | Language packs (English, Khmer). Missing keys fall back to the English `STRINGS` table in `dossier.html`. |
-| `docs/` | `HOW-THE-AI-WORKS.md` (the whole AI pipeline for beginners, plus a reusable blueprint) and `how-the-ai-works.html` (the same as a self-contained picture page). Keep both in step with the code when the pipeline changes (numbers: 60 records, 10 notes, 30 lessons, 14,000 characters, 64 actions / 43 writes). |
+| `docs/` | `HOW-THE-AI-WORKS.md` (the whole AI pipeline for beginners, plus a reusable blueprint) and `how-the-ai-works.html` (the same as a self-contained picture page). Keep both in step with the code when the pipeline changes (numbers: 60 records, 10 notes, 30 lessons, 14,000 characters, 65 actions / 43 writes). |
 | `tests/` | `sources.test.js` and `diagram.test.js` (node:test), `e2e/run.js` + `e2e/sources.scenario.js` (real browser), `fixtures/` (made-up documents; `make-pdf.js` regenerates the PDFs). |
 
 A *workspace* is a folder the user picks (File System Access API):
@@ -91,13 +91,13 @@ A *workspace* is a folder the user picks (File System Access API):
 - Commit messages: clear summary + body; no model names in commits, code or
   docs. Do not open a pull request unless the owner asks.
 - Work so far is on branch `claude/chat-panel-pixel-art-gifs-d822hq`
-  (latest: 5.15.0). Follow the branch instructions of your own session.
+  (latest: 5.16.0). Follow the branch instructions of your own session.
 
 ## Testing
 
 ```
-node --test                                   # 50 unit tests (Sources, grounding, names check, flow reply fields, diagrams)
-node tests/e2e/run.js                         # the app in headless Chrome/Edge: 164 checks (CHROME=<path> to choose)
+node --test                                   # 54 unit tests (Sources, grounding, names check, code origin, flow reply fields, diagrams)
+node tests/e2e/run.js                         # the app in headless Chrome/Edge: 171 checks (CHROME=<path> to choose)
 node flow/check-prompt.js                     # after editing flow/prompt.txt ...
 python3 flow/embed-prompt.py                  # ... then copy it into flow.js (PROMPT_BUILTIN)
 node tests/fixtures/make-pdf.js               # regenerate the PDF fixtures
@@ -119,6 +119,46 @@ Also useful:
   `DossierFlow.validate`. `tests/e2e/run.js` is a working example of all of it.
 
 ## Recent history (newest first)
+
+- **5.16.0** — Owner (screenshots, company data, never committed): "help me
+  to support this" + a picture of an email got "Open SSMS… run the SQL…
+  same as your BAU guideline" (nothing cited), and "what do you mean by step
+  two?" got an invented SQL query; their Markdown guideline in Sources was
+  never found.
+  - *Causes*: every matcher used the typed words only (`srcForFlow`,
+    `runbooksMatchedForFlow`, scripts, notes, past fixes, profiles);
+    `search()` coverage counts typed words only; `followUp()` missed "step
+    two"; `chatReadImage` returns no text when `flowSees()`; the HOW-TO rule
+    said "the command or query … with their values filled in".
+  - *Effective question*: `flowMatchText(q, thread)` → `{q, extra, vague,
+    text}` from the typed words + `DossierSources.keyTerms(ix, text, 12)`
+    (rarest words present in the index; df > 30% dropped) of attachments
+    (`f.matchText` = OCR even with vision, or the doc text) and, when
+    `flowVague()`, of `thread.convo.lastMatch` (set in `flowContext`), the
+    title, `thread.summary` and the last answer. `flowContext` passes
+    `mt.text` to runbooks/scripts/notes/pastFixes/profiles and `mt` to
+    `srcForFlow` → `srcSearch`: vague → query = q + extra with
+    `opts.minCov` 0.15; else extra as `context`. `followUp()` also: step N,
+    what do you mean, explain, more detail, which sql/query/script.
+  - *needSources* (flow.js, `ACTIONS_IN_FULL`): `flowNeedsSources(out)`;
+    in `flowAsk` after needRecords (only if no needRecords): `srcForFlow`
+    with the words, matched runbooks/scripts, `followUp {of, searched,
+    found}` now inside `workspace` (buildRequest), one ask, note
+    `FlowSearchedAgain`; `used` ctx replaces `ctx` for srcApply/drafts/
+    evidence. 65 actions / 43 writes.
+  - *Prompt*: QUERIES, COMMANDS AND SCRIPTS (copied only, never written for
+    support; code only when asked), `=== A REQUEST TO SUPPORT, AND
+    QUESTIONS ABOUT A STEP ===`, needRecords rule mentions needSources,
+    SUPPORT WORK check query from their sources; three made-up examples
+    (needSources; the guide's SQL with September filled in; step two with
+    no query in the guide).
+  - *Code origin*: `sources.js codeBlocks/codeOrigin/codeKey` (4-token
+    shingles after values → "?", ≥60%); `flowCodeSources` (passages, all
+    `SCRIPT_TEXT`, runbooks, attachments, their messages, notes) →
+    `reply.codeFrom` → `chatCodeFrom` in `chatSay`'s code card (`.ccfrom`
+    ok/warn/plain, `CodeFrom_*`, `CodeFromNoneRun`, `CodeFromNone`;
+    `CHAT.codeFrom` set around `chatSay` in `chatRenderBot`). `RUN_WORDS` /
+    `flowRunNoCode` → `reply.runNoCode` → `RunNoCode` warning.
 
 - **5.15.0** — The owner attached an email PDF with "no save this file, just
   only for this chat" and it went into Sources for every chat; answers led

@@ -2448,6 +2448,54 @@ follow it alone:
 Ask for something else — a summary, one line, an email, only the query — and
 you get that instead.
 
+#### Why did the assistant not use my guideline?
+
+Usually because the question said too little to find it. Since 5.16 KalKech
+searches with what the question is **about**, not only the words you typed:
+
+- **a picture you attach** — the words in it are read on your PC (with
+  `ocr.js` beside `dossier.html`), even when your flow can see the picture
+  itself. *"Help me to support this"* with a screenshot of an email finds the
+  guideline for the report the email asks for;
+- **a follow-up** — *"what do you mean by step two?"*, *"which SQL?"*,
+  *"explain step 3"* — also searches with what the last question was about,
+  the conversation's title and the last answer, so the same guideline goes
+  with it again;
+- if the assistant still sees nothing about your request, it may ask KalKech
+  for **one more search** with the words it read in the request. The answer
+  then says *Searched your documents, runbooks and scripts again for: …*.
+
+If it still finds nothing, the answer says so — *"I found no guideline for …
+in your documents"* — instead of making one up. Then add the guideline to
+**Library → Sources**, or the script to **Menu → Scripts**.
+
+#### What do the labels on a query mean?
+
+Every block of code in an answer has a line under its header that says where
+it came from:
+
+| Label | Meaning |
+|---|---|
+| **From your document: …** | copied from a document in Sources (the values, like the month, may be filled in) |
+| **From your script: …** | one of your scripts in **Menu → Scripts** |
+| **From your runbook: …** | one of your runbooks |
+| **From the file you attached: …** / **From what you wrote** | from your own file or message |
+| **⚠ Not from your documents or scripts — written by the assistant** | the assistant wrote it. **Check it before you run it.** |
+
+For support work the assistant is told to copy queries, commands and scripts
+only from your documents, scripts and runbooks, and never to write its own. If
+none of them has the query a step needs, the answer says so under **Not in
+your documents** — it does not invent one.
+
+#### What does "written by the assistant" mean?
+
+That the code is not in any of your documents, scripts, runbooks or messages —
+the assistant wrote it. That is what you want when you ask it to write code
+(*"give me the DTO in C#"*, *"write a query that…"*); then the line is grey.
+On a query or command (SQL, PowerShell, a batch file) it is amber: check it
+before you run it. An answer that says *"run the SQL"* but shows none, and names
+none of your scripts, gets a warning under it too.
+
 #### Why does an answer say "Not found in your documents, scripts or workspace"?
 
 KalKech checks every specific name in an answer — a script, a stored
@@ -3259,8 +3307,8 @@ Answering from documents has its tests in the repository, and they are the
 first thing to run after changing anything it touches:
 
 ```
-node --test                 # tests/*.test.js: 50 tests - Sources (every scenario below), names in answers, and diagrams
-node tests/e2e/run.js       # the app in Chrome or Edge: 164 checks on the screen
+node --test                 # tests/*.test.js: 54 tests - Sources (every scenario below), names and queries in answers, and diagrams
+node tests/e2e/run.js       # the app in Chrome or Edge: 171 checks on the screen
 node flow/check-prompt.js   # the prompt's examples against the reply validator
 ```
 

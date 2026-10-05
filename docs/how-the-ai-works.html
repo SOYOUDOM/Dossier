@@ -440,7 +440,7 @@ footer{margin-top:56px;padding-top:20px;border-top:1px solid var(--rule);font-si
     <div class="tile"><span class="big">1 chat</span><span class="what">for a file you attach</span><span class="why">read with every question in that conversation, and in no other, until you say "save this file"</span></div>
     <div class="tile"><span class="big">8</span><span class="what">recent messages</span><span class="why">each cut to 1,200 characters, plus a short running summary</span></div>
     <div class="tile"><span class="big">30</span><span class="what">days of incidents</span><span class="why">a summary of the recent incident history</span></div>
-    <div class="tile"><span class="big">64</span><span class="what">allowed actions</span><span class="why">the only things it may ask KalKech to do; 43 of them change something and always ask you first</span></div>
+    <div class="tile"><span class="big">65</span><span class="what">allowed actions</span><span class="why">the only things it may ask KalKech to do; 43 of them change something and always ask you first</span></div>
     <div class="tile"><span class="big">½ yr</span><span class="what">of special days</span><span class="why">the days you marked yourself (a freeze, month-end, a team day) with their notes</span></div>
   </div>
   <p class="callout"><b>With KalKech reason</b> — the reasoning model, only when you choose it — the folder is far bigger:
@@ -539,12 +539,13 @@ footer{margin-top:56px;padding-top:20px;border-top:1px solid var(--rule);font-si
     <h3>Everything the check looks at, in order</h3>
     <ol class="rules">
       <li><b>The shape.</b> The reply must be JSON. A short plain-text reply is shown as plain text; anything else unusable is dropped, with a reason.</li>
-      <li><b>The actions.</b> Only the 64 in KalKech's own list, each with the right details. Anything else is refused by name.</li>
+      <li><b>The actions.</b> Only the 65 in KalKech's own list, each with the right details. Anything else is refused by name.</li>
       <li><b>The blank picture.</b> The flow is always handed a picture, a blank one when you attached nothing, and a small model sometimes answers <i>that</i>. KalKech spots it, takes those sentences out, and asks once more, saying plainly that no picture was attached. Telling it your name for the assistant ("I named you Elle") is answered on your PC and never goes to the flow.</li>
       <li><b>Marks put back.</b> A flow built from an older guide strips <code>```</code> from the reply, so code, diagrams and emails used to arrive as plain text. The prompt now asks for <code>~~~</code> marks, which survive, and KalKech recognises a block whose marks are gone (a line <i>csharp</i> or <i>mermaid</i> over code) and draws it properly.</li>
+      <li><b>Where each query came from.</b> Every code block is compared with your documents, scripts, runbooks and your own words (values like a month or a date left aside) and labelled <i>From your document / script / runbook</i>, or <b>⚠ written by the assistant — check it before you run it</b>. "Run the SQL" with no SQL and none of your scripts named gets a warning.</li>
       <li><b>The names.</b> Every script, stored procedure or table named in the answer is looked for in everything the AI was given. One found nowhere is listed under the answer, <i>"⚠ Not found in your documents, scripts or workspace … may have made these up"</i>, so you check it before you run anything. Nothing is taken out.</li>
       <li><b>A failed flow.</b> If the flow's safety net answered instead of the AI, KalKech asks once more with only the essentials.</li>
-      <li><b>More records.</b> The AI may ask for more records (<code>needRecords</code>). KalKech finds them on your PC and asks once more.</li>
+      <li><b>More records, or another search.</b> The AI may ask for more records (<code>needRecords</code>), or for another search of your documents with words it read - the report an email asks for (<code>needSources</code>). KalKech finds them on your PC and asks once more.</li>
       <li><b>The documents.</b> Every quote must be in its passage, word for word. A line with an unsupported figure is taken out.
         Only if nothing useful is left is the whole reply held back, and then KalKech says so honestly and shows what the passages do say.</li>
       <li><b>Your own words.</b> A figure in one of your runbooks that matched, or one you wrote yourself in your message, is never treated as invented: the answer is marked <i>From your runbook</i> or <i>From what you wrote</i>. A job you give it (close this record with these steps) gets no sources box at all.</li>
@@ -635,9 +636,9 @@ footer{margin-top:56px;padding-top:20px;border-top:1px solid var(--rule);font-si
     <div class="rule"><h3>Send the best, count the rest</h3><p>The model needs the relevant rows. Totals keep "how many?" right.</p><span class="in">60 records, plus totals of all</span></div>
     <div class="rule"><h3>Put a limit on everything that grows</h3><p>Notes, lessons and history grow every day. Without limits every question gets slower.</p><span class="in">10 notes · 30 lessons · 8 messages · 14,000 characters (more for KalKech reason)</span></div>
     <div class="rule"><h3>Fast for chat, strong for hard jobs, reasoning when you choose</h3><p>Stronger models are slower and cost more. Use each where it earns it, and let the person choose.</p><span class="in">The pill beside Send: Auto · Fast · Strong · Reason; Think harder; ◆ KalKech reason</span></div>
-    <div class="rule"><h3>At most one extra round trip</h3><p>Every extra call is another full wait.</p><span class="in">needRecords once; the safety-net retry once</span></div>
+    <div class="rule"><h3>At most one extra round trip</h3><p>Every extra call is another full wait.</p><span class="in">needRecords or needSources once; the safety-net retry once</span></div>
     <div class="rule"><h3>Always set a time limit, and fall back</h3><p>A silent app is worse than a simple answer.</p><span class="in">30 s for chat, up to 115 s for the strong and reasoning models; the local assistant answers if the flow fails</span></div>
-    <div class="rule"><h3>Never trust the reply: check it</h3><p>A model can send the wrong shape, or an action that does not exist.</p><span class="in">The validator; only the 64 known actions</span></div>
+    <div class="rule"><h3>Never trust the reply: check it</h3><p>A model can send the wrong shape, or an action that does not exist.</p><span class="in">The validator; only the 65 known actions</span></div>
     <div class="rule"><h3>Never let it change anything by itself</h3><p>A confident mistake must not become a real change.</p><span class="in">Every change waits for your yes</span></div>
     <div class="rule"><h3>Measure, and show what you measured</h3><p>"It feels slow" cannot be fixed. A number can.</p><span class="in">Time under each answer · Preview of the bytes · the Sources log · tests</span></div>
   </div>
@@ -720,6 +721,8 @@ footer{margin-top:56px;padding-top:20px;border-top:1px solid var(--rule);font-si
         <tr><td>Every attachment put in the library</td><td>A file sent "just for this chat" was cited in other chats</td><td>Keep a chat's file for that chat; put it in the library only when asked</td></tr>
         <tr><td>Past fixes before the guideline</td><td>The answer followed what was done last time, not the procedure</td><td>An order of trust: documents, runbooks and scripts first; past fixes after</td></tr>
         <tr><td>"Run the script to generate the data"</td><td>Someone new cannot follow it: which script, where, with what?</td><td>Send the matching scripts with their text; ask for a guideline that names each one and lists what is missing</td></tr>
+        <tr><td>Matching only the words typed</td><td>"Help me to support this" with a screenshot found no guideline; the model wrote "run the SQL", then its own SQL</td><td>Match on what the question is about - the picture's words, the conversation for a follow-up - and let the model ask for one more search</td></tr>
+        <tr><td>Inviting the model to write the query</td><td>A query that looked right and was in no document</td><td>Copy queries only from their documents and scripts; label every code block with where it came from</td></tr>
         <tr><td>Trusting names in an answer</td><td>A procedure or table that sounds right but does not exist</td><td>Check every name against what was sent; mark the ones found nowhere</td></tr>
         <tr><td>Letting the AI change records directly</td><td>One confident mistake changes real data (KalKech never allowed it)</td><td>Every change waits for a yes</td></tr>
       </tbody>
@@ -740,12 +743,14 @@ footer{margin-top:56px;padding-top:20px;border-top:1px solid var(--rule);font-si
     <div class="word"><dt>Relay</dt><dd>The small page that is the only door to the network (<code>flow/relay.html</code>).</dd></div>
     <div class="word"><dt>Token</dt><dd>A piece of a word. Models count what they read in tokens: more tokens, longer wait.</dd></div>
     <div class="word"><dt>JSON</dt><dd>A strict text format for data, like <code>{"say":"hello"}</code>, so a reply can be checked.</dd></div>
-    <div class="word"><dt>Action</dt><dd>Something the AI may ask KalKech to do. 64 exist; the 43 that change data always ask first.</dd></div>
+    <div class="word"><dt>Action</dt><dd>Something the AI may ask KalKech to do. 65 exist; the 43 that change data always ask first.</dd></div>
     <div class="word"><dt>Reasoning model</dt><dd>A model that thinks a problem through before it answers. Slower and dearer; KalKech asks it (KalKech reason) only when you choose it.</dd></div>
     <div class="word"><dt>Tier</dt><dd>Which model a question goes to: fast, deep (the strong one) or reason.</dd></div>
     <div class="word"><dt>Special day</dt><dd>A day you marked yourself, with a note, that is not a holiday. The assistant is told about the next half year of them.</dd></div>
     <div class="word"><dt>Conversation file</dt><dd>A file attached in the chat. Every question in that conversation can read it; no other can, until you say "save this file".</dd></div>
     <div class="word"><dt>Order of trust</dt><dd>Which information wins: your documents, runbooks and scripts first, then what was done before, then general knowledge (only as a suggestion).</dd></div>
+    <div class="word"><dt>Telling words</dt><dd>The rarest words of a text (an email, an answer) that occur in your documents - what KalKech searches with when the question says little.</dd></div>
+    <div class="word"><dt>Code label</dt><dd>The line on every code block in an answer: from your document, script or runbook - or written by the assistant.</dd></div>
     <div class="word"><dt>Names check</dt><dd>KalKech looking for every script, table or procedure name in an answer in what the AI was given, and marking the ones found nowhere.</dd></div>
     <div class="word"><dt>Passage</dt><dd>A small piece of a document, about 1,100 characters, with its page, lines and section.</dd></div>
     <div class="word"><dt>Citation</dt><dd>Where an answer came from: <span class="mono">[Source: document, version, page, lines, section]</span>.</dd></div>

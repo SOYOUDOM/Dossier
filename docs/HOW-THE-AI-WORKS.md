@@ -173,7 +173,25 @@ wrong. So KalKech *chooses*, on your PC, what this question needs.
 | Attachments | the chat tray | each file's text (up to 80,000 characters); a picture at the size the model reads |
 | Special days | **Week** / **Month** (the ✦ on a day) | the days you marked yourself — a release freeze, month-end, a team day — for the next half year, with their notes |
 | Which model, and your name for it | the pill beside Send; "I named you…" | `workspace.tier` (fast, deep or reason) and `workspace.yourName` |
-| The allowed actions | `flow.js` | the list of the **64** things it may ask KalKech to do |
+| The allowed actions | `flow.js` | the list of the **65** things it may ask KalKech to do |
+
+**What the question is about, not only what was typed (5.16).** Everything
+above that is *matched* — document passages, runbooks, scripts, notes, past
+fixes, system profiles — is matched against what the question is about:
+
+- the words you typed;
+- the telling words of what you attached: a document's, and a picture's
+  (read on your PC even when your flow can see the picture) — so *"help me to
+  support this"* with a screenshot of an email finds the guideline for the
+  report the email asks for;
+- for a vague question or a follow-up (*"what do you mean by step two?"*): what
+  the last question was about, the conversation's title and summary, and the
+  telling words of the last answer — so the same guideline goes again.
+
+"Telling words" are the rarest words of that text that occur in your
+documents, so a long email adds a few precise words, not its greeting and
+signature. If the AI still sees nothing about the request, it can ask for one
+more search with the words it read (`needSources`, Step 6).
 
 **KalKech reason gets a bigger folder.** When you choose the reasoning model
 (the pill beside Send, or **◆ KalKech reason** under an answer), the limits
@@ -234,7 +252,7 @@ same for every question. In the order the file has them:
 
 ```
  === WHO YOU ARE TALKING TO ===             {memory}     ← notes you taught it
- === WHAT YOU CAN ASK THE APP TO DO ===     {actions}    ← the 64 allowed actions
+ === WHAT YOU CAN ASK THE APP TO DO ===     {actions}    ← the 65 allowed actions
  === THEIR WORKSPACE ===                    {workspace}  ← records, totals, runbooks,
                                                            lessons, what is on screen…
  === WHEN ===                               {today} {weekday} {calendar}
@@ -337,15 +355,18 @@ checked*, never as an order. KalKech checks, in this order:
 
 1. **Is it the right shape?** A short reply in plain text (not JSON) is shown
    as a plain answer; anything else unusable is dropped, with a reason.
-2. **Is every action allowed?** Only the 64 actions in KalKech's own list are
+2. **Is every action allowed?** Only the 65 actions in KalKech's own list are
    accepted, each with the right kind of details (a date must be a date, a
    record must exist). Anything else is refused *by name*, so you can see what
    was refused and why.
 3. **Did the flow fail?** If the flow's safety net answered instead of the AI
    (often because Microsoft's content filter blocked something), KalKech asks
    **once** more with only the essentials.
-4. **Did it ask for more records?** The AI may answer "I need the records about
-   X" (`needRecords`). KalKech finds them on the PC and asks **once** more.
+4. **Did it ask for more records, or another search?** The AI may answer "I
+   need the records about X" (`needRecords`), or "search your documents for X"
+   (`needSources`) — for example when you send a screenshot of an email and
+   nothing that was found is about the report it asks for. KalKech searches on
+   the PC and asks **once** more. One extra round in all.
 5. **Did it answer the blank picture?** Your flow's prompt has a picture
    input that cannot be empty, so with nothing attached it is handed one white
    pixel — and a small model now and then answers *that* ("the image is a
@@ -360,7 +381,15 @@ checked*, never as an order. KalKech checks, in this order:
    KalKech recognises a block whose marks are gone — a line such as *csharp*,
    *sql* or *mermaid* over code, after a blank line, a colon or a heading —
    and puts the marks back.
-7. **Are the names real?** Every specific name in the answer — a script, a
+7. **Where did each query come from?** Every block of code in the answer is
+   compared with what the AI was given — the passages of your documents, all
+   your scripts, the runbooks, your own words — ignoring the values it filled
+   in (a month, a date, a name). Each block is labelled: *From your document:
+   …*, *From your script: …*, *From your runbook: …*, or **⚠ Not from your
+   documents or scripts — written by the assistant. Check it before you run
+   it.** An answer that says "run the SQL" but gives none, and names none of
+   your scripts, gets a warning under it.
+8. **Are the names real?** Every specific name in the answer — a script, a
    stored procedure, a table, a column written in code — is looked for in
    everything the AI was given for this question (your documents, scripts,
    runbooks, records, your own words). A name found nowhere is listed under
@@ -368,7 +397,7 @@ checked*, never as an order. KalKech checks, in this order:
    assistant may have made these up.* Nothing is taken out — the name may be
    right and simply new to KalKech — but you know to check it before you run
    anything.
-8. **Is an answer about your documents really in your documents?**
+9. **Is an answer about your documents really in your documents?**
 
    - Every **quote** must be found, word for word, in the passage it names.
    - Every **figure** — a time (days, hours), a percentage, a priority or
@@ -415,7 +444,7 @@ this"* — when they did. Now only the line goes.
 
 - **Reading actions** (show a list, open a record) happen at once — they change
   nothing.
-- **Changing actions** (43 of the 64: raise a record, close one, set a due
+- **Changing actions** (43 of the 65: raise a record, close one, set a due
   date…) are **shown to you one at a time and wait for your yes**. However
   confident the AI is, it cannot change your records by itself.
 - Under an answer about your documents: **one short line** — the source, its
@@ -547,9 +576,9 @@ longer grows as you use the app.
 | 3 | **Send the best, count the rest** | the model needs the relevant rows; totals keep counts right | 60 records plus totals of all |
 | 4 | **Put a limit on everything that grows** | notes, lessons and history grow every day; without limits every question gets slower | 10 notes, 30 lessons, 8 messages, 14,000 characters of passages — more for KalKech reason, only when chosen |
 | 5 | **Fast for chat, strong for hard jobs, reasoning when you choose** | stronger models are slower and cost more; use each where it earns it, and let the person choose | up to three models; the pill beside Send (Auto · Fast · Strong · Reason); **Think harder** and **◆ Reason** under answers |
-| 6 | **At most one extra round trip** | every extra call is another full wait | `needRecords` once; the safety-net retry once |
+| 6 | **At most one extra round trip** | every extra call is another full wait | `needRecords` or `needSources` once; the safety-net retry once |
 | 7 | **Always set a time limit, and fall back** | a silent app is worse than a simple answer | 30 s for chat, up to 115 s for the strong and reasoning models; if the flow fails, the local assistant answers and says why |
-| 8 | **Never trust the reply; check it** | a model can return the wrong shape or an action that does not exist | the validator; only the 64 known actions |
+| 8 | **Never trust the reply; check it** | a model can return the wrong shape or an action that does not exist | the validator; only the 65 known actions |
 | 9 | **Never let it change anything by itself** | a confident mistake must not become a real change | every change waits for your yes |
 | 10 | **Measure, and show what you measured** | "it feels slow" cannot be fixed; a number can | the time under each answer; **Preview** of the exact bytes; the Sources log |
 
@@ -563,7 +592,7 @@ longer grows as you use the app.
   conversation finds the same passages as the old one.
 - **Tests run the real app** in a browser with a *stand-in* AI that returns
   scripted replies, so every check is repeatable: `node --test` (47 tests) and
-  `node tests/e2e/run.js` (164 checks).
+  `node tests/e2e/run.js` (171 checks).
 
 ---
 
@@ -705,6 +734,8 @@ traps its design was built to avoid.
 | Past fixes before the guideline | The answer followed what was done last time, not what the procedure says | Give an order of trust: their documents, runbooks and scripts first; past fixes after, as supporting facts |
 | "Run the script to generate the data" | Someone new cannot follow it: which script, where, with what? | Send the matching scripts with what is in them; ask for a guideline that names each script and place, and lists what is missing |
 | Trusting names in an answer | A procedure or table that sounds right but does not exist | Check every name against what was sent, and mark the ones found nowhere |
+| Matching only the words typed | "Help me to support this" with a screenshot found no guideline; the model wrote "run the SQL", then its own SQL | Match on what the question is about: the picture's words, the conversation for a follow-up; let the model ask for one more search |
+| Inviting the model to write the query | A query that looked right and was in no document | Copy queries only from their documents and scripts; label every code block with where it came from |
 | Hiding the whole answer for one bad line | A correct answer was replaced by "not specified" — when it was specified | Take out only the bad line, and say you did |
 | Reading page headers as headings | Citations said section "CLASSIFICATION : OFFICIAL" | Detect lines repeated on most pages and leave them out |
 | Letting the AI change records directly | One confident mistake changes real data (KalKech never allowed it) | Every change waits for a yes |
@@ -726,7 +757,7 @@ traps its design was built to avoid.
 | **Relay** | The small page (`flow/relay.html`) that is the only door to the network. |
 | **Token** | A piece of a word; models measure how much they read in tokens. More tokens = longer wait and higher cost. |
 | **JSON** | A simple, strict text format for data, like `{"say":"hello"}`. The reply must be JSON so it can be checked. |
-| **Action** | Something the AI may ask KalKech to do, like `find` or `createRecord`. Only 64 exist; the 43 that change data always ask first. |
+| **Action** | Something the AI may ask KalKech to do, like `find` or `createRecord`. Only 65 exist; the 43 that change data always ask first. |
 | **Retrieval** | Finding the pieces of your data that a question needs. |
 | **Reasoning model** | A model that thinks a problem through before it answers. Slower and dearer; KalKech asks one (KalKech reason) only when you choose it. |
 | **Special day** | A day you marked yourself, with a note, that is not a holiday — a release freeze, month-end, a team day. The assistant is told the next half year of them. |
@@ -734,6 +765,8 @@ traps its design was built to avoid.
 | **Knowledge source** | A document in **Library → Sources**, searched and cited by every conversation. |
 | **Order of trust** | Which information wins: your documents, then runbooks, then scripts, then what was done before, then general knowledge (only as a suggestion). |
 | **Names check** | KalKech looking for every script, table or procedure name in an answer in what the AI was given, and marking the ones found nowhere. |
+| **Telling words** | The rarest words of a text (an email, an answer) that occur in your documents — what KalKech searches with when the question itself says little. |
+| **Code label** | The line on every code block in an answer that says where it came from — your document, script or runbook — or that the assistant wrote it. |
 | **Passage** | A small piece of a document (about 1,100 characters), with its page, lines and section — an "index card". |
 | **Index** | A list of which words are on which passage, so search is instant. |
 | **BM25** | The well-known formula KalKech uses to score passages: rare words count more, and a word repeated many times stops counting more after a while. |
@@ -756,7 +789,7 @@ traps its design was built to avoid.
 |---|---|
 | `dossier.html` | The app: the front door (step 1), gathering (step 2), showing and asking (step 7), and the notebook (step 8). Search for `ASKING THROUGH A FLOW`, `LEARNING`, `SOURCES`. |
 | `chat.js` | The local assistant: answers about forty kinds of question with no AI. |
-| `flow.js` | Packing (step 3), sending (step 4), and checking the shape and actions (step 6). Holds the list of 64 actions. |
+| `flow.js` | Packing (step 3), sending (step 4), and checking the shape and actions (step 6). Holds the list of 65 actions. |
 | `sources.js` | Documents: cutting into passages, the index, the search, citations, and the figure check. |
 | `flow/prompt.txt` | The prompt template: the rules and the examples. |
 | `flow/relay.html` | The one door to the network. |

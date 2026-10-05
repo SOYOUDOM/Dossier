@@ -6,6 +6,48 @@ holds — which is what to paste into a bug report.
 
 ---
 
+## 5.16.0 - 2026-10-05
+
+**The assistant finds the guideline your request is about, copies its
+queries instead of inventing them, and every query says where it came
+from.**
+
+- **Finds the guideline even when the question says little.** Your
+  documents, runbooks, scripts, notes and past fixes used to be matched only
+  against the words you typed, so *"help me to support this"* with a
+  screenshot of an email, and *"what do you mean by step two?"*, found
+  nothing - and the assistant filled the gap with *"run the SQL"* and then a
+  query of its own. Now they are matched against what the question is about:
+  - the words in an attached picture are read on your PC (with `ocr.js`),
+    even when your flow can see the picture itself;
+  - a follow-up (*"step two"*, *"which SQL?"*, *"explain"*) also searches with
+    what the last question was about, the conversation's title and the last
+    answer, so the same guideline goes again;
+  - only the telling words are used - the rarest words of the email or
+    answer that occur in your documents, not its greeting and signature.
+- **One more search when nothing matched.** If the assistant can see what a
+  request is about and nothing it was sent is about it, it may ask KalKech
+  for one more search with the words it read (*needSources*). The answer
+  then says *Searched your documents, runbooks and scripts again for: …*.
+  One extra round per question in all.
+- **Queries are copied, never invented.** For support work the assistant
+  copies queries, commands and scripts from your documents, scripts and
+  runbooks - word for word, with your values filled in, saying where from.
+  When none has the query a step needs, it says so under **Not in your
+  documents**. *"Help me support this"* is answered from the guideline for
+  the request (cited); with none, it says *"I found no guideline for …"* -
+  never *"same as your BAU guideline"* without citing it.
+- **Every code block says where it came from**: *From your document / your
+  script / your runbook / the file you attached / what you wrote*, or **⚠ Not
+  from your documents or scripts - written by the assistant. Check it before
+  you run it** (amber for SQL, PowerShell and batch; a grey line for code you
+  asked it to write, like a C# DTO).
+- **"Run the SQL" with no SQL is marked.** An answer that says to run a
+  query or script but shows none and names none of your scripts gets a
+  warning under it.
+
+---
+
 ## 5.15.0 - 2026-10-05
 
 **A file you attach stays in that chat; your knowledge comes first; how-to

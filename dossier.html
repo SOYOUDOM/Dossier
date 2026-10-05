@@ -2755,6 +2755,22 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
   background:var(--paper-3);overflow:hidden;white-space:normal}
 .chcode .cch{display:flex;align-items:center;gap:8px;padding:5px 9px;
   border-bottom:1px solid var(--rule);background:var(--paper-2)}
+/* where the block came from (5.16) */
+.chcode .ccfrom{font-size:11px;line-height:1.4;padding:5px 10px;border-bottom:1px solid var(--rule);font-family:var(--f-ui)}
+/* green and amber mixed with the text colour of where they sit, so they
+   read on a light page and a dark chat alike */
+.chcode .ccfrom.ok{color:color-mix(in srgb,#2fa36b 62%,var(--ink));background:color-mix(in srgb,#2fa36b 12%,transparent)}
+.chcode .ccfrom.warn{color:color-mix(in srgb,#e39a1c 66%,var(--ink));background:color-mix(in srgb,#e8a33a 17%,transparent);font-weight:600}
+.chcode .ccfrom.plain{color:var(--ink-3)}
+.chat .chcode .ccfrom{border-bottom-color:var(--ch-line)}
+.chat .chcode .ccfrom.ok{color:color-mix(in srgb,#3cbf7f 62%,var(--ch-ink))}
+.chat .chcode .ccfrom.warn{color:color-mix(in srgb,#f0a52a 66%,var(--ch-ink))}
+.chat .chcode .ccfrom.plain{color:var(--ch-dim)}
+/* Lumen and Crimson draw code on a dark card of their own */
+.chat[data-lm] .chcode .ccfrom{border-bottom-color:var(--lm-code-line);font-family:var(--lm-font)}
+.chat[data-lm] .chcode .ccfrom.ok{color:color-mix(in srgb,#4fd18f 70%,var(--lm-code-ink))}
+.chat[data-lm] .chcode .ccfrom.warn{color:color-mix(in srgb,#ffb648 75%,var(--lm-code-ink))}
+.chat[data-lm] .chcode .ccfrom.plain{color:var(--lm-code-dim)}
 .chcode .lang{font-family:var(--f-mono);font-size:9.5px;letter-spacing:.08em;
   text-transform:uppercase;color:var(--ink-3);flex:1}
 .chcode .cpy{border:1px solid var(--rule);background:var(--paper);color:var(--ink-2);
@@ -6934,6 +6950,16 @@ const STRINGS = {
   SrcChatOnlyNote: "Read for this conversation only: {list} — not in your Library, and no other conversation can see it.",
   SrcChatOnlyNoFlow: "Kept for this conversation only: {list}. Ask about it and the passages that answer come up here; with a flow set up, the assistant answers from them.",
   DocSaveBtn: "Save…",
+  CodeFrom_doc: "From your document: {name}",
+  CodeFrom_script: "From your script: {name}",
+  CodeFrom_runbook: "From your runbook: {name}",
+  CodeFrom_file: "From the file you attached: {name}",
+  CodeFrom_you: "From what you wrote",
+  CodeFrom_note: "From your notes",
+  CodeFromNoneRun: "⚠ Not from your documents or scripts — written by the assistant. Check it before you run it.",
+  CodeFromNone: "Written by the assistant — not from your documents or scripts.",
+  RunNoCode: "⚠ This answer says to run a query or script but does not show it or name one of your scripts — none was found in your documents for it.",
+  FlowSearchedAgain: "Searched your documents, runbooks and scripts again for: {words}",
   NamesUnknown: "⚠ Not found in your documents, scripts or workspace: {list}. The assistant may have made these up — check them before you run anything.",
   DocSaveHint: "Keep this file for good: as a knowledge source, or filed on a record",
   DocSaveAsk: "Where should I keep {list}? **As a knowledge source**, every conversation can find and cite it. **Filed on a record**, it is kept with that record's documents and is not used as knowledge.",
@@ -7845,7 +7871,7 @@ const STATUSES = [
    the status bar, and clicking it copies a line you can paste into a bug
    report — build date and flow protocol included, because those are the two
    things that actually differ between copies. */
-const APP_VERSION = "5.15.0";
+const APP_VERSION = "5.16.0";
 const APP_BUILT = "2026-09-27";
 function buildLine(){
   return "KalKech v" + APP_VERSION + " \u00b7 built " + APP_BUILT +
@@ -14640,6 +14666,24 @@ function diagAct(btn){
   if (a === "copy") return diagCopyPic(id, card, btn);
   if (a === "save") return diagSave(id, card);
 }
+/* Where a block of code in an answer came from (5.16): their document,
+   script, runbook, the file they attached, their own words - or written by
+   the assistant. Worked out when the answer arrived (flowAsk → codeFrom,
+   DossierSources.codeOrigin) and drawn here, under the block's header. A
+   query or command that was written by the assistant is marked to be
+   checked before it is run; other code it wrote (a C# class they asked
+   for) only says so. */
+const CODE_RUNS = /^(sql|tsql|t-sql|mssql|plsql|mysql|postgres|psql|powershell|ps1|pwsh|bash|sh|shell|cmd|bat|batch|zsh)$/i;
+function chatCodeFrom(body, lang){
+  const list = CHAT.codeFrom;
+  if (!list || !srcHere()) return "";
+  const k = DossierSources.codeKey(body);
+  const c = list.find(x => x.key === k);
+  if (!c) return "";
+  if (c.kind) return '<div class="ccfrom ok">' + LE("CodeFrom_" + c.kind, { name:c.name || "" }) + "</div>";
+  const run = CODE_RUNS.test(c.lang || lang || "") || (!(c.lang || lang) && /\b(select|update|delete|insert|exec)\b/i.test(body));
+  return '<div class="ccfrom ' + (run ? "warn" : "plain") + '">' + LE(run ? "CodeFromNoneRun" : "CodeFromNone") + "</div>";
+}
 function chatSay(text){
   const src = chatMend(text == null ? "" : text);
   if (!src) return "";
@@ -14677,7 +14721,7 @@ function chatSay(text){
     out += dgNote + '<div class="chcode"><div class="cch"><span class="lang">' +
              esc(lang || "text") + "</span>" +
              '<button class="cpy" data-copy="' + id + '">' + esc(L("Copy")) + "</button></div>" +
-           "<pre>" + esc(body) + "</pre></div>";
+           chatCodeFrom(body, lang) + "<pre>" + esc(body) + "</pre></div>";
     i = m.index + m[0].length;
   }
   out += chatProse(src.slice(i));
@@ -14864,8 +14908,12 @@ function chatRenderBot(r, sourceText, replaying, at){
   } else {
     const grounded = r.grounding && r.grounding.status !== "general";
     if (grounded) h += '<div class="srclab">' + LE("SrcAnswerLab") + "</div>";
-    h += '<div class="say">' + chatSay(r.say || "") + "</div>";
+    /* each code block says where it came from (5.16): chatSay reads this */
+    CHAT.codeFrom = r.codeFrom || null;
+    try { h += '<div class="say">' + chatSay(r.say || "") + "</div>"; } finally { CHAT.codeFrom = null; }
     if (grounded || r.suggest) h += srcAnswerHtml(r, id);
+    /* "run the SQL" with no SQL and none of their scripts named (5.16) */
+    if (r.runNoCode) h += '<div class="srcwarn namewarn">' + LE("RunNoCode") + "</div>";
     /* names it could not have been given (5.15) */
     if ((r.unknownNames || []).length)
       h += '<div class="srcwarn namewarn">' + esc(L("NamesUnknown", { list:"\u0001" }))
@@ -15867,6 +15915,55 @@ function flowModeOf(q){
    was chosen. Everything here is the "big" side of a limit below. */
 const FLOW_BIG = { msgs:40, msgChars:6000, notes:30, noteChars:6000, lessons:80, fixes:12,
                    runbooks:6, pastFixes:6, incidentDays:90, srcK:16, srcBudget:48000 };
+/* ── what a question is about (5.16) ────────────────────────────────────
+   Their guidelines, runbooks, scripts, notes and past fixes are matched
+   against the question. Matched against the words TYPED, "help me to
+   support this" (with a screenshot of the email that says what is wanted)
+   and "what do you mean by step two?" found nothing - and the model,
+   given nothing, wrote its own "run the SQL" and then its own SQL. So
+   what is matched is what the question is about:
+   - the words typed;
+   - the telling words of what is attached: a document's, and a picture's
+     as read here (matchText) - the report an email asks for;
+   - for a vague question or a follow-up: what the last question was about
+     (kept on the conversation), its title and running summary, and the
+     telling words of the answer just given.
+   "Telling" means the rarest words that occur in their documents
+   (DossierSources.keyTerms), so a long email adds a few precise words and
+   not forty words of greeting. What is typed is still what the model
+   reads; this is only what the app searches with. */
+const VAGUE_Q = /\b(this|that|these|those|it|step\s*(\d+|one|two|three|four|five|six|seven|eight|nine|ten)|what (do|did) you mean|explain|elaborate|more detail)\b/i;
+function flowVague(t){
+  const n = t.split(/\s+/).filter(Boolean).length;
+  const known = srcHere() && SRC.ix ? DossierSources.keyTerms(SRC.ix, t, 20).split(" ").filter(Boolean).length : n;
+  return known < 2 || (n <= 12 && VAGUE_Q.test(t));
+}
+function flowMatchText(q, thread){
+  const t = String(q || "").replace(/^\[\w+\]\s*/, "").trim();
+  const ix = srcHere() && SRC.ix && SRC.ix.chunks.length ? SRC.ix : null;
+  const key = s => ix ? DossierSources.keyTerms(ix, s, 12) : String(s || "").split(/\s+/).slice(0, 20).join(" ");
+  const parts = [];
+  (CHAT.files || []).forEach(f => {
+    const w = f.matchText || String(f.text || "").slice(0, chatKind(f.type) === "image" ? 2000 : 4000);
+    if (w) parts.push(key(w));
+  });
+  const vague = flowVague(t);
+  if (vague && thread){
+    if (thread.convo && thread.convo.lastMatch) parts.push(thread.convo.lastMatch);
+    if (thread.title) parts.push(key(thread.title));
+    if (thread.summary) parts.push(key(thread.summary));
+    const last = (thread.msgs || []).slice().reverse().find(m => m.who !== "you" && m.reply && m.reply.say);
+    if (last) parts.push(key(last.reply.say));
+  }
+  const seen = new Set(DossierSources && srcHere() ? DossierSources.terms(t) : []);
+  const extra = parts.join(" ").split(/\s+/).filter(w => {
+    if (!w) return false;
+    const k = srcHere() ? (DossierSources.terms(w)[0] || w) : w.toLowerCase();
+    if (seen.has(k)) return false;
+    seen.add(k); return true;
+  }).slice(0, 30).join(" ");
+  return { q:t, extra:extra, vague:vague, text:(t + " " + extra).trim() };
+}
 function flowContext(q, opts){
   const st = S.settings;
   const c = chatThread();
@@ -15892,7 +15989,13 @@ function flowContext(q, opts){
   for (let i = 0; i < 30 && isOffDay(next); i++) next = addDays(next, 1);
   const from = addDays(k, -30), to = addDays(k, 400);
   const hols = holidays().filter(h => h.d >= from && h.d <= to).slice(0, 90);
-  const rbm = runbooksMatchedForFlow(q, big);
+  /* what the question is about - the words typed, and what its picture,
+     its file or (for a follow-up) the conversation says - for every
+     matcher below (5.16) */
+  const mt = flowMatchText(q, c);
+  if (c){ c.convo = c.convo || {}; c.convo.lastMatch = mt.text.split(/\s+/).slice(0, 30).join(" "); }
+  const mq = mt.text || q;
+  const rbm = runbooksMatchedForFlow(mq, big);
 
   return {
     today: k,
@@ -15912,7 +16015,7 @@ function flowContext(q, opts){
     holidaysTotal: holidays().length,
     /* the days they marked themselves, with their notes (SPECIAL DAYS) */
     specialDays: spdForFlow(),
-    memory: memoryForFlow(q, big),
+    memory: memoryForFlow(mq, big),
     promptTemplate: PROMPT.text || "",
     promptFrom: PROMPT.from || "",
     lessons: lessonsForFlow(q, big),
@@ -15923,8 +16026,8 @@ function flowContext(q, opts){
     runbookTotal: runbookStore().length,
     runbooksMatched: rbm,
     /* the scripts this question is about, with what is in them (5.15) */
-    scriptsMatched: scriptsMatchedForFlow(q, c, rbm, big),
-    pastFixes: pastFixesFor(q, big ? FLOW_BIG.pastFixes : undefined),
+    scriptsMatched: scriptsMatchedForFlow(mq, c, rbm, big),
+    pastFixes: pastFixesFor(mq, big ? FLOW_BIG.pastFixes : undefined),
     brief: briefForFlow(),
     /* Resolv itself: its version and latest releases always, and the parts
        of its README and CHANGELOG that answer a question about it */
@@ -15932,12 +16035,12 @@ function flowContext(q, opts){
     /* their runbooks and standards: the passages that match, labelled and
        placed, for the answer to cite (see SOURCES) - not with the daily
        look back or the one-line jobs, which are not about documents */
-    sources: /^\[(reflect|fix|check|brief)\]/.test(String(q || "")) ? undefined : srcForFlow(q, c, CHAT.pins || [], big),
+    sources: /^\[(reflect|fix|check|brief)\]/.test(String(q || "")) ? undefined : srcForFlow(q, c, CHAT.pins || [], big, mt),
     focus: flowFocus(),
     thread: threadForFlow(c),
     mentioned: rbIdents(q),
     incidents: incidentsForFlow(big ? FLOW_BIG.incidentDays : 30),
-    profiles: profilesForFlow(q),
+    profiles: profilesForFlow(mq),
     settable: flowSettable(),
     attachments: (CHAT.files || []).filter(f => !f.reading).map(f => ({
       grid: (flowSees() && CHAT.grid && CHAT.grid.key === chatGridKey()) ? chatGridImages().indexOf(f) + 1 : 0,
@@ -16009,6 +16112,30 @@ function flowEvidence(q, ctx){
   let s = "";
   try { s = JSON.stringify(req || {}, (k, v) => skip[k] ? undefined : v); } catch(e){ s = ""; }
   return s + "\n" + ((ctx && ctx.sources && ctx.sources.text) || "") + "\n" + q;
+}
+
+/* what a code block in an answer may have been copied from */
+function flowCodeSources(q, ctx, thread){
+  const out = [];
+  ((ctx && ctx.sources && ctx.sources.passages) || []).forEach(p => out.push({ kind:"doc", name:p.name, text:p.text }));
+  (S.scripts || []).forEach(sc => { const tx = SCRIPT_TEXT.get(sc.file); if (tx) out.push({ kind:"script", name:sc.name || sc.file, text:tx }); });
+  ((ctx && ctx.runbooksMatched) || []).forEach(r => out.push({ kind:"runbook", name:r.title,
+    text:[].concat(r.steps || [], [r.checks || "", r.escalation || ""]).join("\n") }));
+  ((ctx && ctx.attachments) || []).forEach(a => { if (a.text) out.push({ kind:"file", name:a.name, text:a.text }); });
+  out.push({ kind:"you", name:"", text:[q].concat(((thread && thread.msgs) || []).filter(m => m.who === "you").map(m => m.text || "")).join("\n") });
+  if (ctx && ctx.memory) out.push({ kind:"note", name:"", text:JSON.stringify(ctx.memory).replace(/\\n/g, "\n") });
+  return out;
+}
+/* "Run the SQL for the month" - and no SQL, and none of their scripts
+   named: the step a newcomer cannot follow, said under the answer unless
+   the answer itself says it is not in their documents (5.16) */
+const RUN_WORDS = /\b(run|execute|exec)\b[^.\n]{0,40}\b(sql|query|queries|script|stored procedure)\b/i;
+function flowRunNoCode(say, blocks){
+  const s = String(say || "");
+  if ((blocks || []).length || !RUN_WORDS.test(s) || /not in your (documents|runbook|guide)/i.test(s)) return false;
+  const low = s.toLowerCase();
+  return !(S.scripts || []).some(sc => (sc.file && low.indexOf(String(sc.file).toLowerCase()) >= 0) ||
+                                       (sc.name && String(sc.name).length >= 4 && low.indexOf(String(sc.name).toLowerCase()) >= 0));
 }
 
 async function flowAsk(q, thread, opts){
@@ -16132,6 +16259,40 @@ async function flowAsk(q, thread, opts){
     }
   }
 
+  /* ── another search of their knowledge (5.16) ─────────────────────────
+     What went with the question is what its words found. When the model
+     can see what the question is about and the app could not - a screenshot
+     of an email asking for a report, "help me to support this" - and
+     nothing it was sent is about it, it may answer needSources with the
+     words to search for, and nothing else. They are searched HERE, in their
+     documents, runbooks and scripts, and the same question goes once more
+     with what was found. One extra round in all: needRecords or this. */
+  let used = ctx;
+  const look = !more && flowNeedsSources(out);
+  if (look){
+    const want = look.args || {};
+    const words = [want.text, want.document].filter(Boolean).join(" ").replace(/\s+/g, " ").trim().slice(0, 300);
+    const big = tier === "reason";
+    const mt2 = { q:q, extra:words, vague:true, text:(q + " " + words).trim() };
+    const rbm2 = runbooksMatchedForFlow(mt2.text, big);
+    const src2 = srcForFlow(q, thread, (ctx.sources && ctx.sources.pinned) || [], big, mt2);
+    if (src2 && ctx.sources){ src2.kept = ctx.sources.kept || []; src2.chatOnly = ctx.sources.chatOnly || []; }
+    const ctx2 = Object.assign(flowContext(q, { big:big }), {
+      attachments: ctx.attachments, picture: ctx.picture, pictureName: ctx.pictureName,
+      promptTemplate: ctx.promptTemplate, promptFrom: ctx.promptFrom,
+      sources: src2, runbooksMatched: rbm2, scriptsMatched: scriptsMatchedForFlow(mt2.text, thread, rbm2, big),
+      followUp: { of:q, searched:words, found:((src2 && src2.passages) || []).length + rbm2.length } });
+    if (thread){ thread.convo = thread.convo || {}; thread.convo.lastMatch = mt2.text.split(/\s+/).slice(0, 30).join(" "); }
+    const wait3 = chatThinking(log, tier);
+    let out3 = null, err3 = null;
+    try { out3 = await DossierFlow.ask(q, ctx2, cfg); } catch(e){ err3 = e; }
+    chatThought(wait3, err3);
+    if (!err3 && out3 && !flowFellBack(out3)){
+      out = out3; used = ctx2;
+      out.note = (out.note ? out.note + "\n" : "") + L("FlowSearchedAgain", { words:words });
+    }
+  }
+
   /* ── the blank placeholder, answered instead of the question ──────────
      Nothing attached still sends one white pixel (the flow's picture input
      cannot be empty), and a mini model will now and then answer THAT -
@@ -16155,7 +16316,7 @@ async function flowAsk(q, thread, opts){
         /* asked again with three words of plain fact after the question -
            not an order to the model, which is what the content filter
            refused in 4.6.1, only what is true: nothing was attached */
-        out4 = await DossierFlow.ask(q + " " + PH_NOTE, ctx,
+        out4 = await DossierFlow.ask(q + " " + PH_NOTE, used,
           tier !== "reason" && flowCfg().tiers.on ? Object.assign({}, cfg, { tier:"deep" }) : cfg);
       } catch(e){ out4 = null; }
       chatThought(wait4, null);
@@ -16170,19 +16331,30 @@ async function flowAsk(q, thread, opts){
     out.choices = (out.choices || []).filter(c => !phTalks(c));
   }
 
-  if (out && !fell) srcCheckDrafts(out, ctx.sources);
+  if (out && !fell) srcCheckDrafts(out, used.sources);
   const reply = flowReply(out, q);
   /* answered from the documents? its quotes and figures are checked
      against the passages it was sent before it is shown */
-  if (out && !fell) srcApply(reply, out, ctx.sources, q, thread, ctx.runbooksMatched);
+  if (out && !fell) srcApply(reply, out, used.sources, q, thread, used.runbooksMatched);
   /* the names it wrote - scripts, procedures, tables - that appear nowhere
      in what it was given: shown under the answer as possibly made up */
   if (out && !fell && reply.say && srcHere()){
-    const unknown = DossierSources.unknownNames(reply.say, flowEvidence(q, ctx));
+    const unknown = DossierSources.unknownNames(reply.say, flowEvidence(q, used));
     if (unknown.length){
       reply.unknownNames = unknown.slice(0, 8);
       srcNote({ kind:"names", at:new Date().toISOString(), names:reply.unknownNames });
     }
+    /* every block of code: from their document, script, runbook, file or
+       words - or written by the assistant (5.16) */
+    const blocks = DossierSources.codeBlocks(reply.say);
+    if (blocks.length){
+      const srcs = flowCodeSources(q, used, thread);
+      reply.codeFrom = blocks.map(b => {
+        const o = DossierSources.codeOrigin(b.body, srcs);
+        return { key:DossierSources.codeKey(b.body), lang:b.lang, kind:o ? o.kind : "", name:o ? o.name : "" };
+      });
+    }
+    if (flowRunNoCode(reply.say, blocks)) reply.runNoCode = true;
   }
   if (fell){
     /* even the lean question failed: it is the flow, or the question itself */
@@ -16254,6 +16426,12 @@ function flowNeeds(out){
   if (!out || !Array.isArray(out.actions) || out.actions.length !== 1) return null;
   const a = out.actions[0];
   return (a && a.do === "needRecords") ? a : null;
+}
+/* the same for another search of their documents, runbooks and scripts */
+function flowNeedsSources(out){
+  if (!out || !Array.isArray(out.actions) || out.actions.length !== 1) return null;
+  const a = out.actions[0];
+  return (a && a.do === "needSources" && String((a.args || a).text || "").trim()) ? a : null;
 }
 
 /* One validated reply, turned into the same shape every other answer uses —
@@ -16530,6 +16708,7 @@ function flowRun(a, quiet){
        bigger question, not something to do. One that arrives beside an answer
        reaches here, and saying so is better than refusing it by name. */
     case "needRecords": return { say:"" };
+    case "needSources": return { say:"" };
     case "getRecord": {
       const t = need(g.record); if (!t) return null;
       const L2 = [];
@@ -23812,7 +23991,16 @@ function srcSearch(q, thread, opts){
   if (own.length) o.boostDocs = [...new Set((o.boostDocs || []).concat(own))];
   /* the question as it is kept for the next one, without the brackets of a mode */
   q = String(q || "").replace(/^\[(teach|study|intake)\]\s*/, "");
-  const found = DossierSources.search(SRC.ix, q, o);
+  /* what it is about (flowMatchText, 5.16): a vague question is searched
+     with those words as if typed, each passage needing fewer of them; a
+     plain one keeps them as context, weighed less than what was typed */
+  const mt = opts.match;
+  let query = q;
+  if (mt && mt.extra){
+    if (mt.vague){ query = (q + " " + mt.extra).trim(); o.minCov = 0.15; }
+    else o.context = ((o.context || "") + " " + mt.extra).trim();
+  }
+  const found = DossierSources.search(SRC.ix, query, o);
   if (fu.dir && prev && prev.chunks) o.extra = DossierSources.beside(SRC.ix, prev.chunks, fu.dir);
   const got = DossierSources.gather(SRC.ix, found, o);
   const f = found.eligible.filters || {};
@@ -23825,8 +24013,8 @@ function srcSearch(q, thread, opts){
   res.closest = [...new Set(found.hits.map(h => h.chunk.doc))].map(id => (srcDoc(id) || {}).name).filter(Boolean).slice(0, 8);
   return res;
 }
-function srcForFlow(q, thread, pin, big){
-  const r = srcSearch(q, thread, { purpose:"flow", pin:pin, big:big });
+function srcForFlow(q, thread, pin, big, match){
+  const r = srcSearch(q, thread, { purpose:"flow", pin:pin, big:big, match:match });
   if (!r) return undefined;
   const out = { text:r.text, searched:r.searched, filters:r.filters, docQuestion:r.docQuestion, unproven:r.unproven,
                 closest:r.closest, follow:r.follow, passages:r.passages, pinned:(pin || []).slice(), kept:(CHAT.kept || []).slice(),
@@ -29159,7 +29347,24 @@ function chatOcrClean(t){
     .replace(/[ \t]{2,}/g, " ").replace(/\n{3,}/g, "\n\n").trim();
 }
 async function chatReadImage(f, entry){
-  if (flowOn() && flowSees()) return { text:"", pages:0, note:"vision", keep:true };
+  /* A flow that can see the picture is sent the picture, as before - and
+     its words are still read here when the recogniser is beside this file,
+     for one thing: finding what the picture is about in their guidelines,
+     runbooks and scripts. "Help me to support this" with a screenshot of
+     an email has no words of its own; the email's are the report it asks
+     for (5.16). They go with nothing - matchText is for matching only. */
+  if (flowOn() && flowSees()){
+    let matchText = "";
+    if (chatOcrOn()){
+      try {
+        const prep = await chatOcrBytes(f);
+        const ocr = prep ? await window.DossierOCR.read(prep.bytes, { psm:OCR_PSM, onProgress:p => {
+          if (entry){ entry.progress = p; renderChatFiles(); } } }) : null;
+        if (ocr && ocr.conf >= OCR_MIN_CONF) matchText = chatOcrClean(ocr.text).slice(0, 6000);
+      } catch(e){ matchText = ""; }
+    }
+    return { text:"", pages:0, note:"vision", keep:true, matchText:matchText };
+  }
   if (!chatOcrOn()) return null;
   const prep = await chatOcrBytes(f);
   if (!prep) return { text:"", pages:0, note:"unreadable", keep:true };
@@ -29388,7 +29593,8 @@ async function chatAttach(files){
          have been read out of them, because then the words are the file */
       data:data, text:text, pages:read ? read.pages : 0, note:read ? read.note : "", reading:false,
       words:read ? read.words || 0 : 0, scanned:read ? read.scanned || 0 : 0, page1:read ? read.page1 || "" : "",
-      pics:read ? read.pics || [] : [], page1Name:read ? read.page1Name || "" : "" });
+      pics:read ? read.pics || [] : [], page1Name:read ? read.page1Name || "" : "",
+      matchText:read ? read.matchText || "" : "" });
     renderChatFiles();
   }
   renderChatFiles();
