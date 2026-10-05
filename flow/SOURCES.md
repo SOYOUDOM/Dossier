@@ -31,6 +31,7 @@ this is the reference behind it.
    version) · cleared access label · may go to the assistant · │
    system / environment / document the question names ·       │
    the current version when metadata proves it                 │
+   a file attached in a conversation: in that one only         │
             ▼                                                  │
    search (BM25 over words and word pairs, section headings    │
    weighted, a short synonym list) → best six passages, at     │
@@ -80,7 +81,7 @@ workspace:
 | Key | Default | Meaning |
 |---|---|---|
 | `clearance` | `[]` | Access labels this workspace may read. |
-| `keepChat` | `true` | Keep a document attached in a conversation. |
+| `chatDocs` | `"chat"` | A document attached in a conversation: kept for that conversation only (`"chat"`), or in Sources for every conversation (`"sources"`). Since 5.15; it replaces `keepChat`. "Save this file" in the chat keeps one for good. |
 | `budget` | `14000` | Characters of passages per question (from 2,000). A document attached to that same question travels whole up to 60,000 characters, outside this budget. |
 
 Per document (the details dialog, **Details** to change later): name,

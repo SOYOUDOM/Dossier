@@ -162,10 +162,12 @@ wrong. So KalKech *chooses*, on your PC, what this question needs.
 | Notes you taught it | the `remember` action | the **10** that match best, in full; the rest by title only |
 | Lessons about you | thumbs down, the daily look back | the **30** newest, plus the corrections that match this question |
 | Runbooks | the BAU library | the **2 or 3** that match, in full; the rest as a short index |
+| Scripts | **Menu → Scripts** (the `scripts` folder) | the names of all of them, and the **3** that match the question **with what is in them** (up to 4,000 characters each), where they are and what to fill in |
 | System profiles | the BAU library | up to **3**, for the systems in play |
 | Past fixes | closed records | the **3** most like this question, with how each was fixed |
 | Recent incidents | the incident history | a summary of the last **30 days** |
 | Document passages | **Library → Sources** | the best passages and their neighbours, up to **14,000 characters** |
+| A file attached in this conversation | the chat tray | read for **every question in that conversation** — whole when it fits (24,000 characters on a follow-up), its best passages when it does not — and in no other conversation |
 | The conversation | this chat | the last **8** messages (each cut to 1,200 characters) and a short running summary |
 | What you are doing | the screen | the open record, anything selected, what you did today |
 | Attachments | the chat tray | each file's text (up to 80,000 characters); a picture at the size the model reads |
@@ -177,7 +179,8 @@ wrong. So KalKech *chooses*, on your PC, what this question needs.
 (the pill beside Send, or **◆ KalKech reason** under an answer), the limits
 above are raised, because it reads everything and it is only asked when you
 want it: **240** records with their notes and log, **30** notes, **80**
-lessons, **6** runbooks and **6** past fixes, **16** passages and about
+lessons, **6** runbooks and **6** past fixes, **6** scripts with up to 8,000
+characters each, **16** passages and about
 **48,000** characters of documents, the last **40** messages (6,000 characters
 each) and **90** days of incidents. The prompt tells it it was chosen, so it
 checks every step and figure and writes as much as the question needs.
@@ -240,8 +243,11 @@ same for every question. In the order the file has them:
  === WHAT THEY ATTACHED ===                 {attached}
  === THEIR DOCUMENTS (SOURCES) ===          {sources}    ← the labelled passages,
                                                            then the rules for them
+ === WHAT TO TRUST, IN THIS ORDER ===       ← their documents, runbooks, scripts
+                                              first; past fixes after
  === THE SHAPE OF YOUR REPLY ===            (the JSON it must send back)
- === HOW TO TALK ===  === RULES ===  === SUPPORT WORK ===  === LEARNING ===
+ === HOW TO TALK ===  === RULES ===  === SUPPORT WORK ===
+ === HOW-TO: A GUIDELINE SOMEONE NEW CAN FOLLOW ===  === LEARNING ===
  === MODES ===  === FILES AND PICTURES ===  === RESOLV ITSELF ===
  === EXAMPLES ===                           ← worked examples: a question, and
                                               the perfect reply
@@ -251,7 +257,12 @@ Three things make it work well:
 
 - **Rules in plain words.** For example: *answer only from the passages; never
   state a figure a passage does not state; cite every passage a figure comes
-  from.*
+  from.* Since 5.15 two more: an **order of trust** (their documents, runbooks
+  and scripts before what was done last time), and the **shape of a how-to
+  answer** — before you start, steps that each say where, what (the script
+  by name and place) and what you should see, how to check it worked, who to
+  contact, and *Not in your documents* for anything missing, listed instead
+  of guessed or asked about.
 - **Worked examples.** The model copies its examples more than it follows its
   rules. So every example must be a perfect answer, and a checker
   (`flow/check-prompt.js`) makes sure each one would pass KalKech's own checks.
@@ -349,7 +360,15 @@ checked*, never as an order. KalKech checks, in this order:
    KalKech recognises a block whose marks are gone — a line such as *csharp*,
    *sql* or *mermaid* over code, after a blank line, a colon or a heading —
    and puts the marks back.
-7. **Is an answer about your documents really in your documents?**
+7. **Are the names real?** Every specific name in the answer — a script, a
+   stored procedure, a table, a column written in code — is looked for in
+   everything the AI was given for this question (your documents, scripts,
+   runbooks, records, your own words). A name found nowhere is listed under
+   the answer: *⚠ Not found in your documents, scripts or workspace: … the
+   assistant may have made these up.* Nothing is taken out — the name may be
+   right and simply new to KalKech — but you know to check it before you run
+   anything.
+8. **Is an answer about your documents really in your documents?**
 
    - Every **quote** must be found, word for word, in the passage it names.
    - Every **figure** — a time (days, hours), a percentage, a priority or
@@ -544,7 +563,7 @@ longer grows as you use the app.
   conversation finds the same passages as the old one.
 - **Tests run the real app** in a browser with a *stand-in* AI that returns
   scripted replies, so every check is repeatable: `node --test` (47 tests) and
-  `node tests/e2e/run.js` (151 checks).
+  `node tests/e2e/run.js` (164 checks).
 
 ---
 
@@ -682,6 +701,10 @@ traps its design was built to avoid.
 | Sending everything with every question | Questions grew every week; answers got slower the more the app was used | Rank on the PC; send the best, count the rest |
 | Using an AI to choose what to send | The chooser had to read everything first — two slow calls | Choose with plain code; it takes milliseconds |
 | A document sent with one question only | The next question had only a summary, and the model filled the gap with "4 hours" (a figure from somewhere else) | Keep documents in a searchable store; search them for every question |
+| Every attachment put in the library | A file sent "just for this chat" was cited in other chats | Keep a chat's file for that chat; put it in the library only when asked ("save this file") |
+| Past fixes before the guideline | The answer followed what was done last time, not what the procedure says | Give an order of trust: their documents, runbooks and scripts first; past fixes after, as supporting facts |
+| "Run the script to generate the data" | Someone new cannot follow it: which script, where, with what? | Send the matching scripts with what is in them; ask for a guideline that names each script and place, and lists what is missing |
+| Trusting names in an answer | A procedure or table that sounds right but does not exist | Check every name against what was sent, and mark the ones found nowhere |
 | Hiding the whole answer for one bad line | A correct answer was replaced by "not specified" — when it was specified | Take out only the bad line, and say you did |
 | Reading page headers as headings | Citations said section "CLASSIFICATION : OFFICIAL" | Detect lines repeated on most pages and leave them out |
 | Letting the AI change records directly | One confident mistake changes real data (KalKech never allowed it) | Every change waits for a yes |
@@ -707,6 +730,10 @@ traps its design was built to avoid.
 | **Retrieval** | Finding the pieces of your data that a question needs. |
 | **Reasoning model** | A model that thinks a problem through before it answers. Slower and dearer; KalKech asks one (KalKech reason) only when you choose it. |
 | **Special day** | A day you marked yourself, with a note, that is not a holiday — a release freeze, month-end, a team day. The assistant is told the next half year of them. |
+| **Conversation file** | A file attached in the chat. It belongs to that conversation: every question in it can read the file, no other conversation can, until you say "save this file". |
+| **Knowledge source** | A document in **Library → Sources**, searched and cited by every conversation. |
+| **Order of trust** | Which information wins: your documents, then runbooks, then scripts, then what was done before, then general knowledge (only as a suggestion). |
+| **Names check** | KalKech looking for every script, table or procedure name in an answer in what the AI was given, and marking the ones found nowhere. |
 | **Passage** | A small piece of a document (about 1,100 characters), with its page, lines and section — an "index card". |
 | **Index** | A list of which words are on which passage, so search is instant. |
 | **BM25** | The well-known formula KalKech uses to score passages: rare words count more, and a word repeated many times stops counting more after a while. |

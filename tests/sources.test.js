@@ -696,3 +696,43 @@ test("closing a record can carry how it was fixed", () => {
   assert.equal(v.actions[0].args.resolution, "Added the credit; checked the balance.");
   assert.equal(v.actions[1].args.resolution, "Added the credit.");
 });
+
+/* ── 5.15: a document attached in a conversation belongs to it ─────────── */
+test("a conversation's document is read in that conversation only, and marked as attached there", () => {
+  const lib = library([
+    { file:"x.md", text:"# Partner sync - operations guide\n\nIf the daily sync file is missing, regenerate it on the SYNC database with gen_partner_sync.sql, then run the Partner upload job." },
+    { file:"y.md", text:"# Change management standard\n\nEvery production change needs an approved change record before it is made." }]);
+  /* made a conversation's own, as the app does with an attachment */
+  Object.assign(lib.docs[0], { scope:"chat", chat:"K1" });
+  const q = "how do I regenerate the missing sync file?";
+  const mine = ask(lib, q, { chat:"K1" });
+  assert.ok(mine.pack.passages.some(p => p.doc === "doc1" && p.chat), "its own conversation reads it");
+  assert.match(mine.pack.text, /ATTACHED IN THIS CONVERSATION/);
+  const other = ask(lib, q, { chat:"K2" });
+  assert.ok(!other.pack.passages.some(p => p.doc === "doc1"), "another conversation never sees it");
+  assert.ok(!ask(lib, q, {}).pack.passages.some(p => p.doc === "doc1"), "nor does a question with no conversation");
+  assert.equal(other.found.eligible.docs.some(d => d.id === "doc1"), false);
+  /* pinned in another conversation: still not read */
+  assert.ok(!ask(lib, q, { chat:"K2", pinDocs:["doc1"] }).pack.passages.some(p => p.doc === "doc1"));
+});
+
+/* ── 5.15: names an answer could not have been given ────────────────────── */
+test("names in an answer: scripts, procedures, tables and code names are picked out; words and commands are not", () => {
+  const say = "Run **gen_partner_sync.sql** from Menu → Scripts, then check `vendor_ContactBook` and `RequestTrackingKey`.\n\n" +
+    "~~~sql\nEXEC dbo.usp_MadeUpThing @run_date = '2026-10-01';\nSELECT TOP 10 * FROM SYNC.PartnerQueue WHERE status = 0;\n~~~\n\n" +
+    "Use `Get-Service` and `SELECT` as usual. PowerShell and SharePoint are fine. See [the guide](https://example.com/a_b).";
+  const got = S.namesIn(say).map(x => x.toLowerCase()).sort();
+  assert.deepEqual(got, ["dbo.usp_madeupthing", "gen_partner_sync.sql", "requesttrackingkey", "sync.partnerqueue", "vendor_contactbook"]);
+  /* an email or a diagram is not code: "From John" is not a table */
+  assert.deepEqual(S.namesIn("~~~email Update\nFrom John Smith\nJoin us today\n~~~"), []);
+  assert.deepEqual(S.namesIn("No save this file. just only for this chat only"), []);
+});
+
+test("a name found nowhere in what the model was given is reported; one that was given is not", () => {
+  const say = "Run `gen_partner_sync.sql`, then:\n\n~~~sql\nEXEC dbo.usp_MadeUpThing;\nSELECT * FROM SYNC.PartnerQueue;\n~~~";
+  const evidence = JSON.stringify({ scripts:[{ name:"gen partner sync", file:"gen_partner_sync.sql" }], records:[{ notes:"rows wait in PartnerQueue" }] });
+  assert.deepEqual(S.unknownNames(say, evidence), ["dbo.usp_MadeUpThing"]);
+  /* a script named without its extension, or with spaces for underscores */
+  assert.deepEqual(S.unknownNames("Run `gen_partner_sync` now.", "gen partner sync"), []);
+  assert.deepEqual(S.unknownNames("Nothing to check here.", ""), []);
+});

@@ -184,7 +184,8 @@
         /Page 2 of 3/.test($("srcView").textContent));
   if ($("svClose")) $("svClose").click();
 
-  /* ── a document attached in the conversation is kept ─────────────── */
+  /* ── a document attached in the conversation is kept - for that
+        conversation only (5.15) ──────────────────────────────────────── */
   await chatAttach([await file("patching-standard.md", "text/markdown")]);
   await until(() => CHAT.files.length && !CHAT.files[0].reading, 8000);
   plan = req => ({ say:"Within 3 days of the vendor release.", confidence:"high",
@@ -192,17 +193,22 @@
   el = await ask("What does this say about critical patches?");
   last = sent[sent.length - 1];
   const kept = srcDocs().find(d => d.from === "chat");
-  check("an attached document goes into Sources, and its passages travel labelled", kept && /within 3 days/.test(last.req.sourcesText) &&
-        /kept in Sources/.test(last.req.attachments[0].text) && el.querySelector(".srcans.grounded"),
-        JSON.stringify({ kept:!!kept, att:(last.req.attachments[0] || {}).text }));
+  check("an attached document is kept for this conversation, and its passages travel labelled", kept && kept.scope === "chat" && kept.chat === chatThread().id &&
+        /within 3 days/.test(last.req.sourcesText) && /ATTACHED IN THIS CONVERSATION/.test(last.req.sourcesText) &&
+        /kept for this conversation/.test(last.req.attachments[0].text) && el.querySelector(".srcans.grounded"),
+        JSON.stringify({ kept:!!kept, scope:kept && kept.scope, att:(last.req.attachments[0] || {}).text }));
+  check("...the answer says it is read for this conversation only, with a Save… button",
+        /Read for this conversation only: /.test(el.textContent) && [...el.querySelectorAll("button")].some(b => /Save…/.test(b.textContent)), el.textContent.slice(-300));
   await until(async () => { try { await (await (await ws.getDirectoryHandle("sources")).getDirectoryHandle(kept.id)).getFileHandle("chunks.json"); return true; } catch (e) { return false; } }, 8000);
-  const later = srcSearch("How quickly must critical security patches be applied on internet-facing servers?", null, {});
-  check("...and is found again by a later question", later.passages.some(p => /within 3 days/.test(p.text)));
+  const laterQ = "How quickly must critical security patches be applied on internet-facing servers?";
+  check("...a later question in the same conversation reads it again", srcSearch(laterQ, chatThread(), {}).passages.some(p => /within 3 days/.test(p.text)));
+  check("...another conversation cannot find it, and it is not listed in Sources",
+        !srcSearch(laterQ, { id:"another", convo:{} }, {}).passages.some(p => p.doc === kept.id) && !srcLib().some(d => d.id === kept.id));
 
   /* the file under the question: a card that opens what was sent, and folds */
   const you = () => [...document.querySelectorAll("#chatLog .chb.you")].pop();
   let card = you().querySelector(".cfcard");
-  check("the question shows its file as a card, kept in Sources", card && /patching-standard\.md/.test(card.textContent) && /in Sources/.test(card.textContent),
+  check("the question shows its file as a card, kept for this chat only", card && /patching-standard\.md/.test(card.textContent) && /this chat only/.test(card.textContent),
         you().innerHTML.slice(0, 400));
   card.click();
   await until(() => document.getElementById("srcView"), 3000);
@@ -222,7 +228,7 @@
                    files:[{ name:"patching-standard.md", type:"text/markdown", size:2000 }] };
   chatThread().msgs.push(oldMsg); chatPaint();
   const oldCard = [...document.querySelectorAll("#chatLog .chb.you")].find(b => /an older question/.test(b.textContent)).querySelector(".cfcard");
-  check("a question sent before this version finds its document in Sources by its name", oldCard && /in Sources/.test(oldCard.textContent) &&
+  check("a question sent before this version finds its document in Sources by its name", oldCard && /in Sources|this chat only/.test(oldCard.textContent) &&
         !oldCard.classList.contains("gone"), oldCard ? oldCard.outerHTML.slice(0, 300) : "no card");
   chatThread().msgs.pop(); chatPaint();
 
@@ -264,7 +270,8 @@
         JSON.stringify(srcDocs().map(d => d.name)));
   check("study: the reply is shown, not held back", sent.length > nAsk && !el.querySelector(".srcans") && /I saved one draft runbook/.test(el.textContent),
         el.textContent.slice(0, 300));
-  check("study: it says the document is kept in Sources", /Kept in Sources: SEC\.014 Patch Management Standard/.test(el.textContent), el.textContent.slice(0, 400));
+  check("study: a document handed over to be learned is kept in Sources, for every conversation", /Kept in Sources: SEC\.014 Patch Management Standard/.test(el.textContent) &&
+        kept2 && !kept2.scope, el.textContent.slice(0, 400));
   check("study: the draft names the figure its document does not state", ASK.cur && /Not in the document: 4 hours/.test(ASK.cur.note) &&
         !/14 days/.test((/Not in the document:[^\n]*/.exec(ASK.cur.note) || [""])[0]), ASK.cur ? ASK.cur.note : "no dialog");
   await shot("8-study-draft");
@@ -380,7 +387,8 @@
   if (typeof setView === "function") setView("library");
   await sleep(300);
   const panel = document.querySelector(".srcpanel");
-  check("the Library shows Sources with every document and its status", panel && panel.querySelectorAll(".srcdoc").length === srcDocs().length &&
+  check("the Library shows Sources with every library document and its status - not the ones kept for one conversation",
+        panel && panel.querySelectorAll(".srcdoc").length === srcLib().length && srcDocs().length > srcLib().length &&
         /superseded/.test(panel.textContent) && /switched off/.test(panel.textContent), panel ? panel.textContent.slice(0, 300) : "no panel");
   panel.querySelector("details.srcset:last-of-type").open = true;
   check("the diagnostics list the searches, with no document text", SRC.log.filter(e => e.kind === "answer").length >= 8 &&
@@ -765,6 +773,82 @@
   check("...and then it has", Math.abs(zw - (zd.width + 97)) <= 2 && Math.abs(parseFloat(getComputedStyle(appEl).paddingRight) * 1.25 - zw) <= 2 &&
         !chatBox.style.width && !document.body.classList.contains("chsizing") && $("chatCover").hidden, zw + " " + getComputedStyle(appEl).paddingRight);
   S.settings.textScale = 100; applyFeel(); chatUI().dockW = 452; chatPlaceApply(); await sleep(200);
+
+  /* ── 5.15: a file stays in its conversation; "save this file" asks where;
+        their knowledge first; a guideline names the script; made-up names
+        are marked. Every document and script here is made up. ── */
+  openChat(); chatNew(true); chatPaint(); await sleep(150);
+  const guide = "# Partner sync - operations guide\nVersion 2\n\n## Missing sync file\nIf the daily sync file is missing, regenerate it on the SYNC database with gen_partner_sync.sql, then run the Partner upload job.\n\n## Escalation\nRaise it with the integration team when the upload fails twice.";
+  await chatAttach([new File([guide], "partner-sync-guide.md", { type:"text/markdown" })]);
+  await until(() => CHAT.files.length && !CHAT.files[0].reading, 8000);
+  plan = req => ({ say:"Regenerate it with gen_partner_sync.sql on the SYNC database, then run the Partner upload job.",
+                   cite:[{ s:label(req, /gen_partner_sync/), quote:"regenerate it on the SYNC database with gen_partner_sync.sql" }], confidence:"high" });
+  const n515 = sent.length;
+  el = await ask("no save this file. just only for this chat only - what does it say about a missing sync file?");
+  const cdoc = srcDocs().find(d => d.from === "chat" && /Partner sync/i.test(d.name));
+  check("\"no save this file, just for this chat\": no save is offered, and the file is kept for this conversation only",
+        cdoc && cdoc.scope === "chat" && sent.length === n515 + 1 && !/Where should I keep/.test(el.textContent) && !srcLib().some(d => d === cdoc),
+        JSON.stringify({ scope:cdoc && cdoc.scope, sent:sent.length - n515 }));
+  plan = req => ({ say:"Run the Partner upload job after the file is back." });
+  await ask("and after that?");
+  check("a follow-up in the same conversation carries the file's passages again", /gen_partner_sync\.sql/.test(sent[sent.length - 1].req.sourcesText || "") &&
+        /ATTACHED IN THIS CONVERSATION/.test(sent[sent.length - 1].req.sourcesText || ""));
+  /* "save this file": answered here, with the two choices */
+  const nSave = sent.length, nAns = answers().length;
+  chatAsk("save this file"); await sleep(400);
+  const saveEl = answers().pop();
+  const choice = lab => [...saveEl.querySelectorAll("button")].find(b => b.textContent.trim() === lab);
+  check("\"save this file\" asks where - as a knowledge source, or filed on a record - without asking the flow",
+        sent.length === nSave && answers().length === nAns + 1 && /Where should I keep/.test(saveEl.textContent) &&
+        !!choice("Save as knowledge source") && !!choice("File it on a record"), saveEl.textContent.slice(0, 200));
+  await shot("14-save-choice");
+  choice("Save as knowledge source").click();
+  await until(() => $("sdOk"), 4000);
+  if ($("sdOk")) $("sdOk").click();
+  await until(() => !cdoc.scope, 4000); await sleep(300);
+  check("...as a knowledge source: it is in Sources now, for every conversation", !cdoc.scope && srcLib().some(d => d === cdoc) &&
+        srcSearch("regenerate the partner sync file", { id:"elsewhere", convo:{} }, {}).passages.some(p => p.doc === cdoc.id) &&
+        /Saved to Sources/.test(answers().pop().textContent));
+  /* a second file, filed on a record */
+  const fileT = S.tasks.find(t => LIVE.indexOf(t.status) >= 0) || S.tasks[0];
+  await chatAttach([new File(["Notes from the vendor call: the upload window moves to 06:30 next week."], "vendor-call-notes.txt", { type:"text/plain" })]);
+  await until(() => CHAT.files.length && !CHAT.files[0].reading, 8000);
+  const nRec = sent.length;
+  chatAsk("file this document on " + fileT.code); await sleep(1500);
+  check("\"file this document on D-…\": it is filed with that record, not put in Sources",
+        sent.length === nRec && (fileT.files || []).some(f => /vendor-call-notes/.test(f.name)) &&
+        !srcLib().some(d => /vendor call/i.test(d.name)) && /Filed on /.test(answers().pop().textContent),
+        JSON.stringify({ sent:sent.length - nRec, files:(fileT.files || []).map(f => f.name) }));
+  /* a conversation deleted takes its own files with it */
+  const goneId = chatThread().id;
+  check("...the record's file stays a conversation file until the conversation goes", srcDocs().some(d => d.scope === "chat" && d.chat === goneId));
+  chatDeleteThread(goneId); await sleep(500);
+  check("deleting the conversation removes the files it kept for itself", !srcDocs().some(d => d.chat === goneId) && srcLib().some(d => d === cdoc));
+  /* the prompt: their knowledge first, a guideline someone new can follow */
+  check("the prompt puts their knowledge first and past fixes after it", /=== WHAT TO TRUST, IN THIS ORDER ===/.test(DossierFlow.PROMPT) &&
+        /after the guideline, never instead of it/.test(DossierFlow.PROMPT) && !/ASK TO LEARN/.test(DossierFlow.PROMPT));
+  check("the prompt asks for a guideline someone new can follow, with gaps listed instead of questions",
+        /=== HOW-TO: A GUIDELINE SOMEONE NEW CAN FOLLOW ===/.test(DossierFlow.PROMPT) && /Not in your documents/.test(DossierFlow.PROMPT));
+  /* their scripts, with what is in them */
+  const sdir = await ws.getDirectoryHandle("scripts", { create:true });
+  const sw = await (await sdir.getFileHandle("gen_partner_sync.sql", { create:true })).createWritable();
+  await sw.write("-- rebuilds the partner sync file for one day\nDECLARE @run_date date = '{{run_date}}';\nEXEC sync.build_partner_file @run_date;\n"); await sw.close();
+  S.scripts.push({ id:"Sgps", file:"gen_partner_sync.sql", name:"gen partner sync", desc:"Rebuilds the daily partner sync file", tags:["sync"],
+                   system:"", params:["run_date"], size:120, added:new Date().toISOString(), uses:0, lastUsed:"" });
+  await scriptTextsLoad();
+  openChat(); chatNew(true); chatPaint();
+  const sreq515 = DossierFlow.buildRequest("give me the guideline to regenerate the partner sync file", flowContext("give me the guideline to regenerate the partner sync file"), flowCfg());
+  const sm = (sreq515.workspace.scriptsMatched || [])[0];
+  check("a matching script goes with the question, with where it is and what is in it", sm && sm.name === "gen partner sync" &&
+        /Menu → Scripts/.test(sm.where) && /sync\.build_partner_file/.test(sm.text) && sm.params.indexOf("run_date") >= 0, JSON.stringify(sm || null).slice(0, 300));
+  /* a name nobody gave it is marked */
+  plan = req => ({ say:"Run `gen_partner_sync.sql`, then check the queue:\n\n~~~sql\nEXEC dbo.usp_MadeUpPartnerFix;\n~~~" });
+  el = await ask("how do I fix a missing partner sync file?");
+  const nw = el.querySelector(".namewarn");
+  check("a name that was never given to it is marked under the answer; the real script is not", nw && /usp_MadeUpPartnerFix/.test(nw.textContent) &&
+        !/gen_partner_sync/.test(nw.textContent), nw ? nw.textContent : el.textContent.slice(-200));
+  $("chatLog").scrollTop = 1e9; await sleep(250);
+  await shot("15-names-warning");
   setView("day");
   return { checks };
 })()

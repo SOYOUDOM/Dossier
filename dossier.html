@@ -1671,6 +1671,9 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
 .srcwarn{font-size:12px;line-height:1.5;margin:10px 0 0;padding:7px 10px;border-radius:8px;
   background:color-mix(in srgb,var(--p2) 12%,transparent);color:inherit}
 .srcpbody > .srcwarn{margin:0 0 10px}
+/* names in an answer that were never given to it (5.15) */
+.srcwarn.namewarn code{font-family:var(--f-mono);font-size:11.5px;padding:0 3px;border-radius:4px;
+  background:color-mix(in srgb,currentColor 9%,transparent)}
 .srcempty{font-size:12.5px;color:var(--ink-2);line-height:1.65;margin:4px 0 2px}
 /* the search, the status chips and the sort */
 .srctools{display:flex;gap:8px 12px;align-items:center;flex-wrap:wrap;margin:0 0 8px}
@@ -2916,7 +2919,7 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
   background:color-mix(in srgb,currentColor 7%,transparent);border:1px solid color-mix(in srgb,currentColor 16%,transparent);
   transition:border-color .15s,background .15s}
 .cfcard:hover{border-color:color-mix(in srgb,currentColor 38%,transparent);background:color-mix(in srgb,currentColor 10%,transparent)}
-.cfcard:focus-visible,.cfhide:focus-visible,.cfmin:focus-visible{outline:2px solid color-mix(in srgb,currentColor 50%,transparent);outline-offset:1px}
+.cfcard:focus-visible,.cfhide:focus-visible,.cfsave:focus-visible,.cfmin:focus-visible{outline:2px solid color-mix(in srgb,currentColor 50%,transparent);outline-offset:1px}
 .cfcard .cfic{flex:none;width:32px;height:32px;border-radius:7px;display:grid;place-items:center;font-size:15px;
   background:color-mix(in srgb,currentColor 10%,transparent)}
 .cfcard img{flex:none;width:46px;height:34px;object-fit:cover;border-radius:6px;display:block;
@@ -2925,8 +2928,9 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
 .cfcard .cfnm{max-width:100%;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .cfcard .cfmt{max-width:100%;font-size:10.5px;opacity:.68;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .cfcard.gone{cursor:default;opacity:.62}
-.cfhide,.cfmin{all:unset;cursor:pointer;font-size:11px;line-height:1.3;opacity:.62;padding:3px 7px;border-radius:7px}
-.cfhide:hover,.cfmin:hover{opacity:1;background:color-mix(in srgb,currentColor 9%,transparent)}
+.cfhide,.cfsave,.cfmin{all:unset;cursor:pointer;font-size:11px;line-height:1.3;opacity:.62;padding:3px 7px;border-radius:7px}
+.cfsave{opacity:.85;font-weight:600}
+.cfhide:hover,.cfsave:hover,.cfmin:hover{opacity:1;background:color-mix(in srgb,currentColor 9%,transparent)}
 .cfmin{max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;box-sizing:border-box;
   border:1px dashed color-mix(in srgb,currentColor 25%,transparent)}
 .cfs.min{margin-top:6px}
@@ -3247,7 +3251,7 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
   border-radius:20px 20px 6px 20px;padding:10px 15px;max-width:82%;font-size:14px;line-height:1.55}
 .chat[data-lm] .chb.you + .chb.you{margin-top:-12px;border-top-right-radius:8px}
 .chat[data-lm] .chb.you .cfs{gap:6px;margin-top:8px}
-.chat[data-lm] .chb.you .cfcard,.chat[data-lm] .chb.you .cfhide,.chat[data-lm] .chb.you .cfmin{font-family:var(--lm-font)}
+.chat[data-lm] .chb.you .cfcard,.chat[data-lm] .chb.you .cfhide,.chat[data-lm] .chb.you .cfsave,.chat[data-lm] .chb.you .cfmin{font-family:var(--lm-font)}
 
 /* the assistant: the page itself, under its mark and its name */
 .chat[data-lm] .chb.bot{font-size:14px}
@@ -6860,7 +6864,11 @@ const STRINGS = {
   SrcClearance: "Access labels this workspace may read",
   SrcClearancePh: "e.g. security-restricted, finance",
   SrcClearanceHint: "A document with no label is read by everyone. A document with a label is searched only when that label is listed here; otherwise it is not searched, not counted and never named to the assistant. Different teams keep separate workspace folders.",
-  SrcKeepChat: "Keep a PDF, Word or text file attached in a conversation in Sources (you can untick it per file in the tray)",
+  SrcChatDocs: "Files attached in a conversation",
+  SrcChatDocs_chat: "Keep them for that conversation only",
+  SrcChatDocs_sources: "Put them in Sources, for every conversation",
+  SrcChatDocsHint: "A PDF, Word or text file you attach in chat. Kept for that conversation only, every question in it can read and cite the file, and no other conversation can. To keep one for good, say \"save this file\" or press Save… under the answer.",
+  SrcChipChat: "From chats",
   SrcDiag: "Recent searches and changes ({n})",
   SrcDiagNone: "Nothing yet. Each question that searches your documents is listed here: how many documents, the filters, the passages and their scores, what the answer cited, and any answer held back — never the documents' words.",
   SrcStatus_active: "active",
@@ -6915,12 +6923,27 @@ const STRINGS = {
   SrcCut: "Only the first {n} pages were read.",
   SrcNoOcr: "{n} scanned page(s) have no text and could not be read (ocr.js is not beside dossier.html).",
   SrcTray: "⊕ Sources",
-  SrcTrayOnHint: "Kept in Sources: this answer can cite it, and later questions can find it again. Click to use it for this question only.",
-  SrcTrayOffHint: "For this question only. Click to keep it in Sources as well.",
+  SrcTrayOnHint: "Kept in Sources: every conversation can find and cite it. Click to keep it for this conversation only.",
+  SrcTrayOffHint: "For this conversation only: every question in it can read and cite it, no other conversation can. Click to keep it in Sources for every conversation.",
+  SrcTrayChat: "This chat",
   SrcKeptNoFlow: "Kept in Sources: {list}. Ask about it and the passages that answer come up here; with a flow set up, the assistant answers from them.",
   SrcAttachPointer: "[kept in Sources as \"{name}\" — its passages are in THEIR DOCUMENTS (SOURCES), labelled; cite them]",
+  SrcAttachPointerChat: "[kept for this conversation as \"{name}\" — its passages are in THEIR DOCUMENTS (SOURCES), marked ATTACHED IN THIS CONVERSATION; answer from them and cite them]",
   SrcAnswerLab: "Answer",
   SrcKeptNote: "Kept in Sources: {list} — later questions, in any conversation, can find and cite it.",
+  SrcChatOnlyNote: "Read for this conversation only: {list} — not in your Library, and no other conversation can see it.",
+  SrcChatOnlyNoFlow: "Kept for this conversation only: {list}. Ask about it and the passages that answer come up here; with a flow set up, the assistant answers from them.",
+  DocSaveBtn: "Save…",
+  NamesUnknown: "⚠ Not found in your documents, scripts or workspace: {list}. The assistant may have made these up — check them before you run anything.",
+  DocSaveHint: "Keep this file for good: as a knowledge source, or filed on a record",
+  DocSaveAsk: "Where should I keep {list}? **As a knowledge source**, every conversation can find and cite it. **Filed on a record**, it is kept with that record's documents and is not used as knowledge.",
+  DocSaveSrc: "Save as knowledge source",
+  DocSaveRec: "File it on a record",
+  DocSaveWhichRec: "Which record should {list} be filed on?",
+  DocSavedSrc: "Saved to Sources: {list} — every conversation can now find and cite it.",
+  DocSavedRec: "Filed on {code} {title}: {list}. It is under Library → Documents filed on records, and it is not used as knowledge.",
+  DocSaveGone: "That file is no longer kept here — attach it again and say \"save this file\".",
+  DocSaveNoRec: "There is no record to file it on yet. Open or create the record, then press Save… again.",
   SrcDraftWarn: "Not in the document: {list}. Check these against the original before saving.",
   SrcSourceLab: "Source",
   SrcRelatedLab: "What they do say",
@@ -7253,6 +7276,7 @@ const STRINGS = {
   AttachKindText: "Text",
   AttachOnePage: "1 page",
   AttachInSources: "in Sources",
+  AttachInChat: "this chat only",
   AttachSentAs: "Sent with your question · kept in Sources",
   AttachSentText: "What was read out of it and sent with your question",
   AttachSentPic: "The picture as it was sent",
@@ -7821,7 +7845,7 @@ const STATUSES = [
    the status bar, and clicking it copies a line you can paste into a bug
    report — build date and flow protocol included, because those are the two
    things that actually differ between copies. */
-const APP_VERSION = "5.14.1";
+const APP_VERSION = "5.15.0";
 const APP_BUILT = "2026-09-27";
 function buildLine(){
   return "KalKech v" + APP_VERSION + " \u00b7 built " + APP_BUILT +
@@ -9781,11 +9805,11 @@ async function openWorkspace(handle, quiet){
     if (!n) return;
     renderAll();
     toast(n + L("ScriptSPickedUpFromScripts"));
-  });
+  }).then(() => scriptTextsLoad()).catch(() => {});
   renderAll();
   hideBanner();
   /* this folder's runbooks and standards, read in the background */
-  srcLoad(true).then(() => { if (S.view === "library") renderLib(); }).catch(() => {});
+  srcLoad(true).then(() => { srcDropOrphans(); if (S.view === "library") renderLib(); }).catch(() => {});
   if (!quiet) toast((loaded ? S.tasks.length + L("RecordsLoadedFrom") + FS.name
                             : L("NewWorkspaceStartedIn") + FS.name) +
                     (DB.on ? " \u00b7 " + L("StoreSql") : " \u00b7 " + L("StoreFile")));
@@ -13319,7 +13343,10 @@ function chatNew(quiet){
                        title:"", created:new Date().toISOString(),
                        updated:new Date().toISOString(), msgs:[], convo:{} };
   if (!empty) S.chats.unshift(c);
-  while (S.chats.length > CHAT_MAX_THREADS) S.chats.pop();
+  while (S.chats.length > CHAT_MAX_THREADS){
+    const gone = S.chats.pop();
+    if (gone) srcDropChat(gone.id).catch(() => {});
+  }
   S.chatId = c.id;
   if (!quiet){ chatPaint(); touch(); }
   return c;
@@ -13352,6 +13379,8 @@ function chatAutoTitle(q){
 }
 function chatDeleteThread(id){
   S.chats = (S.chats || []).filter(c => c.id !== id);
+  /* the files it kept for itself go with it (5.15) */
+  srcDropChat(id).catch(() => {});
   if (S.chatId === id) S.chatId = (S.chats[0] || {}).id || "";
   if (!S.chatId) chatNew(true);
   chatPaint(); touch();
@@ -14097,12 +14126,25 @@ function chatFilesPaint(row, files, m){
     const nm = document.createElement("span"); nm.className = "cfnm"; nm.textContent = f.name;
     const mt = document.createElement("span"); mt.className = "cfmt";
     const kindName = { pdf:"PDF", docx:"Word", image:L("AttachKindPic"), text:L("AttachKindText") }[kind] || "";
+    /* where it is kept now: this conversation only, or Sources (it may have
+       been saved there since it was sent) */
+    const sd = kept ? srcDoc(f.srcId) : null;
     mt.textContent = [kindName, f.pages ? L(f.pages === 1 ? "AttachOnePage" : "SrcPages", { n:f.pages }) : "",
-                      bytes(f.size), kept ? L("AttachInSources") : ""].filter(Boolean).join(" \u00b7 ");
+                      bytes(f.size), sd ? L(sd.scope === "chat" ? "AttachInChat" : "AttachInSources") : ""].filter(Boolean).join(" \u00b7 ");
     tx.appendChild(nm); tx.appendChild(mt); b.appendChild(tx);
     b.onclick = () => chatFileOpen(f, lf);
     row.appendChild(b);
   });
+  /* files kept for this conversation only can be kept for good, from here */
+  const mine = files.map(f => f.srcId && srcHere() && srcDoc(f.srcId)).filter(d => d && d.scope === "chat").map(d => d.id);
+  if (mine.length){
+    const sv = document.createElement("button");
+    sv.type = "button"; sv.className = "cfsave";
+    sv.textContent = L("DocSaveBtn");
+    sv.title = L("DocSaveHint");
+    sv.onclick = () => chatDo({ kind:"docsave", ids:mine });
+    row.appendChild(sv);
+  }
   const hide = document.createElement("button");
   hide.type = "button"; hide.className = "cfhide";
   hide.textContent = L("AttachHide");
@@ -14824,6 +14866,10 @@ function chatRenderBot(r, sourceText, replaying, at){
     if (grounded) h += '<div class="srclab">' + LE("SrcAnswerLab") + "</div>";
     h += '<div class="say">' + chatSay(r.say || "") + "</div>";
     if (grounded || r.suggest) h += srcAnswerHtml(r, id);
+    /* names it could not have been given (5.15) */
+    if ((r.unknownNames || []).length)
+      h += '<div class="srcwarn namewarn">' + esc(L("NamesUnknown", { list:"\u0001" }))
+        .replace("\u0001", r.unknownNames.map(n => "<code>" + esc(n) + "</code>").join(", ")) + "</div>";
   }
   if (r.note) h += '<div class="note">' + esc(r.note) + "</div>";
   if (r.took) h += '<div class="took" title="' + esc(L("FlowTookHint")) + '">' + (r.took / 1000).toFixed(1) + " s" +
@@ -15352,6 +15398,40 @@ function chatNameSet(name){
   touch(); applyChatUI(); petPaint();
   return had;
 }
+/* "Save this file", "keep the document in the library", "file it on
+   D-0142" - a conversation's file kept for good, where they choose (5.15).
+   Never "no save this file", "don't keep it", "just for this chat": those
+   say the opposite, and a file sent with them stays in the conversation. A
+   bare "it" or "this" only counts with a file in this very message ("keep
+   it short" is not about a file). */
+const DOC_SAVE_NOT = /\b(?:no|not|don'?t|dont|do\s+not|never|without)\s+(?:need\s+to\s+|have\s+to\s+)?(?:save|keep|store|add|put|file)\b|\b(?:only|just)\b[^.?!\n]{0,24}\b(?:this|the|that)\s+(?:chat|conversation)\b|\bfor\s+(?:this|the)\s+(?:chat|conversation)\s+only\b/i;
+const DOC_SAVE_FILE = /\b(?:save|keep|store|add|put|file)\b[^.?!\n]{0,30}?\b(?:files?|documents?|docs?|pdfs?|attachments?|emails?)\b/i;
+const DOC_SAVE_IT = /\b(?:save|store)\s+(?:it|this|that|them)\b|\bfile\s+(?:it|this|that|them)\s+(?:on|to|under|with)\b/i;
+const DOC_SAVE_ASIDE = /(?:^|[.!?\n]\s*|\b(?:please|pls|plz|and|also|then|can\s+you|could\s+you)\s+)(?:save|keep|store)\s+(?:the\s+|this\s+|that\s+|my\s+)?(?:files?|documents?|docs?|pdfs?|attachments?|it|this|them)\b/i;
+function chatDocSaveLocal(q, c){
+  const t = String(q || "");
+  if (DOC_SAVE_NOT.test(t)) return null;
+  const now = CHAT.files.filter(f => f.srcId).map(f => f.srcId);
+  /* only that to do - or a question as well, which is answered first */
+  const pure = !/\?/.test(t) && t.split(/\s+/).filter(Boolean).length <= 10;
+  const asked = pure
+    ? DOC_SAVE_FILE.test(t) || (now.length && DOC_SAVE_IT.test(t)) || /\bfile\s+(?:it|this|them)\s+on\b/i.test(t)
+    /* beside a question, only as a request of its own ("... Save this file
+       too."), never inside the question ("how do I save a file?") */
+    : DOC_SAVE_ASIDE.test(t);
+  if (!asked) return null;
+  const ids = now.length ? now : srcChatDocs(c && c.id).map(d => d.id);
+  if (!ids.length) return null;
+  /* where, when they already said: "to knowledge", "in Sources", "on D-0142" */
+  const rec = S.tasks.find(x => x.code && new RegExp("\\b" + String(x.code).replace(/[.*+?^${}()|[\]\\-]/g, "\\$&") + "\\b", "i").test(t));
+  const to = /\b(?:knowledge|sources?)\b/i.test(t) ? "src" : rec ? "rec" : "";
+  return { ids:ids, to:to, taskId:rec ? rec.id : "", pure:pure };
+}
+function chatDocSaveRun(s){
+  if (s.to === "src") return docSaveToSources(s.ids);
+  if (s.to === "rec") return docSaveToRecord(s.ids, s.taskId);
+  return docSaveAsk(s.ids);
+}
 function chatNameLocal(q){
   const t = String(q || "").trim();
   if (!t || t.length > 80) return null;
@@ -15387,14 +15467,15 @@ function chatAsk(text, opts){
   if (SRC.loading && !SRC.done) return SRC.loading.catch(() => {}).then(() => chatAsk(q, opts));
   CHAT.last = q;
   const c = chatThread() || chatNew(true);
-  /* documents in the tray go into Sources now, so this question can cite
-     them and the next ones can find them again - and before the message is
-     written, so the message knows where each one is kept */
-  CHAT.pins = CHAT.files.length ? srcKeepFromChat(CHAT.files) : [];
+  /* documents in the tray are kept now - for this conversation, unless
+     they asked for Sources - so this question can cite them and the next
+     ones in it can read them again; and before the message is written, so
+     the message knows where each one is kept */
+  CHAT.pins = CHAT.files.length ? srcKeepFromChat(CHAT.files, c, /^\[study\]/i.test(q)) : [];
   const files = CHAT.files.map(f => {
     const o = { name:f.name, type:f.type, size:f.size };
     if (f.pages) o.pages = f.pages;
-    if (f.srcId){ o.srcId = f.srcId; o.srcName = f.srcName; }
+    if (f.srcId){ o.srcId = f.srcId; o.srcName = f.srcName; if (f.srcScope) o.srcScope = f.srcScope; }
     return o;
   });
   const you = { who:"you", text:q, files:files };
@@ -15411,6 +15492,17 @@ function chatAsk(text, opts){
   chatRenderYou(q, files, you);
   $("chatq").value = "";
   chatGrow();
+
+  /* "save this file" - the conversation's file kept for good, where they
+     choose: answered here, at once; with a question beside it, after the
+     answer to the question (5.15) */
+  const save = !opts.flow && !opts.tier && !opts.force ? chatDocSaveLocal(q, c) : null;
+  if (save && save.pure){
+    CHAT.files = []; CHAT.pins = []; CHAT.kept = []; CHAT.chatOnly = []; renderChatFiles();
+    chatDocSaveRun(save);
+    chatSide();
+    return;
+  }
 
   /* "hi" and "thanks" are answered here, at once. Sending them through
      Power Automate cost seven seconds and a model call for two words. */
@@ -15456,15 +15548,22 @@ function chatAsk(text, opts){
      to, and what answers when the flow is switched off. */
   if (flowOn()){
     updCheck();
+    /* the scripts' text, read again for the next question (this one goes
+       with what was read already - nothing here waits) */
+    if (Date.now() - (CHAT.scriptsAt || 0) > 60000){ CHAT.scriptsAt = Date.now(); scriptTextsLoad().catch(() => {}); }
     const p = flowAsk(q, c, opts);
     /* they went with the question; the tray starts empty for the next one */
-    CHAT.files = []; CHAT.pins = []; CHAT.kept = []; renderChatFiles();
-    return p;
+    CHAT.files = []; CHAT.pins = []; CHAT.kept = []; CHAT.chatOnly = []; renderChatFiles();
+    return save ? p.then(r => { chatDocSaveRun(save); return r; }) : p;
   }
   if (CHAT.files.length){
-    const kept = CHAT.files.filter(f => f.srcId).map(f => f.srcName);
-    CHAT.files = []; CHAT.pins = []; CHAT.kept = []; renderChatFiles();
-    chatBot({ say:"", note:kept.length ? L("SrcKeptNoFlow", { list:kept.join(", ") }) : L("AttachNeedsFlow") });
+    const kept = CHAT.files.filter(f => f.srcId && !f.srcScope).map(f => f.srcName);
+    const mine = CHAT.files.filter(f => f.srcId && f.srcScope).map(f => f.srcName);
+    const ids = CHAT.files.filter(f => f.srcId && f.srcScope).map(f => f.srcId);
+    CHAT.files = []; CHAT.pins = []; CHAT.kept = []; CHAT.chatOnly = []; renderChatFiles();
+    chatBot({ say:"", note:kept.length ? L("SrcKeptNoFlow", { list:kept.join(", ") })
+                         : mine.length ? L("SrcChatOnlyNoFlow", { list:mine.join(", ") }) : L("AttachNeedsFlow"),
+              chips:ids.length ? [{ label:L("DocSaveBtn"), act:{ kind:"docsave", ids:ids } }] : undefined });
   }
   /* no flow: what your documents say about it, passage by passage */
   const fromDocs = !opts.force && srcLocalAnswer(q, c);
@@ -15793,6 +15892,7 @@ function flowContext(q, opts){
   for (let i = 0; i < 30 && isOffDay(next); i++) next = addDays(next, 1);
   const from = addDays(k, -30), to = addDays(k, 400);
   const hols = holidays().filter(h => h.d >= from && h.d <= to).slice(0, 90);
+  const rbm = runbooksMatchedForFlow(q, big);
 
   return {
     today: k,
@@ -15821,7 +15921,9 @@ function flowContext(q, opts){
     memoryTotal: memoryStore().length,
     runbooks: runbooksForFlow(q),
     runbookTotal: runbookStore().length,
-    runbooksMatched: runbooksMatchedForFlow(q, big),
+    runbooksMatched: rbm,
+    /* the scripts this question is about, with what is in them (5.15) */
+    scriptsMatched: scriptsMatchedForFlow(q, c, rbm, big),
     pastFixes: pastFixesFor(q, big ? FLOW_BIG.pastFixes : undefined),
     brief: briefForFlow(),
     /* Resolv itself: its version and latest releases always, and the parts
@@ -15846,7 +15948,8 @@ function flowContext(q, opts){
       /* what was read out of it here — the words the endpoint answers
          from — with the page count, and a note when something got in the
          way: scanned, encrypted, cut, partial, empty, unreadable */
-      text:f.srcId ? L("SrcAttachPointer", { name:f.srcName || f.name }) : chatDocText(f), pages:f.pages || 0, note:f.srcId ? "" : f.note || "",
+      text:f.srcId ? L(f.srcScope === "chat" ? "SrcAttachPointerChat" : "SrcAttachPointer", { name:f.srcName || f.name }) : chatDocText(f),
+      pages:f.pages || 0, note:f.srcId ? "" : f.note || "",
       /* pictures inside a document: how many, each marked in text where it sits */
       pictures:(f.pics || []).filter(p => p.why !== "tiny").length })),
     picture: chatPicture().data,
@@ -15892,6 +15995,21 @@ function flowContext(q, opts){
 }
 
 /* ── the question ─────────────────────────────────────────────────────── */
+
+/* Everything the model was given for a question, as one text: the request
+   (the message, the conversation, the workspace with its scripts, records,
+   runbooks and notes, the attachments' words) and the passages. A name in
+   the answer that is in none of it was not given - it was made up, or
+   remembered from somewhere else (5.15). The prompt itself is left out: its
+   examples are made up on purpose. */
+function flowEvidence(q, ctx){
+  let req = null;
+  try { req = DossierFlow.buildRequest(q, ctx, flowCfg()); } catch(e){ req = null; }
+  const skip = { prompt:1, promptTemplate:1, picture:1, data:1 };
+  let s = "";
+  try { s = JSON.stringify(req || {}, (k, v) => skip[k] ? undefined : v); } catch(e){ s = ""; }
+  return s + "\n" + ((ctx && ctx.sources && ctx.sources.text) || "") + "\n" + q;
+}
 
 async function flowAsk(q, thread, opts){
   opts = opts || {};
@@ -16057,6 +16175,15 @@ async function flowAsk(q, thread, opts){
   /* answered from the documents? its quotes and figures are checked
      against the passages it was sent before it is shown */
   if (out && !fell) srcApply(reply, out, ctx.sources, q, thread, ctx.runbooksMatched);
+  /* the names it wrote - scripts, procedures, tables - that appear nowhere
+     in what it was given: shown under the answer as possibly made up */
+  if (out && !fell && reply.say && srcHere()){
+    const unknown = DossierSources.unknownNames(reply.say, flowEvidence(q, ctx));
+    if (unknown.length){
+      reply.unknownNames = unknown.slice(0, 8);
+      srcNote({ kind:"names", at:new Date().toISOString(), names:reply.unknownNames });
+    }
+  }
   if (fell){
     /* even the lean question failed: it is the flow, or the question itself */
     reply.trouble = true;
@@ -17671,6 +17798,56 @@ function runbooksMatchedForFlow(q, big){
   }));
 }
 
+/* ── their scripts, for a question ───────────────────────────────────────
+   "Go to the database and run the script that generates the data" is no
+   use to someone new: which script, where is it, what does it ask for? The
+   names of their scripts always went with a question, but never what a
+   script does. Now the few that match the question - by name, description,
+   tags and system, and by being named in this conversation's documents or
+   the runbooks it matched - go with their text (5.15), so a step can name
+   the script, say where it is (Menu → Scripts) and what to fill in.
+   The text is read from the scripts folder into memory when the workspace
+   opens and again in the background before each question, because what
+   goes with a question is taken without waiting for anything. */
+const SCRIPT_TEXT = new Map();
+async function scriptTextsLoad(){
+  if (!FS.ok) return;
+  for (const sc of S.scripts || []){
+    if (!TEXTY.test(sc.file || "")) continue;
+    const body = await readScriptText(sc);
+    if (body) SCRIPT_TEXT.set(sc.file, body.slice(0, 16000)); else SCRIPT_TEXT.delete(sc.file);
+  }
+}
+function scriptsMatchedForFlow(q, thread, runbooks, big){
+  const all = S.scripts || [];
+  if (!q || !all.length || !srcHere()) return [];
+  const words = new Set(DossierSources.terms(q));
+  /* names said in this conversation's own documents and in the runbooks
+     the question matched: "run gen_referrals.sql" there points at a script */
+  const said = (srcChatDocs(thread && thread.id).map(d => SRC.texts.get(d.id) || "").join("\n") + "\n" +
+    (runbooks || []).map(r => [].concat(r.steps || [], [r.checks || ""]).join("\n")).join("\n")).toLowerCase();
+  const ql = String(q).toLowerCase();
+  const focus = S.open ? getTask(S.open) : null;
+  const scored = all.map(sc => {
+    const name = String(sc.name || ""), file = String(sc.file || "");
+    const base = splitExt(file)[0].toLowerCase();
+    let score = 0;
+    const hit = (txt, w) => DossierSources.terms(txt).forEach(t => { if (words.has(t)) score += w; });
+    hit(name, 3); hit(sc.desc || "", 1); hit((sc.tags || []).join(" "), 2); hit(sc.system || "", 1);
+    if (base.length >= 4 && (ql.indexOf(base) >= 0 || ql.indexOf(name.toLowerCase()) >= 0)) score += 12;
+    if (base.length >= 4 && (said.indexOf(file.toLowerCase()) >= 0 || said.indexOf(base) >= 0)) score += 8;
+    if (focus && (focus.scripts || []).indexOf(sc.id) >= 0) score += 4;
+    return { sc:sc, score:score };
+  }).filter(x => x.score >= 3).sort((a, b) => b.score - a.score).slice(0, big ? 6 : 3);
+  const cap = big ? 8000 : 4000;
+  return scored.map(({ sc }) => {
+    const body = SCRIPT_TEXT.get(sc.file) || "";
+    return { name:sc.name, file:sc.file, where:"Menu → Scripts → " + sc.name, system:sc.system || "",
+             desc:sc.desc || "", params:(sc.params || []).slice(), language:scriptExt(sc),
+             text:body.slice(0, cap), cut:body.length > cap || undefined };
+  });
+}
+
 /* Profiles do travel whole. They are few, they are meant to be about a
    page, and they are the only thing that helps with a symptom that matches
    nothing. The cap is a backstop against one that grew into a manual. */
@@ -18459,6 +18636,12 @@ function chatDo(act){
   switch (act.kind){
     case "say":      return chatAsk(act.text);
     case "askflow":  return chatAsk(act.text, { flow:true });
+    /* a file kept for this conversation, saved for good: as a knowledge
+       source, or filed on a record (5.15) */
+    case "docsave":  return docSaveAsk(act.ids);
+    case "docsrc":   return docSaveToSources(act.ids);
+    case "docrec":   return docSavePickRecord(act.ids);
+    case "docrecto": return docSaveToRecord(act.ids, act.id);
     case "rerun": {
       const c = chatThread();
       let r;
@@ -22908,13 +23091,29 @@ function srcCfg(){
   if (!st.sources || typeof st.sources !== "object") st.sources = {};
   const c = st.sources;
   if (!Array.isArray(c.clearance)) c.clearance = [];
-  if (c.keepChat === undefined) c.keepChat = true;
+  /* A document attached in a chat: kept for that conversation only
+     ("chat", the default since 5.15), or put in Sources for every
+     conversation ("sources"). Before 5.15 a switch, keepChat, defaulted to
+     Sources - and a file sent with "just for this chat" ended up in the
+     library. That old default was never a choice anyone made, so it is not
+     carried over. */
+  if (c.chatDocs !== "chat" && c.chatDocs !== "sources") c.chatDocs = "chat";
+  delete c.keepChat;
   if (!(+c.budget >= 2000)) c.budget = 14000;
   return c;
 }
 function srcDocs(){ return (SRC.cat && SRC.cat.docs) || []; }
 function srcDoc(id){ return srcDocs().find(d => d.id === id) || null; }
 function srcActive(){ return srcDocs().filter(d => d.status === "active"); }
+/* The library: every document but the ones attached in a conversation and
+   kept for that conversation only (scope "chat", 5.15). Those are stored
+   the same way - passages, citations, the viewer all work for them - but
+   they are not listed in Sources, not counted, and only the conversation
+   they came in can read them. */
+function srcLib(){ return srcDocs().filter(d => d.scope !== "chat"); }
+function srcChatDocs(threadId){
+  return threadId ? srcDocs().filter(d => d.scope === "chat" && d.chat === threadId && d.status === "active") : [];
+}
 function srcNewId(){ return "src" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5); }
 
 /* ── on disk ──────────────────────────────────────────────────────────── */
@@ -22954,7 +23153,7 @@ async function srcLoad(force){
     const stale = SRC.cat.algo !== DossierSources.ALGO;
     let redone = 0, renamed = 0;
     /* 5.9.0 named a PDF kept from a conversation after its first line, which
-       is often a logo ("AIA"): those take their file's name */
+       is often a logo (a company's initials): those take their file's name */
     SRC.cat.docs.forEach(d => {
       if (d.from === "chat" && d.kind === "pdf" && !d.named && DossierSources.weakTitle(d.name)){
         const n = DossierSources.nameFor("", d.file, d.kind);
@@ -23099,7 +23298,7 @@ async function srcAddFiles(list){
       srcNote({ kind:"error", file:f.name, what:"no text" });
       toast(L("SrcNoText", { name:f.name }), { bad:true, life:9000 }); continue;
     }
-    const same = srcDocs().find(d => d.status !== "deleted" && ((x.sha && d.sha === x.sha) ||
+    const same = srcLib().find(d => d.status !== "deleted" && ((x.sha && d.sha === x.sha) ||
                    d.textHash === DossierSources.hash36(DossierSources.norm(x.text))));
     if (same){ toast(L("SrcUnchanged", { name:same.name })); continue; }
     const meta = DossierSources.detectMeta(x.text, f.name);
@@ -23125,14 +23324,14 @@ async function srcAddMany(files){
     catch(e){ failed.push(f.name); srcNote({ kind:"error", file:f.name, what:String(e.message || e) }); continue; }
     if (!x.text.trim()){ failed.push(f.name); srcNote({ kind:"error", file:f.name, what:"no text" }); continue; }
     const th = DossierSources.hash36(DossierSources.norm(x.text));
-    if (srcDocs().some(d => d.status !== "deleted" && ((x.sha && d.sha === x.sha) || d.textHash === th)) || read.some(r => r.th === th)){
+    if (srcLib().some(d => d.status !== "deleted" && ((x.sha && d.sha === x.sha) || d.textHash === th)) || read.some(r => r.th === th)){
       skipped.push(f.name); continue;
     }
     const meta = DossierSources.detectMeta(x.text, f.name);
     const name = DossierSources.nameFor(meta.title, f.name, x.kind, meta.titleFrom);
     const fam = DossierSources.familyKey(name);
     read.push({ f:f, x:x, th:th, name:name, version:meta.version, effective:meta.effective,
-                match:srcDocs().filter(d => d.family === fam && d.status === "active") });
+                match:srcLib().filter(d => d.family === fam && d.status === "active") });
   }
   if (!read.length){
     toast([skipped.length ? L("SrcSkippedSame", { n:skipped.length }) : "", failed.length ? L("SrcFailedN", { n:failed.length }) : ""].filter(Boolean).join(" ") ||
@@ -23171,7 +23370,7 @@ function srcDetailsMany(read, skipped, failed){
     const kinds = {};
     read.forEach(r => { const k = SRC_KINDS[r.x.kind] || r.x.kind; kinds[k] = (kinds[k] || 0) + 1; });
     const versions = read.filter(r => r.match.length);
-    const cats = [...new Set(srcDocs().map(d => d.category).filter(Boolean))].sort();
+    const cats = [...new Set(srcLib().map(d => d.category).filter(Boolean))].sort();
     el.innerHTML =
       '<div class="srcdlgb"><h3>' + LE("SrcManyTitle", { n:read.length }) + "</h3>" +
       '<p class="srcfile">' + esc([L("SrcManyRead", { n:read.length }) + " (" + Object.keys(kinds).map(k => kinds[k] + " " + k).join(", ") + ")",
@@ -23259,7 +23458,7 @@ function srcAskCategory(ids){
     const old = document.getElementById("srcDlg"); if (old) old.remove();
     const el = document.createElement("div");
     el.id = "srcDlg"; el.className = "srcdlg"; el.setAttribute("role", "dialog");
-    const cats = [...new Set(srcDocs().map(d => d.category).filter(Boolean))].sort();
+    const cats = [...new Set(srcLib().map(d => d.category).filter(Boolean))].sort();
     const same = [...new Set(ids.map(id => (srcDoc(id) || {}).category || ""))];
     el.innerHTML = '<div class="srcdlgb"><h3>' + LE("SrcCatTitle", { n:ids.length }) + "</h3>" +
       fr(L("SrcCategory"), '<input class="in" id="scCat" list="scCats" value="' + esc(same.length === 1 ? same[0] : "") + '" placeholder="' + LE("SrcCategoryPh") + '">' +
@@ -23276,22 +23475,37 @@ function srcAskCategory(ids){
 }
 
 /* ── a document handed over in a conversation ───────────────────────────
-   Kept, not forgotten after one answer: a PDF, a Word document or a text
-   file attached to a question goes into Sources at once, from the text the
-   tray has already read, so this question can cite it - and the next
-   question, and a new conversation next week. The original is written
-   beside it and read again to the end, for a document longer than an
-   attachment is read. Switched off with the setting, or per file in the
-   tray. */
-function srcKeepFromChat(files){
+   Kept, not forgotten after one answer - but kept for THAT conversation
+   (5.15). A PDF, a Word document or a text file attached to a question is
+   stored like any document in Sources (its passages, the original beside
+   them, read again to the end when it is long), marked scope "chat" with
+   the conversation's id: every question in the conversation reads it and
+   can cite it, follow-ups included, and no other conversation sees it.
+   It goes into Sources for every conversation only when they choose that -
+   the setting, the chip on the file in the tray, or "save this file"
+   afterwards (chatDocSave). Before 5.15 every attachment went into Sources
+   by default, and a file sent "just for this chat" turned up in answers
+   in other chats. */
+function srcKeepFromChat(files, thread, toLib){
   if (!srcHere() || !FS.ok || !SRC.cat || !SRC.ix) return [];
   const cfg = srcCfg(), pins = [];
   (files || []).forEach(f => {
     if (f.reading || !f.text || chatKind(f.type) === "image") return;
-    if (f.keepSrc === false || (!cfg.keepChat && !f.keepSrc)) return;
-    const text = String(f.text).replace(/\d+\n?/g, "");
+    /* toLib: a document handed over to be learned ([study], "Learn from a
+       BAU document") is asked to be kept - that is the point of it */
+    const lib = f.keepSrc === undefined ? (!!toLib || cfg.chatDocs === "sources") : !!f.keepSrc;
+    if (!lib && !thread) return;
+    const text = String(f.text).replace(/\uE000\d+\n?/g, "");
     const th = DossierSources.hash36(DossierSources.norm(text));
-    let d = srcDocs().find(x => x.textHash === th && x.status === "active");
+    /* already in Sources: that one is read, nothing is stored twice; already
+       kept for this conversation: that one again (and into Sources, if
+       that is where it is wanted now) */
+    let d = srcLib().find(x => x.textHash === th && x.status === "active");
+    const mine = d ? null : srcChatDocs(thread && thread.id).find(x => x.textHash === th);
+    if (mine){
+      d = mine;
+      if (lib){ srcPromote(mine); (CHAT.kept = CHAT.kept || []).push(mine.name); }
+    }
     if (!d){
       const kind = srcKindOf(f.name, f.type);
       const meta = DossierSources.detectMeta(text, f.name);
@@ -23300,18 +23514,130 @@ function srcKeepFromChat(files){
             systems:[], environment:"", category:"", label:"", assistant:true, status:"active",
             family:DossierSources.familyKey(name), textHash:th, size:f.size || 0, pages:f.pages || 0,
             added:new Date().toISOString(), from:"chat", pageStats:[] };
+      if (!lib){ d.scope = "chat"; d.chat = thread.id; }
       const r = srcPrepare(d, text);
       d.chunks = r.chunks.length; d.issues = r.issues;
       SRC.cat.docs.push(d); SRC.chunks.set(d.id, r.chunks); SRC.texts.set(d.id, text);
       srcRebuild();
       srcKeepFiles(d, f, text);
       f.srcNew = true;
-      (CHAT.kept = CHAT.kept || []).push(d.name);
+      if (lib) (CHAT.kept = CHAT.kept || []).push(d.name);
+      else (CHAT.chatOnly = CHAT.chatOnly || []).push({ id:d.id, name:d.name });
     }
-    f.srcId = d.id; f.srcName = d.name;
+    f.srcId = d.id; f.srcName = d.name; f.srcScope = d.scope === "chat" ? "chat" : "";
     pins.push(d.id);
   });
   return pins;
+}
+/* a conversation's document put into Sources for every conversation: the
+   same passages and original, now part of the library */
+function srcPromote(d){
+  if (!d || d.scope !== "chat") return d;
+  delete d.scope; delete d.chat;
+  d.promoted = new Date().toISOString();
+  srcRebuild();
+  srcSaveCat().catch(() => {});
+  srcNote({ kind:"edited", doc:d.name, version:d.version, from:"chat" });
+  return d;
+}
+/* ── "save this file": where a conversation's file goes for good ─────────
+   Two places, and they are different things:
+   - a knowledge source - in Sources, read and cited by every conversation
+     (the same passages, now part of the library);
+   - a file on a record - filed with that record like any document dragged
+     onto it, listed under Library → Documents filed on records, never read
+     as knowledge.
+   Asked only when they ask for it ("save this file", or the Save… button);
+   until then the file belongs to the conversation it came in. */
+function docSaveDocs(ids){ return (ids || []).map(srcDoc).filter(Boolean); }
+function docSaveAsk(ids){
+  const docs = docSaveDocs(ids);
+  if (!docs.length) return chatBot({ say:L("DocSaveGone") });
+  const list = docs.map(d => d.name).join(", ");
+  chatBot({ say:L("DocSaveAsk", { list:list }), chips:[
+    { label:L("DocSaveSrc"), act:{ kind:"docsrc", ids:docs.map(d => d.id) } },
+    { label:L("DocSaveRec"), act:{ kind:"docrec", ids:docs.map(d => d.id) } }] });
+}
+async function docSaveToSources(ids){
+  const docs = docSaveDocs(ids);
+  if (!docs.length) return chatBot({ say:L("DocSaveGone") });
+  const done = [];
+  for (const d of docs){
+    /* the same text already in the library: nothing to add */
+    const same = srcLib().find(x => x !== d && x.textHash === d.textHash && x.status === "active");
+    if (same){ done.push(same.name); continue; }
+    srcPromote(d);
+    done.push(d.name);
+    /* the details a library document carries - its name, version, systems,
+       category - asked now, as when one is added in Sources */
+    await srcEdit(d.id);
+  }
+  touch();
+  if (S.view === "library") renderLib();
+  chatBot({ say:L("DocSavedSrc", { list:docSaveDocs(ids).map(d => d.name).join(", ") || done.join(", ") }) });
+}
+/* the records it could go on: the one in front of them first, then what
+   they are working on now */
+function docSaveRecords(){
+  const out = [], add = t => { if (t && out.indexOf(t) < 0) out.push(t); };
+  if (S.open) add(getTask(S.open));
+  if (S.lastOpen) add(getTask(S.lastOpen.id));
+  [...(S.sel || [])].forEach(id => add(getTask(id)));
+  const last = t => (t.log || []).reduce((m, l) => l.at > m ? l.at : m, t.created || "");
+  S.tasks.filter(t => LIVE.indexOf(t.status) >= 0).sort((a, b) => last(b).localeCompare(last(a))).forEach(add);
+  return out.slice(0, 6);
+}
+function docSavePickRecord(ids){
+  const docs = docSaveDocs(ids);
+  if (!docs.length) return chatBot({ say:L("DocSaveGone") });
+  const recs = docSaveRecords();
+  if (!recs.length) return chatBot({ say:L("DocSaveNoRec") });
+  chatBot({ say:L("DocSaveWhichRec", { list:docs.map(d => d.name).join(", ") }),
+            chips:recs.map(t => ({ label:t.code + " " + clip(t.title, 34), act:{ kind:"docrecto", ids:ids, id:t.id } })) });
+}
+/* the file as it was sent: this session's copy, else the original kept
+   beside its passages, else (a document read from pasted text) its text */
+async function docSaveFile(d){
+  for (const k in CHAT.msgFiles){
+    const f = (CHAT.msgFiles[k] || []).find(x => x.srcId === d.id && x.file);
+    if (f) return f.file;
+  }
+  try {
+    const dir = await FS.dir([SRC_DIR, d.id], false);
+    const b = await (await dir.getFileHandle(d.file)).getFile();
+    return new File([b], d.file, { type:b.type });
+  } catch(e){}
+  const tx = SRC.texts.get(d.id);
+  return tx ? new File([tx], String(d.file || d.name).replace(/\.[^.]+$/, "") + ".txt", { type:"text/plain" }) : null;
+}
+async function docSaveToRecord(ids, taskId){
+  const t = getTask(taskId), docs = docSaveDocs(ids);
+  if (!t) return chatBot({ say:L("DocSaveNoRec") });
+  if (!docs.length) return chatBot({ say:L("DocSaveGone") });
+  const files = [];
+  for (const d of docs){ const f = await docSaveFile(d); if (f) files.push(f); }
+  if (!files.length) return chatBot({ say:L("DocSaveGone") });
+  const n = await attachFiles(t, files);
+  if (!n) return;
+  chatBot({ say:L("DocSavedRec", { code:t.code, title:clip(t.title, 50), list:files.map(f => f.name).join(", ") }),
+            chips:[{ label:L("AiOpenRecord"), act:{ kind:"open", id:t.id } }] });
+}
+
+/* files kept for a conversation that is no longer there (deleted on
+   another PC, or before 5.15 could tidy up after it) */
+function srcDropOrphans(){
+  if (!Array.isArray(S.chats)) return;
+  const live = new Set(S.chats.map(c => c.id));
+  [...new Set(srcDocs().filter(d => d.scope === "chat" && !live.has(d.chat)).map(d => d.chat))]
+    .forEach(id => srcDropChat(id).catch(() => {}));
+}
+/* a conversation deleted: the documents it kept for itself go with it */
+async function srcDropChat(threadId){
+  const mine = srcDocs().filter(d => d.scope === "chat" && d.chat === threadId);
+  if (!mine.length) return;
+  for (const d of mine) await srcRemoveNow(d, true);
+  await srcSaveCat(); srcRebuild();
+  if (S.view === "library") renderLib();
 }
 async function srcKeepFiles(d, f, text){
   try {
@@ -23374,7 +23700,7 @@ async function srcReindex(id, quiet){
   }
 }
 async function srcReindexAll(){
-  const list = srcDocs().filter(d => d.status !== "deleted");
+  const list = srcLib().filter(d => d.status !== "deleted");
   let ok = 0;
   for (const d of list){ if (await srcReindex(d.id, true)) ok++; }
   toast(L("SrcReindexedAll", { n:ok, of:list.length }));
@@ -23400,7 +23726,7 @@ async function srcRemoveNow(d, batch){
 function srcDetails(pre, x, fileName, existing){
   return new Promise(resolve => {
     const fam = DossierSources.familyKey(pre.name);
-    const match = existing ? [] : srcDocs().filter(d => d.family === fam && d.status === "active");
+    const match = existing ? [] : srcLib().filter(d => d.family === fam && d.status === "active");
     const old = document.getElementById("srcDlg"); if (old) old.remove();
     const el = document.createElement("div");
     el.id = "srcDlg"; el.className = "srcdlg"; el.setAttribute("role", "dialog");
@@ -23444,7 +23770,7 @@ function srcDetails(pre, x, fileName, existing){
              category:$("sdCat").value.trim(), label:$("sdLab").value.trim(), assistant:$("sdAi").checked,
              replaces:mode === "replace" ? match : [], mode:mode });
     };
-    setTimeout(() => $("sdName").focus(), 30);
+    setTimeout(() => { const n = $("sdName"); if (n) n.focus(); }, 30);
   });
 }
 async function srcEdit(id){
@@ -23469,13 +23795,21 @@ function srcSearch(q, thread, opts){
   const cfg = srcCfg();
   const prev = thread && thread.convo && thread.convo.src;
   const fu = DossierSources.followUp(q, prev);
+  /* The conversation's own documents (5.15) go with every question in it -
+     whole when they fit, their best passages when they do not - so a
+     follow-up is answered from the file, not from what an earlier answer
+     happened to say about it. No other conversation can find them. */
+  const now = opts.pin || [];
+  const own = srcChatDocs(thread && thread.id).map(d => d.id);
+  const pins = [...new Set(now.concat(own))];
   /* KalKech reason: more passages, and room for them */
   const o = { clearance:cfg.clearance, purpose:opts.purpose || "flow", today:today(),
-              k:opts.big ? FLOW_BIG.srcK : 6,
+              k:opts.big ? FLOW_BIG.srcK : 6, chat:(thread && thread.id) || "",
               budget:opts.big ? Math.max(+cfg.budget || 14000, FLOW_BIG.srcBudget) : +cfg.budget || 14000,
-              systems:(S.settings.systems || []).map(s => s.name), pinDocs:opts.pin || [],
-              pinBudget:opts.pin && opts.pin.length ? 60000 : 0 };
+              systems:(S.settings.systems || []).map(s => s.name), pinDocs:pins,
+              pinBudget:now.length || (own.length && opts.big) ? 60000 : own.length ? 24000 : 0 };
   if (fu.follow){ o.context = fu.context; o.boostDocs = fu.boostDocs; }
+  if (own.length) o.boostDocs = [...new Set((o.boostDocs || []).concat(own))];
   /* the question as it is kept for the next one, without the brackets of a mode */
   q = String(q || "").replace(/^\[(teach|study|intake)\]\s*/, "");
   const found = DossierSources.search(SRC.ix, q, o);
@@ -23495,7 +23829,8 @@ function srcForFlow(q, thread, pin, big){
   const r = srcSearch(q, thread, { purpose:"flow", pin:pin, big:big });
   if (!r) return undefined;
   const out = { text:r.text, searched:r.searched, filters:r.filters, docQuestion:r.docQuestion, unproven:r.unproven,
-                closest:r.closest, follow:r.follow, passages:r.passages, pinned:(pin || []).slice(), kept:(CHAT.kept || []).slice() };
+                closest:r.closest, follow:r.follow, passages:r.passages, pinned:(pin || []).slice(), kept:(CHAT.kept || []).slice(),
+                chatOnly:(CHAT.chatOnly || []).slice() };
   out.diag = DossierSources.diagnose(q, r.found, r, null);
   return out;
 }
@@ -23526,9 +23861,15 @@ function srcApply(reply, out, sources, q, thread, runbooks){
   if (!srcHere() || !out) return;
   const pack = sources || { passages:[], docQuestion:false };
   const mode = (String(q || "").match(/^\[(\w+)\]/) || [0, "chat"])[1];
-  /* a document handed over just now: say it is kept, and where */
+  /* a document handed over just now: say where it is kept - in Sources for
+     every conversation, or (the usual) for this conversation only, with
+     the button that saves it for good when that is wanted */
   if (sources && (sources.kept || []).length)
     reply.note = (reply.note ? reply.note + "\n" : "") + L("SrcKeptNote", { list:sources.kept.join(", ") });
+  if (sources && (sources.chatOnly || []).length){
+    reply.note = (reply.note ? reply.note + "\n" : "") + L("SrcChatOnlyNote", { list:sources.chatOnly.map(x => x.name).join(", ") });
+    reply.chips = (reply.chips || []).concat([{ label:L("DocSaveBtn"), act:{ kind:"docsave", ids:sources.chatOnly.map(x => x.id) } }]);
+  }
   /* Studying a guideline, being interviewed about a runbook, logging an
      email, the daily look back: jobs, not questions about what a document
      says. Their reply is not held back - what they propose to keep is
@@ -23895,7 +24236,7 @@ function srcRowHtml(d, sel){
   const key = [d.name, d.file, d.version ? "v" + d.version : "", (d.systems || []).join(" "), d.environment, d.category, d.label,
                SRC_KINDS[d.kind] || d.kind].join(" ").toLowerCase();
   return '<div class="srcdoc ' + esc(d.status) + (sel ? " sel" : "") + '" role="row" data-src="' + esc(d.id) + '" data-k="' + esc(key) +
-      '" data-st="' + esc(d.status) + '" data-bad="' + (srcDocBad(d) ? 1 : 0) + '">' +
+      '" data-st="' + esc(d.status) + '" data-bad="' + (srcDocBad(d) ? 1 : 0) + '" data-chat="' + (d.from === "chat" ? 1 : 0) + '">' +
     '<span class="srcc srcsel" role="cell"><input type="checkbox" data-ss' + (sel ? " checked" : "") + ' aria-label="' + LE("SrcSelectOne", { name:d.name }) + '"></span>' +
     '<span class="srcc srcmain" role="cell"><button class="srcname" type="button" data-sa="view" title="' + LE("SrcOpenDoc") + '">' + esc(d.name) + "</button>" +
       '<span class="srcmeta">' + (d.missing ? '<b class="srcbadt">' + LE("SrcMissing") + "</b> " : "") +
@@ -23911,14 +24252,14 @@ function srcRowHtml(d, sel){
 }
 function srcPanelHtml(){
   if (!srcHere()) return "";
-  const docs = srcDocs().filter(d => d.status !== "deleted");
+  const docs = srcLib().filter(d => d.status !== "deleted");
   const cfg = srcCfg(), ui = srcUi();
   const clear = cfg.clearance.map(x => String(x).toLowerCase());
   const mine = docs.filter(d => !d.label || clear.indexOf(String(d.label).toLowerCase()) >= 0);
   const hidden = docs.length - mine.length;
   [...ui.sel].forEach(id => { if (!mine.some(d => d.id === id)) ui.sel.delete(id); });
   const count = s => mine.filter(d => d.status === s).length;
-  const nBad = mine.filter(srcDocBad).length;
+  const nBad = mine.filter(srcDocBad).length, nChat = mine.filter(d => d.from === "chat").length;
   /* several active versions nobody has told apart */
   const fams = {};
   mine.filter(d => d.status === "active").forEach(d => { (fams[d.family] = fams[d.family] || []).push(d); });
@@ -23943,7 +24284,11 @@ function srcPanelHtml(){
       '<div class="srcchips" role="group" aria-label="' + LE("SrcFilterBy") + '">' + chip("all", "SrcChipAll", mine.length) + chip("active", "SrcChipActive", count("active")) +
         (count("superseded") || ui.st === "superseded" ? chip("superseded", "SrcChipSuperseded", count("superseded")) : "") +
         (count("inactive") || ui.st === "inactive" ? chip("inactive", "SrcChipOff", count("inactive")) : "") +
-        (nBad || ui.st === "bad" ? chip("bad", "SrcChipBad", nBad) : "") + "</div>" +
+        (nBad || ui.st === "bad" ? chip("bad", "SrcChipBad", nBad) : "") +
+        /* documents that came into Sources from a conversation - before 5.15
+           every attachment did - to look over, and remove what was meant for
+           that conversation only */
+        (nChat || ui.st === "chat" ? chip("chat", "SrcChipChat", nChat) : "") + "</div>" +
       '<label class="srcsort">' + LE("SrcSortLab") + ' <select class="in" id="srcSort">' +
         [["name", "SrcSortName"], ["added", "SrcSortAdded"], ["category", "SrcSortCategory"], ["kind", "SrcSortKind"]]
           .map(o => '<option value="' + o[0] + '"' + (sort === o[0] ? " selected" : "") + ">" + LE(o[1]) + "</option>").join("") + "</select></label></div>";
@@ -23980,7 +24325,10 @@ function srcPanelHtml(){
   h += '<details class="srcset"><summary>' + LE("SrcSettings") + "</summary>" +
     fr(L("SrcClearance"), '<input class="in" id="srcClear" value="' + esc(cfg.clearance.join(", ")) + '" placeholder="' + LE("SrcClearancePh") + '">') +
     '<p class="srchint">' + LE("SrcClearanceHint") + "</p>" +
-    '<label class="srcck"><input type="checkbox" id="srcKeepChat"' + (cfg.keepChat ? " checked" : "") + "> " + LE("SrcKeepChat") + "</label></details>";
+    fr(L("SrcChatDocs"), '<select class="in" id="srcChatDocs">' +
+      '<option value="chat"' + (cfg.chatDocs === "chat" ? " selected" : "") + ">" + LE("SrcChatDocs_chat") + "</option>" +
+      '<option value="sources"' + (cfg.chatDocs === "sources" ? " selected" : "") + ">" + LE("SrcChatDocs_sources") + "</option></select>") +
+    '<p class="srchint">' + LE("SrcChatDocsHint") + "</p></details>";
   h += '<details class="srcset"><summary>' + LE("SrcDiag", { n:SRC.log.length }) + '</summary><div class="srclog">' +
     (SRC.log.length ? SRC.log.slice(0, 40).map(e => '<div class="srcle"><i>' + esc(stamp(e.at)) + "</i> " + esc(srcNoteLine(e)) + "</div>").join("")
                     : '<p class="srchint">' + LE("SrcDiagNone") + "</p>") + "</div></details>";
@@ -23995,7 +24343,7 @@ function srcFilter(){
   let shown = 0, total = 0;
   box.querySelectorAll(".srcdoc").forEach(r => {
     total++;
-    const okSt = ui.st === "all" || (ui.st === "bad" ? r.dataset.bad === "1" : r.dataset.st === ui.st);
+    const okSt = ui.st === "all" || (ui.st === "bad" ? r.dataset.bad === "1" : ui.st === "chat" ? r.dataset.chat === "1" : r.dataset.st === ui.st);
     const ok = okSt && words.every(w => r.dataset.k.indexOf(w) >= 0);
     r.hidden = !ok;
     if (ok) shown++;
@@ -24166,8 +24514,8 @@ function srcPanelWire(){
   });
   const cl = $("srcClear");
   if (cl) cl.onchange = () => { srcCfg().clearance = cl.value.split(",").map(s => s.trim()).filter(Boolean); touch(); renderLib(); };
-  const kc = $("srcKeepChat");
-  if (kc) kc.onchange = () => { srcCfg().keepChat = kc.checked; touch(); };
+  const kc = $("srcChatDocs");
+  if (kc) kc.onchange = () => { srcCfg().chatDocs = kc.value === "sources" ? "sources" : "chat"; touch(); };
   srcFilter();
 }
 /* a click anywhere else, a scroll of the list, Escape: an open ⋯ menu shuts */
@@ -29090,7 +29438,9 @@ function chatDocNote(f){
   if (f.note === "unreadable") return { t:L("AttachUnreadable"), c:"warn" };
   return { t:L("AttachNoText"), c:"warn" };
 }
-function chatKeepSrc(f){ return f.keepSrc === undefined ? srcCfg().keepChat : !!f.keepSrc; }
+/* where a document in the tray will be kept: in Sources for every
+   conversation (true), or for this conversation only (false, the usual) */
+function chatKeepSrc(f){ return f.keepSrc === undefined ? srcCfg().chatDocs === "sources" : !!f.keepSrc; }
 function renderChatFiles(){
   const box = $("chatFiles");
   if (!box) return;
@@ -29102,10 +29452,11 @@ function renderChatFiles(){
       '<span class="tx"><span class="nm">' + esc(f.name) + "</span>" +
         (note ? '<span class="rd' + (note.c ? " " + note.c : "") + '" title="' + esc(note.t) + '">' + esc(note.t) + "</span>" : "") +
       "</span>" +
-      /* a document is kept in Sources, to be cited now and found again later */
+      /* a document is kept for this conversation (or, switched here, in
+         Sources for every conversation), to be cited now and read again */
       (srcHere() && FS.ok && !f.reading && f.text && chatKind(f.type) !== "image"
         ? '<button class="cfsrc' + (chatKeepSrc(f) ? " on" : "") + '" data-srck="' + i + '" type="button" title="' +
-          LE(chatKeepSrc(f) ? "SrcTrayOnHint" : "SrcTrayOffHint") + '">' + LE("SrcTray") + "</button>" : "") +
+          LE(chatKeepSrc(f) ? "SrcTrayOnHint" : "SrcTrayOffHint") + '">' + LE(chatKeepSrc(f) ? "SrcTray" : "SrcTrayChat") + "</button>" : "") +
       '<span class="sz"' + (f.from ? ' title="' + esc(L("AttachShrunk",
           { from:bytes(f.from), to:bytes(f.size) })) + '"' : "") + ">" +
         bytes(f.size) + (f.from ? " \u2193" : "") + "</span>" +

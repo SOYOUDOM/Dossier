@@ -433,9 +433,11 @@ footer{margin-top:56px;padding-top:20px;border-top:1px solid var(--rule);font-si
     <div class="tile"><span class="big">10</span><span class="what">notes you taught it</span><span class="why">the ones that match, in full; the rest by title only</span></div>
     <div class="tile"><span class="big">30</span><span class="what">lessons about you</span><span class="why">the newest, plus the corrections that match this question</span></div>
     <div class="tile"><span class="big">3</span><span class="what">runbooks</span><span class="why">the ones that match, in full; the rest as a short index</span></div>
+    <div class="tile"><span class="big">3</span><span class="what">scripts, with what is in them</span><span class="why">the ones that match, from Menu → Scripts, so a step can name the script, where it is and what to fill in</span></div>
     <div class="tile"><span class="big">3</span><span class="what">past fixes</span><span class="why">closed records most like this question, with how each was fixed</span></div>
     <div class="tile"><span class="big">3</span><span class="what">system profiles</span><span class="why">for the systems in play</span></div>
     <div class="tile"><span class="big">14,000</span><span class="what">characters of documents</span><span class="why">the best passages from Library → Sources, and their neighbours</span></div>
+    <div class="tile"><span class="big">1 chat</span><span class="what">for a file you attach</span><span class="why">read with every question in that conversation, and in no other, until you say "save this file"</span></div>
     <div class="tile"><span class="big">8</span><span class="what">recent messages</span><span class="why">each cut to 1,200 characters, plus a short running summary</span></div>
     <div class="tile"><span class="big">30</span><span class="what">days of incidents</span><span class="why">a summary of the recent incident history</span></div>
     <div class="tile"><span class="big">64</span><span class="what">allowed actions</span><span class="why">the only things it may ask KalKech to do; 43 of them change something and always ask you first</span></div>
@@ -540,6 +542,7 @@ footer{margin-top:56px;padding-top:20px;border-top:1px solid var(--rule);font-si
       <li><b>The actions.</b> Only the 64 in KalKech's own list, each with the right details. Anything else is refused by name.</li>
       <li><b>The blank picture.</b> The flow is always handed a picture, a blank one when you attached nothing, and a small model sometimes answers <i>that</i>. KalKech spots it, takes those sentences out, and asks once more, saying plainly that no picture was attached. Telling it your name for the assistant ("I named you Elle") is answered on your PC and never goes to the flow.</li>
       <li><b>Marks put back.</b> A flow built from an older guide strips <code>```</code> from the reply, so code, diagrams and emails used to arrive as plain text. The prompt now asks for <code>~~~</code> marks, which survive, and KalKech recognises a block whose marks are gone (a line <i>csharp</i> or <i>mermaid</i> over code) and draws it properly.</li>
+      <li><b>The names.</b> Every script, stored procedure or table named in the answer is looked for in everything the AI was given. One found nowhere is listed under the answer, <i>"⚠ Not found in your documents, scripts or workspace … may have made these up"</i>, so you check it before you run anything. Nothing is taken out.</li>
       <li><b>A failed flow.</b> If the flow's safety net answered instead of the AI, KalKech asks once more with only the essentials.</li>
       <li><b>More records.</b> The AI may ask for more records (<code>needRecords</code>). KalKech finds them on your PC and asks once more.</li>
       <li><b>The documents.</b> Every quote must be in its passage, word for word. A line with an unsupported figure is taken out.
@@ -714,6 +717,10 @@ footer{margin-top:56px;padding-top:20px;border-top:1px solid var(--rule);font-si
         <tr><td>A flow that strips <code>```</code> from replies</td><td>Code, diagrams and emails arrived as plain text, and one block after a heading was missed</td><td>Ask for <code>~~~</code> marks, and repair a block whose marks are gone</td></tr>
         <tr><td>Handing a small model a blank picture</td><td>It answered the picture ("a white square") instead of the question</td><td>Answer simple things on the PC; ask again with a plain fact; give the flow a text-only prompt</td></tr>
         <tr><td>One size of folder for every model</td><td>A reasoning model was given as little as the quick one</td><td>Give the big folder only to the model chosen for big questions</td></tr>
+        <tr><td>Every attachment put in the library</td><td>A file sent "just for this chat" was cited in other chats</td><td>Keep a chat's file for that chat; put it in the library only when asked</td></tr>
+        <tr><td>Past fixes before the guideline</td><td>The answer followed what was done last time, not the procedure</td><td>An order of trust: documents, runbooks and scripts first; past fixes after</td></tr>
+        <tr><td>"Run the script to generate the data"</td><td>Someone new cannot follow it: which script, where, with what?</td><td>Send the matching scripts with their text; ask for a guideline that names each one and lists what is missing</td></tr>
+        <tr><td>Trusting names in an answer</td><td>A procedure or table that sounds right but does not exist</td><td>Check every name against what was sent; mark the ones found nowhere</td></tr>
         <tr><td>Letting the AI change records directly</td><td>One confident mistake changes real data (KalKech never allowed it)</td><td>Every change waits for a yes</td></tr>
       </tbody>
     </table>
@@ -737,6 +744,9 @@ footer{margin-top:56px;padding-top:20px;border-top:1px solid var(--rule);font-si
     <div class="word"><dt>Reasoning model</dt><dd>A model that thinks a problem through before it answers. Slower and dearer; KalKech asks it (KalKech reason) only when you choose it.</dd></div>
     <div class="word"><dt>Tier</dt><dd>Which model a question goes to: fast, deep (the strong one) or reason.</dd></div>
     <div class="word"><dt>Special day</dt><dd>A day you marked yourself, with a note, that is not a holiday. The assistant is told about the next half year of them.</dd></div>
+    <div class="word"><dt>Conversation file</dt><dd>A file attached in the chat. Every question in that conversation can read it; no other can, until you say "save this file".</dd></div>
+    <div class="word"><dt>Order of trust</dt><dd>Which information wins: your documents, runbooks and scripts first, then what was done before, then general knowledge (only as a suggestion).</dd></div>
+    <div class="word"><dt>Names check</dt><dd>KalKech looking for every script, table or procedure name in an answer in what the AI was given, and marking the ones found nowhere.</dd></div>
     <div class="word"><dt>Passage</dt><dd>A small piece of a document, about 1,100 characters, with its page, lines and section.</dd></div>
     <div class="word"><dt>Citation</dt><dd>Where an answer came from: <span class="mono">[Source: document, version, page, lines, section]</span>.</dd></div>
     <div class="word"><dt>Figure</dt><dd>A number that makes a rule: days or hours, a percentage, a priority or severity, a score.</dd></div>

@@ -274,7 +274,7 @@ adds `D-0099` without touching `seq` will not cause a collision.
 | Key | Type | Default | Meaning |
 |---|---|---|---|
 | `owner` | string | `""` | Your name. Used in reports and hand-overs. |
-| `sources` | `{clearance, keepChat, budget}` | `{[], true, 14000}` | Answering from documents ([Sources](#answering-from-your-runbooks-and-standards-sources)). `clearance`: the access labels this workspace may read; `keepChat`: keep documents attached in a conversation; `budget`: characters of passages sent with a question. |
+| `sources` | `{clearance, chatDocs, budget}` | `{[], "chat", 14000}` | Answering from documents ([Sources](#answering-from-your-runbooks-and-standards-sources)). `clearance`: the access labels this workspace may read; `chatDocs`: a document attached in a conversation is kept for that conversation only (`"chat"`, since 5.15) or in Sources for every conversation (`"sources"`); `budget`: characters of passages sent with a question. |
 | `systems` | array of `{name, colour}` | 8 seeded | The applications you support. `colour` is a hex string and drives every chip and bar for that system. |
 | `types` | array of string | `Incident, Service request, Change, Development, Meeting, Admin` | Work types. |
 | `parties` | array of string | 10 seeded | Teams you end up waiting on: *Data team, DBA, Infra, Network, Security, Vendor, Agency ops, Finance, Release management, Business user*. |
@@ -2311,11 +2311,48 @@ figure no passage states, and the app checks the answer before showing it.
      searchable on this PC only.
 4. **Add**. It is searched from the next question on.
 
-A document **attached to a question** in the chat is kept in Sources too — the
-**⊕ Sources** chip under it in the tray says so, and a click makes it for that
-question only. It is cited in that answer, found again by the next question,
-and by a new conversation next week. (**Library → Sources → Access, and
-documents attached in conversations** switches the default off.)
+A document **attached to a question** in the chat is kept **for that
+conversation only** (since 5.15). Every question in that conversation reads
+it and can cite it — follow-ups included — and no other conversation sees it.
+It is not listed in Sources. The chip under it in the tray says **This chat**;
+click it to put that one file in Sources instead. The setting **Library →
+Sources → Access, and documents attached in conversations → Files attached in
+a conversation** changes the default.
+
+#### Why didn't my chat file go into the Library?
+
+Because you did not ask for it. A file you attach in chat belongs to that
+conversation: the answer under it says *Read for this conversation only: …*.
+Before 5.15 every attachment went into Sources, so a file sent "just for this
+chat" turned up in answers in other chats. Now it never does.
+
+#### How do I keep a file I attached in chat?
+
+Say **"save this file"** (or "keep this document", "save it to the
+knowledge") — or press **Save…** under the answer, or on the file's card in
+your message. KalKech asks where:
+
+- **Save as knowledge source** — it goes into **Library → Sources**, and every
+  conversation can find and cite it. You can give it its name, version and
+  category in the window that opens.
+- **File it on a record** — pick the record. It is kept with that record's
+  documents (**Library → Documents filed on records**) and is **not** used as
+  knowledge.
+
+You can say where at once: *"save this file to the knowledge source"*, or
+*"file this document on D-0142"*. Words like *"no save"*, *"don't keep it"* or
+*"just for this chat"* never save anything.
+
+A document you hand over to be learned — **Menu → Setup → Runbooks → Learn
+from a BAU document…** — goes into Sources straight away, because learning it
+is the point.
+
+#### How do I remove a file that was kept from a chat?
+
+**Library → Sources → From chats** lists every document that came into
+Sources from a conversation (before 5.15 that was every attachment). Open the
+**⋯** on the one you do not want there and choose **Remove**. A file kept for
+one conversation only is removed by itself when you delete that conversation.
 
 #### Studying a guideline (BAU learning), and checking it was learned
 
@@ -2370,6 +2407,56 @@ To check it was learned, in a **new** conversation (not `[study]`):
 - When a new version of KalKech changes how passages are cut, every document
   is cut again from its kept text the next time the workspace opens —
   nothing to do.
+
+#### What does the assistant trust first?
+
+Your knowledge comes first, what was done before comes after it. For every
+fact in an answer the assistant takes the first of these that has it:
+
+1. a file attached in this conversation, when you ask about it;
+2. your documents in **Sources** — guidelines, policies, procedures;
+3. your **runbooks**;
+4. your **scripts** (**Menu → Scripts**) — it is sent the ones that match the
+   question, with what is in them;
+5. what was done before — past fixes on closed records, incidents, lessons and
+   notes. These come **after** the guideline, as *"last time it was fixed by
+   …"*; when a past fix differs from the guideline, it follows the guideline
+   and says how last time was different;
+6. its own general knowledge — only in the **Suggestion**, marked as not from
+   your documents.
+
+An earlier answer in the conversation is never treated as evidence: if it
+disagrees with a document, the document wins.
+
+#### How do I get step-by-step guidelines?
+
+Ask how to do something — *"how do I…"*, *"give me the steps for…"*, *"the
+guideline for…"*. The answer is written so that someone new to IT support can
+follow it alone:
+
+- **Before you start** — the access and tools you need, and the exact system,
+  server, database and screen;
+- **Steps** — for each one: where exactly, what exactly (the command or query
+  with your values, or **the script by its name, where it is in KalKech and
+  what to fill in**), what you should see, and what to do if you don't;
+- **Check it worked**;
+- **If it goes wrong** — who to contact, when your documents say;
+- **Not in your documents** — anything the guideline needs that nothing you
+  gave it says (for example *which script generates the data*). It is listed
+  plainly instead of guessed, and the assistant does not stop to ask you.
+
+Ask for something else — a summary, one line, an email, only the query — and
+you get that instead.
+
+#### Why does an answer say "Not found in your documents, scripts or workspace"?
+
+KalKech checks every specific name in an answer — a script, a stored
+procedure, a table, a column written in code — against everything the
+assistant was given for that question: your documents, scripts, runbooks,
+records and your own words. A name that is in none of them is listed under the
+answer: *⚠ Not found in your documents, scripts or workspace: `usp_…` — the
+assistant may have made these up.* Nothing is taken out (the name may be right
+and simply new to KalKech), but check it before you run anything.
 
 #### Does the assistant only answer from one document (say, the password standard)?
 
@@ -2467,7 +2554,7 @@ attached in conversations**, and in `settings.sources`:
 | Setting | Default | What it does |
 |---|---|---|
 | **Access labels this workspace may read** (`clearance`) | none | Which labelled documents are searched. |
-| **Keep … attached in a conversation** (`keepChat`) | on | Whether a document attached to a question is kept in Sources. |
+| **Files attached in a conversation** (`chatDocs`) | for that conversation only | Kept for the conversation they were attached in, or put in Sources for every conversation. |
 | `budget` | 14,000 characters | How much of the documents goes with one question — six best passages and the ones around them. A document attached to that very question goes whole, up to 60,000 characters, as an attachment always did. |
 
 Scanned PDFs need `ocr.js` beside `dossier.html` (§12, *Asking with a file*).
@@ -3172,8 +3259,8 @@ Answering from documents has its tests in the repository, and they are the
 first thing to run after changing anything it touches:
 
 ```
-node --test                 # tests/*.test.js: 47 tests - Sources (every scenario below) and diagrams
-node tests/e2e/run.js       # the app in Chrome or Edge: 151 checks on the screen
+node --test                 # tests/*.test.js: 50 tests - Sources (every scenario below), names in answers, and diagrams
+node tests/e2e/run.js       # the app in Chrome or Edge: 164 checks on the screen
 node flow/check-prompt.js   # the prompt's examples against the reply validator
 ```
 

@@ -697,9 +697,16 @@ function cleared(doc, opts){
   if (!label) return true;
   return (opts.clearance || []).map(x => String(x).trim().toLowerCase()).indexOf(label) >= 0;
 }
+/* A document attached in a conversation belongs to that conversation
+   (scope "chat", chat = the conversation's id): read for every question
+   in it, and for no other. It is not part of the library of documents
+   every question searches - "just for this chat" means exactly that. */
+function inScope(doc, opts){
+  return doc.scope !== "chat" || (!!opts.chat && doc.chat === opts.chat);
+}
 function eligible(ix, q, opts){
   const qn = " " + norm(q) + " ";
-  const all = [...ix.docs.values()].filter(d => cleared(d, opts) && !(opts.purpose === "flow" && d.assistant === false));
+  const all = [...ix.docs.values()].filter(d => cleared(d, opts) && inScope(d, opts) && !(opts.purpose === "flow" && d.assistant === false));
   /* a version asked for by name: "version 1.2 of the access standard" */
   const askedVer = (/\b(?:version|ver|v)\s*\.?\s*(\d+(?:\.\d+)*)\b/i.exec(q) || [])[1] || "";
   let named = all.filter(d => { const n = norm(d.name).replace(/\b(md|pdf|docx|txt)\b/g, "").trim();
@@ -971,7 +978,7 @@ function gather(ix, found, opts){
     return { s:"S" + (k + 1), id:c.id, doc:d.id, name:d.name, file:d.file || "", kind:d.kind, version:d.version || "",
              effective:d.effective || "", status:d.status, page:c.page || 0, lineStart:c.lineStart || 0, lineEnd:c.lineEnd || 0,
              section:c.section || "", quality:c.quality || "ok", qualityWhy:c.qualityWhy || "", role:pick.get(i),
-             lines:c.lines || [], heads:c.heads || [],
+             lines:c.lines || [], heads:c.heads || [], chat:d.scope === "chat",
              score:h ? Math.round(h.score * 100) / 100 : 0, text:c.text };
   });
   return { passages:passages, chars:chars, pinned:pinned };
@@ -990,6 +997,7 @@ function packText(res){
       res.unproven.map(g => g.join(" / ")).join("; ") + ". If they differ, give both, each with its citation.");
   P.forEach(p => {
     const bits = [p.name];
+    if (p.chat) bits.push("ATTACHED IN THIS CONVERSATION");
     if (p.version) bits.push("version " + p.version);
     if (p.effective) bits.push("effective " + p.effective);
     if (p.status === "superseded") bits.push("SUPERSEDED - asked for by version");
@@ -1387,6 +1395,88 @@ function diagnose(q, found, packed, g){
   };
 }
 
+/* ── names in an answer, and whether they were ever given ─────────────────
+   A support answer goes wrong most quietly in its names: a stored
+   procedure, a table, a script that sounds right and does not exist. The
+   figures check (ground) cannot see those. namesIn() picks out the specific
+   names an answer writes - the ones a person would type or run - and
+   unknownNames() returns the ones found nowhere in what the model was
+   given: their documents, scripts, runbooks, workspace and their own words.
+   The app shows those under the answer as possibly made up. Nothing is
+   taken out: a name can be right and simply new to KalKech (5.15). */
+const NAME_SKIP = new Set(("select from where join update insert into delete exec execute set declare begin end case when then " +
+  "else null not and or order group by having top distinct values as on inner left right outer cross union all with nolock " +
+  "getdate dateadd datediff count sum max min avg cast convert isnull coalesce len ltrim rtrim upper lower dbo sys tempdb " +
+  "master true false table procedure proc function view index exists if return go use print raiserror throw try catch " +
+  "transaction commit rollback output inserted deleted object_id newid sysdatetime getutcdate").split(" "));
+const SCRIPT_FILE = /\.(?:sql|ps1|psm1|bat|cmd|py|sh|vbs)$/i;
+function nameClean(t){ return String(t || "").replace(/^[\[\]"'`(<{*]+|[\[\]"'`)>},;:!?*]+$/g, "").replace(/\.$/, ""); }
+/* a word that is a specific name: a script file, an underscore name, a
+   schema.object, CamelCase with two or more humps, or a usp_/tbl-style
+   prefix - not a keyword, a variable, a number, a switch or a command */
+function looksLikeName(w){
+  const t = nameClean(w);
+  if (t.length < 4 || t.length > 80 || /\s/.test(t)) return "";
+  if (/^[@#$\-\/\\\d]/.test(t) || /^https?:/i.test(t) || /[<>]/.test(t)) return "";
+  if (NAME_SKIP.has(t.toLowerCase())) return "";
+  if (/^[A-Z][a-z]+-[A-Z][A-Za-z]+$/.test(t)) return "";            /* Get-Service: a command */
+  if (SCRIPT_FILE.test(t)) return t;
+  if (/^[A-Za-z]\w*_\w*[A-Za-z0-9]$/.test(t) && /[A-Za-z]{2}/.test(t)) return t;
+  if (/^[A-Za-z_]\w*(?:\.[A-Za-z_]\w*)+$/.test(t) && !/\.(?:com|net|org|html?|json|xml|txt|md|pdf|docx?|xlsx?|csv|log|config|exe|dll)$/i.test(t)) return t;
+  if (/[a-z][A-Z].*[a-z][A-Z]/.test(t) && /^[A-Za-z]\w*$/.test(t)) return t;
+  if (/^(?:usp|sp|fn|udf|tbl|vw)[A-Z_]\w+$/.test(t)) return t;
+  return "";
+}
+function namesIn(say){
+  const s = String(say || "");
+  const out = new Map();
+  const add = (w, loose) => {
+    let n = looksLikeName(w);
+    /* what a query reads or runs is a name even as one plain word */
+    if (!n && loose){
+      const t = nameClean(w).replace(/[\[\]]/g, "");
+      if (t.length >= 4 && /^[A-Za-z_][\w.]*$/.test(t) && !NAME_SKIP.has(t.toLowerCase()) && !/^#/.test(t)) n = t;
+    }
+    if (n && !out.has(n.toLowerCase())) out.set(n.toLowerCase(), n.replace(/[\[\]]/g, ""));
+  };
+  const blocks = s.match(/(~~~|```)[^\n]*\n[\s\S]*?\n\1/g) || [];
+  blocks.forEach(b => {
+    /* code only: an email, a message, a note or a diagram is not a query,
+       and its "From John" is not a table */
+    const lang = (/^(?:~~~|```)\s*([\w-]*)/.exec(b) || [])[1].toLowerCase();
+    if (/^(?:email|mail|message|msg|note|text|txt|teams|chat|mermaid|diagram|flowchart|markdown|md)$/.test(lang)) return;
+    const body = b.replace(/^[^\n]*\n/, "");
+    const re = /\b(?:EXEC(?:UTE)?|FROM|JOIN|UPDATE|INTO|TABLE|PROC(?:EDURE)?)\s+(\[?[A-Za-z_#][\w]*\]?(?:\.\[?[A-Za-z_][\w]*\]?)*)/gi;
+    let m;
+    while ((m = re.exec(body))) add(m[1], true);
+    (body.match(/[\w.-]+\.(?:sql|ps1|psm1|bat|cmd|py|sh|vbs)\b/gi) || []).forEach(w => add(w));
+  });
+  let prose = blocks.reduce((x, b) => x.split(b).join(" "), s);
+  (prose.match(/`[^`\n]{2,160}`/g) || []).forEach(m => m.slice(1, -1).split(/[\s,;()=]+/).forEach(w => add(w)));
+  prose = prose.replace(/`[^`\n]*`/g, " ").replace(/\]\([^)]*\)/g, "]").replace(/https?:\/\/\S+/g, " ");
+  (prose.match(/[A-Za-z][\w.-]*\w/g) || []).forEach(w => {
+    if (/_/.test(w) || SCRIPT_FILE.test(w) || /[a-z][A-Z].*[a-z][A-Z]/.test(w)) add(w);
+  });
+  return [...out.values()];
+}
+/* the names no part of what the model was given contains - compared
+   without case, brackets or quotes; a schema-qualified name counts when
+   its last part is there */
+function unknownNames(say, evidence){
+  const ev = String(evidence || "").toLowerCase().replace(/[\[\]"'`]/g, "");
+  return namesIn(say).filter(n => {
+    const k = n.toLowerCase();
+    if (ev.indexOf(k) >= 0) return false;
+    const last = k.split(".").pop();
+    if (k.indexOf(".") > 0 && !SCRIPT_FILE.test(k) && last.length >= 4 && ev.indexOf(last) >= 0) return false;
+    /* a script named without its extension, or with spaces for underscores */
+    const base = k.replace(SCRIPT_FILE, "");
+    if (base !== k && ev.indexOf(base) >= 0) return false;
+    if (/_/.test(k) && ev.indexOf(k.replace(/_/g, " ")) >= 0) return false;
+    return true;
+  });
+}
+
 const API = {
   VERSION: VERSION, ALGO: ALGO, BUDGET: BUDGET,
   stem: stem, terms: terms, norm: norm, hash36: hash36,
@@ -1398,7 +1488,8 @@ const API = {
   isDocQuestion: isDocQuestion, followUp: followUp, beside: beside,
   figures: figures, ground: ground, diagnose: diagnose, unsupportedIn: unsupportedIn,
   trimSay: trimSay, sentencesOf: sentencesOf, statedIn: statedIn,
-  nameFor: nameFor, weakTitle: weakTitle, plainTitle: plainTitle, betterName: betterName
+  nameFor: nameFor, weakTitle: weakTitle, plainTitle: plainTitle, betterName: betterName,
+  namesIn: namesIn, unknownNames: unknownNames, inScope: inScope
 };
 if (typeof module === "object" && module.exports) module.exports = API;
 if (root) root.DossierSources = API;

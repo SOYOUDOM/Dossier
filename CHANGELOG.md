@@ -6,6 +6,64 @@ holds — which is what to paste into a bug report.
 
 ---
 
+## 5.15.0 - 2026-10-05
+
+**A file you attach stays in that chat; your knowledge comes first; how-to
+answers are guidelines someone new can follow; made-up names are marked.**
+
+- **A file attached in chat stays in that conversation.** Every question in
+  the conversation reads it and can cite it - follow-ups too, so they are
+  answered from the file and not from what an earlier answer said - and no
+  other conversation sees it. It is not listed in Sources. Before, every
+  attachment went into Sources by default, so a file sent "no save, just for
+  this chat" turned up in answers in other chats.
+  - The answer says *Read for this conversation only: …*, with a **Save…**
+    button; the file's card in your message says *this chat only*.
+  - **"Save this file"** (or **Save…**) asks where: **Save as knowledge
+    source** (Library → Sources, every conversation can use it) or **File it
+    on a record** (kept with that record's documents, never used as
+    knowledge). "Save this file to the knowledge source" or "file this
+    document on D-0142" go straight there. "No save", "don't keep it" and
+    "just for this chat" never save anything.
+  - Deleting a conversation removes the files it kept for itself.
+  - **Library → Sources → From chats** lists documents that came in from
+    conversations before this version, so you can remove the ones meant for
+    one chat only (**⋯ → Remove**).
+  - The tray chip says **This chat**; click it to put that file in Sources
+    instead. The default is under **Library → Sources → Access, and
+    documents attached in conversations**.
+  - **Learn from a BAU document** still puts its document in Sources - being
+    learned is the point of it.
+- **Your knowledge first.** The assistant takes each fact from the first
+  place that has it: a file attached in this conversation, your documents
+  (Sources), your runbooks, your scripts - and only then what was done before
+  (past fixes, incidents, lessons). A past fix comes after the guideline, as
+  "last time it was fixed by …"; when it differs, the guideline is followed
+  and the difference said. An earlier answer is never evidence.
+- **How-to answers are guidelines.** "How do I…", "give me the steps…" is
+  answered so that someone new to IT support can follow it alone: **Before
+  you start** (access, tools, the exact server, database and screen), **Steps**
+  (where exactly, what exactly - the command, or the script by its name, where
+  it is in KalKech and what to fill in - what you should see, what to do if
+  not), **Check it worked**, **If it goes wrong**, and **Not in your
+  documents** for anything missing - listed plainly, never guessed, and the
+  assistant does not stop to ask. Ask for a summary or an email and you get
+  that instead.
+- **Your scripts go with the question.** The scripts in **Menu → Scripts**
+  that match a question (by name, description, tags, system, or being named
+  in the conversation's file or a matched runbook) are sent with what is in
+  them, so "run the script that generates the data" names the script and
+  says how to run it. Up to 3 (6 for KalKech reason).
+- **Made-up names are marked.** Every script, stored procedure or table named
+  in an answer is looked for in everything the assistant was given. One found
+  nowhere is listed under the answer: *⚠ Not found in your documents, scripts
+  or workspace: … The assistant may have made these up - check them before
+  you run anything.* Nothing is taken out.
+- The assistant no longer stops to ask about a word it cannot place or a
+  gap in a runbook; it answers with what it knows and says what is missing.
+
+---
+
 ## 5.14.1 - 2026-10-04
 
 **The chat panel moves smoothly, and cards open inside the window at any

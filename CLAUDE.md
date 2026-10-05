@@ -91,13 +91,13 @@ A *workspace* is a folder the user picks (File System Access API):
 - Commit messages: clear summary + body; no model names in commits, code or
   docs. Do not open a pull request unless the owner asks.
 - Work so far is on branch `claude/chat-panel-pixel-art-gifs-d822hq`
-  (latest: 5.14.1). Follow the branch instructions of your own session.
+  (latest: 5.15.0). Follow the branch instructions of your own session.
 
 ## Testing
 
 ```
-node --test                                   # 47 unit tests (Sources, grounding, flow reply fields, diagrams)
-node tests/e2e/run.js                         # the app in headless Chrome/Edge: 151 checks (CHROME=<path> to choose)
+node --test                                   # 50 unit tests (Sources, grounding, names check, flow reply fields, diagrams)
+node tests/e2e/run.js                         # the app in headless Chrome/Edge: 164 checks (CHROME=<path> to choose)
 node flow/check-prompt.js                     # after editing flow/prompt.txt ...
 python3 flow/embed-prompt.py                  # ... then copy it into flow.js (PROMPT_BUILTIN)
 node tests/fixtures/make-pdf.js               # regenerate the PDF fixtures
@@ -119,6 +119,46 @@ Also useful:
   `DossierFlow.validate`. `tests/e2e/run.js` is a working example of all of it.
 
 ## Recent history (newest first)
+
+- **5.15.0** — The owner attached an email PDF with "no save this file, just
+  only for this chat" and it went into Sources for every chat; answers led
+  with past fixes over their guidelines; how-to answers said "run the script
+  to generate the data" without saying which; names could be invented. The
+  owner's screenshot (file name, procedure and field names) is company data
+  and was never committed; all test documents/scripts are made up.
+  - *Chat files*: `srcKeepFromChat(files, thread, toLib)` stores a chat
+    attachment as a normal Sources document with `scope:"chat", chat:<thread
+    id>` unless `toLib` ([study]), the tray chip (`f.keepSrc`) or
+    `srcCfg().chatDocs === "sources"` (replaces `keepChat`, default
+    `"chat"`, old value dropped). `srcLib()` = non-chat docs (panel, counts,
+    duplicates, categories, re-index all); `srcChatDocs(id)`.
+    `sources.js inScope()` in `eligible()` hides a chat doc from other
+    threads (`opts.chat`); `gather` marks `p.chat`, `packText` writes
+    ATTACHED IN THIS CONVERSATION. `srcSearch` pins the thread's docs on every
+    question (pinBudget 60k for a fresh attachment / big, 24k for
+    follow-ups) and boosts them. `srcPromote`, `srcDropChat` (from
+    `chatDeleteThread` and the 30-thread trim), `srcDropOrphans` after
+    `srcLoad`. Note/chip: `SrcChatOnlyNote` + `DocSaveBtn` (`docsave`);
+    card meta `AttachInChat`; `.cfsave` on the file row.
+  - *Save*: `chatDocSaveLocal(q, c)` (`DOC_SAVE_NOT` negations first;
+    `DOC_SAVE_FILE`/`DOC_SAVE_IT` for a short command, `DOC_SAVE_ASIDE`
+    beside a question → after the answer). `chatDo` kinds `docsave`,
+    `docsrc` (`srcPromote` + `srcEdit`), `docrec` (records: open, last
+    open, selected, recent live), `docrecto` (`attachFiles` with
+    `docSaveFile`). Sources filter chip `chat` ("From chats").
+  - *Prompt*: `=== WHAT TO TRUST, IN THIS ORDER ===`, `=== HOW-TO: A
+    GUIDELINE SOMEONE NEW CAN FOLLOW ===`; LAST TIME after the guideline;
+    "ASK TO LEARN" became "SAY SO - DO NOT STOP TO ASK"; the unplaced-term
+    rule no longer asks; a guideline example (made up: gen_partner_sync.sql).
+  - *Scripts*: `SCRIPT_TEXT` cache (`scriptTextsLoad`, after scanScripts and
+    at most once a minute before a question), `scriptsMatchedForFlow` →
+    `workspace.scriptsMatched` (3 × 4,000 chars; reason 6 × 8,000).
+  - *Names*: `sources.js namesIn/unknownNames` (inline code, script files,
+    underscore / schema.object / 2-hump CamelCase names; FROM/JOIN/EXEC…
+    targets in code blocks, not in email/note/mermaid blocks).
+    `flowEvidence(q, ctx)` = the request JSON without the prompt + passages +
+    the question; `reply.unknownNames` → `.srcwarn.namewarn` (`NamesUnknown`).
+  - Also: `srcDetails` focus guarded (a fast close threw).
 
 - **5.14.1** — Owner: "the dialog of calendar appears out of the screen;
   float is so laggy and auto dock so laggy".
