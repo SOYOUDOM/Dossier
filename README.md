@@ -278,7 +278,8 @@ adds `D-0099` without touching `seq` will not cause a collision.
 | `systems` | array of `{name, colour}` | 8 seeded | The applications you support. `colour` is a hex string and drives every chip and bar for that system. |
 | `types` | array of string | `Incident, Service request, Change, Development, Meeting, Admin` | Work types. |
 | `parties` | array of string | 10 seeded | Teams you end up waiting on: *Data team, DBA, Infra, Network, Security, Vendor, Agency ops, Finance, Release management, Business user*. |
-| `theme` | `"archive"` \| `"vault"` \| custom id | `"archive"` | Archive and Vault are built in and cannot be deleted. |
+| `ui` | `"studio"` \| `"quiet"` \| `"classic"` \| `"nova"` \| `"prism"` | `"studio"` | The look ([§6.5](#65-looks-and-themes)). |
+| `theme` | `"archive"` \| `"vault"` \| `"studio"` \| `"nova"` \| `"prism"` (and their dark ones) \| custom id | `"studio"` | The palette. The built-in ones cannot be deleted. |
 | `palettes` | array | `[]` | Your own themes: copy one, change five colours, the other twenty-odd are derived. |
 | `fonts` | object | — | `{ khmer: "auto" | <family> }` and interface font choices. |
 | `remind` | boolean | `false` | Windows notifications on/off. |
@@ -299,6 +300,7 @@ adds `D-0099` without touching `seq` will not cause a collision.
 | `hushed` | array of string | `[]` | Keys of the Day-sheet notices you have silenced. Cleared from **Setup → Hidden notices**. |
 | `chatUI` | `{skin, confirm, every, reveal, glow, grid, pulse, typing, chips, ambient, place, side, dockW, floatBox, name}` | all on, `nebula`, ask-first, docked right | How the assistant panel looks and behaves. Set from **◎** in the chat header. |
 | `memory` | array of `{id, title, body, tags, system, created, updated, uses, lastUsed}` | `[]` | What you have taught the assistant: how something is done, what caused something, what to check next time. See [§12](#12-asking-through-a-power-automate-flow). |
+| `exportPick` | array of part names | every part | The parts ticked the last time you exported (see [Export](#how-do-i-export-only-some-of-my-data)). |
 
 ### 5.3 `tasks` — a record
 
@@ -460,8 +462,8 @@ in `dossier.json`:
 
 | | |
 |---|---|
-| **Skin** | **Nebula** · **Lumen** · **Crimson** — the three kept in 5.14 (Aurora, Carbon, Ember and Paper were taken away at the owner's request; a workspace that used one opens in Nebula). Nebula's surfaces take their colour from the skin, not from the app theme; Lumen and Crimson follow the app's light or dark mode and change the layout too (below). |
-| **Motion** | Seven switches — answers arriving, edge light, the living background, the orb pulse, thinking dots, springy buttons, and a passing light on an interval you set — and an eighth, *Lively icons*, while Lumen or Crimson is the skin. Each one genuinely unhooks its animation. |
+| **Skin** | **Nebula** · **Lumen** · **Crimson** · **Halo** (new in 5.17). Aurora, Carbon, Ember and Paper were taken away in 5.14 at the owner's request; a workspace that used one opens in Nebula. Nebula's surfaces take their colour from the skin, not from the app theme; Lumen, Crimson and Halo follow the app's light or dark mode and change the layout too (below). |
+| **Motion** | Seven switches — answers arriving, edge light, the living background, the orb pulse, thinking dots, springy buttons, and a passing light on an interval you set — and an eighth, *Lively icons*, while Lumen, Crimson or Halo is the skin. Each one genuinely unhooks its animation. |
 | **Pixel art** | One switch, for the sprites below. Off leaves the panel exactly as it was: the drawn orb, the old waiting animation, a `✓` on a receipt. |
 | **Ask before doing anything** | On by default: everything is put to you first. Off: it does what you ask straight away and the line says *done without asking*. `Ctrl`+`Z` still undoes it either way. |
 
@@ -471,8 +473,8 @@ rest of the app — the record sheet stays still while you read it.
 
 #### Lumen
 
-The newest skin, and the only one that changes the layout as well as the
-colours (with Crimson, below, which is built on it). Pick it under **◎ →
+The skin that changes the layout as well as the colours (with Crimson and
+Halo, below, which are built on it). Pick it under **◎ →
 Skin → Lumen**; the other skins stay exactly as they were, and switching back
 is one click.
 
@@ -570,6 +572,43 @@ Crimson — a skin with its own character keeps its own mark unless a picture
 is there for it by name. Keep a picture like that in your own folder only;
 it does not belong in the repository.
 
+#### Halo
+
+**The moving skin**, new in 5.17 and drawn to go with the **Prism** look
+([§6.5](#65-looks-and-themes)). It uses Lumen's layout (everything in the
+Lumen section holds for it too) with its own colours, mark and motion.
+
+**How do I use Halo?** Open the chat panel, press **◎** (Look and
+behaviour), and under **Skin** choose **Halo**. Choosing the **Prism** look
+also offers it: press **Use Halo in the chat too** on the message. To go
+back, choose any other skin.
+
+What you see:
+
+- **The mark: a living orb** — a glowing sphere in a ring of violet, pink and
+  cyan. The ring turns slowly while the assistant waits, and quickly, with a
+  pulse, while an answer is on its way. (With **Pixel art** on, the robot
+  stands in for it, as in every skin.)
+- **The greeting:** a large orb with two small lights going round it, and
+  *Good morning* with light running through the letters.
+- **Colour behind the conversation:** soft violet, pink and cyan drifting
+  slowly behind the messages, with the cards and the box you type in as
+  see-through glass over it.
+- **Answers arrive part by part:** each paragraph, list and code block rises
+  in just after the one before, so a long answer reads like it is being
+  written.
+- **Thinking:** a line of colour runs under the header and down the panel's
+  edge, and light runs through the *asking your flow…* words.
+- **The box you type in:** a ring of colour turns around it while you type;
+  **Send** is filled with the prism's colours, grows when you point at it
+  and springs when you press it.
+- **Light and dark:** frosted white in light mode, deep violet in dark mode.
+
+**Why did the motion switches come on when I picked Halo?** Halo is drawn to
+move, so the first time you pick it, the panel's motion switches (◎ →
+Motion) are turned on. Each one is still yours to switch off. A PC that
+asks for reduced motion is left as it is.
+
 #### The pixel set
 
 Nine sprites, sixteen colours, drawn at sixteen pixels square — twenty-four
@@ -632,7 +671,8 @@ or screen-reader user is never tabbing around a page they cannot see.
 
 Two separate choices, both in *Menu → Look*.
 
-**The look** is the shape of the interface. **Nova** is the newest: a page
+**The look** is the shape of the interface. **Prism** is the newest (5.17),
+described just below. **Nova** is the one before it: a page
 header on every view (the date, a greeting and the day's count on Day; search,
 light/dark, *Ask AI* and *New record* on the right), the sidebar grouped into
 Work, Knowledge and Assistant with a line icon and a live count per view,
@@ -645,12 +685,55 @@ glyphs when the assistant is docked at narrower widths. **Quiet** keeps the
 top bar with the same restraint — one line per record, status as a dot, colour
 only where it must be noticed. **Classic** is the original: boxed rows and
 coloured chips, unchanged. Below 900px every look becomes the top bar. The
-assistant can switch it (`ui`: `nova`, `studio`, `quiet` or `classic`).
+assistant can switch it (`ui`: `prism`, `nova`, `studio`, `quiet` or `classic`).
 
-**The theme** is the palette. Six built in — **Studio** (graphite ink,
+#### What is the Prism look?
+
+Prism is Nova's layout (the page header, the grouped sidebar with counts,
+the quick actions on each record) in **glass, colour and motion**, after
+the way apps were being designed in 2025–26:
+
+- **A slow aurora** of violet, pink and cyan drifts behind the whole page,
+  with a fine grain over it.
+- **Glass surfaces:** the sidebar floats off the edge as an island, the
+  status line is a floating pill, and cards, records and dialogs are
+  see-through glass with a light top edge. Records, Setup, the command
+  palette and questions blur what is behind them as they open.
+- **A light that slides** to the view you open in the sidebar, and counts
+  that pop when they change.
+- **Views rise in:** opening a view brings its cards and records up one
+  after another; the page title shimmers once.
+- **Light under the pointer:** records and cards light up where your mouse
+  is.
+- **Springs:** buttons, cards, dialogs, the record sheet and messages move
+  with a little bounce instead of a straight slide.
+- **The main buttons** (*New record*, the first card of the day) carry a
+  slow flowing gradient; the box you type in gets a turning ring of colour
+  while you type; today in the week view has one too.
+- **Light and dark** (the ◐ button) spreads out in a circle from the button.
+
+**How do I turn Prism on?** *Menu → Look*, **Look → Prism**. It puts on its
+own palette — **Prism** (light) or **Prism Night** (dark) — and offers the
+**Halo** chat skin to go with it. Choosing another look puts your previous
+palette back.
+
+**How do I make it move less?** *Menu → Look → Motion*: **Subtle** keeps
+everything still that loops (the aurora, the turning rings, the flowing
+buttons) and makes the rest quick; **None** stops all of it. A PC set to
+reduce motion gets the loops off on its own.
+
+**Prism felt slow on my PC — why, and what did KalKech do?** On a PC with no
+graphics card (a virtual desktop, often), the browser draws the moving
+aurora itself, and everything else slows with it. KalKech times the screen
+for a moment after Prism comes on; if it is slow, it keeps the aurora and
+the other looping effects still on that PC. Everything else in Prism still
+moves.
+
+**The theme** is the palette. Eight built in — **Studio** (graphite ink,
 off-white canvas, one indigo accent), **Studio Dark**, **Nova** (cool canvas,
-blue accent), **Nova Night**, **Archive** (warm, paper) and **Vault** (dark) —
-none deletable. A custom palette is a copy of
+blue accent), **Nova Night**, **Prism** (lavender white, violet and cyan),
+**Prism Night**, **Archive** (warm, paper) and **Vault** (dark) — none
+deletable. A custom palette is a copy of
 one with five colours changed; the other twenty-odd (rules, muted text, hover
 states, shadows) are derived from those five. Any look works with any theme.
 Palettes are stored in `dossier.json`, so a theme travels with the folder.
@@ -862,10 +945,73 @@ Workspace* with their size and date, and restore in two clicks. Restoring
 writes what is on the sheet now out to a file first, so it is never a one-way
 door.
 
-**Moving to another PC** is *Menu → Workspace → Export JSON*, which writes the
-same shape `dossier.json` has — every record, routine, script, setting and
-conversation — and *Import a JSON export…* on the other machine. Attachments
-are files in `tasks/`; copy the folder for those.
+**Moving to another PC** is *Menu → Workspace → Export JSON*, and *Import a
+JSON export…* on the other machine. Since 5.17 you choose what goes in the
+file, and your knowledge documents can go with it — see the questions below.
+Files attached to records are in `tasks/`; copy that folder for those.
+
+#### How do I export only some of my data?
+
+1. Open **Menu → Workspace** and press **Export JSON**.
+2. A window lists the parts, each with how many there are: **Records**,
+   **Routines**, **Scripts**, **Runbooks & system profiles**, **Notes & what
+   the assistant learned**, **Knowledge (Sources)**, **Conversations**,
+   **Incident history**, **Calendar** (holidays and special days) and
+   **Settings & appearance**.
+3. Tick only the parts you want. **Tick all / Untick all** does them all at
+   once. The window shows about how big the file will be.
+4. Press **Export**. The file goes to your Downloads folder, named after
+   what is in it (for example `kalkech-records-sources-2026-10-06.json`, or
+   `kalkech-export-….json` when everything is ticked). KalKech remembers your
+   ticks for next time.
+
+Nothing is sent anywhere: the file is made in the browser on your PC.
+
+**Your flow address is left out** of *Settings & appearance* unless you tick
+**Include my flow address**. The address works like a key — anyone who has
+it can use your flow — so only include it when the file stays with you.
+
+A part with nothing in it (for example no incidents yet) cannot be ticked.
+
+#### How do I move my knowledge documents (Sources) to another PC?
+
+Export with **Knowledge (Sources)** ticked. Every document in *Library →
+Sources* goes in the file **with its original file** (the PDF, Word, Markdown
+or text you added), the words read out of it, and its details (name, version,
+effective date, systems, category, who may read it, switched on or off).
+Files kept for a conversation go too when **Conversations** is also ticked.
+
+On the other PC, open a workspace folder first, then **Import a JSON
+export…**. The documents are stored in that folder's `sources/` exactly as if
+you had added them, cut into passages again, and searched by the assistant
+straight away. A document that is already there (the same file, or the same
+words) is not added twice.
+
+#### How do I import an export?
+
+1. **Menu → Workspace → Import a JSON export…**, and choose the file.
+2. The window shows the parts that are in the file, with counts. Tick the
+   ones to bring in.
+3. Choose how:
+   - **Add to what is here** (the usual choice): nothing here is removed. A
+     record that is in both keeps the copy that was changed last. Routines,
+     scripts, notes, conversations and calendar days that are not here yet
+     come in. A document already in Sources is not added again.
+   - **Replace the ticked parts**: the ticked parts become what is in the
+     file; the parts you did not tick stay exactly as they are. Documents in
+     Sources are **switched off**, not deleted, so you can switch them back.
+4. Press **Import**. The message says what came in, with **Undo**.
+
+**Settings** from a file take the place of yours (your flow address stays if
+the file has none). **Script files** are written back into `scripts\`; if a
+script with the same name but different text is already there, yours is
+kept and the one from the file is saved beside it as `name (2).sql`.
+**Undo** (`Ctrl`+`Z`) puts everything back except documents added to
+Sources — remove those in *Library → Sources* if you need to.
+
+Old exports (before 5.17, one file with everything) still import: the
+window offers every part they have. A runbook library file (*Library →
+Export library*) can be imported here too.
 
 ### 4.1 The database as the store
 
@@ -3308,7 +3454,7 @@ first thing to run after changing anything it touches:
 
 ```
 node --test                 # tests/*.test.js: 54 tests - Sources (every scenario below), names and queries in answers, and diagrams
-node tests/e2e/run.js       # the app in Chrome or Edge: 171 checks on the screen
+node tests/e2e/run.js       # the app in Chrome or Edge: 188 checks on the screen
 node flow/check-prompt.js   # the prompt's examples against the reply validator
 ```
 

@@ -691,7 +691,7 @@
   tz.pick = "auto"; S.settings.memory = S.settings.memory.filter(n => !/^mbig/.test(n.id)); chatModelPaint();
 
   /* ── 5.14: three skins, centred icons, code after a heading, the magnet, special days ── */
-  check("three chat skins are kept: Nebula, Lumen, Crimson", CHAT_SKINS.map(x => x.id).join() === "nebula,lumen,crimson");
+  check("the chat skins are Nebula, Lumen, Crimson and (5.17) Halo", CHAT_SKINS.map(x => x.id).join() === "nebula,lumen,crimson,halo");
   const oldSkin = chatUI().skin; chatUI().skin = "aurora"; chatUI();
   check("...and a workspace that used one of the others opens in Nebula", chatUI().skin === "nebula");
   chatUI().skin = oldSkin; applyChatUI();
@@ -910,5 +910,73 @@
   check("the prompt: queries are copied from their sources, never written for a support task", /QUERIES, COMMANDS AND SCRIPTS come from their documents/.test(DossierFlow.PROMPT) &&
         /=== A REQUEST TO SUPPORT, AND QUESTIONS ABOUT A STEP ===/.test(DossierFlow.PROMPT) && !!DossierFlow.ACTIONS.needSources);
   setView("day");
+
+  /* ── 5.17: export the parts you choose - Sources with their files - and
+        bring them in somewhere else; Prism and Halo ── */
+  closeChat();
+  S.settings.flow.url = "https://flow.example/invoke?sig=made-up";
+  const xpd = xpExport();
+  await until(() => $("xpDlg"));
+  const xpRows = [...document.querySelectorAll("#xpDlg [data-xp]")].map(b => b.dataset.xp);
+  check("Export lists the ten parts, Knowledge among them", xpRows.length === 10 && xpRows.indexOf("sources") >= 0 && $("xpUrl"), xpRows.join());
+  await shot("18-export-parts");
+  $("xpNo").click(); await xpd;
+  const libN = srcLib().filter(d => d.status !== "deleted").length;
+  const ex = JSON.parse(await (await xpBuild(["records", "sources"])).blob.text());
+  const exPdf = (ex.sources.docs || []).find(d => d.name === "Data Retention Standard");
+  check("records + knowledge: every library document goes, with its original file and its text", ex.sources.docs.length === libN &&
+        exPdf && exPdf.original && exPdf.original.b64.length > 1000 && /System logs are kept for 90 days/.test(exPdf.text), ex.sources.docs.length + " of " + libN);
+  check("...and only those parts", Array.isArray(ex.tasks) && !ex.routines && !ex.chats && !ex.settings && !ex.scripts && ex.parts.join() === "records,sources", Object.keys(ex).join());
+  const exSet = JSON.parse(await (await xpBuild(["settings", "scripts"])).blob.text());
+  check("settings leave the flow address out unless it is asked for", exSet.settings.flow.url === "" &&
+        JSON.parse(await (await xpBuild(["settings"], { flowUrl:true })).blob.text()).settings.flow.url === S.settings.flow.url);
+  check("scripts carry their text", /sync\.build_partner_file/.test((exSet.scriptFiles || {})["gen_partner_sync.sql"] || ""), Object.keys(exSet.scriptFiles || {}).join());
+  const oldWhole = JSON.parse(JSON.stringify(payload()));
+  /* a fresh workspace to bring it into */
+  try { await root.removeEntry("e2e-import", { recursive:true }); } catch (e) {}
+  const wsI = await root.getDirectoryHandle("e2e-import", { create:true });
+  const fhI = await wsI.getFileHandle("dossier.json", { create:true });
+  const wI = await fhI.createWritable();
+  await wI.write(JSON.stringify({ app:"dossier", version:3, savedAt:"2026-10-05T08:00:00.000Z", wsId:"wImp", seq:0,
+    settings:{ flow:{ on:true, url:"https://flow.example/its-own" } }, routines:[], scripts:[], incidents:[], chats:[],
+    tasks:[{ id:"own1", code:"D-0001", title:"Only in the second workspace", status:"open", created:"2026-10-05" }] }));
+  await wI.close();
+  await openWorkspace(wsI, true);
+  await srcLoad(true);
+  await xpApply(ex, ["records", "sources"], false);
+  const inPdf = srcLib().find(d => d.name === "Data Retention Standard");
+  const inNames = []; if (inPdf) for await (const k2 of (await (await wsI.getDirectoryHandle("sources")).getDirectoryHandle(inPdf.id)).keys()) inNames.push(k2);
+  check("import: the documents arrive in Sources with their original files", srcLib().length === libN && inPdf &&
+        ["data-retention-standard.pdf", "text.txt", "chunks.json"].every(n => inNames.includes(n)), srcLib().length + " " + inNames.join());
+  check("...the records come in beside the ones already there", S.tasks.some(t => t.id === "own1") && S.tasks.length > 1);
+  const found = srcSearch("how long are system logs kept", null, {});
+  check("...and the documents are searched", found && /90 days/.test(JSON.stringify(found)));
+  const xpAgain = await xpApply(ex, ["sources"], false);
+  check("importing the same documents again adds none", srcLib().length === libN && xpAgain.counts.sources === 0);
+  await xpApply(exSet, ["settings"], false);
+  check("settings from a file without the flow address keep this workspace's", flowCfg().url === "https://flow.example/its-own", flowCfg().url);
+  const oldParts = xpCountsIn(oldWhole);
+  await xpApply(oldWhole, ["routines", "chats"], true);
+  check("an export from before 5.17 is read: its parts are offered and imported", "records" in oldParts && !("sources" in oldParts) &&
+        S.chats.length === oldWhole.chats.slice(0, 30).length, JSON.stringify(oldParts));
+  /* Prism, on Nova's layout */
+  prismChoose(); await sleep(60);
+  setView("board"); await sleep(400);
+  const prOn = document.querySelector("#tabs button.on"), prL = $("prInd");
+  check("Prism: Nova's layout and its own layer, with its own palette", document.documentElement.getAttribute("data-look") === "nova" &&
+        document.documentElement.hasAttribute("data-prism") && S.settings.theme === "prism");
+  check("...the light on the open view sits on it", prL && !prL.hidden && prL.style.transform.indexOf(prOn.offsetTop + "px") > 0, prL ? prL.style.transform : "none");
+  themeFlip(); await sleep(60);
+  check("...◐ goes between Prism and Prism Night", S.settings.theme === "prism-night");
+  S.settings.motion = "none"; applyFeel();
+  check("...with Motion off nothing loops", getComputedStyle(document.body, "::before").animationName === "none");
+  S.settings.motion = "full"; applyFeel();
+  chatSkinSet("halo");
+  check("Halo: a skin on Lumen's layout", $("chat").dataset.skin === "halo" && "lm" in $("chat").dataset && chatUI().reveal === true);
+  openChat(); chatNew(true); chatPaint(); await sleep(900);
+  await shot("19-prism-halo");
+  closeChat();
+  lookChoose("studio");
+  check("leaving Prism puts the palette from before back", !document.documentElement.hasAttribute("data-prism") && !/^prism/.test(S.settings.theme), S.settings.theme);
   return { checks };
 })()

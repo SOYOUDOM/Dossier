@@ -6,6 +6,57 @@ holds — which is what to paste into a bug report.
 
 ---
 
+## 5.17.0 - 2026-10-06
+
+**Export only what you choose - with your knowledge documents - and two new
+designs that move: the Prism look and the Halo chat skin.**
+
+- **Export the parts you choose.** *Menu → Workspace → Export JSON* opens a
+  window listing the parts, each with how many there are: records,
+  routines, scripts, runbooks & system profiles, notes & what the assistant
+  learned, knowledge (Sources), conversations, incident history, calendar,
+  settings & appearance. Tick the ones you want; the window shows about how
+  big the file will be and remembers your ticks. It used to write
+  everything, every time.
+- **Your knowledge documents go with it.** With *Knowledge (Sources)* ticked,
+  every document in Library → Sources is in the file with its **original
+  file** (PDF, Word, Markdown, text), the words read out of it and its
+  details. Script files go with *Scripts* (their text, not only their
+  names). Files kept for a conversation go when *Conversations* is ticked
+  too.
+- **Your flow address stays out** of an export unless you tick *Include my
+  flow address* - it works like a key.
+- **Import the parts you choose.** *Import a JSON export…* shows what the
+  file has; tick the parts, then **Add to what is here** (nothing removed;
+  the newer copy of a record wins; a document already in Sources is not
+  added twice) or **Replace the ticked parts** (only those; documents are
+  switched off, not deleted). Documents are stored in `sources/` as if you
+  had added them and searched straight away; scripts are written back to
+  `scripts\` (a different file with the same name is kept and the new one
+  saved as `name (2)`). Old exports and runbook library files still import.
+- **Prism, a new look** (Menu → Look → Prism), designed after 2025-26
+  interfaces: Nova's layout in glass and colour - a slow aurora behind the
+  page, a floating glass sidebar whose light slides to the view you open,
+  records and cards that light up under the pointer, views whose cards rise
+  in one after another, counts that pop, spring motion everywhere, a ring
+  of colour round the box you type in, and light/dark spreading in a circle
+  from the button. Its own palettes, **Prism** and **Prism Night**.
+- **Halo, a new chat skin** (◎ → Skin → Halo), drawn with Prism: a living
+  orb for a mark (its ring turns faster while an answer comes), a greeting
+  with lights going round the orb, colour drifting behind the conversation
+  under glass cards, answers that arrive part by part, light running
+  through *thinking*, and a Send button in the prism's colours. Picking it
+  the first time turns the panel's motion switches on.
+- **Motion is still yours.** *Motion: Subtle* stops everything that loops;
+  *None* stops it all; a PC set to reduce motion gets the loops off. On a PC
+  with no graphics card (a virtual desktop), KalKech times the screen when
+  Prism comes on and keeps the aurora and the loops still if it is slow.
+- Nothing new reaches the network: the designs are drawn in the file
+  (CSS and SVG, the PC's own fonts), and an export is made in the browser.
+- Tests: 188 checks in the browser (17 new: export parts and files, import
+  into a fresh workspace, no duplicates, flow address, old exports, Prism,
+  Halo).
+
 ## 5.16.0 - 2026-10-05
 
 **The assistant finds the guideline your request is about, copies its

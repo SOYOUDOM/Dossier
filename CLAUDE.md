@@ -73,8 +73,8 @@ A *workspace* is a folder the user picks (File System Access API):
 - **Talk to the owner in plain, simple English** (not their first language).
   Short steps, no jargon without explanation.
 - **New designs are added as selectable presets; existing ones are never
-  removed** (looks: Studio, Quiet, Classic, Nova; chat skins: Nebula, Lumen,
-  Crimson). The one exception so far was the owner's own request in 5.14:
+  removed** (looks: Studio, Quiet, Classic, Nova, Prism; chat skins: Nebula,
+  Lumen, Crimson, Halo). The one exception so far was the owner's own request in 5.14:
   the chat skins Aurora, Carbon, Ember and Paper were removed (`chatUI()`
   moves a workspace that used one to Nebula). Do not remove anything else
   unless the owner asks.
@@ -91,13 +91,13 @@ A *workspace* is a folder the user picks (File System Access API):
 - Commit messages: clear summary + body; no model names in commits, code or
   docs. Do not open a pull request unless the owner asks.
 - Work so far is on branch `claude/chat-panel-pixel-art-gifs-d822hq`
-  (latest: 5.16.0). Follow the branch instructions of your own session.
+  (latest: 5.17.0). Follow the branch instructions of your own session.
 
 ## Testing
 
 ```
 node --test                                   # 54 unit tests (Sources, grounding, names check, code origin, flow reply fields, diagrams)
-node tests/e2e/run.js                         # the app in headless Chrome/Edge: 171 checks (CHROME=<path> to choose)
+node tests/e2e/run.js                         # the app in headless Chrome/Edge: 188 checks (CHROME=<path> to choose)
 node flow/check-prompt.js                     # after editing flow/prompt.txt ...
 python3 flow/embed-prompt.py                  # ... then copy it into flow.js (PROMPT_BUILTIN)
 node tests/fixtures/make-pdf.js               # regenerate the PDF fixtures
@@ -119,6 +119,59 @@ Also useful:
   `DossierFlow.validate`. `tests/e2e/run.js` is a working example of all of it.
 
 ## Recent history (newest first)
+
+- **5.17.0** — Owner: "export only the selected choice … include the
+  knowledge file source … a new preset for the whole layout and for the chat
+  … modern with a lot of animated motion; check the internet first".
+  - *Export/import* (`EXPORT AND IMPORT` banner, after `lastTouch`; the old
+    `mergeWorkspace` is gone): `XP_PARTS` (records, routines, scripts,
+    runbooks, notes, sources, chats, incidents, calendar, settings),
+    `XP_SET_KEYS` (settings keys owned by a part), `xpCountsHere()`,
+    `xpCountsIn(d)` (a 5.17 file lists `parts`; an old one = keys present),
+    `xpDialog(mode, counts, info)` (`#xpDlg`, `.srcdlg` + `.xpb/.xpp/.xpmode`),
+    `xpBuild(picks, {flowUrl})` → `{blob, sum}` (a Blob of pieces, one per
+    document; file kind `kalkech.export`, `version:3` keys as `payload()`;
+    `scriptFiles` {file: text}; `sources:{algo, docs:[catalog entry + text +
+    original{name,type,size,b64}]}`, no chunks — re-cut on import; flow
+    `url` blanked unless asked), `downloadBlob`, `b64FromBlob`,
+    `blobFromB64`, `xpExport()`, `xpImportFile(f)` (also runbook bundles),
+    `xpApply(d, picks, replace)` (pushUndo first; add = by id / title / newer
+    record; replace = only ticked parts; settings keep this flow url when the
+    file has none; `xpSettingsApplied()`), `xpScriptsIn` (never overwrites a
+    different file: `name (2).ext`), `xpSourcesIn` (dedupe by sha/textHash,
+    new ids, re-link supersedes, replace switches docs off). Helpers
+    `scriptClean`, `chatClean` (from `hydrate`), `seqFromCodes`, `rbMerge`
+    (from `rbImportBundle`). `settings.exportPick`. Strings `Xp*`.
+  - *Prism look* (CSS `PRISM` after `/NOVA`; JS beside `applyTheme`):
+    `UI_MODES` + `"prism"`, `novaish()` (nova or prism: `data-ui="studio"`,
+    `data-look="nova"`, plus `data-prism`), palettes `prism`/`prism-night`,
+    `lookPalette(look)`, `prismChoose()` (offers Halo), `lookChoose(want)`
+    (Setup select and the `setSetting ui` action), `novaLeave` handles both,
+    `themeFlip()` + `prismReveal(btn, fn)` (View Transition circle, `.prvt`,
+    `--vt-x/y`), `prismInd()` (`#prInd` sliding light, from `novaSync`/
+    `applyUi` + a ResizeObserver on `#tabs`), `prismEnter()` (`.prin` on
+    main and `#nxHead` for 1.9 s: stagger, title shimmer), spotlight
+    (`PRISM_LIT`, one pointermove listener, `--mx/--my` registered
+    `inherits:false`, `.lit`), badge `.bump`, `prismProbe()` (times 50
+    frames 1.5 s after Prism comes on; median > 24 ms → `data-still`, which
+    stops the aurora and every loop). Aurora on `body::before/::after`
+    (z-index -1), grain on `.app::after`. No backdrop-filter beside the page
+    (only overlays): a blur over the moving aurora is redone every frame.
+    Loops only under `[data-motion="full"]` inside
+    `@media (prefers-reduced-motion:no-preference)`; all transforms/opacity
+    except the conic rings (`--pr-a`, `steps(72)`). Measured in headless
+    software rendering: idle 16.7 ms/frame after the probe; Studio's own.
+  - *Halo chat skin* (CSS `HALO` after `/CRIMSON`; `CHAT_SKINS` id `halo`,
+    `lm:true`, no art): animated SVG orb marks (`--lm-mark/-live/-idle`),
+    own `.chaur` aurora, `.chat::before` / `.chh::after` lines while busy,
+    staggered answer parts (`.chb.bot.ans:last-child .say > *`), blur-in only
+    for the last 3 messages, shimmer on `.chthink .tx` (fx-typing), conic
+    composer ring, flowing Send. `chatSkinSet(id)` (from the picker and
+    Prism's offer) turns the panel's motion switches on the first time Halo
+    is picked (not with reduced motion). The skins grid is `auto-fill`.
+  - Research (web, 2026): Liquid Glass, aurora gradients, bento cards with
+    spotlight hover, spring easing via `linear()`, `@starting-style`,
+    scroll-driven animation, View Transitions; motion must stay optional.
 
 - **5.16.0** — Owner (screenshots, company data, never committed): "help me
   to support this" + a picture of an email got "Open SSMS… run the SQL…

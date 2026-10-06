@@ -1771,6 +1771,27 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
 .srcfile{font-size:12px;color:var(--ink-2);margin:0 0 10px;line-height:1.5}
 .srcdlg2{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}
 .srcver{margin:10px 0 4px;padding:9px 11px;border-radius:10px;background:color-mix(in srgb,var(--accent) 8%,transparent);font-size:12px}
+/* Export and Import (5.17): one card a part, two across */
+.xpb{width:640px}
+.xpparts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:4px 0 10px}
+.xpp{display:flex;gap:9px;align-items:flex-start;padding:9px 11px;border:1px solid var(--rule);border-radius:11px;cursor:pointer;
+  background:var(--paper);transition:border-color .15s,background .15s,transform .15s}
+.xpp:hover{border-color:var(--rule-hi)}
+.xpp:has(input:checked){border-color:color-mix(in srgb,var(--accent) 55%,var(--rule));background:color-mix(in srgb,var(--accent) 6%,var(--paper))}
+.xpp input{margin-top:2px;flex:0 0 auto}
+.xpp b{display:block;font-size:12.5px;font-weight:650}
+.xpp b i{font-style:normal;font-weight:600;font-size:11px;color:var(--ink-3);margin-left:4px}
+.xpp small{display:block;font-size:11px;color:var(--ink-3);line-height:1.45;margin-top:2px}
+.xpp.none{opacity:.5;cursor:default}
+.xpmode{margin:4px 0 6px;padding:6px 11px;border-radius:11px;background:color-mix(in srgb,var(--accent) 6%,transparent);
+  display:grid;grid-template-columns:1fr 1fr;gap:0 14px}
+@media (max-width:620px){.xpmode{grid-template-columns:1fr}}
+.xpmode .srcck span{color:var(--ink-2)}
+.xpmode .srcck b{color:var(--ink)}
+.xpurl{margin:2px 0 8px}
+#xpSize.warn{color:var(--p2);font-weight:600}
+.xpdlg [hidden]{display:none}
+@media (max-width:620px){.xpparts{grid-template-columns:1fr}}
 .srcvb{width:820px;padding:0;display:flex;flex-direction:column}
 .srcvh{display:flex;gap:10px;justify-content:space-between;align-items:flex-start;padding:12px 14px;border-bottom:1px solid var(--rule)}
 .srcvm{font-size:11.5px;color:var(--ink-3);margin-left:8px}
@@ -3505,7 +3526,7 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
 .chat[data-lm] .chfxb{padding:10px 20px 24px}
 .chat[data-lm] .chfxb h6{font-size:12px;font-weight:650;letter-spacing:0;text-transform:none;color:var(--ch-ink);margin:22px 0 8px}
 .chat[data-lm] .chfxb h6:first-child{margin-top:8px}
-.chat[data-lm] .chskins{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.chat[data-lm] .chskins{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:8px}
 .chat[data-lm] .chskin{flex-direction:column;align-items:stretch;gap:8px;padding:8px 8px 9px;border-radius:12px;font-size:12.5px;font-weight:600;
   background:var(--lm-card);border:1px solid var(--ch-line);color:var(--ch-ink);text-align:left;position:relative}
 .chat[data-lm] .chskin .dot{width:auto;height:40px;border-radius:8px}
@@ -3753,6 +3774,194 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
 /* the history: the open conversation marked with a red edge */
 .chat[data-skin="crimson"] .chsi.on{box-shadow:inset 3px 0 0 var(--ch-acc)}
 /* ═══ /CRIMSON ═══ */
+/* ═══ HALO
+   A fourth skin on Lumen's layout (5.17), drawn with Prism, the look that
+   came with it, and after the way AI assistants were drawn in 2025-26: a
+   living orb for a mark, colour that drifts behind the conversation, glass
+   cards over it, answers that arrive part by part, a shimmer on "thinking".
+   Every rule is scoped to .chat[data-skin="halo"]; the layout is Lumen's
+   (.chat[data-lm] above). The mark is an orb in a ring of violet, pink and
+   cyan - still, slowly turning while idle, quickly while an answer is on
+   its way - drawn here as SVG, like Lumen's and Crimson's: data, not a
+   fetch. The moving parts sit behind the panel's own switches (Look and
+   behaviour): Ambient for the colour that drifts, Glow for the lit edge,
+   Reveal for answers arriving, Typing for the shimmer, Springy chips for
+   the lifts. The panel itself is not blurred glass: what is behind it moves
+   (Prism's aurora), and a blur over moving colour is worked out again on
+   every frame. The glass is inside - see-through cards over its own aurora. */
+.chat[data-skin="halo"]{
+  --hl-pink:#ec4899; --hl-cyan:#06b6d4; --hl-solid:#ffffff;
+  --hl-spring:linear(0,0.084,0.266,0.471,0.657,0.805,0.911,0.979,1.017,1.035,1.038,1.034,1.027,1.019,1.012,1.007,1.003,1.001,0.999,1);
+  --hl-bounce:linear(0,0.105,0.344,0.62,0.864,1.042,1.144,1.179,1.166,1.125,1.076,1.031,0.997,0.976,0.968,0.97,0.976,0.985,0.993,1,1.004,1.006,1.005,1.003,1.001,1);
+  --hl-flow:linear-gradient(100deg,#7c3aed 0%,#c026d3 25%,#0891b2 50%,#c026d3 75%,#7c3aed 100%);
+  --ch-bg:#fbfaff; --ch-panel:#f3effe; --ch-line:rgba(91,61,180,.13); --ch-ink:#17142b; --ch-dim:#6b6585;
+  --ch-acc:#7c3aed; --ch-acc2:#0891b2;
+  --ch-glow:rgba(139,92,246,.30); --ch-mesh:rgba(124,58,237,.05);
+  --lm-ink2:#3d3858; --lm-bubble:#efe9fe; --lm-card:rgba(255,255,255,.74); --lm-hover:rgba(124,58,237,.07);
+  --lm-line2:rgba(91,61,180,.22); --lm-ring:rgba(124,58,237,.18); --lm-soft:rgba(124,58,237,.10);
+  --lm-shadow:0 1px 2px rgba(50,30,120,.06),0 12px 32px -14px rgba(70,40,160,.30);
+  --lm-pop:0 22px 56px -18px rgba(60,30,140,.42),0 2px 6px rgba(50,30,120,.08);
+  --lm-grad:linear-gradient(125deg,#7c3aed 0%,#c026d3 52%,#0891b2 100%);
+  --lm-mark:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cdefs%3E%3ClinearGradient id='r' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23a78bfa'/%3E%3Cstop offset='.5' stop-color='%23f472b6'/%3E%3Cstop offset='1' stop-color='%2322d3ee'/%3E%3C/linearGradient%3E%3CradialGradient id='c' cx='.36' cy='.3' r='.78'%3E%3Cstop offset='0' stop-color='%23ffffff'/%3E%3Cstop offset='.26' stop-color='%23ddd6fe'/%3E%3Cstop offset='.68' stop-color='%238b5cf6'/%3E%3Cstop offset='1' stop-color='%234c1d95'/%3E%3C/radialGradient%3E%3C/defs%3E%3Cg%3E%3Ccircle cx='24' cy='24' r='20.5' fill='none' stroke='url(%23r)' stroke-width='3.6' stroke-linecap='round' stroke-dasharray='96 33'/%3E%3C/g%3E%3Cg transform='translate(24 24)'%3E%3Cg%3E%3Ccircle r='13' fill='url(%23c)'/%3E%3Cellipse cx='-4.6' cy='-5.6' rx='4.4' ry='2.8' fill='white' opacity='.75'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  --lm-mark-live:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cdefs%3E%3ClinearGradient id='r' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23a78bfa'/%3E%3Cstop offset='.5' stop-color='%23f472b6'/%3E%3Cstop offset='1' stop-color='%2322d3ee'/%3E%3C/linearGradient%3E%3CradialGradient id='c' cx='.36' cy='.3' r='.78'%3E%3Cstop offset='0' stop-color='%23ffffff'/%3E%3Cstop offset='.26' stop-color='%23ddd6fe'/%3E%3Cstop offset='.68' stop-color='%238b5cf6'/%3E%3Cstop offset='1' stop-color='%234c1d95'/%3E%3C/radialGradient%3E%3C/defs%3E%3Cg%3E%3CanimateTransform attributeName='transform' type='rotate' from='0 24 24' to='360 24 24' dur='1.1s' repeatCount='indefinite'/%3E%3Ccircle cx='24' cy='24' r='20.5' fill='none' stroke='url(%23r)' stroke-width='3.6' stroke-linecap='round' stroke-dasharray='96 33'/%3E%3C/g%3E%3Cg transform='translate(24 24)'%3E%3Cg%3E%3CanimateTransform attributeName='transform' type='scale' values='1;1.09;1' keyTimes='0;.5;1' dur='0.9s' repeatCount='indefinite' additive='sum'/%3E%3Ccircle r='13' fill='url(%23c)'/%3E%3Cellipse cx='-4.6' cy='-5.6' rx='4.4' ry='2.8' fill='white' opacity='.75'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  --lm-mark-idle:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cdefs%3E%3ClinearGradient id='r' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23a78bfa'/%3E%3Cstop offset='.5' stop-color='%23f472b6'/%3E%3Cstop offset='1' stop-color='%2322d3ee'/%3E%3C/linearGradient%3E%3CradialGradient id='c' cx='.36' cy='.3' r='.78'%3E%3Cstop offset='0' stop-color='%23ffffff'/%3E%3Cstop offset='.26' stop-color='%23ddd6fe'/%3E%3Cstop offset='.68' stop-color='%238b5cf6'/%3E%3Cstop offset='1' stop-color='%234c1d95'/%3E%3C/radialGradient%3E%3C/defs%3E%3Cg%3E%3CanimateTransform attributeName='transform' type='rotate' from='0 24 24' to='360 24 24' dur='7s' repeatCount='indefinite'/%3E%3Ccircle cx='24' cy='24' r='20.5' fill='none' stroke='url(%23r)' stroke-width='3.6' stroke-linecap='round' stroke-dasharray='96 33'/%3E%3C/g%3E%3Cg transform='translate(24 24)'%3E%3Cg%3E%3CanimateTransform attributeName='transform' type='scale' values='1;1.09;1' keyTimes='0;.5;1' dur='3.2s' repeatCount='indefinite' additive='sum'/%3E%3Ccircle r='13' fill='url(%23c)'/%3E%3Cellipse cx='-4.6' cy='-5.6' rx='4.4' ry='2.8' fill='white' opacity='.75'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  box-shadow:-30px 0 80px -30px rgba(70,40,160,.34)}
+:root[data-mode="dark"] .chat[data-skin="halo"]{
+  --hl-pink:#f472b6; --hl-cyan:#22d3ee; --hl-solid:#1a1631;
+  --hl-flow:linear-gradient(100deg,#8b5cf6 0%,#db2777 25%,#0891b2 50%,#db2777 75%,#8b5cf6 100%);
+  --ch-bg:#0d0b1a; --ch-panel:#15122a; --ch-line:rgba(167,139,250,.14); --ch-ink:#eeeafd; --ch-dim:#a39bc4;
+  --ch-acc:#a78bfa; --ch-acc2:#22d3ee;
+  --ch-glow:rgba(167,139,250,.36); --ch-mesh:rgba(167,139,250,.06);
+  --lm-ink2:#d4cdef; --lm-bubble:#2a1f4a; --lm-card:rgba(31,26,58,.72); --lm-hover:rgba(255,255,255,.06);
+  --lm-line2:rgba(167,139,250,.26); --lm-ring:rgba(167,139,250,.26); --lm-soft:rgba(167,139,250,.15);
+  --lm-code:#08070f; --lm-code-h:#110e1f; --lm-code-line:#241d3d;
+  --lm-shadow:0 1px 2px rgba(0,0,0,.35),0 14px 34px -14px rgba(0,0,0,.7);
+  --lm-pop:0 26px 64px -18px rgba(0,0,0,.8),0 0 0 1px rgba(255,255,255,.05);
+  --lm-grad:linear-gradient(125deg,#8b5cf6 0%,#db2777 52%,#0891b2 100%);
+  box-shadow:-30px 0 80px -30px rgba(0,0,0,.8)}
+.chat[data-skin="halo"] ::selection{background:rgba(124,58,237,.2)}
+:root[data-mode="dark"] .chat[data-skin="halo"] ::selection{background:rgba(167,139,250,.32)}
+
+/* its own aurora, behind the conversation (the panel's .chaur) */
+.chat[data-skin="halo"] .chaur{opacity:1;filter:none;inset:-30%;
+  background:radial-gradient(34% 26% at 82% 8%,color-mix(in srgb,var(--ch-acc) 22%,transparent),transparent 70%),
+    radial-gradient(30% 24% at 10% 44%,color-mix(in srgb,var(--hl-pink) 14%,transparent),transparent 70%),
+    radial-gradient(38% 28% at 70% 92%,color-mix(in srgb,var(--hl-cyan) 16%,transparent),transparent 70%)}
+.chat[data-skin="halo"].fx-ambient .chaur{animation:hlDrift 36s ease-in-out infinite alternate}
+/* a PC drawing in software (see prismProbe): what loops stays still here too */
+:root[data-still] .chat[data-skin="halo"] .chaur,:root[data-still] .chat[data-skin="halo"] .chhero .chorbx::before,
+:root[data-still] .chat[data-skin="halo"] .chhero .chorbx::after,:root[data-still] .chat[data-skin="halo"] .chhero .lmhi,
+:root[data-still] .chat[data-skin="halo"] .chf .btn.pri:not(.empty),:root[data-still] .chat[data-skin="halo"] .chf:focus-within{animation:none!important}
+:root[data-still] .chat[data-skin="halo"]:not(.busy) .chorb,
+:root[data-still] .chat[data-skin="halo"]:not(.ownmark) .chhero .chorbx:not(:has(.pxl)){background-image:var(--lm-mark)!important}
+@keyframes hlDrift{0%{transform:translate3d(0,0,0) rotate(0deg)}50%{transform:translate3d(-6%,4%,0) rotate(10deg) scale(1.08)}
+  100%{transform:translate3d(5%,-5%,0) rotate(-8deg) scale(.96)}}
+.chat[data-skin="halo"] .chgrid{background-image:radial-gradient(var(--ch-mesh) 1.2px,transparent 1.4px);background-size:22px 22px}
+
+/* the lit edge: violet to pink to cyan, running down while it thinks */
+.chat[data-skin="halo"]::before{width:2px;background:linear-gradient(180deg,transparent,var(--ch-acc),var(--hl-pink),var(--hl-cyan),transparent) 0 0 / 100% 300%}
+.chat[data-skin="halo"].fx-glow.busy::before{opacity:1;box-shadow:0 0 14px var(--ch-glow)}
+.chat[data-skin="halo"].fx-glow.busy::before{animation:hlRun 1.6s linear infinite}
+@keyframes hlRun{to{background-position:0 300%}}
+
+/* the header: glass over the aurora, and a line of colour while it thinks */
+.chat[data-skin="halo"] .chh{background:color-mix(in srgb,var(--ch-bg) 72%,transparent)}
+.chat[data-skin="halo"] .chh::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:2px;pointer-events:none;
+  background:var(--hl-flow) 0 0 / 300% 100%;opacity:0;transition:opacity .3s}
+.chat[data-skin="halo"].busy .chh::after{opacity:1;animation:hlFlow 1.8s linear infinite}
+@keyframes hlFlow{to{background-position:300% 0}}
+.chat[data-skin="halo"] .chorb{border-radius:50%;background:var(--lm-mark) center / contain no-repeat;box-shadow:none}
+.chat[data-skin="halo"] .chorb i{display:none}
+.chat[data-skin="halo"].fx-icons .chorb{background-image:var(--lm-mark-idle)}
+.chat[data-skin="halo"].fx-icons.busy .chorb{background-image:var(--lm-mark-live)}
+.chat[data-skin="halo"].fx-glow .chorb{box-shadow:0 0 18px -3px var(--ch-glow)}
+.chat[data-skin="halo"] .chorb.pixorb{background:none;box-shadow:none}
+.chat[data-skin="halo"].ownmark .chorb{background:none}
+.chat[data-skin="halo"] .chb.bot.ans::before,.chat[data-skin="halo"] .chb.bot.thinking::before{background-size:26px 26px;padding-left:35px}
+
+/* the greeting: the orb, with two lights going round it */
+.chat[data-skin="halo"]:not(.ownmark) .chhero .chorbx:not(:has(.pxl)){width:92px;height:92px;position:relative;
+  filter:drop-shadow(0 14px 30px var(--ch-glow))}
+.chat[data-skin="halo"]:not(.ownmark) .chhero .chorbx:not(:has(.pxl))::before,
+.chat[data-skin="halo"]:not(.ownmark) .chhero .chorbx:not(:has(.pxl))::after{content:"";position:absolute;inset:-14px;border-radius:50%;pointer-events:none;
+  background:radial-gradient(circle at 50% 0,#fff 0 2.6px,color-mix(in srgb,var(--ch-acc) 60%,transparent) 3.4px,transparent 6px)}
+.chat[data-skin="halo"]:not(.ownmark) .chhero .chorbx:not(:has(.pxl))::after{inset:-26px;
+  background:radial-gradient(circle at 50% 100%,var(--hl-cyan) 0 2px,color-mix(in srgb,var(--hl-cyan) 50%,transparent) 2.8px,transparent 5px)}
+.chat[data-skin="halo"].fx-ambient .chhero .chorbx:not(:has(.pxl))::before{animation:hlOrbit 7s linear infinite}
+.chat[data-skin="halo"].fx-ambient .chhero .chorbx:not(:has(.pxl))::after{animation:hlOrbit 11s linear infinite reverse}
+@keyframes hlOrbit{to{transform:rotate(360deg)}}
+.chat[data-skin="halo"] .chhero .lmhi{background:linear-gradient(100deg,var(--ch-ink) 0%,var(--ch-ink) 35%,var(--ch-acc) 48%,
+  var(--hl-pink) 56%,var(--hl-cyan) 64%,var(--ch-ink) 76%,var(--ch-ink) 100%) 100% 0 / 280% 100%;
+  -webkit-background-clip:text;background-clip:text;color:transparent}
+.chat[data-skin="halo"].fx-ambient .chhero .lmhi{animation:hlTitle 8s ease-in-out infinite alternate}
+@keyframes hlTitle{0%,25%{background-position:100% 0}75%,100%{background-position:0% 0}}
+.chat[data-skin="halo"] .chhero .chseed button{background:var(--lm-card);border-color:var(--ch-line);border-radius:18px;
+  transition:transform .5s var(--hl-spring),box-shadow .25s,border-color .25s,background .25s}
+.chat[data-skin="halo"] .chhero .chseed button:hover{border-color:transparent;transform:translateY(-3px);
+  background:linear-gradient(var(--hl-solid),var(--hl-solid)) padding-box,var(--lm-grad) border-box;box-shadow:var(--lm-pop)}
+.chat[data-skin="halo"] .chhero .chseed button:active{transform:scale(.97);transition-duration:.1s}
+.chat[data-skin="halo"].fx-reveal .chhero .chseed button{animation:hlRise .7s var(--hl-spring) both}
+.chat[data-skin="halo"].fx-reveal .chhero .chseed button:nth-child(2){animation-delay:.07s}
+.chat[data-skin="halo"].fx-reveal .chhero .chseed button:nth-child(3){animation-delay:.14s}
+.chat[data-skin="halo"].fx-reveal .chhero .chseed button:nth-child(4){animation-delay:.21s}
+.chat[data-skin="halo"] .chseed button{transition:transform .45s var(--hl-spring),background .2s,border-color .2s}
+.chat[data-skin="halo"] .chseed button:hover{transform:translateY(-2px);border-color:color-mix(in srgb,var(--ch-acc) 45%,var(--ch-line))}
+.chat[data-skin="halo"] .chseed button::before,.chat[data-skin="halo"] .chseed button > .lmi{color:var(--ch-acc)}
+.chat[data-skin="halo"]:not(.fx-chips) .chhero .chseed button:hover,
+.chat[data-skin="halo"]:not(.fx-chips) .chseed button:hover{transform:none}
+
+/* the conversation: you in a soft wash of the prism's colours, answers
+   arriving part by part */
+.chat[data-skin="halo"] .chb.you{background:linear-gradient(135deg,color-mix(in srgb,var(--ch-acc) 14%,var(--hl-solid)),
+  color-mix(in srgb,var(--hl-pink) 10%,var(--hl-solid)) 60%,color-mix(in srgb,var(--hl-cyan) 10%,var(--hl-solid)));
+  box-shadow:0 1px 2px rgba(50,30,120,.05),inset 0 0 0 1px var(--ch-line)}
+.chat[data-skin="halo"].fx-reveal .chb{animation:hlRise .5s var(--hl-spring) both}
+/* the blur-in only for the last few: a whole thread repainted at once would
+   be eighty blurs on one frame */
+.chat[data-skin="halo"].fx-reveal .chb:nth-last-child(-n+3){animation:hlIn .6s var(--hl-spring) both}
+.chat[data-skin="halo"].fx-reveal .chb.bot.ans:last-child .say > *{animation:hlIn .6s var(--hl-spring) both}
+.chat[data-skin="halo"].fx-reveal .chb.bot.ans:last-child .say > :nth-child(2){animation-delay:.06s}
+.chat[data-skin="halo"].fx-reveal .chb.bot.ans:last-child .say > :nth-child(3){animation-delay:.12s}
+.chat[data-skin="halo"].fx-reveal .chb.bot.ans:last-child .say > :nth-child(4){animation-delay:.18s}
+.chat[data-skin="halo"].fx-reveal .chb.bot.ans:last-child .say > :nth-child(5){animation-delay:.24s}
+.chat[data-skin="halo"].fx-reveal .chb.bot.ans:last-child .say > :nth-child(6){animation-delay:.30s}
+.chat[data-skin="halo"].fx-reveal .chb.bot.ans:last-child .say > :nth-child(n+7){animation-delay:.36s}
+.chat[data-skin="halo"].fx-reveal .chb.bot.ans:last-child > :not(.say){animation:hlIn .6s var(--hl-spring) .3s both}
+@keyframes hlIn{from{opacity:0;transform:translateY(12px) scale(.985);filter:blur(4px)}to{opacity:1;transform:none;filter:none}}
+@keyframes hlRise{from{opacity:0;transform:translateY(16px) scale(.96)}to{opacity:1;transform:none}}
+/* thinking: light running through the words */
+.chat[data-skin="halo"] .chthink .tx{font-weight:550}
+.chat[data-skin="halo"].fx-typing .chthink .tx{background:linear-gradient(90deg,var(--ch-dim) 0%,var(--ch-dim) 35%,var(--ch-acc) 45%,
+  var(--hl-pink) 52%,var(--hl-cyan) 58%,var(--ch-dim) 68%,var(--ch-dim) 100%) 100% 0 / 300% 100%;
+  -webkit-background-clip:text;background-clip:text;color:transparent;animation:hlShimmer 1.8s linear infinite}
+@keyframes hlShimmer{to{background-position:-50% 0}}
+.chat[data-skin="halo"] .chgif{filter:hue-rotate(38deg) saturate(1.2)}
+
+/* the box you type in: glass, a ring that turns while you type, and Send in
+   the prism's colours */
+.chat[data-skin="halo"] .chf,.chat[data-skin="halo"] .chclip{background:var(--lm-card);border-color:var(--ch-line)}
+.chat[data-skin="halo"] .chclip:empty + .chf:focus-within{border-color:transparent;
+  background:linear-gradient(var(--hl-solid),var(--hl-solid)) padding-box,
+    conic-gradient(from var(--pr-a),var(--ch-acc),var(--hl-pink),var(--hl-cyan),var(--ch-acc)) border-box;
+  box-shadow:0 0 0 4px var(--lm-ring),var(--lm-shadow)}
+.chat[data-skin="halo"].fx-glow .chclip:empty + .chf:focus-within{animation:hlTurn 6s steps(72) infinite}
+@keyframes hlTurn{to{--pr-a:360deg}}
+.chat[data-skin="halo"] .chf .btn.pri{background:var(--hl-flow) 0 0 / 300% 100%;color:#fff;
+  box-shadow:0 6px 16px -6px color-mix(in srgb,var(--hl-pink) 70%,transparent);
+  transition:transform .45s var(--hl-bounce),box-shadow .2s,opacity .2s}
+.chat[data-skin="halo"] .chf .btn.pri:hover{background:var(--hl-flow) 0 0 / 300% 100%;opacity:1;transform:scale(1.08)}
+.chat[data-skin="halo"] .chf .btn.pri:active{transform:scale(.9);transition-duration:.08s}
+.chat[data-skin="halo"].fx-ambient .chf .btn.pri:not(.empty){animation:hlFlow 6s linear infinite}
+.chat[data-skin="halo"] .chf .btn.pri.empty{background:var(--lm-hover);color:var(--ch-dim);box-shadow:none;transform:none}
+.chat[data-skin="halo"].busy .chf .btn.pri{animation:hlFlow 1.4s linear infinite;opacity:.8}
+.chat[data-skin="halo"] .chacts button.pri,.chat[data-skin="halo"] .chask2 .btn.pri,.chat[data-skin="halo"] .chrb .rbf button.prim{
+  background:var(--lm-grad);border-color:transparent;color:#fff}
+
+/* cards in answers, the history, the menus */
+.chat[data-skin="halo"] .chcode,.chat[data-skin="halo"] .chtext,.chat[data-skin="halo"] .chdiag{position:relative;overflow:hidden}
+.chat[data-skin="halo"] .chcode::before,.chat[data-skin="halo"] .chtext::before,.chat[data-skin="halo"] .chdiag::before{content:"";position:absolute;
+  left:0;right:0;top:0;height:2px;background:var(--lm-grad);opacity:.9;pointer-events:none;z-index:1}
+.chat[data-skin="halo"] .chsi{transition:background .2s,transform .4s var(--hl-spring)}
+.chat[data-skin="halo"] .chsi:hover{transform:translateX(2px)}
+.chat[data-skin="halo"] .chsi.on{background:linear-gradient(90deg,var(--lm-soft),transparent);box-shadow:inset 3px 0 0 var(--ch-acc)}
+.chat[data-skin="halo"].fx-reveal.convos .chsi{animation:hlRise .5s var(--hl-spring) both}
+.chat[data-skin="halo"] .chplm{background:var(--hl-solid);animation:hlRise .4s var(--hl-spring) both}
+.chat[data-skin="halo"] .chskin.on{border-color:transparent;
+  background:linear-gradient(var(--hl-solid),var(--hl-solid)) padding-box,var(--lm-grad) border-box}
+
+/* motion turned down: what loops stands still */
+:root[data-motion="none"] .chat[data-skin="halo"] *,:root[data-motion="none"] .chat[data-skin="halo"]::before,
+:root[data-motion="subtle"] .chat[data-skin="halo"] .chaur,:root[data-motion="subtle"] .chat[data-skin="halo"] .chhero .chorbx::before,
+:root[data-motion="subtle"] .chat[data-skin="halo"] .chhero .chorbx::after,:root[data-motion="subtle"] .chat[data-skin="halo"] .chhero .lmhi,
+:root[data-motion="subtle"] .chat[data-skin="halo"] .chf .btn.pri,:root[data-motion="subtle"] .chat[data-skin="halo"] .chf:focus-within,
+:root[data-motion="subtle"] .chat[data-skin="halo"] .chthink .tx,:root[data-motion="subtle"] .chat[data-skin="halo"]::before,
+:root[data-motion="subtle"] .chat[data-skin="halo"] .chh::after{animation:none}
+@media (prefers-reduced-motion:reduce){
+  .chat[data-skin="halo"] .chaur,.chat[data-skin="halo"] .chhero .chorbx::before,.chat[data-skin="halo"] .chhero .chorbx::after,
+  .chat[data-skin="halo"] .chhero .lmhi,.chat[data-skin="halo"] .chf .btn.pri,.chat[data-skin="halo"] .chf:focus-within,
+  .chat[data-skin="halo"] .chthink .tx,.chat[data-skin="halo"]::before,.chat[data-skin="halo"] .chh::after{animation:none!important}
+}
+/* ═══ /HALO ═══ */
 /* ═══ NOVA ════════════════════════════════════════════════════════════════
    The fourth look, and the first one designed rather than subtracted.
    Studio's shell underneath — the sidebar grid, the rail it folds to when
@@ -4409,6 +4618,368 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
   :root[data-look="nova"] .nxhead p{white-space:normal}
 }
 /* ═══ /NOVA ═══ */
+
+/* ═══ PRISM ═══════════════════════════════════════════════════════════════
+   The fifth look (5.17), drawn after the way interfaces moved in 2025-26:
+   glass that lets colour through (Apple's Liquid Glass), a slow aurora of
+   soft colour behind everything, cards that light up under the pointer,
+   springs instead of straight easing, and things that arrive rather than
+   appear. Nova's layout underneath - applyUi() sets data-look="nova" and
+   data-prism together - so this block is only what Prism adds, the way
+   CRIMSON is only what Crimson adds to Lumen.
+
+   THE BACKDROP. Four soft fields of colour - the palette's accent, its
+   second accent and a pink - on two layers behind the page, drifting on
+   46- and 58-second loops, with a fine grain over them so the glass has
+   something to be glass over.
+
+   GLASS. The sidebar is an island floating off the edge, the status line
+   a pill, every card and dialog a see-through surface with a light top
+   edge. Only what opens over the page (the record, Setup, the palette,
+   a question) blurs what is behind it: a blur over the moving aurora would
+   be worked out again on every frame, and beside the page there is nothing
+   to blur but colour.
+
+   MOTION. One spring (--pr-spring, a sampled spring curve in linear()) for
+   anything that moves a distance, a bouncier one (--pr-bounce) for small
+   pops. The light on the open view slides between the tabs (prismInd()),
+   a view's cards rise in one after another (prismEnter()), counts pop when
+   they change, the light follows the pointer (PRISM_LIT), the title and
+   the main buttons carry a slow shimmer, light and dark spread out in a
+   circle from the button (prismReveal()), and library cards come up as
+   they scroll into view.
+
+   ALL OF IT FOLLOWS MOTION. Full: everything. Subtle: nothing loops - the
+   aurora, the borders and the shimmer are still - and the rest is quick.
+   None, or a PC set to reduce motion: nothing moves. The loops are turned
+   off by name below, because the app's own "make every animation short"
+   rule would otherwise turn a slow loop into a flicker.                    */
+
+@property --pr-a{syntax:"<angle>";inherits:false;initial-value:0deg}
+@property --mx{syntax:"<length>";inherits:false;initial-value:-999px}
+@property --my{syntax:"<length>";inherits:false;initial-value:-999px}
+
+.prind{display:none}
+
+:root[data-prism]{
+  --pr-pink:#E1489A;
+  --pr-spring:linear(0,0.084,0.266,0.471,0.657,0.805,0.911,0.979,1.017,1.035,1.038,1.034,1.027,1.019,1.012,1.007,1.003,1.001,0.999,1);
+  --pr-bounce:linear(0,0.105,0.344,0.62,0.864,1.042,1.144,1.179,1.166,1.125,1.076,1.031,0.997,0.976,0.968,0.97,0.976,0.985,0.993,1,1.004,1.006,1.005,1.003,1.001,1);
+  --pr-glass:color-mix(in srgb,var(--paper) 66%,transparent);
+  --pr-glass-2:color-mix(in srgb,var(--paper) 80%,transparent);
+  --pr-glass-3:color-mix(in srgb,var(--paper) 92%,transparent);
+  --pr-line:color-mix(in srgb,var(--ink) 9%,transparent);
+  --pr-line-2:color-mix(in srgb,var(--ink) 15%,transparent);
+  --pr-edge:rgba(255,255,255,.85);
+  --pr-sh:0 1px 1px rgba(40,24,90,.04),0 14px 34px -16px rgba(70,40,140,.26);
+  --pr-sh-2:0 2px 4px rgba(40,24,90,.06),0 24px 50px -18px rgba(70,40,140,.36);
+  --pr-grad:linear-gradient(120deg,var(--accent) 0%,var(--pr-pink) 52%,var(--teal) 100%);
+  --pr-flow:linear-gradient(100deg,var(--accent) 0%,var(--pr-pink) 25%,var(--teal) 50%,var(--pr-pink) 75%,var(--accent) 100%);
+  --pr-lit:color-mix(in srgb,var(--accent) 13%,transparent);
+  --pr-grain:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .6 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  /* Nova's one gradient becomes the prism's: violet, pink, cyan */
+  --nx-grad:linear-gradient(125deg,var(--accent) 0%,color-mix(in srgb,var(--accent) 45%,var(--pr-pink)) 55%,
+            color-mix(in srgb,var(--pr-pink) 40%,var(--teal)) 100%);
+  --nx-soft:color-mix(in srgb,var(--accent) 10%,transparent);
+  --r-sm:11px; --r:16px; --r-lg:20px;
+  scrollbar-color:color-mix(in srgb,var(--accent) 32%,transparent) transparent;
+}
+:root[data-prism][data-mode="dark"]{
+  --pr-pink:#F472B6;
+  --pr-glass:color-mix(in srgb,var(--paper) 58%,transparent);
+  --pr-glass-2:color-mix(in srgb,var(--paper) 72%,transparent);
+  --pr-glass-3:color-mix(in srgb,var(--paper) 88%,transparent);
+  --pr-line:color-mix(in srgb,var(--ink) 10%,transparent);
+  --pr-line-2:color-mix(in srgb,var(--ink) 17%,transparent);
+  --pr-edge:rgba(255,255,255,.09);
+  --pr-sh:0 1px 1px rgba(0,0,0,.35),0 16px 40px -16px rgba(0,0,0,.7);
+  --pr-sh-2:0 2px 4px rgba(0,0,0,.4),0 28px 60px -18px rgba(0,0,0,.8);
+  --pr-lit:color-mix(in srgb,var(--accent) 18%,transparent);
+  --nx-grad:linear-gradient(125deg,color-mix(in srgb,var(--accent) 80%,#4C1D95) 0%,
+            color-mix(in srgb,var(--pr-pink) 62%,#6D28D9) 55%,color-mix(in srgb,var(--teal) 55%,#1E3A8A) 100%);
+}
+
+/* ── the backdrop: the aurora, and the grain over it ───────────────────── */
+:root[data-prism] body{background:var(--canvas)}
+:root[data-prism] .app,
+:root[data-prism] main{background:transparent}
+:root[data-prism] body::before,
+:root[data-prism] body::after{content:"";position:fixed;inset:-12vmax;z-index:-1;pointer-events:none}
+:root[data-prism] body::before{background:
+  radial-gradient(40vmax 30vmax at 20% 24%,color-mix(in srgb,var(--accent) 32%,transparent),transparent 70%),
+  radial-gradient(34vmax 28vmax at 84% 30%,color-mix(in srgb,var(--teal) 24%,transparent),transparent 70%)}
+:root[data-prism] body::after{background:
+  radial-gradient(36vmax 30vmax at 72% 84%,color-mix(in srgb,var(--pr-pink) 22%,transparent),transparent 70%),
+  radial-gradient(30vmax 26vmax at 26% 82%,color-mix(in srgb,var(--accent) 16%,transparent),transparent 70%)}
+:root[data-prism][data-mode="dark"] body::before{opacity:1}
+:root[data-prism][data-mode="dark"] body::after{opacity:.9}
+:root[data-prism] .app::after{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
+  background:var(--pr-grain);opacity:.035}
+:root[data-prism][data-mode="dark"] .app::after{opacity:.06}
+@keyframes prDriftA{0%{transform:translate3d(0,0,0) rotate(0deg) scale(1)}
+  50%{transform:translate3d(6vmax,4vmax,0) rotate(16deg) scale(1.12)}
+  100%{transform:translate3d(-4vmax,7vmax,0) rotate(-10deg) scale(1.04)}}
+@keyframes prDriftB{0%{transform:translate3d(0,0,0) rotate(0deg) scale(1.05)}
+  50%{transform:translate3d(-7vmax,-3vmax,0) rotate(-14deg) scale(.95)}
+  100%{transform:translate3d(5vmax,-6vmax,0) rotate(12deg) scale(1.1)}}
+::selection{background:color-mix(in srgb,var(--accent) 22%,transparent)}
+:root[data-prism] ::selection{background:color-mix(in srgb,var(--accent) 30%,transparent)}
+
+/* ── the sidebar: an island of glass, and the light on the open view ───── */
+:root[data-prism] .mast{background:var(--pr-glass);border-color:var(--pr-line);backdrop-filter:none}
+:root[data-prism] .tabs{position:relative}
+:root[data-prism] .tabs button{position:relative;z-index:1;transition:color .2s,transform .35s var(--pr-spring)}
+:root[data-prism] .tabs button:active{transform:scale(.97)}
+:root[data-prism] .tabs button.on,
+:root[data-prism][data-mode="dark"] .tabs button.on{background:transparent;box-shadow:none;color:var(--ink)}
+:root[data-prism] .tabs button.on::before{color:var(--accent)}
+:root[data-prism] .prind{display:block;position:absolute;left:0;top:0;z-index:0;pointer-events:none;border-radius:11px;
+  background:var(--pr-glass-3);box-shadow:0 1px 2px rgba(40,24,90,.08),0 8px 22px -10px color-mix(in srgb,var(--accent) 45%,transparent),
+    inset 0 0 0 1px var(--pr-line),inset 0 1px 0 var(--pr-edge);
+  transition:transform .6s var(--pr-spring),width .45s var(--pr-spring),height .45s var(--pr-spring)}
+:root[data-prism] .prind::before{content:"";position:absolute;left:0;top:9px;bottom:9px;width:3px;border-radius:0 3px 3px 0;
+  background:var(--pr-grad)}
+:root[data-prism] .prind[hidden]{display:none}
+:root[data-prism] .nxb{transition:background .2s,color .2s}
+:root[data-prism] .nxb.bump{animation:prBump .6s var(--pr-bounce)}
+@keyframes prBump{0%{transform:scale(.55);opacity:.4}100%{transform:none;opacity:1}}
+:root[data-prism] .brand .seal{box-shadow:0 0 0 1px var(--pr-line),0 8px 20px -8px color-mix(in srgb,var(--accent) 60%,transparent)}
+:root[data-prism] .dial .arc{filter:drop-shadow(0 0 3px color-mix(in srgb,var(--accent) 70%,transparent))}
+@media (min-width:901px){
+  :root[data-prism] .app{grid-template-columns:268px minmax(0,1fr)}
+  :root[data-prism] .mast{margin:12px 2px 12px 12px;border:1px solid var(--pr-line);border-radius:22px;
+    box-shadow:var(--pr-sh),inset 0 1px 0 var(--pr-edge)}
+  :root[data-prism] .wsbtn,:root[data-prism] .find input,:root[data-prism] .mastsp{background:var(--pr-glass-2);border-color:var(--pr-line)}
+  :root[data-prism] .tabs button:hover{background:color-mix(in srgb,var(--ink) 4%,transparent)}
+  :root[data-prism] .tabs button.on:hover{background:transparent}
+}
+@media (min-width:901px) and (max-width:1240px){
+  :root[data-prism] body.chatting .mast{margin:10px 2px 10px 8px;border-radius:18px}
+}
+@media (max-width:900px){
+  :root[data-prism] .mast{border-bottom:1px solid var(--pr-line)}
+  :root[data-prism] .prind{border-radius:9px}
+  :root[data-prism] .prind::before{left:9px;right:9px;top:auto;bottom:0;width:auto;height:2px;border-radius:2px 2px 0 0}
+}
+
+/* ── the page header: a title with light running through it ───────────── */
+:root[data-prism] .nxe{background:var(--pr-grad);-webkit-background-clip:text;background-clip:text;color:transparent;
+  width:max-content;max-width:100%}
+:root[data-prism] .nxhead h1{background:linear-gradient(100deg,var(--ink) 0%,var(--ink) 38%,var(--accent) 50%,
+  var(--pr-pink) 58%,var(--ink) 72%,var(--ink) 100%) 100% 0 / 260% 100%;
+  -webkit-background-clip:text;background-clip:text;color:transparent;padding-bottom:2px;background-position:0% 0}
+@keyframes prTitle{from{background-position:100% 0}to{background-position:0% 0}}
+:root[data-prism] .nxsearch,
+:root[data-prism] .nxbtn{background:var(--pr-glass-2);border-color:var(--pr-line);
+  transition:transform .45s var(--pr-spring),box-shadow .2s,background .2s,border-color .2s}
+:root[data-prism] .nxbtn:hover,:root[data-prism] .nxsearch:hover{transform:translateY(-2px);box-shadow:var(--pr-sh)}
+:root[data-prism] .nxbtn:active,:root[data-prism] .nxsearch:active{transform:scale(.96);transition-duration:.12s}
+
+/* ── the main buttons: the prism's colours, flowing ────────────────────── */
+:root[data-prism] .nxbtn.pri,
+:root[data-prism] :is(.app,.modal,.drawer,.srcdlg,.ask,.intake,.problem,.chase,.drill) .btn.pri,
+:root[data-prism] .cbar .n{background:var(--pr-flow) 0 0 / 300% 100%;border-color:transparent;color:#fff;
+  box-shadow:0 1px 2px rgba(40,24,90,.14),0 10px 24px -10px color-mix(in srgb,var(--pr-pink) 70%,transparent),
+    inset 0 1px 0 rgba(255,255,255,.28)}
+:root[data-prism] .nxbtn.pri:hover,
+:root[data-prism] :is(.app,.modal,.drawer,.srcdlg,.ask,.intake,.problem,.chase,.drill) .btn.pri:hover{
+  filter:saturate(1.15) brightness(1.05);transform:translateY(-2px);
+  box-shadow:0 2px 4px rgba(40,24,90,.16),0 16px 32px -10px color-mix(in srgb,var(--pr-pink) 75%,transparent),
+    inset 0 1px 0 rgba(255,255,255,.28)}
+:root[data-prism] :is(.app,.modal,.drawer,.srcdlg,.ask,.intake,.problem,.chase,.drill) .btn{
+  transition:transform .4s var(--pr-spring),box-shadow .2s,background .2s,border-color .2s,filter .2s}
+:root[data-prism] :is(.app,.modal,.drawer,.srcdlg,.ask,.intake,.problem,.chase,.drill) .btn:active{transform:scale(.96);transition-duration:.1s}
+:root[data-prism] .nxbtn.pri{position:relative;overflow:hidden;isolation:isolate;background:var(--pr-grad)}
+:root[data-prism] .nxbtn.pri::before{content:"";position:absolute;top:0;bottom:0;left:0;width:300%;z-index:-1;pointer-events:none;
+  background:var(--pr-flow)}
+@keyframes prSlide{from{transform:translateX(0)}to{transform:translateX(-66.667%)}}
+
+/* ── the box you type in: a ring of colour that turns while you type ──── */
+:root[data-prism] .cbar{background:var(--pr-glass-3);border:1.5px solid var(--pr-line);border-radius:18px;box-shadow:var(--pr-sh);
+  transition:box-shadow .3s,border-color .3s}
+:root[data-prism] .cbar:focus-within{border-color:transparent;
+  background:linear-gradient(var(--paper),var(--paper)) padding-box,
+    conic-gradient(from var(--pr-a),var(--accent),var(--pr-pink),var(--teal),var(--accent)) border-box;
+  box-shadow:var(--pr-sh),0 0 0 5px color-mix(in srgb,var(--accent) 11%,transparent)}
+@keyframes prTurn{to{--pr-a:360deg}}
+:root[data-prism] .sugg{background:var(--pr-glass-3);backdrop-filter:blur(18px) saturate(1.5);border-color:var(--pr-line);
+  animation:prPop .4s var(--pr-spring) both}
+
+/* filters */
+:root[data-prism] .pill{transition:background .2s,color .2s,transform .35s var(--pr-spring),box-shadow .2s}
+:root[data-prism] .pill:hover{transform:translateY(-1px)}
+:root[data-prism] .pill.on{background:var(--pr-glass-3);border-color:var(--pr-line-2);box-shadow:var(--pr-sh)}
+:root[data-prism] .rail select{background-color:var(--pr-glass-3)}
+
+/* ── cards and rows: a little see-through, lit under the pointer ───────── */
+:root[data-prism] .kpi,
+:root[data-prism] .rows,
+:root[data-prism] .col,
+:root[data-prism] .panel,
+:root[data-prism] .aiq,
+:root[data-prism] .wc,
+:root[data-prism] table.reg,
+:root[data-prism] .srcpanel,
+:root[data-prism] .backlog{background:var(--pr-glass-2);border-color:var(--pr-line);box-shadow:var(--pr-sh)}
+:root[data-prism] .kpi,:root[data-prism] .rows,:root[data-prism] .panel,:root[data-prism] .aiq,:root[data-prism] .srcpanel{border-radius:20px}
+:root[data-prism] .kpi{transition:transform .5s var(--pr-spring),box-shadow .25s}
+:root[data-prism] .kpi.lit{background:radial-gradient(260px circle at var(--mx) var(--my),var(--pr-lit),transparent 70%),var(--pr-glass-2)}
+:root[data-prism] .kpi[data-dr]:not(.nil):hover{transform:translateY(-4px);box-shadow:var(--pr-sh-2)}
+/* the day's progress: the one card in colour, with light running over it */
+:root[data-prism] #vDay .cards .kpi:first-child{background:var(--pr-flow) 0 0 / 300% 100%;
+  box-shadow:0 2px 4px rgba(40,24,90,.14),0 18px 40px -14px color-mix(in srgb,var(--pr-pink) 70%,transparent)}
+:root[data-prism] #vDay .cards .kpi:first-child.lit{background:radial-gradient(240px circle at var(--mx) var(--my),rgba(255,255,255,.26),transparent 70%),
+  var(--pr-flow) 0 0 / 300% 100%}
+:root[data-prism] #vDay .cards .kpi:first-child::after{content:"";position:absolute;top:0;bottom:0;left:0;width:60%;pointer-events:none;
+  background:linear-gradient(105deg,transparent 0%,rgba(255,255,255,.3) 50%,transparent 100%);transform:translateX(-120%)}
+@keyframes prSheen{0%,55%{transform:translateX(-120%)}100%{transform:translateX(260%)}}
+:root[data-prism] .kpi .tr i{background:var(--pr-flow) 0 0 / 300% 100%}
+:root[data-prism] .row{transition:background .2s}
+:root[data-prism] .row.lit{background:radial-gradient(320px circle at var(--mx) var(--my),var(--pr-lit),transparent 72%),
+  color-mix(in srgb,var(--ink) 2%,transparent)}
+:root[data-prism] .row.cur{background:color-mix(in srgb,var(--accent) 9%,transparent);box-shadow:inset 3px 0 0 var(--accent)}
+:root[data-prism] .row.p1::before{background:linear-gradient(180deg,var(--p1),var(--pr-pink));box-shadow:0 0 10px var(--p1)}
+:root[data-prism] .mark{transition:transform .4s var(--pr-bounce),background .2s,border-color .2s}
+:root[data-prism] .mark:hover{transform:scale(1.18)}
+:root[data-prism] .mb{transition:opacity .15s,background .15s,color .15s,border-color .15s,transform .35s var(--pr-spring)}
+:root[data-prism] .mb:hover{transform:translateY(-1px) scale(1.06)}
+:root[data-prism] .chip.due.over{box-shadow:0 0 0 1px color-mix(in srgb,var(--p1) 30%,transparent)}
+:root[data-prism] .hd .t{letter-spacing:-.01em}
+:root[data-prism] .hd .ln{background:linear-gradient(90deg,var(--pr-line-2),transparent)}
+
+/* board, week, library, insight, assist */
+:root[data-prism] .col{border-radius:22px}
+:root[data-prism] .kc,:root[data-prism] .wk,:root[data-prism] .doc,:root[data-prism] .aic{background:var(--pr-glass-3);border-color:var(--pr-line);
+  transition:transform .5s var(--pr-spring),box-shadow .25s,border-color .2s}
+:root[data-prism] .kc:hover,:root[data-prism] .wk:hover{transform:translateY(-3px) rotate(-.3deg);box-shadow:var(--pr-sh-2)}
+:root[data-prism] .doc:hover{transform:translateY(-5px);box-shadow:var(--pr-sh-2)}
+:root[data-prism] .kc.lit,:root[data-prism] .wk.lit,:root[data-prism] .doc.lit,:root[data-prism] .aic.lit,
+:root[data-prism] .panel.lit,:root[data-prism] .wc.lit{
+  background:radial-gradient(240px circle at var(--mx) var(--my),var(--pr-lit),transparent 70%),var(--pr-glass-3)}
+:root[data-prism] .doc .thumb{background:var(--pr-flow) 0 0 / 300% 100%;opacity:.85;transition:background-position 1.2s ease,opacity .3s}
+:root[data-prism] .doc:hover .thumb{background-position:100% 0;opacity:1}
+:root[data-prism] .doc .ext{color:#fff;text-shadow:0 2px 10px rgba(0,0,0,.25)}
+:root[data-prism] .wc.today{border:1.5px solid transparent;
+  background:linear-gradient(var(--pr-glass-3),var(--pr-glass-3)) padding-box,
+    conic-gradient(from var(--pr-a),var(--accent),var(--pr-pink),var(--teal),var(--accent)) border-box;
+  box-shadow:var(--pr-sh-2)}
+:root[data-prism] .hb .tr i,:root[data-prism] .vb .c .a{background:var(--pr-grad)}
+:root[data-prism] .airow.lit{background:radial-gradient(300px circle at var(--mx) var(--my),var(--pr-lit),transparent 72%)}
+:root[data-prism] .blank .g{background:var(--pr-flow) 0 0 / 300% 100%;color:#fff;box-shadow:var(--pr-sh-2)}
+@keyframes prFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+
+/* ── the status line: a floating pill ──────────────────────────────────── */
+@media (min-width:901px){
+  :root[data-prism] .status{margin:0 14px 10px 10px;border:1px solid var(--pr-line);border-radius:999px;
+    background:var(--pr-glass);box-shadow:var(--pr-sh)}
+}
+
+/* ── things that open: glass, and a spring ─────────────────────────────── */
+:root[data-prism] .scrim{background:color-mix(in srgb,#140a2e 30%,transparent);backdrop-filter:blur(6px) saturate(1.2)}
+:root[data-prism][data-mode="dark"] .scrim{background:rgba(0,0,0,.5)}
+:root[data-prism] .drawer,
+:root[data-prism] .modal,
+:root[data-prism] .ask,
+:root[data-prism] .cmd{background:var(--pr-glass-3);backdrop-filter:blur(26px) saturate(1.6);-webkit-backdrop-filter:blur(26px) saturate(1.6);
+  border-color:var(--pr-line-2);box-shadow:var(--pr-sh-2),inset 0 1px 0 var(--pr-edge)}
+:root[data-prism] .drawer{border-radius:24px;transition-duration:.65s;transition-timing-function:var(--pr-spring)}
+:root[data-prism] .modal,:root[data-prism] .ask,:root[data-prism] .cmd{border-radius:22px;
+  transition-duration:.5s;transition-timing-function:var(--pr-spring)}
+:root[data-prism] .modal{transform:translate(-50%,-44%) scale(.94)}
+:root[data-prism] .modal.on{transform:translate(-50%,-50%) scale(1)}
+:root[data-prism] .ask{transform:translate(-50%,-44%) scale(.92)}
+:root[data-prism] .ask.on{transform:translate(-50%,-50%) scale(1)}
+:root[data-prism] .cmd{transform:translate(-50%,-22px) scale(.96)}
+:root[data-prism] .cmd.on{transform:translate(-50%,0) scale(1)}
+:root[data-prism] .dh,:root[data-prism] .mh{background:transparent}
+:root[data-prism] .mt button.on{border-bottom-color:transparent;
+  background:linear-gradient(var(--accent),var(--accent)) bottom / 100% 2px no-repeat;border-image:none}
+:root[data-prism] .ci.cur{background:color-mix(in srgb,var(--accent) 12%,transparent)}
+:root[data-prism] .ask .opt{transition:transform .4s var(--pr-spring),background .2s,border-color .2s}
+:root[data-prism] .ask .opt:hover{transform:translateX(3px)}
+:root[data-prism] .srcdlg{background:color-mix(in srgb,#140a2e 34%,transparent);backdrop-filter:blur(6px);animation:prFade .25s ease both}
+:root[data-prism] .srcdlgb{background:var(--pr-glass-3);backdrop-filter:blur(26px) saturate(1.6);border-color:var(--pr-line-2);
+  border-radius:22px;box-shadow:var(--pr-sh-2),inset 0 1px 0 var(--pr-edge);animation:prPop .55s var(--pr-spring) both}
+:root[data-prism] .xpp{background:var(--pr-glass-3);transition:transform .45s var(--pr-spring),border-color .2s,background .2s}
+:root[data-prism] .xpp:hover{transform:translateY(-2px)}
+:root[data-prism] .xpp:has(input:checked){border-color:transparent;
+  background:linear-gradient(color-mix(in srgb,var(--accent) 7%,var(--paper)),color-mix(in srgb,var(--accent) 7%,var(--paper))) padding-box,
+    var(--pr-grad) border-box}
+:root[data-prism] .xpp.lit{background:radial-gradient(220px circle at var(--mx) var(--my),var(--pr-lit),transparent 70%),var(--pr-glass-3)}
+:root[data-prism] .toast{background:color-mix(in srgb,var(--ink) 86%,transparent);color:var(--paper);
+  backdrop-filter:blur(16px) saturate(1.4);-webkit-backdrop-filter:blur(16px) saturate(1.4);
+  border-radius:16px;box-shadow:var(--pr-sh-2);animation:prToast .6s var(--pr-bounce) both}
+@keyframes prFade{from{opacity:0}to{opacity:1}}
+@keyframes prPop{from{opacity:0;transform:translateY(10px) scale(.94)}to{opacity:1;transform:none}}
+@keyframes prToast{from{opacity:0;transform:translateY(22px) scale(.9)}to{opacity:1;transform:none}}
+:root[data-prism] .in{background:var(--pr-glass-3);transition:border-color .2s,box-shadow .25s,background .2s}
+
+/* ── a view opening: its cards rise in, one after another ──────────────── */
+@keyframes prRise{from{opacity:0;transform:translateY(16px) scale(.985)}to{opacity:1;transform:none}}
+@keyframes prRiseBlur{from{opacity:0;transform:translateY(18px) scale(.97);filter:blur(5px)}to{opacity:1;transform:none;filter:none}}
+@keyframes prGrow{from{transform:scaleX(0)}to{transform:none}}
+:root[data-prism] .rows .row.isnew{animation:prRise .55s var(--pr-spring) both}
+
+/* light and dark: the new one spreads from the button (prismReveal) */
+:root.prvt::view-transition-old(root),
+:root.prvt::view-transition-new(root){animation:none;mix-blend-mode:normal}
+:root.prvt::view-transition-new(root){animation:prReveal .75s cubic-bezier(.2,.75,.2,1) both}
+@keyframes prReveal{from{clip-path:circle(0% at var(--vt-x,50%) var(--vt-y,50%))}
+  to{clip-path:circle(150% at var(--vt-x,50%) var(--vt-y,50%))}}
+
+/* ── what only Full moves (and never on a PC set to reduce motion) ─────── */
+@media (prefers-reduced-motion:no-preference){
+  /* What loops is moved by the graphics card alone - a transform or an
+     opacity, never a repaint - except the turning rings, which turn in a
+     dozen steps a second. A PC with no graphics card (a virtual desktop)
+     draws even that in software, and everything slows with it: prismProbe()
+     times the frames once Prism is on, and if they are slow it sets
+     data-still, which keeps the aurora still there. */
+  :root[data-prism][data-motion="full"]:not([data-still]) body::before{animation:prDriftA 46s ease-in-out infinite alternate}
+  :root[data-prism][data-motion="full"]:not([data-still]) body::after{animation:prDriftB 58s ease-in-out infinite alternate}
+  :root[data-prism][data-motion="full"] .nxhead.prin h1{animation:prTitle 1.8s ease-out both}
+  :root[data-prism][data-motion="full"] .nxbtn.pri::before{animation:prSlide 9s ease-in-out infinite alternate}
+  :root[data-prism][data-motion="full"] .blank .g{animation:prFloat 4s ease-in-out infinite}
+  :root[data-prism][data-motion="full"] #vDay .cards .kpi:first-child::after{animation:prSheen 7s ease-in-out infinite}
+  :root[data-prism][data-motion="full"] .cbar:focus-within,
+  :root[data-prism][data-motion="full"] .wc.today{animation:prTurn 6s steps(72) infinite}
+  :root[data-prism][data-motion="full"] .mark.proc{animation:prSpin 2.6s linear infinite}
+  @keyframes prSpin{to{transform:rotate(360deg)}}
+  /* drawn in software (prismProbe): nothing loops; what arrives still does */
+  :root[data-prism][data-still] .nxbtn.pri::before,:root[data-prism][data-still] .blank .g,
+  :root[data-prism][data-still] #vDay .cards .kpi:first-child::after,:root[data-prism][data-still] .cbar:focus-within,
+  :root[data-prism][data-still] .wc.today,:root[data-prism][data-still] .mark.proc{animation:none}
+
+  /* a view opening (prismEnter() sets .prin on main for a moment) */
+  :root[data-prism][data-motion="full"] main.prin :is(.cards .kpi,.panel,.col,.aiq,.backlog){animation:prRiseBlur .7s var(--pr-spring) both}
+  :root[data-prism][data-motion="full"] main.prin :is(.rows .row,.kc,.doc,.wc,.wk,.airow,.hd){animation:prRise .6s var(--pr-spring) both}
+  :root[data-prism][data-motion="full"] main.prin .hb .tr i{animation:prGrow .9s var(--pr-spring) both;transform-origin:left}
+  :root[data-prism][data-motion="full"] main.prin :is(.kpi,.row,.kc,.doc,.wc,.wk,.airow,.panel,.col):nth-child(2){animation-delay:.03s}
+  :root[data-prism][data-motion="full"] main.prin :is(.kpi,.row,.kc,.doc,.wc,.wk,.airow,.panel,.col):nth-child(3){animation-delay:.06s}
+  :root[data-prism][data-motion="full"] main.prin :is(.kpi,.row,.kc,.doc,.wc,.wk,.airow,.panel,.col):nth-child(4){animation-delay:.09s}
+  :root[data-prism][data-motion="full"] main.prin :is(.kpi,.row,.kc,.doc,.wc,.wk,.airow,.panel,.col):nth-child(5){animation-delay:.12s}
+  :root[data-prism][data-motion="full"] main.prin :is(.kpi,.row,.kc,.doc,.wc,.wk,.airow,.panel,.col):nth-child(6){animation-delay:.15s}
+  :root[data-prism][data-motion="full"] main.prin :is(.kpi,.row,.kc,.doc,.wc,.wk,.airow,.panel,.col):nth-child(7){animation-delay:.18s}
+  :root[data-prism][data-motion="full"] main.prin :is(.kpi,.row,.kc,.doc,.wc,.wk,.airow,.panel,.col):nth-child(8){animation-delay:.21s}
+  :root[data-prism][data-motion="full"] main.prin :is(.kpi,.row,.kc,.doc,.wc,.wk,.airow,.panel,.col):nth-child(9){animation-delay:.24s}
+  :root[data-prism][data-motion="full"] main.prin :is(.kpi,.row,.kc,.doc,.wc,.wk,.airow,.panel,.col):nth-child(10){animation-delay:.27s}
+  :root[data-prism][data-motion="full"] main.prin :is(.kpi,.row,.kc,.doc,.wc,.wk,.airow,.panel,.col):nth-child(n+11){animation-delay:.3s}
+
+  /* scrolling: the header gains its edge, library cards come up as they
+     arrive (not every record: two hundred scroll-linked animations made
+     every redraw of a list three times slower) */
+  @supports (animation-timeline:scroll()){
+    :root[data-prism] .app{timeline-scope:--prmain}
+    :root[data-prism] main{scroll-timeline:--prmain block}
+    :root[data-prism][data-motion="full"] .nxhead::after{content:"";position:absolute;left:var(--nx-pad);right:var(--nx-pad);bottom:-6px;height:1px;
+      background:linear-gradient(90deg,transparent,var(--accent),var(--pr-pink),var(--teal),transparent);opacity:0;pointer-events:none;
+      animation:prFade linear both;animation-timeline:--prmain;animation-range:0 90px}
+    :root[data-prism][data-motion="full"] main:not(.prin) .doc{
+      animation:prView linear both;animation-timeline:view();animation-range:entry 0% entry 80%}
+    @keyframes prView{from{opacity:.15;transform:translateY(22px) scale(.97)}to{opacity:1;transform:none}}
+  }
+}
+/* ═══ /PRISM ═══ */
 
 /* ═══ WHERE THE ASSISTANT SITS ════════════════════════════════════════════
    Three places, picked from the header (the frame button) or from Look and
@@ -5727,6 +6298,8 @@ const STRINGS = {
   FlowFiltered: "Microsoft's content filter blocked this question before the model saw it (\u201cPrompt was filtered\u201d) - and again when it was asked without your notes and records, so it is the question itself, or the prompt file. Word it differently; if every question is blocked, check flow/prompt.txt or your dossier-prompt.txt for lines added recently.",
   FlowSaid: "The flow said: {p0}",
   NovaOn: "Nova is on. The \u25d0 button switches light and dark; Menu \u2192 Appearance \u2192 Look brings any other design back.",
+  PrismOn: "Prism is on. The \u25d0 button switches light and dark; Menu \u2192 Appearance \u2192 Look brings any other design back, and Motion makes it move less.",
+  PrismHalo: "Use Halo in the chat too",
   NovaInvite: "There is a new design, Nova - a clearer layout, quick actions on every record, light and dark. Your current look stays one click away.",
   NovaTry: "Try Nova",
   UpdReady: "KalKech {v} is in the folder, and this window is still running {now}. Reload to use it - your work is saved first.",
@@ -6227,6 +6800,67 @@ const STRINGS = {
   ImportAJsonExport: "Import a JSON export\u2026",
   ExportJson: "Export JSON",
   ExportedJson: "{n} record(s) written out. That file is a whole workspace \u2014 Import it on the other machine.",
+  /* 5.17: export and import the parts you choose */
+  XpExportTitle: "Export \u2014 choose what goes in the file",
+  XpExportIntro: "Only the ticked parts are written. The file goes to your Downloads folder; nothing is sent anywhere.",
+  XpImportTitle: "Import \u2014 choose what to bring in",
+  XpSavedOn: "saved {when}",
+  Xp_records: "Records",
+  Xp_routines: "Routines",
+  Xp_scripts: "Scripts",
+  Xp_runbooks: "Runbooks & system profiles",
+  Xp_notes: "Notes & what the assistant learned",
+  Xp_sources: "Knowledge (Sources)",
+  Xp_chats: "Conversations",
+  Xp_incidents: "Incident history",
+  Xp_calendar: "Calendar",
+  Xp_settings: "Settings & appearance",
+  XpHint_records: "Tickets and tasks, with their notes, steps and history",
+  XpHint_routines: "The schedules that raise records",
+  XpHint_scripts: "The list, and the text of each script file",
+  XpHint_runbooks: "Your BAU library: runbooks and what each system is like",
+  XpHint_notes: "Notes, lessons, and corrections you taught it",
+  XpHint_sources: "Every document with its original file (PDF, Word, Markdown\u2026) and its text",
+  XpHint_chats: "Chats with the assistant \u2014 and files kept for a chat, when Knowledge is ticked too",
+  XpHint_incidents: "Incidents imported for Insight",
+  XpHint_calendar: "Holidays and special days",
+  XpHint_settings: "Look, lists, the assistant\u2019s setup \u2014 everything in Setup",
+  XpFlowUrl: "Include my flow address (it works like a key \u2014 keep the file private)",
+  XpSize: "File size: about {size}",
+  XpSizeBig: "A big file: about {size}. Writing it can take a minute.",
+  XpGo: "Export",
+  XpImportGo: "Import",
+  XpTickAll: "Tick all",
+  XpTickNone: "Untick all",
+  XpModeAdd: "Add to what is here",
+  XpModeAddHint: "Nothing here is removed. A record in both keeps the newer copy; a document already here is not added twice.",
+  XpModeReplace: "Replace the ticked parts",
+  XpModeReplaceHint: "The ticked parts become what is in the file. Parts not ticked stay as they are. Documents in Sources are switched off, not deleted.",
+  XpSettingsNote: "Settings from the file take the place of yours. Your flow address stays when the file has none.",
+  XpUndoNote: "Undo (Ctrl+Z) puts everything back except documents added to Sources \u2014 remove those in Library \u2192 Sources.",
+  XpNoFolderSrc: "Knowledge needs a workspace folder: choose one, then import again.",
+  XpNothingPicked: "Tick at least one part.",
+  XpNothingInFile: "That file has nothing KalKech can import.",
+  XpWriting: "Writing the export\u2026",
+  XpReading: "Bringing in {name}\u2026",
+  XpDone: "Exported {what} \u2014 {size}.",
+  XpMissing: "{n} document(s) had a file missing from the folder; what was there is in the export.",
+  XpFailed: "The export could not be written:",
+  XpImported: "Imported {what}.",
+  XpImportedNone: "Nothing new \u2014 everything ticked is already here.",
+  XpSrcSame: "{n} document(s) were already here.",
+  XpSrcSkipped: "{n} chat file(s) were left out (their conversation was not imported).",
+  XpSrcBad: "{n} document(s) could not be read.",
+  XpN_records: "{n} record(s)",
+  XpN_routines: "{n} routine(s)",
+  XpN_scripts: "{n} script(s)",
+  XpN_runbooks: "{n} runbook(s) and profile(s)",
+  XpN_notes: "{n} note(s) and lesson(s)",
+  XpN_sources: "{n} document(s) with their files",
+  XpN_chats: "{n} conversation(s)",
+  XpN_incidents: "{n} incident(s)",
+  XpN_calendar: "{n} calendar day(s)",
+  XpN_settings: "your settings",
   VaultHeading: "What this PC remembers",
   VaultIntro: "Every save also writes a copy into this browser's own database, on this PC. The folder is still the record \u2014 this is the thing that notices when the folder loses some, and stops before anything is written over. Clearing this browser's site data removes it, and another PC cannot see it: to move a workspace, use Export JSON.",
   VaultLooking: "Looking\u2026",
@@ -7146,7 +7780,8 @@ const STRINGS = {
   UiQuiet: "Quiet \u2014 the top bar, one line per record",
   UiClassic: "Classic \u2014 boxed rows and coloured chips",
   UiNova: "Nova \u2014 the new design: page header, grouped sidebar, hover actions",
-  UiNote: "Nova is the newest design: a page header that says where you are and what is waiting, navigation grouped with live counts, quick actions on every record when you hover it, and its own light and dark palettes (the \u25d0 button switches between them). Studio is the previous design: navigation down the left, the day in cards, one accent. Quiet keeps the top bar with the same restraint. Classic is the original. All of them work with every palette.",
+  UiPrism: "Prism \u2014 glass and colour that move: a floating sidebar, light that follows the pointer, views that rise in",
+  UiNote: "Prism is the newest design: Nova's layout in glass and colour, with a slow aurora behind the page, a floating sidebar whose light slides to the view you open, cards that light up under the pointer, and views that rise in. Motion (above) makes it move less or not at all. Nova is the design before it: a page header that says where you are and what is waiting, navigation grouped with live counts, quick actions on every record when you hover it, and its own light and dark palettes (the \u25d0 button switches between them). Studio is the design before that: navigation down the left, the day in cards, one accent. Quiet keeps the top bar with the same restraint. Classic is the original. All of them work with every palette.",
   IncTag: "Incidents",
   IncGapTag: "Thin records",
   IncWhoTag: "Who has fixed this",
@@ -7667,7 +8302,7 @@ function applyFonts(){
   ["display","ui","mono"].forEach(role => {
     const chosen = S.settings.fonts && S.settings.fonts[role];
     const pick = (chosen && (chosen === "auto" ? null : chosen)) ||
-                 (S.settings.ui === "nova" && novaFont(role)) || FONTS_FOUND[role][0];
+                 (novaish() && novaFont(role)) || FONTS_FOUND[role][0];
     const rest = FONT_POOL[role].filter(f => f !== pick).slice(0, 3).map(f => '"' + f + '"').join(",");
     const stack = (pick ? '"' + pick + '",' : "") + (rest ? rest + "," : "") +
                   '"' + kmFont() + '",' + FONT_FALLBACK[role];
@@ -7871,8 +8506,8 @@ const STATUSES = [
    the status bar, and clicking it copies a line you can paste into a bug
    report — build date and flow protocol included, because those are the two
    things that actually differ between copies. */
-const APP_VERSION = "5.16.0";
-const APP_BUILT = "2026-09-27";
+const APP_VERSION = "5.17.0";
+const APP_BUILT = "2026-10-06";
 function buildLine(){
   return "KalKech v" + APP_VERSION + " \u00b7 built " + APP_BUILT +
          " \u00b7 flow protocol " + (window.DossierFlow ? DossierFlow.version : "\u2014") +
@@ -8088,6 +8723,12 @@ const BUILTIN_PAL = [
     base:{ canvas:"#F4F6FB", paper:"#FFFFFF", ink:"#0E1526", accent:"#3563F0", teal:"#0E9F9A" } },
   { id:"nova-night", name:"Nova Night", builtin:true, mode:"dark",
     base:{ canvas:"#080C16", paper:"#0F1524", ink:"#E7ECF5", accent:"#7C9BFF", teal:"#2DD4BF" } },
+  /* Prism's pair (5.17): a lavender white and a violet night, violet with a
+     cyan second accent - the colours its aurora is drawn from */
+  { id:"prism", name:"Prism", builtin:true, mode:"light",
+    base:{ canvas:"#F3F1FC", paper:"#FFFFFF", ink:"#15122B", accent:"#7C3AED", teal:"#0891B2" } },
+  { id:"prism-night", name:"Prism Night", builtin:true, mode:"dark",
+    base:{ canvas:"#08070F", paper:"#13111F", ink:"#EDEBFB", accent:"#A78BFA", teal:"#22D3EE" } },
   { id:"archive", name:"Archive", builtin:true, mode:"light", handwritten:true,
     base:{ canvas:"#EDEAE3", paper:"#FFFFFF", ink:"#1C1B18", accent:"#8B1E3F", teal:"#1F4E5F" } },
   { id:"vault", name:"Vault", builtin:true, mode:"dark", handwritten:true,
@@ -8144,7 +8785,10 @@ function applyPalettes(){
    one; "classic" is what the app looked like before, kept because a big
    visual change to something somebody uses every day should be one switch
    away from undone rather than an argument. */
-const UI_MODES = ["studio", "quiet", "classic", "nova"];
+const UI_MODES = ["studio", "quiet", "classic", "nova", "prism"];
+/* Nova's layout is under two looks: Nova itself, and Prism (5.17), which is
+   drawn over it the way Crimson is drawn over Lumen's chat */
+function novaish(ui){ const u = ui || (S.settings && S.settings.ui); return u === "nova" || u === "prism"; }
 function applyUi(mode){
   const want = mode || S.settings.ui;
   const m = UI_MODES.indexOf(want) >= 0 ? want : "studio";
@@ -8156,10 +8800,15 @@ function applyUi(mode){
   /* Nova is Studio's shell - the sidebar grid, the narrow-screen fallback,
      the way it makes room for the assistant - with a design of its own laid
      over it: data-look="nova" carries everything that is new. */
-  document.documentElement.setAttribute("data-ui", m === "nova" ? "studio" : m);
-  if (m === "nova") document.documentElement.setAttribute("data-look", "nova");
+  document.documentElement.setAttribute("data-ui", novaish(m) ? "studio" : m);
+  if (novaish(m)) document.documentElement.setAttribute("data-look", "nova");
   else document.documentElement.removeAttribute("data-look");
+  /* Prism: everything of Nova's, and data-prism for what it adds */
+  if (m === "prism") document.documentElement.setAttribute("data-prism", "");
+  else document.documentElement.removeAttribute("data-prism");
+  if (m === "prism" && typeof prismProbe === "function") prismProbe();
   if (typeof novaSync === "function") novaSync();
+  if (typeof prismInd === "function") prismInd();
   applyFonts();
 }
 /* Choosing Nova also puts on its palette - light or dark, whichever the
@@ -8167,27 +8816,50 @@ function applyUi(mode){
    Any other palette can still be picked afterwards. */
 function novaChoose(){
   applyUi("nova");
-  const cur = getPalette(S.settings.theme);
-  if (!/^nova/.test(cur.id)){
-    S.settings.preNova = cur.id;
-    applyTheme(cur.mode === "dark" ? "nova-night" : "nova");
-  }
+  lookPalette("nova");
   S.settings.novaSeen = true;
   touch(); renderAll();
   toast(L("NovaOn"), { action:L("Ok") });
 }
-/* ...and leaving it puts back the palette that was on before, if Nova's own
-   is still the one in use. A palette picked while in Nova stays. */
+/* a look's own palette put on, light or dark as the one before was; the
+   palette from before either look is what leaving puts back */
+function lookPalette(look){
+  const cur = getPalette(S.settings.theme);
+  if (new RegExp("^" + look + "(-|$)").test(cur.id)) return;
+  if (!/^(nova|prism)/.test(cur.id)) S.settings.preNova = cur.id;
+  applyTheme(cur.mode === "dark" ? look + "-night" : look);
+}
+/* Prism (5.17): its palette too, and the chat skin drawn to go with it is
+   offered, not forced - the chat is a choice of its own */
+function prismChoose(){
+  applyUi("prism");
+  lookPalette("prism");
+  S.settings.prismSeen = true;
+  touch(); renderAll();
+  const u = chatUI();
+  if (u.skin !== "halo") toast(L("PrismOn"), { action:L("PrismHalo"), onAction:() => chatSkinSet("halo"), life:14000 });
+  else toast(L("PrismOn"), { action:L("Ok") });
+}
+/* any look chosen by name - from Setup or from the assistant */
+function lookChoose(want){
+  if (want === "nova" && S.settings.ui !== "nova") return novaChoose();
+  if (want === "prism" && S.settings.ui !== "prism") return prismChoose();
+  const was = novaish();
+  applyUi(want);
+  if (was && !novaish()) novaLeave();
+}
+/* ...and leaving it puts back the palette that was on before, if the look's
+   own is still the one in use. A palette picked while in the look stays. */
 function novaLeave(){
   const back = S.settings.preNova;
-  if (/^nova/.test(S.settings.theme) && back && allPalettes().some(p => p.id === back)) applyTheme(back);
+  if (/^(nova|prism)/.test(S.settings.theme) && back && allPalettes().some(p => p.id === back)) applyTheme(back);
   delete S.settings.preNova;
 }
 /* Nova's page header and the counts beside each view in its sidebar. Run on
    every render; in any other look it returns at once, and the markup it
    fills is hidden there anyway. */
 function novaSync(){
-  if (S.settings.ui !== "nova" || !$("nxHead")) return;
+  if (!novaish() || !$("nxHead")) return;
   const k = today(), v = S.view || "day";
   const live = S.tasks.filter(t => LIVE.indexOf(t.status) >= 0);
   const over = live.filter(t => t.due && t.due < k).length;
@@ -8198,7 +8870,10 @@ function novaSync(){
   const thisWeek = live.filter(t => t.due && t.due >= k && t.due < dkey(wk)).length;
   const badge = (id, n, hot) => {
     const b = $(id); if (!b) return;
-    b.textContent = n > 0 ? (n > 99 ? "99+" : String(n)) : "";
+    const t = n > 0 ? (n > 99 ? "99+" : String(n)) : "";
+    /* a count that changed pops (Prism draws it; elsewhere the class is idle) */
+    if (b.textContent !== t && t){ b.classList.remove("bump"); void b.offsetWidth; b.classList.add("bump"); }
+    b.textContent = t;
     b.classList.toggle("hot", !!hot && n > 0);
   };
   badge("nxbDay", over + dueT, over > 0);
@@ -8231,6 +8906,7 @@ function novaSync(){
   const dark = getPalette(S.settings.theme).mode === "dark";
   const ti = $("nxTheme").querySelector(".nxi");
   if (ti) ti.className = "nxi " + (dark ? "i-sun" : "i-moon");
+  prismInd();
 }
 /* the two quick actions Nova puts on every row */
 function rowDone(id){
@@ -8243,6 +8919,103 @@ function rowAsk(id){
   openChat();
   setTimeout(() => chatAsk(t.code + " " + t.title, { force:[t] }), 90);
 }
+/* ── Prism's moving parts (5.17) ─────────────────────────────────────────
+   The look itself is the PRISM block in the stylesheet. These four need to
+   know where something is on the screen, so they are code; each returns at
+   once in any other look. */
+function prismOn(){ return document.documentElement.hasAttribute("data-prism"); }
+/* the light that slides to the view you are on: one element, moved to the
+   open tab, rather than one drawn on each tab - so it travels between them */
+function prismInd(){
+  const nav = $("tabs"); if (!nav) return;
+  let ind = $("prInd");
+  if (!prismOn()){ if (ind) ind.hidden = true; return; }
+  if (!ind){
+    ind = document.createElement("span");
+    ind.id = "prInd"; ind.className = "prind"; ind.setAttribute("aria-hidden", "true");
+    nav.appendChild(ind);
+  }
+  const b = nav.querySelector("button.on");
+  if (!b || !b.offsetWidth){ ind.hidden = true; return; }
+  ind.hidden = false;
+  /* offsets are the page's own pixels, the same as a style's, at any zoom */
+  ind.style.transform = "translate(" + b.offsetLeft + "px," + b.offsetTop + "px)";
+  ind.style.width = b.offsetWidth + "px";
+  ind.style.height = b.offsetHeight + "px";
+}
+/* A PC with no graphics card - a virtual desktop, often, at work - draws
+   the moving aurora in software, and everything else slows down with it.
+   Measured rather than guessed: a moment after Prism comes on, fifty frames
+   are timed, and if the middle one took longer than a smooth screen allows
+   (24 ms; 60 frames a second is 17) the aurora is kept still on this PC
+   (data-still). Everything else in Prism moves as before. */
+var PRISM_PROBED = false;   /* var: applyUi() can run before this line has */
+function prismProbe(){
+  const r = document.documentElement;
+  if (PRISM_PROBED || !prismOn() || r.getAttribute("data-motion") !== "full") return;
+  PRISM_PROBED = true;
+  setTimeout(() => {
+    const d = []; let last = 0;
+    const tick = t => {
+      if (last) d.push(t - last);
+      last = t;
+      if (d.length < 50) return requestAnimationFrame(tick);
+      d.sort((a, b) => a - b);
+      if (d[25] > 24) r.setAttribute("data-still", "");
+    };
+    if (!document.hidden) requestAnimationFrame(tick); else PRISM_PROBED = false;
+  }, 1500);
+}
+/* a view opening: its cards and rows rise in one after another - for a
+   moment only, so a list redrawn by a click does not do it all again */
+var PRISM_ENTER = 0;
+function prismEnter(){
+  if (!prismOn()) return;
+  const m = document.querySelector("main"); if (!m) return;
+  const h = $("nxHead");
+  [m, h].forEach(x => { if (x){ x.classList.remove("prin"); void x.offsetWidth; x.classList.add("prin"); } });
+  clearTimeout(PRISM_ENTER);
+  PRISM_ENTER = setTimeout(() => [m, h].forEach(x => x && x.classList.remove("prin")), 1900);
+}
+/* Light and dark, in Prism: the new one spreads out in a circle from the
+   button that was pressed. A View Transition - the browser pictures the page
+   before and after, and uncovers the after. Anywhere else, or with motion
+   turned down, it simply changes. */
+function prismReveal(btn, fn){
+  const r = document.documentElement;
+  if (!prismOn() || r.getAttribute("data-motion") !== "full" || chatCalm() || !document.startViewTransition || !btn) return fn();
+  const b = btn.getBoundingClientRect();
+  r.style.setProperty("--vt-x", ((b.left + b.width / 2) / window.innerWidth * 100).toFixed(2) + "%");
+  r.style.setProperty("--vt-y", ((b.top + b.height / 2) / window.innerHeight * 100).toFixed(2) + "%");
+  r.classList.add("prvt");
+  try { document.startViewTransition(fn).finished.finally(() => r.classList.remove("prvt")); }
+  catch(e){ r.classList.remove("prvt"); fn(); }
+}
+/* The light under the pointer: one listener for the page, one card lit at a
+   time, moved once a frame at most. --mx and --my are registered as not
+   inherited (see PRISM), so moving them restyles that card and nothing in it. */
+const PRISM_LIT = ".row,.kpi,.kc,.doc,.panel,.wc,.wk,.airow,.aic,.srcdoc,.xpp,.nxbtn,.btn.pri,.pill,.ask .opt,.ci";
+const PRISM = { lit:null, ev:null, raf:0 };
+document.addEventListener("pointermove", e => {
+  if (!prismOn() || e.pointerType === "touch") return;
+  PRISM.ev = e;
+  if (PRISM.raf) return;
+  PRISM.raf = requestAnimationFrame(() => {
+    PRISM.raf = 0;
+    const ev = PRISM.ev, t = ev && ev.target;
+    const card = t && t.closest ? t.closest(PRISM_LIT) : null;
+    if (PRISM.lit && PRISM.lit !== card) PRISM.lit.classList.remove("lit");
+    PRISM.lit = card;
+    if (!card || card.closest(".chat")) return;
+    const r = card.getBoundingClientRect(), z = pageZoom();
+    card.style.setProperty("--mx", Math.round((ev.clientX - r.left) / z) + "px");
+    card.style.setProperty("--my", Math.round((ev.clientY - r.top) / z) + "px");
+    card.classList.add("lit");
+  });
+}, { passive:true });
+document.documentElement.addEventListener("pointerleave", () => {
+  if (PRISM.lit){ PRISM.lit.classList.remove("lit"); PRISM.lit = null; }
+});
 function applyTheme(id){
   const p = getPalette(id);
   applyPalettes();
@@ -9295,19 +10068,8 @@ function hydrate(d){
   S.tasks = Array.isArray(d.tasks) ? d.tasks.map(normalise) : [];
   S.routines = Array.isArray(d.routines) ? d.routines : [];
   S.incidents = Array.isArray(d.incidents) ? d.incidents : [];
-  S.scripts = Array.isArray(d.scripts) ? d.scripts.map(x => ({
-    id:x.id || ("S" + Math.random().toString(36).slice(2,8)), file:x.file || "",
-    name:x.name || splitExt(x.file || "script")[0], size:+x.size || 0,
-    added:x.added || "", desc:x.desc || "", tags:Array.isArray(x.tags) ? x.tags : [],
-    system:x.system || "", params:Array.isArray(x.params) ? x.params : [],
-    uses:+x.uses || 0, lastUsed:x.lastUsed || ""
-  })).filter(x => x.file) : [];
-  S.chats = Array.isArray(d.chats) ? d.chats.filter(c => c && c.id).map(c => ({
-    id:c.id, title:String(c.title || "").slice(0, 80), reflect:!!c.reflect,
-    created:c.created || "", updated:c.updated || "",
-    msgs:Array.isArray(c.msgs) ? c.msgs.slice(-80) : [],
-    convo:(c.convo && typeof c.convo === "object") ? c.convo : {}
-  })).slice(0, 30) : [];
+  S.scripts = Array.isArray(d.scripts) ? d.scripts.map(scriptClean).filter(x => x.file) : [];
+  S.chats = Array.isArray(d.chats) ? d.chats.filter(c => c && c.id).map(chatClean).slice(0, 30) : [];
   S.chatId = typeof d.chatId === "string" ? d.chatId : "";
   if (d.settings) Object.assign(S.settings, d.settings);
   /* 5.6 and 5.7 could send alerts to a Telegram bot; that is gone, and so
@@ -9335,6 +10097,29 @@ function hydrate(d){
     return isNaN(n) ? m : Math.max(m, n);
   }, 0));
   buildModel();
+}
+/* one script and one conversation as a workspace keeps them - read from
+   dossier.json, and from an export (5.17) */
+function scriptClean(x){
+  x = x || {};
+  return { id:x.id || ("S" + Math.random().toString(36).slice(2,8)), file:x.file || "",
+    name:x.name || splitExt(x.file || "script")[0], size:+x.size || 0,
+    added:x.added || "", desc:x.desc || "", tags:Array.isArray(x.tags) ? x.tags : [],
+    system:x.system || "", params:Array.isArray(x.params) ? x.params : [],
+    uses:+x.uses || 0, lastUsed:x.lastUsed || "" };
+}
+function chatClean(c){
+  return { id:c.id, title:String(c.title || "").slice(0, 80), reflect:!!c.reflect,
+    created:c.created || "", updated:c.updated || "",
+    msgs:Array.isArray(c.msgs) ? c.msgs.slice(-80) : [],
+    convo:(c.convo && typeof c.convo === "object") ? c.convo : {} };
+}
+/* the next D- number never goes back past a record that is already here */
+function seqFromCodes(){
+  S.seq = Math.max(+S.seq || 0, S.tasks.reduce((m, t) => {
+    const n = parseInt(String(t.code || "").replace(/\D/g,""), 10);
+    return isNaN(n) ? m : Math.max(m, n);
+  }, 0));
 }
 function touch(){
   S.dirty = true; S.rev++;
@@ -12506,7 +13291,9 @@ const CHAT_SKINS = [
   { id:"lumen",  name:"Lumen",  a:"#6366f1", b:"#d946ef", fresh:true, lm:true },
   /* 5.10: Lumen's layout in red and white, with a character of its own -
      see CRIMSON in the stylesheet and the heart in art/make-pixel-art.py */
-  { id:"crimson", name:"Crimson", a:"#d31145", b:"#ff6a5c", fresh:true, lm:true, art:"crimson/" }
+  { id:"crimson", name:"Crimson", a:"#d31145", b:"#ff6a5c", fresh:true, lm:true, art:"crimson/" },
+  /* 5.17: Lumen's layout again, drawn with the Prism look - see HALO */
+  { id:"halo", name:"Halo", a:"#8b5cf6", b:"#06b6d4", fresh:true, lm:true }
 ];
 /* the skins built on Lumen's layout: the panel carries data-lm while one is
    picked, and everything Lumen's layout does (the history, the icons, the
@@ -12546,6 +13333,23 @@ function chatUI(){
   return st.chatUI;
 }
 
+/* a skin picked - from the panel's own settings, or from Prism's offer */
+function chatSkinSet(id){
+  if (!CHAT_SKINS.some(x => x.id === id)) return;
+  const u = chatUI(), was = chatArtSet();
+  /* Halo is drawn to move: the first time it is picked, the panel's motion
+     switches come on (each stays a switch in Look and behaviour) - unless
+     this PC has asked for less motion */
+  if (id === "halo" && !(u.tried || []).includes("halo") && !chatCalm())
+    ["reveal", "glow", "pulse", "ambient", "typing", "chips", "icons"].forEach(k => { u[k] = true; });
+  u.skin = id; u.skinPicked = true;
+  /* a skin marked New stops saying so once it has been tried */
+  if (!(u.tried || []).includes(u.skin)) u.tried = (u.tried || []).concat(u.skin);
+  applyChatUI(); chatSide(); touch();
+  /* a skin with another character: the thread and the desk pet change to
+     it now, not on the next message */
+  if (chatArtSet() !== was){ chatPaint(); petRedress(); }
+}
 /* a name you gave the assistant: at the top of the panel and in the box
    you type in (again after a language switch, which rewrites both) */
 function chatNameShow(){
@@ -12788,16 +13592,7 @@ function renderChatFx(){
     };
   });
   box.querySelectorAll("[data-skin]").forEach(b => {
-    b.onclick = () => {
-      const was = chatArtSet();
-      u.skin = b.dataset.skin; u.skinPicked = true;
-      /* a skin marked New stops saying so once it has been tried */
-      if (!(u.tried || []).includes(u.skin)) u.tried = (u.tried || []).concat(u.skin);
-      applyChatUI(); chatSide(); touch(); renderChatFx();
-      /* a skin with another character: the thread and the desk pet change to
-         it now, not on the next message */
-      if (chatArtSet() !== was){ chatPaint(); petRedress(); }
-    };
+    b.onclick = () => { chatSkinSet(b.dataset.skin); renderChatFx(); };
   });
   const ev = $("fxEvery");
   if (ev) ev.oninput = () => {
@@ -15863,7 +16658,7 @@ function aboutSearch(q, n){
   }).filter(x => x.score > 0).sort((a, b) => b.score - a.score).slice(0, n || 3);
 }
 /* is this question about Resolv itself, rather than about their work */
-const ABOUT_OWN = /\u1780\u17b6\u179b\u1780\u17b7\u1785\u17d2\u1785|\b(resolv|kalkech|kal kech|this app|the app|in the app|your(self)? (version|features?)|what'?s new|what is new|new (in|feature|version)|release notes?|change ?log|changelog|version|feature|setting|settings|set ?up|preset|skin|theme|lumen|nova|nebula|aurora|carbon|pixel|desk pet|shortcut|keyboard|alerts?|bell|reminders?|notifications?|bridge|power automate|prompt|language|khmer|menu|button|look and behaviou?r|sources?|document indexing|index(?:ing)?|re-?index(?:ing|ed)?|citations?|pdf runbooks?|(?:add|upload|import|update|replace) (?:a |an |my |the )?(?:new |updated )?(?:pdf|markdown|word|document|runbook|guideline|standard|policy)s?|answer was not found|not found|supports? (?:this|that|the) answer)\b/i;
+const ABOUT_OWN = /\u1780\u17b6\u179b\u1780\u17b7\u1785\u17d2\u1785|\b(resolv|kalkech|kal kech|this app|the app|in the app|your(self)? (version|features?)|what'?s new|what is new|new (in|feature|version)|release notes?|change ?log|changelog|version|feature|setting|settings|set ?up|preset|skin|theme|lumen|nova|nebula|aurora|carbon|prism|halo|crimson|export(?:ing)?|import(?:ing)?|pixel|desk pet|shortcut|keyboard|alerts?|bell|reminders?|notifications?|bridge|power automate|prompt|language|khmer|menu|button|look and behaviou?r|sources?|document indexing|index(?:ing)?|re-?index(?:ing|ed)?|citations?|pdf runbooks?|(?:add|upload|import|update|replace) (?:a |an |my |the )?(?:new |updated )?(?:pdf|markdown|word|document|runbook|guideline|standard|policy)s?|answer was not found|not found|supports? (?:this|that|the) answer)\b/i;
 const ABOUT_HELP = /\b(how (do|can|to|should|does)|where (is|are|do|can)|can (i|you|it)|is there|does it|what does|what is|turn (on|off)|switch (on|off)|enable|disable|configure|change|show me how|why (did|does|do|is|was)|which (source|document))\b/i;
 const ABOUT_NEWS = /\b(what'?s new|what is new|what changed|what has changed|what (?:was|were|has been|have been|got) (?:added|new|changed|fixed|improved)|new in|release notes?|change ?log|changelog|(?:latest|last|newest|current|this) (?:resolv )?(?:version|release|update)|which version|what version|version (are you|is this|am i))\b/i;
 function aboutForFlow(q){
@@ -17303,9 +18098,7 @@ function flowRun(a, quiet){
       /* a look is only a look once it is on the page */
       if (String(g.key).trim() === "ui"){
         const want = String(r.value).toLowerCase().trim();
-        if (want === "nova") novaChoose();
-        else { const was = document.documentElement.getAttribute("data-look") === "nova";
-               applyUi(want); if (was) novaLeave(); }
+        lookChoose(want);
       }
       buildModel(); touch(); renderAll();
       applyFeel && applyFeel();
@@ -18468,8 +19261,16 @@ function rbImportBundle(text){
   if (!b || b.kind !== RB_BUNDLE || !Array.isArray(b.runbooks)) return null;
 
   pushUndo("runbook", true);
+  const got = rbMerge(b.runbooks, b.profiles);
+  touch(); renderRunbooks();
+  return got;
+}
+/* the library merged in: by title for runbooks and by system for profiles,
+   the newer edit winning either way (also used by Import, 5.17) */
+function rbMerge(runbooks, profiles){
   let a = 0, c = 0;
-  (b.runbooks || []).forEach(raw => {
+  (runbooks || []).forEach(raw => {
+    if (!raw) return;
     const inc = rbNormalise(raw, null);
     if (!inc.title) return;
     inc.updated = String(raw.updated || inc.updated);
@@ -18486,7 +19287,8 @@ function rbImportBundle(text){
     } else runbookStore().push(inc);
     a++;
   });
-  (b.profiles || []).forEach(raw => {
+  (profiles || []).forEach(raw => {
+    if (!raw) return;
     const sys = String(raw.system || "").trim();
     if (!sys) return;
     const inc = { system:sys, facts:String(raw.facts || ""), quirks:String(raw.quirks || ""),
@@ -18499,7 +19301,6 @@ function rbImportBundle(text){
     } else profileStore().push(inc);
     c++;
   });
-  touch(); renderRunbooks();
   return { a, c };
 }
 
@@ -21473,10 +22274,11 @@ async function renderModal(){
       '<option value="subtle"' + (st.motion === "subtle" ? " selected" : "") + ">" + LE("MotionSubtle") + "</option>" +
       '<option value="none"'   + (st.motion === "none" ? " selected" : "") + ">" + LE("MotionNone") + "</option></select>") +
     fr(L("UiMode"), '<select class="in" id="fUi">' +
-      '<option value="studio"'  + (st.ui !== "quiet" && st.ui !== "classic" && st.ui !== "nova" ? " selected" : "") + ">" + LE("UiStudio") + "</option>" +
+      '<option value="studio"'  + (["quiet", "classic", "nova", "prism"].indexOf(st.ui) < 0 ? " selected" : "") + ">" + LE("UiStudio") + "</option>" +
       '<option value="quiet"'   + (st.ui === "quiet" ? " selected" : "") + ">" + LE("UiQuiet") + "</option>" +
       '<option value="classic"' + (st.ui === "classic" ? " selected" : "") + ">" + LE("UiClassic") + "</option>" +
-      '<option value="nova"'    + (st.ui === "nova" ? " selected" : "") + ">" + LE("UiNova") + "</option></select>") +
+      '<option value="nova"'    + (st.ui === "nova" ? " selected" : "") + ">" + LE("UiNova") + "</option>" +
+      '<option value="prism"'   + (st.ui === "prism" ? " selected" : "") + ">" + LE("UiPrism") + "</option></select>") +
     '<p style="font-size:11.5px;color:var(--ink-2);margin:-6px 0 14px;line-height:1.7">' +
       L("UiNote") + "</p>" +
     fr(L("Density"), '<select class="in" id="fDe">' +
@@ -22019,13 +22821,8 @@ function wireModal(){
     box.textContent = lines.join("\n");
     saveNudge();          /* and anything waiting to be written goes now */
   });
-  on("wsJson", () => {
-    /* the same shape dossier.json has, so the machine you carry it to
-       imports it without knowing it came from anywhere else */
-    download("dossier-" + today() + ".json",
-             JSON.stringify(payload(), null, 2), "application/json");
-    toast(L("ExportedJson", { n:S.tasks.length }));
-  });
+  /* the parts you choose (5.17) - see EXPORT AND IMPORT */
+  on("wsJson", () => xpExport());
   on("wsImport", () => $("jsonIn").click());
   on("wsCsv", () => download("dossier-" + today() + ".csv", toCSV(), "text/csv"));
   $$("[data-wsopen]").forEach(b => b.onclick = async () => {
@@ -22221,10 +23018,10 @@ function wireModal(){
   const feel = (k, v) => { S.settings[k] = v; applyFeel(); touch(); };
   if ($("fMo")) $("fMo").onchange = () => feel("motion", $("fMo").value);
   if ($("fUi")) $("fUi").onchange = () => {
-    if ($("fUi").value === "nova" && S.settings.ui !== "nova"){ novaChoose(); renderModal(); return; }
-    const leaving = S.settings.ui === "nova";
-    applyUi($("fUi").value);
-    if (leaving) novaLeave();
+    const want = $("fUi").value;
+    if ((want === "nova" || want === "prism") && S.settings.ui !== want){ lookChoose(want); renderModal(); return; }
+    const leaving = novaish();
+    lookChoose(want);
     touch(); renderAll();
     if (leaving) renderModal();
   };
@@ -26836,9 +27633,12 @@ function setView(v){
      live in the closed ones — so the filter rail would be lying if it stayed. */
   $("rail").style.display = v === "assist" ? "none" : "";
   rememberFilters();
+  prismEnter();
   renderAll();
 }
 $("tabs").addEventListener("click", e => { const b = e.target.closest("button"); if (b) setView(b.dataset.v); });
+/* Prism's sliding light follows the tabs when the sidebar changes width */
+if (window.ResizeObserver) new ResizeObserver(() => { if (prismOn()) prismInd(); }).observe($("tabs"));
 
 /* Ask: the input, the buttons inside answers, and the ways out. */
 $("chatBtn").addEventListener("click", openChat);
@@ -29864,19 +30664,22 @@ $("vAi").addEventListener("click", e => {
   const row = e.target.closest(".airow");
   if (row && row.dataset.id) openDrawer(row.dataset.id);
 });
-$("themeBtn").addEventListener("click", () => {
-  if (S.settings.ui === "nova" && /^nova/.test(S.settings.theme)){
-    applyTheme(S.settings.theme === "nova" ? "nova-night" : "nova"); touch(); return;
+function themeFlip(){
+  /* Nova and Prism go between their own light and dark */
+  const own = /^(nova|prism)(-night)?$/.exec(S.settings.theme || "");
+  if (novaish() && own){
+    applyTheme(own[2] ? own[1] : own[1] + "-night"); touch(); novaSync(); return;
   }
   const list = allPalettes();
   const i = Math.max(0, list.findIndex(p => p.id === S.settings.theme));
   const next = list[(i + 1) % list.length];
-  applyTheme(next.id); touch();
+  applyTheme(next.id); touch(); novaSync();
   if (list.length > 2) toast(next.name);
-});
+}
+$("themeBtn").addEventListener("click", e => prismReveal(e.currentTarget, themeFlip));
 /* Nova's header buttons: each is a door to something that already exists */
 $("nxSearch").addEventListener("click", openCmd);
-$("nxTheme").addEventListener("click", () => { $("themeBtn").click(); novaSync(); });
+$("nxTheme").addEventListener("click", e => prismReveal(e.currentTarget, themeFlip));
 $("nxAsk").addEventListener("click", openChat);
 $("nxNew").addEventListener("click", () => {
   if (S.view === "assist") setView("day");
@@ -30632,66 +31435,543 @@ $("rbIn").addEventListener("change", e => {
 });
 $("jsonIn").addEventListener("change", e => {
   const f = e.target.files[0]; e.target.value = "";
-  if (!f) return;
-  const r = new FileReader();
-  r.onload = async ev => {
-    let d;
-    try { d = JSON.parse(ev.target.result); } catch(err){ return toast(L("ThatIsNotValidJson"), { bad:true }); }
-    if (!d || !Array.isArray(d.tasks)) return toast(L("NoRecordsFoundInThatFile"), { bad:true });
-    const res = await askUser(L("Import") + d.tasks.length + " record(s)",
-      L("From") + f.name,
-      [{ label:L("MergeIntoThisWorkspace"), hint:L("KeepsWhatYouAlreadyHave") },
-       { label:L("ReplaceEverything"), hint:L("DiscardsTheCurrentRecords") },
-       { label:L("Cancel"), hint:"" }], false);
-    if (!res || res.choice === 2) return;
-    pushUndo("import", { lib:true });
-    if (res.choice === 1){ const keepId = S.wsId; hydrate(d); S.wsId = keepId; }
-    else mergeWorkspace(d);
-    renderAll(); renderModal();
-    await saveNow(false, { reason:"import", confirm: res.choice === 1 });
-    toast(L("Imported") + d.tasks.length + " record(s)");
-  };
-  r.readAsText(f);
+  if (f) xpImportFile(f);
 });
 
-/* Bring another export's work in beside this one. Nothing already here is
-   removed. A record in both keeps whichever copy was touched last - the
-   file's version used to win outright, so importing last week's export put
-   last week's notes over this week's. Routines, scripts, runbooks, notes,
-   system profiles, conversations and incidents that are not here yet come
-   in; the ones that are stay as they are. */
+/* When a record is in this workspace and in a file being imported, the copy
+   touched last wins - the file's version used to win outright, so importing
+   last week's export put last week's notes over this week's. */
 function lastTouch(t){
   let m = String(t.completed || t.started || t.created || "");
   (t.log || []).forEach(l => { if (l && l.at && String(l.at) > m) m = String(l.at); });
   if (t.waitSince && String(t.waitSince) > m) m = String(t.waitSince);
   return m;
 }
-function mergeWorkspace(d){
-  const have = {};
-  S.tasks.forEach(t => have[t.id] = t);
-  (d.tasks || []).map(normalise).forEach(t => {
-    const mine = have[t.id];
-    if (!mine) S.tasks.push(t);
-    else if (lastTouch(t) > lastTouch(mine)) Object.assign(mine, t);
+/* ═══ EXPORT AND IMPORT — the parts you choose ═══════════════════════════
+   Export JSON used to write the whole workspace or nothing, and it left out
+   the two things that cannot be typed in again: the documents in Sources
+   and the text of the scripts. Since 5.17 a dialog lists the parts, each
+   with how much there is of it, and the file holds only what was ticked:
+
+     records · routines · scripts (with each script's text) · runbooks and
+     system profiles · notes and what the assistant learned · knowledge
+     (Sources: each document with its original file and its text) ·
+     conversations · incident history · calendar · settings
+
+   The file keeps the shape dossier.json has - tasks, routines, settings -
+   so an export with everything ticked still opens on an older KalKech, and
+   an old export imports here. Sources go under "sources": each document's
+   details as the catalog holds them, its original file in base64 and the
+   words read out of it. Its passages are not written: they are cut again
+   from the text on import, the way this version cuts them.
+
+   The flow's address is left out unless it is asked for. Anyone holding it
+   can use the flow, and an export is a file that gets mailed and copied.
+
+   Import reads a file, says which parts it has, and brings in the ticked
+   ones - beside what is here (nothing removed), or in place of those parts
+   only. Nothing here reaches the network: the file is made in the browser
+   and saved as a download. */
+const XP_KIND = "kalkech.export";
+const XP_PARTS = ["records", "routines", "scripts", "runbooks", "notes", "sources",
+                  "chats", "incidents", "calendar", "settings"];
+/* the settings that belong to a part of their own, not to "settings" */
+const XP_SET_KEYS = { runbooks:["runbooks", "profiles"],
+                      notes:["memory", "lessons", "learnSignals", "chatLearn", "chatAlias"],
+                      calendar:["holidays", "specialDays"] };
+const XP_OWN = [].concat(XP_SET_KEYS.runbooks, XP_SET_KEYS.notes, XP_SET_KEYS.calendar);
+/* past this the dialog says it may take a while */
+const XP_BIG = 200 * 1024 * 1024;
+
+/* how much of each part there is here (-1: a part with no count) */
+function xpCountsHere(){
+  return { records:S.tasks.length, routines:S.routines.length, scripts:S.scripts.length,
+           runbooks:runbookStore().length + profileStore().length,
+           notes:memoryStore().length + lessonStore().length,
+           sources:FS.ok ? srcLib().filter(d => d.status !== "deleted").length : 0,
+           chats:S.chats.length, incidents:(S.incidents || []).length,
+           calendar:holidays().length + specialDays().length, settings:-1 };
+}
+/* ...and in a file: only the parts it has. A 5.17 file says which parts it
+   holds; an older one is a whole workspace and holds what it has keys for. */
+function xpCountsIn(d){
+  const out = {};
+  if (!d || typeof d !== "object") return out;
+  const st = (d.settings && typeof d.settings === "object") ? d.settings : {};
+  const len = a => Array.isArray(a) ? a.length : 0;
+  const has = k => st[k] != null && typeof st[k] === "object";
+  const said = Array.isArray(d.parts) ? d.parts : null;
+  const put = (p, ok, n) => { if (ok && (!said || said.indexOf(p) >= 0)) out[p] = n; };
+  put("records", Array.isArray(d.tasks), len(d.tasks));
+  put("routines", Array.isArray(d.routines), len(d.routines));
+  put("scripts", Array.isArray(d.scripts), len(d.scripts));
+  put("runbooks", XP_SET_KEYS.runbooks.some(has), len(st.runbooks) + len(st.profiles));
+  put("notes", XP_SET_KEYS.notes.some(has), len(st.memory) + len(st.lessons));
+  put("sources", !!(d.sources && Array.isArray(d.sources.docs)), d.sources ? len(d.sources.docs) : 0);
+  put("chats", Array.isArray(d.chats), len(d.chats));
+  put("incidents", Array.isArray(d.incidents), len(d.incidents));
+  put("calendar", XP_SET_KEYS.calendar.some(has), len(st.holidays) + len(st.specialDays));
+  put("settings", Object.keys(st).some(k => XP_OWN.indexOf(k) < 0), -1);
+  return out;
+}
+/* the Sources documents a part takes: the library, and the files kept for a
+   conversation when the conversations go too */
+function xpSrcDocs(picks){
+  if (!FS.ok || picks.indexOf("sources") < 0) return [];
+  const chats = new Set(picks.indexOf("chats") >= 0 ? S.chats.map(c => c.id) : []);
+  return srcDocs().filter(d => d.status !== "deleted" && (d.scope !== "chat" || chats.has(d.chat)));
+}
+/* about how big the file will be - near enough to warn before a long write */
+function xpEstimate(picks){
+  const on = p => picks.indexOf(p) >= 0;
+  const js = v => { try { return JSON.stringify(v).length; } catch(e){ return 0; } };
+  let n = 300;
+  if (on("records")) n += js(S.tasks) * 1.25;
+  if (on("routines")) n += js(S.routines);
+  if (on("scripts")) n += js(S.scripts) + S.scripts.reduce((s, x) => s + (+x.size || 0), 0);
+  if (on("runbooks")) n += js(runbookStore()) + js(profileStore());
+  if (on("notes")) n += js(memoryStore()) + js(lessonStore());
+  if (on("chats")) n += js(S.chats);
+  if (on("incidents")) n += js(S.incidents);
+  if (on("calendar")) n += js(holidays()) + js(specialDays());
+  if (on("settings")) n += 4000;
+  xpSrcDocs(picks).forEach(d => {
+    n += (+d.size || 0) * 1.37 + 600;
+    (SRC.chunks.get(d.id) || []).forEach(c => { n += String(c.text || "").length; });
   });
-  const addById = (mine, theirs, key) => {
-    if (!Array.isArray(theirs)) return mine;
-    mine = Array.isArray(mine) ? mine : [];
-    const k = key || "id";
-    const seen = new Set(mine.map(x => x && x[k]));
-    theirs.forEach(x => { if (x && x[k] != null && !seen.has(x[k])){ mine.push(x); seen.add(x[k]); } });
-    return mine;
-  };
-  S.routines = addById(S.routines, d.routines);
-  S.scripts = addById(S.scripts, d.scripts);
-  S.chats = addById(S.chats, d.chats);
-  S.incidents = addById(S.incidents, d.incidents, "num");
-  const ds = d.settings || {};
-  ["runbooks", "memory", "profiles", "lessons"].forEach(k => {
-    if (Array.isArray(ds[k])) S.settings[k] = addById(S.settings[k], ds[k]);
+  return Math.round(n);
+}
+
+function b64FromBlob(blob){
+  return new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = () => { const s = String(r.result || ""); res(s.slice(s.indexOf(",") + 1)); };
+    r.onerror = () => rej(r.error || new Error("read"));
+    r.readAsDataURL(blob);
   });
-  S.seq = Math.max(S.seq || 0, +d.seq || 0);
+}
+function blobFromB64(b64, type){
+  const bin = atob(String(b64 || ""));
+  const u = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
+  return new Blob([u], { type:type || "application/octet-stream" });
+}
+function downloadBlob(name, blob){
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 4000);
+}
+
+/* The file, as a Blob made of pieces - one per document - so a library of
+   a hundred PDFs is never one giant string in memory. */
+async function xpBuild(picks, opts){
+  opts = opts || {};
+  const on = p => picks.indexOf(p) >= 0;
+  const d = { app:"dossier", kind:XP_KIND, version:3, exportVersion:1, savedAt:new Date().toISOString(),
+              appVersion:APP_VERSION, parts:XP_PARTS.filter(on) };
+  const sum = { docs:0, missing:0, scripts:0, counts:{} };
+  if (on("records")){ d.seq = S.seq; d.tasks = S.tasks; sum.counts.records = S.tasks.length; }
+  if (on("routines")){ d.routines = S.routines; sum.counts.routines = S.routines.length; }
+  if (on("scripts")){
+    d.scripts = S.scripts; d.scriptFiles = {};
+    if (FS.ok) for (const sc of S.scripts){
+      if (!TEXTY.test(sc.file || "")) continue;
+      const body = await readScriptText(sc);
+      if (body){ d.scriptFiles[sc.file] = body; sum.scripts++; }
+    }
+    sum.counts.scripts = S.scripts.length;
+  }
+  if (on("chats")){ d.chats = S.chats; d.chatId = S.chatId; sum.counts.chats = S.chats.length; }
+  if (on("incidents")){ d.incidents = S.incidents || []; sum.counts.incidents = d.incidents.length; }
+  const st = {};
+  if (on("settings")) Object.keys(S.settings).forEach(k => { if (XP_OWN.indexOf(k) < 0) st[k] = S.settings[k]; });
+  if (on("runbooks")){ st.runbooks = runbookStore(); st.profiles = profileStore(); sum.counts.runbooks = st.runbooks.length + st.profiles.length; }
+  if (on("notes")){
+    XP_SET_KEYS.notes.forEach(k => { if (S.settings[k] !== undefined) st[k] = S.settings[k]; });
+    sum.counts.notes = memoryStore().length + lessonStore().length;
+  }
+  if (on("calendar")){ st.holidays = holidays(); st.specialDays = specialDays(); sum.counts.calendar = st.holidays.length + st.specialDays.length; }
+  if (Object.keys(st).length){
+    d.settings = JSON.parse(JSON.stringify(st));
+    /* the flow's address works like a key: only when asked for */
+    if (d.settings.flow && !opts.flowUrl) d.settings.flow.url = "";
+  }
+  if (on("settings")) sum.counts.settings = 1;
+  const pieces = [];
+  if (on("sources")){
+    await srcLoad();
+    for (const x of xpSrcDocs(picks)){
+      const e = Object.assign({}, x);
+      delete e.missing;
+      e.text = ""; e.original = null;
+      try { e.text = await srcText(x); } catch(err){}
+      try {
+        const f = await (await (await FS.dir([SRC_DIR, x.id], false)).getFileHandle(x.file)).getFile();
+        e.original = { name:x.file, type:f.type || "", size:f.size, b64:await b64FromBlob(f) };
+      } catch(err){}
+      if (!e.original || !e.text) sum.missing++;
+      if (!e.text && !e.original) continue;
+      pieces.push(JSON.stringify(e));
+      sum.docs++;
+    }
+    sum.counts.sources = sum.docs;
+  }
+  const head = JSON.stringify(d, null, 1);
+  const parts = [];
+  if (on("sources")){
+    parts.push(head.slice(0, head.lastIndexOf("}")),
+               ',"sources":{"algo":' + (srcHere() ? DossierSources.ALGO : 0) + ',"docs":[\n');
+    pieces.forEach((p, i) => parts.push((i ? ",\n" : "") + p));
+    parts.push("\n]}}\n");
+  } else parts.push(head);
+  return { blob:new Blob(parts, { type:"application/json" }), sum:sum };
+}
+/* "142 records, 12 documents with their files" */
+function xpSaid(counts){
+  return XP_PARTS.filter(p => counts[p] != null && (counts[p] > 0 || p === "settings"))
+    .map(p => L("XpN_" + p, { n:counts[p] })).join(", ");
+}
+
+/* ── the dialog, for both ways ─────────────────────────────────────────── */
+function xpDialog(mode, counts, info){
+  info = info || {};
+  return new Promise(resolve => {
+    const old = $("xpDlg"); if (old) old.remove();
+    const imp = mode === "import";
+    const parts = XP_PARTS.filter(p => counts[p] !== undefined);
+    const saved = !imp && Array.isArray(S.settings.exportPick) ? S.settings.exportPick : null;
+    const usable = p => imp || counts[p] !== 0;
+    /* an empty part is never ticked for you: replacing with nothing is a
+       choice to make on purpose */
+    const ticked = p => usable(p) && counts[p] !== 0 && (imp || !saved || saved.indexOf(p) >= 0);
+    const fl = flowCfg();
+    const el = document.createElement("div");
+    el.id = "xpDlg"; el.className = "srcdlg xpdlg"; el.setAttribute("role", "dialog"); el.setAttribute("aria-modal", "true");
+    el.innerHTML =
+      '<div class="srcdlgb xpb"><h3>' + LE(imp ? "XpImportTitle" : "XpExportTitle") + "</h3>" +
+      '<p class="srcfile">' + (imp ? esc(info.file || "") + (info.savedAt ? " · " + esc(L("XpSavedOn", { when:stamp(info.savedAt) })) : "") +
+                                     (info.from ? " · KalKech " + esc(info.from) : "")
+                                   : LE("XpExportIntro")) + "</p>" +
+      '<div class="xpparts">' + parts.map(p => {
+        const n = counts[p], off = !usable(p);
+        return '<label class="xpp' + (off ? " none" : "") + '"><input type="checkbox" data-xp="' + p + '"' +
+          (ticked(p) ? " checked" : "") + (off ? " disabled" : "") + "><span><b>" + LE("Xp_" + p) +
+          (n >= 0 ? " <i>" + n + "</i>" : "") + "</b><small>" + LE("XpHint_" + p) + "</small></span></label>";
+      }).join("") + "</div>" +
+      (!imp && fl.url ? '<label class="srcck xpurl" id="xpUrlRow"><input type="checkbox" id="xpUrl"> ' + LE("XpFlowUrl") + "</label>" : "") +
+      (imp ? '<div class="xpmode">' +
+        '<label class="srcck"><input type="radio" name="xpMode" value="add" checked><span><b>' + LE("XpModeAdd") + "</b><br>" + LE("XpModeAddHint") + "</span></label>" +
+        '<label class="srcck"><input type="radio" name="xpMode" value="replace"><span><b>' + LE("XpModeReplace") + "</b><br>" + LE("XpModeReplaceHint") + "</span></label></div>" +
+        (counts.settings !== undefined ? '<p class="srchint" data-xpn="settings">' + LE("XpSettingsNote") + "</p>" : "") +
+        (counts.sources !== undefined ? '<p class="srchint" data-xpn="sources">' + LE(FS.ok ? "XpUndoNote" : "XpNoFolderSrc") + "</p>" : "")
+        : '<p class="srchint" id="xpSize"></p>') +
+      '<div class="brow"><button class="btn pri" id="xpGo" type="button">' + LE(imp ? "XpImportGo" : "XpGo") + "</button>" +
+      '<button class="btn" id="xpAll" type="button"></button>' +
+      '<button class="btn" id="xpNo" type="button">' + LE("Cancel") + "</button></div></div>";
+    document.body.appendChild(el);
+    const boxes = () => Array.prototype.slice.call(el.querySelectorAll("[data-xp]"));
+    const picks = () => boxes().filter(b => b.checked && !b.disabled).map(b => b.dataset.xp);
+    const paint = () => {
+      const p = picks(), all = boxes().filter(b => !b.disabled);
+      $("xpAll").textContent = L(all.every(b => b.checked) ? "XpTickNone" : "XpTickAll");
+      $("xpGo").disabled = !p.length;
+      const row = $("xpUrlRow"); if (row) row.hidden = p.indexOf("settings") < 0;
+      el.querySelectorAll("[data-xpn]").forEach(n => { n.hidden = p.indexOf(n.dataset.xpn) < 0; });
+      const sz = $("xpSize");
+      if (sz){
+        const n = xpEstimate(p);
+        sz.textContent = L(n > XP_BIG ? "XpSizeBig" : "XpSize", { size:bytes(n) });
+        sz.classList.toggle("warn", n > XP_BIG);
+      }
+    };
+    el.addEventListener("change", paint);
+    $("xpAll").onclick = () => {
+      const all = boxes().filter(b => !b.disabled), on = !all.every(b => b.checked);
+      all.forEach(b => { b.checked = on; });
+      paint();
+    };
+    const done = v => { el.remove(); resolve(v); };
+    $("xpNo").onclick = () => done(null);
+    el.addEventListener("click", e => { if (e.target === el) done(null); });
+    el.addEventListener("keydown", e => { if (e.key === "Escape"){ e.stopPropagation(); done(null); } });
+    $("xpGo").onclick = () => {
+      const p = picks();
+      if (!p.length) return toast(L("XpNothingPicked"), { bad:true });
+      done({ picks:p, mode:imp ? ((el.querySelector('input[name="xpMode"]:checked') || {}).value || "add") : "export",
+             flowUrl:!!($("xpUrl") && $("xpUrl").checked) });
+    };
+    paint();
+    setTimeout(() => { const f = el.querySelector("[data-xp]:not([disabled])"); if (f) f.focus(); }, 30);
+  });
+}
+
+/* ── export ────────────────────────────────────────────────────────────── */
+async function xpExport(){
+  if (FS.ok && srcHere()) { try { await srcLoad(); } catch(e){} }
+  const counts = xpCountsHere();
+  const ans = await xpDialog("export", counts);
+  if (!ans) return;
+  S.settings.exportPick = ans.picks.slice();
+  toast(L("XpWriting"));
+  let r;
+  try { r = await xpBuild(ans.picks, { flowUrl:ans.flowUrl }); }
+  catch(e){ return toast(L("XpFailed") + " " + (e.message || e), { bad:true, life:9000 }); }
+  const usable = XP_PARTS.filter(p => counts[p] !== 0);
+  const all = usable.every(p => ans.picks.indexOf(p) >= 0);
+  downloadBlob("kalkech-" + (all ? "export" : ans.picks.slice(0, 3).join("-") + (ans.picks.length > 3 ? "-more" : "")) +
+               "-" + today() + ".json", r.blob);
+  toast(L("XpDone", { what:xpSaid(r.sum.counts), size:bytes(r.blob.size) }), { life:9000 });
+  if (r.sum.missing) setTimeout(() => toast(L("XpMissing", { n:r.sum.missing }), { bad:true, life:9000 }), 1400);
+  touch();
+  return r;
+}
+
+/* ── import ────────────────────────────────────────────────────────────── */
+async function xpImportFile(f){
+  let text = "";
+  try { text = await f.text(); } catch(e){ return toast(L("ThatIsNotValidJson"), { bad:true }); }
+  let d;
+  try { d = JSON.parse(text); } catch(e){ return toast(L("ThatIsNotValidJson"), { bad:true }); }
+  /* a runbook library (Library → Export library) brought in the same way */
+  if (d && d.kind === RB_BUNDLE){
+    const got = rbImportBundle(text);
+    if (!got) return toast(L("RunbookBadFile"), { bad:true });
+    return toast(L("RunbookImported", { a:got.a, b:got.c }), { action:L("Undo"), onAction:doUndo });
+  }
+  text = "";
+  const counts = xpCountsIn(d);
+  if (!Object.keys(counts).length) return toast(L("XpNothingInFile"), { bad:true });
+  const ans = await xpDialog("import", counts, { file:f.name, savedAt:d.savedAt, from:d.appVersion });
+  if (!ans) return;
+  toast(L("XpReading", { name:f.name }));
+  const got = await xpApply(d, ans.picks, ans.mode === "replace");
+  const what = xpSaid(got.counts);
+  toast(what ? L("XpImported", { what:what }) + (got.notes.length ? " " + got.notes.join(" ") : "")
+             : L("XpImportedNone") + (got.notes.length ? " " + got.notes.join(" ") : ""),
+        { life:10000, action:L("Undo"), onAction:doUndo });
+  return got;
+}
+
+/* add what is not here yet, by id (or another key); how many came in */
+function xpAdd(mine, theirs, key){
+  if (!Array.isArray(theirs) || !Array.isArray(mine)) return 0;
+  const k = key || "id";
+  const seen = new Set(mine.map(x => x && x[k]));
+  let n = 0;
+  theirs.forEach(x => { if (x && x[k] != null && !seen.has(x[k])){ mine.push(x); seen.add(x[k]); n++; } });
+  return n;
+}
+async function xpApply(d, picks, replace){
+  const on = p => picks.indexOf(p) >= 0;
+  const st = (d.settings && typeof d.settings === "object") ? d.settings : {};
+  const arr = a => Array.isArray(a) ? a : [];
+  const counts = {}, notes = [];
+  pushUndo("import", { lib:true });
+
+  if (on("records")){
+    const theirs = arr(d.tasks).filter(t => t && t.id).map(normalise);
+    if (replace){ S.tasks = theirs; S.seq = +d.seq || 0; counts.records = theirs.length; }
+    else {
+      const have = {}; S.tasks.forEach(t => { have[t.id] = t; });
+      let n = 0;
+      theirs.forEach(t => {
+        const mine = have[t.id];
+        if (!mine){ S.tasks.push(t); n++; }
+        else if (lastTouch(t) > lastTouch(mine)){ Object.assign(mine, t); n++; }
+      });
+      S.seq = Math.max(+S.seq || 0, +d.seq || 0);
+      counts.records = n;
+    }
+    seqFromCodes();
+  }
+  if (on("routines")){
+    if (replace){ S.routines = arr(d.routines).slice(); counts.routines = S.routines.length; }
+    else counts.routines = xpAdd(S.routines, d.routines);
+  }
+  if (on("scripts")) counts.scripts = await xpScriptsIn(arr(d.scripts), d.scriptFiles || {}, replace);
+  if (on("runbooks")){
+    if (replace){
+      if (Array.isArray(st.runbooks)) S.settings.runbooks = st.runbooks.slice();
+      if (Array.isArray(st.profiles)) S.settings.profiles = st.profiles.slice();
+      counts.runbooks = runbookStore().length + profileStore().length;
+    } else { const r = rbMerge(st.runbooks, st.profiles); counts.runbooks = r.a + r.c; }
+  }
+  if (on("notes")){
+    if (replace){
+      XP_SET_KEYS.notes.forEach(k => { if (st[k] != null && typeof st[k] === "object") S.settings[k] = JSON.parse(JSON.stringify(st[k])); });
+      counts.notes = memoryStore().length + lessonStore().length;
+    } else {
+      counts.notes = xpAdd(memoryStore(), st.memory) + xpAdd(lessonStore(), st.lessons);
+      if (Array.isArray(st.learnSignals)){
+        if (!Array.isArray(S.settings.learnSignals)) S.settings.learnSignals = [];
+        const seen = new Set(S.settings.learnSignals.map(x => x && x.at + "|" + x.text));
+        st.learnSignals.forEach(x => { if (x && !seen.has(x.at + "|" + x.text)) S.settings.learnSignals.push(x); });
+        S.settings.learnSignals.sort((a, b) => String(b.at) < String(a.at) ? -1 : 1).length =
+          Math.min(S.settings.learnSignals.length, 40);
+      }
+      if (st.chatLearn && typeof st.chatLearn === "object"){
+        const mine = chatLearnStore();
+        Object.keys(st.chatLearn).forEach(k => { if (!(k in mine)) mine[k] = st.chatLearn[k]; });
+      }
+      if (Array.isArray(st.chatAlias)){
+        if (!Array.isArray(S.settings.chatAlias)) S.settings.chatAlias = [];
+        xpAdd(S.settings.chatAlias, st.chatAlias, "from");
+      }
+    }
+  }
+  if (on("chats")){
+    const theirs = arr(d.chats).filter(c => c && c.id).map(chatClean);
+    if (replace){
+      S.chats = theirs.slice(0, 30);
+      S.chatId = S.chats.some(c => c.id === d.chatId) ? d.chatId : "";
+      counts.chats = S.chats.length;
+    } else counts.chats = xpAdd(S.chats, theirs);
+  }
+  if (on("incidents")){
+    if (!Array.isArray(S.incidents)) S.incidents = [];
+    if (replace){ S.incidents = arr(d.incidents).slice(); counts.incidents = S.incidents.length; }
+    else counts.incidents = xpAdd(S.incidents, d.incidents, "num");
+  }
+  if (on("calendar")){
+    if (replace){
+      if (Array.isArray(st.holidays)) S.settings.holidays = st.holidays.slice();
+      if (Array.isArray(st.specialDays)) S.settings.specialDays = st.specialDays.slice();
+      counts.calendar = holidays().length + specialDays().length;
+    } else {
+      const seen = new Set(holidays().map(h => h.d + "|" + h.n));
+      let n = 0;
+      arr(st.holidays).forEach(h => { if (h && h.d && !seen.has(h.d + "|" + h.n)){ holidays().push(h); seen.add(h.d + "|" + h.n); n++; } });
+      counts.calendar = n + xpAdd(specialDays(), st.specialDays);
+    }
+    holidays().sort((a, b) => a.d < b.d ? -1 : a.d > b.d ? 1 : 0);
+  }
+  if (on("settings")){
+    const url = flowCfg().url;
+    Object.keys(st).forEach(k => { if (XP_OWN.indexOf(k) < 0) S.settings[k] = JSON.parse(JSON.stringify(st[k])); });
+    delete S.settings.telegram;
+    /* a file written without the flow's address keeps the one here */
+    const fl = flowCfg();
+    if (!fl.url && url) fl.url = url;
+    counts.settings = 1;
+    xpSettingsApplied();
+  }
+  if (on("sources") && d.sources){
+    const r = await xpSourcesIn(arr(d.sources.docs), replace);
+    counts.sources = r.added;
+    if (r.same) notes.push(L("XpSrcSame", { n:r.same }));
+    if (r.skipped) notes.push(L("XpSrcSkipped", { n:r.skipped }));
+    if (r.nofolder) notes.push(L("XpNoFolderSrc"));
+    if (r.bad) notes.push(L("XpSrcBad", { n:r.bad }));
+  }
+  /* files kept for conversations that a replace took away */
+  if (on("chats") && replace && FS.ok && srcHere()) srcDropOrphans();
   buildModel();
+  touch();
+  renderAll();
+  if ($("modal").classList.contains("on")) renderModal();
+  if (on("sources") && typeof renderLib === "function" && S.view === "library") renderLib();
+  if (on("chats") && typeof chatPaint === "function"){ try { chatPaint(); } catch(e){} }
+  await saveNow(false, { reason:"import", confirm:replace });
+  return { counts:counts, notes:notes };
+}
+/* what openWorkspace does with a workspace's settings, after they change */
+function xpSettingsApplied(){
+  try {
+    I18N.code = I18N.packs[S.settings.lang] ? S.settings.lang : "en";
+    document.documentElement.setAttribute("lang", I18N.code);
+    applyI18n();
+  } catch(e){}
+  applyFonts(); applyFeel(); applyTheme(S.settings.theme || "studio");
+  applyChatUI(); petPaint();
+  refreshSelects(); syncRail(); renderTemplates();
+}
+
+/* Scripts: the list, and each script's text written back into scripts\.
+   A file already there with the same words is left as it is; one with
+   different words is never written over - the one from the file is saved
+   beside it, as "name (2).sql", and that is the one its entry points to. */
+async function xpScriptsIn(list, files, replace){
+  const theirs = list.map(scriptClean).filter(x => x.file);
+  if (replace) S.scripts = [];
+  let dir = null;
+  if (FS.ok) { try { dir = await scriptsDir(true); } catch(e){ dir = null; } }
+  let n = 0;
+  for (const x of theirs){
+    if (S.scripts.some(s => s.id === x.id || s.file === x.file)) continue;
+    const body = typeof files[x.file] === "string" ? files[x.file] : null;
+    if (body != null && dir){
+      try {
+        let name = safeFile(x.file), i = 2;
+        while (await FS.exists(dir, name)){
+          let now = null;
+          try { now = await FS.readText(dir, name); } catch(e){}
+          if (now === body) break;
+          name = suffixName(safeFile(x.file), i++);
+        }
+        if (!(await FS.exists(dir, name))) await FS.writeText(dir, name, body);
+        x.file = name;
+      } catch(e){}
+    }
+    S.scripts.push(x); n++;
+  }
+  if (FS.ok) scriptTextsLoad().catch(() => {});
+  return n;
+}
+
+/* Sources: each document stored the way Add stores one - its original, its
+   text, its passages (cut here, from the text) - and put in the catalog.
+   One already in the library (the same file, or the same words) is not
+   added again. A replace switches the library's documents off rather than
+   deleting them: Undo cannot bring back a file, and a switch can be put
+   back by hand. The links between versions are moved to the new ids. */
+async function xpSourcesIn(list, replace){
+  const out = { added:0, same:0, skipped:0, bad:0 };
+  if (!srcHere() || !FS.ok){ out.skipped = list.length; out.nofolder = true; return out; }
+  await srcLoad();
+  const now = new Date().toISOString();
+  const chats = new Set(S.chats.map(c => c.id));
+  const map = {}, fresh = [];
+  if (replace) srcLib().forEach(x => { if (x.status === "active"){ x.status = "inactive"; x.changed = now; } });
+  for (const e of list){
+    if (!e || typeof e !== "object"){ out.bad++; continue; }
+    if (e.scope === "chat" && !chats.has(e.chat)){ out.skipped++; continue; }
+    const text = typeof e.text === "string" ? e.text.replace(/\r\n?/g, "\n") : "";
+    if (!text.trim()){ out.bad++; continue; }
+    const th = DossierSources.hash36(DossierSources.norm(text));
+    const pool = e.scope === "chat" ? srcDocs().filter(x => x.scope === "chat" && x.chat === e.chat) : srcLib();
+    const dup = pool.find(x => x.status !== "deleted" && ((e.sha && x.sha === e.sha) || x.textHash === th));
+    if (dup){
+      map[e.id] = dup.id; out.same++;
+      if (replace && dup.status === "inactive" && e.status === "active"){ dup.status = "active"; dup.changed = now; }
+      continue;
+    }
+    const d = Object.assign({}, e);
+    delete d.text; delete d.original; delete d.missing;
+    d.id = srcNewId(); map[e.id] = d.id;
+    d.name = String(d.name || (e.original && e.original.name) || "document");
+    d.file = safeFile(d.file || (e.original && e.original.name) || "document.txt");
+    if (["active", "inactive", "superseded"].indexOf(d.status) < 0) d.status = "active";
+    d.family = DossierSources.familyKey(d.name); d.textHash = th; d.imported = now;
+    const r = srcPrepare(d, text, d.pageStats);
+    d.chunks = r.chunks.length;
+    try {
+      const dir = await FS.dir([SRC_DIR, d.id], true);
+      if (e.original && typeof e.original.b64 === "string" && e.original.b64)
+        await FS.writeBlob(dir, d.file, blobFromB64(e.original.b64, e.original.type));
+      await FS.writeText(dir, "text.txt", text);
+      await FS.writeText(dir, "chunks.json", JSON.stringify(r.chunks));
+    } catch(err){ out.bad++; continue; }
+    SRC.cat.docs.push(d); SRC.chunks.set(d.id, r.chunks); SRC.texts.set(d.id, text);
+    fresh.push(d); out.added++;
+  }
+  fresh.forEach(d => {
+    if (d.supersededBy) d.supersededBy = map[d.supersededBy] || "";
+    if (Array.isArray(d.supersedes)) d.supersedes = d.supersedes.map(i => map[i]).filter(Boolean);
+  });
+  if (out.added || replace || out.same){ await srcSaveCat(); srcRebuild(); }
+  srcNote({ kind:"imported", doc:out.added + " document(s)", status:out.same ? out.same + " already here" : "" });
+  return out;
 }
 
 /* modal chrome */
