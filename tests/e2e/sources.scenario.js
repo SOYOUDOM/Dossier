@@ -691,7 +691,7 @@
   tz.pick = "auto"; S.settings.memory = S.settings.memory.filter(n => !/^mbig/.test(n.id)); chatModelPaint();
 
   /* ── 5.14: three skins, centred icons, code after a heading, the magnet, special days ── */
-  check("the chat skins are Nebula, Lumen, Crimson and (5.17) Halo", CHAT_SKINS.map(x => x.id).join() === "nebula,lumen,crimson,halo");
+  check("the chat skins are Nebula, Lumen, Crimson, (5.17) Halo and (5.18) Neon", CHAT_SKINS.map(x => x.id).join() === "nebula,lumen,crimson,halo,neon");
   const oldSkin = chatUI().skin; chatUI().skin = "aurora"; chatUI();
   check("...and a workspace that used one of the others opens in Nebula", chatUI().skin === "nebula");
   chatUI().skin = oldSkin; applyChatUI();
@@ -978,5 +978,30 @@
   closeChat();
   lookChoose("studio");
   check("leaving Prism puts the palette from before back", !document.documentElement.hasAttribute("data-prism") && !/^prism/.test(S.settings.theme), S.settings.theme);
+
+  /* ── 5.18: Neon, the neon cat, and the pet's character picked by hand ── */
+  const before518 = S.settings.theme;
+  neonChoose(); await sleep(60);
+  check("Neon: Nova's layout and its own layer, dark first", document.documentElement.getAttribute("data-look") === "nova" &&
+        document.documentElement.hasAttribute("data-neon") && !document.documentElement.hasAttribute("data-prism") && S.settings.theme === "neon", S.settings.theme);
+  setView("day"); await sleep(300);
+  const nnOn = document.querySelector("#tabs button.on"), nnL = $("prInd");
+  check("...the yellow block sits on the open view", nnL && !nnL.hidden && nnL.style.transform.indexOf(nnOn.offsetTop + "px") > 0);
+  check("...the title carries its own words for the glitch", $("nxTitle").dataset.text === $("nxTitle").textContent);
+  themeFlip(); await sleep(60);
+  check("...◐ goes between Neon and Neon Day", S.settings.theme === "neon-day");
+  themeFlip();
+  chatSkinSet("neon");
+  check("the Neon chat skin brings the cat", $("chat").dataset.skin === "neon" && chatArtSet() === "neon/" &&
+        pixKey("pet-idle") === "neon/pet-idle" && !!PIX["neon/hero"]);
+  petCharSet("robot");
+  check("a character picked for the pet overrides the skin's, in the chat too", chatArtSet() === "" && pixKey("hero") === "hero");
+  petCharSet("cat"); chatSkinSet("lumen");
+  check("...the cat with any skin", chatArtSet() === "neon/" && pixKey("think") === "neon/think");
+  petCharSet("auto");
+  check("...and Match the chat skin goes back to the skin's own", chatArtSet() === "");
+  await shot("20-neon");
+  lookChoose("studio");
+  check("leaving Neon puts the palette from before back", !document.documentElement.hasAttribute("data-neon") && S.settings.theme === before518, S.settings.theme);
   return { checks };
 })()

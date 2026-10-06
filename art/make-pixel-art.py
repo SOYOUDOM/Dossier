@@ -16,6 +16,10 @@ writes:
     art/contact-sheet.png       every frame of every sprite, 8x, on a dark
                                 band and a light one - so a colour that
                                 vanishes on one skin is visible here first
+    assets/pixel/crimson/, assets/pixel/neon/
+                                the same sixteen names for the heart (the
+                                Crimson skin) and the neon cat (Neon), with
+                                art/contact-sheet-crimson.png and -neon.png
 
 then art/embed-pixel-art.py carries the same files into dossier.html as
 base64, which is what a copy of the app on its own runs on.
@@ -1090,6 +1094,329 @@ SPRITES_CRIMSON = [
 ]
 
 
+# ═══ the third character: the neon cat, for the Neon skin and look ══════════
+# Neon is black, yellow and cyan with a hot red, after the neon-and-chrome
+# look of cyberpunk stories, and its character is a small yellow cat with a
+# visor: a band of dark glass across its eyes in which two cyan eyes (or a
+# scanning light, while it thinks) glow. Same sixteen names, sizes and timing
+# as the robot's and the heart's, so the app shows whichever set it is asked
+# for with no other change - the chat skin's, or the one picked for the pet.
+#
+# The same sixteen letters again; only what they mean changes. Yellow reads
+# on white and on near-black alike, the outline is a deep violet rather than
+# black, and the visor is the darkest thing in the drawing so the cyan in it
+# glows on either.
+PAL_NEON = [
+    ("." , (0xF5, 0xE1, 0x0A)),   # 0  transparent (filled with the body yellow)
+    ("K" , (0x1B, 0x10, 0x2E)),   # 1  outline, deep violet
+    ("D" , (0xC2, 0xA4, 0x00)),   # 2  shade
+    ("B" , (0xF5, 0xE1, 0x0A)),   # 3  body yellow
+    ("A" , (0xFF, 0xF3, 0x6A)),   # 4  lit yellow
+    ("L" , (0xFF, 0xF7, 0xB8)),   # 5  pale yellow: paws, the z
+    ("W" , (0xFF, 0xFD, 0xF0)),   # 6  white
+    ("C" , (0x00, 0xE5, 0xF5)),   # 7  cyan: the eyes, the whiskers
+    ("G" , (0x22, 0xD9, 0x86)),   # 8  green, a yes
+    ("Y" , (0xFF, 0xB8, 0x1F)),   # 9  amber
+    ("O" , (0xFF, 0x7A, 0x1F)),   # 10 orange
+    ("R" , (0xFF, 0x2A, 0x6D)),   # 11 hot red: the nose, the collar
+    ("P" , (0xC0, 0x3C, 0xFF)),   # 12 magenta: inside the ears, the tail tip
+    ("S" , (0x7D, 0x80, 0x9C)),   # 13 slate, a left-alone
+    ("E" , (0x0E, 0x9F, 0x6E)),   # 14 deep green
+    ("N" , (0x30, 0x23, 0x52)),   # 15 the visor glass: violet, so it is not a
+                                  #    hole in the head on a near-black panel
+]
+OUT_NEON = os.path.join(OUT, "neon")
+
+CAT = grid([
+    "........................",
+    ".....KK..........KK.....",
+    "....KPBK........KBPK....",
+    "....KPBBK......KBBPK....",
+    "....KBBBBKKKKKKBBBBK....",
+    "....KBABBBBBBBBBBBBK....",
+    "....KABBBBBBBBBBBBBK....",
+    "....KNNNNNNNNNNNNNNK....",
+    "....KNNNNNNNNNNNNNNK....",
+    "....KNNNNNNNNNNNNNNK....",
+    "....KBBBBBBRRBBBBBBK....",
+    "....KBBBBBKBBKBBBBBK....",
+    ".....KBBBBBKKBBBBBK.....",
+    "......KKKKKKKKKKKK......",
+    ".......KRRRRRRRRK.......",
+    "......KBBBBBBBBBBK......",
+    "......KBBBBAABBBBK......",
+    "......KBBBBBBBBBBK......",
+    "......KBBDBBBBDBBK......",
+    "......KBBDBBBBDBBK......",
+    "......KLLKBBBBKLLK......",
+    "......KKKK....KKKK......",
+    "......DDDDDDDDDDDD......",
+    "........................",
+])
+CAT_HEAD = grid([
+    "................",
+    "..KK........KK..",
+    ".KPBK......KBPK.",
+    ".KPBBKKKKKKBBPK.",
+    ".KBABBBBBBBBBBK.",
+    ".KNNNNNNNNNNNNK.",
+    ".KNNNNNNNNNNNNK.",
+    ".KNNNNNNNNNNNNK.",
+    ".KBBBBBRRBBBBBK.",
+    ".KBBBBKBBKBBBBK.",
+    "..KBBBBKKBBBBK..",
+    "...KKKKKKKKKK...",
+    "................",
+    "................",
+    "................",
+    "................",
+])
+
+
+def visor(g, how="open", y0=7, x0=5, w=14, glance=0, scan=None):
+    """What shows in the dark glass: two cyan eyes (open, shut, wide,
+    happy), or a bar of light sweeping across it while it thinks."""
+    if scan is not None:
+        for dx in (-1, 0, 1):
+            x = x0 + scan + dx
+            if x0 <= x < x0 + w:
+                for y in range(y0, y0 + 3):
+                    g[y][x] = "C" if dx == 0 else ("C" if y == y0 + 1 else g[y][x])
+        return g
+    left, right = x0 + 2 + glance, x0 + w - 4 + glance
+    if how == "shut":
+        paste(g, ["CC"], left, y0 + 2); paste(g, ["CC"], right, y0 + 2)
+    elif how == "happy":
+        for x in (left, right):
+            paste(g, ["CC"], x, y0); px(g, x - 1, y0 + 1, "C"); px(g, x + 2, y0 + 1, "C")
+    elif how == "wide":
+        paste(g, ["CC", "CC", "CC"], left, y0); paste(g, ["CC", "CC", "CC"], right, y0)
+    elif how == "small":
+        paste(g, ["C"], left + 1, y0 + 1); paste(g, ["C"], right, y0 + 1)
+    else:
+        paste(g, ["CC", "CC"], left, y0); paste(g, ["CC", "CC"], right, y0)
+    return g
+
+
+def whiskers(g, y=10, dy=0):
+    for x in (1, 2, 21, 22):
+        px(g, x, y + dy, "C")
+    px(g, 2, y + 1 + dy, "C"); px(g, 21, y + 1 + dy, "C")
+
+
+def tail(g, how="up", dy=0):
+    """It curls up beside the body on the right, with a magenta tip."""
+    if how == "up":
+        pts = [(18, 19), (19, 18), (19, 17), (20, 16), (20, 15), (20, 14)]
+        tip = (20, 13)
+    elif how == "flick":
+        pts = [(18, 19), (19, 18), (20, 17), (21, 16), (21, 15)]
+        tip = (22, 14)
+    else:                                     # down, along the floor
+        pts = [(18, 20), (19, 20), (20, 20), (21, 19)]
+        tip = (22, 18)
+    # in the shade yellow, not the outline: a violet line is lost on a dark
+    # panel, and this one reads on white and on near-black
+    for (x, y) in pts:
+        px(g, x, y + dy, "D")
+    px(g, tip[0], tip[1] + dy, "P")
+
+
+def paw(g, side, how="down", dy=0):
+    """A front leg and a pale paw: down by the body, out to hold something,
+    up over the head, or a wave."""
+    L = side == "L"
+    st = -1 if L else 1
+    sx = (5 if L else 18)
+    sy = 15 + dy
+    if how == "down":
+        return                                # the legs are in the drawing
+    if how == "out":
+        pts = [(sx, sy), (sx + st * 0, sy + 1)]
+        hand = (sx - (1 if L else 0) + (2 if L else -1), sy + 2)
+    elif how == "up":
+        pts = [(sx, sy - 1), (sx + st, sy - 2), (sx + st, sy - 3), (sx + st, sy - 4)]
+        hand = (sx + st * 2 - (1 if L else 0), sy - 6)
+    elif how == "wave":
+        pts = [(sx, sy - 1), (sx + st, sy - 2), (sx + st * 2, sy - 3)]
+        hand = (sx + st * 3 - (1 if L else 0), sy - 5)
+    else:
+        return
+    for (x, y) in pts:
+        px(g, x, y, "D")
+    paste(g, ["LL", "LL"], hand[0], hand[1])
+
+
+def cat_pose(look="open", dy=0, arms=("down", "down"), over=None, front=None, glance=0,
+             tl="up", floor=True, scan=None):
+    g = blank(24, 24)
+    for y, row in enumerate(CAT):
+        for x, ch in enumerate(row):
+            if ch == "D" and y == 22 and not floor:
+                continue
+            if ch != "." and 0 <= y + (dy if y < 22 else 0) < 24:
+                g[y + (dy if y < 22 else 0)][x] = ch
+    visor(g, look, 7 + dy, 5, 14, glance, scan)
+    whiskers(g, 10, dy)
+    tail(g, tl, dy)
+    paw(g, "L", arms[0], dy); paw(g, "R", arms[1], dy)
+    if front:
+        paste(g, front[0], front[1], front[2])
+    if over:
+        paste(g, over[0], over[1], over[2])
+    return g
+
+
+def cat_head(look="open", glance=0, scan=None, blink_glow=False):
+    g = copy(CAT_HEAD)
+    if scan is not None:
+        visor(g, scan=scan, y0=5, x0=2, w=12)
+    else:
+        visor(g, look, 5, 2, 12, glance)
+    px(g, 0, 8, "C"); px(g, 15, 8, "C")
+    return g
+
+
+def nn_think():
+    """Waiting on an answer: a light sweeps across the visor, there and back."""
+    return [cat_head(scan=s) for s in (1, 3, 5, 7, 9, 11, 9, 7, 5, 3)], 9
+
+
+def nn_slow():
+    out = []
+    for i in range(4):
+        g = cat_head(look="shut")
+        g = shift(g, -1, 2)
+        if i in (0, 1):
+            paste(g, ["LLL", "..L", ".L.", "LLL"], 12, 1 - i)
+        if i in (1, 2):
+            paste(g, ["WW", ".W", "WW"], 10, 3 - i)
+        out.append(g)
+    return out, 42
+
+
+def nn_orb():
+    """The mark in the header: the cat's head, its eyes looking about and a
+    blink - no sweep here, which at the header's size is a flicker."""
+    return [cat_head(), cat_head(glance=-1), cat_head(), cat_head(glance=1), cat_head(look="shut"), cat_head()], \
+           [90, 30, 60, 30, 10, 60]
+
+
+def nn_hero():
+    star = [".W.", "WWW", ".W."]
+    spark = [".C.", "CCC", ".C."]
+    return [
+        cat_pose(),
+        cat_pose(arms=("down", "wave"), over=(star, 1, 3), tl="flick"),
+        cat_pose(arms=("down", "up")),
+        cat_pose(arms=("down", "wave"), over=(spark, 1, 3), tl="flick"),
+        cat_pose("shut", arms=("down", "up")),
+        cat_pose("happy"),
+        cat_pose(),
+        cat_pose(over=(star, 1, 3), tl="flick"),
+    ], 18
+
+
+def nn_ask():
+    """Its bubble is yellow, so the question mark in it is the outline's
+    violet: a white one on yellow is barely there."""
+    frames, delay = sprite_ask()
+    return [[[("B" if c == "A" else ("K" if c == "W" else c)) for c in row] for row in f] for f in frames], delay
+
+
+def nn_new():
+    """The arrow in hot red: pale yellow on a white panel is barely there."""
+    frames, delay = sprite_new()
+    return [[[("R" if c == "A" else c) for c in row] for row in f] for f in frames], delay
+
+
+def nn_pet_idle():
+    """Standing about: still, a blink, a flick of the tail."""
+    return [cat_pose(), cat_pose("shut"), cat_pose(), cat_pose(tl="flick"), cat_pose()], [170, 12, 120, 30, 60]
+
+
+def nn_pet_cheer():
+    star = [".W.", "WWW", ".W."]
+    spark = [".C.", "CCC", ".C."]
+    return [
+        cat_pose("happy", arms=("up", "up")),
+        cat_pose("happy", dy=-2, arms=("up", "up"), over=(star, 1, 2), floor=False, tl="flick"),
+        cat_pose("happy", dy=-2, arms=("up", "up"), over=(spark, 20, 2), floor=False, tl="flick"),
+        cat_pose("happy", dy=-2, arms=("up", "up"), over=(star, 1, 2), floor=False),
+        cat_pose("happy", arms=("up", "up")),
+        cat_pose(),
+    ], [10, 10, 10, 10, 12, 30]
+
+
+def nn_pet_worry():
+    bang = ["RR", "RR", "RR", "..", "RR"]
+    out = []
+    for i, mark in enumerate((True, True, False, True)):
+        out.append(cat_pose("small", arms=("out", "out"), glance=(-1 if i % 2 else 0), tl="down",
+                            over=(bang, 21, 1) if mark else None))
+    return out, [26, 26, 20, 26]
+
+
+def nn_pet_nap():
+    zed = ["LLL", "..L", ".L.", "LLL"]
+    return [
+        cat_pose("shut", dy=1, tl="down", over=(zed, 20, 0)),
+        cat_pose("shut", dy=1, tl="down", over=(zed, 20, -1)),
+        cat_pose("shut", dy=1, tl="down", over=(["WW", ".W", "WW"], 20, 1)),
+        cat_pose("shut", dy=1, tl="down"),
+    ], [70, 70, 70, 90]
+
+
+def nn_pet_work():
+    card = ["SSSSS", "SWWWS", "SWWWS", "SSSSS"]
+    done = ["SSSSS", "SWGWS", "SGWGS", "SSSSS"]
+    return [
+        cat_pose(arms=("out", "out"), front=(card, 9, 16)),
+        cat_pose(arms=("out", "out"), dy=-1, front=(card, 9, 15)),
+        cat_pose("happy", arms=("out", "out"), front=(done, 9, 16)),
+        cat_pose("happy", arms=("out", "out"), front=(done, 9, 16)),
+    ], [16, 12, 16, 26]
+
+
+def nn_pet_stretch():
+    return [
+        cat_pose(),
+        cat_pose("shut", arms=("up", "up")),
+        cat_pose("shut", dy=-1, arms=("up", "up"), tl="flick", over=(["LL", "..", "LL"], 20, 2)),
+        cat_pose("shut", dy=-1, arms=("up", "up"), tl="flick", over=(["LL", "..", "LL"], 20, 1)),
+        cat_pose(arms=("up", "up")),
+        cat_pose(),
+    ], [24, 24, 40, 40, 24, 60]
+
+
+def nn_pet_held():
+    return [
+        cat_pose("wide", dy=-1, arms=("up", "up"), tl="down", floor=False),
+        cat_pose("wide", arms=("up", "up"), tl="down"),
+        cat_pose("wide", dy=-1, arms=("up", "up"), tl="down", floor=False),
+        cat_pose("wide", dy=1, arms=("up", "up"), tl="down"),
+    ], 9
+
+
+SPRITES_NEON = [
+    ("think", nn_think, True),
+    ("slow",  nn_slow,  True),
+    ("orb",   nn_orb,   True),
+    ("hero",  nn_hero,  True),
+    ("done",  sprite_done, False),
+    ("no",    sprite_no,   False),
+    ("oops",  sprite_oops, True),
+    ("ask",   nn_ask,   True),
+    ("new",   nn_new,   True),
+    ("pet-idle",    nn_pet_idle,    True),
+    ("pet-cheer",   nn_pet_cheer,   True),
+    ("pet-worry",   nn_pet_worry,   True),
+    ("pet-nap",     nn_pet_nap,     True),
+    ("pet-work",    nn_pet_work,    True),
+    ("pet-stretch", nn_pet_stretch, True),
+    ("pet-held",    nn_pet_held,    True),
+]
+
 # ═══ the contact sheet ══════════════════════════════════════════════════════
 def png(path, w, h, rgb_rows):
     """A plain 8-bit RGB PNG, so every frame can be looked at without a
@@ -1162,6 +1489,7 @@ def write_set(sprites, out_dir, sheet, pal):
 def main():
     sizes = write_set(SPRITES, OUT, os.path.join(HERE, "contact-sheet.png"), PAL)
     sizes += write_set(SPRITES_CRIMSON, OUT_CRIMSON, os.path.join(HERE, "contact-sheet-crimson.png"), PAL_CRIMSON)
+    sizes += write_set(SPRITES_NEON, OUT_NEON, os.path.join(HERE, "contact-sheet-neon.png"), PAL_NEON)
     total = sum(sizes)
     print("total %d bytes, %d as base64" % (total, int(total * 4 / 3)))
     print("now: python3 art/embed-pixel-art.py")

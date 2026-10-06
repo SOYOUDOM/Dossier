@@ -2536,6 +2536,16 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
 .chorb.pixorb .pxl{position:relative;z-index:1}
 /* the pill that says an answer arrived above where you are reading */
 .chat .chpill .pxl{display:inline-block;vertical-align:-3px;margin-right:5px}
+/* Menu → Look → Desk pet: the characters to pick from (5.18) */
+.petpick{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px}
+.petc{display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 6px 8px;border:1px solid var(--rule);
+  border-radius:var(--r-sm);background:var(--paper);color:var(--ink-2);font:600 11.5px/1.25 var(--f-ui);cursor:pointer;
+  transition:border-color .15s,background .15s,transform .15s}
+.petc:hover{border-color:var(--rule-hi);transform:translateY(-1px)}
+.petc.on{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 8%,var(--paper));color:var(--ink);
+  box-shadow:0 0 0 1px var(--accent)}
+.petc img{width:48px;height:48px;image-rendering:pixelated}
+.petc span{text-align:center}
 /* and the mark on the confirmation */
 .chask2 .dlgi{display:flex;flex:0 0 auto}
 .chask2 .dlgi:empty{display:none}
@@ -3962,6 +3972,188 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
   .chat[data-skin="halo"] .chthink .tx,.chat[data-skin="halo"]::before,.chat[data-skin="halo"] .chh::after{animation:none!important}
 }
 /* ═══ /HALO ═══ */
+/* ═══ NEON (the chat skin)
+   Lumen's layout once more (5.18), drawn with the Neon look: black, neon
+   yellow and cyan with a hot red, square edges and cut corners, terminal
+   type for labels, scan lines behind the conversation, and the yellow cat
+   with a visor (art/make-pixel-art.py, picked by pixKey()) as its
+   character. The mark is the cat's head on a yellow tile with a corner cut,
+   drawn as SVG like the others: still, blinking while idle, its visor
+   scanning while an answer is on its way. In the app's light mode it turns
+   to Neon Day: black and red on a warm off-white, yellow for what is filled.
+   Like the look it is drawn after the stories, not after anybody's game:
+   no name, logo or type of theirs. */
+.chat[data-skin="neon"]{
+  --nn-y:#fcee0a; --nn-c:#00f0ff; --nn-r:#ff2a6d; --nn-on-y:#0a0a10; --nn-solid:#0e0e16;
+  --nn-font:"Bahnschrift","Bahnschrift SemiCondensed","DIN Alternate","Agency FB","Segoe UI","Roboto Condensed","Arial Narrow",sans-serif;
+  --nn-mono:"Cascadia Code","Cascadia Mono",Consolas,"JetBrains Mono","DejaVu Sans Mono",ui-monospace,monospace;
+  --ch-bg:#07070c; --ch-panel:#0e0e16; --ch-line:rgba(0,240,255,.2); --ch-ink:#e6f6f6; --ch-dim:#8b9ba6;
+  --ch-acc:#fcee0a; --ch-acc2:#00f0ff;
+  --ch-glow:rgba(0,240,255,.32); --ch-mesh:rgba(0,240,255,.06);
+  --lm-ink2:#c9d6da; --lm-bubble:rgba(252,238,10,.09); --lm-card:#0e0e16; --lm-hover:rgba(0,240,255,.08);
+  --lm-line2:rgba(0,240,255,.36); --lm-ring:rgba(252,238,10,.22); --lm-soft:rgba(0,240,255,.12);
+  --lm-code:#030306; --lm-code-h:#0b0b12; --lm-code-line:#1b1b28;
+  --lm-shadow:none; --lm-pop:0 20px 50px -20px rgba(0,0,0,.85),0 0 0 1px rgba(0,240,255,.25);
+  --lm-grad:linear-gradient(90deg,#fcee0a,#fcee0a);
+  --lm-mark:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cpolygon points='0,0 38,0 48,10 48,48 10,48 0,38' fill='%23fcee0a'%3E%3C/polygon%3E%3Cpath d='M11 33 L11 10 L18.5 16.5 L29.5 16.5 L37 10 L37 33 Q37 38 32 38 L16 38 Q11 38 11 33 Z' fill='%230a0a10'/%3E%3Crect x='13' y='20.5' width='22' height='5' fill='%2300f0ff'%3E%3C/rect%3E%3Crect x='22.5' y='29' width='3' height='2' fill='%23ff2a6d'/%3E%3C/svg%3E");
+  --lm-mark-live:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cpolygon points='0,0 38,0 48,10 48,48 10,48 0,38' fill='%23fcee0a'%3E%3Canimate attributeName='opacity' values='1;1;.55;1;1' keyTimes='0;.6;.65;.7;1' dur='1.3s' repeatCount='indefinite'/%3E%3C/polygon%3E%3Cpath d='M11 33 L11 10 L18.5 16.5 L29.5 16.5 L37 10 L37 33 Q37 38 32 38 L16 38 Q11 38 11 33 Z' fill='%230a0a10'/%3E%3Crect x='13' y='20.5' width='22' height='5' fill='%2300f0ff'%3E%3C/rect%3E%3Crect y='20.5' width='4' height='5' fill='%23ffffff'%3E%3Canimate attributeName='x' values='14;30;14' dur='.9s' repeatCount='indefinite'/%3E%3C/rect%3E%3Crect x='22.5' y='29' width='3' height='2' fill='%23ff2a6d'/%3E%3C/svg%3E");
+  --lm-mark-idle:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cpolygon points='0,0 38,0 48,10 48,48 10,48 0,38' fill='%23fcee0a'%3E%3C/polygon%3E%3Cpath d='M11 33 L11 10 L18.5 16.5 L29.5 16.5 L37 10 L37 33 Q37 38 32 38 L16 38 Q11 38 11 33 Z' fill='%230a0a10'/%3E%3Crect x='13' y='20.5' width='22' height='5' fill='%2300f0ff'%3E%3Canimate attributeName='height' values='5;5;1;5;5' keyTimes='0;.9;.93;.96;1' dur='4s' repeatCount='indefinite'/%3E%3Canimate attributeName='y' values='20.5;20.5;22.5;20.5;20.5' keyTimes='0;.9;.93;.96;1' dur='4s' repeatCount='indefinite'/%3E%3C/rect%3E%3Crect x='22.5' y='29' width='3' height='2' fill='%23ff2a6d'/%3E%3C/svg%3E");
+  border-left:1px solid rgba(0,240,255,.45);box-shadow:-30px 0 80px -30px rgba(0,0,0,.85),-1px 0 18px -6px rgba(0,240,255,.35)}
+:root[data-mode="light"] .chat[data-skin="neon"]{
+  --nn-r:#d4003c; --nn-solid:#fffdf3;
+  --ch-bg:#fbf9ee; --ch-panel:#f2efdc; --ch-line:rgba(11,11,19,.15); --ch-ink:#0b0b13; --ch-dim:#5d5b66;
+  --ch-acc:#d4003c; --ch-acc2:#008fa8;
+  --ch-glow:rgba(212,0,60,.2); --ch-mesh:rgba(11,11,19,.05);
+  --lm-ink2:#2c2b33; --lm-bubble:rgba(252,238,10,.45); --lm-card:#fffdf3; --lm-hover:rgba(11,11,19,.06);
+  --lm-line2:rgba(11,11,19,.3); --lm-ring:rgba(212,0,60,.16); --lm-soft:rgba(212,0,60,.08);
+  --lm-pop:8px 8px 0 #fcee0a,0 0 0 1px #0b0b13;
+  border-left:1px solid #0b0b13;box-shadow:-30px 0 70px -30px rgba(20,16,0,.35)}
+.chat[data-skin="neon"] ::selection{background:#fcee0a;color:#0a0a10}
+
+/* behind the conversation: scan lines, a horizon glow, a passing scan bar */
+.chat[data-skin="neon"] .chgrid{opacity:1;animation:none;background:repeating-linear-gradient(0deg,rgba(0,0,0,.22) 0 1px,transparent 1px 3px)}
+:root[data-mode="light"] .chat[data-skin="neon"] .chgrid{background:repeating-linear-gradient(0deg,rgba(0,0,0,.035) 0 1px,transparent 1px 3px)}
+.chat[data-skin="neon"] .chaur{opacity:1;filter:none;animation:none;background:
+  radial-gradient(90% 30% at 80% 105%,color-mix(in srgb,var(--nn-r) 22%,transparent),transparent 70%),
+  radial-gradient(70% 24% at 10% -6%,color-mix(in srgb,var(--ch-acc2) 16%,transparent),transparent 70%)}
+.chat[data-skin="neon"] .chsweep{background:linear-gradient(180deg,transparent 40%,color-mix(in srgb,var(--ch-acc2) 10%,transparent) 50%,transparent 60%)}
+.chat[data-skin="neon"].fx-ambient .chsweep{animation:nnSweep var(--ch-every,12s) linear infinite}
+@keyframes nnSweep{0%,70%{transform:translate3d(0,-100%,0);opacity:0}72%{opacity:1}100%{transform:translate3d(0,100%,0);opacity:.8}}
+.chat[data-skin="neon"]::before{width:1px;background:linear-gradient(180deg,var(--nn-y),var(--ch-acc2) 40%,transparent 90%)}
+.chat[data-skin="neon"].fx-glow.busy::before{opacity:1;width:2px;box-shadow:0 0 12px var(--ch-acc2)}
+
+/* the header: a yellow line along the top, capitals, the cat's head */
+.chat[data-skin="neon"] .chh{background:var(--ch-bg);box-shadow:inset 0 2px 0 var(--nn-y);border-bottom-color:var(--ch-line)}
+:root[data-mode="light"] .chat[data-skin="neon"] .chh{box-shadow:inset 0 3px 0 var(--nn-y)}
+.chat[data-skin="neon"] .chid .ctn{font-family:var(--nn-font);text-transform:uppercase;letter-spacing:.07em;font-weight:600}
+.chat[data-skin="neon"] .chh .sub{font-family:var(--nn-mono);font-size:10.5px;color:var(--ch-acc2)}
+.chat[data-skin="neon"] .chh .sub.live{color:var(--ch-acc)}
+.chat[data-skin="neon"] .chh .ib{border-radius:0}
+.chat[data-skin="neon"] .chh .ib:hover{color:var(--ch-acc2);background:var(--lm-hover)}
+.chat[data-skin="neon"] .chh::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:2px;pointer-events:none;opacity:0;
+  background:repeating-linear-gradient(90deg,var(--nn-y) 0 14px,transparent 14px 20px,var(--ch-acc2) 20px 34px,transparent 34px 40px)}
+.chat[data-skin="neon"].busy .chh::after{opacity:1}
+.chat[data-skin="neon"].busy.fx-glow .chh::after{animation:nnRun 1s linear infinite}
+@keyframes nnRun{to{background-position:40px 0}}
+.chat[data-skin="neon"] .chorb{border-radius:0;background:var(--lm-mark) center / contain no-repeat;box-shadow:none}
+.chat[data-skin="neon"] .chorb i{display:none}
+.chat[data-skin="neon"].fx-icons .chorb{background-image:var(--lm-mark-idle)}
+.chat[data-skin="neon"].fx-icons.busy .chorb{background-image:var(--lm-mark-live)}
+.chat[data-skin="neon"] .chorb.pixorb{background:none}
+.chat[data-skin="neon"].ownmark .chorb{background:none}
+
+/* the greeting: the cat, a title that glitches, a prompt line */
+.chat[data-skin="neon"] .chhero .chorbx:has(.pxl){width:120px;height:120px;margin-bottom:0;
+  filter:drop-shadow(0 0 18px color-mix(in srgb,var(--nn-y) 40%,transparent))}
+.chat[data-skin="neon"] .chhero .chorbx .pxl.p144{width:120px;height:120px;margin:0 auto}
+.chat[data-skin="neon"]:not(.ownmark) .chhero .chorbx:not(:has(.pxl)){width:84px;height:84px;border-radius:0;
+  filter:drop-shadow(0 0 16px color-mix(in srgb,var(--nn-y) 45%,transparent))}
+.chat[data-skin="neon"] .chhero .lmhi{font-family:var(--nn-font);text-transform:uppercase;letter-spacing:.06em;font-weight:700;
+  text-shadow:-2px 0 color-mix(in srgb,var(--nn-r) 75%,transparent),2px 0 color-mix(in srgb,var(--ch-acc2) 75%,transparent)}
+:root[data-mode="light"] .chat[data-skin="neon"] .chhero .lmhi{text-shadow:3px 3px 0 var(--nn-y)}
+.chat[data-skin="neon"].fx-ambient .chhero .lmhi{animation:nnHi 6s steps(1,end) infinite}
+@keyframes nnHi{0%,88%,100%{transform:none;opacity:1}90%{transform:translateX(-3px) skewX(-8deg);opacity:.8}
+  92%{transform:translateX(2px);opacity:1}94%{transform:translateX(-1px) skewX(5deg)}96%{transform:none;opacity:.6}}
+.chat[data-skin="neon"] .chhero .lmhs{font-family:var(--nn-mono);font-size:13px;color:var(--ch-acc2)}
+.chat[data-skin="neon"] .chhero .lmhs::before{content:"> "}
+:root[data-mode="light"] .chat[data-skin="neon"] .chhero .lmhs{color:var(--ch-ink)}
+.chat[data-skin="neon"] .chhero .chseed button{border-radius:0;background:var(--lm-card);border-color:var(--ch-line);
+  font-family:var(--nn-font);text-transform:uppercase;letter-spacing:.04em;font-size:12.5px;
+  clip-path:polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,0 100%);transition:background .12s,color .12s,border-color .12s}
+.chat[data-skin="neon"] .chhero .chseed button:hover{background:var(--nn-y);color:var(--nn-on-y);border-color:var(--nn-y)}
+.chat[data-skin="neon"] .chhero .chseed button:hover::before,.chat[data-skin="neon"] .chhero .chseed button:hover > .lmi{color:var(--nn-on-y)}
+.chat[data-skin="neon"].fx-chips .chhero .chseed button:hover{animation:nnJitter .2s steps(3)}
+@keyframes nnJitter{0%{transform:translate(1px,0)}33%{transform:translate(-1px,1px)}66%{transform:translate(1px,-1px)}100%{transform:none}}
+.chat[data-skin="neon"] .chseed button{border-radius:0}
+.chat[data-skin="neon"] .chseed button::before,.chat[data-skin="neon"] .chseed button > .lmi{color:var(--ch-acc2)}
+:root[data-mode="light"] .chat[data-skin="neon"] .chseed button::before,:root[data-mode="light"] .chat[data-skin="neon"] .chseed button > .lmi{color:var(--ch-acc)}
+.chat[data-skin="neon"].fx-reveal .chhero .chseed button{animation:nnOnC .5s steps(8,end) both}
+.chat[data-skin="neon"].fx-reveal .chhero .chseed button:nth-child(2){animation-delay:.06s}
+.chat[data-skin="neon"].fx-reveal .chhero .chseed button:nth-child(3){animation-delay:.12s}
+.chat[data-skin="neon"].fx-reveal .chhero .chseed button:nth-child(4){animation-delay:.18s}
+
+/* the conversation: your words with a yellow edge, answers switched on */
+.chat[data-skin="neon"] .chb.you{border-radius:0;background:var(--lm-bubble);box-shadow:inset 3px 0 0 var(--nn-y);
+  clip-path:polygon(0 0,calc(100% - 9px) 0,100% 9px,100% 100%,0 100%)}
+:root[data-mode="light"] .chat[data-skin="neon"] .chb.you{box-shadow:inset 3px 0 0 #0b0b13}
+.chat[data-skin="neon"] .chb.bot.ans::before,.chat[data-skin="neon"] .chb.bot.thinking::before{font-family:var(--nn-font);
+  text-transform:uppercase;letter-spacing:.08em;font-size:12px;color:var(--ch-acc2)}
+:root[data-mode="light"] .chat[data-skin="neon"] .chb.bot.ans::before,:root[data-mode="light"] .chat[data-skin="neon"] .chb.bot.thinking::before{color:var(--ch-ink)}
+.chat[data-skin="neon"] .say strong{color:var(--nn-y)}
+:root[data-mode="light"] .chat[data-skin="neon"] .say strong{color:var(--ch-ink);background:linear-gradient(transparent 60%,rgba(252,238,10,.6) 60%)}
+.chat[data-skin="neon"] .say a{color:var(--ch-acc2)}
+.chat[data-skin="neon"] .say h4,.chat[data-skin="neon"] .say h5{font-family:var(--nn-font);text-transform:uppercase;letter-spacing:.05em}
+.chat[data-skin="neon"] .say li::marker{color:var(--ch-acc2)}
+.chat[data-skin="neon"] .say code.inl{border-radius:0;color:var(--nn-y);background:rgba(252,238,10,.08)}
+:root[data-mode="light"] .chat[data-skin="neon"] .say code.inl{color:var(--ch-acc);background:rgba(212,0,60,.07)}
+.chat[data-skin="neon"] .chcode,.chat[data-skin="neon"] .chtext,.chat[data-skin="neon"] .chdiag,.chat[data-skin="neon"] .chsrc,
+.chat[data-skin="neon"] .srcbox{border-radius:0}
+.chat[data-skin="neon"] .chcode{box-shadow:inset 3px 0 0 var(--nn-r);border:1px solid var(--ch-line)}
+.chat[data-skin="neon"] .chcode .lang{font-family:var(--nn-mono);text-transform:uppercase;color:var(--nn-y)}
+.chat[data-skin="neon"] .chtools button,.chat[data-skin="neon"] .chrate > button,.chat[data-skin="neon"] .chcode .cpy,.chat[data-skin="neon"] .chtext .cpy{border-radius:0}
+.chat[data-skin="neon"] .chtools button:hover,.chat[data-skin="neon"] .chrate > button:hover{color:var(--ch-acc2)}
+.chat[data-skin="neon"].fx-reveal .chb{animation:nnOnC .45s steps(8,end) both}
+.chat[data-skin="neon"].fx-reveal .chb.bot.ans:last-child .say > *{animation:nnOnC .45s steps(8,end) both}
+.chat[data-skin="neon"].fx-reveal .chb.bot.ans:last-child .say > :nth-child(2){animation-delay:.05s}
+.chat[data-skin="neon"].fx-reveal .chb.bot.ans:last-child .say > :nth-child(3){animation-delay:.1s}
+.chat[data-skin="neon"].fx-reveal .chb.bot.ans:last-child .say > :nth-child(4){animation-delay:.15s}
+.chat[data-skin="neon"].fx-reveal .chb.bot.ans:last-child .say > :nth-child(n+5){animation-delay:.2s}
+@keyframes nnOnC{0%{opacity:0;transform:translateX(-8px)}30%{opacity:1;transform:none}42%{opacity:.3}55%{opacity:1}68%{opacity:.7}80%,100%{opacity:1;transform:none}}
+/* thinking: terminal words with a cursor */
+.chat[data-skin="neon"] .chthink .tx{font-family:var(--nn-mono);text-transform:uppercase;font-size:11.5px;letter-spacing:.04em;color:var(--ch-acc2)}
+:root[data-mode="light"] .chat[data-skin="neon"] .chthink .tx{color:var(--ch-ink)}
+.chat[data-skin="neon"] .chthink .tx::after{content:"_";margin-left:2px;color:var(--nn-y)}
+:root[data-mode="light"] .chat[data-skin="neon"] .chthink .tx::after{color:var(--ch-acc)}
+.chat[data-skin="neon"].fx-typing .chthink .tx::after{animation:nnBlinkC .8s steps(1,end) infinite}
+.chat[data-skin="neon"].fx-typing .chthink .tx{animation:nnFlick 2.4s steps(1,end) infinite}
+@keyframes nnBlinkC{50%{opacity:0}}
+@keyframes nnFlick{0%,84%,100%{opacity:1}86%{opacity:.4}88%{opacity:1}90%{opacity:.6}}
+.chat[data-skin="neon"] .chgif{filter:hue-rotate(-150deg) saturate(1.6) brightness(1.15)}
+
+/* the box you type in: black, cyan, yellow when you type; Send in yellow */
+.chat[data-skin="neon"] .chf,.chat[data-skin="neon"] .chclip{border-radius:0;background:var(--lm-card);border-color:var(--lm-line2)}
+.chat[data-skin="neon"] .chf{clip-path:polygon(0 0,calc(100% - 12px) 0,100% 12px,100% 100%,12px 100%,0 calc(100% - 12px))}
+.chat[data-skin="neon"] .chclip:empty + .chf:focus-within{border-color:var(--nn-y);background:var(--lm-card);
+  box-shadow:inset 0 0 0 1px var(--nn-y),inset 0 0 26px -10px rgba(252,238,10,.5)}
+:root[data-mode="light"] .chat[data-skin="neon"] .chclip:empty + .chf:focus-within{border-color:#0b0b13;box-shadow:inset 0 0 0 1px #0b0b13}
+.chat[data-skin="neon"] .chf textarea{caret-color:var(--nn-y)}
+:root[data-mode="light"] .chat[data-skin="neon"] .chf textarea{caret-color:var(--ch-acc)}
+.chat[data-skin="neon"] .chpin{border-radius:0}
+.chat[data-skin="neon"] .chf .btn.pri{border-radius:0;background:var(--nn-y);color:var(--nn-on-y);
+  clip-path:polygon(0 0,calc(100% - 8px) 0,100% 8px,100% 100%,0 100%)}
+.chat[data-skin="neon"] .chf .btn.pri:hover{background:var(--ch-acc2);color:var(--nn-on-y);opacity:1}
+:root[data-mode="light"] .chat[data-skin="neon"] .chf .btn.pri:hover{background:#0b0b13;color:var(--nn-y)}
+.chat[data-skin="neon"].fx-chips .chf .btn.pri:not(.empty):hover{animation:nnJitter .2s steps(3)}
+.chat[data-skin="neon"] .chf .btn.pri.empty{background:var(--lm-hover);color:var(--ch-dim)}
+.chat[data-skin="neon"].busy .chf .btn.pri{animation:nnBlinkC .9s steps(1,end) infinite;opacity:1}
+.chat[data-skin="neon"] .chacts button,.chat[data-skin="neon"] .chask2 .btn,.chat[data-skin="neon"] .chpill,.chat[data-skin="neon"] #chatModel{border-radius:0}
+.chat[data-skin="neon"] .chacts button.pri,.chat[data-skin="neon"] .chask2 .btn.pri,.chat[data-skin="neon"] .chrb .rbf button.prim{
+  background:var(--nn-y);border-color:var(--nn-y);color:var(--nn-on-y)}
+
+/* the history, the menus, the settings */
+.chat[data-skin="neon"] .chside{border-radius:0}
+.chat[data-skin="neon"] .lmnew,.chat[data-skin="neon"] .lmq input,.chat[data-skin="neon"] .chsi{border-radius:0}
+.chat[data-skin="neon"] .lmnew:hover{border-color:var(--nn-y)}
+.chat[data-skin="neon"] .chsi.on{background:var(--lm-soft);box-shadow:inset 3px 0 0 var(--nn-y)}
+:root[data-mode="light"] .chat[data-skin="neon"] .chsi.on{box-shadow:inset 3px 0 0 #0b0b13}
+.chat[data-skin="neon"] .chsh{font-family:var(--nn-mono);text-transform:uppercase;letter-spacing:.06em}
+.chat[data-skin="neon"] .chplm{border-radius:0;background:var(--nn-solid)}
+.chat[data-skin="neon"] .chplm button{border-radius:0}
+.chat[data-skin="neon"] .chskin,.chat[data-skin="neon"] .chskin .dot,.chat[data-skin="neon"] .chfxb .btn{border-radius:0}
+.chat[data-skin="neon"] .chskin.on{border-color:var(--nn-y);box-shadow:0 0 0 1px var(--nn-y)}
+
+/* motion turned down, or drawn in software: what loops stands still */
+:root[data-motion="none"] .chat[data-skin="neon"] *,:root[data-motion="none"] .chat[data-skin="neon"]::before,
+:root[data-motion="subtle"] .chat[data-skin="neon"] .chsweep,:root[data-motion="subtle"] .chat[data-skin="neon"] .chhero .lmhi,
+:root[data-motion="subtle"] .chat[data-skin="neon"] .chthink .tx,:root[data-motion="subtle"] .chat[data-skin="neon"] .chthink .tx::after,
+:root[data-motion="subtle"] .chat[data-skin="neon"] .chh::after,:root[data-motion="subtle"] .chat[data-skin="neon"] .chf .btn.pri,
+:root[data-still] .chat[data-skin="neon"] .chsweep,:root[data-still] .chat[data-skin="neon"] .chhero .lmhi{animation:none!important}
+:root[data-still] .chat[data-skin="neon"]:not(.busy) .chorb{background-image:var(--lm-mark)!important}
+@media (prefers-reduced-motion:reduce){
+  .chat[data-skin="neon"] .chsweep,.chat[data-skin="neon"] .chhero .lmhi,.chat[data-skin="neon"] .chthink .tx,
+  .chat[data-skin="neon"] .chthink .tx::after,.chat[data-skin="neon"] .chh::after{animation:none!important}
+}
+/* ═══ /NEON (the chat skin) ═══ */
 /* ═══ NOVA ════════════════════════════════════════════════════════════════
    The fourth look, and the first one designed rather than subtracted.
    Studio's shell underneath — the sidebar grid, the rail it folds to when
@@ -4980,6 +5172,378 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
   }
 }
 /* ═══ /PRISM ═══ */
+
+/* ═══ NEON ════════════════════════════════════════════════════════════════
+   The sixth look (5.18): a screen out of a cyberpunk story - black, neon
+   yellow and electric cyan, with a hot red for what is wrong. Drawn after
+   the way those stories' interfaces are drawn (heads-up displays, terminal
+   type, cut corners), not after any one game or film: no name, logo, type
+   or picture of anybody's is used, and none may be added.
+
+   Nova's layout underneath, like Prism: applyUi() sets data-look="nova"
+   and data-neon, and this block is only what Neon adds. It shares Prism's
+   moving parts - the light that slides to the open view (here a yellow
+   block with a cut corner), the light under the pointer, a view's cards
+   arriving (here like neon tubes coming on: a flicker, then steady), the
+   light/dark switch (here a wipe from the top), the probe that keeps the
+   loops still on a PC that draws in software.
+
+   SQUARE AND CUT. No rounded corners anywhere; the things that matter most
+   - the main button, the open view, the day's first card, the dialogs -
+   have a corner cut off (--nn-clip). Cards carry HUD brackets: a yellow
+   corner at the top left and a cyan one at the bottom right.
+
+   TYPE. Headings, the navigation, labels and buttons in capitals, in
+   Bahnschrift (Windows' own DIN-like face, on every Windows 10 and 11 -
+   nothing is downloaded), labels and the status line in a terminal face.
+   Body text stays in the reading face: a record is still read all day.
+
+   LIGHT. A grid and a red-and-cyan horizon behind everything, scan lines,
+   and a scan bar that passes down the screen. Titles glitch - split into
+   red and cyan and back - when a view opens and every so often after.
+   Neon Day is the same in black and red on a warm off-white, for daylight.
+
+   Motion follows the same rules as Prism's: loops only with Motion on Full,
+   never on a PC set to reduce motion, never where prismProbe() found the
+   screen slow (data-still).                                                */
+:root[data-neon]{
+  --nn-y:#FCEE0A; --nn-c:#00F0FF; --nn-r:#FF2A6D; --nn-on-y:#0A0A10;
+  --nn-line:color-mix(in srgb,var(--teal) 24%,transparent);
+  --nn-line-2:color-mix(in srgb,var(--teal) 50%,transparent);
+  --nn-panel:color-mix(in srgb,var(--paper) 90%,transparent);
+  --nn-glow:0 0 14px color-mix(in srgb,var(--teal) 40%,transparent);
+  --nn-yglow:0 0 18px color-mix(in srgb,var(--nn-y) 42%,transparent);
+  --nn-tglow:0 0 10px color-mix(in srgb,var(--teal) 55%,transparent);
+  --nn-cut:11px;
+  --nn-clip:polygon(0 0,calc(100% - var(--nn-cut)) 0,100% var(--nn-cut),100% 100%,var(--nn-cut) 100%,0 calc(100% - var(--nn-cut)));
+  --nn-clip-tr:polygon(0 0,calc(100% - 8px) 0,100% 8px,100% 100%,0 100%);
+  --nn-font:"Bahnschrift","Bahnschrift SemiCondensed","DIN Alternate","DIN Condensed","Agency FB","Segoe UI","Roboto Condensed","Arial Narrow",sans-serif;
+  --nn-mono:"Cascadia Code","Cascadia Mono",Consolas,"JetBrains Mono","DejaVu Sans Mono",ui-monospace,monospace;
+  --nn-bracket:linear-gradient(var(--nn-y),var(--nn-y)) 0 0 / 14px 2px no-repeat,
+    linear-gradient(var(--nn-y),var(--nn-y)) 0 0 / 2px 14px no-repeat,
+    linear-gradient(var(--teal),var(--teal)) 100% 100% / 14px 2px no-repeat,
+    linear-gradient(var(--teal),var(--teal)) 100% 100% / 2px 14px no-repeat;
+  --nx-grad:linear-gradient(var(--nn-y),var(--nn-y));
+  --nx-soft:color-mix(in srgb,var(--teal) 10%,transparent);
+  --nx-line:var(--nn-line); --nx-line-2:var(--nn-line-2);
+  --nx-sh1:none; --nx-sh2:0 0 0 1px transparent; --nx-sh3:0 20px 50px -20px rgba(0,0,0,.8);
+  --r-xs:0px; --r-sm:0px; --r:0px; --r-lg:0px;
+  --p1:#FF2A6D;
+  scrollbar-color:color-mix(in srgb,var(--nn-y) 70%,transparent) transparent;
+}
+:root[data-neon][data-mode="light"]{
+  --nn-r:#D4003C; --p1:#D4003C;
+  --nn-line:color-mix(in srgb,var(--ink) 16%,transparent);
+  --nn-line-2:color-mix(in srgb,var(--ink) 34%,transparent);
+  --nn-glow:none; --nn-tglow:none;
+  --nn-yglow:0 4px 0 color-mix(in srgb,var(--ink) 85%,transparent);
+  --nx-sh3:0 18px 40px -18px rgba(20,16,0,.4);
+  --nn-bracket:linear-gradient(var(--ink),var(--ink)) 0 0 / 14px 2px no-repeat,
+    linear-gradient(var(--ink),var(--ink)) 0 0 / 2px 14px no-repeat,
+    linear-gradient(var(--accent),var(--accent)) 100% 100% / 14px 2px no-repeat,
+    linear-gradient(var(--accent),var(--accent)) 100% 100% / 2px 14px no-repeat;
+  scrollbar-color:color-mix(in srgb,var(--ink) 60%,transparent) transparent;
+}
+
+/* ── behind everything: a grid, a horizon, scan lines; a scan bar passes ─ */
+:root[data-neon] body{background:var(--canvas)}
+:root[data-neon] .app,:root[data-neon] main{background:transparent}
+:root[data-neon] body::before,:root[data-neon] body::after{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none}
+:root[data-neon] body::before{background:
+  radial-gradient(90vmax 38vmax at 82% 112%,color-mix(in srgb,var(--nn-r) 20%,transparent),transparent 70%),
+  radial-gradient(70vmax 30vmax at 8% -12%,color-mix(in srgb,var(--teal) 16%,transparent),transparent 70%),
+  linear-gradient(transparent calc(100% - 1px),color-mix(in srgb,var(--teal) 6%,transparent) 0) 0 0 / 100% 46px,
+  linear-gradient(90deg,transparent calc(100% - 1px),color-mix(in srgb,var(--teal) 6%,transparent) 0) 0 0 / 46px 100%}
+:root[data-neon] body::after{background:repeating-linear-gradient(0deg,rgba(0,0,0,.16) 0 1px,transparent 1px 3px)}
+:root[data-neon][data-mode="light"] body::before{background:
+  radial-gradient(90vmax 38vmax at 82% 112%,color-mix(in srgb,var(--nn-y) 34%,transparent),transparent 70%),
+  radial-gradient(70vmax 30vmax at 8% -12%,color-mix(in srgb,var(--teal) 10%,transparent),transparent 70%),
+  linear-gradient(transparent calc(100% - 1px),color-mix(in srgb,var(--ink) 5%,transparent) 0) 0 0 / 100% 46px,
+  linear-gradient(90deg,transparent calc(100% - 1px),color-mix(in srgb,var(--ink) 5%,transparent) 0) 0 0 / 46px 100%}
+:root[data-neon][data-mode="light"] body::after{background:repeating-linear-gradient(0deg,rgba(0,0,0,.035) 0 1px,transparent 1px 3px)}
+:root[data-neon] .app::after{content:"";position:absolute;left:0;right:0;top:0;height:160px;z-index:61;pointer-events:none;
+  background:linear-gradient(transparent,color-mix(in srgb,var(--teal) 7%,transparent) 70%,color-mix(in srgb,var(--teal) 16%,transparent) 96%,transparent);
+  transform:translateY(-170px)}
+:root[data-neon][data-mode="light"] .app::after{background:linear-gradient(transparent,color-mix(in srgb,var(--ink) 4%,transparent) 80%,transparent)}
+@keyframes nnScan{from{transform:translateY(-170px)}to{transform:translateY(110vh)}}
+:root[data-neon] ::selection{background:var(--nn-y);color:var(--nn-on-y)}
+:root[data-neon] :focus-visible{outline:2px solid var(--teal);outline-offset:2px;border-radius:0}
+
+/* ── the type ──────────────────────────────────────────────────────────── */
+:root[data-neon] :is(.nxhead h1,.brand .wm b,.tabs button,.nxbtn,.btn,.hd .t,.kpi .k,.colh b,.wkh h3,.panel h4,.mh h3,.dh h3,
+  .ask .ah h4,.pill,.srcdlgb h3,.xpp b){font-family:var(--nn-font);text-transform:uppercase;letter-spacing:.06em}
+:root[data-neon] :is(.nxe,.nxg,.chip,.status,.tm,.kpi .d,.nxb,.hd .n,.colh .n,.cmdf,.srcfile,.xpp small){font-family:var(--nn-mono)}
+
+/* ── the sidebar: a black column, a cyan edge, yellow on the open view ─── */
+:root[data-neon] .mast{background:var(--nn-panel);border-color:var(--nn-line);backdrop-filter:none}
+:root[data-neon] .brand .seal{border-radius:0;clip-path:var(--nn-clip-tr);background:var(--nn-y)}
+:root[data-neon] .brand .wm b{letter-spacing:.14em;text-shadow:var(--nn-tglow)}
+:root[data-neon] .brand .wm span{font-family:var(--nn-mono);font-size:10px;letter-spacing:.04em;color:var(--teal)}
+:root[data-neon] .nxg::before{content:"// "}
+:root[data-neon] .nxg{color:var(--teal);letter-spacing:.12em}
+:root[data-neon] .wsbtn,:root[data-neon] .find input,:root[data-neon] .mastsp{border-radius:0;background:var(--paper);border-color:var(--nn-line);box-shadow:none}
+:root[data-neon] .find input:focus{border-color:var(--nn-y);box-shadow:var(--nn-yglow)}
+:root[data-neon] .tabs{position:relative}
+:root[data-neon] .tabs button{position:relative;z-index:1;border-radius:0;font-size:12.5px;font-weight:600;
+  transition:color .15s,transform .2s}
+:root[data-neon] .tabs button:hover{background:color-mix(in srgb,var(--teal) 8%,transparent);color:var(--ink)}
+:root[data-neon] .tabs button.on,:root[data-neon][data-mode="dark"] .tabs button.on{background:transparent;box-shadow:none;color:var(--nn-on-y)}
+:root[data-neon] .tabs button.on::before{color:var(--nn-on-y)}
+:root[data-neon] .tabs button.on:hover{background:transparent}
+:root[data-neon] .prind{display:block;position:absolute;left:0;top:0;z-index:0;pointer-events:none;background:var(--nn-y);
+  clip-path:var(--nn-clip-tr);box-shadow:var(--nn-yglow);
+  transition:transform .32s cubic-bezier(.2,.9,.25,1),width .25s,height .25s}
+:root[data-neon] .prind::after{content:"";position:absolute;right:10px;top:50%;width:5px;height:5px;margin-top:-2.5px;background:var(--nn-on-y)}
+:root[data-neon] .prind[hidden]{display:none}
+:root[data-neon] .nxb{border-radius:0;background:color-mix(in srgb,var(--teal) 12%,transparent);color:var(--teal)}
+:root[data-neon] .tabs button.on .nxb{background:var(--nn-on-y);color:var(--nn-y)}
+:root[data-neon] .nxb.hot,:root[data-neon] .tabs button.on .nxb.hot{background:var(--nn-r);color:#fff}
+:root[data-neon] .nxb.bump{animation:nnBump .45s steps(5)}
+@keyframes nnBump{0%{transform:translateX(-3px);filter:hue-rotate(90deg)}40%{transform:translateX(2px)}70%{transform:translateX(-1px)}100%{transform:none;filter:none}}
+:root[data-neon] .dial .arc{stroke:var(--nn-y);filter:drop-shadow(0 0 3px var(--nn-y))}
+:root[data-neon] .dial .trk{stroke:var(--nn-line)}
+:root[data-neon] .dial b{font-family:var(--nn-mono)}
+@media (min-width:901px){
+  :root[data-neon] .mast{border-right:1px solid var(--nn-line-2);box-shadow:1px 0 0 0 transparent,var(--nn-glow)}
+}
+:root[data-neon][data-mode="light"] .tabs button.on,:root[data-neon][data-mode="light"] .tabs button.on::before{color:var(--nn-on-y)}
+
+/* ── the page header: a title that glitches ────────────────────────────── */
+:root[data-neon] .nxe{color:var(--teal);letter-spacing:.14em;text-transform:uppercase;font-size:11.5px}
+:root[data-neon] .nxe::before{content:"// "}
+:root[data-neon] .nxhead h1{font-size:30px;font-weight:700;letter-spacing:.05em;text-shadow:0 0 18px color-mix(in srgb,var(--teal) 35%,transparent);
+  position:relative}
+:root[data-neon][data-mode="light"] .nxhead h1{text-shadow:2px 2px 0 var(--nn-y)}
+:root[data-neon] #nxTitle::before,:root[data-neon] #nxTitle::after{content:attr(data-text);position:absolute;inset:0;pointer-events:none;
+  opacity:0;overflow:hidden;white-space:nowrap}
+:root[data-neon] #nxTitle::before{color:var(--nn-r);text-shadow:none}
+:root[data-neon] #nxTitle::after{color:var(--teal);text-shadow:none}
+@keyframes nnGlitchA{0%,100%{opacity:0;transform:none;clip-path:inset(0)}
+  10%{opacity:.9;transform:translate(-3px,1px);clip-path:inset(10% 0 55% 0)}
+  25%{opacity:.9;transform:translate(3px,-1px);clip-path:inset(60% 0 8% 0)}
+  40%{opacity:.8;transform:translate(-2px,0);clip-path:inset(35% 0 40% 0)}
+  55%{opacity:0}}
+@keyframes nnGlitchB{0%,100%{opacity:0;transform:none;clip-path:inset(0)}
+  12%{opacity:.9;transform:translate(3px,-1px);clip-path:inset(50% 0 20% 0)}
+  28%{opacity:.9;transform:translate(-3px,1px);clip-path:inset(5% 0 70% 0)}
+  45%{opacity:.7;transform:translate(2px,0);clip-path:inset(70% 0 5% 0)}
+  60%{opacity:0}}
+:root[data-neon] .nxhead p{font-family:var(--nn-mono);font-size:12px;color:var(--ink-2)}
+:root[data-neon] .nxsearch,:root[data-neon] .nxbtn{border-radius:0;background:var(--paper);border-color:var(--nn-line-2);box-shadow:none;
+  font-size:12px;transition:background .15s,color .15s,border-color .15s,box-shadow .15s}
+:root[data-neon] .nxsearch{font-family:var(--nn-mono);text-transform:none;letter-spacing:0}
+:root[data-neon] .nxbtn:hover,:root[data-neon] .nxsearch:hover{border-color:var(--teal);box-shadow:var(--nn-glow);color:var(--ink);animation:nnJit .22s steps(3)}
+:root[data-neon] kbd{border-radius:0;font-family:var(--nn-mono)}
+@keyframes nnJit{0%{transform:translate(1px,0)}33%{transform:translate(-1px,1px)}66%{transform:translate(1px,-1px)}100%{transform:none}}
+
+/* ── the main buttons: yellow, black words, a corner cut ───────────────── */
+:root[data-neon] .nxbtn.pri,
+:root[data-neon] :is(.app,.modal,.drawer,.srcdlg,.ask,.intake,.problem,.chase,.drill) .btn.pri{background:var(--nn-y);color:var(--nn-on-y);
+  border-color:transparent;clip-path:var(--nn-clip-tr);box-shadow:none;font-weight:700}
+:root[data-neon] .nxbtn.pri .nxi{color:var(--nn-on-y)}
+:root[data-neon] .nxbtn.pri:hover,
+:root[data-neon] :is(.app,.modal,.drawer,.srcdlg,.ask,.intake,.problem,.chase,.drill) .btn.pri:hover{background:var(--teal);color:var(--nn-on-y);filter:none}
+:root[data-neon] :is(.app,.modal,.drawer,.srcdlg,.ask,.intake,.problem,.chase,.drill) .btn{border-radius:0;font-size:11.5px;font-weight:600}
+:root[data-neon] :is(.app,.modal,.drawer,.srcdlg,.ask,.intake,.problem,.chase,.drill) .btn:not(.pri):hover{border-color:var(--teal);color:var(--ink);box-shadow:var(--nn-glow)}
+:root[data-neon] :is(.app,.modal,.drawer,.srcdlg,.ask,.intake,.problem,.chase,.drill) .btn:active{transform:translate(1px,1px)}
+:root[data-neon] .in{border-radius:0;border-color:var(--nn-line);background:var(--paper);caret-color:var(--nn-y)}
+:root[data-neon][data-mode="light"] .in{caret-color:var(--accent)}
+:root[data-neon] .in:focus{border-color:var(--nn-y);box-shadow:var(--nn-yglow)}
+:root[data-neon][data-mode="light"] .in:focus{border-color:var(--ink);box-shadow:3px 3px 0 var(--nn-y)}
+
+/* ── the box you type in ───────────────────────────────────────────────── */
+:root[data-neon] .cbar{border-radius:0;border:1px solid var(--nn-line-2);background:var(--paper);box-shadow:none;clip-path:var(--nn-clip)}
+:root[data-neon] .cbar:focus-within{border-color:var(--nn-y);box-shadow:inset 0 0 0 1px var(--nn-y),inset 0 0 24px -8px color-mix(in srgb,var(--nn-y) 45%,transparent)}
+:root[data-neon][data-mode="light"] .cbar:focus-within{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
+:root[data-neon] .cbar input{caret-color:var(--nn-y);font-family:var(--nn-mono);font-size:13.5px}
+:root[data-neon][data-mode="light"] .cbar input{caret-color:var(--accent)}
+:root[data-neon] .cbar .n{border-radius:0;background:var(--nn-y);clip-path:var(--nn-clip-tr);box-shadow:none}
+:root[data-neon] .cbar .n::before{background:var(--nn-on-y)}
+:root[data-neon] .cbar .paste,:root[data-neon] .cbar .go{border-radius:0;font-family:var(--nn-font);text-transform:uppercase;letter-spacing:.06em}
+:root[data-neon] .cbar .go{background:var(--ink);color:var(--paper)}
+:root[data-neon] .cbar .go:hover{background:var(--nn-y);color:var(--nn-on-y)}
+:root[data-neon] .sugg{border-radius:0;border-color:var(--nn-line-2);background:var(--paper);clip-path:var(--nn-clip)}
+:root[data-neon] .sugg .si{border-radius:0}
+
+/* filters */
+:root[data-neon] .pill{border-radius:0;font-size:11.5px;border:1px solid var(--nn-line)}
+:root[data-neon] .pill:hover{border-color:var(--teal);color:var(--ink);background:transparent}
+/* a ticked filter is outlined in yellow, not filled: four of them are on
+   most of the day, and four yellow blocks would shout over the records */
+:root[data-neon] .pill.on,:root[data-neon] .pill.on[data-st]{background:color-mix(in srgb,var(--nn-y) 7%,transparent);color:var(--nn-y);
+  border-color:color-mix(in srgb,var(--nn-y) 70%,transparent);box-shadow:none}
+:root[data-neon] .pill.on .n{background:var(--nn-y);color:var(--nn-on-y)}
+:root[data-neon][data-mode="light"] .pill.on,:root[data-neon][data-mode="light"] .pill.on[data-st]{background:var(--paper);color:var(--ink);border-color:var(--ink)}
+:root[data-neon] .pill .n,:root[data-neon] .rail select,:root[data-neon] #clearF{border-radius:0}
+:root[data-neon] .rail select{background-color:var(--paper);border-color:var(--nn-line);font-family:var(--nn-mono);font-size:11.5px}
+
+/* ── cards: HUD brackets; the day's first card in yellow ───────────────── */
+:root[data-neon] .kpi,:root[data-neon] .panel,:root[data-neon] .aiq,:root[data-neon] .backlog,:root[data-neon] .srcpanel{
+  border-radius:0;border-color:var(--nn-line);background:var(--nn-bracket),var(--nn-panel);box-shadow:none}
+:root[data-neon] .kpi{transition:transform .2s,box-shadow .2s,border-color .2s}
+:root[data-neon] .kpi[data-dr]:not(.nil):hover{transform:translateY(-2px);border-color:var(--teal);box-shadow:var(--nn-glow)}
+:root[data-neon] .kpi .k{font-size:11.5px;font-weight:600;color:var(--ink-2)}
+:root[data-neon] .kpi .v{font-family:var(--nn-font);font-size:36px;font-weight:700;letter-spacing:.01em;
+  text-shadow:0 0 16px color-mix(in srgb,var(--teal) 45%,transparent)}
+:root[data-neon][data-mode="light"] .kpi .v{text-shadow:none}
+:root[data-neon] .kpi .tr{border-radius:0;height:5px;background:var(--nn-line)}
+:root[data-neon] .kpi .tr i{border-radius:0;background:var(--teal);box-shadow:var(--nn-tglow)}
+:root[data-neon] #vDay .cards .kpi .k::before{border-radius:0;background-color:color-mix(in srgb,var(--teal) 12%,transparent)}
+:root[data-neon] #vDay .cards .kpi .k::after{background:var(--teal)}
+:root[data-neon] #vDay .cards .kpi:first-child{background:
+  repeating-linear-gradient(-45deg,var(--nn-on-y) 0 7px,transparent 7px 14px) 0 100% / 100% 7px no-repeat,var(--nn-y);
+  border-color:var(--nn-y);clip-path:var(--nn-clip);box-shadow:none}
+:root[data-neon] #vDay .cards .kpi:first-child::before{display:none}
+:root[data-neon] #vDay .cards .kpi:first-child :is(.k,.d,.v){color:var(--nn-on-y);text-shadow:none}
+:root[data-neon] #vDay .cards .kpi:first-child .k::before{background-color:rgba(0,0,0,.12)}
+:root[data-neon] #vDay .cards .kpi:first-child .k::after{background:var(--nn-on-y)}
+:root[data-neon] #vDay .cards .kpi:first-child .tr{background:rgba(0,0,0,.18)}
+:root[data-neon] #vDay .cards .kpi:first-child .tr i{background:var(--nn-on-y);box-shadow:none}
+:root[data-neon] #vDay .cards .kpi.bad .k::after{background:var(--nn-r)}
+:root[data-neon] .kpi.bad .d{color:var(--nn-r)}
+:root[data-neon] .kpi.lit,:root[data-neon] .panel.lit{background:var(--nn-bracket),
+  radial-gradient(240px circle at var(--mx) var(--my),color-mix(in srgb,var(--teal) 14%,transparent),transparent 70%),var(--nn-panel)}
+
+/* group headings: a terminal comment */
+:root[data-neon] .hd .t{font-size:12.5px;color:var(--teal)}
+:root[data-neon] .hd .t::before{content:"// "}
+:root[data-neon] .hd.alarm .t{color:var(--nn-r)}
+:root[data-neon] .hd .n{border-radius:0}
+:root[data-neon] .hd .ln{background:linear-gradient(90deg,var(--nn-line-2),transparent)}
+
+/* records */
+:root[data-neon] .rows{border-radius:0;border-color:var(--nn-line);background:var(--nn-panel);box-shadow:none}
+:root[data-neon] .row{border-bottom-color:var(--nn-line);transition:background .12s}
+:root[data-neon] .row:hover{background:color-mix(in srgb,var(--teal) 6%,transparent)}
+:root[data-neon] .row:hover .tt{text-shadow:-1px 0 color-mix(in srgb,var(--nn-r) 70%,transparent),1px 0 color-mix(in srgb,var(--teal) 70%,transparent)}
+:root[data-neon] .row.lit{background:radial-gradient(300px circle at var(--mx) var(--my),color-mix(in srgb,var(--teal) 11%,transparent),transparent 72%)}
+:root[data-neon] .row.cur{background:color-mix(in srgb,var(--nn-y) 8%,transparent);box-shadow:inset 3px 0 0 var(--nn-y)}
+:root[data-neon][data-mode="light"] .row.cur{box-shadow:inset 3px 0 0 var(--ink)}
+:root[data-neon] .row.p1::before{background:var(--nn-r);box-shadow:0 0 10px var(--nn-r)}
+:root[data-neon] .row.p2::before{background:var(--nn-y)}
+:root[data-neon] .tt{font-weight:600;letter-spacing:0}
+:root[data-neon] .chip{border-radius:0;font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;font-weight:500}
+:root[data-neon] .chip.code{color:var(--teal)}
+:root[data-neon] .chip.st{background:transparent;box-shadow:inset 0 0 0 1px color-mix(in srgb,currentColor 55%,transparent)}
+:root[data-neon] .chip.st::before{border-radius:0}
+:root[data-neon] .chip.sys::before{border-radius:0}
+:root[data-neon] .chip.pri.P1,:root[data-neon] .chip.due.over{color:#fff;background:var(--nn-r);box-shadow:0 0 10px color-mix(in srgb,var(--nn-r) 55%,transparent)}
+:root[data-neon][data-mode="light"] .chip.pri.P1,:root[data-neon][data-mode="light"] .chip.due.over{box-shadow:none}
+:root[data-neon] .chip.pri.P2{color:var(--nn-on-y);background:var(--nn-y)}
+:root[data-neon] .mark{border-radius:0;border-color:var(--nn-line-2)}
+:root[data-neon] .mark:hover{border-color:var(--teal);background:color-mix(in srgb,var(--teal) 14%,transparent)}
+:root[data-neon] .mark.on{background:var(--teal);border-color:var(--teal);box-shadow:var(--nn-tglow)}
+:root[data-neon] .mark.proc{border-color:var(--nn-y);background:conic-gradient(var(--nn-y) 0 50%,transparent 50% 100%);background-clip:content-box}
+:root[data-neon] .mb{border-radius:0}
+:root[data-neon] .mb:hover{border-color:var(--teal);color:var(--teal);background:transparent}
+:root[data-neon] .tm{font-family:var(--nn-mono)}
+:root[data-neon] .tm.run{color:var(--nn-y)}
+
+/* board, register, week, library, insight, assist */
+:root[data-neon] .col{border-radius:0;border-color:var(--nn-line);background:color-mix(in srgb,var(--paper) 60%,transparent)}
+:root[data-neon] .colh{border-bottom:1px solid var(--nn-line)}
+:root[data-neon] .colh .sw{border-radius:0}
+:root[data-neon] .colh .n{border-radius:0;font-family:var(--nn-mono)}
+:root[data-neon] .kc,:root[data-neon] .wk,:root[data-neon] .doc,:root[data-neon] .aic{border-radius:0;border-color:var(--nn-line);
+  background:var(--paper);clip-path:var(--nn-clip-tr);box-shadow:none;transition:transform .2s,border-color .2s,box-shadow .2s}
+:root[data-neon] .kc:hover,:root[data-neon] .wk:hover,:root[data-neon] .doc:hover{border-color:var(--teal);transform:translate(-1px,-2px)}
+:root[data-neon] .kc.lit,:root[data-neon] .wk.lit,:root[data-neon] .doc.lit,:root[data-neon] .aic.lit{
+  background:radial-gradient(220px circle at var(--mx) var(--my),color-mix(in srgb,var(--teal) 12%,transparent),transparent 70%),var(--paper)}
+:root[data-neon] table.reg{border-radius:0;border-color:var(--nn-line);background:var(--nn-panel);box-shadow:none}
+:root[data-neon] table.reg th{font-family:var(--nn-mono);text-transform:uppercase;letter-spacing:.06em;color:var(--teal);
+  background:color-mix(in srgb,var(--teal) 6%,var(--paper));border-radius:0!important}
+:root[data-neon] table.reg tbody tr:hover td{background:color-mix(in srgb,var(--teal) 6%,transparent)}
+:root[data-neon] table.reg tbody tr.cur td:first-child{box-shadow:inset 3px 0 0 var(--nn-y)}
+:root[data-neon] .wc{border-radius:0;border-color:var(--nn-line);background:var(--nn-panel);box-shadow:none}
+:root[data-neon] .wc.today{border-color:var(--nn-y);box-shadow:inset 0 0 0 1px var(--nn-y),var(--nn-yglow)}
+:root[data-neon][data-mode="light"] .wc.today{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink),4px 4px 0 var(--nn-y)}
+:root[data-neon] .wc.today .wch b{color:var(--nn-y)}
+:root[data-neon][data-mode="light"] .wc.today .wch b{color:var(--accent)}
+:root[data-neon] .wch{border-bottom-color:var(--nn-line)}
+:root[data-neon] .calsw{border-radius:0}
+:root[data-neon] .calsw button{border-radius:0}
+:root[data-neon] .calsw button.on{background:var(--nn-y);color:var(--nn-on-y)}
+:root[data-neon] .doc .thumb{background:linear-gradient(transparent calc(100% - 1px),var(--nn-line) 0) 0 0 / 100% 14px,var(--canvas)}
+:root[data-neon] .doc .ext{color:var(--nn-y);font-family:var(--nn-font);text-shadow:var(--nn-yglow)}
+:root[data-neon][data-mode="light"] .doc .ext{color:var(--accent);text-shadow:none}
+:root[data-neon] .hb .tr,:root[data-neon] .hb .tr i,:root[data-neon] .vb .c .a,:root[data-neon] .vb .c .b{border-radius:0}
+:root[data-neon] .hb .tr i,:root[data-neon] .vb .c .a{background:var(--teal);box-shadow:var(--nn-tglow)}
+:root[data-neon] .blank .g{border-radius:0;background:var(--nn-y);color:var(--nn-on-y);clip-path:var(--nn-clip-tr);box-shadow:none}
+
+/* ── the status line: a terminal ───────────────────────────────────────── */
+:root[data-neon] .status{background:var(--paper);border-top:1px solid var(--nn-line-2);font-size:11px;color:var(--teal);
+  text-transform:uppercase;letter-spacing:.04em}
+:root[data-neon][data-mode="light"] .status{color:var(--ink-2)}
+:root[data-neon] .status b{color:var(--nn-y)}
+:root[data-neon][data-mode="light"] .status b{color:var(--ink)}
+:root[data-neon] .status::after{content:"\258C";color:var(--nn-y);margin-left:4px}
+@keyframes nnBlink{50%{opacity:0}}
+
+/* ── things that open: a frame with a yellow top, switched on like a tube ─ */
+:root[data-neon] .scrim{background:rgba(2,2,6,.66);backdrop-filter:none}
+:root[data-neon][data-mode="light"] .scrim{background:rgba(20,18,4,.4)}
+:root[data-neon] .drawer,:root[data-neon] .modal,:root[data-neon] .ask,:root[data-neon] .cmd,:root[data-neon] .srcdlgb{
+  border-radius:0;background:var(--paper);border:1px solid var(--nn-line-2);
+  box-shadow:inset 0 3px 0 var(--nn-y),var(--nx-sh3),var(--nn-glow);backdrop-filter:none}
+:root[data-neon][data-mode="light"] :is(.drawer,.modal,.ask,.cmd,.srcdlgb){box-shadow:inset 0 3px 0 var(--ink),8px 8px 0 var(--nn-y)}
+:root[data-neon] .modal,:root[data-neon] .ask,:root[data-neon] .cmd,:root[data-neon] .srcdlgb{clip-path:var(--nn-clip)}
+:root[data-neon] .dh,:root[data-neon] .mh{background:transparent}
+:root[data-neon] .mt button{border-radius:0;font-family:var(--nn-font);text-transform:uppercase;letter-spacing:.06em;font-size:12px}
+:root[data-neon] .mt button.on{color:var(--ink);border-bottom-color:var(--nn-y)}
+:root[data-neon] .ci{border-radius:0}
+:root[data-neon] .ci.cur{background:color-mix(in srgb,var(--teal) 12%,transparent);box-shadow:inset 3px 0 0 var(--nn-y)}
+:root[data-neon] .ci .ic{border-radius:0}
+:root[data-neon] .ci.cur .ic{background:var(--nn-y);color:var(--nn-on-y)}
+:root[data-neon] .ask .opt{border-radius:0}
+:root[data-neon] .ask .opt:hover{border-color:var(--teal);background:color-mix(in srgb,var(--teal) 8%,transparent)}
+:root[data-neon] .srcdlg{background:rgba(2,2,6,.6);backdrop-filter:none}
+:root[data-neon] .xpp{border-radius:0;background:var(--paper)}
+:root[data-neon] .xpp:has(input:checked){border-color:var(--nn-y);background:color-mix(in srgb,var(--nn-y) 8%,var(--paper))}
+:root[data-neon][data-mode="light"] .xpp:has(input:checked){border-color:var(--ink);background:color-mix(in srgb,var(--nn-y) 22%,var(--paper))}
+:root[data-neon] .xpp.lit{background:radial-gradient(200px circle at var(--mx) var(--my),color-mix(in srgb,var(--teal) 12%,transparent),transparent 70%),var(--paper)}
+:root[data-neon] .xpmode{border-radius:0}
+:root[data-neon] .toast{border-radius:0;background:var(--paper);color:var(--ink);border:1px solid var(--nn-line-2);
+  box-shadow:inset 4px 0 0 var(--nn-y),var(--nx-sh3);font-family:var(--nn-mono);font-size:12px;animation:nnToast .4s steps(6,end) both}
+:root[data-neon] .toast.bad{box-shadow:inset 4px 0 0 var(--nn-r),var(--nx-sh3)}
+:root[data-neon] .toast button{border-radius:0;background:var(--nn-y);color:var(--nn-on-y);font-family:var(--nn-font);text-transform:uppercase}
+@keyframes nnToast{0%{opacity:0;transform:translateX(-14px)}50%{opacity:1}60%{opacity:.35}70%{opacity:1}100%{transform:none}}
+@keyframes nnBoot{0%{clip-path:inset(48% 0 48% 0);opacity:.2}35%{clip-path:inset(0);opacity:1}45%{opacity:.45}55%{opacity:1}68%{opacity:.75}80%{opacity:1}100%{clip-path:inset(0);opacity:1}}
+:root[data-neon] .srcdlgb{animation:nnBoot .5s ease-out both}
+:root[data-neon] .modal.on,:root[data-neon] .ask.on,:root[data-neon] .cmd.on{animation:nnBootC .5s ease-out both}
+/* the dialogs' own corner is cut too, so they switch on inside that shape */
+@keyframes nnBootC{0%{opacity:.2;filter:brightness(2)}35%{opacity:1;filter:none}45%{opacity:.45}55%{opacity:1}68%{opacity:.75}80%,100%{opacity:1}}
+:root[data-neon] .drawer.on{animation:nnBootC .5s ease-out both}
+
+/* light and dark (◐): the new one wipes down from the top */
+:root.prvt[data-neon]::view-transition-new(root){animation:nnWipe .55s steps(10,end) both}
+@keyframes nnWipe{from{clip-path:inset(0 0 100% 0)}to{clip-path:inset(0)}}
+
+/* ── a view opening: its cards come on like neon tubes ─────────────────── */
+@keyframes nnOn{0%{opacity:0;transform:translateX(-10px)}30%{opacity:1;transform:none}40%{opacity:.25}50%{opacity:1}
+  62%{opacity:.6}72%,100%{opacity:1;transform:none}}
+:root[data-neon] .rows .row.isnew{animation:nnOn .5s steps(8,end) both}
+
+/* ── what only Full moves (and never on a PC set to reduce motion, nor one
+      prismProbe() found slow) ──────────────────────────────────────────── */
+@media (prefers-reduced-motion:no-preference){
+  :root[data-neon][data-motion="full"]:not([data-still]) .app::after{animation:nnScan 9s linear infinite}
+  :root[data-neon][data-motion="full"]:not([data-still]) .nxhead #nxTitle::before{animation:nnGlitchA 9s steps(1,end) infinite}
+  :root[data-neon][data-motion="full"]:not([data-still]) .nxhead #nxTitle::after{animation:nnGlitchB 9s steps(1,end) infinite}
+  :root[data-neon][data-motion="full"] .nxhead.prin #nxTitle::before{animation:nnGlitchA .7s steps(1,end) 2}
+  :root[data-neon][data-motion="full"] .nxhead.prin #nxTitle::after{animation:nnGlitchB .7s steps(1,end) 2}
+  :root[data-neon][data-motion="full"]:not([data-still]) .status::after{animation:nnBlink 1.1s steps(1,end) infinite}
+  :root[data-neon][data-motion="full"]:not([data-still]) .mark.proc{animation:prSpin 3s steps(12) infinite}
+  :root[data-neon][data-motion="full"] main.prin :is(.cards .kpi,.panel,.col,.aiq,.backlog,.rows .row,.kc,.doc,.wc,.wk,.airow,.hd){
+    animation:nnOn .55s steps(10,end) both}
+  :root[data-neon][data-motion="full"] main.prin :is(.kpi,.row,.kc,.doc,.wc,.wk,.airow,.panel,.col):nth-child(2){animation-delay:.04s}
+  :root[data-neon][data-motion="full"] main.prin :is(.kpi,.row,.kc,.doc,.wc,.wk,.airow,.panel,.col):nth-child(3){animation-delay:.08s}
+  :root[data-neon][data-motion="full"] main.prin :is(.kpi,.row,.kc,.doc,.wc,.wk,.airow,.panel,.col):nth-child(4){animation-delay:.12s}
+  :root[data-neon][data-motion="full"] main.prin :is(.kpi,.row,.kc,.doc,.wc,.wk,.airow,.panel,.col):nth-child(5){animation-delay:.16s}
+  :root[data-neon][data-motion="full"] main.prin :is(.kpi,.row,.kc,.doc,.wc,.wk,.airow,.panel,.col):nth-child(6){animation-delay:.2s}
+  :root[data-neon][data-motion="full"] main.prin :is(.kpi,.row,.kc,.doc,.wc,.wk,.airow,.panel,.col):nth-child(7){animation-delay:.24s}
+  :root[data-neon][data-motion="full"] main.prin :is(.kpi,.row,.kc,.doc,.wc,.wk,.airow,.panel,.col):nth-child(n+8){animation-delay:.28s}
+}
+/* ═══ /NEON ═══ */
 
 /* ═══ WHERE THE ASSISTANT SITS ════════════════════════════════════════════
    Three places, picked from the header (the frame button) or from Look and
@@ -6300,6 +6864,8 @@ const STRINGS = {
   NovaOn: "Nova is on. The \u25d0 button switches light and dark; Menu \u2192 Appearance \u2192 Look brings any other design back.",
   PrismOn: "Prism is on. The \u25d0 button switches light and dark; Menu \u2192 Appearance \u2192 Look brings any other design back, and Motion makes it move less.",
   PrismHalo: "Use Halo in the chat too",
+  NeonOn: "Neon is on. The \u25d0 button switches to Neon Day and back; Menu \u2192 Appearance \u2192 Look brings any other design back, and Motion makes it move less.",
+  NeonSkin: "Use Neon in the chat too",
   NovaInvite: "There is a new design, Nova - a clearer layout, quick actions on every record, light and dark. Your current look stays one click away.",
   NovaTry: "Try Nova",
   UpdReady: "KalKech {v} is in the folder, and this window is still running {now}. Reload to use it - your work is saved first.",
@@ -7780,8 +8346,9 @@ const STRINGS = {
   UiQuiet: "Quiet \u2014 the top bar, one line per record",
   UiClassic: "Classic \u2014 boxed rows and coloured chips",
   UiNova: "Nova \u2014 the new design: page header, grouped sidebar, hover actions",
+  UiNeon: "Neon \u2014 black, neon yellow and cyan: a screen out of a cyberpunk story, with scan lines and glitches",
   UiPrism: "Prism \u2014 glass and colour that move: a floating sidebar, light that follows the pointer, views that rise in",
-  UiNote: "Prism is the newest design: Nova's layout in glass and colour, with a slow aurora behind the page, a floating sidebar whose light slides to the view you open, cards that light up under the pointer, and views that rise in. Motion (above) makes it move less or not at all. Nova is the design before it: a page header that says where you are and what is waiting, navigation grouped with live counts, quick actions on every record when you hover it, and its own light and dark palettes (the \u25d0 button switches between them). Studio is the design before that: navigation down the left, the day in cards, one accent. Quiet keeps the top bar with the same restraint. Classic is the original. All of them work with every palette.",
+  UiNote: "Neon is the newest design: Nova's layout as a screen out of a cyberpunk story \u2014 black, neon yellow and cyan, square edges and cut corners, capitals in Bahnschrift, scan lines, and titles that glitch; Neon Day is the same in black and red on a warm off-white. Prism is the design before it: Nova's layout in glass and colour, with a slow aurora behind the page, a floating sidebar whose light slides to the view you open, cards that light up under the pointer, and views that rise in. Motion (above) makes either move less or not at all. Nova came before them: a page header that says where you are and what is waiting, navigation grouped with live counts, quick actions on every record when you hover it, and its own light and dark palettes (the \u25d0 button switches between them). Studio is the design before that: navigation down the left, the day in cards, one accent. Quiet keeps the top bar with the same restraint. Classic is the original. All of them work with every palette.",
   IncTag: "Incidents",
   IncGapTag: "Thin records",
   IncWhoTag: "Who has fixed this",
@@ -7898,6 +8465,12 @@ const STRINGS = {
   PetCornerBL: "Bottom left",
   PetCornerTR: "Top right",
   PetCornerTL: "Top left",
+  PetChar: "Character",
+  PetCharAuto: "Match the chat skin",
+  PetCharRobot: "Robot",
+  PetCharHeart: "Heart",
+  PetCharCat: "Neon cat",
+  PetCharHint: "The desk pet and the pictures in the chat are one character, so the one you pick is used for both. Match the chat skin takes the skin\u2019s own: the heart for Crimson, the cat for Neon, the robot for the others.",
   PetCornerHint: "Or drag it there. While the chat is open it is in the chat, not in its corner.",
   PetMotionOff: "Motion is set to none, so it starts switched off. Turning it on here overrides that — it is your corner.",
   PetLabel: "The assistant \u2014 click to talk",
@@ -8506,7 +9079,7 @@ const STATUSES = [
    the status bar, and clicking it copies a line you can paste into a bug
    report — build date and flow protocol included, because those are the two
    things that actually differ between copies. */
-const APP_VERSION = "5.17.0";
+const APP_VERSION = "5.18.0";
 const APP_BUILT = "2026-10-06";
 function buildLine(){
   return "KalKech v" + APP_VERSION + " \u00b7 built " + APP_BUILT +
@@ -8729,6 +9302,13 @@ const BUILTIN_PAL = [
     base:{ canvas:"#F3F1FC", paper:"#FFFFFF", ink:"#15122B", accent:"#7C3AED", teal:"#0891B2" } },
   { id:"prism-night", name:"Prism Night", builtin:true, mode:"dark",
     base:{ canvas:"#08070F", paper:"#13111F", ink:"#EDEBFB", accent:"#A78BFA", teal:"#22D3EE" } },
+  /* Neon's pair (5.18), dark first: near-black with neon yellow and cyan;
+     by day a warm off-white, where yellow cannot be read as text, so the
+     accent there is the hot red and yellow stays for what is filled */
+  { id:"neon", name:"Neon", builtin:true, mode:"dark",
+    base:{ canvas:"#06060B", paper:"#0E0E16", ink:"#E6F6F6", accent:"#FCEE0A", teal:"#00F0FF" } },
+  { id:"neon-day", name:"Neon Day", builtin:true, mode:"light",
+    base:{ canvas:"#F2EFDC", paper:"#FFFDF3", ink:"#0B0B13", accent:"#D4003C", teal:"#008FA8" } },
   { id:"archive", name:"Archive", builtin:true, mode:"light", handwritten:true,
     base:{ canvas:"#EDEAE3", paper:"#FFFFFF", ink:"#1C1B18", accent:"#8B1E3F", teal:"#1F4E5F" } },
   { id:"vault", name:"Vault", builtin:true, mode:"dark", handwritten:true,
@@ -8785,10 +9365,15 @@ function applyPalettes(){
    one; "classic" is what the app looked like before, kept because a big
    visual change to something somebody uses every day should be one switch
    away from undone rather than an argument. */
-const UI_MODES = ["studio", "quiet", "classic", "nova", "prism"];
-/* Nova's layout is under two looks: Nova itself, and Prism (5.17), which is
-   drawn over it the way Crimson is drawn over Lumen's chat */
-function novaish(ui){ const u = ui || (S.settings && S.settings.ui); return u === "nova" || u === "prism"; }
+const UI_MODES = ["studio", "quiet", "classic", "nova", "prism", "neon"];
+/* Nova's layout is under three looks: Nova itself, and Prism (5.17) and
+   Neon (5.18), which are drawn over it the way Crimson is drawn over
+   Lumen's chat */
+function novaish(ui){ const u = ui || (S.settings && S.settings.ui); return u === "nova" || u === "prism" || u === "neon"; }
+/* each designed look's own palettes, light and dark */
+const LOOK_PALS = { nova:{ light:"nova", dark:"nova-night" }, prism:{ light:"prism", dark:"prism-night" },
+                    neon:{ light:"neon-day", dark:"neon" } };
+const LOOK_PAL_RE = /^(nova|prism|neon)(-night|-day)?$/;
 function applyUi(mode){
   const want = mode || S.settings.ui;
   const m = UI_MODES.indexOf(want) >= 0 ? want : "studio";
@@ -8803,10 +9388,13 @@ function applyUi(mode){
   document.documentElement.setAttribute("data-ui", novaish(m) ? "studio" : m);
   if (novaish(m)) document.documentElement.setAttribute("data-look", "nova");
   else document.documentElement.removeAttribute("data-look");
-  /* Prism: everything of Nova's, and data-prism for what it adds */
+  /* Prism and Neon: everything of Nova's, and data-prism or data-neon for
+     what each adds */
   if (m === "prism") document.documentElement.setAttribute("data-prism", "");
   else document.documentElement.removeAttribute("data-prism");
-  if (m === "prism" && typeof prismProbe === "function") prismProbe();
+  if (m === "neon") document.documentElement.setAttribute("data-neon", "");
+  else document.documentElement.removeAttribute("data-neon");
+  if ((m === "prism" || m === "neon") && typeof prismProbe === "function") prismProbe();
   if (typeof novaSync === "function") novaSync();
   if (typeof prismInd === "function") prismInd();
   applyFonts();
@@ -8823,11 +9411,11 @@ function novaChoose(){
 }
 /* a look's own palette put on, light or dark as the one before was; the
    palette from before either look is what leaving puts back */
-function lookPalette(look){
-  const cur = getPalette(S.settings.theme);
-  if (new RegExp("^" + look + "(-|$)").test(cur.id)) return;
-  if (!/^(nova|prism)/.test(cur.id)) S.settings.preNova = cur.id;
-  applyTheme(cur.mode === "dark" ? look + "-night" : look);
+function lookPalette(look, mode){
+  const cur = getPalette(S.settings.theme), pal = LOOK_PALS[look];
+  if (!pal || cur.id === pal.light || cur.id === pal.dark) return;
+  if (!LOOK_PAL_RE.test(cur.id)) S.settings.preNova = cur.id;
+  applyTheme(pal[mode || (cur.mode === "dark" ? "dark" : "light")]);
 }
 /* Prism (5.17): its palette too, and the chat skin drawn to go with it is
    offered, not forced - the chat is a choice of its own */
@@ -8840,10 +9428,21 @@ function prismChoose(){
   if (u.skin !== "halo") toast(L("PrismOn"), { action:L("PrismHalo"), onAction:() => chatSkinSet("halo"), life:14000 });
   else toast(L("PrismOn"), { action:L("Ok") });
 }
+/* Neon (5.18): dark first, whatever was on before - it was drawn for the
+   night - and its chat skin offered, the same way */
+function neonChoose(){
+  applyUi("neon");
+  lookPalette("neon", "dark");
+  touch(); renderAll();
+  const u = chatUI();
+  if (u.skin !== "neon") toast(L("NeonOn"), { action:L("NeonSkin"), onAction:() => chatSkinSet("neon"), life:14000 });
+  else toast(L("NeonOn"), { action:L("Ok") });
+}
 /* any look chosen by name - from Setup or from the assistant */
 function lookChoose(want){
   if (want === "nova" && S.settings.ui !== "nova") return novaChoose();
   if (want === "prism" && S.settings.ui !== "prism") return prismChoose();
+  if (want === "neon" && S.settings.ui !== "neon") return neonChoose();
   const was = novaish();
   applyUi(want);
   if (was && !novaish()) novaLeave();
@@ -8852,7 +9451,7 @@ function lookChoose(want){
    own is still the one in use. A palette picked while in the look stays. */
 function novaLeave(){
   const back = S.settings.preNova;
-  if (/^(nova|prism)/.test(S.settings.theme) && back && allPalettes().some(p => p.id === back)) applyTheme(back);
+  if (LOOK_PAL_RE.test(S.settings.theme) && back && allPalettes().some(p => p.id === back)) applyTheme(back);
   delete S.settings.preNova;
 }
 /* Nova's page header and the counts beside each view in its sidebar. Run on
@@ -8901,6 +9500,7 @@ function novaSync(){
   }
   $("nxEye").textContent = eye;
   $("nxTitle").textContent = title;
+  $("nxTitle").dataset.text = title;     /* Neon's glitch draws it twice more */
   $("nxSub").textContent = sub;
   $("nxSub").classList.toggle("alarm", v === "day" && over > 0);
   const dark = getPalette(S.settings.theme).mode === "dark";
@@ -8923,7 +9523,9 @@ function rowAsk(id){
    The look itself is the PRISM block in the stylesheet. These four need to
    know where something is on the screen, so they are code; each returns at
    once in any other look. */
-function prismOn(){ return document.documentElement.hasAttribute("data-prism"); }
+/* Prism's moving parts serve Neon too: the sliding light, the light under
+   the pointer, a view's cards arriving, the light/dark switch, the probe */
+function prismOn(){ const r = document.documentElement; return r.hasAttribute("data-prism") || r.hasAttribute("data-neon"); }
 /* the light that slides to the view you are on: one element, moved to the
    open tab, rather than one drawn on each tab - so it travels between them */
 function prismInd(){
@@ -12912,6 +13514,22 @@ const PIX_DATA = {
   "crimson/pet-work": "data:image/gif;base64,R0lGODlhGAAYAPMAANMRRUoKHqAON9MRRfBFbP+4yP/2+CoiKy+ucv/CTf+KTP9rhf+dtY6Kkx96UhwaICH/C05FVFNDQVBFMi4wAwEAAAAh+QQJEAAAACwAAAAAGAAYAAAEdBDISau9OOfAA+2eFgyEMYTjoIZXUKprCp8tMd84O8l4r0s8w2EmnP0AvMMQpoQJjsmlqql6Wp4DBmPKzTKegitvKq0GwuLeDIwREMZrF/oahg+sgvmmwOdbNRYFDYMFR4AAgoSHF318i4+QeZKSkJWWl48RACH5BAkMAAAALAAAAAAYABgAAARzEMhJq70y6EA3x9lAGMMXDGgJBmNanq5qsXHtfp2ty3lqHK7fbeY6AFPGlAA3gaGSyONgaVkOGIyn9spYCqrOaMx7se6mgW+ZEB6z1NVvG0UVwFeFfJ4KuhQagAVMfRR/gYQYenmIjI2OiHaRkY+UlZZ9EQAh+QQJEAAAACwAAAAAGAAYAAAEdhDISau9OOfAA+2eFgyEMYTjoIZXUKprCp8tMd84O8l4r0u8w2EmnP0AsuFAyVQJjrze7Gl5DhgMlbB4ZTwF1ehycfterFJnAHwmiGFPArsKflMF801hv6dqLAUNCA0FR38ABYMIBYcXfHuNkZJ4lJSSl5iZkREAIfkECRoAAAAsAAAAABgAGAAABHYQyEmrvTjnwAPtnhYMhDGE46CGV1CqawqfLTHfODvJeK9LvMNhJpz9ALLhQMlUCY683uxpeQ4YDJWweGU8BdXocnH7XqxSZwB8JohhTwK7Cn5TBfNNYb+naiwFDQgNBUd/AAWDCAWHF3x7jZGSeJSUkpeYmZERADs=",
   "crimson/pet-stretch": "data:image/gif;base64,R0lGODlhGAAYAPMAANMRRUoKHqAON9MRRfBFbP+4yP/2+CoiKy+ucv/CTf+KTP9rhf+dtY6Kkx96UhwaICH/C05FVFNDQVBFMi4wAwEAAAAh+QQJGAAAACwAAAAAGAAYAAAEcxDISau9OOfAA+2eFgyEMYTjoIZXUKprCp8tMd84O8l4r0s8w2EmnP0AvMMQpoQJjsmlqql6Wp4DBmPKzTKegitvKq0GwpXwGGdFTwQEYM8sIbgBAvd6YJXkRTd9GhUygoOEeUeHO4qLjhl5kZGPlJWWjhEAIfkECRgAAAAsAAAAABgAGAAABGsQyEmrvTjnwAPtnhYMhDGE46CGk0BIQamu6XxKhKADse3/nh1AUPsZAwIK0cg8JVvFpor4bNkOh2t2Wv0MGAzVdgsmYqIDrM98lg7YmyZcZJxreGvWfVKz72E6en8fgoOGGTqJiYeMjY4aEQAh+QQJKAAAACwAAAAAGAAYAAAEbhBIGWqdwF6MwyDGMASUaJJcBppixZpFIRHqa9skIWR3L8aAncDj6wV2QWIRhxwubUNk8HU4sKosgbQ0YDBE1kHYOximeNSwyXxG+9htNxQV577gdbsIn7fz+xRadIAcG4SHiIkTWoyMio+QkRIRACH5BAkoAAAALAAAAAAYABgAAARvEEgZap3AXozDIMYwBJRoBkXBBaApVu45ERkR33EKEEKG/7KewAP8BXqAYdGIVC5jQ2Qydji4qi6BtDRgMETWQdg7GHK417DJfEb/2G03lBTv4OD1CXFNz6/4fnFHeIErfYWIiYpnWo2Ni5CRkmcRACH5BAkYAAAALAAAAAAYABgAAARxEMhJq70458AD7Z4WDIQxhOOghpNASEGprul8SoSgA7Ht/54dQFD7GQMCCtFmODCdM6SyeICqqjNiUmnDzrwDYWXEYFzPgzIRU7xaVWu20RbfzMMskbGugfn4fX5weYETSICFhoSJjBk6j4+NkpOUGhEAIfkECTwAAAAsAAAAABgAGAAABHMQyEmrvTjnwAPtnhYMhDGE46CGV1CqawqfLTHfODvJeK9LPMNhJpz9ALzDEKaECY7JpaqpelqeAwZjys0ynoIrbyqtBsKV8BhnRU8EBGDPLCG4AQL3emCV5EU3fRoVMoKDhHlHhzuKi44ZeZGRj5SVlo4RADs=",
   "crimson/pet-held": "data:image/gif;base64,R0lGODlhGAAYAPMAANMRRUoKHqAON9MRRfBFbP+4yP/2+CoiKy+ucv/CTf+KTP9rhf+dtY6Kkx96UhwaICH/C05FVFNDQVBFMi4wAwEAAAAh+QQJCQAAACwAAAAAGAAYAAAEcBDISau9MuhAN8fZQBjDFwxoWQlENqblCasAIdxAQMw8zOEAgQxlOMCKPgFFCDsYU87kcjiIQp8DoXLZ6wIrJwYD5bSKhRgqeTFDp7spN0gNk4NyPfsdX//sO3F+fx03goMdhoeKi4xBN4+NkZKTExEAIfkECQkAAAAsAAAAABgAGAAABHEQyEmrvTjnwAPtnhYMhDGE46CGk0BIQamu6XxKhKADse3/nh1AUBsYDrajLSCgEG0H5Cy6bLaK1Kl0QLS2fmCVsDJiMFTRrJmIKaIXPnY7PJNv6HYROK/hxVl9EzV8gTA6gIUfiImMGTqPj42Sk5QaEQAh+QQJCQAAACwAAAAAGAAYAAAEcBDISau9MuhAN8fZQBjDFwxoWQlENqblCasAIdxAQMw8zOEAgQxlOMCKPgFFCDsYU87kcjiIQp8DoXLZ6wIrJwYD5bSKhRgqeTFDp7spN0gNk4NyPfsdX//sO3F+fx03goMdhoeKi4xBN4+NkZKTExEAIfkECQkAAAAsAAAAABgAGAAABHAQyEmrvTjrzYMP1AdqwUAYw1gO7DgJhBScbLvWqUQIPDDjwCCoBxDcBoYDLokLCChG3EFZmzafr6O1Sh0Ysa+gmEWslBgM1nSLNmKO6gXQ/R7X6Bk4Dk8S8zdwfx13LhwhPIWGIYmKPI6OipGSk5QRADs=",
+  "neon/think": "data:image/gif;base64,R0lGODlhEAAQAPMAAPXhChsQLsKkAPXhCv/zav/3uP/98ADl9SLZhv+4H/96H/8qbcA8/32AnA6fbjAjUiH/C05FVFNDQVBFMi4wAwEAAAAh+QQJCQAAACwAAAAAEAAQAAAEQBDISesMwUp82chVMDBg4H1YOozlQKxw/G3P8dx4Xh587pc13w9wEMUWC1ngADCujM7ZJoahhlJYjmbL7Xq/3AgAIfkECQkAAAAsAAAAABAAEAAABEEQyEnrDMFKfNnIVTAwYOB9WDqM5UCscPxtT33UOF7ax53XO9tPBziIYouFLHAAHFfH52wTw1RDqSxHw+16v+BuBAAh+QQJCQAAACwAAAAAEAAQAAAEQRDISesMwUp82chVMDBg4H1YOozlQKxw/G1PXR+2XeZHnz873g8IOIhii4UscAAcV8fnbBPDVEOpLEfD7Xq/4G4EACH5BAkJAAAALAAAAAAQABAAAARBEMhJ6wzBSnzZyFUwMGDgfVg6jOVArHD8bU9tP8dd3vXh2zseTgc4iGKLhSxwABxXx+dsE8NUQ6ksR8Pter/gbgQAIfkECQkAAAAsAAAAABAAEAAABEEQyEnrDMFKfNnIVTAwYOB9WDqM5UCscPxtT23bR13e9+E/Ox5OBziIYouFLHAAHFfH52wTw1RDqSxHw+16v+BuBAAh+QQJCQAAACwAAAAAEAAQAAAEPxDISesMwUp82chVMDBg4H1YOozlQKxw/G1Pbd/PUeL4odO8208nWyxkgQNABGMyV6BlDDMNpa4cjXbL7Xq3EQAh+QQJCQAAACwAAAAAEAAQAAAEQRDISesMwUp82chVMDBg4H1YOozlQKxw/G1PbdtHXd734T87Hk4HOIhii4UscAAcV8fnbBPDVEOpLEfD7Xq/4G4EACH5BAkJAAAALAAAAAAQABAAAARBEMhJ6wzBSnzZyFUwMGDgfVg6jOVArHD8bU9tP8dd3vXh2zseTgc4iGKLhSxwABxXx+dsE8NUQ6ksR8Pter/gbgQAIfkECQkAAAAsAAAAABAAEAAABEEQyEnrDMFKfNnIVTAwYOB9WDqM5UCscPxtT10ftl3mR58/O94PCDiIYouFLHAAHFfH52wTw1RDqSxHw+16v+BuBAAh+QQJCQAAACwAAAAAEAAQAAAEQRDISesMwUp82chVMDBg4H1YOozlQKxw/G1PfdQ4XtrHndc7208HOIhii4UscAAcV8fnbBPDVEOpLEfD7Xq/4G4EADs=",
+  "neon/slow": "data:image/gif;base64,R0lGODlhEAAQAPMAAPXhChsQLsKkAPXhCv/zav/3uP/98ADl9SLZhv+4H/96H/8qbcA8/32AnA6fbjAjUiH/C05FVFNDQVBFMi4wAwEAAAAh+QQJKgAAACwAAAAAEAAQAAAERBDISau9Jd9dZAjb1wEBM4BVMGRdOZxf/DKoSrx4fnpP7/+9GnD4ED4Ohx8y6NEtFrrAgZRTnaoT6+uDpcS+sY14LI4AACH5BAkqAAAALAAAAAAQABAAAARIEMhJZbk106KpMQAnBUFnXFzADGX1Ma06sGQ9w+NAzHzPjo+gcBiMEY8P4+NwGDKLud5i4QscAIFelqWdbGekLqVGrnXO6HMEACH5BAkqAAAALAAAAAAQABAAAAREEMhJq63G3K1pCFcGSgEzjN7AjOVwfrC7kgPh3vhJPnzv86yf8BF8HA6+I5CGWyxygQMggKOeqhOr64P1wL6fjXgsjgAAIfkECSoAAAAsAAAAABAAEAAABEEQyEmrvTjTEDCfATN0VTAwZDiMXLuikkmsdD3GT67vecr/D9/jcNgRezHbYmELHAAmWjS6IkFrHGypxf1ovmBJBAA7",
+  "neon/orb": "data:image/gif;base64,R0lGODlhEAAQAPMAAPXhChsQLsKkAPXhCv/zav/3uP/98ADl9SLZhv+4H/96H/8qbcA8/32AnA6fbjAjUiH/C05FVFNDQVBFMi4wAwEAAAAh+QQJWgAAACwAAAAAEAAQAAAEQxDISesMwUp82chVMDBg4H1YOozlQKxw/G3Pcxx1fdeljue7Ry9HJGYOothiIQscAMlVMjrbxDDXUGrL0Xi/4LD4GwEAIfkECR4AAAAsAAAAABAAEAAABEEQyEnrDMFKfNnIVTAwYOB9WDqM5UCscPxtz3E8eH3jpZ77PNpvGDyIYouFLHAAHFfH52wTw1RDqSxHw+16v+BuBAAh+QQJPAAAACwAAAAAEAAQAAAEQxDISesMwUp82chVMDBg4H1YOozlQKxw/G3Pcxx1fdeljue7Ry9HJGYOothiIQscAMlVMjrbxDDXUGrL0Xi/4LD4GwEAIfkECR4AAAAsAAAAABAAEAAABEIQyEnrDMFKfNnIVTAwYOB9WDqM5UCscPxtT30ctY2X+Z0/Pt5vWMscRLHFQhY4AJArJHS2iWGsoZSWo+l6v+CwNwIAIfkECQoAAAAsAAAAABAAEAAABEEQyEnrDMFKfNnIVTAwYOB9WDqM5UCscPxtT23fdYnvj/4chxswBziIYouFLHAAHFfH52wTw1RDqSxHw+16v+BuBAAh+QQJPAAAACwAAAAAEAAQAAAEQxDISesMwUp82chVMDBg4H1YOozlQKxw/G3Pcxx1fdeljue7Ry9HJGYOothiIQscAMlVMjrbxDDXUGrL0Xi/4LD4GwEAOw==",
+  "neon/hero": "data:image/gif;base64,R0lGODlhGAAYAPMAAPXhChsQLsKkAPXhCv/zav/3uP/98ADl9SLZhv+4H/96H/8qbcA8/32AnA6fbjAjUiH/C05FVFNDQVBFMi4wAwEAAAAh+QQJEgAAACwAAAAAGAAYAAAEjBDISau9IAQsNQ/MsF3BwIwWOIjpemLlKmq0zJIDYe8yWgU6Hs9HCTweh8NxiVQ+iBNjk3lMHqEdqnZJTGZ4i8UQ4JUcvrZYrEfGpdcrbJFGp0sYnEx4v0cJPkJsAH8wNgRBcRKEboEbi24CNpEsjy0DkyuTAZUpBQVwAZ5ycx5RNHmKAqqrrJyorwARACH5BAkSAAAALAAAAAAYABgAAASREMhJq70gBCw1D8ywXcHAjJSRhaJVmqhkzO8garhtx3I2ELqgkDcJAIXIFunxOByY0ObzQewwndHrtJrJeqE8p0+4WCA3hcLkMNa9ajtA2jWEtwQfnF4PwHMyZYGBG34ADCRJbhOFFXAER3ESjBR2Q5IfNgJBmnd/L5yZO5MuaXABpX8dOJSrqQKvsLGvqbQXEQAh+QQJEgAAACwAAAAAGAAYAAAEjxDISau9IAQsNQ/MsF3BwIwWOIjpemLlKmq0zJIDYe8yWgU6Hs9HCTweh8NxiVQ+iBNjk3lMHqEdqnYZKBQmyQxvsRh6D2CxLRaTCQDo1rq9Crw/tHweIGBwMmSBgRtvdzhCdRKGcisEQYl8H4iJi3ICNpcslT8rmZ11mz9edF0FWD80Ral/fAKur7ChrLMRACH5BAkSAAAALAAAAAAYABgAAASQEMhJq70gBCw1D8ywXcHAjNSRhaJVmqh0zO8garhtx3I2ELqgkDcJAIXIFunxmDGfzQOT2GE6odEpJoDtPnkzn3CxQG4KhYmqtmsHz+kK+zYECD64fN7O6ZD/fxt3EgwkSToogy5BBEc7E4pyh498WzYCQZgtkYsDmpc7nC5obAGkfR04FHuoAq6vsK6osxcRACH5BAkSAAAALAAAAAAYABgAAASLEMhJq70gBCw1D8ywXcHAjBY4iOl6YuUqarTMkgNh7zJaBToez0cJPI7IZJI4MSqfR2bneDg8q9FCYVLN8BaLofbA9dpiMZkAQG6d06vA+kOr1wECBicD7vc3a3M4QnESgm4rBEGFeB+EhYduAjaTLJE/K5WZcZc/WnABn3sdNEWlowKpqqupo64XEQAh+QQJEgAAACwAAAAAGAAYAAAEixDISau9IAQsNQ/MsF3BwIwWOIjpemLlKmq0zJIDYe8yWgU6Hs9HCTweh8NxiVQ+iBOj03mcPmHMbJaYzPAWiyGgKzl4bbFYb4xDq1fQH20+lzA4GbBejxJ8hGsAfjA2BEFwEoNtgBuKbQI2kCyOLQOSK5IBlCkFBW8BnXFyHlE0eIkCqaqrm6euABEAIfkECRIAAAAsAAAAABgAGAAABIwQyEmrvSAELDUPzLBdwcCMFjiI6Xpi5SpqtMySA2HvMloFOh7PRwk8HofDcYlUPogTY5N5TB6hHap2SUxmeIvFEOCVHL62WKxHxqXXK2yRRqdLGJxMeL9HCT5CbAB/MDYEQXEShG6BG4tuAjaRLI8tA5MrkwGVKQUFcAGecnMeUTR5igKqq6ycqK8AEQAh+QQJEgAAACwAAAAAGAAYAAAEjBDISau9IAQsNQ/MsF3BwIyUkYWiVZqoZMzvIGq4bcdyNhC6oJA3CQCFyBbp8TgcmNDm80HsMJ3R67SayXqhPKdPuFggN2LJYax71XaAtWv4Vn5weDyHEij7/TwMJEltEwIYbwRHcBKHg4RKjo8CQZQtkpOVO5gkBQVvAZ5cfDikHnsAAqqrrKqorxcRADs=",
+  "neon/done": "data:image/gif;base64,R0lGODlhEAAQAPMAAPXhChsQLsKkAPXhCv/zav/3uP/98ADl9SLZhv+4H/96H/8qbcA8/32AnA6fbjAjUiH5BAkHAAAALAAAAAAQABAAAAQWEMhJq704680r6hLygSIIlKSprmzrRgAh+QQJBwAAACwAAAAAEAAQAAAEHBDISau9OOvNK+oS8lHjJU5ndqaaWG4vKM90TUUAIfkECQcAAAAsAAAAABAAEAAABCAQyEmrvTgDpCni3QZOo1dKX5Veq6ilbfadcmjfeK4DEQAh+QQJCQAAACwAAAAAEAAQAAAEJxDISau9wGBr+q4G8k2ISJlVaaknmqIspsZb6YLn1mmjxPfAoLASAQAh+QQJKAAAACwAAAAAEAAQAAAEIBDISau9OAOkKeLdBk6jV0pflV6rqKVt9p1yaN94rgMRADs=",
+  "neon/no": "data:image/gif;base64,R0lGODlhEAAQAPMAAPXhChsQLsKkAPXhCv/zav/3uP/98ADl9SLZhv+4H/96H/8qbcA8/32AnA6fbjAjUiH5BAkHAAAALAAAAAAQABAAAAQnEMhJq70YtM3xtl/VeGKmUWOWSmmIvto6yTIIk3cp1rHHuaagEBABACH5BAkHAAAALAAAAAAQABAAAAQoEMhJq70YtM3xtl/VeGKmUWOWSim3nlPbxaj5vmB54Rofgi6eaWiKAAAh+QQJBwAAACwAAAAAEAAQAAAEKRDISau9GLTN8bZf1XhiplFjlkop151T67aoucJkfd0sr/k9l2lIpEQAACH5BAk8AAAALAAAAAAQABAAAAQpEMhJq70YtM3xtl/VeGKmUWOWSinXnVPrtqi5wmR93Syv+T2XaUikRAAAOw==",
+  "neon/oops": "data:image/gif;base64,R0lGODlhEAAQAPMAAPXhChsQLsKkAPXhCv/zav/3uP/98ADl9SLZhv+4H/96H/8qbcA8/32AnA6fbjAjUiH/C05FVFNDQVBFMi4wAwEAAAAh+QQJFAAAACwAAAAAEAAQAAAELRDISau9ONvAu69BIo5kQIUjV54lKpqTm6gpm8qwJJOv/eI+Xu/kKWqOyGQlAgAh+QQJFAAAACwAAAAAEAAQAAAEMBDISau9ONvAu6+BIo5kQIUjV54lKpqAAriKmsYybb+xRJO8iU7HAq5OnqRmyWxWIgAh+QQJFAAAACwAAAAAEAAQAAAEMBDISau9ONvAu6/BIo5kQIUjV54lKprAAriLmsYybb+xRJO8iU7HAq5OnqRmyWxWIgAh+QQJFAAAACwAAAAAEAAQAAAELRDISau9ONvAu6+BIo5kQIUjV54lKpqTq6gpm8qwJJOv/eI+Xu/kKWqOyGQlAgA7",
+  "neon/ask": "data:image/gif;base64,R0lGODlhEAAQAPMAAPXhChsQLsKkAPXhCv/zav/3uP/98ADl9SLZhv+4H/96H/8qbcA8/32AnA6fbjAjUiH/C05FVFNDQVBFMi4wAwEAAAAh+QQJFgAAACwAAAAAEAAQAAAEMBDISSsNOOsahv9gcIXYJ06dlw7pKa2hOoKsOZvhTcsoDbsvjdACaBEtmKNyyWwSIwAh+QQJFgAAACwAAAAAEAAQAAAEMBDISSsNOOsahv9gcIXYJ06dlw7pKa2hOoKsOZvhTcsoDbsvjdACaBEtmKNyyWwSIwAh+QQJFgAAACwAAAAAEAAQAAAEMBDISau9N+jNaxhgKAbUF25nea4DOZliC7oSzLbqOOZx+sY2Wo1DzMwwHiFyybxEAAAh+QQJFgAAACwAAAAAEAAQAAAEMBDISau9N+jNaxhgKAbUF25nea4DOZliC7oSzLbqOOZx+sY2Wo1DzMwwHiFyybxEAAA7",
+  "neon/new": "data:image/gif;base64,R0lGODlhEAAQAPMAAPXhChsQLsKkAPXhCv/zav/3uP/98ADl9SLZhv+4H/96H/8qbcA8/32AnA6fbjAjUiH/C05FVFNDQVBFMi4wAwEAAAAh+QQJCwAAACwAAAAAEAAQAAAEHxDISau9WK698uSdB4DiyGVgGlbqhqYiWbplbd84HgEAIfkECQsAAAAsAAAAABAAEAAABB8QyEmrvTjnxZeWnfeFH0BiYSpWKrelY1ea62zfuBYBACH5BAkLAAAALAAAAAAQABAAAAQhEMhJqwVF5su770u4fIA4fiaZcmZ7Vm4ItqhIlu+t714EACH5BAkLAAAALAAAAAAQABAAAAQfEMhJq71YFp27/9IiLt9IemY5ZmZ7Vq7ItuiqgvgXAQAh+QQJCwAAACwAAAAAEAAQAAAEIRDISasFRebLu+9LuHyAOH4mmXJme1ZuCLaoSJbvre9eBAAh+QQJCwAAACwAAAAAEAAQAAAEHxDISau9OOfFl5ad94UfQGJhKlYqt6VjV5rrbN+4FgEAOw==",
+  "neon/pet-idle": "data:image/gif;base64,R0lGODlhGAAYAPMAAPXhChsQLsKkAPXhCv/zav/3uP/98ADl9SLZhv+4H/96H/8qbcA8/32AnA6fbjAjUiH/C05FVFNDQVBFMi4wAwEAAAAh+QQJqgAAACwAAAAAGAAYAAAEjBDISau9IAQsNQ/MsF3BwIwWOIjpemLlKmq0zJIDYe8yWgU6Hs9HCTweh8NxiVQ+iBNjk3lMHqEdqnZJTGZ4i8UQ4JUcvrZYrEfGpdcrbJFGp0sYnEx4v0cJPkJsAH8wNgRBcRKEboEbi24CNpEsjy0DkyuTAZUpBQVwAZ5ycx5RNHmKAqqrrJyorwARACH5BAkMAAAALAAAAAAYABgAAASJEMhJq70gBCw1D8ywXcHAjBY4iOl6YuUqarTMkgNh7zJaBToez0cJPI7IZJI4MSqfR2bneDg8q9FKNcNbLIaAreTAtcVivTDOjF5Ji7R4XMLgZLx4PErwEaYBfDA2BEFuEoFrfhuIawI2jiyMLQOQK5ABkikFBW0Bm29wHk00docCp6ipmaWsABEAIfkECXgAAAAsAAAAABgAGAAABIwQyEmrvSAELDUPzLBdwcCMFjiI6Xpi5SpqtMySA2HvMloFOh7PRwk8HofDcYlUPogTY5N5TB6hHap2SUxmeIvFEOCVHL62WKxHxqXXK2yRRqdLGJxMeL9HCT5CbAB/MDYEQXEShG6BG4tuAjaRLI8tA5MrkwGVKQUFcAGecnMeUTR5igKqq6ycqK8AEQAh+QQJHgAAACwAAAAAGAAYAAAEhxDISau9IAQsNQ/MsF3BwIwWOIjpemLlKmq0zJIDYe8yWgU6Hs9HCTweh8NxiVQ+iBNjk3lMHqEdqnZJTGZ4i8UQ4JUcvrZYrEfGpdcrbJFGp3OK4XyeyHALbwACMDYEQXETgn5CI4luAjaPLI2OkHGTJAUFcAGZcnMeUTR3EgKlpqelo6oXEQAh+QQJPAAAACwAAAAAGAAYAAAEjBDISau9IAQsNQ/MsF3BwIwWOIjpemLlKmq0zJIDYe8yWgU6Hs9HCTweh8NxiVQ+iBNjk3lMHqEdqnZJTGZ4i8UQ4JUcvrZYrEfGpdcrbJFGp0sYnEx4v0cJPkJsAH8wNgRBcRKEboEbi24CNpEsjy0DkyuTAZUpBQVwAZ5ycx5RNHmKAqqrrJyorwARADs=",
+  "neon/pet-cheer": "data:image/gif;base64,R0lGODlhGAAYAPMAAPXhChsQLsKkAPXhCv/zav/3uP/98ADl9SLZhv+4H/96H/8qbcA8/32AnA6fbjAjUiH/C05FVFNDQVBFMi4wAwEAAAAh+QQJCgAAACwAAAAAGAAYAAAEkxDISau9IAQsNQ/MsF3BwIwWOIjpemLlKmq0zJIDYe8yWgU6Hs9HCTweh8NxiVQ+iBOj03mcPi2FgpHJZQayk0M2ZlsshtlDGCDYxcgrAUBdEcBnbvlFTuv72QwYfGaEhBtyejhCKyOJLTIEQYwSjj+Lk5WWA20ynIccGXE2npk/YzZfWqAdNEWtqwKxsrOxq7YXEQAh+QQJCgAAACwAAAAAGAAYAAAEkhBIENgIM9PBsJbVcH2B2H3GJl5B265jZswlAd+rJ1M2juuawONxOAyPROMDmBEqlcPn8lMoCJFYZKA6OVRLt8XiVz10AYIbGLwSAMwaAVv0ggXcHzTFxefr83oBYoODGHgADHlzPxOHQTAEPXSNgItqEo6PA2ltk5manCKcd4ATW1Z2X6WmLk2tq7CxsrO0tasRACH5BAkKAAAALAAAAAAYABgAAASPEEgQ2Agz08GwltVwfYHYfaAoBmyrjgc5EG+tBkeuBbRtY7Hd45EbGomHoYdEHCaNz+RyUigEjlhsoDo5VEu1xeJXDQJighoYrBKcPwL2Sn5xo9ytvB5gv1PEgIAYfQwodGoTfTsvBD0riSgbPo98kZJpbY+KMgOYIpgBmyRfL1tWlhN5Gaqora6vsLGyqBEAIfkECQoAAAAsAAAAABgAGAAABJEQSBDYCDPTwbCW1XB9gdh9xiZeQduuY2bMJQHfqydTNo7rmsDjcTgMj0TjA5gRKpXD5/JTKAiRWGSgOjlUS7fF4lc9dAGCGxi8EgDMGgFb9IIF3B80xcXnoxl5egFihIQYbnh5cz8SiSQwBD10jYEqPiOOjwNpbZOZQSKcoXSfQV92X5UTfqsuqq+wsbKztK8RACH5BAkMAAAALAAAAAAYABgAAASTEMhJq70gBCw1D8ywXcHAjBY4iOl6YuUqarTMkgNh7zJaBToez0cJPB6Hw3GJVD6IE6PTeZw+LYWCkcllBrKTQzZmWyyG2UMYINjFyCsBQF0RwGdu+UVO6/vZDBh8ZoSEG3J6OEIrI4ktMgRBjBKOP4uTlZYDbTKchxwZcTaemT9jNl9aoB00Ra2rArGys7GrthcRACH5BAkeAAAALAAAAAAYABgAAASMEMhJq70gBCw1D8ywXcHAjBY4iOl6YuUqarTMkgNh7zJaBToez0cJPB6Hw3GJVD6IE2OTeUweoR2qdklMZniLxRDglRy+tlisR8al1ytskUanSxicTHi/Rwk+QmwAfzA2BEFxEoRugRuLbgI2kSyPLQOTK5MBlSkFBXABnnJzHlE0eYoCqqusnKivABEAOw==",
+  "neon/pet-worry": "data:image/gif;base64,R0lGODlhGAAYAPMAAPXhChsQLsKkAPXhCv/zav/3uP/98ADl9SLZhv+4H/96H/8qbcA8/32AnA6fbjAjUiH/C05FVFNDQVBFMi4wAwEAAAAh+QQJGgAAACwAAAAAGAAYAAAEixDISau9IAQstVxLFTDDdgUDs4EiWVpouoZUPJRaft8mPBC7oHAmAgqPr9NjyWw2eyLmwfmYLqE1qvaBPRwyR9Bx4518bbx0kHwaopOcnHzOqYHud+xF8B4K6nxBBEY8f3UFBUg3iHUAiAMCQZEDjBIMbZCSPBOGMIhoAZ8Co3E5NaaNo6qrqo2uFxEAIfkECRoAAAAsAAAAABgAGAAABIsQyEmrvSAELLVcSxUww3YFA7OBIllaaLqGVDyUWn7fJjwQu6BwJgIKj6/TY8lsNnui5cH5mDKhNar2gT0cMkfQceOdfG28dJB8GqKTnJx8zqmB7nfsRfAeCup8QQRGPH91BQVIN4h1AIgDAkGRA4wSDG2QkjwThjCIaAGfAqNxOTWmjaOqq6qNrhcRACH5BAkUAAAALAAAAAAYABgAAASLEMhJq70gBCw1D8ywXcHAjBY4iOl6YuUqarTMkgNh7zJaBToez0cJPI7IZJI4MR4Pygf0yOxErw/i4ZDhLRZDwHbCjfVWZrQYZ9PsqkWaXM4pfu93OEWQHgrqfDYEQWh/dQUFQiuIdQCIAwI2kQOMEgxskyuTKIYpiGkBnwKjHzRxHo2jqquqja4XEQAh+QQJGgAAACwAAAAAGAAYAAAEixDISau9IAQstVxLFTDDdgUDs4EiWVpouoZUPJRaft8mPBC7oHAmAgqPr9NjyWw2e6LlwfmYMqE1qvaBPRwyR9Bx4518bbx0kHwaopOcnHzOqYHud+xF8B4K6nxBBEY8f3UFBUg3iHUAiAMCQZEDjBIMbZCSPBOGMIhoAZ8Co3E5NaaNo6qrqo2uFxEAOw==",
+  "neon/pet-nap": "data:image/gif;base64,R0lGODlhGAAYAPMAAPXhChsQLsKkAPXhCv/zav/3uP/98ADl9SLZhv+4H/96H/8qbcA8/32AnA6fbjAjUiH/C05FVFNDQVBFMi4wAwEAAAAh+QQJRgAAACwAAAAAGAAYAAAEiRDISWst2Ootiw0BB4DdxwyhFgxMgHlUcKLfwKa1jYK8TqsDgm+ow1UCQiLRGHs4n1AocxKIWp9TSfVxOFi7TmZ3RFwsloCx5ED2rVDDEDtXfBdFI55ej9ea/39ZdEqCMT4ESTaFVEp3eG8CPpE/EgxAA5M2kzgCGy4FdigYAQKlHKWoqah9rBURACH5BAlGAAAALAAAAAAYABgAAASGEMhJqwXl6pttCBvwYUU3BcwAXsHArF6qeoMLV22tfrw+swOCb6i7UQJCItF4ejifUChTEohan1OR83Cwcp1Groi4WCwBYslh7Mvlimhg+13Lnnh4fOhU7vftR0pwe3QESXV7bIKAVDUCPo8/EgxykY6IEgIaASV0nAUBAqIboqWmpYmpFREAIfkECUYAAAAsAAAAABgAGAAABIQQyEmrvRgbc0PIgCdxVcAMXzcwwWaZA/rGLBbEsaffeDoTuKDQVwIKj7LOY8lsNomUgHPKhE6kj8Nhql1CtaHjYnH8gCWHcJDH6wHSs3U7Bwrt7qJ6aMznW1VIdHVzBEaCIHNlejwCQY1JEgyAjzGPPgI2BQVzAZoBAqAZoKOko3qnFREAIfkECVoAAAAsAAAAABgAGAAABH8QyEmrvTjjEDTPATN0VzAwpBUOo8qiG8tytCmnlUnIfI9TgV1v2Co9jshk8jcJKJ9IpsT5OBye1uPPCrDxFothhys5dH0zH8Ds4nHUnpr8o5mC73dpm1j08AhCM3VnfH0gLAI8iYYMJYiKghICGwUFXiOVAQKbGZuen56DohURADs=",
+  "neon/pet-work": "data:image/gif;base64,R0lGODlhGAAYAPMAAPXhChsQLsKkAPXhCv/zav/3uP/98ADl9SLZhv+4H/96H/8qbcA8/32AnA6fbjAjUiH/C05FVFNDQVBFMi4wAwEAAAAh+QQJEAAAACwAAAAAGAAYAAAElhDISau9IAQsNQ/MsF3BwIwWOIjpemLlKmq0zJIDYe8yWgU6Hs9HCTweh8NxiVQ+iBNjk3lMHqEdqnZJTGZ4i8UQ4JUcvrZYrEfGpdcrbJFGp0sYnEx4v0cJMAJwQ39/F4ErDYmJPYQcBQUDDQaTDTKPhRiPkZMGDQIrl3kxiomfIpgwj3ABqnkdNHMergK0tba0rrkXEQAh+QQJDAAAACwAAAAAGAAYAAAElhBIGcK8s+Ib2LAbEAwMuHXDd6ZlKKZpJY+wiY0ErO82l+9AVSjweBwOxaQR+ehlikcllOmkSK/J3vG1WyyAlq3kwK3FeADySldBuyizuAbAeIu8eLxJ4BLQgh98fCF+KQ2HhzWCbwUFAw0GkQ0wjYMujY+RBg0CKZV2NIiHnYF2Io1/H6imIjIcrqyxdgK0tba0srkAEQAh+QQJEAAAACwAAAAAGAAYAAAElhDISau9IAQsNQ/MsF3BwIwWOIjpemLlKmq0zJIDYe8yWgU6Hs9HCTweh8NxiVQ+iBOj03mcPmHMbJaYzPAWiyGgKzl4bbFYb4xDq1fQH20+lzA4GbBejxJgBG9Dfn4XgCsNiIg9gxwFBQMNBggGDTKOhBiOkJMIDQIrl3gxiYifIpgwjm8BqngdNEWwrgK0tba0rrkXEQAh+QQJGgAAACwAAAAAGAAYAAAElhDISau9IAQsNQ/MsF3BwIwWOIjpemLlKmq0zJIDYe8yWgU6Hs9HCTweh8NxiVQ+iBOj03mcPmHMbJaYzPAWiyGgKzl4bbFYb4xDq1fQH20+lzA4GbBejxJgBG9Dfn4XgCsNiIg9gxwFBQMNBggGDTKOhBiOkJMIDQIrl3gxiYifIpgwjm8BqngdNEWwrgK0tba0rrkXEQA7",
+  "neon/pet-stretch": "data:image/gif;base64,R0lGODlhGAAYAPMAAPXhChsQLsKkAPXhCv/zav/3uP/98ADl9SLZhv+4H/96H/8qbcA8/32AnA6fbjAjUiH/C05FVFNDQVBFMi4wAwEAAAAh+QQJGAAAACwAAAAAGAAYAAAEjBDISau9IAQsNQ/MsF3BwIwWOIjpemLlKmq0zJIDYe8yWgU6Hs9HCTweh8NxiVQ+iBNjk3lMHqEdqnZJTGZ4i8UQ4JUcvrZYrEfGpdcrbJFGp0sYnEx4v0cJPkJsAH8wNgRBcRKEboEbi24CNpEsjy0DkyuTAZUpBQVwAZ5ycx5RNHmKAqqrrJyorwARACH5BAkYAAAALAAAAAAYABgAAASOEMhJq70gBCw1D8ywXcHAjBY4iOl6YuUqarTMkgNh7zJaBToez0cJPI7IZJI4MSqfR2ah4DwcntbodHKYxmyLxXB64AIEu9h3JQCUK4L1LN2+tGn4/JmBuYf/fxttdThCKyOELTIEQYcSiT+GjpCRA2gyl4IcGWw2mZQ/XjYBXpsdNEWopgKsra6sprEXEQAh+QQJKAAAACwAAAAAGAAYAAAEkRBIGcK8s+Ib2LAbEAwMuHXDd6ZlUazpV82xGo5ErceBe+a7nQkTeBiPSOSQk2welwBX8XE4NKvG3ktykO4WC6HrMCELdKOPTgAgYwRpXjwVYIfYs7weYL+LwICAFn0MN0E8E31ENQRAdIkhIoePfJGSA2cxmYOWl5kpm4o3XjxSnRQzHKmnrKwCr7Cxr620ExEAIfkECSgAAAAsAAAAABgAGAAABJAQSBnCvLPiG9iwGxAMTFAUWzd86VqG4rpW9CibKDYScu+DKZ5vyAoFHsikUgnULZ/JpuR0fBwOzysSNzlQh4vFEHfoAgS/mU8AKGMEtlt8xg6xa3jaGbYPhP9/FnUADEZENxODOj0EQjOJMHNjEoqLA2gymIJ8MZc9mpUpXzdUnBR6Gaimq6YCrq+wrqyzExEAIfkECRgAAAAsAAAAABgAGAAABJIQyEmrvSAELDUPzLBdwcCMFjiI6Xpi5SpqtMySA2HvMloFOh7PRwk8HofDcYlUPogTY5N5TB6hhYKUyn1mJ4dszLZYDLMHMECwi41XAkC6InjP2vFLnMbvrxkYe2WDgxtxeThCKyOILTIEQYsSjT+KkpSVA2wym4YcGXA2nZg/YjYBYp8dNEWsqgKwsbKwqrUXEQAh+QQJPAAAACwAAAAAGAAYAAAEjBDISau9IAQsNQ/MsF3BwIwWOIjpemLlKmq0zJIDYe8yWgU6Hs9HCTweh8NxiVQ+iBNjk3lMHqEdqnZJTGZ4i8UQ4JUcvrZYrEfGpdcrbJFGp0sYnEx4v0cJPkJsAH8wNgRBcRKEboEbi24CNpEsjy0DkyuTAZUpBQVwAZ5ycx5RNHmKAqqrrJyorwARADs=",
+  "neon/pet-held": "data:image/gif;base64,R0lGODlhGAAYAPMAAPXhChsQLsKkAPXhCv/zav/3uP/98ADl9SLZhv+4H/96H/8qbcA8/32AnA6fbjAjUiH/C05FVFNDQVBFMi4wAwEAAAAh+QQJCQAAACwAAAAAGAAYAAAEjhBIGcK8s+Ib2LAbEAwMuHXDd6ZlKKZpJY+wiY0ErO82l+9AVSjweBwOxaQR+ehlikcllOksFIhLabZpnRysNN1iAQxYD16AgBfbCQBojCAco3/eofdsL1O7/AFjgoIWeH92PH8ZOgQ/MYoUQTWQLwNrMJc2DEMpl52PEoY3YDpmVwKoh30Zq5Sur7CxGxEAIfkECQkAAAAsAAAAABgAGAAABJEQyEmrvSAELDUPzLBdwcCMFjiI6Xpi5SpqtMySA2HvMloFOh7PRwk8HofDcYlUPogTY5N5TB6hhYLUSuUGspNDNmZbLIbZQxgg2MXIKwFAXRHAZ275RU7r+9kcfGaDgxt6H0I9HFE2BEErUC2JN4sxbTKXPgw4A5dxkBOHP2M2X1oCqB80RauLbKiwsamutBYRACH5BAkJAAAALAAAAAAYABgAAASOEEgZwryz4hvYsBsQDAy4dcN3pmUopmklj7CJjQSs7zaX70BVKPB4HA7FpBH56GWKRyWU6SwUiEtptmmdHKw03WIBDFgPXoCAF9sJAGiMIByjf96h92wvU7v8AWOCghZ4f3Y8fxk6BD8xihRBNZAvA2swlzYMQymXnY8ShjdgOmZXAqiHfRmrlK6vsLEbEQAh+QQJCQAAACwAAAAAGAAYAAAEjRDISau9OOMQNM8BM3RXMDCkFQ6jyqIby3K0KaeVSch8j1OBXW/YKj0eh8NxiVQ+fpPAMcmcOqGFgrRZ5T6zk0PWxlsshoHsIQwQ+GY9AWBdEZBn95H8Iq/5aW0ZfWaEhB17IEQ3GhJ3BEIzjAB5PpI2bjKYOAwlLJiekRKIOWM8aVoCqYKprK2qkrAUEQA7",
 };
 /* PIXEL-ART-DATA-END */
 const PIX = Object.assign({}, PIX_DATA);
@@ -13016,8 +13634,9 @@ function petCfg(){
   if (!st.pet || typeof st.pet !== "object")
     /* A machine that has asked not to be moved at, or an interface already
        set to hold still, does not get a pet without being asked for one. */
-    st.pet = { on: !chatCalm() && st.motion !== "none", corner:"br" };
+    st.pet = { on: !chatCalm() && st.motion !== "none", corner:"br", char:"auto" };
   if (PET_CORNERS.indexOf(st.pet.corner) < 0) st.pet.corner = "br";
+  if (!PET_CHARS.some(c => c.id === st.pet.char)) st.pet.char = "auto";
   /* one character, one name: a name given to the pet before 5.12 becomes the
      assistant's, unless the assistant already had one of its own */
   if ("name" in st.pet){
@@ -13057,6 +13676,16 @@ function petPaint(){
   petShow(PET.mood || "idle", !b.querySelector("img.pxl"));
 }
 
+/* a character picked for the pet: the corner and the chat both change to it
+   now, in whatever mood each was in */
+function petCharSet(id){
+  if (!PET_CHARS.some(c => c.id === id)) return;
+  const was = chatArtSet();
+  petCfg().char = id;
+  touch();
+  if (chatArtSet() !== was){ applyChatUI(); chatPaint(); petRedress(); petMood("wave", 2200); }
+  if ($("modal") && $("modal").classList.contains("on")) renderModal();
+}
 /* the chat skin changed to one with another character: the pet is that
    character from now on, in whatever mood it was in */
 function petRedress(){
@@ -13293,7 +13922,10 @@ const CHAT_SKINS = [
      see CRIMSON in the stylesheet and the heart in art/make-pixel-art.py */
   { id:"crimson", name:"Crimson", a:"#d31145", b:"#ff6a5c", fresh:true, lm:true, art:"crimson/" },
   /* 5.17: Lumen's layout again, drawn with the Prism look - see HALO */
-  { id:"halo", name:"Halo", a:"#8b5cf6", b:"#06b6d4", fresh:true, lm:true }
+  { id:"halo", name:"Halo", a:"#8b5cf6", b:"#06b6d4", fresh:true, lm:true },
+  /* 5.18: Lumen's layout in neon yellow, cyan and black, with the cat - see
+     NEON in the stylesheet and the cat in art/make-pixel-art.py */
+  { id:"neon", name:"Neon", a:"#fcee0a", b:"#00f0ff", fresh:true, lm:true, art:"neon/" }
 ];
 /* the skins built on Lumen's layout: the panel carries data-lm while one is
    picked, and everything Lumen's layout does (the history, the icons, the
@@ -13302,11 +13934,26 @@ function chatLm(skin){
   const k = CHAT_SKINS.find(x => x.id === (skin || chatUI().skin));
   return !!(k && k.lm);
 }
-/* the pixel set a skin brings, if any: "crimson/" for the heart. The robot is
+/* The characters the assistant can be (5.18): the pixel set each is drawn
+   in. "auto" is whichever the chat skin brings - the heart for Crimson, the
+   cat for Neon, the robot for the rest. Picked in Menu → Look → Desk pet, and
+   it is the character in the chat as well as in the corner: since 5.12 the
+   pet and the assistant are one character, so they change together. */
+const PET_CHARS = [
+  { id:"auto",  key:"PetCharAuto",  set:null },
+  { id:"robot", key:"PetCharRobot", set:"" },
+  { id:"heart", key:"PetCharHeart", set:"crimson/" },
+  { id:"cat",   key:"PetCharCat",   set:"neon/" }
+];
+/* the pixel set in use: the character picked for the pet, or the one the
+   skin brings ("crimson/" for the heart, "neon/" for the cat). The robot is
    the set with no prefix, and every skin that does not bring one shows it. */
 function chatArtSet(){
-  const st = S && S.settings && S.settings.chatUI;
-  const k = st && CHAT_SKINS.find(x => x.id === st.skin);
+  const st = S && S.settings;
+  const c = st && st.pet && PET_CHARS.find(x => x.id === st.pet.char);
+  if (c && c.set !== null) return c.set;
+  const u = st && st.chatUI;
+  const k = u && CHAT_SKINS.find(x => x.id === u.skin);
   return (k && k.art) || "";
 }
 
@@ -13337,10 +13984,10 @@ function chatUI(){
 function chatSkinSet(id){
   if (!CHAT_SKINS.some(x => x.id === id)) return;
   const u = chatUI(), was = chatArtSet();
-  /* Halo is drawn to move: the first time it is picked, the panel's motion
-     switches come on (each stays a switch in Look and behaviour) - unless
-     this PC has asked for less motion */
-  if (id === "halo" && !(u.tried || []).includes("halo") && !chatCalm())
+  /* Halo and Neon are drawn to move: the first time one is picked, the
+     panel's motion switches come on (each stays a switch in Look and
+     behaviour) - unless this PC has asked for less motion */
+  if ((id === "halo" || id === "neon") && !(u.tried || []).includes(id) && !chatCalm())
     ["reveal", "glow", "pulse", "ambient", "typing", "chips", "icons"].forEach(k => { u[k] = true; });
   u.skin = id; u.skinPicked = true;
   /* a skin marked New stops saying so once it has been tried */
@@ -16658,7 +17305,7 @@ function aboutSearch(q, n){
   }).filter(x => x.score > 0).sort((a, b) => b.score - a.score).slice(0, n || 3);
 }
 /* is this question about Resolv itself, rather than about their work */
-const ABOUT_OWN = /\u1780\u17b6\u179b\u1780\u17b7\u1785\u17d2\u1785|\b(resolv|kalkech|kal kech|this app|the app|in the app|your(self)? (version|features?)|what'?s new|what is new|new (in|feature|version)|release notes?|change ?log|changelog|version|feature|setting|settings|set ?up|preset|skin|theme|lumen|nova|nebula|aurora|carbon|prism|halo|crimson|export(?:ing)?|import(?:ing)?|pixel|desk pet|shortcut|keyboard|alerts?|bell|reminders?|notifications?|bridge|power automate|prompt|language|khmer|menu|button|look and behaviou?r|sources?|document indexing|index(?:ing)?|re-?index(?:ing|ed)?|citations?|pdf runbooks?|(?:add|upload|import|update|replace) (?:a |an |my |the )?(?:new |updated )?(?:pdf|markdown|word|document|runbook|guideline|standard|policy)s?|answer was not found|not found|supports? (?:this|that|the) answer)\b/i;
+const ABOUT_OWN = /\u1780\u17b6\u179b\u1780\u17b7\u1785\u17d2\u1785|\b(resolv|kalkech|kal kech|this app|the app|in the app|your(self)? (version|features?)|what'?s new|what is new|new (in|feature|version)|release notes?|change ?log|changelog|version|feature|setting|settings|set ?up|preset|skin|theme|lumen|nova|nebula|aurora|carbon|prism|halo|crimson|neon|cyberpunk|character|export(?:ing)?|import(?:ing)?|pixel|desk pet|shortcut|keyboard|alerts?|bell|reminders?|notifications?|bridge|power automate|prompt|language|khmer|menu|button|look and behaviou?r|sources?|document indexing|index(?:ing)?|re-?index(?:ing|ed)?|citations?|pdf runbooks?|(?:add|upload|import|update|replace) (?:a |an |my |the )?(?:new |updated )?(?:pdf|markdown|word|document|runbook|guideline|standard|policy)s?|answer was not found|not found|supports? (?:this|that|the) answer)\b/i;
 const ABOUT_HELP = /\b(how (do|can|to|should|does)|where (is|are|do|can)|can (i|you|it)|is there|does it|what does|what is|turn (on|off)|switch (on|off)|enable|disable|configure|change|show me how|why (did|does|do|is|was)|which (source|document))\b/i;
 const ABOUT_NEWS = /\b(what'?s new|what is new|what changed|what has changed|what (?:was|were|has been|have been|got) (?:added|new|changed|fixed|improved)|new in|release notes?|change ?log|changelog|(?:latest|last|newest|current|this) (?:resolv )?(?:version|release|update)|which version|what version|version (are you|is this|am i))\b/i;
 function aboutForFlow(q){
@@ -18912,7 +19559,7 @@ function memoryIndexForFlow(q){
                        through a settings key would skip the draft/approved
                        distinction entirely, which is the whole point of it. */
 const FLOW_SET = {
-  ui:             { type:"text",   what:"The visual treatment: nova, studio, quiet or classic" },
+  ui:             { type:"text",   what:"The visual treatment: neon, prism, nova, studio, quiet or classic" },
   owner:          { type:"text",   what:"Your name, used in reports and hand-overs" },
   remind:         { type:"yes/no", what:"Windows reminders on or off" },
   lead:           { type:"number", what:"Minutes of warning before something is due",
@@ -22274,11 +22921,12 @@ async function renderModal(){
       '<option value="subtle"' + (st.motion === "subtle" ? " selected" : "") + ">" + LE("MotionSubtle") + "</option>" +
       '<option value="none"'   + (st.motion === "none" ? " selected" : "") + ">" + LE("MotionNone") + "</option></select>") +
     fr(L("UiMode"), '<select class="in" id="fUi">' +
-      '<option value="studio"'  + (["quiet", "classic", "nova", "prism"].indexOf(st.ui) < 0 ? " selected" : "") + ">" + LE("UiStudio") + "</option>" +
+      '<option value="studio"'  + (["quiet", "classic", "nova", "prism", "neon"].indexOf(st.ui) < 0 ? " selected" : "") + ">" + LE("UiStudio") + "</option>" +
       '<option value="quiet"'   + (st.ui === "quiet" ? " selected" : "") + ">" + LE("UiQuiet") + "</option>" +
       '<option value="classic"' + (st.ui === "classic" ? " selected" : "") + ">" + LE("UiClassic") + "</option>" +
       '<option value="nova"'    + (st.ui === "nova" ? " selected" : "") + ">" + LE("UiNova") + "</option>" +
-      '<option value="prism"'   + (st.ui === "prism" ? " selected" : "") + ">" + LE("UiPrism") + "</option></select>") +
+      '<option value="prism"'   + (st.ui === "prism" ? " selected" : "") + ">" + LE("UiPrism") + "</option>" +
+      '<option value="neon"'    + (st.ui === "neon" ? " selected" : "") + ">" + LE("UiNeon") + "</option></select>") +
     '<p style="font-size:11.5px;color:var(--ink-2);margin:-6px 0 14px;line-height:1.7">' +
       L("UiNote") + "</p>" +
     fr(L("Density"), '<select class="in" id="fDe">' +
@@ -22301,6 +22949,15 @@ async function renderModal(){
             L("PetMotionOff") + "</p>" : "") +
         fr(L("PetName"), '<input class="in" id="fPetName" maxlength="24" value="' +
           esc(petName()) + '" placeholder="' + LE("PetNamePh") + '">') +
+        /* the character, as a picture of each standing about */
+        fr(L("PetChar"), '<div class="petpick" role="radiogroup">' + PET_CHARS.map(c => {
+          const set = c.set === null ? ((CHAT_SKINS.find(k => k.id === chatUI().skin) || {}).art || "") : c.set;
+          const src = PIX[set + "pet-idle"] || PIX["pet-idle"];
+          return '<button type="button" class="petc' + (pc.char === c.id ? " on" : "") + '" data-petchar="' + c.id +
+            '" role="radio" aria-checked="' + (pc.char === c.id) + '"><img class="pxl" alt="" draggable="false" src="' + esc(src) + '">' +
+            "<span>" + LE(c.key) + "</span></button>";
+        }).join("") + "</div>") +
+        '<p style="font-size:11.5px;color:var(--ink-2);margin:-6px 0 12px;line-height:1.7">' + L("PetCharHint") + "</p>" +
         fr(L("PetCorner"), '<select class="in" id="fPetCorner">' +
           [["br", "PetCornerBR"], ["bl", "PetCornerBL"],
            ["tr", "PetCornerTR"], ["tl", "PetCornerTL"]].map(([v, k]) =>
@@ -23019,7 +23676,7 @@ function wireModal(){
   if ($("fMo")) $("fMo").onchange = () => feel("motion", $("fMo").value);
   if ($("fUi")) $("fUi").onchange = () => {
     const want = $("fUi").value;
-    if ((want === "nova" || want === "prism") && S.settings.ui !== want){ lookChoose(want); renderModal(); return; }
+    if ((want === "nova" || want === "prism" || want === "neon") && S.settings.ui !== want){ lookChoose(want); renderModal(); return; }
     const leaving = novaish();
     lookChoose(want);
     touch(); renderAll();
@@ -23043,6 +23700,7 @@ function wireModal(){
     petCfg().corner = $("fPetCorner").value;
     touch(); petPaint();
   };
+  $$("[data-petchar]").forEach(b => b.onclick = () => petCharSet(b.dataset.petchar));
   on("fFeelReset", () => {
     S.settings.motion = "full"; S.settings.density = "comfortable"; S.settings.textScale = 100;
     applyFeel(); touch(); renderModal();
@@ -30665,10 +31323,10 @@ $("vAi").addEventListener("click", e => {
   if (row && row.dataset.id) openDrawer(row.dataset.id);
 });
 function themeFlip(){
-  /* Nova and Prism go between their own light and dark */
-  const own = /^(nova|prism)(-night)?$/.exec(S.settings.theme || "");
-  if (novaish() && own){
-    applyTheme(own[2] ? own[1] : own[1] + "-night"); touch(); novaSync(); return;
+  /* Nova, Prism and Neon go between their own light and dark */
+  const pal = LOOK_PALS[S.settings.ui], th = S.settings.theme;
+  if (pal && (th === pal.light || th === pal.dark)){
+    applyTheme(th === pal.light ? pal.dark : pal.light); touch(); novaSync(); return;
   }
   const list = allPalettes();
   const i = Math.max(0, list.findIndex(p => p.id === S.settings.theme));

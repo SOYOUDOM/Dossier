@@ -73,8 +73,8 @@ A *workspace* is a folder the user picks (File System Access API):
 - **Talk to the owner in plain, simple English** (not their first language).
   Short steps, no jargon without explanation.
 - **New designs are added as selectable presets; existing ones are never
-  removed** (looks: Studio, Quiet, Classic, Nova, Prism; chat skins: Nebula,
-  Lumen, Crimson, Halo). The one exception so far was the owner's own request in 5.14:
+  removed** (looks: Studio, Quiet, Classic, Nova, Prism, Neon; chat skins:
+  Nebula, Lumen, Crimson, Halo, Neon; characters: robot, heart, neon cat). The one exception so far was the owner's own request in 5.14:
   the chat skins Aurora, Carbon, Ember and Paper were removed (`chatUI()`
   moves a workspace that used one to Nebula). Do not remove anything else
   unless the owner asks.
@@ -91,13 +91,13 @@ A *workspace* is a folder the user picks (File System Access API):
 - Commit messages: clear summary + body; no model names in commits, code or
   docs. Do not open a pull request unless the owner asks.
 - Work so far is on branch `claude/chat-panel-pixel-art-gifs-d822hq`
-  (latest: 5.17.0). Follow the branch instructions of your own session.
+  (latest: 5.18.0). Follow the branch instructions of your own session.
 
 ## Testing
 
 ```
 node --test                                   # 54 unit tests (Sources, grounding, names check, code origin, flow reply fields, diagrams)
-node tests/e2e/run.js                         # the app in headless Chrome/Edge: 188 checks (CHROME=<path> to choose)
+node tests/e2e/run.js                         # the app in headless Chrome/Edge: 197 checks (CHROME=<path> to choose)
 node flow/check-prompt.js                     # after editing flow/prompt.txt ...
 python3 flow/embed-prompt.py                  # ... then copy it into flow.js (PROMPT_BUILTIN)
 node tests/fixtures/make-pdf.js               # regenerate the PDF fixtures
@@ -119,6 +119,42 @@ Also useful:
   `DossierFlow.validate`. `tests/e2e/run.js` is a working example of all of it.
 
 ## Recent history (newest first)
+
+- **5.18.0** — Owner asked for a cyberpunk-style preset (they named a
+  well-known cyberpunk video game) "for all components", and for the pet to
+  be selectable. Drawn after the genre, **not** the game: no game name, logo,
+  font, character or slogan in the repository (like Crimson's rule) — keep
+  it that way.
+  - *Neon look* (CSS `NEON` after `/PRISM`): `UI_MODES` + `"neon"`,
+    `novaish()` covers it, `applyUi` sets `data-neon`; `LOOK_PALS`
+    ({nova, prism, neon} → light/dark ids) and `LOOK_PAL_RE` replace the
+    nova/prism regexes in `lookPalette(look, mode)`, `themeFlip()`,
+    `novaLeave()`; palettes `neon` (dark) / `neon-day` (light, accent red
+    because yellow text is unreadable on white); `neonChoose()` (dark first,
+    offers the Neon skin); `prismOn()` is true for Prism **and** Neon, so the
+    sliding light (`#prInd`, a yellow chamfered block here), spotlight,
+    `prismEnter` stagger (here `nnOn`, a neon-tube flicker), `prismReveal`
+    (here `nnWipe`) and `prismProbe` serve both. Glitch title:
+    `#nxTitle[data-text]` (set in `novaSync`) drawn twice by
+    `::before/::after` (`nnGlitchA/B`). Tokens `--nn-*` (`--nn-clip`,
+    `--nn-bracket` HUD corners), Bahnschrift via `--nn-font`. Loops: scan bar
+    `.app::after`, title glitch, status cursor — Full motion only, not with
+    reduced motion or `data-still`. Filter chips are outlined, not filled.
+  - *Neon chat skin* (CSS `NEON (the chat skin)` after `/HALO`; `CHAT_SKINS`
+    id `neon`, `lm:true`, `art:"neon/"`): SVG cat-head marks
+    (`--lm-mark/-live/-idle`), scan lines on `.chgrid`, horizon on `.chaur`,
+    scan bar `.chsweep`, `nnOnC` reveal, terminal thinking with cursor.
+    `chatSkinSet` turns the motion switches on at first pick (Halo and Neon).
+  - *The neon cat*: `art/make-pixel-art.py` `PAL_NEON`, `CAT`, `CAT_HEAD`,
+    `visor()`, `cat_pose()`, `nn_*` (think = a sweep across the visor;
+    `nn_ask`/`nn_new` recoloured for contrast), `SPRITES_NEON` →
+    `assets/pixel/neon/`, `art/contact-sheet-neon.png`; `embed-pixel-art.py`
+    NAMES + `neon/`. Robot and heart GIFs byte-identical (checked by md5).
+  - *Pet character*: `PET_CHARS` (auto/robot/heart/cat → set), stored in
+    `settings.pet.char`; `chatArtSet()` returns the picked set before the
+    skin's, so the chat's sprites and the pet change together (one character
+    since 5.12); `petCharSet(id)`; Appearance → Desk pet → Character cards
+    (`.petpick` / `.petc`, `[data-petchar]`).
 
 - **5.17.0** — Owner: "export only the selected choice … include the
   knowledge file source … a new preset for the whole layout and for the chat

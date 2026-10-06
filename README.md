@@ -169,7 +169,7 @@ With the demo copied in you should immediately see:
 | `assets/assistant-logo.png`, `assets/assistant-bg.jpg` | — | optional | The assistant's own mark and the picture behind its panel. Each is asked for once when the panel opens and used only if it answers. |
 | `assets/crimson-mark.png` | — | optional, not shipped | Your own mark for the **Crimson** skin. Asked for only when an `assets` folder is there; Crimson otherwise draws its own heart. |
 | `assets/thinking.gif` | 1.5 KB | optional | The animation shown while an answer is on its way, when the pixel set is off. The same file travels inside `dossier.html` as two kilobytes of base64, so a copy on its own still has it; a file here overrides that. |
-| `assets/pixel/*.gif` | 9.7 KB | optional | The pixel set — nine sprites the assistant panel wears when **Pixel art** is on, and seven the desk pet wears. All sixteen also travel inside `dossier.html` as thirteen kilobytes of base64; a file here overrides its copy, one sprite at a time. |
+| `assets/pixel/*.gif` | 9.7 KB | optional | The pixel set — nine sprites the assistant panel wears when **Pixel art** is on, and seven the desk pet wears. All sixteen also travel inside `dossier.html` as base64; a file here overrides its copy, one sprite at a time. `crimson/` and `neon/` hold the same sixteen for the heart and the neon cat. |
 | `assets/pixel/crimson/*.gif` | 9.8 KB | optional | The same sixteen for the **Crimson** skin: the heart. Inside `dossier.html` too, as `crimson/<name>`. |
 | `art/make-pixel-art.py` | ~40 KB | — | Where the sprites are drawn: each frame is a picture written out in characters, one per pixel. Stdlib Python — it writes the GIFs itself, LZW and all. Also writes `art/contact-sheet.png` and `art/contact-sheet-crimson.png`, every frame on a dark band and a light one. |
 | `art/embed-pixel-art.py` | 2.2 KB | — | Carries `assets/pixel/*.gif` into `dossier.html` as base64, between two marker comments. Run after the art changes; never otherwise. |
@@ -278,8 +278,9 @@ adds `D-0099` without touching `seq` will not cause a collision.
 | `systems` | array of `{name, colour}` | 8 seeded | The applications you support. `colour` is a hex string and drives every chip and bar for that system. |
 | `types` | array of string | `Incident, Service request, Change, Development, Meeting, Admin` | Work types. |
 | `parties` | array of string | 10 seeded | Teams you end up waiting on: *Data team, DBA, Infra, Network, Security, Vendor, Agency ops, Finance, Release management, Business user*. |
-| `ui` | `"studio"` \| `"quiet"` \| `"classic"` \| `"nova"` \| `"prism"` | `"studio"` | The look ([§6.5](#65-looks-and-themes)). |
-| `theme` | `"archive"` \| `"vault"` \| `"studio"` \| `"nova"` \| `"prism"` (and their dark ones) \| custom id | `"studio"` | The palette. The built-in ones cannot be deleted. |
+| `ui` | `"studio"` \| `"quiet"` \| `"classic"` \| `"nova"` \| `"prism"` \| `"neon"` | `"studio"` | The look ([§6.5](#65-looks-and-themes)). |
+| `pet` | `{on, corner, char}` | on (off with reduced motion), `"br"`, `"auto"` | The desk pet: shown or not, its corner, and its character — `"auto"` (the chat skin's own), `"robot"`, `"heart"` or `"cat"`. |
+| `theme` | `"archive"` \| `"vault"` \| `"studio"` \| `"nova"` \| `"prism"` \| `"neon"` (and their light or dark partners) \| custom id | `"studio"` | The palette. The built-in ones cannot be deleted. |
 | `palettes` | array | `[]` | Your own themes: copy one, change five colours, the other twenty-odd are derived. |
 | `fonts` | object | — | `{ khmer: "auto" | <family> }` and interface font choices. |
 | `remind` | boolean | `false` | Windows notifications on/off. |
@@ -462,8 +463,8 @@ in `dossier.json`:
 
 | | |
 |---|---|
-| **Skin** | **Nebula** · **Lumen** · **Crimson** · **Halo** (new in 5.17). Aurora, Carbon, Ember and Paper were taken away in 5.14 at the owner's request; a workspace that used one opens in Nebula. Nebula's surfaces take their colour from the skin, not from the app theme; Lumen, Crimson and Halo follow the app's light or dark mode and change the layout too (below). |
-| **Motion** | Seven switches — answers arriving, edge light, the living background, the orb pulse, thinking dots, springy buttons, and a passing light on an interval you set — and an eighth, *Lively icons*, while Lumen, Crimson or Halo is the skin. Each one genuinely unhooks its animation. |
+| **Skin** | **Nebula** · **Lumen** · **Crimson** · **Halo** (5.17) · **Neon** (new in 5.18). Aurora, Carbon, Ember and Paper were taken away in 5.14 at the owner's request; a workspace that used one opens in Nebula. Nebula's surfaces take their colour from the skin, not from the app theme; Lumen, Crimson, Halo and Neon follow the app's light or dark mode and change the layout too (below). |
+| **Motion** | Seven switches — answers arriving, edge light, the living background, the orb pulse, thinking dots, springy buttons, and a passing light on an interval you set — and an eighth, *Lively icons*, while Lumen, Crimson, Halo or Neon is the skin. Each one genuinely unhooks its animation. |
 | **Pixel art** | One switch, for the sprites below. Off leaves the panel exactly as it was: the drawn orb, the old waiting animation, a `✓` on a receipt. |
 | **Ask before doing anything** | On by default: everything is put to you first. Off: it does what you ask straight away and the line says *done without asking*. `Ctrl`+`Z` still undoes it either way. |
 
@@ -473,8 +474,8 @@ rest of the app — the record sheet stays still while you read it.
 
 #### Lumen
 
-The skin that changes the layout as well as the colours (with Crimson and
-Halo, below, which are built on it). Pick it under **◎ →
+The skin that changes the layout as well as the colours (with Crimson, Halo
+and Neon, below, which are built on it). Pick it under **◎ →
 Skin → Lumen**; the other skins stay exactly as they were, and switching back
 is one click.
 
@@ -609,6 +610,39 @@ move, so the first time you pick it, the panel's motion switches (◎ →
 Motion) are turned on. Each one is still yours to switch off. A PC that
 asks for reduced motion is left as it is.
 
+#### Neon
+
+**The cyberpunk skin**, new in 5.18 and drawn to go with the **Neon** look
+([§6.5](#65-looks-and-themes)): black, neon yellow and cyan with a hot red,
+square edges and cut corners. It uses Lumen's layout, with its own colours,
+mark, motion and a character of its own — **a small yellow cat with a
+visor**, whose cyan eyes glow in the dark glass.
+
+**How do I use the Neon chat skin?** Open the chat panel, press **◎** (Look
+and behaviour), and under **Skin** choose **Neon**. Choosing the **Neon**
+look also offers it: press **Use Neon in the chat too** on the message.
+
+What you see:
+
+- **The cat:** with **Pixel art** on, it waves on the greeting, a light
+  sweeps across its visor while it thinks, it dozes when an answer is slow,
+  and the desk pet becomes the cat too (unless you picked another character
+  — see [the desk pet](#66-the-desk-pet)).
+- **The mark:** the cat's head on a yellow tile with a corner cut. It blinks
+  while it waits, and its visor scans while an answer is on its way.
+- **The greeting:** *GOOD MORNING* in capitals, split into red and cyan,
+  with a small glitch now and then, and a terminal line under it.
+- **Scan lines** behind the conversation, a red-and-cyan glow at the edges,
+  and a scan bar that passes down now and then (**Passing light**).
+- **Answers switch on like neon tubes** — a flicker, then steady — part by
+  part.
+- **Thinking:** terminal words with a blinking cursor, and a striped line
+  running under the header.
+- **The box you type in:** black with a cyan edge, yellow while you type;
+  **Send** is a yellow block with a corner cut.
+- **In the app's light mode** it turns to Neon Day: black and red on a warm
+  off-white, with yellow for what is filled.
+
 #### The pixel set
 
 Nine sprites, sixteen colours, drawn at sixteen pixels square — twenty-four
@@ -671,8 +705,8 @@ or screen-reader user is never tabbing around a page they cannot see.
 
 Two separate choices, both in *Menu → Look*.
 
-**The look** is the shape of the interface. **Prism** is the newest (5.17),
-described just below. **Nova** is the one before it: a page
+**The look** is the shape of the interface. **Neon** is the newest (5.18)
+and **Prism** the one before it (5.17), both described just below. **Nova** is the one before it: a page
 header on every view (the date, a greeting and the day's count on Day; search,
 light/dark, *Ask AI* and *New record* on the right), the sidebar grouped into
 Work, Knowledge and Assistant with a line icon and a live count per view,
@@ -685,7 +719,43 @@ glyphs when the assistant is docked at narrower widths. **Quiet** keeps the
 top bar with the same restraint — one line per record, status as a dot, colour
 only where it must be noticed. **Classic** is the original: boxed rows and
 coloured chips, unchanged. Below 900px every look becomes the top bar. The
-assistant can switch it (`ui`: `prism`, `nova`, `studio`, `quiet` or `classic`).
+assistant can switch it (`ui`: `neon`, `prism`, `nova`, `studio`, `quiet` or `classic`).
+
+#### What is the Neon look? (the cyberpunk one)
+
+Neon is Nova's layout as **a screen out of a cyberpunk story** — black,
+neon yellow and electric cyan, with a hot red for what is wrong. It is drawn
+after the style of those stories, not copied from any game or film: no name,
+logo, font or picture of anybody's is in it.
+
+- **Square and cut:** no rounded corners; the main button, the open view,
+  the day's first card and every dialog have a corner cut off. Cards carry
+  HUD brackets — a yellow corner at the top left, a cyan one at the bottom
+  right.
+- **Type:** headings, the navigation, labels and buttons in capitals, in
+  **Bahnschrift** (a font that comes with Windows 10 and 11, so nothing is
+  downloaded); labels, times and the status line in a terminal font. Your
+  records stay in the normal reading font.
+- **Yellow on the view you are on:** a yellow block with a corner cut slides
+  to it in the sidebar. **New record** is yellow with black words, and the
+  day's first card is yellow with a black-and-yellow hazard stripe.
+- **Behind everything:** a faint grid, scan lines, a red-and-cyan glow at
+  the edges of the screen, and a scan bar that passes down now and then.
+- **Glitches:** the page title splits into red and cyan for a moment when a
+  view opens, and every few seconds after; records glow cyan under the
+  pointer and their titles split a little when you point at them.
+- **Things switch on:** cards and records flicker on like neon tubes when a
+  view opens; dialogs and the record sheet switch on the same way; messages
+  slide in with a flicker.
+- **The status line is a terminal**, with a blinking cursor.
+- **Light and dark:** **Neon** is the dark one (it starts there). The ◐
+  button switches to **Neon Day** — black and red on a warm off-white, with
+  yellow for what is filled — with a wipe down the screen.
+
+**How do I turn Neon on?** *Menu → Look*, **Look → Neon**. It puts on the
+**Neon** palette and offers the **Neon** chat skin and its cat to go with
+it. Choosing another look puts your previous palette back. *Motion* makes it
+move less or not at all, as with Prism.
 
 #### What is the Prism look?
 
@@ -729,11 +799,12 @@ for a moment after Prism comes on; if it is slow, it keeps the aurora and
 the other looping effects still on that PC. Everything else in Prism still
 moves.
 
-**The theme** is the palette. Eight built in — **Studio** (graphite ink,
+**The theme** is the palette. Ten built in — **Studio** (graphite ink,
 off-white canvas, one indigo accent), **Studio Dark**, **Nova** (cool canvas,
 blue accent), **Nova Night**, **Prism** (lavender white, violet and cyan),
-**Prism Night**, **Archive** (warm, paper) and **Vault** (dark) — none
-deletable. A custom palette is a copy of
+**Prism Night**, **Neon** (near-black, neon yellow and cyan), **Neon Day**
+(warm off-white, black and red), **Archive** (warm, paper) and **Vault**
+(dark) — none deletable. A custom palette is a copy of
 one with five colours changed; the other twenty-odd (rules, muted text, hover
 states, shadows) are derived from those five. Any look works with any theme.
 Palettes are stored in `dossier.json`, so a theme travels with the folder.
@@ -745,8 +816,9 @@ alone, and choosing again afterwards always sticks.
 ### 6.6 The desk pet
 
 **The desk pet is the assistant.** Not a second character: the same one, out
-of its panel and parked in a corner of the window — the robot, or the heart
-while the chat skin is **Crimson**. It is the same drawing and the same
+of its panel and parked in a corner of the window — the robot, the heart
+while the chat skin is **Crimson**, the neon cat while it is **Neon**, or
+whichever of them you pick (below). It is the same drawing and the same
 sixteen colours as [the pixel set](#the-pixel-set), it has the same name, and
 since 5.12 it behaves as the same person:
 
@@ -786,7 +858,21 @@ over the chat, in the box you type in, on the pet, and told to the AI. A pet
 named before 5.12 gives its name to the assistant, unless the assistant
 already had one.
 
-*Menu → Appearance → Desk pet* holds the switch, the name and the corner. A
+#### How do I choose the pet? (robot, heart or cat)
+
+1. Open **Menu → Appearance** and find **Desk pet**.
+2. Under **Character**, click a picture:
+   - **Match the chat skin** (the usual): the skin's own character — the
+     heart for Crimson, the cat for Neon, the robot for the others;
+   - **Robot**, **Heart** or **Neon cat**: that one, whatever the skin.
+3. It changes at once — in its corner **and in the chat** (the greeting, the
+   thinking picture, the header). The pet and the assistant are one
+   character, so they always match.
+
+The choice is kept in `dossier.json` with the rest of the pet's settings.
+
+*Menu → Appearance → Desk pet* holds the switch, the name, the character and
+the corner. A
 machine that has asked for reduced motion — or an interface already set to
 *Motion: none* — starts with the pet switched off; turning it on there
 overrides that, because it is your corner. The pet and the assistant panel's
@@ -3454,7 +3540,7 @@ first thing to run after changing anything it touches:
 
 ```
 node --test                 # tests/*.test.js: 54 tests - Sources (every scenario below), names and queries in answers, and diagrams
-node tests/e2e/run.js       # the app in Chrome or Edge: 188 checks on the screen
+node tests/e2e/run.js       # the app in Chrome or Edge: 197 checks on the screen
 node flow/check-prompt.js   # the prompt's examples against the reply validator
 ```
 

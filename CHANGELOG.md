@@ -6,6 +6,44 @@ holds — which is what to paste into a bug report.
 
 ---
 
+## 5.18.0 - 2026-10-06
+
+**Neon: a cyberpunk theme for the whole app and the chat, with a cat of its
+own - and the desk pet is yours to choose.**
+
+- **Neon, a new look** (Menu → Look → Neon): Nova's layout as a screen out
+  of a cyberpunk story - black, neon yellow and electric cyan with a hot red
+  for what is wrong. Square edges and cut corners; HUD brackets on the
+  cards; capitals in Bahnschrift (it comes with Windows) and a terminal font
+  for labels and the status line; a yellow block that slides to the view you
+  open; a yellow *New record* and a yellow first card with a hazard stripe;
+  a grid, scan lines and a red-and-cyan glow behind everything, and a scan
+  bar passing down the screen; page titles that glitch into red and cyan;
+  cards, records and dialogs that switch on like neon tubes; a blinking
+  cursor on the status line. Its palettes: **Neon** (dark, the one it starts
+  in) and **Neon Day** (black and red on a warm off-white); ◐ switches with
+  a wipe down the screen.
+- **Neon, a new chat skin** (◎ → Skin → Neon), in the same colours, with
+  scan lines behind the conversation, answers that flicker on part by part,
+  terminal-style *thinking* with a cursor, a yellow Send button, and a mark
+  that is the cat's head on a yellow tile, its visor scanning while an
+  answer comes.
+- **A third character: the neon cat** - a small yellow cat with a dark
+  visor in which its cyan eyes glow. Sixteen pictures like the robot's and
+  the heart's: it waves, scans while it thinks, dozes, cheers, worries,
+  stamps a record, stretches and gets carried. It comes with the Neon chat
+  skin.
+- **Choose the pet.** *Menu → Appearance → Desk pet → Character*: **Match
+  the chat skin** (as before), **Robot**, **Heart** or **Neon cat**. The pet
+  and the assistant are one character, so the chat's pictures change with
+  it.
+- Drawn after the style of cyberpunk stories, not copied from any game or
+  film: no name, logo, font or picture of anybody's. Nothing new reaches the
+  network. Motion follows the Motion setting and the PC's reduced-motion
+  setting, as Prism's does.
+- Tests: 197 checks in the browser (9 new: the Neon look, its palettes and
+  light/dark, the Neon skin and its cat, picking the pet's character).
+
 ## 5.17.0 - 2026-10-06
 
 **Export only what you choose - with your knowledge documents - and two new
