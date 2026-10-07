@@ -863,7 +863,8 @@ already had one.
 1. Open **Menu → Appearance** and find **Desk pet** (click it to open it).
 2. Under **Character**, click a picture: **Robot**, **Heart** or **Neon
    cat**.
-3. The pet in the corner changes at once.
+3. The pet in the corner changes at once - and so does the assistant's
+   picture in the chat (5.20), unless you chose **Logo** for it.
 
 **The pet is your free choice (5.19).** Changing the chat skin does not
 change the pet, and picking a pet does not change the chat: the pictures
@@ -2241,17 +2242,23 @@ document, runbook interviews, Diagnose).
 
 #### What is the Reason power-up? How do I turn it off?
 
-When you use **KalKech reason**, the chat lights up so you can see the
-strongest model is at work — like the rainbow a coding assistant puts on its
-"think hardest" word, but bigger:
+When you use **KalKech reason**, the chat shows that the strongest model is
+at work. Since 5.20 it looks like this (the style the owner picked, called
+**Mind map**):
 
 | When | What you see |
 |---|---|
-| you pick **Reason** in the pill | a burst of light from the pill; the pill, the box you type in **and the words you type** turn rainbow; on an empty conversation the character stands in a turning ring of colour |
-| you press Send | a burst from the Send button |
-| it is thinking | colours run round the edge of the chat; the waiting line *"KalKech reason is thinking it through…"* flows in rainbow over an **energy bar**; the character sits in a **spinning ring with sparks**; the mark in the header glows |
-| the chat is closed while it thinks | the **desk pet** wears the ring and the sparks |
-| the answer arrives | a sweep of colour across the answer and a burst from its mark |
+| you pick **Reason** in the pill | a small lightning bolt on the pill, and now and then **lightning strikes the Send button** |
+| it is thinking | a **mind map** grows from your pet to what KalKech sent with your question (for example *16 passages*, *Runbook: Month-end close*, *240 records*, *6 past fixes*), with small lights running along the lines; **lightning strikes your pet** again and again, and the Send button too |
+| the chat is closed while it thinks | lightning strikes the **desk pet** in its corner |
+| the answer arrives | one last strike on the pet beside KalKech's name |
+
+The labels on the map are real: they are counted from what is sent with
+your question (your documents' passages, the runbook that matched, your
+records, past fixes, notes, scripts, files).
+
+**The rainbow style from 5.19 is still there** if you liked it: ◎ (Look and
+behaviour) → **Motion** → **Reason power-up** → **Style: Rainbow**.
 
 **To turn it off** (either place does it):
 
@@ -2261,13 +2268,22 @@ strongest model is at work — like the rainbow a coding assistant puts on its
   **Reason power-up**.
 
 Off, KalKech reason looks like the other models (just the coloured pill).
-The switch is saved with your workspace.
+The switch and the style are saved with your workspace.
 
 It follows **Menu → Look → Motion**: with *Subtle* or *None*, or a PC set to
-reduce motion, the colours are shown but nothing moves and there are no
-bursts. It is light on the PC: the moving parts slide rather than being
-redrawn, and it was checked to keep a smooth 60 frames a second even on a PC
-drawing without a graphics card.
+reduce motion, the map is drawn but nothing moves and there is no
+lightning. It is light on the PC: measured at 60 frames a second while it
+runs, even on a PC drawing without a graphics card.
+
+#### How do I put my pet in the chat instead of the logo?
+
+It is already there (5.20): the **desk pet's character** is the assistant's
+picture in the chat - in the header, beside KalKech's name over every
+answer, and waving on an empty conversation. Pick the character in
+**Menu → Appearance → Desk pet → Character** (robot, heart or neon cat).
+
+To have the logo back: click **◎** (Look and behaviour) at the top of the
+chat → **Assistant's picture** → **Logo**.
 
 #### How do I add KalKech reason to my flow?
 
@@ -3599,7 +3615,7 @@ first thing to run after changing anything it touches:
 
 ```
 node --test                 # tests/*.test.js: 54 tests - Sources (every scenario below), names and queries in answers, and diagrams
-node tests/e2e/run.js       # the app in Chrome or Edge: 212 checks on the screen
+node tests/e2e/run.js       # the app in Chrome or Edge: 217 checks on the screen
 node flow/check-prompt.js   # the prompt's examples against the reply validator
 ```
 

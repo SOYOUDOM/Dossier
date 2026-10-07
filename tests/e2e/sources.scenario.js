@@ -472,12 +472,18 @@
        workspace showed before), whatever the skin */
     check("...and the desk pet keeps its own character (5.19)", petArtSet() === "" &&
           !/^crimson\//.test(($("petBtn").querySelector("img.pxl") || {}).getAttribute("data-pix") || ""));
-  check("...the blue star that comes with KalKech does not cover the heart's own mark", !chatEl.classList.contains("ownmark"));
+  /* 5.20: the assistant's picture is the pet by default; these are about
+     the logo, which is still a choice */
+  check("(5.20) the chat wears the pet as its picture by default", chatMarkKind() === "pet" && chatEl.classList.contains("petmark") &&
+        chatEl.style.getPropertyValue("--ch-mark").indexOf(PIX[pixKey("pet-idle", petArtSet())].slice(0, 40)) >= 0);
+  chatUI().mark = "logo"; chatMarkApply();
+  check("...the blue star that comes with KalKech does not cover the heart's own mark", !chatEl.classList.contains("ownmark") && !chatEl.classList.contains("petmark"));
   check("...and the greeting has its heartbeat line", getComputedStyle(document.querySelector("#chatLog .chhero .lmhs"), "::after").backgroundImage.includes("svg"));
   /* back to Lumen: the robot, the star, nothing of Crimson left behind */
   chatUI().skin = "lumen"; applyChatUI(); chatPaint(); await sleep(100);
   check("Lumen is as it was: its layout, the robot, its mark", "lm" in chatEl.dataset && pixKey("think") === "think" &&
         chatEl.classList.contains("ownmark") === !!CHAT_MARKS.base);
+  delete chatUI().mark; chatMarkApply();
   chatUI().skin = "nebula"; applyChatUI(); await sleep(50);
   check("...and a skin without Lumen's layout does not carry it", !("lm" in chatEl.dataset) && pixKey("hero") === "hero");
   chatUI().skin = "lumen"; applyChatUI();
@@ -1038,13 +1044,28 @@
   openChat(); chatNew(true); chatPaint(); await sleep(200);
   check("(5.19) the power-up switch is on, in Look and behaviour", $("chat").classList.contains("fx-power") && CHAT_FX.includes("power"));
   chatModelSet("reason");
-  check("...picking KalKech reason arms the chat", $("chat").classList.contains("pw-armed") &&
-        getComputedStyle($("chatModel"), "::before").content !== "none");
+  check("...picking KalKech reason arms the chat; (5.20) the mind map is the style, with a bolt on the pill", $("chat").classList.contains("pw-armed") &&
+        pwStyle() === "map" && $("chat").classList.contains("pw-map") && getComputedStyle($("chatModel").querySelector(".ml"), "::before").content !== "none");
+  check("...and lightning over the Send button", getComputedStyle(document.querySelector("#chat .chf"), "::after").content !== "none");
+  PW.ctx = null;   /* as flowAsk does before each question */
+  const mapRow = chatThinking($("chatLog"), "reason");
+  pwMapFill(mapRow, { sources:{ passages:[1, 2, 3] }, runbooksMatched:[{ title:"Month-end close" }], pastFixes:[1, 2], memory:[] });
+  const mapText = mapRow.querySelector(".pwmap") ? mapRow.querySelector(".pwmap").textContent : "";
+  check("(5.20) while it thinks: a map from the pet to what was sent, with the lightning on the pet",
+        $("chat").classList.contains("pw-run") && mapRow.classList.contains("pwm") && mapRow.querySelectorAll(".mm .nd").length === 4 &&
+        /3 passages/.test(mapText) && /Runbook: Month-end close/.test(mapText) && /records/.test(mapText) &&
+        !!mapRow.querySelector(".mm .zap") && !!mapRow.querySelector(".mm image"), mapText);
+  await shot("21-power");
+  chatThought(mapRow, null);
+  check("...and stops when the answer is in (map)", !$("chat").classList.contains("pw-run"));
+  /* the rainbow is still a choice */
+  chatUI().powerStyle = "rainbow"; applyChatUI();
+  check("...the Rainbow style is still there", $("chat").classList.contains("pw-rb") && getComputedStyle($("chatModel"), "::before").content !== "none");
   const pwRow = chatThinking($("chatLog"), "reason");
   check("...while it thinks: the panel runs, the row has its ring and energy bar",
         $("chat").classList.contains("pw-run") && pwRow.classList.contains("pw") && !!pwRow.querySelector(".pwcore .pwr") && !!pwRow.querySelector(".pwbar"));
-  await shot("21-power");
   chatThought(pwRow, null);
+  delete chatUI().powerStyle; applyChatUI();
   check("...and stops when the answer is in", !$("chat").classList.contains("pw-run"));
   const fastRow = chatThinking($("chatLog"), "fast");
   check("...the other models never power up", !fastRow.classList.contains("pw") && !$("chat").classList.contains("pw-run"));

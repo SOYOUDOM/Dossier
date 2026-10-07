@@ -6,6 +6,38 @@ holds — which is what to paste into a bug report.
 
 ---
 
+## 5.20.0 - 2026-10-07
+
+**Your pet is the assistant's picture, and KalKech reason thinks in a mind
+map, with lightning.**
+
+- **The pet replaces the logo in the chat.** The desk pet's character (robot,
+  heart or neon cat - Menu → Appearance → Desk pet) is now the assistant's
+  picture: in the chat's header, beside KalKech's name over every answer,
+  and waving on an empty conversation. Drawn as crisp pixels. The logo is
+  still a choice: ◎ Look and behaviour → *Assistant's picture* → *Logo*.
+- **A new style for the Reason power-up: Mind map**, picked by the owner
+  from a page of 91 designs. While KalKech reason thinks, lines grow from
+  your pet to what was sent with the question - the passages from your
+  documents, the runbook that matched, your records, past fixes, notes,
+  scripts, files - each with its real count, and small lights run along
+  the lines.
+- **Lightning.** While KalKech reason is picked, lightning strikes the Send
+  button now and then; while it thinks, lightning strikes your pet again and
+  again, and the Send button too; with the chat closed, the desk pet in its
+  corner is struck; the answer lands with one strike on the pet beside the
+  name.
+- **The rainbow from 5.19 stays** as the second style: ◎ → Motion →
+  *Reason power-up* → *Style: Rainbow*. The on/off switch is where it was
+  (and at the foot of the model menu).
+- Follows the Motion setting: with Subtle or None the map is drawn but
+  nothing moves and there is no lightning. Measured at 60 frames a second
+  while it runs, even without a graphics card.
+- Nothing new reaches the network.
+- Tests: 217 checks in the browser (5 new: the pet as the picture, the
+  mind map with real labels, lightning on the pill and the Send button,
+  the rainbow still a choice).
+
 ## 5.19.0 - 2026-10-07
 
 **Pick the pet freely, the right fonts for a Khmer name, and a power-up for

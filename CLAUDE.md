@@ -91,13 +91,13 @@ A *workspace* is a folder the user picks (File System Access API):
 - Commit messages: clear summary + body; no model names in commits, code or
   docs. Do not open a pull request unless the owner asks.
 - Work so far is on branch `claude/chat-panel-pixel-art-gifs-d822hq`
-  (latest: 5.19.0). Follow the branch instructions of your own session.
+  (latest: 5.20.0). Follow the branch instructions of your own session.
 
 ## Testing
 
 ```
 node --test                                   # 54 unit tests (Sources, grounding, names check, code origin, flow reply fields, diagrams)
-node tests/e2e/run.js                         # the app in headless Chrome/Edge: 212 checks (CHROME=<path> to choose)
+node tests/e2e/run.js                         # the app in headless Chrome/Edge: 217 checks (CHROME=<path> to choose)
 node flow/check-prompt.js                     # after editing flow/prompt.txt ...
 python3 flow/embed-prompt.py                  # ... then copy it into flow.js (PROMPT_BUILTIN)
 node tests/fixtures/make-pdf.js               # regenerate the PDF fixtures
@@ -119,6 +119,41 @@ Also useful:
   `DossierFlow.validate`. `tests/e2e/run.js` is a working example of all of it.
 
 ## Recent history (newest first)
+
+- **5.20.0** — After 5.19 the owner said they did not like the rainbow at
+  all and asked for a page of styles to pick from: a standalone preview
+  (not in the repo) grew to 91 designs over four rounds; they picked
+  **72, the mind map**, with: "replace the AI logo with the pet; lightning
+  strikes in a loop on the pet and the Send button".
+  - *Pet as the picture*: `chatMarkKind()` (`chatUI().mark`, "pet" by
+    default, "logo"); `chatMarkApply()` puts the pet's `pet-idle` in
+    `--ch-mark` and its `hero` in `--ch-hero` and sets `ownmark` +
+    `petmark` (the existing own-picture path: header `.chorb::after`, Lumen
+    labels `::before`, hero `.chorbx`); `petmark` CSS draws them pixelated at
+    24 / 96 / 144 px. Picker `[data-markpick]` (`.chmarks`) in Look and
+    behaviour; `petCharSet` calls `chatMarkApply`.
+  - *Mind map* (CSS `THE MIND MAP` after `/THE REASON POWER-UP`):
+    `pwStyle()` (`chatUI().powerStyle`, "map" default, "rainbow"); the 5.19
+    CSS is now gated `.chat.fx-power.pw-rb` / `.pet.pw.rb`; `applyChatUI`
+    sets `pw-rb` / `pw-map`. `chatThinking` (reason, map) builds
+    `.chb.thinking.pwm` with an empty `.pwmap`; `flowAsk` sets `PW.ctx`
+    (reset before `chatThinking`) and calls `pwMapFill(wait, ctx)`;
+    `pwMapNodes(ctx)` = passages, matched runbook, records (≤240), past
+    fixes, notes, scripts, files, lessons, incidents in window, the
+    conversation, then "Your question"/"Your calendar" (≥3, ≤4); SVG
+    `.mm`: lines `.ln` (drawn in, `--d`), nodes `.nd` (rects measured with
+    `getComputedTextLength`), SMIL signals only when `pwMoves()`, hub with
+    the pet's sprite, bolts `.zap.z1/.z2` + `.hit` ring. Lightning images:
+    `--zap` (white SVG bolt, glow by drop-shadows in the skin accent): the
+    Send bolt is `.chf::after` (Lumen icons hide the button's own pseudos
+    via `.lmh::before{display:none!important}`), the pill gets a masked
+    bolt on `.ml::before`, the desk pet `.pet.pw.map::before` by corner,
+    the landing `.pwzap` on the answer. Bursts (`pwBurst`) are rainbow only;
+    `pwCharge` just sets `pw-charge` (a strike now). Strings `PwStyle*`,
+    `PwMap*`, `ChatMark*`.
+  - Tests needed `PW.ctx = null` before calling `chatThinking` directly.
+    Screenshot tip: freeze a strike with `document.getAnimations()`,
+    `a.currentTime = duration * .735 + delay` (delay is negative).
 
 - **5.19.0** — Owner: "make the pet freely to choose, not based on the chat
   theme"; "the pet name in Khmer in the chat has no font - use the Khmer and
