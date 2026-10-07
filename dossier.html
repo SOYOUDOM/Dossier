@@ -3174,7 +3174,11 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
 .chat[data-lm]{
   --lm-mark-live:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%236366f1'/%3E%3Cstop offset='.55' stop-color='%238b5cf6'/%3E%3Cstop offset='1' stop-color='%23d946ef'/%3E%3CanimateTransform attributeName='gradientTransform' type='rotate' from='0 .5 .5' to='360 .5 .5' dur='2.4s' repeatCount='indefinite'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='24' cy='24' r='24' fill='url%28%23g%29'/%3E%3Cg transform='translate%2824 24%29'%3E%3Cpath fill='white' d='M0-11c.95 7.6 3.4 10.05 11 11-7.6.95-10.05 3.4-11 11-.95-7.6-3.4-10.05-11-11 7.6-.95 10.05-3.4 11-11z'%3E%3CanimateTransform attributeName='transform' type='scale' values='1%3B0.7%3B1' keyTimes='0%3B.5%3B1' calcMode='spline' keySplines='.45 0 .55 1%3B.45 0 .55 1' dur='1.3s' repeatCount='indefinite'/%3E%3C/path%3E%3C/g%3E%3Cpath fill='white' d='M34.5 10.5c.3 2.3.9 2.9 3.2 3.2-2.3.3-2.9.9-3.2 3.2-.3-2.3-.9-2.9-3.2-3.2 2.3-.3 2.9-.9 3.2-3.2z'%3E%3Canimate attributeName='opacity' values='.85%3B.85%3B.1%3B.85' keyTimes='0%3B0.3%3B.82%3B1' dur='1.3s' repeatCount='indefinite'/%3E%3C/path%3E%3C/svg%3E");
   --lm-mark-idle:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%236366f1'/%3E%3Cstop offset='.55' stop-color='%238b5cf6'/%3E%3Cstop offset='1' stop-color='%23d946ef'/%3E%3CanimateTransform attributeName='gradientTransform' type='rotate' from='0 .5 .5' to='360 .5 .5' dur='14s' repeatCount='indefinite'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='24' cy='24' r='24' fill='url%28%23g%29'/%3E%3Cg transform='translate%2824 24%29'%3E%3Cpath fill='white' d='M0-11c.95 7.6 3.4 10.05 11 11-7.6.95-10.05 3.4-11 11-.95-7.6-3.4-10.05-11-11 7.6-.95 10.05-3.4 11-11z'%3E%3CanimateTransform attributeName='transform' type='scale' values='1%3B0.93%3B1' keyTimes='0%3B.5%3B1' calcMode='spline' keySplines='.45 0 .55 1%3B.45 0 .55 1' dur='4s' repeatCount='indefinite'/%3E%3C/path%3E%3C/g%3E%3Cpath fill='white' d='M34.5 10.5c.3 2.3.9 2.9 3.2 3.2-2.3.3-2.9.9-3.2 3.2-.3-2.3-.9-2.9-3.2-3.2 2.3-.3 2.9-.9 3.2-3.2z'%3E%3Canimate attributeName='opacity' values='.85%3B.85%3B.1%3B.85' keyTimes='0%3B0.7%3B.82%3B1' dur='4s' repeatCount='indefinite'/%3E%3C/path%3E%3C/svg%3E");
-  --lm-font:"Resolv Inter","Inter Variable","Inter","Segoe UI Variable Text","Segoe UI",system-ui,-apple-system,"Dossier Khmer",sans-serif;
+  /* Inter, unless a face was picked in Appearance → Typeface; Khmer from
+     there always (5.19: a name in Khmer was drawn in the bundled face, or
+     in whatever the PC found, never the one picked) */
+  --lm-font:var(--f-own-ui,"Resolv Inter","Inter Variable","Inter","Segoe UI Variable Text","Segoe UI",var(--f-khmer),system-ui,-apple-system,"Dossier Khmer",sans-serif);
+  --lm-head:var(--f-own-display,var(--lm-font));
   --lm-mono:"Cascadia Code","JetBrains Mono","Cascadia Mono",Consolas,ui-monospace,monospace;
   --ch-bg:#ffffff; --ch-panel:#f6f6f8; --ch-line:#e7e7ec; --ch-ink:#18181b; --ch-dim:#6e6e7a;
   --ch-acc:#6157f5; --ch-acc2:#0f9f8f;
@@ -3306,7 +3310,7 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
 .chat[data-lm] .chb.bot.ans > *,.chat[data-lm] .chb.bot.thinking > *{grid-column:1 / -1;min-width:0}
 .chat[data-lm] .chb.bot.ans::before,.chat[data-lm] .chb.bot.thinking::before{content:var(--lm-name,"KalKech");grid-column:1 / -1;
   display:flex;align-items:center;height:24px;padding-left:33px;margin-bottom:8px;
-  font-size:13px;font-weight:650;letter-spacing:-.005em;color:var(--ch-ink);
+  font-family:var(--lm-head);font-size:13px;font-weight:650;letter-spacing:-.005em;color:var(--ch-ink);
   background:var(--lm-mark) 0 50% / 24px 24px no-repeat}
 .chat[data-lm].ownmark .chb.bot.ans::before,.chat[data-lm].ownmark .chb.bot.thinking::before{background-image:var(--ch-mark)}
 .chat[data-lm] .chb.bot .say{font-size:14px;line-height:1.7;color:var(--ch-ink);letter-spacing:-.003em}
@@ -3985,7 +3989,7 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
    no name, logo or type of theirs. */
 .chat[data-skin="neon"]{
   --nn-y:#fcee0a; --nn-c:#00f0ff; --nn-r:#ff2a6d; --nn-on-y:#0a0a10; --nn-solid:#0e0e16;
-  --nn-font:"Bahnschrift","Bahnschrift SemiCondensed","DIN Alternate","Agency FB","Segoe UI","Roboto Condensed","Arial Narrow",sans-serif;
+  --nn-font:var(--f-own-display,"Bahnschrift","Bahnschrift SemiCondensed","DIN Alternate","Agency FB","Segoe UI","Roboto Condensed","Arial Narrow",var(--f-khmer),"Dossier Khmer",sans-serif);
   --nn-mono:"Cascadia Code","Cascadia Mono",Consolas,"JetBrains Mono","DejaVu Sans Mono",ui-monospace,monospace;
   --ch-bg:#07070c; --ch-panel:#0e0e16; --ch-line:rgba(0,240,255,.2); --ch-ink:#e6f6f6; --ch-dim:#8b9ba6;
   --ch-acc:#fcee0a; --ch-acc2:#00f0ff;
@@ -4154,6 +4158,16 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
   .chat[data-skin="neon"] .chthink .tx::after,.chat[data-skin="neon"] .chh::after{animation:none!important}
 }
 /* ═══ /NEON (the chat skin) ═══ */
+
+/* ── a name written in Khmer (5.19) ──────────────────────────────────────
+   applyChatUI marks the panel when the assistant's name has Khmer in it.
+   The name labels then lose the space some skins put between letters,
+   which pulls a Khmer word's stacked consonants and vowels apart, and get
+   the height a Khmer face needs for the vowels it draws above and below
+   the line (a single line with overflow hidden cut them off). Capitals do
+   nothing to Khmer, so Neon's stay for any Latin beside it. */
+.chat[data-kname] .chh .t,.chat[data-kname] .chhero .cht{letter-spacing:0;line-height:1.6}
+.chat[data-kname] .chb.bot.ans::before,.chat[data-kname] .chb.bot.thinking::before{letter-spacing:0;height:auto;min-height:24px;line-height:1.55}
 /* ═══ NOVA ════════════════════════════════════════════════════════════════
    The fourth look, and the first one designed rather than subtracted.
    Studio's shell underneath — the sidebar grid, the rail it folds to when
@@ -5217,7 +5231,7 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
   --nn-cut:11px;
   --nn-clip:polygon(0 0,calc(100% - var(--nn-cut)) 0,100% var(--nn-cut),100% 100%,var(--nn-cut) 100%,0 calc(100% - var(--nn-cut)));
   --nn-clip-tr:polygon(0 0,calc(100% - 8px) 0,100% 8px,100% 100%,0 100%);
-  --nn-font:"Bahnschrift","Bahnschrift SemiCondensed","DIN Alternate","DIN Condensed","Agency FB","Segoe UI","Roboto Condensed","Arial Narrow",sans-serif;
+  --nn-font:var(--f-own-display,"Bahnschrift","Bahnschrift SemiCondensed","DIN Alternate","DIN Condensed","Agency FB","Segoe UI","Roboto Condensed","Arial Narrow",var(--f-khmer),"Dossier Khmer",sans-serif);
   --nn-mono:"Cascadia Code","Cascadia Mono",Consolas,"JetBrains Mono","DejaVu Sans Mono",ui-monospace,monospace;
   --nn-bracket:linear-gradient(var(--nn-y),var(--nn-y)) 0 0 / 14px 2px no-repeat,
     linear-gradient(var(--nn-y),var(--nn-y)) 0 0 / 2px 14px no-repeat,
@@ -5735,6 +5749,223 @@ body.chsizing .app,body.chsizing .pet{transition:none!important}
 .chplh{font-size:11px;color:var(--ch-dim);margin:0 0 6px;line-height:1.5}
 :root[data-motion="none"] .chat[data-place]{transition:none}
 /* ═══ /WHERE THE ASSISTANT SITS ═══ */
+/* ═══ THE REASON POWER-UP (5.19) ═════════════════════════════════════════
+   KalKech reason is the strongest model, given the most of the workspace
+   and the longest to think, and with the "Reason power-up" switch on
+   (Look and behaviour, or the foot of the model menu) the chat says so in
+   colour: a rainbow in the spirit of the way a coding assistant lights up
+   its "think hardest" word, and then some.
+     .pw-armed   KalKech reason is picked: the model pill, the box you type
+                 in, the words in it and an empty thread's character
+     .pw-charge  just picked, or just sent: a flash round the panel
+     .pw-run     an answer from it on its way: the panel's edge and top
+                 line, the header mark, the waiting row (.chb.thinking.pw:
+                 words, energy bar, a ring and sparks round the character)
+     .pwdone     the answer as it lands: a sweep of colour
+   and .pet.pw, the desk pet in the same ring while the panel is shut.
+   Everything is gated on .fx-power, so the switch takes all of it away.
+   What moves moves on transform, opacity or filter - the compositor runs
+   those without redrawing the page - apart from the colours running
+   through a few short lines of text. The colour turns (hue-rotate) go in
+   steps, about twelve a second: on a PC drawing without its graphics card
+   a smooth turn redrew the panel's edge every frame, and the steps cannot
+   be told apart from it. Loops only with Motion on Full and
+   the PC not asking for less (and not once Prism's probe found this PC
+   slow); otherwise the colours are there and stand still. */
+:root{--pw-cone:conic-gradient(from 210deg,#ff5f6d,#ffa63d,#ffe14d,#4ef0a0,#3fd0ff,#7d7bff,#e86bff,#ff5f6d);
+  --pw-grad:linear-gradient(90deg,#ff5f6d,#ffa63d,#ffe14d,#4ef0a0,#3fd0ff,#7d7bff,#e86bff,#ff5f6d);
+  --pw-gradv:linear-gradient(180deg,#ff5f6d,#ffa63d,#ffe14d,#4ef0a0,#3fd0ff,#7d7bff,#e86bff,#ff5f6d)}
+/* the colours for words: each one mixed a third of the way towards the
+   panel's own ink, so they stay readable on a dark panel (pastel) and on a
+   light one (deep) alike, whatever the skin */
+.chat{--pw-text:linear-gradient(90deg,color-mix(in oklab,#ff3d5e 70%,var(--ch-ink)),color-mix(in oklab,#ff8f1f 70%,var(--ch-ink)),
+  color-mix(in oklab,#f2c800 62%,var(--ch-ink)),color-mix(in oklab,#16d47a 66%,var(--ch-ink)),color-mix(in oklab,#1aaeff 68%,var(--ch-ink)),
+  color-mix(in oklab,#6d5cff 70%,var(--ch-ink)),color-mix(in oklab,#d44bff 70%,var(--ch-ink)),color-mix(in oklab,#ff3d5e 70%,var(--ch-ink)))}
+/* parts that are only there for it, and away without it */
+.pwr,.pws,.pwbar,.pwdot,.pwh,.chpw{display:none}
+.pwcore{display:contents}
+
+/* ── the model pill ─────────────────────────────────────────────────── */
+.chat.fx-power .chmodel[data-model="reason"]{position:relative;border-color:transparent;
+  background:color-mix(in srgb,var(--ch-bg) 75%,transparent);
+  box-shadow:-4px 0 12px -4px rgba(255,95,109,.55),4px 0 12px -4px rgba(63,208,255,.55),0 3px 12px -5px rgba(232,107,255,.5)}
+.chat.fx-power .chmodel[data-model="reason"]::before{content:"";position:absolute;inset:-1px;border-radius:inherit;padding:1.5px;
+  background:var(--pw-cone);pointer-events:none;
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;
+  mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0)}
+.chat.fx-power .chmodel[data-model="reason"] .ml{background:var(--pw-text) 0 0 / 160px 100% repeat;
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+/* its star keeps colours of its own: a box of its own is outside the
+   words' rainbow */
+.chat.fx-power .chmodel[data-model="reason"] .ml::before{content:"\2726";display:inline-block;margin-right:4px;
+  background:var(--pw-cone);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+/* in its menu, and on the button under an answer that asks it */
+.chat.fx-power .chmm button[data-model="reason"] b,.chat.fx-power .chrate [data-deeper="reason"]:hover{
+  background:var(--pw-text) 0 0 / 160px 100% repeat;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+/* the switch at the foot of the model menu */
+.chmm .pwt{border-top:1px solid var(--ch-line);margin-top:4px;padding-top:4px}
+.chmm .pwt button{grid-template-columns:minmax(0,1fr) auto}
+.chmm .pwt .tgl{pointer-events:none}
+
+/* ── the box you type in, and what you type ─────────────────────────── */
+.chat.fx-power:is(.pw-armed,.pw-run) .chf{position:relative}
+.chat.fx-power:is(.pw-armed,.pw-run) .chf::before{content:"";position:absolute;inset:-1px;border-radius:inherit;padding:1.5px;
+  background:var(--pw-cone);pointer-events:none;z-index:2;
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;
+  mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0)}
+/* its glow: four soft shadows in four colours (a blurred rainbow behind it
+   was redrawn on every frame of its breathing) */
+.chat.fx-power:is(.pw-armed,.pw-run) .chf::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;z-index:-1;
+  box-shadow:-7px 0 18px -4px rgba(255,95,109,.5),7px 0 18px -4px rgba(63,208,255,.5),0 -6px 16px -6px rgba(255,225,77,.45),0 6px 16px -5px rgba(232,107,255,.5)}
+.chat.fx-power.pw-armed #chatq,.chat.fx-power.pw-armed #chatq::placeholder{
+  background-image:var(--pw-text);background-size:240px 100%;background-repeat:repeat;
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.chat.fx-power.pw-armed #chatq{caret-color:var(--ch-ink)}
+.chat.fx-power.pw-armed #chatq::selection{-webkit-text-fill-color:var(--ch-ink);background:color-mix(in srgb,var(--ch-acc) 28%,transparent)}
+
+/* ── an empty thread's character, standing in its aura ──────────────── */
+.chat.fx-power.pw-armed .chhero .chorbx{isolation:isolate}
+.chat.fx-power.pw-armed .chhero .pwh{display:block;position:absolute;inset:-10%;pointer-events:none;z-index:-1;--r:60px}
+.chat.fx-power.pw-armed .chhero .pwh::before{content:"";position:absolute;inset:4%;border-radius:50%;
+  background:var(--pw-cone);opacity:.3;
+  -webkit-mask:radial-gradient(closest-side,#000 40%,transparent);mask:radial-gradient(closest-side,#000 40%,transparent)}
+
+/* ── the ring and the sparks (the waiting row, the hero) ─────────────── */
+.chat.fx-power :is(.pw,.pwh) .pwr{display:block;position:absolute;inset:0;border-radius:50%;background:var(--pw-cone);
+  -webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 3px),#000 calc(100% - 2.5px));
+  mask:radial-gradient(farthest-side,transparent calc(100% - 3px),#000 calc(100% - 2.5px))}
+.chat.fx-power :is(.pw,.pwh) .pws{display:block;position:absolute;inset:0}
+.pws b{position:absolute;left:50%;top:50%;width:4px;height:4px;margin:-2px 0 0 -2px;border-radius:50%;opacity:0;
+  background:hsl(var(--a) 95% 66%);box-shadow:0 0 6px 1px hsl(var(--a) 95% 60%);
+  transform:rotate(var(--a)) translateY(calc(var(--r,20px) * -.9))}
+
+/* ── the waiting row ─────────────────────────────────────────────────── */
+.chat.fx-power .chb.thinking.pw .pwcore{display:grid;place-items:center;position:relative;flex:0 0 auto;
+  width:42px;height:42px;margin:-5px 0 -5px -5px;--r:21px}
+.chat.fx-power .chb.thinking.pw .pwcore > img,.chat.fx-power .chb.thinking.pw .pwcore > .pwdot{grid-area:1 / 1;position:relative;z-index:1;margin:0}
+.chat.fx-power .chb.thinking.pw .pwdot{display:block;width:14px;height:14px;border-radius:50%;background:var(--pw-cone);
+  box-shadow:0 0 12px 2px rgba(140,120,255,.55)}
+.chat.fx-power .chb.thinking.pw .pwcore::before{content:"";position:absolute;inset:6px;border-radius:50%;
+  background:var(--pw-cone);filter:blur(10px);opacity:.35}
+.chat.fx-power .chb.thinking.pw .tx{background:var(--pw-text) 0 0 / 220px 100% repeat;
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;font-weight:650}
+.chat.fx-power .chb.thinking.pw .pwbar{display:block;position:relative;height:3px;max-width:280px;margin:9px 0 2px;
+  border-radius:3px;overflow:hidden;background:color-mix(in srgb,var(--ch-ink) 9%,transparent)}
+.chat[data-lm].fx-power .chb.thinking.pw .pwbar{margin-left:2px}
+.pwbar b{position:absolute;top:0;bottom:0;left:0;width:200%;background:var(--pw-grad) 0 0 / 50% 100% repeat-x;opacity:.9}
+.pwbar::after{content:"";position:absolute;top:-2px;bottom:-2px;left:0;width:26%;opacity:0;
+  background:radial-gradient(closest-side,rgba(255,255,255,.95),rgba(255,255,255,0))}
+
+/* ── the panel: its edge, a glow inside it, a spark along the top ───────
+   The edge is four thin bars whose colours run round the panel (each one
+   moved, not redrawn); the glow inside stands still. */
+.chat.fx-power .chpw{display:block;position:absolute;inset:0;pointer-events:none;z-index:6;border-radius:inherit;
+  overflow:hidden;opacity:0;transition:opacity .45s ease}
+.chat.fx-power.pw-run .chpw{opacity:1}
+.chpw i{position:absolute;display:block}
+.chpw .pg{inset:0;border-radius:inherit;box-shadow:inset 0 0 34px 0 rgba(125,123,255,.26),inset 0 0 12px 0 rgba(255,95,109,.16)}
+.chpw .pt,.chpw .pb{left:0;width:200%;height:2px;background:var(--pw-grad) 0 0 / 50% 100% repeat-x}
+.chpw .pt{top:0;height:3px}
+.chpw .pb{bottom:0;transform:translateX(-50%)}
+.chpw .pl,.chpw .pr{top:0;width:2px;height:200%;background:var(--pw-gradv) 0 0 / 100% 50% repeat-y}
+.chpw .pl{left:0;transform:translateY(-50%)}
+.chpw .pr{right:0}
+.chpw .pc{left:0;top:-3px;width:100%;height:9px}
+.chpw .pc::after{content:"";position:absolute;right:0;top:0;width:110px;height:9px;border-radius:50%;
+  background:radial-gradient(closest-side,rgba(255,255,255,.95),rgba(255,255,255,0))}
+.chat.fx-power.pw-run #chatOrb{filter:drop-shadow(0 0 5px rgba(125,123,255,.85))}
+
+/* ── the answer as it lands ─────────────────────────────────────────── */
+.chb.bot.ans.pwdone{position:relative}
+.pwsw{position:absolute;inset:-6px -8px;border-radius:14px;overflow:hidden;pointer-events:none;z-index:3}
+.chat[data-skin="neon"] .pwsw{border-radius:0}
+.pwsw::before{content:"";position:absolute;top:0;bottom:0;left:0;width:55%;transform:translateX(-120%) skewX(-14deg);
+  background:linear-gradient(100deg,transparent,rgba(255,95,109,.16) 18%,rgba(255,225,77,.22) 36%,rgba(78,240,160,.2) 52%,
+    rgba(63,208,255,.2) 68%,rgba(232,107,255,.16) 84%,transparent)}
+.pwsw::after{content:"";position:absolute;inset:0;border-radius:inherit;padding:1.5px;background:var(--pw-cone);opacity:0;
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;
+  mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0)}
+
+/* ── a burst: a ring going out and sparks (picked, sent, answered) ───── */
+.pwburst{position:absolute;width:0;height:0;pointer-events:none;z-index:80}
+.pwburst.fixed{position:fixed;z-index:95}
+.pwburst .rg{position:absolute;left:-42px;top:-42px;width:84px;height:84px;border-radius:50%;background:var(--pw-cone);opacity:0;
+  -webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 3px),#000 calc(100% - 2.5px));
+  mask:radial-gradient(farthest-side,transparent calc(100% - 3px),#000 calc(100% - 2.5px));
+  animation:pwRing .85s cubic-bezier(.2,.7,.3,1) forwards}
+.pwburst .r2{animation-delay:.11s}
+.pwburst.big .rg{left:-66px;top:-66px;width:132px;height:132px}
+.pwburst .sp{position:absolute;left:-2.5px;top:-2.5px;width:5px;height:5px;border-radius:50%;opacity:0;
+  background:hsl(var(--a) 95% 66%);box-shadow:0 0 8px 1px hsl(var(--a) 95% 60%);
+  animation:pwShoot .8s cubic-bezier(.15,.7,.3,1) var(--d) forwards}
+.pwburst.big .sp{--far:-62px}
+
+/* ── the desk pet, while the panel is shut ───────────────────────────── */
+.pet.pw .petb{position:relative}
+.pet.pw .petb::before{content:"";position:absolute;inset:-10px;border-radius:50%;background:var(--pw-cone);z-index:-1;
+  -webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 3px),#000 calc(100% - 2.5px),#000 calc(100% - .5px),transparent);
+  mask:radial-gradient(farthest-side,transparent calc(100% - 3px),#000 calc(100% - 2.5px),#000 calc(100% - .5px),transparent)}
+.pet.pw:not(.news) .petb::after{content:"";position:absolute;inset:-16px;border-radius:50%;pointer-events:none;
+  background:radial-gradient(circle at 50% 3%,#ffe14d 0 2px,transparent 3.5px),radial-gradient(circle at 94% 62%,#3fd0ff 0 2px,transparent 3.5px),
+    radial-gradient(circle at 8% 70%,#e86bff 0 2px,transparent 3.5px),radial-gradient(circle at 70% 95%,#4ef0a0 0 1.6px,transparent 3px)}
+.pet.pw .petb{filter:drop-shadow(0 0 8px rgba(125,123,255,.7)) drop-shadow(0 7px 10px rgba(0,0,0,.3))}
+
+/* ── what moves, and only where moving is welcome ───────────────────── */
+@media (prefers-reduced-motion:no-preference){
+  :root[data-motion="full"]:not([data-still]) .chat.fx-power .chmodel[data-model="reason"]::before{animation:pwHue 4s steps(48) infinite}
+  :root[data-motion="full"]:not([data-still]) .chat.fx-power .chmodel[data-model="reason"] .ml{animation:pwFlow 4s linear infinite}
+  :root[data-motion="full"]:not([data-still]) .chat.fx-power .chmodel[data-model="reason"] .ml::before{animation:pwTwinkle 1.8s ease-in-out infinite}
+  :root[data-motion="full"]:not([data-still]) .chat.fx-power:is(.pw-armed,.pw-run) .chf::before{animation:pwHue 5s steps(60) infinite}
+  :root[data-motion="full"]:not([data-still]) .chat.fx-power:is(.pw-armed,.pw-run) .chf::after{animation:pwBreath 3.2s ease-in-out infinite}
+  :root[data-motion="full"]:not([data-still]) .chat.fx-power.pw-armed #chatq,
+  :root[data-motion="full"]:not([data-still]) .chat.fx-power.pw-armed #chatq::placeholder{animation:pwFlowW 7s linear infinite}
+  :root[data-motion="full"]:not([data-still]) .chat.fx-power.pw-armed .chhero .pwr{animation:pwSpin 6s linear infinite}
+  :root[data-motion="full"]:not([data-still]) .chat.fx-power.pw-armed .chhero .pwh::before{animation:pwHue 6s steps(72) infinite,pwBreath 3s ease-in-out infinite}
+  :root[data-motion="full"]:not([data-still]) .chat.fx-power.pw-armed .chhero .pws b{animation:pwSpark 2.6s ease-out var(--d) infinite}
+  :root[data-motion="full"]:not([data-still]) .chat.fx-power .chb.thinking.pw .pwr{animation:pwSpin 1.1s linear infinite}
+  :root[data-motion="full"]:not([data-still]) .chat.fx-power .chb.thinking.pw .pws b{animation:pwSpark 1.4s ease-out var(--d) infinite}
+  :root[data-motion="full"]:not([data-still]) .chat.fx-power .chb.thinking.pw .pwcore::before{animation:pwHue 2s steps(24) infinite,pwBreath 1.2s ease-in-out infinite}
+  :root[data-motion="full"]:not([data-still]) .chat.fx-power .chb.thinking.pw .pwcore > img{animation:pwBob 1.1s ease-in-out infinite}
+  :root[data-motion="full"]:not([data-still]) .chat.fx-power .chb.thinking.pw .tx{animation:pwFlow 1.8s linear infinite}
+  :root[data-motion="full"]:not([data-still]) .chat.fx-power .chb.thinking.pw .pwbar b{animation:pwRun 1.1s linear infinite}
+  :root[data-motion="full"]:not([data-still]) .chat.fx-power .chb.thinking.pw .pwbar::after{animation:pwGlint 1.7s cubic-bezier(.5,0,.5,1) infinite}
+  :root[data-motion="full"]:not([data-still]) .chat.fx-power.pw-run .chpw .pt{animation:pwRun 1.6s linear infinite}
+  :root[data-motion="full"]:not([data-still]) .chat.fx-power.pw-run .chpw .pr{animation:pwRunV 1.6s linear infinite}
+  :root[data-motion="full"]:not([data-still]) .chat.fx-power.pw-run .chpw .pb{animation:pwRun 1.6s linear infinite reverse}
+  :root[data-motion="full"]:not([data-still]) .chat.fx-power.pw-run .chpw .pl{animation:pwRunV 1.6s linear infinite reverse}
+  :root[data-motion="full"]:not([data-still]) .chat.fx-power.pw-run .chpw .pc{animation:pwComet 2.2s cubic-bezier(.45,0,.55,1) infinite}
+  :root[data-motion="full"]:not([data-still]) .chat.fx-power.pw-run #chatOrb{animation:pwOrb 2.4s steps(24) infinite}
+  :root[data-motion="full"]:not([data-still]) .chat.fx-power.pw-charge .chmodel[data-model="reason"]{animation:pwPop .55s cubic-bezier(.3,1.6,.5,1)}
+  :root[data-motion="full"]:not([data-still]) .chat.fx-power.pw-charge:not(.pw-run) .chpw{animation:pwFlash 1.1s ease-out}
+  :root[data-motion="full"]:not([data-still]) .pwdone .pwsw::before{animation:pwSweep 1.15s cubic-bezier(.4,0,.2,1) forwards}
+  :root[data-motion="full"]:not([data-still]) .pwdone .pwsw::after{animation:pwEdge 1.7s ease-out forwards}
+  :root[data-motion="full"]:not([data-still]) .pet.pw .petb::before{animation:pwSpin 1.6s linear infinite}
+  :root[data-motion="full"]:not([data-still]) .pet.pw:not(.news) .petb::after{animation:pwSpin 3.2s linear infinite reverse}
+  :root[data-motion="full"]:not([data-still]) .pet.pw .petb .pxl{animation:pwBob 1.1s ease-in-out infinite}
+}
+@keyframes pwHue{to{filter:hue-rotate(360deg)}}
+@keyframes pwSpin{to{transform:rotate(360deg)}}
+@keyframes pwBreath{50%{opacity:.12}}
+@keyframes pwFlow{to{background-position:160px 0}}
+@keyframes pwFlowW{to{background-position:240px 0}}
+@keyframes pwRun{to{transform:translateX(-50%)}}
+@keyframes pwRunV{to{transform:translateY(-50%)}}
+@keyframes pwTwinkle{0%,100%{transform:scale(.8) rotate(0)}50%{transform:scale(1.15) rotate(90deg)}}
+@keyframes pwBob{50%{transform:translateY(-2px)}}
+@keyframes pwSpark{0%{opacity:0;transform:rotate(var(--a)) translateY(calc(var(--r,20px) * -.7)) scale(1)}
+  18%{opacity:1}100%{opacity:0;transform:rotate(calc(var(--a) + 50deg)) translateY(calc(var(--r,20px) * -1.45)) scale(.25)}}
+@keyframes pwGlint{0%{transform:translateX(-110%);opacity:0}15%{opacity:1}85%{opacity:1}100%{transform:translateX(420%);opacity:0}}
+@keyframes pwComet{0%{transform:translateX(-100%)}100%{transform:translateX(12%)}}
+@keyframes pwOrb{0%,100%{filter:drop-shadow(0 0 5px #ff5f6d)}25%{filter:drop-shadow(0 0 6px #ffe14d)}
+  50%{filter:drop-shadow(0 0 6px #3fd0ff)}75%{filter:drop-shadow(0 0 6px #e86bff)}}
+@keyframes pwPop{40%{transform:scale(1.14)}}
+@keyframes pwFlash{0%{opacity:0}18%{opacity:1}100%{opacity:0}}
+@keyframes pwSweep{to{transform:translateX(260%) skewX(-14deg)}}
+@keyframes pwEdge{0%{opacity:0}20%{opacity:.95}100%{opacity:0}}
+@keyframes pwRing{0%{opacity:1;transform:scale(.12)}100%{opacity:0;transform:scale(1)}}
+@keyframes pwShoot{0%{opacity:1;transform:rotate(var(--a)) translateY(-6px) scale(1.1)}
+  100%{opacity:0;transform:rotate(var(--a)) translateY(var(--far,-44px)) scale(.3)}}
+/* ═══ /THE REASON POWER-UP ═══ */
 </style>
 </head>
 <body>
@@ -5909,6 +6140,9 @@ body.chsizing .app,body.chsizing .pet{transition:none!important}
   <div class="chfx" aria-hidden="true">
     <div class="chgrid"></div><div class="chaur"></div><div class="chsweep"></div>
   </div>
+  <!-- the Reason power-up's edge, glow and top line (5.19); shown only
+       while KalKech reason works and the switch is on -->
+  <div class="chpw" aria-hidden="true"><i class="pg"></i><i class="pt"></i><i class="pr"></i><i class="pb"></i><i class="pl"></i><i class="pc"></i></div>
   <div class="chh">
     <button class="ib" id="chatMenu" data-i18n-title="ChatConversations" title="Conversations">☰</button>
     <span class="chorb" id="chatOrb" aria-hidden="true"><i></i></span>
@@ -8456,7 +8690,7 @@ const STRINGS = {
   FxAmbientWhy: "A light crosses the panel every so often.",
   FxEvery: "How often",
   PetHeading: "Desk pet",
-  PetIntro: "The assistant itself, out of its panel and parked in a corner \u2014 one character, one name. Click it to talk to it: the chat opens and it goes in there, and it comes back out when you close the chat. Point at it for a line about your day. While an answer is coming it thinks, as it does in the chat; an answer that arrives while the chat is closed, and a bell alert, it tells you from its corner. Otherwise it only moves when something happens: a record finished, something overdue, a save going out. Drag it to whichever corner is out of your way.",
+  PetIntro: "The assistant itself, out of its panel and parked in a corner \u2014 one name, in the character you pick below. Click it to talk to it: the chat opens and it goes in there, and it comes back out when you close the chat. Point at it for a line about your day. While an answer is coming it thinks, as it does in the chat; an answer that arrives while the chat is closed, and a bell alert, it tells you from its corner. Otherwise it only moves when something happens: a record finished, something overdue, a save going out. Drag it to whichever corner is out of your way.",
   PetOnOff: "Keep it on screen",
   PetName: "Its name (the assistant\u2019s name too)",
   PetNamePh: "KalKech",
@@ -8465,12 +8699,16 @@ const STRINGS = {
   PetCornerBL: "Bottom left",
   PetCornerTR: "Top right",
   PetCornerTL: "Top left",
+  FxPower: "Reason power-up",
+  FxPowerWhy: "When KalKech reason is picked or thinking, the chat lights up in rainbow colours: the model button, the box you type in and your words, a ring, sparks and an energy bar while it works, and a burst when the answer comes. Off: KalKech reason looks like the other models.",
+  ChatModelPower: "Power-up animation",
+  ChatModelPowerWhy: "Rainbow colours and sparks while KalKech reason works",
   PetChar: "Character",
-  PetCharAuto: "Match the chat skin",
+  PetCharAuto: "Follow the chat skin",
   PetCharRobot: "Robot",
   PetCharHeart: "Heart",
   PetCharCat: "Neon cat",
-  PetCharHint: "The desk pet and the pictures in the chat are one character, so the one you pick is used for both. Match the chat skin takes the skin\u2019s own: the heart for Crimson, the cat for Neon, the robot for the others.",
+  PetCharHint: "Pick any character for the desk pet. It stays the same when you change the chat skin, and the pictures inside the chat stay the skin\u2019s own. Follow the chat skin changes it with the skin: the heart for Crimson, the cat for Neon, the robot for the others.",
   PetCornerHint: "Or drag it there. While the chat is open it is in the chat, not in its corner.",
   PetMotionOff: "Motion is set to none, so it starts switched off. Turning it on here overrides that — it is your corner.",
   PetLabel: "The assistant \u2014 click to talk",
@@ -8872,6 +9110,7 @@ function novaFont(role){
   return NOVA_FOUND[role][0] || null;
 }
 function applyFonts(){
+  const root = document.documentElement.style;
   ["display","ui","mono"].forEach(role => {
     const chosen = S.settings.fonts && S.settings.fonts[role];
     const pick = (chosen && (chosen === "auto" ? null : chosen)) ||
@@ -8879,9 +9118,21 @@ function applyFonts(){
     const rest = FONT_POOL[role].filter(f => f !== pick).slice(0, 3).map(f => '"' + f + '"').join(",");
     const stack = (pick ? '"' + pick + '",' : "") + (rest ? rest + "," : "") +
                   '"' + kmFont() + '",' + FONT_FALLBACK[role];
-    document.documentElement.style.setProperty("--f-" + role, stack);
+    root.setProperty("--f-" + role, stack);
+    /* A face picked by hand in Appearance → Typeface is used in the chat as
+       well, whatever the skin (5.19). Left on automatic, a skin keeps the
+       face it was drawn in - Inter for Lumen and the skins built on it, the
+       condensed one for Neon. The chat skins read these two and fall back
+       to their own when they are not set. */
+    if (role !== "mono"){
+      if (chosen && chosen !== "auto") root.setProperty("--f-own-" + role, stack);
+      else root.removeProperty("--f-own-" + role);
+    }
   });
-  document.documentElement.style.setProperty("--f-khmer", '"' + kmFont() + '"');
+  /* Khmer is always the one picked under Khmer text, in every skin and
+     look: each of their own stacks ends with this before anything else
+     that could draw Khmer */
+  root.setProperty("--f-khmer", '"' + kmFont() + '"');
 }
 
 /* the Khmer face in use: whatever was chosen, else the bundled one */
@@ -9079,8 +9330,8 @@ const STATUSES = [
    the status bar, and clicking it copies a line you can paste into a bug
    report — build date and flow protocol included, because those are the two
    things that actually differ between copies. */
-const APP_VERSION = "5.18.0";
-const APP_BUILT = "2026-10-06";
+const APP_VERSION = "5.19.0";
+const APP_BUILT = "2026-10-07";
 function buildLine(){
   return "KalKech v" + APP_VERSION + " \u00b7 built " + APP_BUILT +
          " \u00b7 flow protocol " + (window.DossierFlow ? DossierFlow.version : "\u2014") +
@@ -13391,7 +13642,7 @@ function teachForgetAll(){
    for happens after you agree, or happens because you asked the question.
    That switch is off — meaning ask first — until you move it. */
 
-const CHAT_FX = ["reveal", "glow", "grid", "pulse", "ambient", "typing", "chips", "pixel", "icons"];
+const CHAT_FX = ["reveal", "glow", "grid", "pulse", "ambient", "typing", "chips", "pixel", "icons", "power"];
 /* Whether this machine has asked not to be moved at. Read fresh each time
    rather than once at startup, because it is a system setting and somebody
    who turns it on halfway through the afternoon means it. */
@@ -13551,13 +13802,14 @@ function pixOver(){
    of these sits beside words that already say what it means, and a screen
    reader reading "picture, tick" after "Done" is noise. */
 /* which drawing a name means now: the skin's own set when it brings one
-   and has this sprite ("crimson/think"), otherwise the robot's */
-function pixKey(name){
-  const set = typeof chatArtSet === "function" ? chatArtSet() : "";
+   and has this sprite ("crimson/think"), otherwise the robot's. The desk
+   pet passes its own set (5.19: it is chosen apart from the skin). */
+function pixKey(name, set){
+  if (set === undefined) set = typeof chatArtSet === "function" ? chatArtSet() : "";
   return set && PIX[set + name] ? set + name : name;
 }
-function pixArt(name, size){
-  name = pixKey(name);
+function pixArt(name, size, set){
+  name = pixKey(name, set);
   if (!PIX[name]) return "";
   /* draggable="false" is not decoration. A browser lets you drag any <img>
      out of a page, and it puts the picture on the drag as a FILE - so
@@ -13634,9 +13886,18 @@ function petCfg(){
   if (!st.pet || typeof st.pet !== "object")
     /* A machine that has asked not to be moved at, or an interface already
        set to hold still, does not get a pet without being asked for one. */
-    st.pet = { on: !chatCalm() && st.motion !== "none", corner:"br", char:"auto" };
+    st.pet = { on: !chatCalm() && st.motion !== "none", corner:"br" };
   if (PET_CORNERS.indexOf(st.pet.corner) < 0) st.pet.corner = "br";
-  if (!PET_CHARS.some(c => c.id === st.pet.char)) st.pet.char = "auto";
+  /* 5.19: the pet's character is its own choice. In 5.18 it followed the
+     chat skin unless picked ("auto", the default). That workspace keeps
+     the character it shows today, and from now on changing the skin does
+     not change the pet. "Follow the chat skin" is still there for anyone
+     who picks it - once "free" is set, an "auto" here was chosen. */
+  if (!st.pet.free){
+    if (!st.pet.char || st.pet.char === "auto") st.pet.char = petCharOfSet(chatArtSet());
+    st.pet.free = true;
+  }
+  if (!PET_CHARS.some(c => c.id === st.pet.char)) st.pet.char = "robot";
   /* one character, one name: a name given to the pet before 5.12 becomes the
      assistant's, unless the assistant already had one of its own */
   if ("name" in st.pet){
@@ -13676,18 +13937,18 @@ function petPaint(){
   petShow(PET.mood || "idle", !b.querySelector("img.pxl"));
 }
 
-/* a character picked for the pet: the corner and the chat both change to it
-   now, in whatever mood each was in */
+/* a character picked for the pet: the pet changes to it now, in whatever
+   mood it was in. The chat keeps the skin's own pictures (5.19). */
 function petCharSet(id){
   if (!PET_CHARS.some(c => c.id === id)) return;
-  const was = chatArtSet();
+  const was = petArtSet();
   petCfg().char = id;
   touch();
-  if (chatArtSet() !== was){ applyChatUI(); chatPaint(); petRedress(); petMood("wave", 2200); }
+  if (petArtSet() !== was){ petRedress(); petMood("wave", 2200); }
   if ($("modal") && $("modal").classList.contains("on")) renderModal();
 }
-/* the chat skin changed to one with another character: the pet is that
-   character from now on, in whatever mood it was in */
+/* the pet's character changed (picked, or the skin it follows changed):
+   it is that character from now on, in whatever mood it was in */
 function petRedress(){
   if ($("petBtn")) petShow(PET.mood || "idle", true);
 }
@@ -13700,7 +13961,7 @@ function petShow(mood, force){
   if (!art) return;
   if (!force && PET.mood === mood) return;
   PET.mood = mood;
-  b.innerHTML = pixArt(PET_ART[mood] || "pet-idle");
+  b.innerHTML = pixArt(PET_ART[mood] || "pet-idle", "", petArtSet());
   pixFix(b);
 }
 /* A mood with a clock on it: held for ms, then back to whatever the day
@@ -13934,27 +14195,37 @@ function chatLm(skin){
   const k = CHAT_SKINS.find(x => x.id === (skin || chatUI().skin));
   return !!(k && k.lm);
 }
-/* The characters the assistant can be (5.18): the pixel set each is drawn
-   in. "auto" is whichever the chat skin brings - the heart for Crimson, the
-   cat for Neon, the robot for the rest. Picked in Menu → Look → Desk pet, and
-   it is the character in the chat as well as in the corner: since 5.12 the
-   pet and the assistant are one character, so they change together. */
+/* The characters the desk pet can be: the pixel set each is drawn in.
+   Picked in Menu → Look → Desk pet (5.18). Since 5.19 the pick is free:
+   the pet keeps it whatever chat skin is on, and the chat keeps the
+   skin's own pictures. "auto" (Follow the chat skin) is the one choice
+   that ties them again: the heart for Crimson, the cat for Neon, the robot
+   for the rest. */
 const PET_CHARS = [
-  { id:"auto",  key:"PetCharAuto",  set:null },
   { id:"robot", key:"PetCharRobot", set:"" },
   { id:"heart", key:"PetCharHeart", set:"crimson/" },
-  { id:"cat",   key:"PetCharCat",   set:"neon/" }
+  { id:"cat",   key:"PetCharCat",   set:"neon/" },
+  { id:"auto",  key:"PetCharAuto",  set:null }
 ];
-/* the pixel set in use: the character picked for the pet, or the one the
-   skin brings ("crimson/" for the heart, "neon/" for the cat). The robot is
-   the set with no prefix, and every skin that does not bring one shows it. */
+/* the pixel set the chat panel draws with: the one the skin brings
+   ("crimson/" for the heart, "neon/" for the cat). The robot is the set
+   with no prefix, and every skin that does not bring one shows it. */
 function chatArtSet(){
-  const st = S && S.settings;
-  const c = st && st.pet && PET_CHARS.find(x => x.id === st.pet.char);
-  if (c && c.set !== null) return c.set;
-  const u = st && st.chatUI;
+  const u = S && S.settings && S.settings.chatUI;
   const k = u && CHAT_SKINS.find(x => x.id === u.skin);
   return (k && k.art) || "";
+}
+/* the pixel set the desk pet is drawn in: its own pick, or the skin's
+   when it follows the skin */
+function petArtSet(){
+  const st = S && S.settings;
+  const c = st && st.pet && PET_CHARS.find(x => x.id === st.pet.char);
+  return c && c.set !== null ? c.set : chatArtSet();
+}
+/* the character a pixel set draws (for a 5.18 workspace moving over) */
+function petCharOfSet(set){
+  const c = PET_CHARS.find(x => x.set === set);
+  return c ? c.id : "robot";
 }
 
 function chatUI(){
@@ -13977,13 +14248,15 @@ function chatUI(){
   if (typeof st.chatUI.pixel !== "boolean") st.chatUI.pixel = !chatCalm();
   /* and the moving icons arrived in 5.5, the same way */
   if (typeof st.chatUI.icons !== "boolean") st.chatUI.icons = !chatCalm();
+  /* and the Reason power-up in 5.19 */
+  if (typeof st.chatUI.power !== "boolean") st.chatUI.power = !chatCalm();
   return st.chatUI;
 }
 
 /* a skin picked - from the panel's own settings, or from Prism's offer */
 function chatSkinSet(id){
   if (!CHAT_SKINS.some(x => x.id === id)) return;
-  const u = chatUI(), was = chatArtSet();
+  const u = chatUI(), was = chatArtSet(), petWas = petArtSet();
   /* Halo and Neon are drawn to move: the first time one is picked, the
      panel's motion switches come on (each stays a switch in Look and
      behaviour) - unless this PC has asked for less motion */
@@ -13993,9 +14266,10 @@ function chatSkinSet(id){
   /* a skin marked New stops saying so once it has been tried */
   if (!(u.tried || []).includes(u.skin)) u.tried = (u.tried || []).concat(u.skin);
   applyChatUI(); chatSide(); touch();
-  /* a skin with another character: the thread and the desk pet change to
-     it now, not on the next message */
-  if (chatArtSet() !== was){ chatPaint(); petRedress(); }
+  /* a skin with another character: the thread changes to it now, not on
+     the next message. The desk pet only when it follows the skin. */
+  if (chatArtSet() !== was) chatPaint();
+  if (petArtSet() !== petWas) petRedress();
 }
 /* a name you gave the assistant: at the top of the panel and in the box
    you type in (again after a language switch, which rewrites both) */
@@ -14016,6 +14290,7 @@ function applyChatUI(){
   el.style.setProperty("--ch-every", Math.max(4, Math.min(120, +u.every || 12)) + "s");
   /* Lumen writes the assistant's name over each answer, from CSS */
   el.style.setProperty("--lm-name", JSON.stringify(chatName()));
+  el.toggleAttribute("data-kname", /[\u1780-\u17ff\u19e0-\u19ff]/.test(chatName()));
   chatNameShow();
   chatMarkApply();
   chatPixDress();
@@ -14200,6 +14475,7 @@ function renderChatFx(){
     '<p class="chplh">' + esc(L("ChatPlaceHint")) + "</p>" +
 
     "<h6>" + esc(L("ChatMotion")) + "</h6>" +
+    sw("power",   L("FxPower"),   L("FxPowerWhy")) +
     sw("reveal",  L("FxReveal"),  L("FxRevealWhy")) +
     sw("glow",    L("FxGlow"),    L("FxGlowWhy")) +
     sw("grid",    L("FxGrid"),    L("FxGridWhy")) +
@@ -15188,6 +15464,7 @@ function chatModelPaint(){
   b.dataset.model = p;
   b.querySelector(".ml").textContent = L("ChatModelShort_" + p);
   b.title = L("ChatModelBtn") + " \u00b7 " + L("ChatModel_" + p);
+  pwArm();
 }
 function chatModelMenu(show){
   const m = $("chatModelMenu"), b = $("chatModel"); if (!m || !b) return;
@@ -15200,7 +15477,12 @@ function chatModelMenu(show){
   m.innerHTML = '<div class="mx">' + LE("ChatModelHead") + "</div>" + chatModelsOn().map(k =>
     '<button type="button" role="menuitemradio" aria-checked="' + (k === p) + '" data-model="' + k + '">' +
       "<span><b>" + LE("ChatModel_" + k) + "</b><small>" + LE("ChatModel_" + k + "Why") + "</small></span>" +
-      '<span class="tk" aria-hidden="true">\u2713</span></button>').join("");
+      '<span class="tk" aria-hidden="true">\u2713</span></button>').join("") +
+    /* the Reason power-up's switch, where KalKech reason is picked (5.19) */
+    (chatModelsOn().indexOf("reason") >= 0
+      ? '<div class="pwt"><button type="button" role="menuitemcheckbox" aria-checked="' + pwOn() + '" data-pwt="1">' +
+        "<span><b>" + LE("ChatModelPower") + "</b><small>" + LE("ChatModelPowerWhy") + "</small></span>" +
+        '<span class="tgl" aria-hidden="true" aria-checked="' + pwOn() + '"></span></button></div>' : "");
   const cr = $("chat").getBoundingClientRect(), br = b.getBoundingClientRect(), z = pageZoom();
   m.style.top = "auto";
   m.style.bottom = Math.round((cr.bottom - br.top + 8) / z) + "px";
@@ -15211,9 +15493,121 @@ function chatModelMenu(show){
 }
 function chatModelSet(p){
   if (CHAT_MODELS.indexOf(p) < 0) return;
+  const was = chatModelPick();
   flowCfg().tiers.pick = p;
   touch(); chatModelMenu(false); chatModelPaint();
+  /* KalKech reason picked: the pill sends out its burst */
+  if (chatModelPick() === "reason" && was !== "reason") pwCharge($("chatModel"));
   $("chatq").focus();
+}
+
+/* ═══ THE REASON POWER-UP ═════════════════════════════════════════════════
+   (5.19) The owner asked for KalKech reason to look like what it is - the
+   strongest model, given the most of the workspace and the longest to
+   think - the way a coding assistant lights its "think hardest" word in a
+   rainbow, only more. With the switch on (Look and behaviour → Reason
+   power-up, or the switch at the foot of the model menu):
+     picked    the model pill and the box you type in wear a rainbow, and so
+               do the words you type; an empty thread's character stands in
+               an aura. Picking it sends out a burst from the pill.
+     asking    Send launches it with a burst; the panel's edge and top line
+               run with colour, the header mark glows, the waiting row's
+               words flow over an energy bar and the character sits in a
+               turning ring with sparks. The desk pet wears the same ring
+               while the panel is shut.
+     answered  the answer lands with a sweep of colour and a burst from its
+               mark (from the pet, when the panel is shut).
+   The look is all CSS (THE REASON POWER-UP in the stylesheet); this sets
+   the classes and makes the bursts. Bursts and loops only where motion is
+   welcome (pwMoves); otherwise the colours are there and stand still. Off,
+   KalKech reason looks like the other models. */
+const PW = { at:0, charge:0 };
+function pwOn(){ return !!(S.settings && chatUI().power); }
+function pwMoves(){
+  const r = document.documentElement;
+  return r.getAttribute("data-motion") === "full" && !r.hasAttribute("data-still") && !chatCalm();
+}
+/* the sparks round a ring: n of them, each its own colour and start */
+function pwSparks(n){
+  let h = '<i class="pws" aria-hidden="true">';
+  for (let i = 0; i < n; i++)
+    h += '<b style="--a:' + Math.round(i * 360 / n) + "deg;--d:-" + ((i * 0.53) % 1.4).toFixed(2) + 's"></b>';
+  return h + "</i>";
+}
+/* KalKech reason picked or not: the pill, the box and the hero */
+function pwArm(){
+  const c = $("chat"); if (!c || !S.settings) return;
+  c.classList.toggle("pw-armed", chatModelPick() === "reason");
+}
+/* a burst at a point on the screen: two rings going out and twelve sparks.
+   In the panel unless told otherwise; over the page (host body) for the
+   desk pet. */
+function pwBurst(x, y, host, big){
+  if (!pwOn() || !pwMoves()) return;
+  host = host || $("chat"); if (!host) return;
+  const z = pageZoom(), fixed = host === document.body;
+  const hr = fixed ? { left:0, top:0 } : host.getBoundingClientRect();
+  const b = document.createElement("div");
+  b.className = "pwburst" + (fixed ? " fixed" : "") + (big ? " big" : "");
+  b.setAttribute("aria-hidden", "true");
+  b.style.left = Math.round((x - hr.left) / z) + "px";
+  b.style.top = Math.round((y - hr.top) / z) + "px";
+  let h = '<i class="rg"></i><i class="rg r2"></i>';
+  for (let i = 0; i < 12; i++) h += '<i class="sp" style="--a:' + (i * 30 + (i % 2 ? 11 : 0)) + "deg;--d:" + (i % 3) * 45 + 'ms"></i>';
+  b.innerHTML = h;
+  host.appendChild(b);
+  setTimeout(() => b.remove(), 1300);
+}
+function pwBurstAt(el, host, big){
+  if (!el) return;
+  const r = el.getBoundingClientRect();
+  if (r.width) pwBurst(r.left + r.width / 2, r.top + r.height / 2, host, big);
+}
+/* just picked: a flash round the panel and a burst from where it was
+   picked */
+function pwCharge(from){
+  const c = $("chat"); if (!c || !pwOn() || !pwMoves()) return;
+  c.classList.remove("pw-charge"); void c.offsetWidth; c.classList.add("pw-charge");
+  clearTimeout(PW.charge); PW.charge = setTimeout(() => c.classList.remove("pw-charge"), 1150);
+  pwBurstAt(from);
+}
+/* an answer from KalKech reason on its way (from chatThinking), and in
+   (from chatThought) */
+function pwStart(w){
+  const c = $("chat"); if (!c) return;
+  w._pw = true;
+  c.classList.add("pw-run");
+  pwPet(true);
+  if (c.classList.contains("on")) pwBurstAt($("chatGo"));
+}
+function pwStop(w, err){
+  if (!w || !w._pw) return;
+  const c = $("chat"); if (c) c.classList.remove("pw-run");
+  pwPet(false);
+  PW.at = err ? 0 : Date.now();
+}
+function pwPet(on){
+  const el = $("pet");
+  if (el) el.classList.toggle("pw", !!on && pwOn());
+}
+/* the answer has landed (from chatRenderBot): a sweep of colour over it
+   and a burst from its mark - or, with the panel shut, from the pet */
+function pwLand(d){
+  const fresh = Date.now() - PW.at < 6000;
+  PW.at = 0;
+  if (!fresh || !pwOn() || !pwMoves()) return;
+  const c = $("chat");
+  if (c && c.classList.contains("on")){
+    d.classList.add("pwdone");
+    const sw = document.createElement("i");
+    sw.className = "pwsw"; sw.setAttribute("aria-hidden", "true");
+    d.appendChild(sw);
+    setTimeout(() => { d.classList.remove("pwdone"); sw.remove(); }, 1800);
+    requestAnimationFrame(() => {
+      const r = d.getBoundingClientRect(), l = $("chatLog").getBoundingClientRect();
+      if (r.width) pwBurst(r.left + 12, Math.max(r.top + 12, l.top + 24), null, true);
+    });
+  } else if (petOn()) pwBurstAt($("petBtn"), document.body, true);
 }
 
 /* ── dragging an edge, or the panel by its top bar ───────────────────────
@@ -15438,14 +15832,18 @@ function chatNear(){
    a hang — how long it has been doing it. */
 function chatThinking(log, tier){
   const w = document.createElement("div");
-  w.className = "chb bot thinking";
+  /* KalKech reason with its power-up on: a ring and sparks round the
+     character, and an energy bar under the words (5.19) */
+  const pw = tier === "reason" && pwOn();
+  w.className = "chb bot thinking" + (pw ? " pw" : "");
   /* With the pixel set on it is the pixel one that waits with you; with it
      off, the animation that has always been here. Never both. */
   const pix = chatPix("think", "p32");
+  const art = pix || (CHAT.gif ? '<img class="chgif" alt="" src="' + esc(CHAT.gif) + '">' : "");
   w.innerHTML = '<div class="chthink"><div class="chwait">' +
-    (pix || (CHAT.gif ? '<img class="chgif" alt="" src="' + esc(CHAT.gif) + '">' : "")) +
+    (pw ? '<span class="pwcore"><i class="pwr" aria-hidden="true"></i>' + (art || '<i class="pwdot" aria-hidden="true"></i>') + pwSparks(8) + "</span>" : art) +
     '<span class="tx">' + esc(L(tier === "reason" ? "TierReasonAsking" : "FlowAsking")) +
-    '</span><span class="el"></span></div></div>';
+    '</span><span class="el"></span></div>' + (pw ? '<i class="pwbar" aria-hidden="true"><b></b></i>' : "") + "</div>";
   /* if a folder copy ever stops loading, the row falls back to the one built
      into the file rather than showing the browser's broken-picture mark */
   pixFix(w);
@@ -15456,6 +15854,7 @@ function chatThinking(log, tier){
   };
   log.appendChild(w);
   $("chat").classList.add("busy");
+  if (tier === "reason") pwStart(w);
   petSync();
   chatOrbPix("think");
   chatState(L("ChatThinking"), true);
@@ -15492,6 +15891,7 @@ function chatThought(w, err){
   clearInterval(w._tick);
   const ms = Date.now() - (w._t0 || Date.now());
   $("chat").classList.remove("busy");
+  pwStop(w, err);
   petSync();
   chatOrbPix("orb");
   const ghost = document.createElement("div");
@@ -16340,7 +16740,9 @@ function chatRenderBot(r, sourceText, replaying, at){
        handled, a few lines down in the stylesheet. */
     const art = chatPix("hero", "p144");
     const hr = new Date().getHours();
-    h += '<div class="chorbx" aria-hidden="true">' + (art || CHAT_ORB_SVG) + "</div>" +
+    h += '<div class="chorbx" aria-hidden="true">' + (art || CHAT_ORB_SVG) +
+         /* the aura it stands in while KalKech reason is picked (5.19) */
+         '<i class="pwh"><i class="pwr"></i>' + pwSparks(10) + "</i></div>" +
          /* Lumen's greeting; the other skins keep the name and the card */
          '<div class="lmhi">' + LE(hr < 12 ? "LmMorning" : hr < 18 ? "LmAfternoon" : "LmEvening") + "</div>" +
          '<div class="lmhs">' + LE("LmHelp") + "</div>" +
@@ -16488,6 +16890,7 @@ function chatRenderBot(r, sourceText, replaying, at){
   d.innerHTML = h;
   pixFix(d);
   $("chatLog").appendChild(d);
+  if (!replaying && r.tier === "reason") pwLand(d);
 
   /* reference cards go underneath the answer, never above it */
   (r.cards || []).forEach(c => {
@@ -17305,7 +17708,7 @@ function aboutSearch(q, n){
   }).filter(x => x.score > 0).sort((a, b) => b.score - a.score).slice(0, n || 3);
 }
 /* is this question about Resolv itself, rather than about their work */
-const ABOUT_OWN = /\u1780\u17b6\u179b\u1780\u17b7\u1785\u17d2\u1785|\b(resolv|kalkech|kal kech|this app|the app|in the app|your(self)? (version|features?)|what'?s new|what is new|new (in|feature|version)|release notes?|change ?log|changelog|version|feature|setting|settings|set ?up|preset|skin|theme|lumen|nova|nebula|aurora|carbon|prism|halo|crimson|neon|cyberpunk|character|export(?:ing)?|import(?:ing)?|pixel|desk pet|shortcut|keyboard|alerts?|bell|reminders?|notifications?|bridge|power automate|prompt|language|khmer|menu|button|look and behaviou?r|sources?|document indexing|index(?:ing)?|re-?index(?:ing|ed)?|citations?|pdf runbooks?|(?:add|upload|import|update|replace) (?:a |an |my |the )?(?:new |updated )?(?:pdf|markdown|word|document|runbook|guideline|standard|policy)s?|answer was not found|not found|supports? (?:this|that|the) answer)\b/i;
+const ABOUT_OWN = /\u1780\u17b6\u179b\u1780\u17b7\u1785\u17d2\u1785|\b(resolv|kalkech|kal kech|this app|the app|in the app|your(self)? (version|features?)|what'?s new|what is new|new (in|feature|version)|release notes?|change ?log|changelog|version|feature|setting|settings|set ?up|preset|skin|theme|lumen|nova|nebula|aurora|carbon|prism|halo|crimson|neon|cyberpunk|character|power[- ]?up|rainbow|fonts?|typefaces?|export(?:ing)?|import(?:ing)?|pixel|desk pet|shortcut|keyboard|alerts?|bell|reminders?|notifications?|bridge|power automate|prompt|language|khmer|menu|button|look and behaviou?r|sources?|document indexing|index(?:ing)?|re-?index(?:ing|ed)?|citations?|pdf runbooks?|(?:add|upload|import|update|replace) (?:a |an |my |the )?(?:new |updated )?(?:pdf|markdown|word|document|runbook|guideline|standard|policy)s?|answer was not found|not found|supports? (?:this|that|the) answer)\b/i;
 const ABOUT_HELP = /\b(how (do|can|to|should|does)|where (is|are|do|can)|can (i|you|it)|is there|does it|what does|what is|turn (on|off)|switch (on|off)|enable|disable|configure|change|show me how|why (did|does|do|is|was)|which (source|document))\b/i;
 const ABOUT_NEWS = /\b(what'?s new|what is new|what changed|what has changed|what (?:was|were|has been|have been|got) (?:added|new|changed|fixed|improved)|new in|release notes?|change ?log|changelog|(?:latest|last|newest|current|this) (?:resolv )?(?:version|release|update)|which version|what version|version (are you|is this|am i))\b/i;
 function aboutForFlow(q){
@@ -22951,7 +23354,7 @@ async function renderModal(){
           esc(petName()) + '" placeholder="' + LE("PetNamePh") + '">') +
         /* the character, as a picture of each standing about */
         fr(L("PetChar"), '<div class="petpick" role="radiogroup">' + PET_CHARS.map(c => {
-          const set = c.set === null ? ((CHAT_SKINS.find(k => k.id === chatUI().skin) || {}).art || "") : c.set;
+          const set = c.set === null ? chatArtSet() : c.set;
           const src = PIX[set + "pet-idle"] || PIX["pet-idle"];
           return '<button type="button" class="petc' + (pc.char === c.id ? " on" : "") + '" data-petchar="' + c.id +
             '" role="radio" aria-checked="' + (pc.char === c.id) + '"><img class="pxl" alt="" draggable="false" src="' + esc(src) + '">' +
@@ -28334,6 +28737,15 @@ document.addEventListener("pointerdown", e => {
 }, true);
 $("chatModel").addEventListener("click", e => { e.stopPropagation(); chatModelMenu(); });
 $("chatModelMenu").addEventListener("click", e => {
+  const t = e.target.closest("button[data-pwt]");
+  if (t){
+    const u = chatUI(); u.power = !u.power;
+    t.setAttribute("aria-checked", String(u.power));
+    t.querySelector(".tgl").setAttribute("aria-checked", String(u.power));
+    applyChatUI(); touch();
+    if (u.power && chatModelPick() === "reason") pwCharge($("chatModel"));
+    return;
+  }
   const b = e.target.closest("button[data-model]");
   if (b) chatModelSet(b.dataset.model);
 });

@@ -6,6 +6,43 @@ holds — which is what to paste into a bug report.
 
 ---
 
+## 5.19.0 - 2026-10-07
+
+**Pick the pet freely, the right fonts for a Khmer name, and a power-up for
+KalKech reason.**
+
+- **The desk pet is your free choice.** *Menu → Appearance → Desk pet →
+  Character*: **Robot**, **Heart** or **Neon cat**, and the pet keeps it
+  whatever chat skin you use. Picking a pet no longer changes the chat
+  either: the chat's pictures stay the skin's own. **Follow the chat skin**
+  is still there (last) for anyone who wants the two tied. A workspace from
+  5.18 keeps the character its pet was showing, as its pick.
+- **A Khmer name in the chat uses your fonts.** The assistant's name over the
+  answers (and the rest of the chat) now uses the fonts from *Menu →
+  Appearance → Typeface*: always your **Khmer text** font, and your
+  **Headings** / **Body text** fonts when you picked one (on *automatic* each
+  skin keeps its own). In the Neon skin a Khmer name was also spread apart
+  letter by letter, which broke its stacked letters; a Khmer name is never
+  spread now, and has room for the vowels above and below.
+- **The Reason power-up.** Pick **KalKech reason** and the chat lights up in
+  rainbow colours: a burst from the pill; the pill, the box you type in and
+  the words you type in a rainbow; the character on an empty conversation in
+  a ring of colour. While it thinks: colours run round the panel's edge, the
+  waiting line flows in rainbow over an energy bar, the character sits in a
+  spinning ring with sparks, the header mark glows - and the desk pet wears
+  the ring if the chat is closed. The answer lands with a sweep of colour and
+  a burst. Works in every chat skin.
+- **Its switch**: at the bottom of the model pill's menu (*Power-up
+  animation*), and in ◎ Look and behaviour → Motion → *Reason power-up*. On
+  by default (off on a PC that asks for less motion). It follows the Motion
+  setting: with Subtle or None the colours stay but nothing moves. Built to
+  stay smooth: measured at 60 frames a second while it runs, even on a PC
+  drawing without a graphics card.
+- Nothing new reaches the network.
+- Tests: 212 checks in the browser (15 new: the pet apart from the skin,
+  5.18 workspaces, the Khmer name and Setup fonts, the power-up and its
+  switch).
+
 ## 5.18.0 - 2026-10-06
 
 **Neon: a cyberpunk theme for the whole app and the chat, with a cat of its

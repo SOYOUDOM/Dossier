@@ -91,13 +91,13 @@ A *workspace* is a folder the user picks (File System Access API):
 - Commit messages: clear summary + body; no model names in commits, code or
   docs. Do not open a pull request unless the owner asks.
 - Work so far is on branch `claude/chat-panel-pixel-art-gifs-d822hq`
-  (latest: 5.18.0). Follow the branch instructions of your own session.
+  (latest: 5.19.0). Follow the branch instructions of your own session.
 
 ## Testing
 
 ```
 node --test                                   # 54 unit tests (Sources, grounding, names check, code origin, flow reply fields, diagrams)
-node tests/e2e/run.js                         # the app in headless Chrome/Edge: 197 checks (CHROME=<path> to choose)
+node tests/e2e/run.js                         # the app in headless Chrome/Edge: 212 checks (CHROME=<path> to choose)
 node flow/check-prompt.js                     # after editing flow/prompt.txt ...
 python3 flow/embed-prompt.py                  # ... then copy it into flow.js (PROMPT_BUILTIN)
 node tests/fixtures/make-pdf.js               # regenerate the PDF fixtures
@@ -119,6 +119,51 @@ Also useful:
   `DossierFlow.validate`. `tests/e2e/run.js` is a working example of all of it.
 
 ## Recent history (newest first)
+
+- **5.19.0** — Owner: "make the pet freely to choose, not based on the chat
+  theme"; "the pet name in Khmer in the chat has no font - use the Khmer and
+  English fonts from Setup"; "a power animation when I use reason (the chat,
+  the choice, the text, the waiting, the pet), like a coding assistant's
+  rainbow "think hardest" word but more advanced, with a switch".
+  - *Pet apart from the skin*: `chatArtSet()` is the skin's set only again;
+    `petArtSet()` = `pet.char`'s set (or the skin's for "auto", now
+    *Follow the chat skin*, last in `PET_CHARS`); `pixKey(name, set)` /
+    `pixArt(name, size, set)` take an optional set, `petShow` passes
+    `petArtSet()`. `petCfg()`: `pet.free` marks the 5.19 move - a 5.18
+    "auto" becomes `petCharOfSet(chatArtSet())` once. `chatSkinSet` redresses
+    the pet only when `petArtSet()` changed; `petCharSet` no longer repaints
+    the chat.
+  - *Fonts*: `applyFonts()` also sets `--f-own-display` / `--f-own-ui` (the
+    same stacks) only when a face was picked (not auto). `--lm-font` =
+    `var(--f-own-ui, Inter…, var(--f-khmer), …)`, `--lm-head` =
+    `var(--f-own-display, var(--lm-font))` (the name label `::before`),
+    both `--nn-font`s = `var(--f-own-display, Bahnschrift…, var(--f-khmer),
+    "Dossier Khmer", sans-serif)`. `applyChatUI` sets `data-kname` on the
+    panel when `chatName()` has Khmer; CSS after `/NEON (the chat skin)`
+    drops letter-spacing and gives line height to the name labels.
+  - *Reason power-up* (`THE REASON POWER-UP`: CSS block at the very end of
+    the stylesheet, JS after `chatModelSet`): `CHAT_FX` + `"power"`
+    (`chatUI().power`, default `!chatCalm()`, switch first under Motion and
+    a `[data-pwt]` menuitemcheckbox at the foot of `#chatModelMenu`).
+    Classes on `.chat`: `fx-power`, `pw-armed` (`pwArm()` from
+    `chatModelPaint`: pick is reason), `pw-charge` (`pwCharge(from)` on
+    picking, 1.15 s), `pw-run` (`pwStart(w)` from `chatThinking` for tier
+    reason, `pwStop` from `chatThought`); `.chb.thinking.pw` (built only when
+    on: `.pwcore` > `.pwr` ring + sprite or `.pwdot` + `pwSparks(n)`, and
+    `.pwbar`); hero `.chorbx .pwh`; overlay `.chpw` (`pg` glow, `pt/pr/pb/pl`
+    bars moved by transform, `pc` comet); `pwLand(d)` from `chatRenderBot`
+    (reply `tier === "reason"`, not replaying, within 6 s of `PW.at`):
+    `.pwdone` + `.pwsw` sweep, `pwBurst()` (`.pwburst` rings + 12 sparks, in
+    the panel or `fixed` on body for the pet); `.pet.pw` (`pwPet`). Text
+    rainbow `--pw-text` = colours mixed with `var(--ch-ink)` (readable on
+    light and dark panels); `#chatq` and its placeholder use
+    `background-clip:text` (works in Chromium textareas). Loops only under
+    `[data-motion="full"]:not([data-still])` in `prefers-reduced-motion:
+    no-preference`; bursts only when `pwMoves()`. Speed: hue-rotate only in
+    `steps()` (~12/s) and never on panel-size layers; no blur filter on
+    anything that animates (the composer glow is four box-shadows) -
+    measured 60 fps in headless software rendering (a hue-rotated edge ring
+    and a blurred glow had dropped to ~40).
 
 - **5.18.0** — Owner asked for a cyberpunk-style preset (they named a
   well-known cyberpunk video game) "for all components", and for the pet to

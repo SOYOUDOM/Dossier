@@ -816,11 +816,11 @@ alone, and choosing again afterwards always sticks.
 ### 6.6 The desk pet
 
 **The desk pet is the assistant.** Not a second character: the same one, out
-of its panel and parked in a corner of the window — the robot, the heart
-while the chat skin is **Crimson**, the neon cat while it is **Neon**, or
-whichever of them you pick (below). It is the same drawing and the same
-sixteen colours as [the pixel set](#the-pixel-set), it has the same name, and
-since 5.12 it behaves as the same person:
+of its panel and parked in a corner of the window — the robot, the heart or
+the neon cat, **whichever you pick** (below; since 5.19 the pick is yours and
+the chat skin does not change it). It is drawn in the same sixteen colours as
+[the pixel set](#the-pixel-set), it has the same name, and since 5.12 it
+behaves as the same person:
 
 | You | It |
 |---|---|
@@ -860,14 +860,23 @@ already had one.
 
 #### How do I choose the pet? (robot, heart or cat)
 
-1. Open **Menu → Appearance** and find **Desk pet**.
-2. Under **Character**, click a picture:
-   - **Match the chat skin** (the usual): the skin's own character — the
-     heart for Crimson, the cat for Neon, the robot for the others;
-   - **Robot**, **Heart** or **Neon cat**: that one, whatever the skin.
-3. It changes at once — in its corner **and in the chat** (the greeting, the
-   thinking picture, the header). The pet and the assistant are one
-   character, so they always match.
+1. Open **Menu → Appearance** and find **Desk pet** (click it to open it).
+2. Under **Character**, click a picture: **Robot**, **Heart** or **Neon
+   cat**.
+3. The pet in the corner changes at once.
+
+**The pet is your free choice (5.19).** Changing the chat skin does not
+change the pet, and picking a pet does not change the chat: the pictures
+inside the chat (the greeting, the thinking picture, the header) stay the
+skin's own — the heart for Crimson, the cat for Neon, the robot for the
+others. So you can have, say, the neon cat in the corner and the Lumen skin
+in the chat.
+
+Want them tied together again? Pick **Follow the chat skin** (the last
+picture): then the pet changes whenever the skin does.
+
+*From 5.18:* the pet used to follow the skin unless you picked one. On the
+first start of 5.19 it keeps the character it was showing, as your pick.
 
 The choice is kept in `dossier.json` with the rest of the pet's settings.
 
@@ -2230,6 +2239,36 @@ you choose it: the pill, **◆ KalKech reason** under an answer, or — if you
 tick it in Setup — the hard jobs (the daily look back, learning a BAU
 document, runbook interviews, Diagnose).
 
+#### What is the Reason power-up? How do I turn it off?
+
+When you use **KalKech reason**, the chat lights up so you can see the
+strongest model is at work — like the rainbow a coding assistant puts on its
+"think hardest" word, but bigger:
+
+| When | What you see |
+|---|---|
+| you pick **Reason** in the pill | a burst of light from the pill; the pill, the box you type in **and the words you type** turn rainbow; on an empty conversation the character stands in a turning ring of colour |
+| you press Send | a burst from the Send button |
+| it is thinking | colours run round the edge of the chat; the waiting line *"KalKech reason is thinking it through…"* flows in rainbow over an **energy bar**; the character sits in a **spinning ring with sparks**; the mark in the header glows |
+| the chat is closed while it thinks | the **desk pet** wears the ring and the sparks |
+| the answer arrives | a sweep of colour across the answer and a burst from its mark |
+
+**To turn it off** (either place does it):
+
+- open the model pill (beside Send) — at the bottom of its menu is
+  **Power-up animation**; click it; or
+- click **◎** (Look and behaviour) at the top of the chat → **Motion** →
+  **Reason power-up**.
+
+Off, KalKech reason looks like the other models (just the coloured pill).
+The switch is saved with your workspace.
+
+It follows **Menu → Look → Motion**: with *Subtle* or *None*, or a PC set to
+reduce motion, the colours are shown but nothing moves and there are no
+bursts. It is light on the PC: the moving parts slide rather than being
+redrawn, and it was checked to keep a smooth 60 frames a second even on a PC
+drawing without a graphics card.
+
 #### How do I add KalKech reason to my flow?
 
 It is one more prompt and one more Condition in your Power Automate flow —
@@ -2392,7 +2431,27 @@ A **Keep KalKech** button under the reply puts the old name back if you change
 your mind. To go back later, say *"use your own name"*. *"What's your name?"*
 gets the name you gave it. The name is kept with your workspace. You can also
 type it under *Menu → Appearance → Desk pet → Its name*: the pet and the
-assistant are one character with one name.
+assistant share one name.
+
+#### The name in Khmer looked wrong in the chat — what changed?
+
+Fixed in 5.19. A name written in Khmer (for example *កាលកិច្ច*) over the
+answers was drawn in the chat skin's own font, not the one you chose. In the
+Neon skin the letters were also spread apart, which breaks Khmer letters that
+stack.
+
+Now the chat uses **the fonts from Menu → Appearance → Typeface**:
+
+- **Khmer text** — always the Khmer font you picked there, in every chat
+  skin and every look;
+- **Headings** and **Body text** — when you picked a font there (not
+  *automatic*), the chat uses it too: Headings for the name over the
+  answers, Body text for everything else. Left on *automatic*, each skin
+  keeps its own design font (Inter for Lumen, Crimson and Halo; the narrow
+  capitals for Neon).
+
+A Khmer name is never spread apart, and gets room above and below for the
+vowels Khmer writes there.
 
 #### The assistant talked about a blank or white picture I never sent — why?
 
@@ -3540,7 +3599,7 @@ first thing to run after changing anything it touches:
 
 ```
 node --test                 # tests/*.test.js: 54 tests - Sources (every scenario below), names and queries in answers, and diagrams
-node tests/e2e/run.js       # the app in Chrome or Edge: 197 checks on the screen
+node tests/e2e/run.js       # the app in Chrome or Edge: 212 checks on the screen
 node flow/check-prompt.js   # the prompt's examples against the reply validator
 ```
 

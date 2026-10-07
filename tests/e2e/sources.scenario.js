@@ -468,7 +468,10 @@
           orb && orb.getAttribute("data-pix") === "crimson/orb", (hero && hero.getAttribute("data-pix")) + " " + (orb && orb.getAttribute("data-pix")));
   }
   if (typeof petOn === "function" && petOn() && $("petBtn"))
-    check("...and so does the desk pet", /^crimson\//.test(($("petBtn").querySelector("img.pxl") || {}).getAttribute("data-pix") || ""));
+    /* 5.19: the pet keeps the character picked for it (the robot this
+       workspace showed before), whatever the skin */
+    check("...and the desk pet keeps its own character (5.19)", petArtSet() === "" &&
+          !/^crimson\//.test(($("petBtn").querySelector("img.pxl") || {}).getAttribute("data-pix") || ""));
   check("...the blue star that comes with KalKech does not cover the heart's own mark", !chatEl.classList.contains("ownmark"));
   check("...and the greeting has its heartbeat line", getComputedStyle(document.querySelector("#chatLog .chhero .lmhs"), "::after").backgroundImage.includes("svg"));
   /* back to Lumen: the robot, the star, nothing of Crimson left behind */
@@ -994,13 +997,69 @@
   chatSkinSet("neon");
   check("the Neon chat skin brings the cat", $("chat").dataset.skin === "neon" && chatArtSet() === "neon/" &&
         pixKey("pet-idle") === "neon/pet-idle" && !!PIX["neon/hero"]);
+  /* 5.19: the pet's character is its own choice; the chat keeps the skin's */
   petCharSet("robot");
-  check("a character picked for the pet overrides the skin's, in the chat too", chatArtSet() === "" && pixKey("hero") === "hero");
+  check("(5.19) a character picked for the pet leaves the chat's pictures alone", petArtSet() === "" && chatArtSet() === "neon/" &&
+        pixKey("hero") === "neon/hero" && pixKey("pet-idle", petArtSet()) === "pet-idle");
   petCharSet("cat"); chatSkinSet("lumen");
-  check("...the cat with any skin", chatArtSet() === "neon/" && pixKey("think") === "neon/think");
+  check("...and changing the skin leaves the pet alone", petArtSet() === "neon/" && chatArtSet() === "" && pixKey("think") === "think");
   petCharSet("auto");
-  check("...and Match the chat skin goes back to the skin's own", chatArtSet() === "");
+  check("...Follow the chat skin ties them again", petArtSet() === chatArtSet() && petCfg().char === "auto");
+  const petWas = S.settings.pet, skinWas = chatUI().skin;
+  S.settings.pet = { on:false, corner:"br", char:"auto" }; chatUI().skin = "crimson";
+  check("...a 5.18 workspace keeps the character it showed, chosen now", petCfg().char === "heart" && petCfg().free === true);
+  chatUI().skin = "lumen";
+  check("...and it stays when the skin changes", petArtSet() === "crimson/");
+  S.settings.pet = petWas; chatUI().skin = skinWas; applyChatUI();
   await shot("20-neon");
+
+  /* ── 5.19: the name in Khmer, in the fonts from Setup ───────────────── */
+  chatSkinSet("neon");
+  chatNameSet("\u1780\u17b6\u179b\u1780\u17b7\u1785\u17d2\u1785");
+  const cs = () => getComputedStyle($("chat"));
+  check("(5.19) a Khmer name marks the panel, and Neon's face ends with the Khmer one from Setup",
+        $("chat").hasAttribute("data-kname") && cs().getPropertyValue("--nn-font").indexOf(kmFont()) >= 0, cs().getPropertyValue("--nn-font"));
+  chatSkinSet("lumen");
+  check("...Lumen's too", cs().getPropertyValue("--lm-font").indexOf(kmFont()) >= 0, cs().getPropertyValue("--lm-font"));
+  const fontsWas = Object.assign({}, S.settings.fonts);
+  S.settings.fonts.display = "Made Up Display"; S.settings.fonts.ui = "Made Up Text"; applyFonts();
+  check("...a face picked under Typeface is used in the chat as well", /^\s*"?Made Up Text/.test(cs().getPropertyValue("--lm-font")) &&
+        /^\s*"?Made Up Display/.test(cs().getPropertyValue("--lm-head")), cs().getPropertyValue("--lm-head"));
+  S.settings.fonts.display = fontsWas.display; S.settings.fonts.ui = fontsWas.ui; applyFonts();
+  check("...and left on automatic the skin keeps its own", /Resolv Inter/.test(cs().getPropertyValue("--lm-font")));
+  chatNameSet("");
+  check("...a name without Khmer: no mark", !$("chat").hasAttribute("data-kname"));
+
+  /* ── 5.19: the Reason power-up ───────────────────────────────────────── */
+  const pwTz = flowCfg().tiers, tzWas = JSON.stringify(pwTz), flowWas = { on:S.settings.flow.on, url:S.settings.flow.url };
+  S.settings.flow.on = true; S.settings.flow.url = S.settings.flow.url || "https://flow.example/invoke";
+  pwTz.on = true; pwTz.reason = true; pwTz.pick = "auto";
+  chatUI().power = true; applyChatUI();
+  openChat(); chatNew(true); chatPaint(); await sleep(200);
+  check("(5.19) the power-up switch is on, in Look and behaviour", $("chat").classList.contains("fx-power") && CHAT_FX.includes("power"));
+  chatModelSet("reason");
+  check("...picking KalKech reason arms the chat", $("chat").classList.contains("pw-armed") &&
+        getComputedStyle($("chatModel"), "::before").content !== "none");
+  const pwRow = chatThinking($("chatLog"), "reason");
+  check("...while it thinks: the panel runs, the row has its ring and energy bar",
+        $("chat").classList.contains("pw-run") && pwRow.classList.contains("pw") && !!pwRow.querySelector(".pwcore .pwr") && !!pwRow.querySelector(".pwbar"));
+  await shot("21-power");
+  chatThought(pwRow, null);
+  check("...and stops when the answer is in", !$("chat").classList.contains("pw-run"));
+  const fastRow = chatThinking($("chatLog"), "fast");
+  check("...the other models never power up", !fastRow.classList.contains("pw") && !$("chat").classList.contains("pw-run"));
+  chatThought(fastRow, null);
+  $("chatModel").click(); await sleep(60);
+  const pwt = document.querySelector("#chatModelMenu [data-pwt]");
+  check("...its switch is in the model menu too", !!pwt && pwt.getAttribute("aria-checked") === "true");
+  pwt.click();
+  check("...and turns it off", chatUI().power === false && !$("chat").classList.contains("fx-power") &&
+        getComputedStyle($("chatModel"), "::before").content === "none");
+  chatModelMenu(false);
+  chatUI().power = true; chatModelSet("auto");
+  Object.assign(pwTz, JSON.parse(tzWas)); S.settings.flow.on = flowWas.on; S.settings.flow.url = flowWas.url; applyChatUI();
+  check("...auto again: not armed", !$("chat").classList.contains("pw-armed"));
+  closeChat();
   lookChoose("studio");
   check("leaving Neon puts the palette from before back", !document.documentElement.hasAttribute("data-neon") && S.settings.theme === before518, S.settings.theme);
   return { checks };
