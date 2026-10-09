@@ -91,7 +91,7 @@ A *workspace* is a folder the user picks (File System Access API):
 - Commit messages: clear summary + body; no model names in commits, code or
   docs. Do not open a pull request unless the owner asks.
 - Work so far is on branch `claude/chat-panel-pixel-art-gifs-d822hq`
-  (latest: 5.20.0). Follow the branch instructions of your own session.
+  (latest: 5.20.1). Follow the branch instructions of your own session.
 
 ## Testing
 
@@ -119,6 +119,22 @@ Also useful:
   `DossierFlow.validate`. `tests/e2e/run.js` is a working example of all of it.
 
 ## Recent history (newest first)
+
+- **5.20.1** - Owner's screenshot: a clone in a new folder, with KalKech
+  still running from the old folder, said "running and out of date" and then
+  "Windows cannot find ... DossierBridge.exe". `KalKech.bat` asked
+  `tasklist` for *any* `DossierBridge.exe`, took another folder's for its
+  own, skipped `:compile`, and started an .exe that did not exist. Now:
+  `MINE` = this folder's .exe cannot be opened for writing
+  (`2>nul (>>"%EXE%" (call )) || set "MINE=1"`, cleared again when no
+  DossierBridge.exe runs at all - a virus scan or read-only file); "out of
+  date" only when `BUILD` and `MINE`; otherwise build, then `:others`
+  (tasklist) - another folder's copy running gets a message, the new
+  folder's path, a `pause` and a second check before `:go`; `:runkey` says
+  to run `KalKech.bat startup` when the Run key points elsewhere. Skipped
+  when `DOSSIER_DB` is set (a second instance on purpose: the bridge's mutex
+  is per database). `scripts/check-bat.py` passes; there was no Windows in
+  the session to run it.
 
 - **5.20.0** — After 5.19 the owner said they did not like the rainbow at
   all and asked for a page of styles to pick from: a standalone preview

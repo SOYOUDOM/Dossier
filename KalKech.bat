@@ -80,30 +80,95 @@ if exist "%EXE%" for /f %%A in ('dir /b /o-d "%SRC%" "%EXE%" 2^>nul') do (
 )
 :built
 
-if defined BUILD (
-  rem  a running copy holds its .exe open, so it cannot be replaced under it
-  tasklist /fi "imagename eq DossierBridge.exe" 2>nul | find /i "DossierBridge.exe" >nul
-  if not errorlevel 1 (
-    echo.
-    echo   KalKech is running, and this copy of it is out of date.
-    echo   Quit it from the icon by the clock - right-click, Quit -
-    echo   and run this again to start the new one.
-    echo.
-    start "" "%EXE%"
-    pause
-    exit /b 0
-  )
-  call :compile
-  if errorlevel 1 exit /b 1
-)
+rem ---- is it THIS folder's copy that is running? ---------------------------
+rem  Windows lets nobody write to a program while it runs. So opening our own
+rem  .exe to add nothing to it - it is not changed - says whether this very
+rem  file is running. Asking Task Manager by name could not tell: a KalKech
+rem  started from another folder (an older clone, a second checkout) has the
+rem  same name there, and 5.20.0 took that one for this one - it skipped the
+rem  build, and then could not start a program that had never been made.
+set "MINE="
+if not exist "%EXE%" goto :mined
+2>nul (>>"%EXE%" (call )) || set "MINE=1"
+rem  locked, but no KalKech running at all: something else holds it (a virus
+rem  scan, a read-only file) - not ours running, so do not say it is
+if not defined MINE goto :mined
+call :others
+if errorlevel 1 set "MINE="
+:mined
+
+if not defined BUILD goto :other
+if not defined MINE goto :build
+echo.
+echo   KalKech is running from this folder, and it is out of date.
+echo   Quit it from the icon by the clock - right-click, Quit -
+echo   and run this again to start the new one.
+echo.
+start "" "%EXE%"
+pause
+exit /b 0
+
+:build
+call :compile
+if errorlevel 1 exit /b 1
+
+rem ---- a KalKech from another folder? -------------------------------------------
+rem  One KalKech runs at a time for a database; starting a second only opens
+rem  the first one's page. When the first one is another folder, this copy
+rem  would quietly show you that one instead - an older version, perhaps,
+rem  and its files, not these. So say so, and let you choose.
+rem  (Someone who set DOSSIER_DB runs a second KalKech on purpose, on its own
+rem  database: left alone.)
+:other
+if defined DOSSIER_DB goto :go
+if defined MINE goto :go
+call :others
+if errorlevel 1 goto :go
+echo.
+echo   Another KalKech is already running - started from a different folder.
+echo   This copy is ready, in:
+echo     "%~dp0"
+echo.
+echo   To use this one, quit the other from its icon by the clock -
+echo   right-click, Quit - and then press a key here.
+call :runkey
+echo.
+pause
+call :others
+if errorlevel 1 goto :go
+echo.
+echo   The other KalKech is still running, so this one cannot start yet.
+echo   Quit it from the icon by the clock, then run KalKech.bat again.
+echo.
+pause
+exit /b 0
 
 rem ---- and go ---------------------------------------------------------------
+:go
 rem  start, not call: this window closes now and KalKech carries on without it
 if defined ARGS (
   start "" "%EXE%" "%ARGS%"
 ) else (
   start "" "%EXE%"
 )
+exit /b 0
+
+
+rem ===========================================================================
+rem  errorlevel 0 when a DossierBridge.exe is running - from anywhere
+:others
+tasklist /fi "imagename eq DossierBridge.exe" 2>nul | find /i "DossierBridge.exe" >nul
+exit /b
+
+rem  if "Start with Windows" points at another folder's copy, say how to move it
+:runkey
+reg query "%RUNKEY%" /v Dossier >nul 2>&1
+if errorlevel 1 exit /b 0
+reg query "%RUNKEY%" /v Dossier 2>nul | find /i "%EXE%" >nul
+if not errorlevel 1 exit /b 0
+echo.
+echo   The other one is also the one that starts with Windows. To have
+echo   this one start with Windows instead, run:   KalKech.bat startup
 exit /b 0
 
 

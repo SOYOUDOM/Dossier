@@ -132,6 +132,28 @@ With the demo copied in you should immediately see:
 > only ever one thing to start. With no SQL Server on the PC it serves the
 > page on its own.
 
+#### KalKech.bat says "KalKech is running, and this copy of it is out of date", then "Windows cannot find ... DossierBridge.exe" - why?
+
+That happened in 5.20.0 when you cloned KalKech into a **new folder** while
+the copy in the **old folder** was still running. The starter saw a KalKech
+running and took it for this folder's own, so it skipped setting the new copy
+up - and then could not start a program that had never been made.
+
+Since 5.20.1 `KalKech.bat` checks whether it is **this folder's** program that
+is running, and always sets a new copy up. If a KalKech from another folder
+is still running, it tells you and waits:
+
+1. Right-click the KalKech icon by the clock → **Quit** (that is the old copy).
+2. Press a key in the `KalKech.bat` window. The new copy starts.
+
+On 5.20.0 itself, do the same by hand: quit the old KalKech from its icon,
+then double-click `KalKech.bat` in the new folder again.
+
+**It still starts the old copy at login?** "Start with Windows" remembers the
+folder it was switched on from. Run `KalKech.bat startup` in the new folder
+(or switch it on from the new copy's icon menu), and the new copy is the one
+that starts with Windows.
+
 ---
 
 ## 3. What is in this repository

@@ -6,6 +6,30 @@ holds — which is what to paste into a bug report.
 
 ---
 
+## 5.20.1 - 2026-10-09
+
+**KalKech.bat starts a new copy properly when an old one is still running.**
+
+- **The fix.** Cloned into a new folder while KalKech was still running
+  from the old one, `KalKech.bat` said *"KalKech is running, and this copy of
+  it is out of date"* and then *"Windows cannot find ...
+  DossierBridge.exe"*. It saw a KalKech in Task Manager and took it for this
+  folder's own - so it skipped setting this copy up, and then tried to start
+  a program that had never been made. Now it checks whether it is **this
+  folder's** program that is running (Windows will not let a running program
+  be written to, so it can tell), and sets the new copy up in any case.
+- **Another folder's KalKech still running?** It says so, shows where the new
+  copy is, and waits: quit the other one from its icon by the clock
+  (right-click, Quit), press a key, and the new one starts. Before, the new
+  copy would have quietly shown you the old one's page.
+- **Start with Windows pointing at the old folder?** It tells you to run
+  `KalKech.bat startup` from the new folder, so the new copy is the one that
+  starts at login.
+- Nothing else changed: the same message as before when it really is this
+  folder's copy that is running and out of date.
+
+---
+
 ## 5.20.0 - 2026-10-07
 
 **Your pet is the assistant's picture, and KalKech reason thinks in a mind
