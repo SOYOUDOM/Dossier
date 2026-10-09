@@ -106,6 +106,10 @@ git clone https://github.com/SOYOUDOM/Resolv
    LocalDB is on the PC. Without LocalDB it still works, and your records
    stay in `dossier.json`. (You can also just open `dossier.html` directly —
    everything works except Windows notifications and the database.)
+   **Is your SQL Server not LocalDB?** If SSMS shows another server name
+   when you connect (`.\SQLEXPRESS`, your PC's name …), type that name in
+   **Menu → Setup → Database (SQL Server)** — see
+   [How do I use a different SQL Server?](#how-do-i-use-a-different-sql-server-the-server-name-in-ssms)
 3. Click **Choose workspace folder…** in the banner and pick **the folder you
    made**. Allow "Edit files" when asked.
 
@@ -447,7 +451,7 @@ Switch with **1**–**7**, or by clicking the tab.
 | **Routines** | The schedule editor. ✎ edits in place and keeps the id. Shows *runs itself*, *reminds you*, *paused*, *missing script*, when it last raised, and — loudly — *runs itself but nothing is listening*. |
 | **Scripts** | Register a script, read its `{{params}}`, set the workspace **Folder path**, write the runner, copy the `schtasks` line. |
 | **Appearance** | Theme (Archive, Vault, or your own), fonts including the bundled Khmer face, "feel" (density and motion), language, and **Reload** for language files. |
-| **Setup** | Your name · Reminders · Chase after · Running a script · Target dates (SLA) · Holidays and festivals · **Understanding harder questions** (the optional model). |
+| **Setup** | Your name · Reminders · Chase after · Running a script · Target dates (SLA) · Holidays and festivals · **Understanding harder questions** (the optional model) · **Database (SQL Server)** (the server name, when it is not LocalDB). |
 | **Help** | The keyboard sheet, how your folder is laid out, and the privacy statement. |
 
 ### 6.3 The other surfaces
@@ -1182,6 +1186,60 @@ What that one program does:
 
 `dossier-bridge.bat` and `dossier-serve.bat` still exist, so nothing that
 points at them breaks; both pass straight through to `KalKech.bat`.
+
+### How do I use a different SQL Server (the server name in SSMS)?
+
+You only need this when your PC's SQL Server is **not** LocalDB. KalKech
+looks for `(localdb)\MSSQLLocalDB` unless you tell it otherwise, and on most
+PCs that is right. Other PCs have other names:
+
+| What is installed | Its usual server name |
+|---|---|
+| SQL Server LocalDB (the default) | `(localdb)\MSSQLLocalDB` |
+| SQL Server Express | `.\SQLEXPRESS` or `YOURPC\SQLEXPRESS` |
+| A full SQL Server, the default instance | `localhost` or `YOURPC` |
+| A full SQL Server, a named instance | `YOURPC\INSTANCE` |
+
+**Not sure which?** Open **SSMS**. The *Connect to Server* window shows it in
+the **Server name** box — copy exactly that.
+
+**To change it:**
+
+1. Start KalKech as usual (`KalKech.bat`, the icon by the clock must be
+   running).
+2. **Menu → Setup → Database (SQL Server)**. It shows the server in use, where
+   that name came from, and whether it is connected.
+3. Type the server name and press **Test**. Nothing changes yet: KalKech only
+   says whether it reached the server, its SQL Server version, and whether a
+   KalKech database (`Dossier`) is already there.
+4. Press **Use this server**, then **Use it**. KalKech saves your work first,
+   makes its database and tables on the new server, **copies your workspace
+   and the files attached to your records** across from the old server, and
+   opens your workspace again. The old server keeps its own copy, and its
+   *Database history* stays there.
+
+The name is kept for your Windows user (in the registry, under
+`HKCU\Software\KalKech`, value `SqlServer`), so KalKech uses it after a
+restart, and a second copy of KalKech cloned on the same PC finds it too.
+`scripts\dossier-sql.bat` reads the same setting.
+
+- **Back to the default:** the same section → **Back to the default**.
+- **The database will not start at all** (a new PC, LocalDB not installed):
+  the red banner at the top has a **SQL Server name…** button that opens this
+  section straight away.
+- **The new server already holds another workspace:** nothing is copied over
+  it. KalKech opens your folder from its own `dossier.json` and says so, the
+  same as at any start.
+- **Your Windows account signs in** (KalKech uses Windows sign-in, never a
+  password), so it needs the right to create a database on that server — or
+  ask the server's owner to create an empty `Dossier` database for you.
+- **Which name wins:** a server given to `DossierBridge.exe` on its command
+  line, then `set DOSSIER_SQL=...`, then the name chosen in Setup, then
+  `(localdb)\MSSQLLocalDB`. When `DOSSIER_SQL` is set, Setup shows that name
+  and cannot change it.
+- **The section says "an older copy is running"?** After updating KalKech,
+  quit it from the icon by the clock (right-click → Quit) and run
+  `KalKech.bat` again; it rebuilds itself.
 
 ### Your work cannot be emptied by accident
 
@@ -3637,7 +3695,7 @@ first thing to run after changing anything it touches:
 
 ```
 node --test                 # tests/*.test.js: 54 tests - Sources (every scenario below), names and queries in answers, and diagrams
-node tests/e2e/run.js       # the app in Chrome or Edge: 217 checks on the screen
+node tests/e2e/run.js       # the app in Chrome or Edge: 230 checks on the screen
 node flow/check-prompt.js   # the prompt's examples against the reply validator
 ```
 

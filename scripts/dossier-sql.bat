@@ -35,7 +35,8 @@ rem  a word. To add a file's records to what is there, use Dossier's own
 rem  Menu -> Workspace -> Import a JSON export -> Merge.
 rem
 rem  DEFAULTS, all overridable by environment variable
-rem    server   (localdb)\MSSQLLocalDB       set DOSSIER_SQL=...
+rem    server   (localdb)\MSSQLLocalDB       set DOSSIER_SQL=...  or the name
+rem                                          chosen in KalKech's Setup
 rem    database Dossier                      set DOSSIER_DB=...
 rem    file     ..\dossier.json              or pass one
 rem
@@ -59,6 +60,8 @@ if defined ALL set "ALL=%ALL:"=%"
 for /f "tokens=1,*" %%A in ("%ALL%") do set "ARG=%%B"
 
 set "SERVER=%DOSSIER_SQL%"
+rem  else the name chosen in KalKech's Setup, kept for this Windows user
+if "%SERVER%"=="" for /f "tokens=2,*" %%A in ('reg query "HKCU\Software\KalKech" /v SqlServer 2^>nul ^| find /i "SqlServer"') do set "SERVER=%%B"
 if "%SERVER%"=="" set "SERVER=(localdb)\MSSQLLocalDB"
 set "DB=%DOSSIER_DB%"
 if "%DB%"=="" set "DB=Dossier"

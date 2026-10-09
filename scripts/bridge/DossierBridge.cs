@@ -62,7 +62,14 @@ public class DossierBridge
     static string Token;
     static string ConnectionString;
     static string Database = "Dossier";
-    static string Server = @"(localdb)\MSSQLLocalDB";
+    const string DefaultServer = @"(localdb)\MSSQLLocalDB";
+    static string Server = DefaultServer;
+    //  where Server came from: "default", "setup" (chosen in KalKech's
+    //  Setup, kept in the registry), "DOSSIER_SQL" or "command line"
+    static string ServerFrom = "default";
+    //  moves on every change of server, so a save that was already queued
+    //  for the old one is not written into the new one
+    static volatile int ServerGen;
     static int Port;
     static int Wanted = 5500;           // the port dossier-serve.bat used
     static string AppRoot;              // the folder dossier.html sits in
@@ -126,14 +133,25 @@ public class DossierBridge
             try { AttachConsole(-1); } catch (Exception) { }
         }
         if (pos.Count > 0 && pos[0].Length > 0) Workspace = pos[0];
-        if (pos.Count > 1 && pos[1].Length > 0) Server = pos[1];
+        if (pos.Count > 1 && pos[1].Length > 0) { Server = pos[1]; ServerFrom = "command line"; }
         if (pos.Count > 2 && pos[2].Length > 0) Database = pos[2];
         if (pos.Count > 3 && pos[3].Length > 0) AppRoot = pos[3];
 
         string env = Environment.GetEnvironmentVariable("DOSSIER_SQL");
-        if (env != null && env.Length > 0 && pos.Count < 2) Server = env;
+        //  an empty argument is no argument: it does not hide the variable
+        if (env != null && env.Length > 0 && ServerFrom == "default") { Server = env; ServerFrom = "DOSSIER_SQL"; }
+        //  Not every PC has LocalDB, or calls its server the same thing:
+        //  SQL Express is ".\SQLEXPRESS", a full install is the PC's own name.
+        //  The name typed into Setup is kept per Windows user, so a second
+        //  clone on the same PC finds it too. The two above still win - they
+        //  are someone saying so on purpose, for this one start.
+        if (ServerFrom == "default")
+        {
+            string saved = SavedServer();
+            if (saved != null) { Server = saved; ServerFrom = "setup"; }
+        }
         env = Environment.GetEnvironmentVariable("DOSSIER_DB");
-        if (env != null && env.Length > 0 && pos.Count < 3) Database = env;
+        if (env != null && env.Length > 0 && (pos.Count < 3 || pos[2].Length == 0)) Database = env;
         env = Environment.GetEnvironmentVariable("DOSSIER_PORT");
         if (env != null && env.Length > 0) int.TryParse(env, out Wanted);
         if (Environment.GetEnvironmentVariable("DOSSIER_OPEN") == "0") Quiet = true;
@@ -174,9 +192,7 @@ public class DossierBridge
 
         ChooseWorkspace();
 
-        ConnectionString = "Server=" + Server + ";Database=" + Database +
-                           ";Integrated Security=true;MultipleActiveResultSets=true;" +
-                           "Connect Timeout=60;Application Name=DossierBridge";
+        ConnectionString = ConnFor(Server);
 
         Token = Guid.NewGuid().ToString("N");
         TcpListener listener = Bind(AppRoot == null ? 0 : Wanted, out Port);
@@ -710,7 +726,8 @@ public class DossierBridge
                 // file types out of the folder dossier.html sits in, which is
                 // a checkout of a public repository. Your records are not in
                 // that folder, and nothing below will serve them if they are.
-                bool api = (path == "/health" || path == "/workspace" || path == "/attachment" || path == "/history");
+                bool api = (path == "/health" || path == "/workspace" || path == "/attachment" || path == "/history" ||
+                            path == "/sqlserver");
                 if (!api)
                 {
                     if ((method == "GET" || method == "HEAD") && Static(net, path, method == "HEAD")) return;
@@ -730,6 +747,9 @@ public class DossierBridge
 
                 try
                 {
+                    //  which SQL Server: asked and changed from Setup, and it
+                    //  has to work most of all when the database does not
+                    if (path == "/sqlserver") { SqlServerRoute(net, method, query); return; }
                     if (!DbReady)
                     {
                         Respond(net, method == "GET" && path == "/health" ? 200 : 503, "application/json",
@@ -1089,9 +1109,16 @@ public class DossierBridge
             }
 
         Stopwatch clock = Stopwatch.StartNew();
+        int gen = ServerGen;
         lock (SaveLock)
         {
         long waited = clock.ElapsedMilliseconds;
+        if (gen != ServerGen || !DbOk)
+        {
+            Respond(net, 503, "application/json",
+                    Bytes("{\"error\":\"the SQL Server was changed while this save waited - it will be sent again\"}"));
+            return;
+        }
         if (win != null && reason == "save")
         {
             long newest;
@@ -1295,6 +1322,310 @@ public class DossierBridge
             int n = cmd.ExecuteNonQuery();
             Respond(net, 200, "application/json", Bytes("{\"ok\":true,\"deleted\":" + n + "}"));
         }
+    }
+
+    // ── which SQL Server ────────────────────────────────────────────────────
+    //  The name is the one SSMS asks for in its Connect window: "Server name".
+    //  It goes into a connection string, so it may be a name and nothing
+    //  else - no ";" or "=" that could add a setting of its own.
+    public static bool ServerNameOk(string s)
+    {
+        return s != null && Regex.IsMatch(s, @"^[A-Za-z0-9_.,:\\()\-]{1,128}$");
+    }
+
+    static string ConnFor(string server)
+    {
+        return "Server=" + server + ";Database=" + Database +
+               ";Integrated Security=true;MultipleActiveResultSets=true;" +
+               "Connect Timeout=60;Application Name=DossierBridge";
+    }
+
+    const string OwnKey = @"Software\KalKech";
+
+    static string SavedServer()
+    {
+        try
+        {
+            using (RegistryKey k = Registry.CurrentUser.OpenSubKey(OwnKey))
+            {
+                string v = k == null ? null : k.GetValue("SqlServer") as string;
+                if (v == null || v.Trim().Length == 0) return null;
+                v = v.Trim();
+                if (ServerNameOk(v)) return v;
+                Log("  ! the SQL Server name saved in Setup has characters a server name cannot have - using the default");
+                return null;
+            }
+        }
+        catch (Exception) { return null; }
+    }
+
+    //  the default is not saved: forgetting the choice is what goes back to it
+    static void SaveServer(string v)
+    {
+        using (RegistryKey k = Registry.CurrentUser.CreateSubKey(OwnKey))
+        {
+            if (v == null || string.Equals(v, DefaultServer, StringComparison.OrdinalIgnoreCase))
+                k.DeleteValue("SqlServer", false);
+            else k.SetValue("SqlServer", v, RegistryValueKind.String);
+        }
+    }
+
+    //  GET  /sqlserver                  what is in use, and where it came from
+    //  POST /sqlserver?name=..&apply=0  can that server be reached? what is on it?
+    //  POST /sqlserver?name=..&apply=1  use it: tables made, your workspace and
+    //                                   its attachments copied over, then kept
+    //  An empty name means the default, (localdb)\MSSQLLocalDB.
+    static void SqlServerRoute(NetworkStream net, string method, string query)
+    {
+        bool locked = ServerFrom == "DOSSIER_SQL" || ServerFrom == "command line";
+        if (method == "GET")
+        {
+            Respond(net, 200, "application/json", Bytes(
+                "{\"server\":" + Json(Server) + ",\"from\":" + Json(ServerFrom) +
+                ",\"locked\":" + (locked ? "true" : "false") +
+                ",\"default\":" + Json(DefaultServer) + ",\"database\":" + Json(Database) +
+                ",\"db\":" + (DbOk ? "true" : "false") + ",\"starting\":" + (DbReady ? "false" : "true") +
+                ",\"error\":" + Json(DbOk ? "" : DbError) + "}"));
+            return;
+        }
+        if (method != "POST") { Respond(net, 405, "application/json", Bytes("{\"error\":\"GET or POST\"}")); return; }
+
+        string name = QueryValue(query, "name").Trim();
+        if (name.Length == 0) name = DefaultServer;
+        if (!ServerNameOk(name))
+        {
+            Respond(net, 400, "application/json", Bytes("{\"ok\":false,\"error\":" +
+                Json("That is not a server name. Use the name SSMS shows, like (localdb)\\MSSQLLocalDB, .\\SQLEXPRESS or YOURPC\\SQLEXPRESS.") + "}"));
+            return;
+        }
+
+        bool apply = QueryValue(query, "apply") == "1";
+        if (apply && locked)
+        {
+            Respond(net, 409, "application/json", Bytes("{\"ok\":false,\"locked\":true,\"error\":" +
+                Json("KalKech was started with the server set by " + ServerFrom + ", which wins over Setup. Change it there, or start KalKech without it.") + "}"));
+            return;
+        }
+        string version, edition, wsId;
+        bool hasDb;
+        int records;
+        string err = TestServer(name, out version, out edition, out hasDb, out records, out wsId);
+        if (err != null)
+        {
+            Respond(net, 200, "application/json", Bytes("{\"ok\":false,\"error\":" + Json(err) + "}"));
+            return;
+        }
+        string found = ",\"version\":" + Json(version) + ",\"edition\":" + Json(edition) +
+                       ",\"hasDb\":" + (hasDb ? "true" : "false") + ",\"records\":" + records +
+                       ",\"wsId\":" + Json(wsId);
+        if (!apply)
+        {
+            Respond(net, 200, "application/json", Bytes("{\"ok\":true" + found + "}"));
+            return;
+        }
+        if (!DbReady)
+        {
+            Respond(net, 503, "application/json", Bytes("{\"ok\":false,\"error\":\"the database is still starting - try again in a moment\"}"));
+            return;
+        }
+
+        string note = "";
+        bool copiedDoc = false;
+        int copiedFiles = 0;
+        lock (SaveLock)
+        {
+            string oldServer = Server, oldConn = ConnectionString, oldErr = DbError;
+            bool oldOk = DbOk, oldHist = HasHistory;
+            DbReady = false;
+            ServerGen++;
+            try
+            {
+                Log("  sql       switching to " + name);
+                Server = name;
+                ConnectionString = ConnFor(name);
+                Migrate();
+                if (!DbOk)
+                {
+                    string why = DbError;
+                    Server = oldServer; ConnectionString = oldConn; DbOk = oldOk; DbError = oldErr; HasHistory = oldHist;
+                    Log("  sql       stayed on " + oldServer + " - " + why);
+                    Respond(net, 200, "application/json", Bytes("{\"ok\":false,\"error\":" +
+                        Json("Reached, but KalKech could not make its tables there: " + why) + "}"));
+                    return;
+                }
+                if (oldOk && !string.Equals(oldServer, name, StringComparison.OrdinalIgnoreCase))
+                {
+                    try { note = CarryOver(oldConn, out copiedDoc, out copiedFiles); }
+                    catch (Exception e)
+                    {
+                        //  nothing is lost: the old server still has it all,
+                        //  and the page brings dossier.json in if it must
+                        note = "copying from the old server stopped: " + e.Message;
+                        Log("  ! " + note);
+                    }
+                }
+                try { SaveServer(name); }
+                catch (Exception e)
+                {
+                    //  in use now, but the next start goes back to the old name
+                    string why = "the choice could not be kept for the next start: " + e.Message;
+                    note = note.Length > 0 ? note + "; " + why : why;
+                    Log("  ! " + why);
+                }
+                ServerFrom =string.Equals(name, DefaultServer, StringComparison.OrdinalIgnoreCase) ? "default" : "setup";
+                Log("  sql       now " + Database + " on " + Server +
+                    (copiedDoc ? " - workspace copied" : "") + (copiedFiles > 0 ? ", " + copiedFiles + " attachment(s) copied" : ""));
+            }
+            finally
+            {
+                DbReady = true;
+                WriteHandshake();
+                if (Tray != null) { try { Tray.Text = TrayText(); } catch (Exception) { } }
+            }
+        }
+        Respond(net, 200, "application/json", Bytes("{\"ok\":true,\"switched\":true,\"server\":" + Json(Server) +
+            found + ",\"copied\":" + (copiedDoc ? "true" : "false") + ",\"files\":" + copiedFiles +
+            ",\"note\":" + Json(note) + "}"));
+    }
+
+    //  Can it be reached, and what does it hold? Read-only: nothing is made.
+    static string TestServer(string name, out string version, out string edition, out bool hasDb,
+                             out int records, out string wsId)
+    {
+        version = ""; edition = ""; hasDb = false; records = 0; wsId = "";
+        try
+        {
+            using (SqlConnection c = new SqlConnection("Server=" + name + ";Database=master;Integrated Security=true;" +
+                                                       "Connect Timeout=30;Application Name=DossierBridge"))
+            {
+                c.Open();
+                using (SqlCommand cmd = new SqlCommand(
+                    "SELECT CAST(SERVERPROPERTY('ProductVersion') AS nvarchar(60)), " +
+                    "CAST(SERVERPROPERTY('Edition') AS nvarchar(120)), DB_ID(@db)", c))
+                {
+                    cmd.Parameters.Add("@db", SqlDbType.NVarChar, 128).Value = Database;
+                    using (SqlDataReader r = cmd.ExecuteReader())
+                    {
+                        if (r.Read())
+                        {
+                            version = r.IsDBNull(0) ? "" : r.GetString(0);
+                            edition = r.IsDBNull(1) ? "" : r.GetString(1);
+                            hasDb = !r.IsDBNull(2);
+                        }
+                    }
+                }
+                if (hasDb)
+                {
+                    //  Database is checked as a plain name at start, so it can
+                    //  stand inside [ ] here. Reached but not let in (made by
+                    //  another Windows user) is still reached: Use says the rest.
+                    try
+                    {
+                        using (SqlCommand cmd = new SqlCommand(
+                            "IF OBJECT_ID(N'[" + Database + "].dbo.Workspace') IS NOT NULL " +
+                            "SELECT ISNULL(Records, 0), LEFT(Doc, 2000) FROM [" + Database + "].dbo.Workspace WHERE Id = 1", c))
+                        using (SqlDataReader r = cmd.ExecuteReader())
+                        {
+                            if (r.Read())
+                            {
+                                records = r.IsDBNull(0) ? 0 : Convert.ToInt32(r.GetValue(0));
+                                wsId = WsId(r.IsDBNull(1) ? "" : r.GetString(1));
+                            }
+                        }
+                    }
+                    catch (SqlException) { }
+                }
+            }
+            return null;
+        }
+        catch (Exception e) { return e.Message; }
+    }
+
+    static string WsId(string doc)
+    {
+        if (doc == null) return "";
+        Match m = Regex.Match(doc.Length > 2000 ? doc.Substring(0, 2000) : doc, "\"wsId\"\\s*:\\s*\"([^\"]*)\"");
+        return m.Success ? m.Groups[1].Value : "";
+    }
+
+    //  Moving to another server must not leave the work behind on the old one.
+    //  With the bridge on, a record's attachments are rows in the database and
+    //  nowhere else, so the workspace AND its attachments come across:
+    //    - the new database empty: the workspace is loaded into it, the same
+    //      way a save loads it, and every attachment copied;
+    //    - the same workspace already there: only the attachments it lacks;
+    //    - another workspace there: nothing - the page sees that and asks.
+    //  The old server keeps everything it had, history included.
+    static string CarryOver(string oldConn, out bool copiedDoc, out int copiedFiles)
+    {
+        copiedDoc = false; copiedFiles = 0;
+        using (SqlConnection from = new SqlConnection(oldConn))
+        using (SqlConnection to = Open())
+        {
+            from.Open();
+            string fromDoc = Scalar(from, "SELECT Doc FROM dbo.Workspace WHERE Id = 1") as string;
+            if (fromDoc == null) return "";
+            string toDoc = Scalar(to, "SELECT Doc FROM dbo.Workspace WHERE Id = 1") as string;
+            string fromId = WsId(fromDoc);
+            if (toDoc != null)
+            {
+                string toId = WsId(toDoc);
+                if (fromId.Length == 0 || toId != fromId)
+                    return "the new server already holds a different workspace - nothing was copied";
+            }
+            else
+            {
+                using (SqlTransaction tx = to.BeginTransaction())
+                {
+                    try
+                    {
+                        using (SqlCommand cmd = new SqlCommand("dbo.LoadWorkspace", to, tx))
+                        {
+                            cmd.CommandType = CommandType.StoredProcedure;
+                            cmd.CommandTimeout = 300;
+                            cmd.Parameters.Add("@doc", SqlDbType.NVarChar, -1).Value = fromDoc;
+                            cmd.ExecuteNonQuery();
+                        }
+                        tx.Commit();
+                    }
+                    catch (Exception)
+                    {
+                        try { tx.Rollback(); } catch (Exception) { }
+                        throw;
+                    }
+                }
+                copiedDoc = true;
+            }
+
+            if (Scalar(from, "SELECT OBJECT_ID('dbo.Attachment', 'U')") == null) return "";
+            using (SqlCommand read = new SqlCommand(
+                "SELECT AttachmentId, RecordId, Name, Type, Bytes, Added, Content FROM dbo.Attachment", from))
+            {
+                read.CommandTimeout = 600;
+                using (SqlDataReader r = read.ExecuteReader())
+                {
+                    while (r.Read())
+                    {
+                        using (SqlCommand put = new SqlCommand(
+                            "IF NOT EXISTS (SELECT 1 FROM dbo.Attachment WHERE AttachmentId = @id) " +
+                            "INSERT dbo.Attachment (AttachmentId, RecordId, Name, Type, Bytes, Added, Content) " +
+                            "VALUES (@id, @rec, @name, @type, @bytes, @added, @content)", to))
+                        {
+                            put.CommandTimeout = 300;
+                            put.Parameters.Add("@id", SqlDbType.NVarChar, 40).Value = r.GetValue(0);
+                            put.Parameters.Add("@rec", SqlDbType.NVarChar, 40).Value = r.GetValue(1);
+                            put.Parameters.Add("@name", SqlDbType.NVarChar, 400).Value = r.GetValue(2);
+                            put.Parameters.Add("@type", SqlDbType.NVarChar, 160).Value = r.GetValue(3);
+                            put.Parameters.Add("@bytes", SqlDbType.Int).Value = r.GetValue(4);
+                            put.Parameters.Add("@added", SqlDbType.DateTime2).Value = r.GetValue(5);
+                            put.Parameters.Add("@content", SqlDbType.VarBinary, -1).Value = r.GetValue(6);
+                            if (put.ExecuteNonQuery() > 0) copiedFiles++;
+                        }
+                    }
+                }
+            }
+        }
+        return "";
     }
 
     // ── odds and ends ───────────────────────────────────────────────────────

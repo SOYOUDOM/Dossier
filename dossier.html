@@ -7846,12 +7846,53 @@ const STRINGS = {
   StoreSqlWhy: "database {p0} on {p1}, through the bridge. dossier.json is written as an export.",
   StoreFile: "dossier.json",
   StoreFileWhy: "the file in this folder. To keep them in SQL Server instead, start KalKech.bat and choose THIS folder from the icon by the clock \u2192 Workspace folder\u2026, then reopen the workspace.",
-  DbStopped: "<b>KalKech's database is not answering</b>, and this workspace keeps its records there rather than in a file. Nothing has been opened and nothing will be written. Start <b>KalKech.bat</b> (or the icon by the clock) and press Try again. {p0}",
+  DbStopped: "<b>KalKech's database is not answering</b>, and this workspace keeps its records there rather than in a file. Nothing has been opened and nothing will be written. Start <b>KalKech.bat</b> (or the icon by the clock) and press Try again. If this PC's SQL Server has another name, press <b>SQL Server name\u2026</b>. {p0}",
   DbStoppedPlain: "",
   DbRetry: "Try again",
   DbHowTo: "What is this?",
   DbHowToSay: "KalKech is a page in a browser and cannot talk to SQL Server itself. KalKech.bat starts one small program that can \u2014 the same one that hands out this page. It has no window: it is the KalKech icon by the clock, where Quit stops it and Start with Windows keeps it there every morning.",
   DbStillStopped: "Still nothing on 127.0.0.1. Is the KalKech icon by the clock there?",
+  /* Setup → Database (SQL Server): the server name, chosen per PC */
+  SqlHead: "Database (SQL Server)",
+  SqlIntro: "KalKech keeps your records in SQL Server while the KalKech icon by the clock is running. Most PCs have LocalDB, called (localdb)\\MSSQLLocalDB, and then there is nothing to change. If your PC's SQL Server has another name, type it here: the same name SSMS shows in the Server name box when you connect. This is optional \u2014 leave it empty to use the default.",
+  SqlInUse: "In use",
+  SqlStatus: "Status",
+  SqlFromDefault: "the default",
+  SqlFromSetup: "chosen here",
+  SqlFromEnv: "set by DOSSIER_SQL",
+  SqlFromCmd: "given to KalKech.bat",
+  SqlConnected: "connected \u2014 database {p0}",
+  SqlNotConnected: "not connected: {p0}",
+  SqlNotConnectedPlain: "not connected",
+  SqlStarting: "starting\u2026",
+  SqlLookingUp: "Asking the KalKech icon by the clock\u2026",
+  SqlName: "Server name",
+  SqlExamples: "Examples: (localdb)\\MSSQLLocalDB \u00b7 .\\SQLEXPRESS \u00b7 localhost \u00b7 YOURPC\\SQLEXPRESS. Not sure? Open SSMS and copy the Server name from its Connect window.",
+  SqlLocked: "The server was {p0}, which wins over this setting. To choose it here, start KalKech without that.",
+  SqlTest: "Test",
+  SqlTesting: "Testing\u2026",
+  SqlUse: "Use this server",
+  SqlReset: "Back to the default",
+  SqlSwitching: "Switching\u2026 KalKech is making its tables on the new server and copying your workspace there. On a big workspace this can take a minute or two.",
+  SqlReached: "Reached {p0} \u2014 SQL Server {p1} {p2}",
+  SqlNoDbYet: "There is no {p0} database there yet. KalKech will make it.",
+  SqlHasEmpty: "The {p0} database is there and empty.",
+  SqlHasOurs: "The {p0} database is there and already holds this workspace ({n} record(s)).",
+  SqlHasOther: "The {p0} database is there and holds a different workspace ({n} record(s)). Nothing will be copied over it: if you use this server, KalKech will tell you and keep this folder's records in its own file.",
+  SqlCantReach: "Could not reach {p0}: {p1}",
+  SqlNameBad: "That is not a server name. Use the name SSMS shows: letters, numbers and . _ - \\ ( ) , : only.",
+  SqlSame: "KalKech already uses {p0}.",
+  SqlAskTitle: "Use {p0}?",
+  SqlAskBody: "KalKech will make its tables on {p0} and copy this workspace and its attachments there. The old server keeps its own copy. From now on KalKech uses {p0}, also after a restart.",
+  SqlUseGo: "Use it",
+  SqlUseGoHint: "your work is saved first",
+  SqlNowUsing: "KalKech now uses {p0}.",
+  SqlCopied: "Your workspace was copied there.",
+  SqlCopiedFiles: "{n} attachment(s) copied.",
+  SqlFailed: "Nothing was changed. {p0}",
+  SqlNoBridge: "This needs the KalKech icon by the clock (start KalKech.bat). It is not running, so there is no SQL Server to choose.",
+  SqlOldBridge: "The KalKech icon by the clock is running an older copy. Quit it from the icon and run KalKech.bat again to get this setting.",
+  SqlBannerBtn: "SQL Server name\u2026",
   DbOn: "records in {p0} on {p1}",
   DbStarting: "<b>Starting the database\u2026</b> LocalDB takes a few seconds to wake. Nothing is opened, and nothing written, until it answers.",
   DbStartingSlow: "the database is still starting after two minutes \u2014 the log (icon by the clock \u2192 Show log) says why",
@@ -9442,7 +9483,7 @@ const STATUSES = [
    the status bar, and clicking it copies a line you can paste into a bug
    report — build date and flow protocol included, because those are the two
    things that actually differ between copies. */
-const APP_VERSION = "5.20.1";
+const APP_VERSION = "5.21.0";
 const APP_BUILT = "2026-10-07";
 function buildLine(){
   return "KalKech v" + APP_VERSION + " \u00b7 built " + APP_BUILT +
@@ -11274,6 +11315,10 @@ async function saveOnce(silent, opts){
      question is still on the screen. Writing now is how an empty workspace
      lands on top of a full one - so it does not. */
   if (VAULT.held) return false;
+  /* Setup is moving the database to another SQL Server: what is on screen
+     was saved before it began, and anything newer waits for the move, so it
+     is not written into a server the checks have not looked at yet */
+  if (SQLSRV.switching){ setSaveState("dirty"); return "retry"; }
   /* The database is the store for this workspace and it is not answering.
      Writing the export on its own would leave a file ahead of the database,
      which is two versions of the truth and the beginning of the next bad
@@ -11885,8 +11930,241 @@ function dbSayStopped(why){
         if (await dbFind()){ hideBanner(); await openWorkspace(FS.root, true); }
         else toast(L("DbStillStopped"), { bad:true });
       } },
-    { label:L("DbHowTo"), run: () => toast(L("DbHowToSay"), { action:L("Ok") }) }
+    { label:L("DbHowTo"), run: () => toast(L("DbHowToSay"), { action:L("Ok") }) },
+    /* the commonest reason of all on a new PC: its SQL Server is not called
+       (localdb)\MSSQLLocalDB. Fixable from here, without a working database. */
+    { label:L("SqlBannerBtn"), run: () => sqlOpenSetup() }
   ]);
+}
+
+/* ═══ WHICH SQL SERVER ═══════════════════════════════════════════════════
+   Not every PC calls its SQL Server the same thing. LocalDB is
+   (localdb)\MSSQLLocalDB, SQL Express is .\SQLEXPRESS, a full install is the
+   PC's own name. Setup → Database (SQL Server) takes the name SSMS shows in
+   its Connect window, and the bridge does the rest (route /sqlserver):
+
+     Test   can it be reached, and what is on it - nothing is made
+     Use    its tables are made, this workspace and its attachments copied
+            across (they are rows in the database and nowhere else), and the
+            name kept for this Windows user, so it is still chosen after a
+            restart and in a second copy of KalKech on the same PC
+
+   After a switch the workspace is opened again through openWorkspace, the
+   same safety checks as every start: an empty database is filled from
+   dossier.json, a database holding another workspace is left alone and
+   said so. Optional throughout: with nothing typed, nothing changes. */
+const SQLSRV = { info:null, busy:"", out:"", focus:false, switching:false, typed:null };
+const SQL_NAME_OK = /^[A-Za-z0-9_.,:\\()\-]{1,128}$/;
+
+/* the bridge's port and token, found the way dbRehello finds them, without
+   touching DB.on: this is asked while the database may well be down */
+async function sqlHand(fresh){
+  if (!fresh && DB.bridge && DB.port && DB.token) return { port:DB.port, token:DB.token };
+  let hand = null;
+  if (location.protocol === "http:" && location.hostname === "127.0.0.1"){
+    try {
+      const r = await fetchIn("/hello", { cache:"no-store" }, 4000);
+      if (r.ok){
+        const h = await r.json();
+        if (h && h.token) hand = { port:+h.port || +location.port, token:h.token };
+      }
+    } catch(e){}
+  }
+  if (!hand && FS.ok && FS.root){
+    try { hand = JSON.parse(await FS.readText(FS.root, ".bridge.json")); } catch(e){}
+  }
+  if (!hand || !hand.port || !hand.token) return null;
+  DB.port = +hand.port; DB.token = String(hand.token); DB.bridge = true;
+  return { port:DB.port, token:DB.token };
+}
+/* one call to /sqlserver; a stale token (the bridge was restarted) is
+   fetched again once. null = no bridge; { old:true } = a bridge from before
+   5.21, which does not know the route. */
+async function sqlCall(method, query, ms){
+  for (let i = 0; i < 2; i++){
+    const hand = await sqlHand(i > 0);
+    if (!hand) return null;
+    let r;
+    try {
+      r = await fetchIn("http://127.0.0.1:" + hand.port + "/sqlserver" + (query || ""),
+                        { method, headers:{ "X-Dossier-Token":hand.token }, cache:"no-store" }, ms || 60000);
+    } catch(e){
+      if (i === 0) continue;
+      return null;
+    }
+    if (r.status === 403 && i === 0) continue;
+    if (r.status === 404) return { old:true };
+    let body = null;
+    try { body = await r.json(); } catch(e){}
+    if (!body) return { ok:false, error:"the bridge answered " + r.status };
+    return body;
+  }
+  return null;
+}
+const sqlSrvGet = () => sqlCall("GET", "", 8000);
+/* a switch makes tables and copies a workspace: minutes, not seconds, on a
+   big one - so it is given ten */
+const sqlSrvPost = (name, apply) =>
+  sqlCall("POST", "?name=" + encodeURIComponent(name) + "&apply=" + (apply ? "1" : "0"), apply ? 600000 : 90000);
+
+function sqlFromLabel(from){
+  return L(from === "setup" ? "SqlFromSetup" : from === "DOSSIER_SQL" ? "SqlFromEnv" :
+           from === "command line" ? "SqlFromCmd" : "SqlFromDefault");
+}
+/* what a test found, line by line, in the same ladder the flow test uses */
+function sqlSaid(r, name){
+  const db = (SQLSRV.info && SQLSRV.info.database) || "Dossier";
+  const step = (ok, text) => '<div class="p"><i style="background:' +
+    (ok ? "var(--st-done)" : "var(--st-block)") + '"></i><span>' + esc(text) + "</span></div>";
+  if (!r.ok) return '<div class="prov" style="margin-top:10px">' +
+    step(false, L("SqlCantReach", { p0:name, p1:r.error || "" })) + "</div>";
+  let h = step(true, L("SqlReached", { p0:name, p1:r.version || "?", p2:r.edition || "" }));
+  const n = +r.records || 0;
+  if (!r.hasDb) h += step(true, L("SqlNoDbYet", { p0:db }));
+  else if (r.wsId && r.wsId === S.wsId) h += step(true, L("SqlHasOurs", { p0:db, n }));
+  else if (r.wsId || n) h += step(false, L("SqlHasOther", { p0:db, n }));
+  else h += step(true, L("SqlHasEmpty", { p0:db }));
+  return '<div class="prov" style="margin-top:10px">' + h + "</div>";
+}
+
+async function renderSqlBox(){
+  const box = $("sqlBox");
+  if (!box) return;
+  const intro = '<p class="hint2">' + esc(L("SqlIntro")) + "</p>";
+  /* the first paint only: after that the box keeps what it shows until the
+     answer is in, rather than blinking at every click */
+  if (!box.firstChild) box.innerHTML = intro + '<p class="hint2">' + esc(L("SqlLookingUp")) + "</p>";
+  const info = await sqlSrvGet();
+  if (!$("sqlBox")) return;
+  if (!info){
+    SQLSRV.info = null;
+    box.innerHTML = intro + '<p class="hint2" style="color:var(--p2);margin-top:8px">' + esc(L("SqlNoBridge")) + "</p>";
+    return;
+  }
+  if (info.old || info.server == null){
+    SQLSRV.info = null;
+    box.innerHTML = intro + '<p class="hint2" style="color:var(--p2);margin-top:8px">' + esc(L("SqlOldBridge")) + "</p>";
+    return;
+  }
+  SQLSRV.info = info;
+  const state = info.starting ? L("SqlStarting")
+    : info.db ? L("SqlConnected", { p0:info.database || "Dossier" })
+    : info.error ? L("SqlNotConnected", { p0:info.error }) : L("SqlNotConnectedPlain");
+  const busy = !!SQLSRV.busy;
+  const off = info.locked || busy ? " disabled" : "";
+  box.innerHTML = intro +
+    '<dl class="kv" style="margin:10px 0 12px">' +
+      "<dt>" + LE("SqlInUse") + '</dt><dd><b class="mono">' + esc(info.server) + "</b> · " +
+        esc(sqlFromLabel(info.from)) + "</dd>" +
+      "<dt>" + LE("SqlStatus") + '</dt><dd style="color:' +
+        (info.db ? "var(--st-done)" : info.starting ? "var(--ink-3)" : "var(--p1)") + '">' + esc(state) + "</dd>" +
+    "</dl>" +
+    (info.locked ? '<p class="hint2" style="color:var(--p2)">' +
+       esc(L("SqlLocked", { p0:sqlFromLabel(info.from) })) + "</p>" : "") +
+    fr(L("SqlName"), '<input class="in mono" id="sqlName" spellcheck="false" autocomplete="off" style="font-size:11.5px"' +
+       ' placeholder="' + esc(info.default || "(localdb)\\MSSQLLocalDB") + '" value="' +
+       esc(SQLSRV.typed != null ? SQLSRV.typed : info.from === "setup" ? info.server : "") + '"' + off + ">") +
+    '<p class="hint2">' + esc(L("SqlExamples")) + "</p>" +
+    '<div class="brow" style="margin-top:8px">' +
+      '<button class="btn sm" id="sqlTest"' + (busy ? " disabled" : "") + ">" +
+        esc(SQLSRV.busy === "test" ? L("SqlTesting") : L("SqlTest")) + "</button>" +
+      '<button class="btn sm pri" id="sqlUse"' + off + ">" + esc(L("SqlUse")) + "</button>" +
+      (info.from === "setup" && !info.locked
+        ? '<button class="btn sm" id="sqlReset"' + off + ">" + esc(L("SqlReset")) + "</button>" : "") +
+    "</div>" +
+    '<div id="sqlOut">' + (SQLSRV.busy === "use" ? '<p class="hint2" style="margin-top:10px">' +
+      esc(L("SqlSwitching")) + "</p>" : SQLSRV.out) + "</div>";
+
+  const name = () => String(($("sqlName") || {}).value || "").trim();
+  const test = $("sqlTest"), use = $("sqlUse"), reset = $("sqlReset");
+  if (test) test.onclick = () => sqlTest(name());
+  if (use) use.onclick = () => sqlUse(name());
+  if (reset) reset.onclick = () => sqlUse("");
+  const inp = $("sqlName");
+  if (inp){
+    inp.oninput = () => { SQLSRV.typed = inp.value; };
+    inp.onkeydown = e => { if (e.key === "Enter"){ e.preventDefault(); sqlTest(name()); } };
+  }
+  if (SQLSRV.focus){
+    SQLSRV.focus = false;
+    const det = box.closest("details");
+    if (det) det.open = true;
+    (det || box).scrollIntoView({ block:"start" });
+    if (inp && !inp.disabled) inp.focus();
+  }
+}
+
+async function sqlTest(typed){
+  if (SQLSRV.busy) return;
+  SQLSRV.typed = typed;
+  const name = typed || (SQLSRV.info && SQLSRV.info.default) || "(localdb)\\MSSQLLocalDB";
+  if (!SQL_NAME_OK.test(name)){ SQLSRV.out = '<p class="hint2" style="color:var(--p1);margin-top:10px">' +
+    esc(L("SqlNameBad")) + "</p>"; renderSqlBox(); return; }
+  SQLSRV.busy = "test"; SQLSRV.out = ""; await renderSqlBox();
+  const r = await sqlSrvPost(name, false);
+  SQLSRV.busy = "";
+  SQLSRV.out = !r ? '<p class="hint2" style="color:var(--p1);margin-top:10px">' + esc(L("SqlNoBridge")) + "</p>"
+    : r.old ? '<p class="hint2" style="color:var(--p2);margin-top:10px">' + esc(L("SqlOldBridge")) + "</p>"
+    : sqlSaid(r, name);
+  renderSqlBox();
+  return r;
+}
+
+/* typed "" = back to the default */
+async function sqlUse(typed){
+  if (SQLSRV.busy) return;
+  const info = SQLSRV.info;
+  if (!info || info.locked) return;
+  SQLSRV.typed = typed;
+  const name = typed || info.default || "(localdb)\\MSSQLLocalDB";
+  if (!SQL_NAME_OK.test(name)){ SQLSRV.out = '<p class="hint2" style="color:var(--p1);margin-top:10px">' +
+    esc(L("SqlNameBad")) + "</p>"; renderSqlBox(); return; }
+  if (info.db && name.toLowerCase() === String(info.server).toLowerCase()){
+    toast(L("SqlSame", { p0:name })); return;
+  }
+  /* test first: a name that cannot be reached is said so here, before any
+     question is asked or anything is saved */
+  const t = await sqlTest(name);
+  if (!t || !t.ok) return;
+  const a = await askUser(L("SqlAskTitle", { p0:name }), L("SqlAskBody", { p0:name }),
+    [{ label:L("SqlUseGo"), hint:L("SqlUseGoHint") }, { label:L("Cancel") }]);
+  if (!a || a.choice !== 0) return;
+
+  SQLSRV.busy = "use"; SQLSRV.out = ""; renderSqlBox();
+  /* what is on screen goes to the old server first, then nothing is saved
+     while the bridge moves: a save that lands half-way would write this
+     workspace somewhere nobody has checked yet */
+  if (FS.ok && FS.root && (S.dirty || SAVE.running)) await saveNow(true);
+  while (SAVE.running){ try { await SAVE.running; } catch(e){} }
+  SQLSRV.switching = true;
+  let r;
+  try { r = await sqlSrvPost(typed ? name : "", true); }
+  finally { SQLSRV.switching = false; }
+  SQLSRV.busy = "";
+  if (!r || r.old || !r.ok){
+    SQLSRV.out = '<p class="hint2" style="color:var(--p1);margin-top:10px">' +
+      esc(L("SqlFailed", { p0:!r ? L("SqlNoBridge") : r.old ? L("SqlOldBridge") : (r.error || "?") })) + "</p>";
+    renderSqlBox();
+    return;
+  }
+  const said = [L("SqlNowUsing", { p0:r.server || name })];
+  if (r.copied) said.push(L("SqlCopied"));
+  if (r.files) said.push(L("SqlCopiedFiles", { n:r.files }));
+  if (r.note) said.push(r.note);
+  SQLSRV.out = '<p class="hint2" style="color:var(--st-done);margin-top:10px">' + esc(said.join(" ")) + "</p>";
+  SQLSRV.typed = null;          /* the box shows what is kept from here */
+  /* open it again through the usual checks - they decide what is in it */
+  if (FS.ok && FS.root){ hideBanner(); await openWorkspace(FS.root, true); }
+  else await dbFind();
+  toast(said.join(" "));
+  renderSqlBox();
+}
+
+/* from the banner: Setup, at this section, unfolded, with the box focused */
+function sqlOpenSetup(){
+  S.folds["pSetup|" + L("SqlHead").trim().slice(0, 48)] = true;
+  SQLSRV.focus = true; SQLSRV.out = ""; SQLSRV.typed = null;
+  openModal("setup");
 }
 
 /* ── why is this workspace not on SQL Server? ──────────────────────────
@@ -17942,7 +18220,7 @@ function aboutSearch(q, n){
   }).filter(x => x.score > 0).sort((a, b) => b.score - a.score).slice(0, n || 3);
 }
 /* is this question about Resolv itself, rather than about their work */
-const ABOUT_OWN = /\u1780\u17b6\u179b\u1780\u17b7\u1785\u17d2\u1785|\b(resolv|kalkech|kal kech|this app|the app|in the app|your(self)? (version|features?)|what'?s new|what is new|new (in|feature|version)|release notes?|change ?log|changelog|version|feature|setting|settings|set ?up|preset|skin|theme|lumen|nova|nebula|aurora|carbon|prism|halo|crimson|neon|cyberpunk|character|power[- ]?up|rainbow|mind ?map|lightning|fonts?|typefaces?|export(?:ing)?|import(?:ing)?|pixel|desk pet|shortcut|keyboard|alerts?|bell|reminders?|notifications?|bridge|power automate|prompt|language|khmer|menu|button|look and behaviou?r|sources?|document indexing|index(?:ing)?|re-?index(?:ing|ed)?|citations?|pdf runbooks?|(?:add|upload|import|update|replace) (?:a |an |my |the )?(?:new |updated )?(?:pdf|markdown|word|document|runbook|guideline|standard|policy)s?|answer was not found|not found|supports? (?:this|that|the) answer)\b/i;
+const ABOUT_OWN = /\u1780\u17b6\u179b\u1780\u17b7\u1785\u17d2\u1785|\b(resolv|kalkech|kal kech|this app|the app|in the app|your(self)? (version|features?)|what'?s new|what is new|new (in|feature|version)|release notes?|change ?log|changelog|version|feature|setting|settings|set ?up|preset|skin|theme|lumen|nova|nebula|aurora|carbon|prism|halo|crimson|neon|cyberpunk|character|power[- ]?up|rainbow|mind ?map|lightning|fonts?|typefaces?|export(?:ing)?|import(?:ing)?|pixel|desk pet|shortcut|keyboard|alerts?|bell|reminders?|notifications?|bridge|localdb|mssqllocaldb|sql ?server name|power automate|prompt|language|khmer|menu|button|look and behaviou?r|sources?|document indexing|index(?:ing)?|re-?index(?:ing|ed)?|citations?|pdf runbooks?|(?:add|upload|import|update|replace) (?:a |an |my |the )?(?:new |updated )?(?:pdf|markdown|word|document|runbook|guideline|standard|policy)s?|answer was not found|not found|supports? (?:this|that|the) answer)\b/i;
 const ABOUT_HELP = /\b(how (do|can|to|should|does)|where (is|are|do|can)|can (i|you|it)|is there|does it|what does|what is|turn (on|off)|switch (on|off)|enable|disable|configure|change|show me how|why (did|does|do|is|was)|which (source|document))\b/i;
 const ABOUT_NEWS = /\b(what'?s new|what is new|what changed|what has changed|what (?:was|were|has been|have been|got) (?:added|new|changed|fixed|improved)|new in|release notes?|change ?log|changelog|(?:latest|last|newest|current|this) (?:resolv )?(?:version|release|update)|which version|what version|version (are you|is this|am i))\b/i;
 function aboutForFlow(q){
@@ -23866,7 +24144,10 @@ async function renderModal(){
     '<div id="hushBox"></div>' +
 
     "<h5 class=\"eyebrow\" style=\"margin:22px 0 8px\">" + L("FlowHead") + "</h5>" +
-    '<div id="flowBox"></div>';
+    '<div id="flowBox"></div>' +
+
+    "<h5 class=\"eyebrow\" style=\"margin:22px 0 8px\">" + L("SqlHead") + "</h5>" +
+    '<div id="sqlBox"></div>';
   paintReflect();
   paintBrief();
   renderMemory();
@@ -23874,6 +24155,7 @@ async function renderModal(){
   renderRunbooks();
   renderHush();
   renderFlow();
+  renderSqlBox();
 
   $("pHelp").innerHTML =
     "<h4 style=\"margin:0 0 10px\">" + L("QuickAdd") + "</h4><dl class=\"kv mono\" style=\"font-size:11.5px\">" +

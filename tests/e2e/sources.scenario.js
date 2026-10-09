@@ -1083,5 +1083,113 @@
   closeChat();
   lookChoose("studio");
   check("leaving Neon puts the palette from before back", !document.documentElement.hasAttribute("data-neon") && S.settings.theme === before518, S.settings.theme);
+
+  /* ── 5.21: the SQL Server name, chosen in Setup ─────────────────────────
+     The bridge is stood in for: /sqlserver answered by a stub, as the real
+     one answers (the real one was run under Mono for the release). */
+  const dbWas = { bridge:DB.bridge, port:DB.port, token:DB.token };
+  const fetchWas = window.fetch, openWas = window.openWorkspace;
+  const sql = { info:null, posts:[], status:200, switchingSeen:null, reopened:0 };
+  window.fetch = async (url, init) => {
+    const u = String(url);
+    if (u.indexOf("http://127.0.0.1:1/sqlserver") === 0){
+      if (sql.status !== 200) return new Response("KalKech is at /dossier.html", { status:sql.status });
+      if ((init && init.method) === "POST"){
+        const q = new URLSearchParams(u.split("?")[1] || "");
+        sql.posts.push({ name:q.get("name"), apply:q.get("apply") });
+        if (q.get("apply") === "1"){
+          sql.switchingSeen = SQLSRV.switching;
+          sql.info = Object.assign({}, sql.info, { server:q.get("name") || sql.info.default, from:q.get("name") ? "setup" : "default", db:true, error:"" });
+          return new Response(JSON.stringify({ ok:true, switched:true, server:sql.info.server, copied:true, files:2, note:"" }));
+        }
+        return new Response(JSON.stringify(/SQLEXPRESS/.test(q.get("name"))
+          ? { ok:true, version:"16.0.1000.6", edition:"Express Edition (64-bit)", hasDb:false, records:0, wsId:"" }
+          : { ok:false, error:"A network-related or instance-specific error occurred while establishing a connection to SQL Server." }));
+      }
+      return new Response(JSON.stringify(sql.info));
+    }
+    return fetchWas(url, init);
+  };
+  window.openWorkspace = async h => { sql.reopened++; return true; };
+  const sqlBoxText = () => ($("sqlBox") || {}).textContent || "";
+
+  DB.bridge = false; DB.port = 0; DB.token = "";
+  openModal("setup");
+  await until(() => /KalKech icon by the clock \(start KalKech\.bat\)/.test(sqlBoxText()), 6000);
+  check("(5.21) Setup has Database (SQL Server); with no bridge it says what is needed",
+        /Database \(SQL Server\)/.test($("pSetup").textContent) && /It is not running/.test(sqlBoxText()) && !$("sqlName"), sqlBoxText());
+
+  DB.bridge = true; DB.port = 1; DB.token = "t"; sql.status = 404;
+  await renderSqlBox();
+  check("...an older bridge: restart KalKech to get it", /older copy/.test(sqlBoxText()) && !$("sqlName"), sqlBoxText());
+
+  sql.status = 200;
+  sql.info = { server:"(localdb)\\MSSQLLocalDB", from:"default", locked:false, default:"(localdb)\\MSSQLLocalDB",
+               database:"Dossier", db:false, starting:false, error:"LocalDB is not installed on this PC." };
+  await renderSqlBox();
+  check("...in use: the default, and why it is not connected; the box empty, the default as its hint",
+        /\(localdb\)\\MSSQLLocalDB · the default/.test(sqlBoxText()) && /not connected: LocalDB is not installed/.test(sqlBoxText()) &&
+        $("sqlName").value === "" && $("sqlName").placeholder === "(localdb)\\MSSQLLocalDB" &&
+        !$("sqlName").disabled && !$("sqlUse").disabled && !$("sqlReset"), sqlBoxText());
+
+  $("sqlName").value = "x;Database=master";
+  $("sqlTest").click();
+  await until(() => /not a server name/.test(sqlBoxText()), 3000);
+  check("...a name with ; or = is refused before it is sent", /not a server name/.test(sqlBoxText()) && sql.posts.length === 0, sqlBoxText());
+
+  $("sqlName").value = "NOSUCHPC\\SQL";
+  $("sqlTest").click();
+  await until(() => /Could not reach/.test(sqlBoxText()), 3000);
+  check("...Test: a server that cannot be reached says so, and nothing is changed",
+        /Could not reach NOSUCHPC\\SQL: A network-related/.test(sqlBoxText()) && sql.posts.length === 1 && sql.posts[0].apply === "0" &&
+        sql.info.server === "(localdb)\\MSSQLLocalDB", sqlBoxText());
+
+  $("sqlName").value = ".\\SQLEXPRESS";
+  $("sqlTest").click();
+  await until(() => /Reached \.\\SQLEXPRESS/.test(sqlBoxText()), 3000);
+  check("...Test: reached, its version, and that the database will be made",
+        /Reached \.\\SQLEXPRESS — SQL Server 16\.0\.1000\.6 Express Edition/.test(sqlBoxText()) && /no Dossier database there yet/.test(sqlBoxText()) &&
+        sql.posts[1].name === ".\\SQLEXPRESS" && sql.posts[1].apply === "0", sqlBoxText());
+
+  $("sqlName").value = ".\\SQLEXPRESS";
+  $("sqlUse").click();
+  await until(() => $("ask").classList.contains("on"), 4000);
+  check("...Use: asks first, in plain words", $("askT").textContent === "Use .\\SQLEXPRESS?" && /copy this workspace and its attachments/.test($("askM").textContent),
+        $("askT").textContent);
+  document.querySelector('#askO .opt[data-i="0"]').click();
+  await until(() => /chosen here/.test(sqlBoxText()) && /now uses/.test(sqlBoxText()), 5000);
+  const lastPost = sql.posts[sql.posts.length - 1];
+  check("...then switches: saves held while it moves, the workspace opened again, what was copied said",
+        lastPost.apply === "1" && lastPost.name === ".\\SQLEXPRESS" && sql.switchingSeen === true && !SQLSRV.switching && sql.reopened === 1 &&
+        /KalKech now uses \.\\SQLEXPRESS\. Your workspace was copied there\. 2 attachment\(s\) copied/.test(sqlBoxText()),
+        JSON.stringify({ lastPost, sw:sql.switchingSeen, re:sql.reopened, t:sqlBoxText().slice(-300) }));
+  check("...and shows it as chosen here, with a way back to the default",
+        $("sqlName").value === ".\\SQLEXPRESS" && !!$("sqlReset") && /connected — database Dossier/.test(sqlBoxText()), sqlBoxText());
+  SQLSRV.switching = true;
+  check("...a save asked for during a switch waits", (await saveOnce(true, {})) === "retry");
+  SQLSRV.switching = false;
+
+  sql.info = Object.assign({}, sql.info, { server:"MYPC\\SQL2019", from:"DOSSIER_SQL", locked:true });
+  SQLSRV.out = "";
+  await renderSqlBox();
+  check("...set by DOSSIER_SQL: shown, and not changeable here",
+        /set by DOSSIER_SQL/.test(sqlBoxText()) && /wins over this setting/.test(sqlBoxText()) && $("sqlName").disabled && $("sqlUse").disabled && !$("sqlReset"),
+        sqlBoxText());
+  closeModal();
+
+  sql.info = Object.assign({}, sql.info, { server:"(localdb)\\MSSQLLocalDB", from:"default", locked:false, db:false });
+  dbSayStopped("Cannot open the database");
+  const bb = Array.prototype.slice.call(document.querySelectorAll("#bannerAct [data-bb]")).find(b => /SQL Server name/.test(b.textContent));
+  check("...the 'database is not answering' banner has a SQL Server name… button", !!bb);
+  if (bb) bb.click();
+  await until(() => document.activeElement === $("sqlName"), 6000);
+  const sec = $("sqlBox") && $("sqlBox").closest("details");
+  check("...which opens Setup at that section, unfolded, the name box ready to type in",
+        $("modal").classList.contains("on") && !!sec && sec.open && document.activeElement === $("sqlName"),
+        String(document.activeElement && document.activeElement.id));
+  await shot("22-sqlserver");
+  hideBanner(); closeModal();
+  window.fetch = fetchWas; window.openWorkspace = openWas;
+  Object.assign(DB, dbWas); SQLSRV.out = "";
   return { checks };
 })()

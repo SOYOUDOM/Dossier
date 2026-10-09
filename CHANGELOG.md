@@ -6,6 +6,39 @@ holds — which is what to paste into a bug report.
 
 ---
 
+## 5.21.0 - 2026-10-09
+
+**Choose your SQL Server in Setup, when it is not LocalDB.**
+
+- **The server name, in Setup.** Not every PC calls its SQL Server
+  `(localdb)\MSSQLLocalDB`: SQL Express is `.\SQLEXPRESS`, a full SQL Server
+  is the PC's own name. **Menu → Setup → Database (SQL Server)** shows the
+  server in use, where the name came from and whether it is connected, and
+  takes the name SSMS shows in its *Server name* box. It is optional: with
+  nothing typed, nothing changes.
+- **Test** says whether KalKech reached the server, its SQL Server version,
+  and whether a KalKech database is already there - and changes nothing.
+- **Use this server** asks first, saves your work, makes KalKech's database
+  and tables on the new server, **copies your workspace and the files
+  attached to your records** across from the old server, and opens the
+  workspace again through the usual safety checks. A server that already
+  holds another workspace gets nothing copied over it. The old server keeps
+  its copy. **Back to the default** returns to LocalDB.
+- **Kept for you.** The name is kept for your Windows user (registry
+  `HKCU\Software\KalKech`, value `SqlServer`), so it is used after a
+  restart, and by a second copy of KalKech cloned on the same PC.
+  `scripts\dossier-sql.bat` reads it too.
+- **When the database will not start** (a new PC, no LocalDB), the red banner
+  at the top has a **SQL Server name…** button that opens the section.
+- `set DOSSIER_SQL=...` still works and wins over Setup; Setup then shows
+  that name and cannot change it. An empty server argument no longer hides
+  `DOSSIER_SQL`.
+- **To get it:** after updating, quit KalKech from the icon by the clock
+  (right-click → Quit) and run `KalKech.bat` again. It rebuilds its program
+  by itself. Until then the section says an older copy is running.
+
+---
+
 ## 5.20.1 - 2026-10-09
 
 **KalKech.bat starts a new copy properly when an old one is still running.**

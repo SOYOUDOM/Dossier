@@ -34,7 +34,7 @@ are careful not to attract attention from their security team.
 | `flow/relay.html` | The **only** page that touches the network: a sandboxed iframe that posts to the flow URL. |
 | `flow/prompt.txt` | The model's instructions, with `{message} {today} {weekday} {calendar} {workspace} {actions} {history} {memory} {attached} {sources}` filled in per question. A user's own copy can live in the workspace as `dossier-prompt.txt`. |
 | `flow/*.md` | Guides: `CONTRACT.md` (request/reply/actions), `POWER-AUTOMATE.md`, `BAU-RUNBOOKS.md`, `SOURCES.md` (setup + troubleshooting for Sources), `SPEED.md`, `SERVICENOW.md`. |
-| `scripts/bridge/DossierBridge.cs` | The tray program (C# 5, WinForms): serves the page on 127.0.0.1, keeps the workspace in SQL LocalDB when available, runs scripts. `KalKech.bat` compiles it with the Windows `csc.exe` whenever the `.cs` is newer than the `.exe`. |
+| `scripts/bridge/DossierBridge.cs` | The tray program (C# 5, WinForms): serves the page on 127.0.0.1, keeps the workspace in SQL LocalDB when available (or the SQL Server named in Setup, since 5.21), runs scripts. `KalKech.bat` compiles it with the Windows `csc.exe` whenever the `.cs` is newer than the `.exe`. |
 | `lang/en.xml`, `lang/km.xml` | Language packs (English, Khmer). Missing keys fall back to the English `STRINGS` table in `dossier.html`. |
 | `docs/` | `HOW-THE-AI-WORKS.md` (the whole AI pipeline for beginners, plus a reusable blueprint) and `how-the-ai-works.html` (the same as a self-contained picture page). Keep both in step with the code when the pipeline changes (numbers: 60 records, 10 notes, 30 lessons, 14,000 characters, 65 actions / 43 writes). |
 | `tests/` | `sources.test.js` and `diagram.test.js` (node:test), `e2e/run.js` + `e2e/sources.scenario.js` (real browser), `fixtures/` (made-up documents; `make-pdf.js` regenerates the PDFs). |
@@ -91,13 +91,13 @@ A *workspace* is a folder the user picks (File System Access API):
 - Commit messages: clear summary + body; no model names in commits, code or
   docs. Do not open a pull request unless the owner asks.
 - Work so far is on branch `claude/chat-panel-pixel-art-gifs-d822hq`
-  (latest: 5.20.1). Follow the branch instructions of your own session.
+  (latest: 5.21.0). Follow the branch instructions of your own session.
 
 ## Testing
 
 ```
 node --test                                   # 54 unit tests (Sources, grounding, names check, code origin, flow reply fields, diagrams)
-node tests/e2e/run.js                         # the app in headless Chrome/Edge: 217 checks (CHROME=<path> to choose)
+node tests/e2e/run.js                         # the app in headless Chrome/Edge: 230 checks (CHROME=<path> to choose)
 node flow/check-prompt.js                     # after editing flow/prompt.txt ...
 python3 flow/embed-prompt.py                  # ... then copy it into flow.js (PROMPT_BUILTIN)
 node tests/fixtures/make-pdf.js               # regenerate the PDF fixtures
@@ -119,6 +119,44 @@ Also useful:
   `DossierFlow.validate`. `tests/e2e/run.js` is a working example of all of it.
 
 ## Recent history (newest first)
+
+- **5.21.0** - Owner: "a setup for the SSMS SQL Server name - not every PC
+  has the same local server name; optional, in Setup".
+  - *Bridge* (`which SQL Server` section before "odds and ends"):
+    `DefaultServer`, `ServerFrom` ("default" | "setup" | "DOSSIER_SQL" |
+    "command line"; the last two = `locked`), `SavedServer()`/`SaveServer()`
+    in `HKCU\Software\KalKech` value `SqlServer` (the default is never
+    stored: deleting the value is "back to default"), `ServerNameOk()`
+    (`^[A-Za-z0-9_.,:\\()\-]{1,128}$` - no `;`/`=` into the connection
+    string), `ConnFor()`. Route `/sqlserver` (token needed, answered before
+    the `DbReady` gate): GET = `{server, from, locked, default, database, db,
+    starting, error}`; POST `?name=&apply=0` = `TestServer` (master, read
+    only: version, edition, `DB_ID`, records + `wsId` from the first 2,000
+    chars of `Doc`); `apply=1` (409 when locked, 503 while starting) under
+    `SaveLock`: `DbReady=false`, `ServerGen++`, new connection string,
+    `Migrate()`, old values put back if it fails; `CarryOver(oldConn)` when
+    the old server worked: workspace via `dbo.LoadWorkspace` into an empty
+    new database (different `wsId` there = nothing copied, a note) and every
+    `dbo.Attachment` row it lacks; `SaveServer`; handshake and tray text.
+    `PutWorkspace` takes `ServerGen` before the lock and answers 503 when it
+    moved (a save queued for the old server). `DOSSIER_SQL` now applies when
+    the server argument is empty (it used to need `pos.Count < 2`).
+  - *Page* (`WHICH SQL SERVER` banner after `dbSayStopped`): `SQLSRV`
+    (`busy`, `out`, `typed` keeps the box across re-draws, `switching`),
+    `sqlHand()` (port/token without touching `DB.on`), `sqlCall()` (403 →
+    fresh token once; 404 → `{old:true}`, a pre-5.21 bridge), `renderSqlBox()`
+    in Setup (`#sqlBox`, last section), `sqlTest`, `sqlUse` (test → `askUser`
+    → `saveNow` → `SQLSRV.switching` (saveOnce returns "retry") → POST →
+    `openWorkspace(FS.root, true)`), `sqlOpenSetup()` from the new banner
+    button in `dbSayStopped`. Strings `Sql*`. `ABOUT_OWN` + localdb / sql
+    server name.
+  - `scripts/dossier-sql.bat` reads the registry value (`reg query`) when
+    `DOSSIER_SQL` is not set; `KalKech.bat` header mentions Setup.
+  - Tested: mcs (C# 5); the bridge run headless under Mono in the session
+    (GET, bad token 403, bad name 400, unreachable server → ok:false and
+    nothing changed, locked 409, registry value / `DOSSIER_SQL` / bad value
+    at start); the success path (a real SQL Server) was not available - the
+    e2e checks stand in for the bridge with a stub. 13 new e2e checks.
 
 - **5.20.1** - Owner's screenshot: a clone in a new folder, with KalKech
   still running from the old folder, said "running and out of date" and then

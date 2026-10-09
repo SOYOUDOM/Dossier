@@ -29,7 +29,8 @@ rem    KalKech.bat startup                start with Windows, quietly
 rem    KalKech.bat startup off            stop doing that
 rem
 rem  DEFAULTS, overridable by environment variable
-rem    server   (localdb)\MSSQLLocalDB    set DOSSIER_SQL=...
+rem    server   (localdb)\MSSQLLocalDB    set DOSSIER_SQL=...  or, kept for
+rem                                       you: Setup, Database (SQL Server)
 rem    database Dossier                   set DOSSIER_DB=...
 rem    port     5500                      set DOSSIER_PORT=...
 rem ===========================================================================
