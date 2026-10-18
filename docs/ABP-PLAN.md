@@ -577,13 +577,27 @@ model → checks → cards.
 
 ---
 
-## 13. Decisions for the owner
+## 13. Decisions the owner made (18 October 2026)
 
-1. **Template**: ABP Framework on .NET 10 (recommended), or ASP.NET
-   Boilerplate on .NET 9 (support ends 10 November 2026)?
-2. **Where the code lives**: a new repository (recommended — the template is
-   a few thousand files and KalKech stays one page), or an `abp/` folder here?
-3. **The model for the lab**: the same Power Automate flow as today, or the
-   stand-in only at first?
-4. **Database**: SQL Server LocalDB (the template's default) — the same one
-   KalKech's bridge already uses — or the named SQL Server from Setup?
+1. **Template**: **ASP.NET Boilerplate**, the latest from
+   aspnetboilerplate.com/Templates (ASP.NET Core + Angular; ABP 10.2,
+   .NET 9). The projects carry `RollForward=Major`, so they also run where
+   only .NET 10 is installed. Moving to .NET 10 later is one line per
+   project (`TargetFramework`).
+2. **Where the code lives**: a new private repository,
+   **SOYOUDOM/kalkech-api**. KalKech stays here, unchanged.
+3. **The model**: **the owner's own Power Automate flow**. The API sends it
+   the same request KalKech sends, so the flow and the prompt work
+   unchanged. Its address is set on the owner's PC only (user secrets), never
+   committed.
+4. **Layers**: **DDD** — the template's Core (domain), Application,
+   EntityFrameworkCore, and a new Infrastructure project for the adapters
+   (the flow, PDF and Word readers, the file store). The brain lives in the
+   domain layer, not in a separate framework-free library as section 2 first
+   suggested; the engines in it are still plain classes with no ABP in them.
+5. **API first**: the Angular front end comes later.
+6. **Database**: SQL Server LocalDB, the template's default (not yet
+   decided whether to point it at the SQL Server named in KalKech's Setup).
+
+How the port is done — layers, folders, the JavaScript traps, golden tests
+against KalKech's own code — is in `docs/PORTING.md` of that repository.
