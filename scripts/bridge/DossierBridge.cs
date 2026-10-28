@@ -17,6 +17,9 @@
 //      transaction, and keeps the previous state before it replaces it.
 //    - starts the script runner for your workspace, hidden, and stops it
 //      again when it quits.
+//    - calls the APIs you have set up as API actions, with the secrets they
+//      need - which it keeps, encrypted for your Windows account, and never
+//      hands back. See "YOUR APIS" at the end of this file.
 //
 //  With no LocalDB on the machine it still hands out the page, and Dossier
 //  keeps its records in dossier.json as it always did.
@@ -47,17 +50,20 @@ using System.Data;
 using System.Data.SqlClient;
 using System.Diagnostics;
 using System.Drawing;
+using System.Globalization;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
+using System.Web.Script.Serialization;
 using System.Windows.Forms;
 using Microsoft.Win32;
 
-public class DossierBridge
+public partial class DossierBridge
 {
     static string Token;
     static string ConnectionString;
@@ -710,7 +716,8 @@ public class DossierBridge
                 // file types out of the folder dossier.html sits in, which is
                 // a checkout of a public repository. Your records are not in
                 // that folder, and nothing below will serve them if they are.
-                bool api = (path == "/health" || path == "/workspace" || path == "/attachment" || path == "/history");
+                bool api = (path == "/health" || path == "/workspace" || path == "/attachment" || path == "/history" ||
+                            path == "/secrets" || path == "/call" || path == "/run");
                 if (!api)
                 {
                     if ((method == "GET" || method == "HEAD") && Static(net, path, method == "HEAD")) return;
@@ -730,6 +737,21 @@ public class DossierBridge
 
                 try
                 {
+                    // Your APIs need no database: the secrets are in your
+                    // Windows profile and the calls go straight out.
+                    if (path == "/secrets") { SecretsRoute(net, method, query, body); return; }
+                    if (path == "/call")
+                    {
+                        if (method == "POST") CallRoute(net, body);
+                        else Respond(net, 405, "application/json", Bytes("{\"error\":\"POST\"}"));
+                        return;
+                    }
+                    if (path == "/run")
+                    {
+                        if (method == "POST") RunRoute(net, body);
+                        else Respond(net, 405, "application/json", Bytes("{\"error\":\"POST\"}"));
+                        return;
+                    }
                     if (!DbReady)
                     {
                         Respond(net, method == "GET" && path == "/health" ? 200 : 503, "application/json",
@@ -1334,5 +1356,1028 @@ public class DossierBridge
         if (s == null || s.Length == 0) return "";
         try { return Uri.UnescapeDataString(s); }
         catch (Exception) { return s; }
+    }
+}
+
+// ===========================================================================
+//  YOUR APIS - called from here, with secrets nothing else ever holds
+//
+//  An "API action" is a short recipe written in Resolv (Menu -> Scripts):
+//  a few HTTP steps, what each one keeps from its answer, and which of
+//  those values are secret. "Regenerate COI" is the worked example - sign
+//  in with a client id and secret, keep the access token, call the COI
+//  endpoint with it. The page cannot make any of those calls: its content
+//  security policy lets it reach 127.0.0.1 and nothing else. So they are
+//  made here, and that is what makes it possible to keep the credentials
+//  out of the page - and out of the assistant, which only ever sees what
+//  the page hands it.
+//
+//  THE RULES, all of them enforced in this file
+//    - A secret is typed once into Resolv and handed straight here. It is
+//      written to your Windows profile, encrypted with DPAPI for your
+//      Windows account (secrets.txt, %LOCALAPPDATA%\Resolv), and it never
+//      goes back: there is no route that returns a secret's value, only its
+//      name, the hosts it may go to and when it was saved.
+//    - A secret may only be sent to the hosts it was saved for. So may
+//      anything obtained with it - the token a sign-in hands back is bound
+//      to the same hosts as the client secret that got it. A recipe that
+//      has been changed, or an assistant that has been talked into
+//      something by an email, still cannot send them anywhere else. To send
+//      a secret to a new host, it has to be saved again, value and all.
+//    - Only https may carry one, except to this machine itself.
+//    - A redirect is never followed: it would send the request, headers and
+//      all, to wherever the answer said.
+//    - A value a step keeps as secret stays here. The page gets a handle -
+//      @kept:<random> - that is no use to anybody, expires in 30 minutes
+//      and with this process, and can be passed back into a later call
+//      (into an input marked kept) to be swapped for the value at the last
+//      moment. That is how one API's answer feeds the next without the
+//      assistant ever seeing it. A value kept with "reveal" is returned as
+//      well, because somebody decided it should be.
+//    - Any secret this call touched is masked - "••••" - in everything it
+//      returns or logs: addresses, error messages, the excerpt of a failed
+//      answer, and the values it kept.
+//    - A script can be given a secret too (POST /run): as an environment
+//      variable, only if the secret was saved for that script by name, and
+//      masked out of what the script prints.
+// ===========================================================================
+public partial class DossierBridge
+{
+    class CallError : Exception { public CallError(string m) : base(m) { } }
+
+    //  one value inside a call: what it is, whether it is secret, where it may go
+    class Val { public string Text; public bool Secret; public List<string> Hosts; public string Label; }
+    class Secret { public string Name; public string Value; public List<string> Hosts; public string Saved; }
+    class Kept { public string Name; public string Value; public List<string> Hosts; public DateTime Expires; }
+    class Answer
+    {
+        public int Status; public string Reason; public string Type; public WebHeaderCollection Headers;
+        public byte[] Bytes; public string FileName; public long Ms;
+        string text;
+        public string Text() { if (text == null) text = new UTF8Encoding(false).GetString(Bytes ?? new byte[0]); return text; }
+    }
+
+    static readonly object SecretLock = new object();
+    static readonly object KeptLock = new object();
+    static readonly Dictionary<string, Kept> KeptValues = new Dictionary<string, Kept>();
+    static readonly byte[] SecretEntropy = Encoding.UTF8.GetBytes("Resolv secrets v1");
+    static bool TlsSet;
+    const int KeptMinutes = 30;
+    const int StepTimeoutMs = 30000;
+    const int MaxSteps = 10;
+    const int MaxAnswerBytes = 20 * 1024 * 1024;
+    const string Dots = "••••";
+    static readonly Regex NameRe = new Regex("^[A-Za-z][A-Za-z0-9_.-]{0,40}$");
+    static readonly Regex HostRe = new Regex(@"^(\*\.)?[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?(\.[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?)*(:\d{1,5})?$");
+    static readonly Regex HandleRe = new Regex("^@kept:[a-z2-7]{20}$");
+    static readonly Regex ScriptPlaceRe = new Regex(@"^script:[a-z0-9][a-z0-9_.()-]{0,120}\.(bat|cmd)$");
+    static readonly Regex SlotRe = new Regex(@"\{\{\s*(secret:)?([A-Za-z][A-Za-z0-9_.-]{0,40})\s*\}\}");
+    static readonly string[] Methods = { "GET", "POST", "PUT", "PATCH", "DELETE" };
+
+    // ── the store ───────────────────────────────────────────────────────────
+    static string SecretsPath()
+    {
+        string p = Environment.GetEnvironmentVariable("DOSSIER_SECRETS");
+        if (p != null && p.Length > 0) return p;
+        string root = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+        return Path.Combine(Path.Combine(root, "Resolv"), "secrets.txt");
+    }
+
+    static List<string> SplitHosts(string s)
+    {
+        List<string> list = new List<string>();
+        foreach (string raw in (s ?? "").Split(new char[] { ',', ';', ' ', '\n', '\r', '\t' }, StringSplitOptions.RemoveEmptyEntries))
+        {
+            string h = raw.Trim().ToLowerInvariant();
+            // script:renew-cert.bat - a script that may be given it, as an
+            // environment variable, by POST /run
+            if (h.StartsWith("script:"))
+            {
+                if (ScriptPlaceRe.IsMatch(h) && list.IndexOf(h) < 0) list.Add(h);
+                continue;
+            }
+            int scheme = h.IndexOf("://");
+            if (scheme >= 0) h = h.Substring(scheme + 3);
+            int slash = h.IndexOf('/');
+            if (slash >= 0) h = h.Substring(0, slash);
+            if (h.Length > 0 && HostRe.IsMatch(h) && list.IndexOf(h) < 0) list.Add(h);
+        }
+        return list;
+    }
+
+    //  read under SecretLock. Values only when the call needs them, and a
+    //  value this Windows account cannot decrypt - saved by somebody else, or
+    //  on another PC and copied here - comes back null rather than throwing.
+    static List<Secret> ReadSecrets(bool values)
+    {
+        List<Secret> list = new List<Secret>();
+        string path = SecretsPath();
+        if (!File.Exists(path)) return list;
+        foreach (string line in File.ReadAllLines(path, Encoding.UTF8))
+        {
+            string[] f = line.Split('\t');
+            if (f.Length < 4 || f[0].Length == 0) continue;
+            Secret s = new Secret();
+            s.Name = f[0]; s.Hosts = SplitHosts(f[1]); s.Saved = f[2];
+            if (values)
+            {
+                try
+                {
+                    byte[] plain = ProtectedData.Unprotect(Convert.FromBase64String(f[3]), SecretEntropy,
+                                                           DataProtectionScope.CurrentUser);
+                    s.Value = Encoding.UTF8.GetString(plain);
+                }
+                catch (Exception) { s.Value = null; }
+            }
+            list.Add(s);
+        }
+        return list;
+    }
+
+    static void WriteSecretLines(List<string> lines)
+    {
+        string path = SecretsPath();
+        string dir = Path.GetDirectoryName(path);
+        if (dir != null && dir.Length > 0 && !Directory.Exists(dir)) Directory.CreateDirectory(dir);
+        string tmp = path + ".tmp";
+        File.WriteAllLines(tmp, lines.ToArray(), new UTF8Encoding(false));
+        if (File.Exists(path)) File.Delete(path);
+        File.Move(tmp, path);
+    }
+
+    static List<string> SecretLinesExcept(string name)
+    {
+        List<string> keep = new List<string>();
+        string path = SecretsPath();
+        if (File.Exists(path))
+            foreach (string l in File.ReadAllLines(path, Encoding.UTF8))
+                if (l.Length > 0 && l.Split('\t')[0] != name) keep.Add(l);
+        return keep;
+    }
+
+    // ── the routes ──────────────────────────────────────────────────────────
+    //  GET     names, hosts and when each was saved - never a value
+    //  POST    {name, value, hosts}: save one, replacing one of that name
+    //  DELETE  ?name=
+    static void SecretsRoute(NetworkStream net, string method, string query, byte[] body)
+    {
+        if (method == "GET")
+        {
+            List<Secret> list;
+            lock (SecretLock) list = ReadSecrets(true);
+            List<object> outp = new List<object>();
+            foreach (Secret s in list)
+            {
+                Dictionary<string, object> d = new Dictionary<string, object>();
+                d["name"] = s.Name; d["hosts"] = s.Hosts; d["saved"] = s.Saved;
+                d["readable"] = s.Value != null;
+                outp.Add(d);
+            }
+            Dictionary<string, object> r = new Dictionary<string, object>();
+            r["secrets"] = outp;
+            Respond(net, 200, "application/json", Bytes(Ser().Serialize(r)));
+            return;
+        }
+        if (method == "POST")
+        {
+            Dictionary<string, object> req = ParseObject(body);
+            string name = Str(req, "name"), value = Str(req, "value");
+            List<string> hosts = new List<string>();
+            object h = req == null ? null : (req.ContainsKey("hosts") ? req["hosts"] : null);
+            if (h is string) hosts = SplitHosts((string)h);
+            else foreach (object x in AsList(h)) hosts.AddRange(SplitHosts(Convert.ToString(x)));
+            string bad = null;
+            if (name == null || !NameRe.IsMatch(name)) bad = "A secret's name is a letter, then letters, digits, _ . or -, up to 41 of them.";
+            else if (value == null || value.Length == 0) bad = "A secret needs a value.";
+            else if (value.Length > 16384) bad = "That value is longer than 16,384 characters.";
+            else if (hosts.Count == 0) bad = "A secret needs at least one place it may go - a host like api.example.com or *.example.com, or a script like script:renew-cert.bat.";
+            if (bad != null) { Respond(net, 400, "application/json", Bytes("{\"error\":" + Json(bad) + "}")); return; }
+            byte[] sealedValue = ProtectedData.Protect(Encoding.UTF8.GetBytes(value), SecretEntropy, DataProtectionScope.CurrentUser);
+            lock (SecretLock)
+            {
+                List<string> lines = SecretLinesExcept(name);
+                lines.Add(name + "\t" + string.Join(",", hosts.ToArray()) + "\t" + DateTime.UtcNow.ToString("o") +
+                          "\t" + Convert.ToBase64String(sealedValue));
+                WriteSecretLines(lines);
+            }
+            Log("  secret    saved " + name + " for " + string.Join(", ", hosts.ToArray()));
+            Respond(net, 200, "application/json", Bytes("{\"ok\":true}"));
+            return;
+        }
+        if (method == "DELETE")
+        {
+            string name = QueryValue(query, "name");
+            bool had;
+            lock (SecretLock)
+            {
+                List<string> lines = SecretLinesExcept(name);
+                had = ReadSecrets(false).Exists(delegate(Secret s) { return s.Name == name; });
+                if (had) WriteSecretLines(lines);
+            }
+            if (had) Log("  secret    forgot " + name);
+            Respond(net, had ? 200 : 404, "application/json", Bytes(had ? "{\"ok\":true}" : "{\"error\":\"no such secret\"}"));
+            return;
+        }
+        Respond(net, 405, "application/json", Bytes("{\"error\":\"GET, POST or DELETE\"}"));
+    }
+
+    //  POST {recipe, params}. Always answers 200 with {ok, ...} once the call
+    //  was attempted, so the page can show which step stopped it and why.
+    static void CallRoute(NetworkStream net, byte[] body)
+    {
+        Dictionary<string, object> req = ParseObject(body);
+        Dictionary<string, object> recipe = req == null ? null : req.ContainsKey("recipe") ? req["recipe"] as Dictionary<string, object> : null;
+        if (recipe == null) { Respond(net, 400, "application/json", Bytes("{\"error\":\"send {recipe, params}\"}")); return; }
+        Dictionary<string, object> pars = req.ContainsKey("params") ? req["params"] as Dictionary<string, object> : null;
+        Dictionary<string, object> result = RunRecipe(recipe, pars ?? new Dictionary<string, object>());
+        Respond(net, 200, "application/json", Bytes(Ser().Serialize(result)));
+    }
+
+    // ── running a recipe ────────────────────────────────────────────────────
+    static Dictionary<string, object> RunRecipe(Dictionary<string, object> recipe, Dictionary<string, object> pars)
+    {
+        Dictionary<string, object> outp = new Dictionary<string, object>();
+        List<object> stepsOut = new List<object>();
+        Dictionary<string, object> values = new Dictionary<string, object>();
+        Dictionary<string, object> kept = new Dictionary<string, object>();
+        List<object> files = new List<object>();
+        List<string> revealed = new List<string>();
+        List<string> masks = new List<string>();
+        string name = Str(recipe, "name") ?? "API action";
+        outp["name"] = name; outp["ok"] = false; outp["steps"] = stepsOut; outp["values"] = values;
+        outp["kept"] = kept; outp["files"] = files; outp["revealed"] = revealed;
+        outp["error"] = ""; outp["failedStep"] = "";
+        string current = "";
+        List<string> logBits = new List<string>();
+        try
+        {
+            Dictionary<string, Val> vars = ReadInputs(Obj(recipe, "inputs"), pars, masks);
+            List<object> steps = AsList(recipe.ContainsKey("steps") ? recipe["steps"] : null);
+            if (steps.Count == 0) throw new CallError("This action has no steps.");
+            if (steps.Count > MaxSteps) throw new CallError("An action may have at most " + MaxSteps + " steps.");
+            for (int i = 0; i < steps.Count; i++)
+            {
+                Dictionary<string, object> st = steps[i] as Dictionary<string, object>;
+                if (st == null) throw new CallError("Step " + (i + 1) + " is not a step.");
+                current = Str(st, "name") ?? ("Step " + (i + 1));
+                Dictionary<string, object> so = RunStep(st, current, vars, values, kept, files, revealed, masks);
+                stepsOut.Add(so);
+                logBits.Add(current + " " + so["status"] + " " + so["ms"] + " ms");
+                if (!(bool)so["ok"])
+                {
+                    outp["failedStep"] = current;
+                    outp["error"] = so["error"];
+                    break;
+                }
+                current = "";
+            }
+            outp["ok"] = Convert.ToString(outp["failedStep"]) == "";
+        }
+        catch (CallError e)
+        {
+            outp["error"] = e.Message;
+            outp["failedStep"] = current;
+            logBits.Add((current.Length > 0 ? current + ": " : "") + "refused");
+        }
+        catch (Exception e)
+        {
+            outp["error"] = "The call broke: " + e.Message;
+            outp["failedStep"] = current;
+            logBits.Add("broke");
+        }
+        // masked on the way out - every secret this call touched, wherever it
+        // turned up - except a value somebody decided to reveal
+        masks.Sort(delegate(string a, string b) { return b.Length.CompareTo(a.Length); });
+        outp["error"] = Mask(Convert.ToString(outp["error"]), masks);
+        foreach (object o in stepsOut)
+        {
+            Dictionary<string, object> d = (Dictionary<string, object>)o;
+            d["url"] = Mask(Convert.ToString(d["url"]), masks);
+            if (d.ContainsKey("error")) d["error"] = Mask(Convert.ToString(d["error"]), masks);
+            if (d.ContainsKey("excerpt")) d["excerpt"] = Mask(Convert.ToString(d["excerpt"]), masks);
+        }
+        List<string> keys = new List<string>(values.Keys);
+        foreach (string k in keys)
+            if (revealed.IndexOf(k) < 0) values[k] = Mask(Convert.ToString(values[k]), masks);
+        Log("  call      " + name + ": " + (logBits.Count > 0 ? string.Join("; ", logBits.ToArray()) : "nothing sent") +
+            ((bool)outp["ok"] ? "" : " - " + Convert.ToString(outp["error"])));
+        return outp;
+    }
+
+    //  what the call was given: plain text checked against the input's
+    //  pattern, or - for an input marked kept - a handle from an earlier call
+    static Dictionary<string, Val> ReadInputs(Dictionary<string, object> inputs, Dictionary<string, object> pars, List<string> masks)
+    {
+        Dictionary<string, Val> vars = new Dictionary<string, Val>();
+        foreach (KeyValuePair<string, object> kv in inputs)
+        {
+            if (!NameRe.IsMatch(kv.Key)) throw new CallError("\"" + kv.Key + "\" is not a name an input can have.");
+            Dictionary<string, object> spec = kv.Value as Dictionary<string, object> ?? new Dictionary<string, object>();
+            string label = Str(spec, "label") ?? kv.Key;
+            string raw = pars.ContainsKey(kv.Key) && pars[kv.Key] != null ? Convert.ToString(pars[kv.Key], CultureInfo.InvariantCulture).Trim() : "";
+            Val v = new Val();
+            v.Label = label;
+            if (Bool(spec, "kept"))
+            {
+                if (raw.Length == 0) throw new CallError("This action needs " + label + " - a value kept by an earlier call.");
+                if (!HandleRe.IsMatch(raw)) throw new CallError(label + " takes a value kept by an earlier call (@kept:...), not text.");
+                Kept k = FindKept(raw);
+                if (k == null) throw new CallError("The kept value given for " + label + " has expired, or this bridge was restarted since. Run the call that kept it again.");
+                v.Text = k.Value; v.Secret = true; v.Hosts = k.Hosts;
+                masks.Add(k.Value);
+            }
+            else
+            {
+                if (raw.Length == 0)
+                {
+                    if (!Bool(spec, "optional")) throw new CallError("This action needs " + label + ".");
+                }
+                else
+                {
+                    if (raw.StartsWith("@kept:")) throw new CallError(label + " takes text. A kept value can only go into an input marked kept, so that it stays bound to its hosts.");
+                    if (raw.Length > 2000) throw new CallError(label + " is longer than 2,000 characters.");
+                    foreach (char ch in raw) if (ch < ' ' && ch != '\t') throw new CallError(label + " has a line break or a control character in it.");
+                    string pattern = Str(spec, "pattern");
+                    if (pattern != null && pattern.Length > 0)
+                    {
+                        bool ok;
+                        try { ok = Regex.IsMatch(raw, pattern, RegexOptions.None, TimeSpan.FromSeconds(1)); }
+                        catch (Exception) { throw new CallError("The pattern for " + label + " is not a regular expression this can use."); }
+                        if (!ok) throw new CallError("\"" + raw + "\" is not a valid " + label + Example(spec) + ".");
+                    }
+                }
+                v.Text = raw; v.Secret = false;
+            }
+            vars[kv.Key] = v;
+        }
+        return vars;
+    }
+
+    static string Example(Dictionary<string, object> spec)
+    {
+        string e = Str(spec, "example");
+        return e != null && e.Length > 0 ? " (like " + e + ")" : "";
+    }
+
+    static Dictionary<string, object> RunStep(Dictionary<string, object> st, string sname, Dictionary<string, Val> vars,
+        Dictionary<string, object> values, Dictionary<string, object> kept, List<object> files, List<string> revealed, List<string> masks)
+    {
+        Dictionary<string, object> so = new Dictionary<string, object>();
+        string method = (Str(st, "method") ?? "GET").ToUpperInvariant();
+        if (Array.IndexOf(Methods, method) < 0) throw new CallError(sname + ": " + method + " is not GET, POST, PUT, PATCH or DELETE.");
+        string urlT = Str(st, "url") ?? "";
+        // where a step goes is part of the recipe, never part of what it is given
+        int sep = urlT.IndexOf("://");
+        string authority = sep < 0 ? "" : urlT.Substring(sep + 3);
+        int end = authority.IndexOfAny(new char[] { '/', '?', '#' });
+        if (end >= 0) authority = authority.Substring(0, end);
+        if (sep < 0 || authority.Length == 0) throw new CallError(sname + ": the address has to start with https://.");
+        if (authority.IndexOf("{{") >= 0) throw new CallError(sname + ": the host in the address cannot be filled in - only the path and the query can.");
+
+        List<Val> used = new List<Val>();
+        string url = Expand(urlT, vars, used, "url", masks);
+        Uri u;
+        if (!Uri.TryCreate(url, UriKind.Absolute, out u) || (u.Scheme != "https" && u.Scheme != "http"))
+            throw new CallError(sname + ": " + Mask(url, masks) + " is not an http or https address.");
+
+        Dictionary<string, string> hdrs = new Dictionary<string, string>();
+        string ctype = "";
+        foreach (KeyValuePair<string, object> h in Obj(st, "headers"))
+        {
+            string hv = Expand(Convert.ToString(h.Value, CultureInfo.InvariantCulture), vars, used, "header", masks);
+            if (hv.IndexOf('\r') >= 0 || hv.IndexOf('\n') >= 0) throw new CallError(sname + ": the header " + h.Key + " would carry a line break.");
+            hdrs[h.Key] = hv;
+            if (h.Key.ToLowerInvariant() == "content-type") ctype = hv.ToLowerInvariant();
+        }
+        string bodyS = null;
+        object bodyO = st.ContainsKey("body") ? st["body"] : null;
+        if (bodyO != null)
+        {
+            string bodyT = bodyO is string ? (string)bodyO : Ser().Serialize(bodyO);
+            if (!(bodyO is string) && ctype.Length == 0) { ctype = "application/json"; hdrs["Content-Type"] = "application/json"; }
+            string kind = ctype.IndexOf("json") >= 0 ? "json" : ctype.IndexOf("x-www-form-urlencoded") >= 0 ? "form" : "raw";
+            bodyS = Expand(bodyT, vars, used, kind, masks);
+        }
+
+        // the rules, before a byte leaves this machine
+        List<string> bound = new List<string>();
+        bool carries = false;
+        foreach (Val v in used)
+        {
+            if (!v.Secret) continue;
+            carries = true;
+            if (!HostAllowed(v.Hosts, u))
+                throw new CallError(sname + " goes to " + u.Host + ", and " + v.Label + " may only be sent to " +
+                                    string.Join(", ", v.Hosts.ToArray()) + ". Save the secret again with that host if it belongs there.");
+            foreach (string hh in v.Hosts) if (bound.IndexOf(hh) < 0) bound.Add(hh);
+        }
+        if (carries && u.Scheme != "https" && !u.IsLoopback)
+            throw new CallError(sname + " would send a secret to " + u.Host + " over plain http. Only https may carry one.");
+
+        so["name"] = sname; so["method"] = method; so["host"] = u.Host; so["url"] = u.ToString();
+        Answer a = Send(method, u, hdrs, bodyS, sname, masks);
+        so["status"] = a.Status; so["ms"] = a.Ms;
+        List<object> accept = AsList(st.ContainsKey("accept") ? st["accept"] : null);
+        bool good = (a.Status >= 200 && a.Status < 300);
+        foreach (object x in accept) { int n; if (int.TryParse(Convert.ToString(x), out n) && n == a.Status) good = true; }
+        so["ok"] = good;
+        if (!good)
+        {
+            string ex = a.Text();
+            if (ex.Length > 600) ex = ex.Substring(0, 600) + "…";
+            so["excerpt"] = ex;
+            so["error"] = sname + " answered " + a.Status + (a.Reason != null && a.Reason.Length > 0 ? " " + a.Reason : "") +
+                          (a.Status >= 300 && a.Status < 400 ? " - a redirect, which is never followed" : "") + ".";
+            return so;
+        }
+
+        // what the step keeps from its answer
+        object parsed = null;
+        bool tried = false;
+        foreach (KeyValuePair<string, object> k in Obj(st, "keep"))
+        {
+            if (!NameRe.IsMatch(k.Key)) throw new CallError(sname + ": \"" + k.Key + "\" is not a name a kept value can have.");
+            // A string is a path into the JSON answer, always. The status, a
+            // header or the whole body are asked for by name instead, because
+            // any word reserved inside a path collides with some API's field:
+            // "status" is the commonest field there is.
+            string from, what; bool secret = false, reveal = false, optional = false;
+            Dictionary<string, object> spec = k.Value as Dictionary<string, object>;
+            string got;
+            if (spec == null) { from = Convert.ToString(k.Value, CultureInfo.InvariantCulture); what = from; got = Pick(a, from, ref parsed, ref tried); }
+            else
+            {
+                secret = Bool(spec, "secret"); reveal = Bool(spec, "reveal"); optional = Bool(spec, "optional");
+                string header = Str(spec, "header");
+                if (Bool(spec, "status")) { what = "status"; got = a.Status.ToString(CultureInfo.InvariantCulture); }
+                else if (Bool(spec, "body")) { what = "body"; got = a.Text(); }
+                else if (header != null && header.Length > 0) { what = header + " header"; got = a.Headers == null ? null : a.Headers[header]; }
+                else { from = Str(spec, "from"); what = from; got = Pick(a, from, ref parsed, ref tried); }
+            }
+            if (got == null)
+            {
+                if (!optional) { so["ok"] = false; so["error"] = sname + " answered " + a.Status + ", but its answer had no " + what + "."; return so; }
+                got = "";
+            }
+            Val v = new Val();
+            v.Text = got; v.Secret = secret; v.Label = k.Key;
+            if (secret)
+            {
+                // bound to wherever the secrets that obtained it may go; with
+                // none, to the host that handed it out
+                v.Hosts = bound.Count > 0 ? new List<string>(bound) : new List<string>(new string[] { AuthorityOf(u) });
+                if (got.Length > 0) masks.Add(got);
+                Dictionary<string, object> kd = new Dictionary<string, object>();
+                kd["handle"] = Keep(k.Key, got, v.Hosts);
+                kd["expires"] = DateTime.UtcNow.AddMinutes(KeptMinutes).ToString("o");
+                kd["hosts"] = v.Hosts;
+                kept[k.Key] = kd;
+                if (reveal) { values[k.Key] = got; if (revealed.IndexOf(k.Key) < 0) revealed.Add(k.Key); }
+            }
+            else values[k.Key] = got;
+            vars[k.Key] = v;
+        }
+
+        // an answer that is a document - a COI, a PDF, an export
+        string save = Str(st, "save");
+        if (save != null && save.Length > 0)
+        {
+            List<Val> fileUsed = new List<Val>();
+            string fname = Expand(save, vars, fileUsed, "raw", masks);
+            foreach (Val fv in fileUsed) if (fv.Secret) throw new CallError(sname + ": a file name cannot be made from a secret.");
+            fname = Regex.Replace(fname, "[\\\\/:*?\"<>|\\x00-\\x1f]+", " ").Trim();
+            if (fname.Length == 0) fname = a.FileName ?? "answer";
+            Dictionary<string, object> fd = new Dictionary<string, object>();
+            fd["name"] = fname; fd["type"] = a.Type ?? "application/octet-stream";
+            fd["size"] = a.Bytes.Length; fd["data"] = Convert.ToBase64String(a.Bytes);
+            files.Add(fd);
+        }
+        return so;
+    }
+
+    static string AuthorityOf(Uri u)
+    {
+        return u.Host.ToLowerInvariant() + (u.IsDefaultPort ? "" : ":" + u.Port);
+    }
+
+    //  api.example.com, *.example.com (any name under it, not itself), or
+    //  host:port to pin one port
+    static bool HostAllowed(List<string> hosts, Uri u)
+    {
+        if (hosts == null) return false;
+        string host = u.Host.ToLowerInvariant(), auth = host + ":" + u.Port;
+        foreach (string h in hosts)
+        {
+            if (h.IndexOf(':') >= 0) { if (h == auth) return true; continue; }
+            if (h.StartsWith("*.")) { if (host.EndsWith(h.Substring(1)) && host.Length > h.Length - 1) return true; continue; }
+            if (h == host) return true;
+        }
+        return false;
+    }
+
+    static string Expand(string tpl, Dictionary<string, Val> vars, List<Val> used, string kind, List<string> masks)
+    {
+        if (tpl == null) return null;
+        return SlotRe.Replace(tpl, delegate(Match m)
+        {
+            Val v;
+            string key = m.Groups[2].Value;
+            if (m.Groups[1].Success)
+            {
+                v = SecretVal(key);
+                masks.Add(v.Text);
+            }
+            else if (!vars.TryGetValue(key, out v))
+                throw new CallError("{{" + key + "}} is not an input of this action, or a value an earlier step kept.");
+            used.Add(v);
+            return Encode(v.Text, kind);
+        });
+    }
+
+    static Val SecretVal(string name)
+    {
+        Secret s;
+        lock (SecretLock) s = ReadSecrets(true).Find(delegate(Secret x) { return x.Name == name; });
+        if (s == null) throw new CallError("There is no secret called " + name + " on this PC. Save it in Menu → Scripts → Secrets.");
+        if (s.Value == null) throw new CallError("The secret " + name + " was saved by another Windows user or on another PC, so it cannot be read here. Save it again.");
+        Val v = new Val();
+        v.Text = s.Value; v.Secret = true; v.Hosts = s.Hosts; v.Label = "the secret " + name;
+        return v;
+    }
+
+    static string Encode(string text, string kind)
+    {
+        if (kind == "url" || kind == "form") return Uri.EscapeDataString(text);
+        if (kind == "json") { string j = Json(text); return j.Substring(1, j.Length - 2); }
+        return text;
+    }
+
+    static string Mask(string s, List<string> masks)
+    {
+        if (s == null || s.Length == 0) return s;
+        foreach (string m in masks)
+        {
+            if (m == null || m.Length < 4) continue;
+            s = s.Replace(m, Dots);
+            string esc = Uri.EscapeDataString(m);
+            if (esc != m) s = s.Replace(esc, Dots);
+            string js = Json(m); js = js.Substring(1, js.Length - 2);
+            if (js != m) s = s.Replace(js, Dots);
+        }
+        return s;
+    }
+
+    // ── sending one step ────────────────────────────────────────────────────
+    static Answer Send(string method, Uri u, Dictionary<string, string> hdrs, string body, string sname, List<string> masks)
+    {
+        if (!TlsSet)
+        {
+            // TLS 1.2 by number: the name is not in every framework this compiles against
+            try { ServicePointManager.SecurityProtocol = ServicePointManager.SecurityProtocol | (SecurityProtocolType)3072; }
+            catch (Exception) { }
+            TlsSet = true;
+        }
+        HttpWebRequest req = (HttpWebRequest)WebRequest.Create(u);
+        req.Method = method;
+        req.AllowAutoRedirect = false;
+        req.Timeout = StepTimeoutMs;
+        req.ReadWriteTimeout = StepTimeoutMs;
+        req.UserAgent = "Resolv";
+        req.Accept = "application/json, */*";
+        IWebProxy proxy = WebRequest.DefaultWebProxy;
+        if (proxy != null) { proxy.Credentials = CredentialCache.DefaultCredentials; req.Proxy = proxy; }
+        foreach (KeyValuePair<string, string> h in hdrs)
+        {
+            string k = h.Key.Trim().ToLowerInvariant();
+            if (k == "content-type") req.ContentType = h.Value;
+            else if (k == "accept") req.Accept = h.Value;
+            else if (k == "user-agent") req.UserAgent = h.Value;
+            else if (k == "host" || k == "content-length" || k == "connection" || k == "transfer-encoding" ||
+                     k == "expect" || k == "date" || k == "range" || k == "referer" || k == "if-modified-since" ||
+                     k == "proxy-connection" || k == "keep-alive")
+                throw new CallError(sname + ": the " + h.Key + " header belongs to the connection and cannot be set.");
+            else
+            {
+                try { req.Headers[h.Key.Trim()] = h.Value; }
+                catch (Exception) { throw new CallError(sname + ": the header " + h.Key + " cannot be set this way."); }
+            }
+        }
+        Stopwatch watch = Stopwatch.StartNew();
+        HttpWebResponse resp = null;
+        try
+        {
+            if (body != null && method != "GET")
+            {
+                byte[] data = new UTF8Encoding(false).GetBytes(body);
+                if (req.ContentType == null) req.ContentType = "application/json";
+                req.ContentLength = data.Length;
+                using (Stream s = req.GetRequestStream()) s.Write(data, 0, data.Length);
+            }
+            try { resp = (HttpWebResponse)req.GetResponse(); }
+            catch (WebException e)
+            {
+                resp = e.Response as HttpWebResponse;
+                if (resp == null)
+                    throw new CallError(sname + ": " + u.Host + " could not be reached - " +
+                                        (e.Status == WebExceptionStatus.Timeout ? "no answer in " + (StepTimeoutMs / 1000) + " seconds" : e.Message) + ".");
+            }
+        }
+        catch (CallError) { throw; }
+        catch (Exception e) { throw new CallError(sname + ": " + u.Host + " could not be reached - " + e.Message + "."); }
+        using (resp)
+        {
+            Answer a = new Answer();
+            a.Status = (int)resp.StatusCode; a.Reason = resp.StatusDescription; a.Type = resp.ContentType;
+            a.Headers = resp.Headers;
+            MemoryStream ms = new MemoryStream();
+            using (Stream s = resp.GetResponseStream())
+            {
+                byte[] buf = new byte[65536];
+                int n;
+                while (s != null && (n = s.Read(buf, 0, buf.Length)) > 0)
+                {
+                    ms.Write(buf, 0, n);
+                    if (ms.Length > MaxAnswerBytes) throw new CallError(sname + ": the answer was larger than 20 MB.");
+                }
+            }
+            a.Bytes = ms.ToArray();
+            string cd = resp.Headers["Content-Disposition"];
+            if (cd != null)
+            {
+                Match fm = Regex.Match(cd, "filename\\*?=(?:UTF-8'')?\"?([^\";]+)\"?", RegexOptions.IgnoreCase);
+                if (fm.Success) a.FileName = Uri.UnescapeDataString(fm.Groups[1].Value);
+            }
+            a.Ms = watch.ElapsedMilliseconds;
+            return a;
+        }
+    }
+
+    // ── what a step keeps: a path into its JSON answer ──────────────────────
+    //  access_token, document.url, data.items[0].id
+    static string Pick(Answer a, string from, ref object parsed, ref bool tried)
+    {
+        if (from == null || from.Trim().Length == 0) return null;
+        from = from.Trim();
+        if (!tried)
+        {
+            tried = true;
+            try { parsed = Ser().DeserializeObject(a.Text()); } catch (Exception) { parsed = null; }
+        }
+        object cur = parsed;
+        string path = from.StartsWith("$.") ? from.Substring(2) : from.StartsWith("$") ? from.Substring(1) : from;
+        foreach (Match m in Regex.Matches(path, @"([^.\[\]]+)|\[(\d+)\]"))
+        {
+            if (cur == null) return null;
+            if (m.Groups[1].Success)
+            {
+                Dictionary<string, object> d = cur as Dictionary<string, object>;
+                if (d == null) return null;
+                object next;
+                if (!d.TryGetValue(m.Groups[1].Value, out next))
+                {
+                    next = null;
+                    foreach (KeyValuePair<string, object> kv in d)
+                        if (string.Equals(kv.Key, m.Groups[1].Value, StringComparison.OrdinalIgnoreCase)) { next = kv.Value; break; }
+                }
+                cur = next;
+            }
+            else
+            {
+                List<object> l = AsList(cur);
+                int i = int.Parse(m.Groups[2].Value, CultureInfo.InvariantCulture);
+                cur = (cur is System.Collections.IList && i < l.Count) ? l[i] : null;
+            }
+        }
+        if (cur == null) return null;
+        if (cur is string) return (string)cur;
+        if (cur is bool) return (bool)cur ? "true" : "false";
+        if (cur is Dictionary<string, object> || cur is System.Collections.IList) return Ser().Serialize(cur);
+        return Convert.ToString(cur, CultureInfo.InvariantCulture);
+    }
+
+    // ── your scripts, run from here ─────────────────────────────────────────
+    //  POST /run {script, args:[{name, value}], secrets:[names], timeout}
+    //
+    //  The runner (dossier-runner.bat) still runs what the Run button asks for.
+    //  This is for the two things it cannot do: hand a script a secret without
+    //  the secret being written anywhere, and say what happened in the same
+    //  answer - so the assistant can read the result and carry on.
+    //    - Only a .bat or .cmd sitting directly in <workspace>\scripts\, and
+    //      none of Resolv's own (dossier-*).
+    //    - Every argument is letters, digits, spaces and _ . , : @ / \ = + # ~ -
+    //      and nothing cmd.exe or PowerShell reads as syntax: no quotes and no
+    //      & | < > ^ % ! $ ' ( ). An argument may have been chosen by the
+    //      assistant, and an argument is a value, never a command.
+    //    - A script written as a template - {{server}} - is filled in, into a
+    //      copy beside it (dossier-run-*) that is deleted when it finishes.
+    //    - A secret goes in as an environment variable, RESOLV_SECRET_<NAME>,
+    //      and only to a script it was saved for - script:<file> among the
+    //      places it may go. It is never written into the copy, and it is
+    //      masked out of everything the script prints.
+    //    - A script that asks a question gets no answer (its input is closed),
+    //      and one still running after its time is stopped, with whatever it
+    //      started.
+    static readonly Regex ScriptFileRe = new Regex(@"^[A-Za-z0-9][A-Za-z0-9 _.()-]{0,120}\.(bat|cmd)$", RegexOptions.IgnoreCase);
+    static readonly Regex ArgNameRe = new Regex(@"^[A-Za-z][\w .-]{0,28}$");
+    static readonly Regex ArgValueRe = new Regex(@"^[\p{L}\p{N} _.,:@/\\=+#~-]*$");
+    static readonly Regex TemplateRe = new Regex(@"\{\{\s*([A-Za-z][\w .-]{0,28})\s*\}\}");
+    const int RunDefaultSeconds = 120, RunMaxSeconds = 280, RunMaxOutput = 1024 * 1024;
+
+    static void RunRoute(NetworkStream net, byte[] body)
+    {
+        Dictionary<string, object> req = ParseObject(body);
+        if (req == null) { Respond(net, 400, "application/json", Bytes("{\"error\":\"send {script, args, secrets}\"}")); return; }
+        Respond(net, 200, "application/json", Bytes(Ser().Serialize(RunScript(req))));
+    }
+
+    static Dictionary<string, object> RunScript(Dictionary<string, object> req)
+    {
+        Dictionary<string, object> outp = new Dictionary<string, object>();
+        string file = (Str(req, "script") ?? "").Trim();
+        outp["script"] = file; outp["ok"] = false; outp["exit"] = -1; outp["output"] = "";
+        outp["ms"] = 0L; outp["cut"] = false; outp["filled"] = false; outp["error"] = "";
+        List<string> masks = new List<string>();
+        string copy = null;
+        try
+        {
+            if (Workspace == null)
+                throw new CallError("This bridge was started without your workspace folder, so it does not know where your scripts are. Start Resolv with Resolv.bat.");
+            string dir = Path.Combine(Workspace, "scripts");
+            if (!Directory.Exists(dir)) throw new CallError("There is no scripts folder in your workspace.");
+            if (!ScriptFileRe.IsMatch(file) || file.IndexOf("..") >= 0)
+                throw new CallError("\"" + file + "\" is not a script this can run: the name of a .bat or .cmd file in your scripts folder.");
+            if (file.StartsWith("dossier-", StringComparison.OrdinalIgnoreCase))
+                throw new CallError(file + " is one of Resolv's own scripts, and those are not run from here.");
+            string path = Path.Combine(dir, file);
+            if (!File.Exists(path)) throw new CallError(file + " is not in your scripts folder.");
+
+            // the arguments, in the order the script takes them
+            List<KeyValuePair<string, string>> args = new List<KeyValuePair<string, string>>();
+            List<object> given = AsList(req.ContainsKey("args") ? req["args"] : null);
+            if (given.Count > 20) throw new CallError("A script takes at most 20 arguments here.");
+            foreach (object o in given)
+            {
+                Dictionary<string, object> a = o as Dictionary<string, object>;
+                string n = Str(a, "name") ?? "", v = (Str(a, "value") ?? "").Trim();
+                if (!ArgNameRe.IsMatch(n)) throw new CallError("\"" + n + "\" is not a parameter name.");
+                if (v.Length > 400) throw new CallError("The value for " + n + " is longer than 400 characters.");
+                if (!ArgValueRe.IsMatch(v))
+                    throw new CallError("The value for " + n + " has a character a script argument cannot carry safely. " +
+                                        "Letters, digits, spaces and _ . , : @ / \\ = + # ~ - only.");
+                args.Add(new KeyValuePair<string, string>(n, v));
+            }
+
+            // the secrets it was saved for, as environment variables
+            Dictionary<string, string> env = new Dictionary<string, string>();
+            List<object> wanted = AsList(req.ContainsKey("secrets") ? req["secrets"] : null);
+            if (wanted.Count > 10) throw new CallError("A script may be given at most 10 secrets.");
+            if (wanted.Count > 0)
+            {
+                List<Secret> all;
+                lock (SecretLock) all = ReadSecrets(true);
+                string place = "script:" + file.ToLowerInvariant();
+                foreach (object w in wanted)
+                {
+                    string name = Convert.ToString(w, CultureInfo.InvariantCulture);
+                    Secret s = all.Find(delegate(Secret x) { return x.Name == name; });
+                    if (s == null)
+                        throw new CallError(file + " needs the secret " + name + ", and there is no secret of that name on this PC. Save it in Menu → Scripts → Secrets.");
+                    if (s.Value == null)
+                        throw new CallError("The secret " + name + " was saved by another Windows user or on another PC, so it cannot be read here. Save it again.");
+                    if (s.Hosts.IndexOf(place) < 0)
+                        throw new CallError("The secret " + name + " may go to " + string.Join(", ", s.Hosts.ToArray()) + ", not to " + file + ". " +
+                                            (file.IndexOf(' ') >= 0 ? "A script with a space in its name cannot be given a secret - rename it first."
+                                                                    : "Save it again with " + place + " among the places it may go, if this script should have it."));
+                    env["RESOLV_SECRET_" + Regex.Replace(name.ToUpperInvariant(), "[^A-Z0-9]", "_")] = s.Value;
+                    masks.Add(s.Value);
+                }
+            }
+
+            // A template is filled in, into a copy beside it, so that %~dp0
+            // still means the scripts folder. Read and written byte for byte
+            // (Latin-1 maps every byte to itself), whatever code page it is in.
+            string run = path, text = null;
+            try { if (new FileInfo(path).Length <= 512 * 1024) text = File.ReadAllText(path, Latin1()); }
+            catch (Exception) { text = null; }
+            if (text != null && args.Count > 0)
+            {
+                bool hit = false;
+                string filled = TemplateRe.Replace(text, delegate(Match m)
+                {
+                    string key = m.Groups[1].Value.Trim();
+                    foreach (KeyValuePair<string, string> a in args)
+                        if (a.Key == key && a.Value.Length > 0) { hit = true; return a.Value; }
+                    return m.Value;
+                });
+                if (hit)
+                {
+                    copy = Path.Combine(dir, "dossier-run-" + RandomWord(8) + "-" + file);
+                    File.WriteAllText(copy, filled, Latin1());
+                    run = copy;
+                    outp["filled"] = true;
+                }
+            }
+
+            int secs = RunDefaultSeconds;
+            object t;
+            if (req.TryGetValue("timeout", out t) && t != null)
+            {
+                int n;
+                if (int.TryParse(Convert.ToString(t, CultureInfo.InvariantCulture), out n)) secs = Math.Max(5, Math.Min(RunMaxSeconds, n));
+            }
+            RunProcess(run, args, env, dir, secs, outp);
+        }
+        catch (CallError e) { outp["error"] = e.Message; }
+        catch (Exception e) { outp["error"] = "The script could not be started: " + e.Message; }
+        finally
+        {
+            if (copy != null) { try { File.Delete(copy); } catch (Exception) { } }
+        }
+        masks.Sort(delegate(string a, string b) { return b.Length.CompareTo(a.Length); });
+        outp["output"] = Mask(Convert.ToString(outp["output"]), masks);
+        outp["error"] = Mask(Convert.ToString(outp["error"]), masks);
+        outp["ok"] = Convert.ToString(outp["error"]).Length == 0 && Convert.ToInt32(outp["exit"]) == 0;
+        Log("  run       " + (file.Length > 0 ? file : "(no script)") + ((bool)outp["filled"] ? " (filled in)" : "") + ": " +
+            (Convert.ToString(outp["error"]).Length > 0 ? Convert.ToString(outp["error"])
+                                                       : "exit " + outp["exit"] + " in " + outp["ms"] + " ms"));
+        return outp;
+    }
+
+    static Encoding Latin1() { return Encoding.GetEncoding(28591); }
+
+    static void RunProcess(string path, List<KeyValuePair<string, string>> args, Dictionary<string, string> env,
+                           string dir, int secs, Dictionary<string, object> outp)
+    {
+        // every argument quoted: none of them can hold a quote of its own
+        StringBuilder line = new StringBuilder();
+        line.Append('"').Append(path).Append('"');
+        foreach (KeyValuePair<string, string> a in args) line.Append(" \"").Append(a.Value).Append('"');
+        bool windows = Path.DirectorySeparatorChar == '\\';
+        string shell = Environment.GetEnvironmentVariable("DOSSIER_SHELL");      // for the tests, off Windows
+        ProcessStartInfo psi;
+        if (shell != null && shell.Length > 0) psi = new ProcessStartInfo(shell, line.ToString());
+        else if (windows) psi = new ProcessStartInfo("cmd.exe", "/d /s /c \"" + line + "\"");
+        else psi = new ProcessStartInfo("/bin/sh", line.ToString());
+        psi.UseShellExecute = false;
+        psi.CreateNoWindow = true;
+        psi.WindowStyle = ProcessWindowStyle.Hidden;
+        psi.RedirectStandardInput = true;
+        psi.RedirectStandardOutput = true;
+        psi.RedirectStandardError = true;
+        psi.WorkingDirectory = dir;
+        if (windows)
+        {
+            // what cmd.exe prints is in the console's code page, not the ANSI one
+            try
+            {
+                Encoding oem = Encoding.GetEncoding(CultureInfo.CurrentCulture.TextInfo.OEMCodePage);
+                psi.StandardOutputEncoding = oem; psi.StandardErrorEncoding = oem;
+            }
+            catch (Exception) { }
+        }
+        psi.EnvironmentVariables["DOSSIER_SCRIPTS"] = dir;
+        foreach (KeyValuePair<string, string> e in env) psi.EnvironmentVariables[e.Key] = e.Value;
+
+        StringBuilder buf = new StringBuilder();
+        object bufLock = new object();
+        bool cut = false;
+        DataReceivedEventHandler take = delegate(object sender, DataReceivedEventArgs e)
+        {
+            if (e.Data == null) return;
+            lock (bufLock)
+            {
+                if (buf.Length + e.Data.Length + 1 > RunMaxOutput) { cut = true; return; }
+                buf.Append(e.Data).Append('\n');
+            }
+        };
+        Stopwatch watch = Stopwatch.StartNew();
+        using (Process p = new Process())
+        {
+            p.StartInfo = psi;
+            p.OutputDataReceived += take;
+            p.ErrorDataReceived += take;
+            p.Start();
+            try { p.StandardInput.Close(); } catch (Exception) { }
+            p.BeginOutputReadLine();
+            p.BeginErrorReadLine();
+            bool done = p.WaitForExit(secs * 1000);
+            if (!done)
+            {
+                KillTree(p);
+                outp["error"] = "It was still running after " + secs + " seconds, so it was stopped.";
+            }
+            // the last of the output, once the pipes close - not forever,
+            // because something the script started may be holding them open
+            Process waitFor = p;
+            Thread flush = new Thread(delegate() { try { waitFor.WaitForExit(); } catch (Exception) { } });
+            flush.IsBackground = true;
+            flush.Start();
+            flush.Join(5000);
+            int code = -1;
+            try { if (done) code = p.ExitCode; } catch (Exception) { }
+            outp["exit"] = code;
+        }
+        outp["ms"] = watch.ElapsedMilliseconds;
+        lock (bufLock) { outp["output"] = buf.ToString(); outp["cut"] = cut; }
+    }
+
+    static void KillTree(Process p)
+    {
+        try
+        {
+            if (Path.DirectorySeparatorChar == '\\')
+            {
+                ProcessStartInfo kill = new ProcessStartInfo("taskkill", "/PID " + p.Id + " /T /F");
+                kill.UseShellExecute = false;
+                kill.CreateNoWindow = true;
+                Process.Start(kill).WaitForExit(5000);
+            }
+            else p.Kill();
+        }
+        catch (Exception) { try { p.Kill(); } catch (Exception) { } }
+    }
+
+    // ── kept values ─────────────────────────────────────────────────────────
+    static string Keep(string name, string value, List<string> hosts)
+    {
+        string handle = "@kept:" + RandomWord(20);
+        Kept k = new Kept();
+        k.Name = name; k.Value = value; k.Hosts = hosts; k.Expires = DateTime.UtcNow.AddMinutes(KeptMinutes);
+        lock (KeptLock) { PurgeKept(); KeptValues[handle] = k; }
+        return handle;
+    }
+
+    //  n letters of a-z and 2-7, from the cryptographic generator: 32 symbols,
+    //  so a byte modulo 32 is not biased
+    static string RandomWord(int n)
+    {
+        byte[] r = new byte[n];
+        using (RandomNumberGenerator rng = RandomNumberGenerator.Create()) rng.GetBytes(r);
+        const string abc = "abcdefghijklmnopqrstuvwxyz234567";
+        StringBuilder b = new StringBuilder();
+        foreach (byte x in r) b.Append(abc[x % 32]);
+        return b.ToString();
+    }
+
+    static Kept FindKept(string handle)
+    {
+        lock (KeptLock)
+        {
+            PurgeKept();
+            Kept k;
+            return KeptValues.TryGetValue(handle, out k) ? k : null;
+        }
+    }
+
+    static void PurgeKept()
+    {
+        List<string> gone = new List<string>();
+        foreach (KeyValuePair<string, Kept> kv in KeptValues) if (kv.Value.Expires < DateTime.UtcNow) gone.Add(kv.Key);
+        foreach (string g in gone) KeptValues.Remove(g);
+    }
+
+    // ── JSON ────────────────────────────────────────────────────────────────
+    static JavaScriptSerializer Ser()
+    {
+        JavaScriptSerializer s = new JavaScriptSerializer();
+        s.MaxJsonLength = int.MaxValue;
+        s.RecursionLimit = 64;
+        return s;
+    }
+
+    static Dictionary<string, object> ParseObject(byte[] body)
+    {
+        if (body == null || body.Length == 0) return null;
+        try { return Ser().DeserializeObject(new UTF8Encoding(false).GetString(body)) as Dictionary<string, object>; }
+        catch (Exception) { return null; }
+    }
+
+    static string Str(Dictionary<string, object> d, string k)
+    {
+        object v;
+        if (d != null && d.TryGetValue(k, out v) && v != null && !(v is Dictionary<string, object>) && !(v is System.Collections.IList))
+            return Convert.ToString(v, CultureInfo.InvariantCulture);
+        return null;
+    }
+
+    static bool Bool(Dictionary<string, object> d, string k)
+    {
+        object v;
+        return d != null && d.TryGetValue(k, out v) && v is bool && (bool)v;
+    }
+
+    static Dictionary<string, object> Obj(Dictionary<string, object> d, string k)
+    {
+        object v;
+        if (d != null && d.TryGetValue(k, out v) && v is Dictionary<string, object>) return (Dictionary<string, object>)v;
+        return new Dictionary<string, object>();
+    }
+
+    static List<object> AsList(object v)
+    {
+        List<object> l = new List<object>();
+        System.Collections.IList il = v as System.Collections.IList;
+        if (il != null) foreach (object x in il) l.Add(x);
+        return l;
     }
 }

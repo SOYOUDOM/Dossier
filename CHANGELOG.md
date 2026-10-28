@@ -6,6 +6,58 @@ holds — which is what to paste into a bug report.
 
 ---
 
+## 5.6.0 - 2026-10-28
+
+**The assistant can call your APIs and run your scripts - and still never
+sees a password, a client secret or a token.**
+
+- **API actions.** *Menu → Scripts → API actions* holds short recipes of HTTP
+  calls: *Regenerate COI* signs in to the insurer with a client id and secret,
+  keeps the access token, and calls the COI endpoint with it. Ask *help me
+  regenerate the COI of policy A01834A10* and the assistant asks for that
+  action by name; you confirm; the bridge makes both calls; a card shows each
+  step, what came back and any document; and the assistant is asked again
+  with the result, so its answer says what happened - or asks for the next
+  call, handing the first call's token on without ever holding it.
+- **Secrets on this PC.** Typed once in *Menu → Scripts*, handed to the
+  bridge, and kept there encrypted for your Windows account. Each may only go
+  to the hosts it was saved for - and so may anything obtained with it - only
+  over https, never through a redirect, and never to a host filled in from an
+  input. Everything a call returns has them masked. There is no way to read
+  one back, and the assistant is told only an action's name, its inputs and
+  the values you let it read. A value kept as secret reaches it as a handle,
+  `@kept:…`, that only the bridge can use, for 30 minutes. A value you *want*
+  it to see is kept with `reveal` and named in `share`.
+- **Scripts the assistant can run, and hear back from.** `runScript` from the
+  assistant now waits for the script, shows what it printed in a card, and
+  hands the exit code and the end of the output back to the assistant, with
+  anything that looks like a credential scrubbed. A record is no longer
+  needed to run one.
+- **Scripts can be given secrets**, as `%RESOLV_SECRET_<NAME>%`, when the
+  secret was saved for that script by name (`script:renew-cert.bat`). Such a
+  script runs through the bridge, which fills its `{{blanks}}` in a copy
+  beside it, closes its input, stops it after two minutes, and masks the
+  secret in everything it prints.
+- **Asked first, regardless.** A call marked `write`, and a script given a
+  secret, ask before running even with *ask before doing things* switched
+  off. A call that cannot be made as asked - no such action, a policy number
+  that fails its pattern - goes back to the assistant without bothering you.
+  Three rounds of *one more call* in a row is the most it gets.
+- **Without a flow,** the local assistant offers the same calls from each
+  action's own phrases, and picks the policy number out of the sentence by
+  the input's pattern.
+- **Fixed on the way:** a script argument with `&`, `|`, `%`, `!`, a quote or
+  another character `cmd.exe` reads as syntax was passed to the runner as it
+  was, so `x&del /q *` would have run two commands. Resolv refuses such an
+  argument now, before anything is queued.
+- **The bridge must be rebuilt** - `Resolv.bat` does that when it starts. A
+  page talking to an older bridge says so on the card.
+- **`node flow/check-apis.js`** checks the recipe checker, what the assistant
+  is told about actions and results, and the local assistant's matching. The
+  bridge was driven under Mono against a fake insurer (56 checks) and the
+  whole loop in a real browser (28), including that no secret or token
+  appears in the page, its storage, or anything sent to the flow.
+
 ## 5.5.0 - 2026-09-30
 
 **Questions about Resolv are answered from its documentation, and every

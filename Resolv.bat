@@ -127,6 +127,8 @@ echo   Setting Resolv up - a few seconds, and only this once.
         /reference:System.Data.dll ^
         /reference:System.Windows.Forms.dll ^
         /reference:System.Drawing.dll ^
+        /reference:System.Security.dll ^
+        /reference:System.Web.Extensions.dll ^
         /out:"%EXE%" "%SRC%"
 if errorlevel 1 (
   echo.

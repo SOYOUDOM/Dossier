@@ -63,6 +63,7 @@ These are design invariants, not preferences. Anything built on top of Resolv
 | 6 | **Nothing an endpoint returns is trusted.** A reply is data to be validated, never a command. An unknown action, a wrong-shaped argument, or a record reference that resolves to nothing is refused by name. | `flow.js` `validate()` and `checkAction()`. |
 | 7 | **The runner only ever runs a file already in `scripts\`.** A name containing `\`, `/`, `:` or `..` is refused. | `dossier-runner.bat`, before it executes anything. |
 | 8 | **A promise Resolv cannot keep is said out loud.** If a routine is set to run itself and no runner is listening, the Day sheet says so rather than failing silently. | The runner heartbeat, `.runner.txt`. |
+| 9 | **A secret never reaches the page or the assistant.** Client ids, client secrets, passwords and keys are typed once and kept by the bridge, encrypted for your Windows account, and sent only to the hosts — or handed only to the scripts — they were saved for. The assistant names an API action and never sees a credential; a token reaches it only as a handle it cannot use. | `DossierBridge.cs`, "YOUR APIS": no route returns a secret's value, every secret is bound to where it may go, and every value it touched is masked in what comes back. See [§9.6](#96-api-actions-secrets-and-what-the-assistant-can-run). |
 
 ---
 
@@ -174,10 +175,11 @@ With the demo copied in you should immediately see:
 | `scripts/check-bat.py` | ~4 KB | — | The five things that have actually gone wrong in a `.bat`: an argument used as a path (`%1` stops at the first space, and a work folder is `OneDrive - Contoso Ltd`), a redirect on an `if` line (cmd performs it whether the condition holds or not), LF line endings, a byte over 7 bits, a call to PowerShell. |
 | `scripts/dossier-sql.bat` | ~7 KB | optional | The launcher: `init`, `push`, `pull`, `check`, `history`, `find`. Defaults to `(localdb)\MSSQLLocalDB`. |
 | `scripts/dossier-bridge.bat` | ~1 KB | — | Kept so nothing that points at it breaks: passes through to `Resolv.bat`, arguments and all. |
-| `scripts/bridge/DossierBridge.cs` | ~45 KB | optional | Resolv, running: the tray icon and its menu, the page, the database (created, migrated, written, and its history kept), the hidden runner. C# 5 and Windows Forms, so `csc.exe` from the .NET Framework builds it with nothing installed. |
+| `scripts/bridge/DossierBridge.cs` | ~115 KB | optional | Resolv, running: the tray icon and its menu, the page, the database (created, migrated, written, and its history kept), the hidden runner — and the API actions, the secrets they sign in with, and the scripts run for the assistant ([§9.6](#96-api-actions-secrets-and-what-the-assistant-can-run)). C# 5 and Windows Forms, so `csc.exe` from the .NET Framework builds it with nothing installed. |
 | `flow/prompt.txt` | ~15 KB | **the assistant's instructions** | What the model reads, with nine places Resolv fills in before every question. Edit it in Notepad and the next question uses it — nothing to change in Power Automate. Your own version goes in your records folder as `dossier-prompt.txt`, where updates never touch it. |
 | `flow/embed-prompt.py` | ~1 KB | — | Copies `flow/prompt.txt` into `flow.js`, for a page opened straight from the folder, which cannot read the file beside it. |
 | `flow/check-prompt.js` | ~3 KB | — | Checks `flow/prompt.txt`: every example reply against the validator Resolv uses on real replies, all nine places present, the copy in `flow.js` the same. |
+| `flow/check-apis.js` | ~15 KB | — | Checks API actions as far as they can be checked without a bridge: the recipe checker refuses what the bridge would, nothing about an action or a result reaches the assistant that should not, and the local assistant proposes a call only when one was asked for. `node flow/check-apis.js`. |
 | `sql/load-proc.sql` | ~14 KB | optional | `dbo.LoadWorkspace` — the only code that writes the tables, called by both the bridge and `push`. |
 
 Everything is a classic script or plain file. There is **no build step, no
@@ -281,6 +283,7 @@ adds `D-0099` without touching `seq` will not cause a collision.
 | `hushed` | array of string | `[]` | Keys of the Day-sheet notices you have silenced. Cleared from **Setup → Hidden notices**. |
 | `chatUI` | `{design, tone, accent, skin, confirm, every, reveal, glow, grid, pulse, typing, chips, ambient, pixel}` | `original`, `auto`, `mint`; all on, `nebula`, ask-first | How the assistant panel looks and behaves. `design` is `original` or `breeze`; `tone` (`auto` \| `light` \| `dark`) and `accent` (`mint` \| `ocean` \| `violet` \| `coral`) are Breeze's, `skin` is Original's. Set from **◎** in the chat header (**Settings** in Breeze), or *Menu → Appearance → Assistant panel*. |
 | `memory` | array of `{id, title, body, tags, system, created, updated, uses, lastUsed}` | `[]` | What you have taught the assistant: how something is done, what caused something, what to check next time. See [§12](#12-asking-through-a-power-automate-flow). |
+| `apis` | array of `{name, about, say, write, inputs, steps, share}` | `[]` | Your API actions: each a short recipe of HTTP calls the bridge makes for you or for the assistant. They hold no secret — only `{{secret:NAME}}` where one goes. See [§9.6](#96-api-actions-secrets-and-what-the-assistant-can-run). |
 
 ### 5.3 `tasks` — a record
 
@@ -359,6 +362,7 @@ Every field, in the order Resolv writes them:
 | `tags` | array of string | For finding it later. |
 | `system` | string | Which application it belongs to, or `""`. |
 | `params` | array of string | The `{{name}}` marks found in the file. Each becomes a box on any record the script is attached to. |
+| `secrets` | array of string | Optional. Names of secrets saved on this PC that the script is given, each as `%RESOLV_SECRET_<NAME>%`. A script with any is run by the bridge, never the runner. See [§9.6](#96-api-actions-secrets-and-what-the-assistant-can-run). |
 | `uses` | number | Times run. |
 | `lastUsed` | ISO 8601 | Last run. |
 
@@ -1011,6 +1015,12 @@ Before executing anything it checks the name from line 1 and refuses, with
 
 So a request cannot reach anything else on the machine, whatever wrote it.
 
+Before writing a request, Resolv refuses an argument holding anything but
+letters, digits, spaces and `_ . , : @ / \ = + # ~ -`. The runner hands its
+arguments to `cmd.exe` on a command line, where `&`, `|`, `<`, `>`, `^`, `%`,
+`!` and a quote are syntax — `x&del /q *` is two commands — and since 5.6 an
+argument can have been chosen by the assistant.
+
 ### 9.4 Running it
 
 Double-click `scripts\dossier-runner.bat`. The window says which folder it is
@@ -1049,6 +1059,147 @@ to the incident it belongs to.
 
 Without a runner, `$` copies the fully-formed command line to the clipboard
 instead, and names any parameter still blank.
+
+### 9.6 API actions, secrets, and what the assistant can run
+
+*"Help me regenerate the COI of policy A01834A10"* is two calls to an insurer:
+sign in with a client id and a client secret and keep the access token, then
+call the COI endpoint with the token. Resolv makes both — asked by you, or by
+the assistant — without the credentials ever reaching the page or the
+assistant. The page cannot make them at all: its content security policy
+lets it reach `127.0.0.1` and nothing else. The bridge makes them.
+
+**Who holds what**
+
+| | Holds | Never holds |
+|---|---|---|
+| The bridge | The secrets, encrypted with DPAPI for your Windows account in `%LOCALAPPDATA%\Resolv\secrets.txt`. Every value a call keeps as secret, in memory, for 30 minutes. | — |
+| The page | The recipes (`settings.apis`), which name a secret only as `{{secret:NAME}}`. What came back. | A secret's value: it is typed once, handed to the bridge, and the box is emptied before the bridge has answered. |
+| The assistant | Each action's name, what it is for, its inputs, what it gives back. The values you let it read. A kept value only as a handle, `@kept:` and twenty letters. | A secret, an address, a header. |
+
+**An API action** is written in *Menu → Scripts → API actions*, as JSON —
+*Start from the COI example* writes this one, and the editor checks it as you
+type and shows exactly what the assistant will be told about it:
+
+```json
+{
+  "name": "Regenerate COI",
+  "about": "Asks the insurer to regenerate the certificate of insurance for a policy",
+  "say": ["regenerate coi", "regenerate the coi", "reissue the certificate of insurance"],
+  "write": true,
+  "inputs": { "policy": { "label": "Policy number", "pattern": "^[A-Z0-9]{6,15}$", "example": "A01834A10" } },
+  "steps": [
+    { "name": "Sign in", "method": "POST", "url": "https://auth.insurer.example/oauth/token",
+      "headers": { "Content-Type": "application/x-www-form-urlencoded" },
+      "body": "grant_type=client_credentials&client_id={{secret:coi_client_id}}&client_secret={{secret:coi_client_secret}}",
+      "keep": { "token": { "from": "access_token", "secret": true } } },
+    { "name": "Regenerate", "method": "POST", "url": "https://api.insurer.example/policies/{{policy}}/coi",
+      "headers": { "Authorization": "Bearer {{token}}", "Content-Type": "application/json" },
+      "body": { "reason": "Requested from Resolv" },
+      "keep": { "status": "status", "document": "document.url" } }
+  ],
+  "share": ["status", "document"]
+}
+```
+
+| Field | Meaning |
+|---|---|
+| `name` | What it is called — by you, by the assistant (`callApi`), and in a record's work log. One of each name. |
+| `about` | One line, shown when it is offered, and told to the assistant. |
+| `say` | Phrases you would type. Without a flow, the local assistant offers the action when every word of one of them is in your sentence. |
+| `write` | `true` when a call changes something at the other end. Such a call is asked first every time, even with *ask before doing things* switched off. |
+| `inputs` | `{name: {label, pattern, example, optional, kept}}`. A value must match `pattern` before anything is sent, so a mistyped policy number never leaves the PC. `kept: true` takes a handle from an earlier call instead of text. |
+| `steps` | Up to ten requests, in order. Each has `method` (`GET` `POST` `PUT` `PATCH` `DELETE`), `url`, and may have `headers`, `body` (text, or JSON), `keep`, `save` and `accept`. |
+| `keep` | Values taken from the answer. A string is a path into its JSON — `"status"`, `"document.url"`, `"items[0].id"`. An object takes `{"from": path}`, `{"header": name}`, `{"status": true}` or `{"body": true}`, plus `"secret": true` to keep it from the page and the assistant, `"reveal": true` on a secret one to show it to you once, and `"optional": true` for one that may be missing. |
+| `save` | A file name, like `"COI {{policy}}.pdf"`: the answer is a document. It is filed on the record when there is one, and offered to save when not. |
+| `accept` | Status codes that also count as success, like `[404]`. |
+| `share` | The kept values the assistant may read. Without it, every value that is not secret. A secret one reaches it only when it is kept with `reveal` *and* named here. |
+
+`{{policy}}` is an input, `{{token}}` a value an earlier step kept, and
+`{{secret:NAME}}` a secret saved on this PC. Each is encoded for where it
+lands: URL-encoded in an address or a form body, JSON-escaped in a JSON body.
+
+**The rules**, every one enforced by the bridge (`DossierBridge.cs`, "YOUR APIS"):
+
+1. A secret goes only to the hosts it was saved for — `api.example.com`,
+   `*.example.com` for any name under it, or `host:port`. So does anything
+   obtained with it: the token a sign-in hands back is bound to the client
+   secret's hosts. A recipe someone has edited, or an assistant an email has
+   talked into something, still cannot send one anywhere else. To send a
+   secret to a new host it is saved again, value and all.
+2. Only https carries a secret, except to this machine.
+3. The host in an address cannot be filled in from an input — only the path
+   and the query.
+4. A redirect is never followed.
+5. Every secret a call touched is masked, `••••`, in all it returns or logs —
+   addresses, errors, the excerpt of a failed answer, the values kept — raw,
+   URL-encoded and JSON-escaped.
+6. There is no route that returns a secret's value. `GET /secrets` lists
+   names, where each may go, when each was saved, and whether this Windows
+   account can read it.
+
+**One call's answer, fed to the next.** A value kept as secret comes back as a
+handle, `@kept:` and twenty letters — useless anywhere but the bridge, and
+gone after 30 minutes or when the bridge stops. Put it into an input marked
+`kept` of another action, and the bridge swaps it for the value at the last
+moment, still bound to its hosts. That is how *sign in* feeds *download the
+COI* without the token reaching the page or the assistant. The page remembers
+the newest handle under each name for the session, so a `kept` input left
+empty is filled with it.
+
+**Secrets on this PC** (*Menu → Scripts*). Type a name, the value, and where
+it may go, then *Save on this PC*. The list shows names, places and dates,
+never a value; to change where one may go, save it again. An action that
+needs a secret this PC has not got says so, with the hosts to save it for. A
+secret saved by another Windows account, or on another PC, is listed as
+unreadable here.
+
+**Scripts that need a secret.** A registered script can be given secrets
+(*Secrets it is given*, `scripts[].secrets`). Each arrives as an environment
+variable, `%RESOLV_SECRET_<NAME>%` — upper case, anything not a letter or a
+digit as `_` — and only if the secret was saved with `script:<file>` among
+where it may go. Such a script is run by the bridge (`POST /run`), not the
+runner: the secret is never written anywhere, and it is masked out of what the
+script prints. The bridge runs the scripts the assistant asks for too,
+because it answers with the result:
+
+- only a `.bat` or `.cmd` sitting directly in `<workspace>\scripts\`, and none
+  of Resolv's own (`dossier-*`);
+- every argument is letters, digits, spaces and `_ . , : @ / \ = + # ~ -`;
+- a template (`{{server}}`) is filled into a copy beside it, `dossier-run-*`,
+  which is deleted when it finishes — so `%~dp0` is still the scripts folder;
+- its input is closed, so a script that asks a question gets no answer rather
+  than hanging; it is stopped after 120 seconds, with whatever it started;
+- what it prints is kept up to a megabyte, stdout and stderr together.
+
+**The assistant.** With a flow switched on, `callApi` and `runScript` are two
+of its actions ([§12](#12-asking-through-a-power-automate-flow),
+`flow/CONTRACT.md`). It names an action and fills its inputs; it cannot
+write an action, change one, or say where one goes. Every call is put to you
+first — an action marked `write`, and a script given secrets, whatever *ask
+before doing things* is set to — saying what it is, what it is given, where
+it goes and what it signs in with. When it has run, a card shows each step,
+what came back, what was kept and until when, and any document, with *Save*
+and *File on a record*; then the question is asked again with the result in
+`workspace.results`, so the answer says what happened — or asks for the next
+call. A call that cannot be made as asked (no such action, a value that fails
+its pattern, an argument with `&` in it) is not put to you at all: the reason
+goes straight back to the assistant. Three rounds in a row at most.
+
+About a result the assistant is sent: the values `share` allows, a handle for
+each secret one, each document's name and size, each step's status, and — for
+a step that failed — the first 300 characters of its answer. For a script:
+its exit code and the last 3,000 characters of what it printed. In both,
+anything that still looks like a credential (`Bearer …`, `password=…`,
+`"client_secret":"…"`) is scrubbed first.
+
+Without a flow, the local assistant offers the same calls from the actions'
+own phrases, picking each input's value out of the sentence by its pattern —
+`A01834A10` fits `^[A-Z0-9]{6,15}$`, the word *policy* does not — and asking
+for one that is missing, so the next message can be just the number.
+
+**Needs the 5.6 bridge.** `Resolv.bat` builds it again when it starts. A page
+talking to an older one says so on the card instead of failing quietly.
 
 ---
 
@@ -1159,7 +1310,7 @@ skipping the matcher; that is what the correction UI uses.
 
 ### 10.5 The intent catalogue
 
-82 intents. `kind` decides the manners: `read` answers immediately, `write`
+83 intents. `kind` decides the manners: `read` answers immediately, `write`
 always proposes and waits, `nav` moves the app, `social` is conversation.
 
 **`read` — 53**
@@ -1220,7 +1371,7 @@ always proposes and waits, `nav` moves the app, `social` is conversation.
 | `justify` | Where that came from | *are you sure* |
 | `help` | What can you do | *what can you do* |
 
-**`write` — 10**
+**`write` — 11**
 
 | intent | what it answers | example |
 |---|---|---|
@@ -1230,6 +1381,7 @@ always proposes and waits, `nav` moves the app, `social` is conversation.
 | `markWait` | Hand it to someone | *waiting on* |
 | `chase` | Chase someone | *follow up* |
 | `run` | Run a script | *run the* |
+| `callApi` | Call one of your API actions — by its own phrases, with its inputs picked out by their patterns ([§9.6](#96-api-actions-secrets-and-what-the-assistant-can-run)) | *regenerate the COI of A01834A10* |
 | `remind` | Set a reminder | *remind me* |
 | `notify` | Windows notifications | *turn on notification* |
 | `undo` | Undo | *undo that* |
@@ -1540,11 +1692,18 @@ you in full and waits for a yes** — the same gate the local assistant's write
 actions have always used, and it holds whether the action arrived as a
 proposal or as a button.
 
-54 actions, 17 read-only and 37 that write — records, checklists, time,
+61 actions, 21 read-only and 40 that write — records, checklists, time,
 waiting and chasing, blocking, tags, scripts, routines, holidays, memory, the
-BAU runbook library, the application's own settings, and the vocabulary itself. Three of them delete (a
-record, a routine, a note); all confirm like everything else and all are undone
-by `Ctrl`+`Z`.
+BAU runbook library, the application's own settings, the vocabulary itself,
+and your API actions. Three of them delete (a record, a routine, a note); all
+confirm like everything else and all are undone by `Ctrl`+`Z` — except what an
+API call or a script has already done at the other end, which no undo reaches.
+
+Two of them come back. `callApi` runs one of your API actions and `runScript`
+one of your scripts; once they have run, the question is asked again with what
+came back (`workspace.results`), so the assistant can say what happened and
+take the next step — sign in, then regenerate a COI, then fetch it. It never
+sees a credential. See [§9.6](#96-api-actions-secrets-and-what-the-assistant-can-run).
 
 **Asking before acting is itself a setting.** *Menu → Setup → Assistant* has a
 switch for it. Leave it on and every write is shown to you and waits; turn it
@@ -2074,6 +2233,12 @@ To add a language: copy `en.xml` to `lang/<culture>.xml`, change `culture` and
   the same action typed as a sentence asked first: one button, two behaviours,
   and the dangerous one was silent. Now both ask.
 - The runner runs **as you**, with no elevation, and touches no network.
+- **Secrets stay in the bridge.** The client ids, secrets and passwords your
+  API actions and scripts use are kept encrypted for your Windows account,
+  sent only where each was saved for, and never shown to the page or the
+  assistant — a token reaches the assistant only as a handle it cannot use.
+  An API action is the one thing in Resolv that sends anything off the PC
+  besides a flow, and only when you, or the assistant with your yes, call it.
 - `Ctrl`+`Z` undoes the last change.
 - Backups: one snapshot per day into `backups/`, 30 kept.
 
@@ -2308,8 +2473,8 @@ things that break here are things a unit test cannot see: a stale iframe cache,
 a CSP refusal, a file one folder away from where a manifest says.
 
 A few small checks do live here, and need nothing but Node or Python:
-`flow/check-prompt.js`, `scripts/check-bat.py`, the three `sql/check-*.py` and
-`scripts/check-assistant-docs.js`. The last checks the assistant against
+`flow/check-prompt.js`, `flow/check-apis.js`, `scripts/check-bat.py`, the three
+`sql/check-*.py` and `scripts/check-assistant-docs.js`. The last checks the assistant against
 `README.md` and `CHANGELOG.md` as they stand — every release heading readable, the page's
 version in the release notes, product questions finding their section, every
 answer word for word in the section it cites, *which source supports this
@@ -2354,6 +2519,22 @@ asking for records it was not given costs one more round trip and never two —
 and, counted against a server that
 records every request, exactly how many times the endpoint is called and how
 large each call is.
+
+API actions and script runs (5.6) were checked against the real bridge,
+compiled with Mono's C# 5 compiler and run headless, and a fake insurer that
+logs every request it is sent: 56 checks — the secret encrypted on disk and
+never in a listing, the chained COI call, the token returned only as a
+handle and swapped back at the bridge, the host binding for secrets and for
+what they obtained, plain http, filled-in hosts and redirects refused, echoes
+masked, a script given a secret as an environment variable and masked in its
+output, every unsafe argument character refused, a script that hangs stopped.
+Then 28 more in a real browser with the page served by that bridge and the
+flow faked: the confirmation, the card, the question asked again with the
+result, a second call fed the first one's token, a write asked first with
+asking switched off, a refusal sent back without asking, a runaway stopped at
+three rounds, an old bridge named as the reason — and no secret, client id,
+password or issued token anywhere in the page's state, its storage, its DOM,
+or any of the requests sent to the flow.
 
 Several of those assertions now measure **geometry, not just content**. An
 email body once rendered its text correctly into a box 25 pixels square at

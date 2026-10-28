@@ -1369,6 +1369,41 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
 .prm{display:grid;grid-template-columns:104px 1fr;gap:7px;align-items:center;margin-top:6px}
 .prm label{font-family:var(--f-mono);font-size:10.5px;color:var(--ink-3);overflow:hidden;text-overflow:ellipsis}
 
+/* ── API actions and secrets, under Menu → Scripts ─────────────────────── */
+.apibox .apisecs{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:8px;font-size:11px;color:var(--ink-3)}
+.apisec{font-family:var(--f-mono);font-size:10.5px;padding:1px 7px;border-radius:var(--r-xs);
+  border:1px solid var(--rule-hi);color:var(--ink-2)}
+.apisec.ok{border-color:var(--st-done);color:var(--st-done)}
+.apisec.no{border-color:var(--p1);color:var(--p1)}
+.apibad,.apiwarn,.apiok{font-size:11.5px;line-height:1.55;margin:4px 0;padding-left:17px;position:relative;word-break:break-word}
+.apibad{color:var(--p1)}
+.apibad::before{content:"\2715";position:absolute;left:0}
+.apiwarn{color:var(--ink-2)}
+.apiwarn::before{content:"\26A0";position:absolute;left:0;color:var(--accent)}
+.apiok{color:var(--ink-2)}
+.apiok::before{content:"\2713";position:absolute;left:0;color:var(--st-done)}
+.secrow{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:7px 0;border-bottom:1px solid var(--rule);font-size:12px}
+.secrow b{font-size:12px;font-weight:600}
+.secrow .where{flex:1;min-width:160px;color:var(--ink-2);font-size:11.5px;word-break:break-word}
+.secrow .when{color:var(--ink-3);font-family:var(--f-mono);font-size:10.5px}
+.secrow button{border:1px solid var(--rule);background:var(--paper);color:var(--ink-2);border-radius:var(--r-xs);
+  padding:4px 9px;font-size:11px;cursor:pointer}
+.secrow button:hover{border-color:var(--accent);color:var(--accent)}
+.secrow.need b{color:var(--ink-3);font-style:italic}
+.secform{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+.secform #secPlaces{grid-column:1 / -1}
+.secform .btn{justify-self:start}
+#secMsg{margin:8px 0 0}
+@media (max-width:560px){ .secform{grid-template-columns:1fr} }
+#apiEd{z-index:62;width:min(860px,96vw)}
+#apiEd .apib{padding:14px 16px 16px;overflow-y:auto;display:flex;flex-direction:column;gap:10px;min-height:0}
+#apiEd .hint2{margin:0}
+#apiEdText{min-height:280px;font-size:11.5px;line-height:1.5;resize:vertical;white-space:pre;tab-size:2}
+.apick{max-height:220px;overflow-y:auto}
+.apisees{font-size:11.5px;color:var(--ink-2);margin-top:6px}
+.apisees pre{margin:6px 0 0;padding:8px 10px;background:var(--paper-2);border:1px solid var(--rule);
+  border-radius:var(--r-xs);font-size:10.5px;max-height:150px;overflow:auto;white-space:pre-wrap}
+
 /* ═══ PALETTE EDITOR ═════════════════════════════════════════════════════ */
 .pal{display:grid;grid-template-columns:repeat(auto-fill,minmax(146px,1fr));gap:9px;margin-bottom:6px}
 .pcard{border:1px solid var(--rule);border-radius:var(--r-sm);padding:10px 11px;background:var(--paper-2);
@@ -1928,6 +1963,36 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
 .chrb .rbf button:hover:not(:disabled){border-color:var(--ch-acc);color:var(--ch-acc)}
 .chrb .rbf button.prim{border-color:var(--ch-acc);color:var(--ch-acc)}
 .chrb .rbf button:disabled{opacity:.42;cursor:default}
+
+/* ── what an API call or a script run gave back ──────────────────────── */
+.chrb .rbst.no{color:var(--p1);border-color:var(--p1)}
+.chrb.res.bad{border-color:var(--p1)}
+.chrb .reserr{padding:7px 11px;font-size:12px;line-height:1.55;color:var(--ch-ink);
+  background:var(--ch-bg);border-bottom:1px solid var(--ch-line);word-break:break-word}
+.chrb .reserr::before{content:"\26A0";margin-right:7px;color:var(--p1)}
+.chrb .restab{width:100%;border-collapse:collapse;font-size:12px;margin:0 0 6px}
+.chrb .restab td{padding:3px 11px;color:var(--ch-ink);vertical-align:top;word-break:break-word}
+.chrb .restab td:nth-child(2),.chrb .restab td:nth-child(3){font-family:var(--f-mono);font-size:11px;
+  color:var(--ch-dim);white-space:nowrap;text-align:right;width:1%}
+.chrb .restab.vals td:first-child{font-family:var(--f-mono);font-size:11px;color:var(--ch-dim);width:1%;white-space:nowrap}
+.chrb .restab.vals td:nth-child(2){font-family:inherit;font-size:12px;color:var(--ch-ink);
+  white-space:normal;text-align:left;width:auto}
+.chrb .restab .dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:7px;
+  background:var(--ch-acc2);vertical-align:1px}
+.chrb .restab .dot.no{background:var(--p1)}
+.chrb .gone{color:var(--ch-dim);font-style:italic}
+.chrb .resv,.chrb .rescp,.chrb .resfile button{border:1px solid var(--ch-line);background:var(--ch-panel);
+  color:var(--ch-ink);border-radius:var(--r-xs);padding:2px 8px;font-size:11px;cursor:pointer;font-family:inherit}
+.chrb .resv{font-family:var(--f-mono);max-width:100%;white-space:normal;word-break:break-all;text-align:left}
+.chrb .resv:hover,.chrb .rescp:hover,.chrb .resfile button:hover:not(:disabled){border-color:var(--ch-acc);color:var(--ch-acc)}
+.chrb .resfile button:disabled{opacity:.6;cursor:default}
+.chrb .reskept{white-space:pre-wrap;font-size:11.5px;color:var(--ch-dim)}
+.chrb .resfiles{padding:0 11px 8px}
+.chrb .resfile{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:4px 0;font-size:12px;color:var(--ch-ink)}
+.chrb .resfile small{color:var(--ch-dim);font-family:var(--f-mono);font-size:10.5px}
+.chrb .resout{margin:0 11px 10px;padding:8px 10px;max-height:240px;overflow:auto;background:var(--ch-bg);
+  border:1px solid var(--ch-line);border-radius:var(--r-xs);font-family:var(--f-mono);font-size:11px;
+  line-height:1.5;color:var(--ch-ink);white-space:pre-wrap;word-break:break-word}
 
 .chrbp{border:1px solid var(--ch-line);border-radius:var(--r-sm);overflow:hidden;
   background:var(--ch-panel);margin:2px 0}
@@ -4047,6 +4112,19 @@ body.chatting .pet[data-corner="br"],body.chatting .pet[data-corner="tr"]{
   </div>
 </div>
 
+<!-- An API action, written as JSON and checked as it is typed. Above the
+     menu, which stays open underneath it. -->
+<div class="modal apied" id="apiEd" role="dialog" aria-modal="true" aria-labelledby="apiEdT" aria-hidden="true">
+  <div class="mh"><h3 id="apiEdT">API action</h3><button class="ib" id="apiEdX" aria-label="Close">✕</button></div>
+  <div class="apib">
+    <p class="hint2" data-i18n="ApiEdHow">One request per step. {{policy}} is one of its inputs; {{secret:NAME}} is a secret saved on this PC, sent only where it was saved for; {{token}} is a value an earlier step kept. keep takes values from the answer - "status" is a path into its JSON, {"from":"access_token","secret":true} keeps one the assistant never sees. share lists what the assistant may read. write:true makes it ask before every call.</p>
+    <textarea class="in mono" id="apiEdText" spellcheck="false" autocomplete="off" aria-label="API action as JSON"></textarea>
+    <div id="apiEdCheck" class="apick" aria-live="polite"></div>
+    <div class="brow"><button class="btn pri" id="apiEdSave" data-i18n="Save">Save</button>
+      <button class="btn" id="apiEdCancel" data-i18n="Cancel">Cancel</button></div>
+  </div>
+</div>
+
 <div class="problem" id="problem">
   <div class="ih">
     <div class="t"><h4 id="probT">Problem</h4><div class="s" id="probS"></div></div>
@@ -6137,7 +6215,123 @@ const STRINGS = {
   FlowRan: "Done.",
   FlowVersions: "flow.js {app} · relay {relay}",
   FlowStaleRelay: "The relay in the frame is an older copy than flow.js expects. Hard-refresh with Ctrl+Shift+R.",
-  AiOpenRoutines: "Open Routines"
+  AiOpenRoutines: "Open Routines",
+
+  /* API actions, secrets, and what came back (5.6) */
+  ApiNoBridge: "API actions and secrets need the bridge, and it is not running. Start Resolv with Resolv.bat.",
+  ApiBridgeSlow: "The bridge took too long to answer.",
+  ApiBridgeGone: "The bridge stopped answering. Start Resolv with Resolv.bat again.",
+  ApiOldBridge: "This bridge was built before API actions and script runs existed. Close Resolv and start it with Resolv.bat, which builds it again.",
+  ApiBridgeSaid: "The bridge answered {n}.",
+  ApiNeedsKept: "It needs {what}, a value kept by an earlier call - run that call first.",
+  ApiKeptOnly: "{what} takes a value kept by an earlier call (@kept:…), not text.",
+  ApiNeeds: "It needs {what}.",
+  ApiTextOnly: "{what} takes text, not a kept value.",
+  ApiNotValid: "“{v}” is not a valid {what}.",
+  ApiLike: "(like {eg})",
+  ApiGoesTo: "goes to {hosts}",
+  ApiSendsTo: "It goes to {hosts}.",
+  ApiUsesSecrets: "Signs in with {names}, saved on this PC. The assistant never sees them.",
+  ApiUsesKept: "Uses {names}, kept by an earlier call.",
+  ApiKeptEarlier: "Filled in from the last call that kept it.",
+  ApiLogsTo: "What comes back goes in the work log of {code}.",
+  ApiConfirmWrite: "Call {name}? It changes something at the other end.",
+  ApiConfirmRead: "Call {name}?",
+  ApiLogOk: "Called {name}",
+  ApiLogFailed: "Called {name} - it failed: {why}",
+  ApiLogFiled: "{n} document(s) it returned are filed on this record.",
+  ApiNoSuch: "There is no API action called “{name}”. Menu → Scripts → API actions lists the ones there are.",
+  ApiNotCalled: "{name} was not called.",
+  ScriptArgUnsafe: "Not run: {what} has a character a script argument cannot carry safely. Letters, digits, spaces and _ . , : @ / \\ = + # ~ - only.",
+  ScriptNoRunner: "Nothing can run scripts here: start Resolv with Resolv.bat, or turn the runner on in Menu → Setup.",
+  ScriptNoSuch: "There is no script called “{name}”. Menu → Scripts lists the ones there are.",
+  ScriptNoRecord: "There is no record {ref} here.",
+  ScriptRunSay: "Run {name}",
+  ScriptRunOn: "on {what}",
+  ScriptRunConfirm: "Run it?",
+  ScriptGetsSecrets: "It is given {names}, saved on this PC. The assistant never sees them.",
+  ScriptSecrets: "Secrets it is given",
+  ScriptSecretsPh: "names from Secrets on this PC - each arrives as %RESOLV_SECRET_NAME%",
+  ScriptSecretsSet: "{file} will be given {names} as {vars} - save each in Secrets on this PC with script:{file} among where it may go.",
+  SentToTheBridge: "Sent to the bridge: ",
+  ScriptOtherWorkspace: "Not run: the bridge is serving the workspace \u201c{theirs}\u201d, not \u201c{ours}\u201d, and a script given secrets can only run from the bridge's own. Choose this folder from the Resolv icon by the clock (Workspace folder\u2026), or start Resolv on it with Resolv.bat.",
+  ResApiTag: "API action",
+  ResScriptTag: "Script",
+  ResOk: "done",
+  ResFailed: "failed",
+  ResExit: "exit {n}",
+  ResSteps: "Steps",
+  ResValues: "What came back",
+  ResShow: "Show",
+  ResRevealGone: "•••• shown once, not saved",
+  ResKept: "Kept on this PC",
+  ResKeptLine: "{name} - held by the bridge until {until}, only for {hosts}. The assistant has a handle to it, never the value.",
+  ResFiles: "Documents",
+  ResFiledOn: "filed on {code}",
+  ResSave: "Save",
+  ResFileOn: "File on a record",
+  ResFileOnWhich: "File it on which record? (its code)",
+  ResNoSuchRecord: "There is no record {ref}.",
+  ResFiled: "Filed on {code}",
+  ResFileGone: "not kept after a reload - call it again",
+  ResArgs: "With",
+  ResOutput: "What it printed",
+  ResOutputEnd: "What it printed - the end of it",
+  ResNoOutput: "(nothing)",
+  ResApiOk: "{name}: done.",
+  ResApiFailed: "{name} failed: {why}",
+  ResScriptOk: "{name} finished.",
+  ResScriptFailed: "{name} failed: {why}",
+  ResRoundsStop: "That is {n} calls in a row, so I have stopped there. Ask again if you want me to carry on.",
+  ApiHeading: "API actions",
+  ApiIntro: "Calls the assistant can make for you, like signing in to an insurer's API and regenerating a COI. Each is a short recipe; the bridge makes the calls, signs in with the secrets below, and sends each secret only where it was saved for. The assistant sees the action's name and inputs, and only the values you let it read - never a secret, and a token only as a handle it cannot use anywhere else. Every call asks first when it changes something.",
+  ApiAdd: "Add an API action",
+  ApiAddExample: "Start from the COI example",
+  ApiNone: "None yet.",
+  ApiTry: "Try it",
+  ApiEdit: "Edit",
+  ApiInputs: "inputs: {list}",
+  ApiSecretsUsed: "Signs in with",
+  ApiRemoveQ: "Remove {name}?",
+  ApiRemoveWhy: "The recipe goes. The secrets it used stay saved on this PC until you remove them too.",
+  ApiEditTitle: "API action - {name}",
+  ApiNewTitle: "New API action",
+  ApiEdHow: "One request per step. {{policy}} is one of its inputs; {{secret:NAME}} is a secret saved on this PC, sent only where it was saved for; {{token}} is a value an earlier step kept. keep takes values from the answer - \"status\" is a path into its JSON, {\"from\":\"access_token\",\"secret\":true} keeps one the assistant never sees. share lists what the assistant may read. write:true makes it ask before every call.",
+  ApiNotJson: "That is not JSON yet: {why}",
+  ApiLooksRight: "The bridge will run this.",
+  ApiSecretUnchecked: "Uses the secret {name}. Whether this PC has it cannot be checked without the bridge.",
+  ApiSecretMissing: "Uses the secret {name}, which is not saved on this PC yet. Save it below, for {hosts}.",
+  ApiSecretUnreadable: "Uses the secret {name}, saved by another Windows user or on another PC. Save it again.",
+  ApiSecretFine: "Uses the secret {name}, saved on this PC for {hosts}.",
+  ApiSecretWrongPlace: "Uses the secret {name}, but it is not saved for {hosts}, so the bridge will refuse to send it there.",
+  ApiAssistantSees: "All the assistant is told about it:",
+  ApiFixFirst: "Fix what is marked first.",
+  ApiSaved: "Saved {name}",
+  SecHeading: "Secrets on this PC",
+  SecIntro: "Client ids, client secrets, passwords and keys for the API actions and scripts above. Each is typed once and handed to the bridge, which keeps it encrypted for your Windows account (%LOCALAPPDATA%\\Resolv\\secrets.txt) and never gives it back - not to this page, not to the assistant. Say where each may go: a host (api.example.com, or *.example.com for any name under it), or a script (script:renew-cert.bat). To change where one may go, save it again.",
+  SecNamePh: "name, like coi_client_secret",
+  SecValuePh: "the value - typed once, kept by the bridge",
+  SecPlacesPh: "where it may go: auth.insurer.example, script:x.bat",
+  SecSave: "Save on this PC",
+  SecLoading: "Asking the bridge…",
+  SecNone: "None saved yet.",
+  SecUnknown: "Cannot tell without the bridge",
+  SecMissing: "Not saved on this PC",
+  SecUnreadable: "Saved by another Windows user or on another PC",
+  SecUnreadableShort: "unreadable here",
+  SecFine: "Saved for where this action sends it",
+  SecWrongPlace: "Saved, but not for {hosts}",
+  SecChange: "Change",
+  SecChangeHow: "Type the value again: a secret is only ever replaced whole, with where it may go.",
+  SecNeededBy: "needed by {by} - not saved yet",
+  SecAddIt: "Save it",
+  SecRemoveQ: "Remove the secret {name} from this PC?",
+  SecRemoveWhy: "Anything that signs in with it stops working until it is saved again.",
+  SecRemoved: "Removed {name}",
+  SecBadName: "A secret's name is a letter, then letters, digits, _ . or -.",
+  SecNoValue: "Type its value.",
+  SecNoPlaces: "Say where it may go - a host, or script:name.bat.",
+  SecSaved: "Saved {name}. The box is empty again; the bridge has it."
 };
 
 /* Loaded files, keyed by culture code. "en" is always present, from STRINGS. */
@@ -6597,8 +6791,8 @@ const STATUSES = [
    the status bar, and clicking it copies a line you can paste into a bug
    report — build date and flow protocol included, because those are the two
    things that actually differ between copies. */
-const APP_VERSION = "5.5.0";
-const APP_BUILT = "2026-09-30";
+const APP_VERSION = "5.6.0";
+const APP_BUILT = "2026-10-28";
 function buildLine(){
   return "Resolv v" + APP_VERSION + " \u00b7 built " + APP_BUILT +
          " \u00b7 flow protocol " + (window.DossierFlow ? DossierFlow.version : "\u2014") +
@@ -9462,6 +9656,8 @@ function runScriptFor(id, scriptId){
   const sc = scriptById(scriptId || (t.scripts || [])[0]);
   if (!sc) return toast(L("NoScriptOnThisRecord"), { bad:true });
   const vals = (t.scriptArgs || {})[sc.id] || {};
+  /* a script given secrets can only be run by the bridge, which holds them */
+  if ((sc.secrets || []).length) return scriptRunWithSecrets(t, sc, vals);
   /* with the runner installed this actually executes; without it, the most a
      browser can do is hand you the line to paste */
   if (S.settings.runner && FS.ok) return queueRun(t, sc, vals);
@@ -10421,6 +10617,8 @@ function chatApi(convo){
        about Resolv and about where an answer came from */
     docs: DOCS.index, docsState: DOCS.state, version: APP_VERSION, built: APP_BUILT,
     last: chatLastReply(),
+    /* the API actions, and the handles earlier calls kept, by name */
+    apis: apiList(), apiKept: keptHandles(),
     h: { tok, idf, similar, estimateFor, predict, knownValues, repeatCandidates,
          today, addDays, dow, mondayOf, niceDate, mins, dayOf, dkey, stamp,
          live, peopleOf, canonPerson, splitPeople, matchParty, findByRef, findScript,
@@ -11237,8 +11435,10 @@ function chatAskNext(){
   if (ASK.cur) return;
   const it = ASK.q.shift();
   if (!it) return;
-  /* switched off, so the thing you asked for simply happens */
-  if (!chatUI().confirm) return chatRunAsked(it, true);
+  /* switched off, so the thing you asked for simply happens - except an API
+     call that changes something, or a script given a secret: those ask
+     whatever this is set to */
+  if (!chatUI().confirm && !it.must) return chatRunAsked(it, true);
   ASK.cur = it;
   const mark = $("chatAskIcon");
   if (mark){ mark.innerHTML = chatPix("ask"); pixFix(mark); }
@@ -11262,7 +11462,12 @@ function chatRunAsked(it, auto){
   const was = ASK.cur;
   if (was) chatAskClose(); else ASK.cur = null;
   try {
-    if (it.act && it.act.kind === "flow"){
+    if (it.act && it.act.kind === "flow" && it.act.a &&
+        (it.act.a.do === "callApi" || it.act.a.do === "runScript")){
+      /* no receipt: its result arrives as a card, and Undo means nothing
+         to a call that has already gone out */
+      flowRunLong(it.act.a, it);
+    } else if (it.act && it.act.kind === "flow"){
       /* run it without letting it speak, and put the one line up ourselves */
       const r = flowRun(it.act.a, true);
       chatReceipt((r && r.say) || it.say || "", false, auto);
@@ -11270,7 +11475,8 @@ function chatRunAsked(it, auto){
       /* the local assistant answers for itself — "D-0001 is now done" — and
          a receipt on top of that would only repeat the question back */
       chatDo(Object.assign({}, it.act, { __ok:true }));
-      if (auto) chatReceipt(it.say || "", false, true);
+      /* a call or a run answers with a card of its own */
+      if (auto && it.act.kind !== "callApi" && it.act.kind !== "run") chatReceipt(it.say || "", false, true);
     }
   } catch(e){ chatReceipt(String((e && e.message) || e), false, auto); }
   chatAskNext();
@@ -11279,6 +11485,7 @@ function chatDeclineAsked(){
   const it = ASK.cur;
   chatAskClose();
   chatReceipt(it ? it.say : "", true);
+  if (it && it.act && it.act.batch) batchDone(it.act.batch, false);
   chatAskNext();
 }
 
@@ -12566,7 +12773,7 @@ function chatRenderBot(r, sourceText, replaying, at){
   if (r.act && r.act.confirm){
     if (!replaying)
       pending.push({ say:r.say || "", note:r.note || "",
-                     confirm:r.act.confirm, act:r.act });
+                     confirm:r.act.confirm, act:r.act, must:!!r.act.must });
   } else if (r.act && !replaying){
     chatDo(r.act);           /* navigation writes nothing, so it needs no permission */
   }
@@ -12655,6 +12862,7 @@ function chatRenderBot(r, sourceText, replaying, at){
     else if (c.kind === "incidents") chatIncidents(c.days, c.system, c.group);
     else if (c.kind === "gaps") chatGaps(c.days, c.only);
     else if (c.kind === "who") chatWho(c.about);
+    else if (c.kind === "result") chatResult(c);
     else if (c.kind === "pick"){
       const hits = (c.titles || []).map(t => rbFind(t)).filter(Boolean).map(rb => ({ rb }));
       if (hits.length) chatRunbookPick(hits);
@@ -13266,6 +13474,11 @@ function flowContext(q){
     incidents: incidentsForFlow(30),
     profiles: profilesForFlow(q),
     settable: flowSettable(),
+    /* the API actions, which flow.js reduces to names, inputs and what they
+       give back; and what the calls and script runs of this conversation
+       returned (RESULTS) */
+    apis: apiList(),
+    results: resultsForFlow(c),
     attachments: (CHAT.files || []).filter(f => !f.reading).map(f => ({
       grid: (flowSees() && CHAT.grid && CHAT.grid.key === chatGridKey()) ? chatGridImages().indexOf(f) + 1 : 0,
       name:f.name, type:f.type, size:f.size, data:f.data || "",
@@ -13339,6 +13552,8 @@ async function flowAsk(q, thread, opts){
      any file". */
   const ctx = flowContext(q);
   if (opts.force) ctx.forceRecords = opts.force.slice();
+  /* asked again with what an API call or a script run gave back */
+  if (opts.followUp) ctx.followUp = opts.followUp;
   /* where the answer goes: into the thread as the next message, or - asked
      again from Retry or Think harder - to the branch waiting for it */
   const deliver = opts.onReply || (r => chatBot(r, q));
@@ -13470,7 +13685,7 @@ async function flowAsk(q, thread, opts){
     out.choices = (out.choices || []).filter(c => !phTalks(c));
   }
 
-  const reply = flowReply(out, q);
+  const reply = flowReply(out, q, opts.round || 0);
   if (fell){
     /* even the lean question failed: it is the flow, or the question itself */
     reply.trouble = true;
@@ -13489,6 +13704,8 @@ async function flowAsk(q, thread, opts){
   if (out && out.title && thread && thread.titleAuto && !thread.titleAi){ thread.title = out.title; thread.titleAi = true; }
   reply.sumBefore = sumBefore;
   deliver(reply);
+  /* what came back from calls and scripts has now been read */
+  resultsSeen(thread);
   chatSide();
 }
 
@@ -13541,7 +13758,7 @@ function flowNeeds(out){
 /* One validated reply, turned into the same shape every other answer uses —
    so a flow's answer looks like an answer rather than like a debug dump, and
    the "not what I meant" button underneath still works. */
-function flowReply(out, asked){
+function flowReply(out, asked, round){
   const r = { say:out.say || "", note:"", rows:[], steps:[], chips:[],
               idents: rbIdents(asked || ""), via:"flow" };
 
@@ -13573,10 +13790,21 @@ function flowReply(out, asked){
      record is not agreeing to close a different one. They are handed over
      as "pending" rather than drawn into the thread; chatRenderBot puts them
      to you once the answer itself is on screen. */
-  r.pending = writes.map(a => {
+  /* An API call or a script run is answered, once it is done, by asking the
+     question again with what came back - once for all of them in this
+     answer, after the last has finished or been declined. One that cannot
+     be done as asked - no such action, a policy number that fails its
+     pattern - is not put to you at all: it goes straight back as a failure,
+     so the assistant can put it right. */
+  const longs = writes.filter(a => a.do === "callApi" || a.do === "runScript");
+  const batch = longs.length ? batchNew(asked, round || 0, longs.length) : "";
+  r.pending = [];
+  writes.forEach(a => {
+    const long = longs.indexOf(a) >= 0;
+    if (long && flowLongRefusal(a)){ setTimeout(() => flowRunLong(a, { act:{ batch:batch } }), 0); return; }
     const d = flowDescribe(a);
-    return { say:d.say, note:d.note || "", confirm:d.confirm,
-             act:{ kind:"flow", a:a, confirm:d.confirm } };
+    r.pending.push({ say:d.say, note:d.note || "", confirm:d.confirm, must:!!d.must,
+                     act:{ kind:"flow", a:a, confirm:d.confirm, batch:long ? batch : "" } });
   });
 
   if (!r.say && !r.rows.length && !r.pending.length && !r.note) r.note = L("FlowNothing");
@@ -13626,9 +13854,20 @@ function flowDescribe(a){
     case "attachScript":
       return { say:"Attach " + g.script + " to " + ref(),
                note:g.args ? JSON.stringify(g.args) : "", confirm:"Attach it?" };
-    case "runScript":
-      return { say:"Run " + g.script + " on " + ref(),
-               note:g.args ? JSON.stringify(g.args) : "", confirm:"Run it?" };
+    case "runScript": {
+      const sc = findScript(g.script), t = g.record ? findByRef(g.record) : null;
+      const args = g.args ? Object.keys(g.args).map(k => k + " " + g.args[k]).join(" \u00b7 ") : "";
+      const secrets = (sc && sc.secrets) || [];
+      return { say:L("ScriptRunSay", { name:sc ? sc.name : g.script }) + (t ? " " + L("ScriptRunOn", { what:ref() }) : ""),
+               note:[args, secrets.length ? L("ScriptGetsSecrets", { names:secrets.join(", ") }) : ""].filter(Boolean).join("\n"),
+               confirm:L("ScriptRunConfirm"), must:secrets.length > 0 };
+    }
+    case "callApi": {
+      const r = apiFind(g.api);
+      if (!r) return { say:String(g.api || ""), confirm:L("ApiConfirmRead", { name:g.api }) };
+      const p = apiParams(r, g.params || {});
+      return apiDescribe(r, p.params, g.record ? findByRef(g.record) : null, p.fromKept);
+    }
     case "createRoutine":
       return { say:"Create the schedule “" + g.title + "” — " + g.freq +
                    (g.cron ? " " + g.cron : g.time ? " at " + g.time : ""),
@@ -14136,18 +14375,12 @@ function flowRun(a, quiet){
       touch(); renderAll(); if (S.open === t.id) renderDrawer();
       return done(L("ChatScriptAttached", { file:sc.file || "", code:t.code }));
     }
-    case "runScript": {
-      const t = need(g.record); if (!t) return null;
-      const sc = findScript(g.script);
-      if (!sc) return flowNeed(a, "there is no script called “" + g.script + "”.");
-      if (g.args){
-        t.scriptArgs = t.scriptArgs || {};
-        t.scriptArgs[sc.id] = Object.assign({}, t.scriptArgs[sc.id], g.args);
-      }
-      if ((t.scripts || []).indexOf(sc.id) < 0) t.scripts = (t.scripts || []).concat([sc.id]);
-      touch();
-      closeChat(); runScriptFor(t.id, sc.id); return null;
-    }
+    /* both wait on the bridge, and what comes back goes to the assistant:
+       see flowRunLong. chatRunAsked sends them there itself; this is for
+       anything that reaches them some other way. */
+    case "runScript":
+    case "callApi":
+      flowRunLong(a, null); return null;
     case "createRoutine": {
       const r = { id:"R" + Date.now().toString(36), title:g.title, message:g.message || "",
                   freq:g.freq, cron:g.cron || "",
@@ -15906,7 +16139,8 @@ function chatDo(act){
     }
     /* one action a flow proposed, now that it has been agreed to */
     case "flow":     return flowRun(act.a);
-    case "run":      closeChat(); return runScriptFor(act.id, act.scriptId);
+    case "run":      return chatScriptLocal(act);
+    case "callApi":  return chatApiLocal(act);
     case "undo":     closeChat(); return doUndo();
     case "routine": {
       const r = { id:"R" + Date.now().toString(36), title:act.title, message:"",
@@ -18403,6 +18637,8 @@ async function renderModal(){
           '" placeholder="Creates the project folder tree for a new build"></div>' +
         "<div class=\"prm\"><label>" + L("Blanks") + "</label><input class=\"in\" data-sparm=\"" + esc(sc.id) + '" value="' + esc((sc.params||[]).join(", ")) +
           '" placeholder="project, environment — written as {{project}} inside the file"></div>' +
+        "<div class=\"prm\"><label>" + L("ScriptSecrets") + "</label><input class=\"in mono\" data-ssec=\"" + esc(sc.id) + '" value="' + esc((sc.secrets||[]).join(", ")) +
+          '" placeholder="' + LE("ScriptSecretsPh") + '"></div>' +
         '<div class="cmdline">' + esc(scriptCommand(sc, {})) + "</div></div>").join("")
       : "<div style=\"font-size:12.5px;color:var(--ink-3);margin-bottom:14px\">" + L("NothingInTheLibraryYet") + "</div>") +
     "<h5 class=\"eyebrow\" style=\"margin:18px 0 8px\">" + L("WhereTheCommandsPoint") + "</h5>" +
@@ -18411,7 +18647,8 @@ async function renderModal(){
     '<p style="font-size:11.5px;color:var(--ink-2);line-height:1.7;margin-top:8px">' +
       L("TheBrowserIsNeverToldThe") +
       L("TypeItOnceHereAndEvery") +
-      L("TerminalLeaveItBlankAndThe");
+      L("TerminalLeaveItBlankAndThe") + "</p>" +
+    apiPanelHtml();
 
   const opts = role => "<option value=\"auto\">" + L("BestAvailable") + (FONTS_FOUND[role][0] || "system") + ")</option>" +
     FONTS_FOUND[role].map(f => '<option value="' + esc(f) + '"' +
@@ -19269,6 +19506,22 @@ function wireModal(){
     sc.params = el.value.split(",").map(x => x.trim()).filter(Boolean);
     touch(); renderModal();
   });
+  /* the secrets a script is given - names only; the bridge holds the values
+     and hands each in as %RESOLV_SECRET_<NAME>% */
+  $$("[data-ssec]").forEach(el => el.onchange = () => {
+    const sc = scriptById(el.dataset.ssec); if (!sc) return;
+    const names = el.value.split(/[\s,;]+/).map(x => x.trim()).filter(Boolean);
+    const bad = names.filter(n => !/^[A-Za-z][A-Za-z0-9_.-]{0,40}$/.test(n));
+    if (bad.length){ toast(L("SecBadName") + " " + bad.join(", "), { bad:true }); return; }
+    sc.secrets = names;
+    if (!names.length) delete sc.secrets;
+    touch();
+    if (names.length) toast(L("ScriptSecretsSet", { file:sc.file, names:names.join(", "),
+      vars:names.map(n => "%RESOLV_SECRET_" + n.toUpperCase().replace(/[^A-Z0-9]/g, "_") + "%").join(" ") }));
+  });
+  /* API actions and secrets, below the scripts */
+  apiPanelPaint();
+  if (!SECRETS_UI.list || Date.now() - SECRETS_UI.at > 30000) secretsRefresh();
   $$("#pScripts .scrbox").forEach(box => {
     const sc = scriptById(box.dataset.msid); if (!sc) return;
     box.querySelectorAll("[data-sx]").forEach(b => b.onclick = async () => {
@@ -20379,20 +20632,43 @@ async function readResult(dir, id){
            at: new Date().toISOString() };
 }
 
-async function queueRun(t, sc, vals){
+/* What a script argument may hold: letters, digits, spaces and a few marks.
+   The runner hands them to cmd.exe on a command line, where & | < > ^ % !
+   and a quote are syntax - "x&del /q *" is two commands - and since 5.6 an
+   argument can have been chosen by the assistant. The bridge's /run checks
+   the same list (ArgValueRe). */
+const SCRIPT_ARG_OK = /^[\p{L}\p{N} _.,:@\/\\=+#~-]*$/u;
+function scriptArgsUnsafe(sc, vals){
+  return (sc.params || []).filter(p => vals && vals[p] != null && !SCRIPT_ARG_OK.test(String(vals[p])));
+}
+
+/* opts.quiet: no toasts - the caller shows the result itself (the chat).
+   Answers { exit, output, ms } once the runner has, or { exit:-1, error }. */
+async function queueRun(t, sc, vals, opts){
+  opts = opts || {};
+  const say = (m, o) => { if (!opts.quiet) toast(m, o); };
+  const unsafe = scriptArgsUnsafe(sc, vals);
+  if (unsafe.length){
+    const m = L("ScriptArgUnsafe", { what:unsafe.join(", ") });
+    say(m, { bad:true });
+    return { exit:-1, output:"", error:m };
+  }
   let dir;
   try { dir = await FS.dir(["scripts", "queue"], true); }
-  catch(e){ return toast(L("CouldNotReachScriptsQueue") + e.message, { bad:true }); }
+  catch(e){
+    say(L("CouldNotReachScriptsQueue") + e.message, { bad:true });
+    return { exit:-1, output:"", error:L("CouldNotReachScriptsQueue") + e.message };
+  }
 
   const id = "r" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
   await FS.writeText(dir, id + ".run.txt", runRequest(sc, vals));
 
-  RUNQ[id] = { task: t.id };
+  RUNQ[id] = { task: t ? t.id : "" };
   markScriptUse(sc);
-  if (!t.started) t.started = new Date().toISOString();
+  if (t && !t.started) t.started = new Date().toISOString();
   PENDING.add(id);
   petMood("work", 2400);          /* something has gone out to the runner */
-  toast(L("SentToTheRunner") + sc.name);
+  say(L("SentToTheRunner") + sc.name);
 
   /* the runner picks the request up within half a second; the minute is for
      the script itself, which may take that long to finish */
@@ -20404,7 +20680,7 @@ async function queueRun(t, sc, vals){
     PENDING.delete(id);
     const ok = +res.exit === 0;
     const out = String(res.output || "").slice(0, 4000);
-    const task = getTask(t.id);
+    const task = t ? getTask(t.id) : null;
     if (task){
       task.log.push({ at:new Date().toISOString(),
         text:(ok ? L("Ran") : L("RanFailedExit") + res.exit + ") ") + sc.name +
@@ -20412,12 +20688,864 @@ async function queueRun(t, sc, vals){
       touch();
     }
     renderAll();
-    if (S.open === t.id) renderDrawer();
-    return toast(ok ? sc.name + " finished" : sc.name + " failed — exit " + res.exit,
-      { bad: !ok, action:L("SeeTheLog"), onAction:() => openDrawer(t.id) });
+    if (t && S.open === t.id) renderDrawer();
+    if (!opts.quiet)
+      toast(ok ? sc.name + " finished" : sc.name + " failed — exit " + res.exit,
+        t ? { bad: !ok, action:L("SeeTheLog"), onAction:() => openDrawer(t.id) } : { bad: !ok });
+    return { exit:res.exit, output:String(res.output || ""), ms:Date.now() - started };
   }
   PENDING.delete(id);
-  toast(L("NoAnswerFromTheRunnerIs"), { bad:true });
+  say(L("NoAnswerFromTheRunnerIs"), { bad:true });
+  return { exit:-1, output:"", error:L("NoAnswerFromTheRunnerIs") };
+}
+
+/* ═══ API ACTIONS, SECRETS, AND WHAT CAME BACK ═══════════════════════════════
+   "Regenerate the COI of A01834A10" is two calls: sign in to the insurer's
+   API and keep the token, then ask for the COI with it. Written once as an
+   API action (Menu → Scripts → API actions), it is run by the bridge -
+   because this page can reach nothing but 127.0.0.1, and because that is
+   what keeps the credentials out of the page and out of the assistant.
+
+   Who holds what:
+     the bridge      the secrets, encrypted for your Windows account, and
+                     every value a call keeps as secret. It is the only
+                     thing that ever sends one, and only to where it was
+                     saved for (scripts/bridge/DossierBridge.cs).
+     this page       the recipes, which hold no secret - only {{secret:NAME}}
+                     where one goes - and what came back: values, handles,
+                     files. A secret is typed into Secrets on this PC once
+                     and handed straight to the bridge; nothing here keeps it.
+     the assistant   the names of the recipes, their inputs, and what came
+                     back that it may read (flow.js, apiSummary/apiResult).
+                     A secret, never; a kept value only as a handle,
+                     @kept:…, which is no use outside the bridge and expires
+                     in half an hour.
+
+   Scripts go the same way when they need a secret: the bridge runs them
+   (POST /run) and hands the secret in as an environment variable. And
+   whatever a call or a script gave back goes to the assistant on the next
+   question, so it can say what happened and take the next step. */
+
+function apiList(){
+  return Array.isArray(S.settings.apis)
+    ? S.settings.apis.filter(r => r && typeof r === "object" && !Array.isArray(r)) : [];
+}
+function apiFind(name){
+  const w = String(name || "").trim().toLowerCase();
+  return w ? apiList().find(r => String(r.name || "").trim().toLowerCase() === w) || null : null;
+}
+/* checked against every other recipe, so a second "Regenerate COI" is caught */
+function apiCheck(r, skip){
+  if (!(window.DossierFlow && DossierFlow.checkApi))
+    return { ok:true, bad:[], warn:[], secrets:[], hosts:[], secretHosts:{}, keeps:[], secretKeeps:[], shared:[] };
+  return DossierFlow.checkApi(r, apiList().filter((x, i) => i !== skip && x !== r));
+}
+
+/* ── the bridge ──────────────────────────────────────────────────────── */
+function bridgeReady(){ return !!(DB.bridge && DB.port && DB.token); }
+/* restarted since the page found it: a new token, maybe a new port. The same
+   two places dbFind looks, without its banner and its wait. */
+async function bridgeRehello(){
+  let hand = null;
+  if (location.protocol === "http:" && location.hostname === "127.0.0.1"){
+    try {
+      const r = await fetchIn("/hello", { cache:"no-store" }, 4000);
+      if (r.ok){ const h = await r.json(); if (h && h.token) hand = { port:+h.port || +location.port, token:h.token, workspace:h.workspace || "" }; }
+    } catch(e){}
+  }
+  if (!hand && FS.ok && FS.root){
+    try { hand = JSON.parse(await FS.readText(FS.root, ".bridge.json")); } catch(e){}
+  }
+  if (!hand || !hand.port || !hand.token) return false;
+  if (+hand.port === DB.port && String(hand.token) === DB.token && DB.bridge) return false;
+  DB.port = +hand.port; DB.token = String(hand.token); DB.bridge = true;
+  if (hand.workspace) DB.bridgeFolder = hand.workspace;
+  return true;
+}
+async function bridgeCall(method, path, body, ms){
+  if (!bridgeReady() && !(await bridgeRehello()))
+    throw Object.assign(new Error(L("ApiNoBridge")), { kind:"nobridge" });
+  const send = () => {
+    const init = { method:method, cache:"no-store", headers:{ "X-Dossier-Token":DB.token } };
+    if (body != null){ init.headers["Content-Type"] = "application/json"; init.body = JSON.stringify(body); }
+    return fetchIn(dbUrl(path), init, ms || 60000);
+  };
+  let r = null;
+  try { r = await send(); }
+  catch(e){
+    if (e && e.name === "AbortError") throw Object.assign(new Error(L("ApiBridgeSlow")), { kind:"slow" });
+    if (await bridgeRehello()){ try { r = await send(); } catch(e2){ r = null; } }
+    if (!r) throw Object.assign(new Error(L("ApiBridgeGone")), { kind:"gone" });
+  }
+  if (r.status === 403 && await bridgeRehello()) r = await send();
+  let j = null;
+  try { j = await r.json(); } catch(e){ j = null; }
+  /* a bridge built before 5.6 has no such route, and says so in plain text */
+  if ((r.status === 404 || r.status === 405) && !(j && j.error))
+    throw Object.assign(new Error(L("ApiOldBridge")), { kind:"old" });
+  if (!r.ok) throw Object.assign(new Error((j && j.error) || L("ApiBridgeSaid", { n:r.status })), { kind:"http", status:r.status });
+  return j || {};
+}
+
+/* ── secrets on this PC: names in, names out, never a value back ──────── */
+async function secretsList(){ return ((await bridgeCall("GET", "/secrets")).secrets || []); }
+function secretSave(name, value, places){ return bridgeCall("POST", "/secrets", { name:name, value:value, hosts:places }); }
+function secretForget(name){ return bridgeCall("DELETE", "/secrets?name=" + encodeURIComponent(name)); }
+
+/* ── what came back, for this session only ────────────────────────────────
+   Per conversation: the results the assistant reads on its next question
+   ("new" until it has). And the handles, by the name they were kept under,
+   so a later call - asked for by the assistant or here - can be handed the
+   token an earlier one kept without anybody typing @kept:… . None of it is
+   saved: a handle is dead in half an hour, and a value is in the card. */
+const RESULTS = { byThread:{}, kept:{} };
+function resultsAdd(c, model){
+  if (!c || !model) return;
+  const list = RESULTS.byThread[c.id] = RESULTS.byThread[c.id] || [];
+  list.push({ model:model, fresh:true });
+  while (list.length > 8) list.shift();
+}
+function resultsForFlow(c){
+  const now = new Date().toISOString();
+  return ((c && RESULTS.byThread[c.id]) || []).map(x => {
+    const o = Object.assign({}, x.model);
+    if (x.fresh) o.new = true;
+    if (o.handlesExpire && o.handlesExpire < now) o.handlesExpired = true;
+    return o;
+  });
+}
+function resultsSeen(c){ ((c && RESULTS.byThread[c.id]) || []).forEach(x => { x.fresh = false; }); }
+function keptRemember(res){
+  Object.keys((res && res.kept) || {}).forEach(k => {
+    const h = res.kept[k];
+    if (h && h.handle) RESULTS.kept[k] = { handle:h.handle, expires:h.expires || "", hosts:h.hosts || [], api:res.name || "" };
+  });
+}
+function keptHandles(){
+  const now = new Date().toISOString(), o = {};
+  Object.keys(RESULTS.kept).forEach(k => { const h = RESULTS.kept[k]; if (!h.expires || h.expires > now) o[k] = h; });
+  return o;
+}
+
+/* ── calling one ─────────────────────────────────────────────────────── */
+/* The same checks the bridge makes, made first, so a wrong policy number is
+   said before the question "call it?" is ever put. A kept input nobody
+   filled takes the handle kept under that name by an earlier call. */
+function apiParams(r, given){
+  const inputs = (r && r.inputs && typeof r.inputs === "object" && !Array.isArray(r.inputs)) ? r.inputs : {};
+  const params = {}, bad = [], used = [];
+  given = given || {};
+  const kept = keptHandles();
+  Object.keys(inputs).forEach(k => {
+    const s = (inputs[k] && typeof inputs[k] === "object") ? inputs[k] : {}, label = s.label || k;
+    let v = given[k] == null ? "" : String(given[k]).trim();
+    if (s.kept){
+      if (!v && kept[k]){ v = kept[k].handle; used.push(k); }
+      if (!v) bad.push(L("ApiNeedsKept", { what:label }));
+      else if (!/^@kept:[a-z2-7]{20}$/.test(v)) bad.push(L("ApiKeptOnly", { what:label }));
+      else params[k] = v;
+      return;
+    }
+    if (!v){ if (!s.optional) bad.push(L("ApiNeeds", { what:label })); return; }
+    if (/^@kept:/.test(v)){ bad.push(L("ApiTextOnly", { what:label })); return; }
+    if (s.pattern){
+      let ok = true;
+      try { ok = new RegExp(String(s.pattern)).test(v); } catch(e){ ok = true; }  /* the bridge has the last word */
+      if (!ok){ bad.push(L("ApiNotValid", { v:v, what:label }) + (s.example ? " " + L("ApiLike", { eg:s.example }) : "")); return; }
+    }
+    params[k] = v;
+  });
+  return { ok:!bad.length, bad:bad, params:params, fromKept:used };
+}
+
+/* what the question "call it?" says: what, with what, where it goes */
+function apiDescribe(r, params, t, fromKept){
+  const c = apiCheck(r);
+  const shown = Object.keys(params).filter(k => !/^@kept:/.test(params[k])).map(k => k + " " + params[k]);
+  const bits = [];
+  if (r.about) bits.push(String(r.about));
+  if (c.hosts.length) bits.push(L("ApiSendsTo", { hosts:c.hosts.join(", ") }));
+  if (c.secrets.length) bits.push(L("ApiUsesSecrets", { names:c.secrets.join(", ") }));
+  const kept = Object.keys(params).filter(k => /^@kept:/.test(params[k]));
+  if (kept.length) bits.push(L("ApiUsesKept", { names:kept.join(", ") }) +
+    ((fromKept || []).length ? " " + L("ApiKeptEarlier") : ""));
+  if (t) bits.push(L("ApiLogsTo", { code:t.code }));
+  return { say:String(r.name) + (shown.length ? "  ·  " + shown.join(" · ") : ""),
+           note:bits.join("\n"),
+           confirm:L(r.write ? "ApiConfirmWrite" : "ApiConfirmRead", { name:r.name }),
+           must:!!r.write };
+}
+
+function b64Bytes(b64){
+  const s = atob(String(b64 || "")), a = new Uint8Array(s.length);
+  for (let i = 0; i < s.length; i++) a[i] = s.charCodeAt(i);
+  return a;
+}
+function downloadBytes(name, b64, type){
+  const b = new Blob([b64Bytes(b64)], { type:type || "application/octet-stream" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(b); a.download = safeFile(name || "download");
+  document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 900);
+}
+
+/* One call, start to finish. Never throws: a bridge that is missing, too
+   old or unreachable comes back as a failed call that says why, so the
+   card and the assistant both have something true to say. */
+async function apiRun(r, params, opts){
+  opts = opts || {};
+  const t = opts.record ? (findByRef(opts.record) || getTask(opts.record)) : null;
+  const at = new Date().toISOString();
+  let res;
+  petMood("work", 2400);
+  try { res = await bridgeCall("POST", "/call", { recipe:r, params:params }, 6 * 60000); }
+  catch(e){
+    res = { name:r.name, ok:false, steps:[], values:{}, kept:{}, files:[], revealed:[],
+            error:String((e && e.message) || e), failedStep:"", bridge:(e && e.kind) || "error" };
+  }
+  keptRemember(res);
+  const model = window.DossierFlow ? DossierFlow.apiResult(r, res, { params:params, at:at }) : null;
+
+  /* what the record keeps: the outcome, and only values the assistant may
+     read too - a work log travels with a record when it is asked about */
+  let filed = "";
+  if (t){
+    if ((res.files || []).length){
+      const files = res.files.map(f => new File([b64Bytes(f.data)], safeFile(f.name || "answer"),
+                                                { type:f.type || "application/octet-stream" }));
+      try { if (await attachFiles(t, files)) filed = t.code; } catch(e){}
+    }
+    const vals = model && model.values ? Object.keys(model.values).map(k => k + " " + model.values[k]) : [];
+    t.log.push({ at:new Date().toISOString(),
+      text:(res.ok ? L("ApiLogOk", { name:r.name }) : L("ApiLogFailed", { name:r.name, why:res.error || "" })) +
+           (vals.length ? "\n" + vals.join("\n") : "") +
+           (filed ? "\n" + L("ApiLogFiled", { n:res.files.length }) : "") });
+    if (!t.started) t.started = new Date().toISOString();
+    touch(); renderAll();
+    if (S.open === t.id) renderDrawer();
+  }
+  if (model){
+    if (t) model.record = t.code;
+    if (filed && model.files) model.files.forEach(f => { f.filedOn = filed; });
+  }
+  return { res:res, model:model, record:t, filed:filed, at:at };
+}
+
+/* ── running a script, and hearing back ──────────────────────────────────
+   Through the bridge when it can (POST /run): it can hand the script its
+   secrets, it fills a template in, and it answers when the script is done.
+   Through the runner otherwise, as the Run button always has. A script that
+   needs a secret runs through the bridge or not at all. */
+async function scriptRunNow(sc, vals, opts){
+  opts = opts || {};
+  const t = opts.record ? (findByRef(opts.record) || getTask(opts.record)) : null;
+  vals = vals || {};
+  const unsafe = scriptArgsUnsafe(sc, vals);
+  if (unsafe.length) return { exit:-1, output:"", error:L("ScriptArgUnsafe", { what:unsafe.join(", ") }), via:"none" };
+  const secrets = (sc.secrets || []).slice();
+  /* the bridge runs scripts out of ITS workspace's scripts folder; when that
+     is another folder than the one open here, the runner is the right one */
+  const elsewhere = !!(DB.bridgeFolder && FS.ok && FS.name && DB.bridgeFolder !== FS.name);
+  if (secrets.length && elsewhere)
+    return { exit:-1, output:"", error:L("ScriptOtherWorkspace", { theirs:DB.bridgeFolder, ours:FS.name }), via:"none" };
+  let res = null;
+  if ((bridgeReady() && !elsewhere) || secrets.length){
+    petMood("work", 2400);
+    try {
+      const j = await bridgeCall("POST", "/run", {
+        script:sc.file, secrets:secrets, timeout:opts.timeout || 120,
+        args:(sc.params || []).map(p => ({ name:p, value:String(vals[p] == null ? "" : vals[p]).trim() })) }, 300000);
+      res = { exit:j.exit, output:j.output || "", error:j.error || "", ms:j.ms || 0, cut:!!j.cut, filled:!!j.filled, via:"bridge" };
+      markScriptUse(sc);
+    } catch(e){
+      if (secrets.length || !(e.kind === "old" || e.kind === "nobridge"))
+        return { exit:-1, output:"", error:String((e && e.message) || e), via:"bridge" };
+    }
+  }
+  if (!res){
+    if (!(S.settings.runner && FS.ok)) return { exit:-1, output:"", error:L("ScriptNoRunner"), via:"none" };
+    const q = await queueRun(t, sc, vals, { quiet:true });
+    return Object.assign({ via:"runner" }, q);           /* the runner logs to the record itself */
+  }
+  if (t){
+    const ok = +res.exit === 0 && !res.error;
+    const out = String(res.output || "").slice(-4000);
+    t.log.push({ at:new Date().toISOString(),
+      text:(ok ? L("Ran") : L("RanFailedExit") + res.exit + ") ") + sc.name +
+           (res.error ? " - " + res.error : "") + (out ? "\n" + out : "") });
+    if (!t.started) t.started = new Date().toISOString();
+    touch(); renderAll();
+    if (S.open === t.id) renderDrawer();
+  }
+  return res;
+}
+
+/* the Run button, for a script that needs a secret: only the bridge can */
+async function scriptRunWithSecrets(t, sc, vals){
+  toast(L("SentToTheBridge") + sc.name);
+  const res = await scriptRunNow(sc, vals, { record:t.id });
+  const ok = +res.exit === 0 && !res.error;
+  toast(ok ? sc.name + " finished" : sc.name + " — " + (res.error || "exit " + res.exit),
+        { bad:!ok, action:L("SeeTheLog"), onAction:() => openDrawer(t.id) });
+}
+
+/* ── the card a result is drawn as ────────────────────────────────────────
+   Saved with the conversation: what was called, how each step went, the
+   values, what was kept and until when, the files' names. Not saved: a
+   revealed value and a file's bytes - those are held for this session
+   (CHAT.resMem) and the card says so once they are gone. */
+CHAT.resMem = CHAT.resMem || {};
+function resultCardApi(r, run){
+  const res = run.res || {}, id = "R" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+  const revealed = res.revealed || [], values = {};
+  Object.keys(res.values || {}).forEach(k => { values[k] = revealed.indexOf(k) >= 0 ? "" : String(res.values[k]); });
+  const mem = {};
+  revealed.forEach(k => { mem["v:" + k] = String(res.values[k]); });
+  (res.files || []).forEach((f, i) => { mem["f:" + i] = f; });
+  if (Object.keys(mem).length) CHAT.resMem[id] = mem;
+  return { kind:"result", type:"api", id:id, name:res.name || r.name, ok:!!res.ok, at:run.at,
+           error:res.error || "", failedStep:res.failedStep || "", bridge:res.bridge || "",
+           steps:(res.steps || []).map(s => ({ name:s.name, status:s.status, ok:!!s.ok, ms:s.ms || 0 })),
+           values:values, revealed:revealed.slice(),
+           kept:Object.keys(res.kept || {}).map(k => ({ name:k, expires:res.kept[k].expires || "",
+                                                        hosts:res.kept[k].hosts || [] })),
+           files:(res.files || []).map(f => ({ name:f.name, type:f.type, size:f.size })),
+           filed:run.filed || "", record:run.record ? run.record.code : "" };
+}
+function resultCardScript(sc, res, t, args){
+  const out = String(res.output || "");
+  return { kind:"result", type:"script", name:sc.name || sc.file, file:sc.file, at:new Date().toISOString(),
+           ok:+res.exit === 0 && !res.error, exit:res.exit, error:res.error || "", ms:res.ms || 0,
+           via:res.via || "", args:args || {}, cut:!!res.cut || out.length > 4000,
+           output:out.length > 4000 ? "…" + out.slice(-4000) : out, record:t ? t.code : "" };
+}
+/* The line above a card. It becomes part of the conversation the assistant
+   reads, so it names only the values the assistant may read anyway. */
+function resultLine(c, model){
+  if (c.type === "script")
+    return c.ok ? L("ResScriptOk", { name:c.name }) : L("ResScriptFailed", { name:c.name, why:c.error || "exit " + c.exit });
+  if (!c.ok) return L("ResApiFailed", { name:c.name, why:c.error || "" });
+  const v = (model && model.values) || {};
+  const vals = Object.keys(v).slice(0, 3).map(k => k + " " + String(v[k]).slice(0, 120));
+  return L("ResApiOk", { name:c.name }) + (vals.length ? " " + vals.join(" · ") : "");
+}
+function hhmm(iso){ const d = new Date(iso); return isNaN(d) ? "" : pad2(d.getHours()) + ":" + pad2(d.getMinutes()); }
+function chatResult(c){
+  const log = $("chatLog"); if (!log || !c) return;
+  const mem = CHAT.resMem[c.id] || null;
+  const wrap = document.createElement("div"); wrap.className = "chb bot";
+  const box = document.createElement("div"); box.className = "chrb res" + (c.ok ? "" : " bad");
+  const head = document.createElement("div"); head.className = "rbh";
+  const ms = c.type === "script" ? c.ms : (c.steps || []).reduce((a, s) => a + (+s.ms || 0), 0);
+  head.innerHTML = '<span class="tag">' + esc(L(c.type === "script" ? "ResScriptTag" : "ResApiTag")) + "</span>" +
+    "<b>" + esc(c.name) + "</b>" + '<span class="sp"></span>' +
+    (c.record ? '<span class="rbs">' + esc(c.record) + "</span>" : "") +
+    (ms ? '<span class="rbs">' + esc(ms >= 1000 ? (ms / 1000).toFixed(1) + " s" : ms + " ms") + "</span>" : "") +
+    '<span class="rbst ' + (c.ok ? "ok" : "no") + '">' +
+      esc(c.type === "script" ? (c.ok ? L("ResExit", { n:c.exit }) : (c.exit === -1 || c.exit == null ? L("ResFailed") : L("ResExit", { n:c.exit })))
+                              : (c.ok ? L("ResOk") : L("ResFailed"))) + "</span>";
+  box.appendChild(head);
+  const sec = (title, el) => {
+    const h = document.createElement("div"); h.className = "rbsec"; h.textContent = title;
+    box.appendChild(h); box.appendChild(el);
+  };
+  if (c.error){
+    const e = document.createElement("div"); e.className = "reserr";
+    e.textContent = (c.failedStep ? c.failedStep + ": " : "") + c.error;
+    box.appendChild(e);
+  }
+  if (c.type === "api"){
+    if ((c.steps || []).length){
+      const tb = document.createElement("table"); tb.className = "restab";
+      c.steps.forEach(s => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = '<td><span class="dot ' + (s.ok ? "ok" : "no") + '"></span>' + esc(s.name) + "</td>" +
+          "<td>" + esc(String(s.status || "—")) + "</td><td>" + esc((s.ms || 0) + " ms") + "</td>";
+        tb.appendChild(tr);
+      });
+      sec(L("ResSteps"), tb);
+    }
+    const keys = Object.keys(c.values || {});
+    if (keys.length){
+      const tb = document.createElement("table"); tb.className = "restab vals";
+      keys.forEach(k => {
+        const tr = document.createElement("tr");
+        const td1 = document.createElement("td"); td1.textContent = k;
+        const td2 = document.createElement("td");
+        const shownOnce = (c.revealed || []).indexOf(k) >= 0;
+        const v = shownOnce ? (mem && mem["v:" + k]) : c.values[k];
+        if (shownOnce && v == null){ td2.className = "gone"; td2.textContent = L("ResRevealGone"); }
+        else if (shownOnce){
+          const b = document.createElement("button"); b.className = "resv"; b.textContent = L("ResShow");
+          b.onclick = () => { if (b.dataset.on){ b.textContent = L("ResShow"); delete b.dataset.on; }
+                              else { b.textContent = v; b.dataset.on = "1"; } };
+          td2.appendChild(b);
+        } else td2.textContent = v;
+        const td3 = document.createElement("td");
+        if (v){ const cp = document.createElement("button"); cp.className = "rescp"; cp.textContent = "⎘";
+                cp.title = L("Copy"); cp.onclick = () => copyText(String(v), L("Copied")); td3.appendChild(cp); }
+        tr.appendChild(td1); tr.appendChild(td2); tr.appendChild(td3);
+        tb.appendChild(tr);
+      });
+      sec(L("ResValues"), tb);
+    }
+    if ((c.kept || []).length){
+      const d = document.createElement("div"); d.className = "rbbody reskept";
+      d.textContent = c.kept.map(k => L("ResKeptLine", { name:k.name, until:hhmm(k.expires),
+        hosts:(k.hosts || []).join(", ") })).join("\n");
+      sec(L("ResKept"), d);
+    }
+    if ((c.files || []).length){
+      const d = document.createElement("div"); d.className = "resfiles";
+      c.files.forEach((f, i) => {
+        const row = document.createElement("div"); row.className = "resfile";
+        row.innerHTML = "<b>" + esc(f.name) + "</b><small>" + esc(bytes(f.size || 0)) + "</small>";
+        const data = mem && mem["f:" + i];
+        if (c.filed){ const s = document.createElement("span"); s.className = "rbs"; s.textContent = L("ResFiledOn", { code:c.filed }); row.appendChild(s); }
+        if (data){
+          const sv = document.createElement("button"); sv.textContent = L("ResSave");
+          sv.onclick = () => downloadBytes(f.name, data.data, f.type);
+          row.appendChild(sv);
+          if (!c.filed){
+            const at = document.createElement("button"); at.textContent = L("ResFileOn");
+            at.onclick = async () => {
+              const ref = window.prompt(L("ResFileOnWhich"), (S.open && getTask(S.open)) ? getTask(S.open).code : "");
+              const t = ref && findByRef(ref);
+              if (!t){ if (ref) toast(L("ResNoSuchRecord", { ref:ref }), { bad:true }); return; }
+              const n = await attachFiles(t, [new File([b64Bytes(data.data)], safeFile(f.name), { type:f.type || "application/octet-stream" })]);
+              if (n){ toast(L("ResFiled", { code:t.code })); at.disabled = true; at.textContent = L("ResFiledOn", { code:t.code }); }
+            };
+            row.appendChild(at);
+          }
+        } else if (!c.filed){
+          const s = document.createElement("span"); s.className = "gone"; s.textContent = L("ResFileGone"); row.appendChild(s);
+        }
+        d.appendChild(row);
+      });
+      sec(L("ResFiles"), d);
+    }
+  } else {
+    const args = Object.keys(c.args || {}).filter(k => c.args[k] !== "" && c.args[k] != null);
+    if (args.length){
+      const d = document.createElement("div"); d.className = "rbbody";
+      d.textContent = args.map(k => k + " " + c.args[k]).join(" · ");
+      sec(L("ResArgs"), d);
+    }
+    const pre = document.createElement("pre"); pre.className = "resout";
+    pre.textContent = c.output || L("ResNoOutput");
+    sec(c.cut ? L("ResOutputEnd") : L("ResOutput"), pre);
+    setTimeout(() => { pre.scrollTop = pre.scrollHeight; }, 0);
+  }
+  wrap.appendChild(box);
+  log.appendChild(wrap);
+  chatScroll();
+}
+
+/* ── asked for in the chat ────────────────────────────────────────────────
+   A flow's callApi and runScript are not done in a moment the way the other
+   writes are: each waits on the bridge, and what comes back is something
+   the assistant should read. So they run here, with the thinking dots up;
+   the result is drawn as a card; and once every one of them in the same
+   answer has finished or been declined, the question is asked once more
+   with what came back (workspace.results, "new"). That is how "regenerate
+   the COI" turns into a sentence saying it worked, or which step failed.
+
+   At most FLOW_ROUNDS times in a row: an assistant that keeps asking for one
+   more call is stopped there, and says so. */
+const FLOW_ROUNDS = 3;
+const BATCH = {};
+function batchNew(asked, round, n){
+  const id = "b" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  BATCH[id] = { asked:asked || "", round:round || 0, left:n, got:0 };
+  return id;
+}
+function batchDone(id, got){
+  const b = id && BATCH[id];
+  if (!b) return;
+  b.left--;
+  if (got) b.got++;
+  if (b.left > 0) return;
+  delete BATCH[id];
+  if (b.got) flowAfter(b.asked, b.round);
+}
+function flowAfter(asked, round){
+  const c = chatThread();
+  if (!asked || !flowOn() || !c) return;
+  if (!((RESULTS.byThread[c.id] || []).some(x => x.fresh))) return;       /* already read */
+  if (round + 1 > FLOW_ROUNDS) return chatBot({ say:"", note:L("ResRoundsStop", { n:FLOW_ROUNDS }) });
+  flowAsk(asked, c, { round:round + 1, followUp:{ of:asked, after:"results" } });
+}
+
+/* why a callApi or runScript cannot be done as asked - before anybody is
+   asked whether to do it */
+function flowLongRefusal(a){
+  const g = a.args || {};
+  if (a.do === "callApi"){
+    const r = apiFind(g.api);
+    if (!r) return L("ApiNoSuch", { name:g.api });
+    const p = apiParams(r, g.params || {});
+    if (!p.ok) return L("ApiNotCalled", { name:r.name }) + " " + p.bad.join(" ");
+    return "";
+  }
+  if (a.do === "runScript"){
+    const sc = findScript(g.script);
+    if (!sc) return L("ScriptNoSuch", { name:g.script });
+    if (g.record && !findByRef(g.record)) return L("ScriptNoRecord", { ref:g.record });
+    const unsafe = scriptArgsUnsafe(sc, g.args || {});
+    if (unsafe.length) return L("ScriptArgUnsafe", { what:unsafe.join(", ") });
+  }
+  return "";
+}
+
+async function flowRunLong(a, it){
+  const g = a.args || {}, act = (it && it.act) || {};
+  const c = chatThread(), log = $("chatLog");
+  let card = null, model = null;
+  const no = flowLongRefusal(a);
+  if (no){
+    /* a note, not a failure to answer: Retry would only ask the same again */
+    chatBot({ say:"", note:no });
+    model = a.do === "callApi"
+      ? { kind:"api", api:String(g.api || ""), ok:false, notCalled:true, error:no, params:g.params || {}, at:new Date().toISOString() }
+      : { kind:"script", script:String(g.script || ""), ok:false, notRun:true, error:no, at:new Date().toISOString() };
+  } else if (a.do === "callApi"){
+    const r = apiFind(g.api), p = apiParams(r, g.params || {});
+    const wait = chatThinking(log);
+    const run = await apiRun(r, p.params, { record:g.record });
+    chatThought(wait, null);
+    model = run.model;
+    card = resultCardApi(r, run);
+  } else {
+    const sc = findScript(g.script), t = g.record ? findByRef(g.record) : null;
+    if (t){
+      if (g.args){ t.scriptArgs = t.scriptArgs || {}; t.scriptArgs[sc.id] = Object.assign({}, t.scriptArgs[sc.id], g.args); }
+      if ((t.scripts || []).indexOf(sc.id) < 0) t.scripts = (t.scripts || []).concat([sc.id]);
+      touch();
+    }
+    const vals = Object.assign({}, (t && t.scriptArgs && t.scriptArgs[sc.id]) || {}, g.args || {});
+    const wait = chatThinking(log);
+    const res = await scriptRunNow(sc, vals, { record:t ? t.id : "" });
+    chatThought(wait, null);
+    model = window.DossierFlow ? DossierFlow.scriptResult(sc, res, { args:vals, record:t ? t.code : "" }) : null;
+    card = resultCardScript(sc, res, t, vals);
+  }
+  if (card) chatBot({ say:resultLine(card, model), cards:[card] });
+  if (model) resultsAdd(c, model);
+  if (act.batch) batchDone(act.batch, !!model);
+}
+
+/* the local assistant's "regenerate the coi of A01834A10", once agreed to */
+async function chatApiLocal(act){
+  const r = apiFind(act.api);
+  if (!r) return chatBot({ say:"", note:L("ApiNoSuch", { name:act.api }), trouble:true });
+  const p = apiParams(r, act.params || {});
+  if (!p.ok) return chatBot({ say:"", note:L("ApiNotCalled", { name:r.name }) + " " + p.bad.join(" "), trouble:true });
+  const wait = chatThinking($("chatLog"));
+  const run = await apiRun(r, p.params, { record:act.record });
+  chatThought(wait, null);
+  const card = resultCardApi(r, run);
+  chatBot({ say:resultLine(card, run.model), cards:[card] });
+  if (run.model) resultsAdd(chatThread(), run.model);
+}
+/* and its "run restart-app-pool on D-14": in the chat, with what it printed,
+   when something can run it; the command to paste, as before, when not */
+async function chatScriptLocal(act){
+  const t = getTask(act.id), sc = scriptById(act.scriptId);
+  if (!t || !sc) return;
+  if (!bridgeReady() && !(S.settings.runner && FS.ok) && !(sc.secrets || []).length){
+    closeChat(); return runScriptFor(act.id, act.scriptId);
+  }
+  const vals = (t.scriptArgs || {})[sc.id] || {};
+  const wait = chatThinking($("chatLog"));
+  const res = await scriptRunNow(sc, vals, { record:t.id });
+  chatThought(wait, null);
+  const card = resultCardScript(sc, res, t, vals);
+  const model = window.DossierFlow ? DossierFlow.scriptResult(sc, res, { args:vals, record:t.code }) : null;
+  chatBot({ say:resultLine(card, model), cards:[card] });
+  if (model) resultsAdd(chatThread(), model);
+}
+
+/* ── Menu → Scripts: API actions and secrets ──────────────────────────────
+   An API action is written as JSON, because that is what it is: a short
+   list of requests. The editor checks it as it is typed (flow.js checkApi)
+   and says, for every secret it uses, whether this PC has one saved and
+   where it may go. A secret is typed once, here, and handed to the bridge:
+   the box empties the moment it is sent, and nothing in the page keeps it. */
+const API_EXAMPLE = {
+  name:"Regenerate COI",
+  about:"Asks the insurer to regenerate the certificate of insurance for a policy",
+  say:["regenerate coi", "regenerate the coi", "reissue the certificate of insurance"],
+  write:true,
+  inputs:{ policy:{ label:"Policy number", pattern:"^[A-Z0-9]{6,15}$", example:"A01834A10" } },
+  steps:[
+    { name:"Sign in", method:"POST", url:"https://auth.insurer.example/oauth/token",
+      headers:{ "Content-Type":"application/x-www-form-urlencoded" },
+      body:"grant_type=client_credentials&client_id={{secret:coi_client_id}}&client_secret={{secret:coi_client_secret}}",
+      keep:{ token:{ from:"access_token", secret:true } } },
+    { name:"Regenerate", method:"POST", url:"https://api.insurer.example/policies/{{policy}}/coi",
+      headers:{ "Authorization":"Bearer {{token}}", "Content-Type":"application/json" },
+      body:{ reason:"Requested from Resolv" },
+      keep:{ status:"status", document:"document.url" } }
+  ],
+  share:["status", "document"]
+};
+const SECRETS_UI = { list:null, err:"", at:0 };
+
+async function secretsRefresh(){
+  try { SECRETS_UI.list = await secretsList(); SECRETS_UI.err = ""; }
+  catch(e){ SECRETS_UI.list = null; SECRETS_UI.err = String((e && e.message) || e); }
+  SECRETS_UI.at = Date.now();
+  apiPanelPaint();
+}
+function secretKnown(name){
+  return (SECRETS_UI.list || []).find(s => s.name === name) || null;
+}
+
+/* the two sections at the bottom of Menu → Scripts */
+function apiPanelHtml(){
+  return '<h5 class="eyebrow" style="margin:18px 0 8px">' + LE("ApiHeading") + "</h5>" +
+    '<div><p class="hint2" style="margin:0 0 10px">' + L("ApiIntro") + "</p>" +
+    '<div id="apiRows"></div>' +
+    '<div class="brow" style="margin:10px 0 0">' +
+      '<button class="btn pri" id="apiAdd">' + LE("ApiAdd") + "</button>" +
+      '<button class="btn" id="apiAddEx">' + LE("ApiAddExample") + "</button></div></div>" +
+    '<h5 class="eyebrow" style="margin:18px 0 8px">' + LE("SecHeading") + "</h5>" +
+    '<div><p class="hint2" style="margin:0 0 10px">' + L("SecIntro") + "</p>" +
+    '<div id="secRows"></div>' +
+    '<div class="secform">' +
+      '<input class="in mono" id="secName" maxlength="41" spellcheck="false" autocomplete="off" placeholder="' + LE("SecNamePh") + '">' +
+      '<input class="in mono" id="secValue" type="password" autocomplete="new-password" spellcheck="false" placeholder="' + LE("SecValuePh") + '">' +
+      '<input class="in mono" id="secPlaces" spellcheck="false" autocomplete="off" placeholder="' + LE("SecPlacesPh") + '">' +
+      '<button class="btn pri" id="secSave">' + LE("SecSave") + "</button></div>" +
+    '<div class="hint2" id="secMsg"></div></div>';
+}
+
+function apiPanelPaint(){
+  const rows = $("apiRows"), secs = $("secRows");
+  if (!rows || !secs) return;
+  const list = apiList();
+  const needed = {};                    /* secret name → the actions, and where they send it */
+  rows.innerHTML = list.length ? list.map((r, i) => {
+    const c = apiCheck(r, i);
+    c.secrets.forEach(n => {
+      needed[n] = needed[n] || { by:[], hosts:[] };
+      needed[n].by.push(r.name);
+      (c.secretHosts[n] || []).forEach(h => { if (needed[n].hosts.indexOf(h) < 0) needed[n].hosts.push(h); });
+    });
+    const inputs = Object.keys((r.inputs && typeof r.inputs === "object") ? r.inputs : {});
+    const sec = c.secrets.map(n => {
+      const s = secretKnown(n);
+      const ok = s && s.readable && (c.secretHosts[n] || []).every(h => secretAllows(s, h));
+      return '<span class="apisec ' + (SECRETS_UI.list ? (ok ? "ok" : "no") : "") + '" title="' +
+        esc(!SECRETS_UI.list ? L("SecUnknown") : !s ? L("SecMissing") : !s.readable ? L("SecUnreadable")
+            : ok ? L("SecFine") : L("SecWrongPlace", { hosts:(c.secretHosts[n] || []).join(", ") })) + '">' + esc(n) + "</span>";
+    }).join("");
+    return '<div class="scrbox apibox" data-api="' + i + '">' +
+      '<div class="scr" style="margin:0;border:0;background:transparent;padding:0">' +
+        '<span class="kd">' + (r.write ? "API ✎" : "API") + "</span>" +
+        '<span class="sn"><b>' + esc(r.name || "(no name)") + "</b><small>" +
+          esc([r.about || "", inputs.length ? L("ApiInputs", { list:inputs.join(", ") }) : "",
+               c.hosts.length ? L("ApiGoesTo", { hosts:c.hosts.join(", ") }) : ""].filter(Boolean).join(" · ")) +
+        "</small></span>" +
+        '<button data-ax="try">' + LE("ApiTry") + '</button><button data-ax="edit">' + LE("ApiEdit") + "</button>" +
+        '<button data-ax="del">' + LE("Remove2") + "</button></div>" +
+      (sec ? '<div class="apisecs"><span>' + LE("ApiSecretsUsed") + "</span>" + sec + "</div>" : "") +
+      (c.bad.length ? '<div class="apibad">' + esc(c.bad[0]) + (c.bad.length > 1 ? " (+" + (c.bad.length - 1) + ")" : "") + "</div>" : "") +
+      "</div>";
+  }).join("") : '<div class="hint2">' + LE("ApiNone") + "</div>";
+
+  /* the secrets: what is saved, and what the actions above still need */
+  let h = "";
+  if (!SECRETS_UI.list){
+    h = '<div class="hint2 apibad">' + esc(SECRETS_UI.err || L("SecLoading")) + "</div>";
+  } else {
+    h = SECRETS_UI.list.map(s =>
+      '<div class="secrow" data-sec="' + esc(s.name) + '"><b class="mono">' + esc(s.name) + "</b>" +
+      '<span class="where">' + esc((s.hosts || []).join(", ")) + "</span>" +
+      (s.readable ? "" : '<span class="apisec no">' + LE("SecUnreadableShort") + "</span>") +
+      '<span class="when">' + esc(String(s.saved || "").slice(0, 10)) + "</span>" +
+      '<button data-sx2="place">' + LE("SecChange") + '</button><button data-sx2="del">' + LE("Remove2") + "</button></div>").join("");
+    Object.keys(needed).filter(n => !secretKnown(n)).forEach(n => {
+      h += '<div class="secrow need" data-need="' + esc(n) + '" data-hosts="' + esc(needed[n].hosts.join(", ")) + '">' +
+        '<b class="mono">' + esc(n) + "</b>" +
+        '<span class="where">' + esc(L("SecNeededBy", { by:needed[n].by.join(", ") })) + "</span>" +
+        '<button data-sx2="fill">' + LE("SecAddIt") + "</button></div>";
+    });
+    if (!h) h = '<div class="hint2">' + LE("SecNone") + "</div>";
+  }
+  secs.innerHTML = h;
+  apiPanelWire();
+}
+
+/* api.example.com, *.example.com, host:port, script:x.bat - as the bridge reads them */
+function secretAllows(s, host){
+  return (s.hosts || []).some(h => {
+    h = String(h).toLowerCase(); host = String(host).toLowerCase();
+    if (h.indexOf(":") >= 0) return h.indexOf("script:") !== 0 && h.split(":")[0] === host;
+    if (h.indexOf("*.") === 0) return host.length > h.length - 1 && host.slice(-(h.length - 1)) === h.slice(1);
+    return h === host;
+  });
+}
+
+function apiPanelWire(){
+  const on = (id, fn) => { const el = $(id); if (el) el.onclick = fn; };
+  $$("#apiRows .apibox").forEach(box => {
+    const i = +box.dataset.api, r = apiList()[i];
+    if (!r) return;
+    box.querySelectorAll("[data-ax]").forEach(b => b.onclick = async () => {
+      const what = b.dataset.ax;
+      if (what === "edit") return apiEdOpen(i);
+      if (what === "del"){
+        const a = await askUser(L("ApiRemoveQ", { name:r.name }), L("ApiRemoveWhy"),
+          [{ label:L("Remove2"), hint:"" }, { label:L("Cancel"), hint:"" }], false);
+        if (!a || a.choice !== 0) return;
+        S.settings.apis = apiList().filter(x => x !== r);
+        touch(); apiPanelPaint();
+        return;
+      }
+      if (what === "try") return apiTry(r);
+    });
+  });
+  $$("#secRows .secrow").forEach(row => {
+    row.querySelectorAll("[data-sx2]").forEach(b => b.onclick = async () => {
+      const what = b.dataset.sx2;
+      const name = row.dataset.sec || row.dataset.need;
+      if (what === "fill" || what === "place"){
+        $("secName").value = name;
+        const s = secretKnown(name);
+        $("secPlaces").value = s ? (s.hosts || []).join(", ") : (row.dataset.hosts || "");
+        $("secValue").value = "";
+        $("secMsg").textContent = what === "place" ? L("SecChangeHow") : "";
+        $("secValue").focus();
+        return;
+      }
+      if (what === "del"){
+        const a = await askUser(L("SecRemoveQ", { name:name }), L("SecRemoveWhy"),
+          [{ label:L("Remove2"), hint:"" }, { label:L("Cancel"), hint:"" }], false);
+        if (!a || a.choice !== 0) return;
+        try { await secretForget(name); toast(L("SecRemoved", { name:name })); }
+        catch(e){ toast(String(e.message || e), { bad:true }); }
+        secretsRefresh();
+      }
+    });
+  });
+  on("apiAdd", () => apiEdOpen(-1));
+  on("apiAddEx", () => apiEdOpen(-1, API_EXAMPLE));
+  on("secSave", secretSaveFromForm);
+  const v = $("secValue");
+  if (v) v.onkeydown = e => { if (e.key === "Enter"){ e.preventDefault(); secretSaveFromForm(); } };
+}
+
+async function secretSaveFromForm(){
+  const n = $("secName"), v = $("secValue"), p = $("secPlaces"), msg = $("secMsg");
+  if (!n || !v || !p) return;
+  const name = n.value.trim(), places = p.value.trim();
+  let value = v.value;
+  /* gone from the page before the answer is back, whatever the answer */
+  v.value = "";
+  if (!/^[A-Za-z][A-Za-z0-9_.-]{0,40}$/.test(name)){ value = ""; msg.textContent = L("SecBadName"); return; }
+  if (!value){ msg.textContent = L("SecNoValue"); return; }
+  if (!places){ value = ""; msg.textContent = L("SecNoPlaces"); return; }
+  try {
+    await secretSave(name, value, places);
+    value = "";
+    msg.textContent = L("SecSaved", { name:name });
+    n.value = ""; p.value = "";
+  } catch(e){
+    value = "";
+    msg.textContent = String((e && e.message) || e);
+  }
+  secretsRefresh();
+}
+
+/* Try it: the values for its inputs, then the same question the assistant's
+   call would put - in the chat, so the result lands where results land */
+function apiTry(r){
+  const inputs = (r.inputs && typeof r.inputs === "object") ? r.inputs : {};
+  const params = {};
+  for (const k of Object.keys(inputs)){
+    const s = inputs[k] || {};
+    if (s.kept) continue;
+    const v = window.prompt((s.label || k) + (s.example ? " - " + L("ApiLike", { eg:s.example }) : ""), "");
+    if (v == null) return;
+    if (v.trim()) params[k] = v.trim();
+  }
+  const p = apiParams(r, params);
+  if (!p.ok) return toast(p.bad.join(" "), { bad:true });
+  closeModal();
+  openChat();
+  const d = apiDescribe(r, p.params, null, p.fromKept);
+  chatBot({ say:d.say, note:d.note, act:{ kind:"callApi", api:r.name, params:p.params, confirm:d.confirm, must:d.must } });
+}
+
+/* ── the editor ───────────────────────────────────────────────────────── */
+const APIED = { i:-1, timer:0 };
+function apiEdOpen(i, start){
+  APIED.i = i;
+  let r = start || (i >= 0 ? apiList()[i] : { name:"", about:"", say:[], write:false, inputs:{}, steps:[{ name:"Step 1", method:"GET", url:"https://" }] });
+  /* the example, opened a second time, under a name of its own */
+  if (start && apiFind(start.name)){
+    let k = 2;
+    while (apiFind(start.name + " " + k)) k++;
+    r = Object.assign({}, start, { name:start.name + " " + k });
+  }
+  $("apiEdT").textContent = i >= 0 ? L("ApiEditTitle", { name:r.name || "" }) : L("ApiNewTitle");
+  $("apiEdText").value = JSON.stringify(r, null, 2);
+  $("apiEd").classList.add("on"); $("apiEd").setAttribute("aria-hidden", "false");
+  apiEdCheck();
+  if (!SECRETS_UI.list || Date.now() - SECRETS_UI.at > 30000) secretsRefresh().then(apiEdCheck);
+  setTimeout(() => $("apiEdText").focus(), 40);
+}
+function apiEdClose(){
+  $("apiEd").classList.remove("on"); $("apiEd").setAttribute("aria-hidden", "true");
+}
+function apiEdRead(){
+  try { return { r:JSON.parse($("apiEdText").value) }; }
+  catch(e){ return { err:L("ApiNotJson", { why:e.message }) }; }
+}
+function apiEdCheck(){
+  const box = $("apiEdCheck"); if (!box) return null;
+  const got = apiEdRead();
+  if (got.err){ box.innerHTML = '<div class="apibad">' + esc(got.err) + "</div>"; return null; }
+  const c = apiCheck(got.r, APIED.i);
+  let h = "";
+  c.bad.forEach(b => { h += '<div class="apibad">' + esc(b) + "</div>"; });
+  c.warn.forEach(w => { h += '<div class="apiwarn">' + esc(w) + "</div>"; });
+  if (c.ok) h += '<div class="apiok">' + esc(L("ApiLooksRight")) + "</div>";
+  c.secrets.forEach(n => {
+    const s = secretKnown(n), hosts = c.secretHosts[n] || [];
+    const ok = s && s.readable && hosts.every(x => secretAllows(s, x));
+    h += '<div class="' + (!SECRETS_UI.list ? "apiwarn" : ok ? "apiok" : "apiwarn") + '">' +
+      esc(!SECRETS_UI.list ? L("ApiSecretUnchecked", { name:n })
+          : !s ? L("ApiSecretMissing", { name:n, hosts:hosts.join(", ") })
+          : !s.readable ? L("ApiSecretUnreadable", { name:n })
+          : ok ? L("ApiSecretFine", { name:n, hosts:(s.hosts || []).join(", ") })
+          : L("ApiSecretWrongPlace", { name:n, hosts:hosts.join(", ") })) + "</div>";
+  });
+  if (c.ok){
+    const sum = window.DossierFlow ? DossierFlow.apiSummary(got.r) : null;
+    if (sum) h += '<div class="apisees">' + esc(L("ApiAssistantSees")) + "<pre>" + esc(JSON.stringify(sum, null, 1)) + "</pre></div>";
+  }
+  box.innerHTML = h;
+  return c.ok ? got.r : null;
+}
+function apiEdSave(){
+  const r = apiEdCheck();
+  if (!r) return toast(L("ApiFixFirst"), { bad:true });
+  const list = apiList().slice();
+  if (APIED.i >= 0 && APIED.i < list.length) list[APIED.i] = r; else list.push(r);
+  S.settings.apis = list;
+  touch(); apiEdClose();
+  toast(L("ApiSaved", { name:r.name }));
+  apiPanelPaint();
+}
+function apiEdWire(){
+  const on = (id, fn) => { const el = $(id); if (el) el.onclick = fn; };
+  on("apiEdX", apiEdClose);
+  on("apiEdCancel", apiEdClose);
+  on("apiEdSave", apiEdSave);
+  const t = $("apiEdText");
+  if (t) t.oninput = () => { clearTimeout(APIED.timer); APIED.timer = setTimeout(apiEdCheck, 250); };
 }
 
 /* ═══ PRINT ══════════════════════════════════════════════════════════════
@@ -25822,6 +26950,7 @@ $("mt").addEventListener("click", e => {
 });
 $("mClose").addEventListener("click", closeModal);
 $("keysX").addEventListener("click", closeKeys);
+apiEdWire();
 
 /* command palette */
 $("cmdq").addEventListener("input", () => { cmdCur = 0; renderCmd(); });
@@ -25855,6 +26984,7 @@ document.addEventListener("keydown", e => {
     }
   }
   if (e.key === "Escape"){
+    if ($("apiEd").classList.contains("on")) return apiEdClose();
     if ($("keys").classList.contains("on")) return closeKeys();
     if ($("chatFxPanel").classList.contains("on")) return closeChatFx();
     if ($("chatAsk").classList.contains("on")) return chatDeclineAsked();

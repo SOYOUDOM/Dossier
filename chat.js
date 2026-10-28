@@ -5328,6 +5328,161 @@ intent("chase", {
              act:{ kind:"chase", id:t.id, confirm:"Log a chase to " + t.waitOn + " on " + t.code + "?" } };
   }
 });
+/* ═══ YOUR API ACTIONS ═══════════════════════════════════════════════════
+   "regenerate the coi of A01834A10": an API action set up in Menu → Scripts,
+   named in the sentence by one of its own phrases (say) or by its name. Each
+   input's value is picked out of the sentence by the input's pattern -
+   A01834A10 fits ^[A-Z0-9]{6,15}$, "regenerate" does not - and one that is
+   missing is asked for, so the next message can be just the value. Nothing
+   is called from here: the answer proposes the call (act callApi), the page
+   puts it to you, and the page and the bridge check every value again. An
+   input marked kept is left to the page, which fills it with the handle the
+   last call to keep that name handed back. */
+const API_QUESTION = /^(why|how|what|when|where|who|which)\b|\b(how (do|can|should|would) (i|we|you)|how to|why (does|did|is|was|do|would)|what (does|is|was|happens))\b/;
+const API_VERB = /\b(run|call|do|trigger|execute|fire|kick)\b/;
+function apiStem(w){ return String(w).replace(/(ing|ed|es|s)$/, "").replace(/e$/, ""); }
+function apiWordsOf(s){ return meaningful(words(normalise(s))).map(apiStem).filter(w => w.length > 1); }
+function apiInputs(r){ return (r && r.inputs && typeof r.inputs === "object" && !Array.isArray(r.inputs)) ? r.inputs : {}; }
+
+function apiMatch(A){
+  const list = ((A.api && A.api.apis) || []).filter(r => r && r.name);
+  if (!list.length || API_QUESTION.test(A.norm)) return null;
+  const have = new Set(meaningful(A.ws).map(apiStem));
+  let best = null;
+  list.forEach(r => {
+    (Array.isArray(r.say) ? r.say : []).concat([r.name]).forEach(p => {
+      const pw = apiWordsOf(p);
+      if (!pw.length || !pw.every(w => have.has(w))) return;
+      /* one word on its own is weak evidence: "coi" turns up in reports
+         of a problem as often as in requests to call anything */
+      if (pw.length < 2 && !API_VERB.test(A.norm)) return;
+      if (!best || pw.length > best.score) best = { r:r, score:pw.length, words:pw };
+    });
+  });
+  return best;
+}
+
+function apiTokens(raw){
+  return String(raw || "").split(/[\s,;()"'\[\]{}<>]+/)
+    .map(t => t.replace(/^[.:!?]+|[.:!?]+$/g, "")).filter(Boolean);
+}
+/* Each input's value, out of the sentence, by its pattern. As typed first;
+   then in capitals, for "a01834a10" - but only a word with a digit in it,
+   or "policy" and "overdue" would pass for policy numbers. The words that
+   named the action, and the input's own name and label, are never values. */
+function apiPick(r, raw, skip, have, record){
+  const inputs = apiInputs(r), params = Object.assign({}, have || {}), missing = [], taken = {};
+  const toks = apiTokens(raw);
+  Object.keys(inputs).forEach(k => {
+    const s = inputs[k] || {};
+    if (s.kept || params[k]) return;
+    let re = null;
+    try { if (s.pattern) re = new RegExp(String(s.pattern)); } catch(e){ re = null; }
+    if (re){
+      const own = new Set(apiWordsOf(k + " " + (s.label || "")));
+      const free = i => {
+        const low = toks[i].toLowerCase();
+        return !taken[i] && !skip.has(apiStem(low)) && !own.has(apiStem(low)) && !NOISE.has(low) &&
+               !(record && low === String(record.code || "").toLowerCase());
+      };
+      let at = -1, v = "";
+      for (let i = 0; i < toks.length && at < 0; i++) if (free(i) && re.test(toks[i])){ at = i; v = toks[i]; }
+      for (let i = 0; i < toks.length && at < 0; i++){
+        const up = toks[i].toUpperCase();
+        if (free(i) && /\d/.test(up) && up !== toks[i] && re.test(up)){ at = i; v = up; }
+      }
+      if (at >= 0){ params[k] = v; taken[at] = 1; return; }
+    }
+    if (!s.optional) missing.push(k);
+  });
+  return { params:params, missing:missing };
+}
+function apiKeepsAs(r, name){
+  return (Array.isArray(r && r.steps) ? r.steps : []).some(st =>
+    st && st.keep && typeof st.keep === "object" && Object.prototype.hasOwnProperty.call(st.keep, name));
+}
+/* where it goes and what it signs in with, for the question that asks first */
+function apiWhere(r){
+  const hosts = [], secrets = [];
+  (Array.isArray(r.steps) ? r.steps : []).forEach(st => {
+    const m = /^https?:\/\/(?:[^@\/?#]*@)?([^\/?#:{}]+)/i.exec(String((st && st.url) || "").trim());
+    if (m && hosts.indexOf(m[1].toLowerCase()) < 0) hosts.push(m[1].toLowerCase());
+    JSON.stringify(st || {}).replace(/\{\{\s*secret:([A-Za-z][A-Za-z0-9_.-]{0,40})\s*\}\}/g, (x, n) => {
+      if (secrets.indexOf(n) < 0) secrets.push(n);
+      return x;
+    });
+  });
+  return [hosts.length ? "It goes to " + hosts.join(", ") + "." : "",
+          secrets.length ? "It signs in with " + secrets.join(", ") + ", saved on this PC - I never see them." : ""]
+    .filter(Boolean).join(" ");
+}
+
+function apiAnswer(A, r, params, missing){
+  const api = A.api, inputs = apiInputs(r), kept = api.apiKept || {};
+  const t = A.slots.record || null;
+  const needKept = Object.keys(inputs).filter(k => inputs[k] && inputs[k].kept && !kept[k] && !params[k]);
+  if (needKept.length){
+    const k = needKept[0], label = (inputs[k] && inputs[k].label) || k;
+    const maker = (api.apis || []).find(x => x && x !== r && apiKeepsAs(x, k));
+    return { say:r.name + " needs " + label + ", which an earlier call keeps" + (maker ? ": " + maker.name + "." : "."),
+             note:maker ? "Run " + maker.name + " first, then ask again." : "Run the call that keeps it first, then ask again.",
+             chips:maker ? [{ label:maker.name, act:{ kind:"say", text:maker.name } }] : [] };
+  }
+  if (missing.length){
+    const k = missing[0], sp = inputs[k] || {};
+    return { say:"Which " + (sp.label || k) + "?" + (sp.example ? " Like " + sp.example + "." : ""),
+             note:"For " + r.name + ".",
+             apiPending:{ api:r.name, params:params, missing:missing, record:t ? t.code : "" } };
+  }
+  const shown = Object.keys(params).filter(k => !/^@kept:/.test(params[k]));
+  return {
+    say:"Call " + r.name + (shown.length ? " for " + shown.map(k => ((inputs[k] && inputs[k].label) || k) + " " + params[k]).join(", ") : "") + "?",
+    note:[r.about || "", apiWhere(r), t ? "What comes back goes in the work log of " + t.code + "." : ""].filter(Boolean).join("\n"),
+    act:{ kind:"callApi", api:r.name, params:params, record:t ? t.code : "",
+          confirm:"Call " + r.name + (shown.length ? " for " + shown.map(k => params[k]).join(", ") : "") + "?",
+          must:!!r.write }
+  };
+}
+
+/* the next message, when the last one asked "which policy number?" */
+function apiFollow(A, pend){
+  const r = ((A.api && A.api.apis) || []).find(x => x && String(x.name).toLowerCase() === String(pend.api || "").toLowerCase());
+  /* a question of its own is not the answer to this one */
+  if (!r || API_QUESTION.test(A.norm) || /\?\s*$/.test(A.raw)) return null;
+  const inputs = apiInputs(r), params = Object.assign({}, pend.params || {});
+  let got = false;
+  (pend.missing || []).forEach((k, i) => {
+    const s = inputs[k] || {};
+    if (params[k]) return;
+    if (s.pattern){
+      const one = {}; one[k] = s;
+      const p = apiPick({ inputs:one }, A.raw, new Set(), {}, A.slots.record);
+      if (p.params[k]){ params[k] = p.params[k]; got = true; }
+    } else if (i === 0 && A.raw.trim() && A.raw.trim().length <= 200){ params[k] = A.raw.trim(); got = true; }
+  });
+  if (!got) return null;
+  A.apiHit = { r:r, score:9, words:[] };
+  A.apiHave = params;
+  if (pend.record && !A.slots.record) A.slots.record = (A.api.tasks || []).find(t => t.code === pend.record) || null;
+  return finish(INTENTS.find(x => x.name === "callApi"), A, 0.95, []);
+}
+
+intent("callApi", {
+  kind:"write", label:"Call an API action", eg:"regenerate the COI of A01834A10",
+  /* never reached by scoring: apiMatch, before the scoring, is the way in */
+  cues:{},
+  run(A){
+    const m = A.apiHit || apiMatch(A);
+    if (!m){
+      const list = (A.api.apis || []).filter(r => r && r.name);
+      return { say:list.length ? "Which API action? There are " + list.length + "." : "There are no API actions set up yet.",
+               note:list.length ? "" : "Menu → Scripts → API actions.",
+               chips:list.slice(0, 6).map(r => ({ label:r.name, act:{ kind:"say", text:r.name } })) };
+    }
+    const p = apiPick(m.r, A.raw, new Set(m.words), A.apiHave || null, A.slots.record);
+    return apiAnswer(A, m.r, p.params, p.missing);
+  }
+});
 intent("run", {
   kind:"write", label:"Run a script",
   cues:{ run:8, execute:8, launch:7, fire:6, trigger:7, kick:5, start:2 },
@@ -6776,6 +6931,12 @@ function ask(raw, api){
     }
   }
 
+  /* "A01834A10" on its own, after "which policy number?" for an API action */
+  if (convo.apiPending && convo.apiPending.api){
+    const out = apiFollow(A, convo.apiPending);
+    if (out) return out;
+  }
+
   /* answering a question this thread asked you: "which record?" → "D-0004" */
   if (convo.awaiting && convo.awaiting.intent){
     const want = convo.awaiting.slot;
@@ -6825,6 +6986,13 @@ function ask(raw, api){
     }
   }
 
+  /* one of your API actions, named by its own phrase or its name */
+  const apiHit = apiMatch(A);
+  if (apiHit){
+    A.apiHit = apiHit;
+    return finish(INTENTS.find(x => x.name === "callApi"), A, 0.95, []);
+  }
+
   const answer = rank(A, norm, ws, mw, slots, asking, firstVerb, convo);
 
   /* The opener turns out to have been the whole message. "Thanks, that is
@@ -6853,6 +7021,8 @@ function askOne(text, api, convo){
   const asking = /\?\s*$/.test(text) || (ws.length && ASKING.has(ws[0]));
   const A = { api, slots, ws, mw, norm, raw:text, asking, convo:convo || {},
               phrase: api.phrase || (p => (p && p.k) || "") };
+  const apiHit = apiMatch(A);
+  if (apiHit){ A.apiHit = apiHit; return finish(INTENTS.find(x => x.name === "callApi"), A, 0.95, []); }
   return rank(A, norm, ws, mw, slots, asking, mw[0] || "", convo || {});
 }
 
@@ -6912,7 +7082,7 @@ function finish(it, A, confidence, altIntents, learned, followed){
   const mods = A.slots.mods;
   if (mods && mods.sawTrigger && !mods.resolvedAny)
     out.ignored = { kind:"condition", words:[mods.sawTrigger] };
-  else if (it.kind !== "social" && it.name !== "help" && it.name !== "about" && !DOC_INTENTS.has(it.name)){
+  else if (it.kind !== "social" && it.name !== "help" && it.name !== "about" && it.name !== "callApi" && !DOC_INTENTS.has(it.name)){
     const left = leftoverWords(it, A);
     if (left.length) out.ignored = { kind:"words", words:left };
   }
@@ -6979,6 +7149,8 @@ function finish(it, A, confidence, altIntents, learned, followed){
     party:  A.slots.party  || (A.convo && A.convo.party)  || "",
     type:   A.slots.type   || (A.convo && A.convo.type)   || "",
     awaiting: out.awaiting || null,
+    /* an API action still waiting for one of its inputs */
+    apiPending: out.apiPending || null,
     /* the list just shown, so the next sentence can point at one of them
        without naming the record again */
     rows: (out.rows || []).slice(0, 20).map(r => ({ id:r.id, code:r.code, text:r.text,
@@ -7331,7 +7503,7 @@ function shortlist(raw, api, n){
 }
 
 window.DossierChat = {
-  version: "1.2",
+  version: "1.3",
   /* the picker in the app needs something to show for each one, and the first
      phrase an intent matches on is the plainest example there is */
   intents: INTENTS.map(i => ({ name:i.name, label:i.label, kind:i.kind,

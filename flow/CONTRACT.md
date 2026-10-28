@@ -542,6 +542,65 @@ at the front of `records`. The second request carries `followUp`:
 a filter asking for finished records gets none while *What to send* is
 *Unfinished records*.
 
+### API actions, script runs, and what came back
+
+Since 5.6 (protocol `1.4`) the person can set up **API actions** — short
+recipes of HTTP calls, such as signing in to an insurer's API and regenerating
+a COI — and the bridge on their PC makes the calls with secrets only it holds.
+Your flow is told what each action is, never how it is done:
+
+```jsonc
+"apis": [{ "name": "Regenerate COI",
+           "about": "Asks the insurer for a new COI",
+           "write": true,                      // it changes something: always asked first
+           "inputs": [{ "name": "policy", "label": "Policy number",
+                        "example": "A01834A10", "pattern": "^[A-Z0-9]{6,15}$" }],
+           "gives": ["status", "document"],    // values you will be able to read
+           "handles": ["token"],               // values you will only get as @kept: handles
+           "files": true }]                    // present when it can return a document
+```
+
+No address, header or secret's name is ever in it. `callApi` names one of
+these by `name` and fills its `inputs` in `params`; `runScript` runs one of
+`workspace.scripts`. Both are writes: the person sees what will happen and
+says yes first. When they have run, Resolv asks **the same question again**,
+with what came back in `workspace.results` and `followUp`:
+
+```jsonc
+"followUp": { "of": "help me regenerate the COI of A01834A10", "after": "results" },
+"results": [{ "kind": "api", "api": "Regenerate COI", "ok": true, "new": true,
+              "params": { "policy": "A01834A10" },
+              "steps": [{ "name": "Sign in", "status": 200, "ok": true },
+                        { "name": "Regenerate", "status": 200, "ok": true }],
+              "values": { "status": "queued", "document": "https://…/A01834A10.pdf" },
+              "handles": { "token": "@kept:k3mzq2c4vd7hw5xa6rb2" },
+              "handlesExpire": "2026-10-28T10:42:00Z",
+              "files": [{ "name": "COI A01834A10.pdf", "type": "application/pdf", "size": 48211 }] },
+            { "kind": "script", "script": "restart-app-pool", "ok": true, "new": true, "exit": 0,
+              "args": { "server": "APP02", "pool": "ImagingPool" },
+              "output": "Recycling application pool \"ImagingPool\" on APP02 …" }]
+```
+
+- `new` marks what happened since your last reply: say what came of it. The
+  others are earlier in the same conversation, there to be reused.
+- A failed call has `error`, `failedStep`, and on the failing step `answered`
+  — the first 300 characters of the answer. One that was never made, because
+  it could not be made as asked (no such action, a value that fails its
+  pattern), has `notCalled: true` and comes back without the person being
+  asked.
+- `handles` are the values the action keeps as secret — tokens, mostly — as
+  `@kept:` and twenty letters. Pass one, exactly, into an input of another
+  action whose input is marked `kept`; the bridge swaps it for the value,
+  still bound to the hosts it came from. It is no use anywhere else, and it
+  expires after 30 minutes (`handlesExpired: true` once it has).
+- A script's `output` is the last 3,000 characters of what it printed (`cut:
+  true` when there was more). Every secret it was given is masked by the
+  bridge, and anything else that looks like a credential is scrubbed
+  (`Bearer ••••`, `password=••••`) before it is sent.
+
+After three rounds in a row of asking for another call, Resolv stops asking
+again and says so.
+
 ---
 
 ## 4. What your flow returns
@@ -1028,13 +1087,23 @@ Attach a registered script to a record, with its parameters filled in.
 
 #### `runScript`
 
-Run a script against a record. Needs the runner to be listening.
+Run one of their scripts (workspace.scripts) on this PC, with args filling its params by name. record, when there is one, gets what it printed in its work log. What it printed and its exit code come back to you in workspace.results.
 
 | argument | shape | required |
 |---|---|---|
-| `record` | ref | **yes** |
+| `record` | ref | no |
 | `script` | string | **yes** |
 | `args` | object of name/value | no |
+
+#### `callApi`
+
+Call one of their API actions (workspace.apis) by its exact name. params gives each of its inputs a value, by input name. An input marked kept takes a @kept: handle from workspace.results, copied exactly. The app signs in by itself: you never see or send a password, key or token. What came back is in workspace.results. record, if given, gets the outcome in its work log and any document the call returns.
+
+| argument | shape | required |
+|---|---|---|
+| `api` | string | **yes** |
+| `params` | object of name/value | no |
+| `record` | ref | no |
 
 #### `createRoutine`
 
