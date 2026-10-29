@@ -37,6 +37,7 @@ job, or a script.
 | 7 | [How a record behaves](#7-how-a-record-behaves) |
 | 8 | [Routines, schedules and cron](#8-routines-schedules-and-cron) |
 | 9 | [Scripts and the runner](#9-scripts-and-the-runner) |
+| 9a | [Automations: API calls and scripts, one step at a time](#9a-automations-api-calls-and-scripts-one-step-at-a-time) |
 | 10 | [The assistant (`chat.js`)](#10-the-assistant-chatjs) |
 | 11 | [Assist (`assist.js`)](#11-assist-assistjs) |
 | 12 | [Asking through a Power Automate flow](#12-asking-through-a-power-automate-flow) |
@@ -170,9 +171,10 @@ that starts with Windows.
 | `flow.js` | ~22 KB | optional | Client for a Power Automate endpoint: builds the request, validates the reply, and owns the relay frame. |
 | `diagram.js` | ~45 KB | optional | Draws the diagrams the assistant writes as ` ```mermaid ` blocks — flowcharts, sequence diagrams, state diagrams — as pictures in the chat, on this PC ([diagrams](#how-do-i-get-a-diagram-from-the-assistant)). Pure JavaScript, tested under Node. Without it, a diagram shows as its code, as before 5.11. |
 | `sources.js` | ~40 KB | optional | Answering from your runbooks and standards ([Sources](#answering-from-your-runbooks-and-standards-sources)): cuts a document into passages with page, lines and section, searches them, formats citations, and checks an answer's quotes and figures against what it cites. Pure JavaScript, tested under Node. Without it, questions go without passages, as before 5.9. |
+| `automations.js` | ~50 KB | optional | Automations ([§9a](#9a-automations-api-calls-and-scripts-one-step-at-a-time)): what a design looks like, its checks, the `{{placeholder}}` and condition rules, what the assistant may see, and the loop that runs the steps. Pure JavaScript, tested under Node. The steps themselves are carried out by the KalKech program by the clock. Without it, the Automations panel says so. |
 | `docs/HOW-THE-AI-WORKS.md` | ~42 KB | — | **How the assistant works, for anyone** — the journey of a question in eight steps, how it learns, how it stays fast, and a reusable blueprint and checklist for building a new AI assistant the same way. |
 | `docs/how-the-ai-works.html` | ~58 KB | — | The same guide as pictures: open it in any browser. Self-contained, nothing loaded from the internet. |
-| `tests/` | — | — | `node --test` runs the Sources and grounding tests; `node tests/e2e/run.js` runs the app in Chrome or Edge against the same scenarios; `tests/fixtures/` holds the sample documents (made up, no real policy). |
+| `tests/` | — | — | `node --test` runs the Sources, grounding, diagram and automation tests; `node tests/e2e/run.js` runs the app in Chrome or Edge against the same scenarios; `node tests/bridge/run.js` builds the KalKech program and checks its automation routes against a made-up API (secrets never come back, tokens stay hidden, values cannot rewrite a request); `tests/fixtures/` holds the sample documents (made up, no real policy). |
 | `flow/relay.html` | ~9 KB | optional | The **only** page allowed to touch the network. Sandboxed, holds no records, pinned to one origin. |
 | `flow/CONTRACT.md` | ~16 KB | — | What your flow receives and must return, generated from `flow.js`. |
 | `flow/POWER-AUTOMATE.md` | ~19 KB | — | How to build the flow: trigger schema, the prompt, knowledge, and the test order. |
@@ -208,7 +210,7 @@ that starts with Windows.
 | `scripts/check-bat.py` | ~4 KB | — | The five things that have actually gone wrong in a `.bat`: an argument used as a path (`%1` stops at the first space, and a work folder is `OneDrive - Contoso Ltd`), a redirect on an `if` line (cmd performs it whether the condition holds or not), LF line endings, a byte over 7 bits, a call to PowerShell. |
 | `scripts/dossier-sql.bat` | ~7 KB | optional | The launcher: `init`, `push`, `pull`, `check`, `history`, `find`. Defaults to `(localdb)\MSSQLLocalDB`. |
 | `scripts/dossier-bridge.bat` | ~1 KB | — | Kept so nothing that points at it breaks: passes through to `KalKech.bat`, arguments and all. |
-| `scripts/bridge/DossierBridge.cs` | ~45 KB | optional | KalKech, running: the tray icon and its menu, the page, the database (created, migrated, written, and its history kept), the hidden runner. C# 5 and Windows Forms, so `csc.exe` from the .NET Framework builds it with nothing installed. |
+| `scripts/bridge/DossierBridge.cs` | ~150 KB | optional | KalKech, running: the tray icon and its menu, the page, the database (created, migrated, written, and its history kept), the hidden runner, and the steps of your automations - with their secrets, kept encrypted for your Windows account. C# 5 and Windows Forms, so `csc.exe` from the .NET Framework builds it with nothing installed. |
 | `flow/prompt.txt` | ~15 KB | **the assistant's instructions** | What the model reads, with ten places KalKech fills in before every question. Edit it in Notepad and the next question uses it — nothing to change in Power Automate. Your own version goes in your records folder as `dossier-prompt.txt`, where updates never touch it. |
 | `flow/embed-prompt.py` | ~1 KB | — | Copies `flow/prompt.txt` into `flow.js`, for a page opened straight from the folder, which cannot read the file beside it. |
 | `flow/check-prompt.js` | ~3 KB | — | Checks `flow/prompt.txt`: every example reply against the validator KalKech uses on real replies, all ten places present, the copy in `flow.js` the same. |
@@ -328,6 +330,7 @@ adds `D-0099` without touching `seq` will not cause a collision.
 | `chatUI` | `{skin, confirm, every, reveal, glow, grid, pulse, typing, chips, ambient, place, side, dockW, floatBox, name}` | all on, `nebula`, ask-first, docked right | How the assistant panel looks and behaves. Set from **◎** in the chat header. |
 | `memory` | array of `{id, title, body, tags, system, created, updated, uses, lastUsed}` | `[]` | What you have taught the assistant: how something is done, what caused something, what to check next time. See [§12](#12-asking-through-a-power-automate-flow). |
 | `exportPick` | array of part names | every part | The parts ticked the last time you exported (see [Export](#how-do-i-export-only-some-of-my-data)). |
+| `automations` | `{v, aiCan, conns, list, runs}` | `{v:1, aiCan:true, [], [], []}` | Automations ([§9a](#9a-automations-api-calls-and-scripts-one-step-at-a-time)). `aiCan`: the assistant may run them at all; `conns`: connections `{id, name, base, auth, header, extra, timeout, proxy, note}` - never a secret, which the KalKech program keeps; `list`: the designs `{id, name, about, system, inputs, steps, result, ai, ask}`; `runs`: the last 40 runs, with the values shown to you or the assistant - never a hidden one. |
 
 ### 5.3 `tasks` — a record
 
@@ -440,7 +443,7 @@ Switch with **1**–**7**, or by clicking the tab.
 | **6** | **Insight** | Counted, not guessed: throughput this week and month, average turnaround, worst system, who raises the most, and the recurring-problem cases written for you. |
 | **7** | **Assist** | The ranked queue and the brief, from `assist.js`. The filter rail is hidden here on purpose — Assist reads closed records too, because that is where its baselines are. |
 
-### 6.2 The menu's seven panels
+### 6.2 The menu's eight panels
 
 **Menu** (or `Ctrl`+`K` → *Menu*) opens a tabbed panel:
 
@@ -450,6 +453,7 @@ Switch with **1**–**7**, or by clicking the tab.
 | **Reports** | This week / last week / this month, plus **Stand-up** and **Hand-over** formats. Copy, save into `reports/`, or print. |
 | **Routines** | The schedule editor. ✎ edits in place and keeps the id. Shows *runs itself*, *reminds you*, *paused*, *missing script*, when it last raised, and — loudly — *runs itself but nothing is listening*. |
 | **Scripts** | Register a script, read its `{{params}}`, set the workspace **Folder path**, write the runner, copy the `schtasks` line. |
+| **Automations** | Jobs you design: API calls and scripts in order, each passing values to the next; their connections and secrets; Run; recent runs ([§9a](#9a-automations-api-calls-and-scripts-one-step-at-a-time)). |
 | **Appearance** | Theme (Archive, Vault, or your own), fonts including the bundled Khmer face, "feel" (density and motion), language, and **Reload** for language files. |
 | **Setup** | Your name · Reminders · Chase after · Running a script · Target dates (SLA) · Holidays and festivals · **Understanding harder questions** (the optional model) · **Database (SQL Server)** (the server name, when it is not LocalDB). |
 | **Help** | The keyboard sheet, how your folder is laid out, and the privacy statement. |
@@ -1537,6 +1541,330 @@ to the incident it belongs to.
 
 Without a runner, `$` copies the fully-formed command line to the clipboard
 instead, and names any parameter still blank.
+
+---
+
+## 9a. Automations: API calls and scripts, one step at a time
+
+**Since 5.22.** An *automation* does one support job for you: it calls your
+APIs and runs your scripts, one step after another, and passes a value from
+one step to the next. The owner's example: *"regenerate the COI of policy
+P10234X56"* - sign in to the login API, take the token it gives, ask the
+policy API for a new certificate with that token, and wait until the job
+says it is done.
+
+You design an automation once, in **Menu → Automations**. Then you run it -
+from that panel, from the command palette (`Ctrl`+`K` → *Run: …*), by typing
+*"run regenerate COI for P10234X56"* in the chat, or by asking the assistant
+for the job in your own words. **Passwords and keys never reach the
+assistant**, and a sign-in token is never seen by the page or the assistant
+either.
+
+### What do I need on my PC for automations?
+
+The **KalKech icon by the clock** - the program `KalKech.bat` starts. A page
+in a browser cannot call your company's APIs or start a script, so the steps
+are carried out by that program, and the secrets are kept there. After you
+update KalKech, quit it once from the icon (right-click → **Quit**) and run
+`KalKech.bat` again: it rebuilds itself with automations in it. Until then
+the Automations panel says an older copy is running.
+
+At the top of the panel a line says whether it is ready, and from which
+workspace folder its scripts are run.
+
+### How do I make an automation?
+
+1. **Menu → Automations → New automation**, and pick a starter:
+   - **Sign in, then call** - get a token from a login API (kept hidden),
+     then call another API with it.
+   - **API key in a header** - one call to an API that takes a key.
+   - **Windows sign-in** - an internal API that knows you by your Windows
+     account; no password to save.
+   - **Submit, then wait** - start a job, then check every 10 seconds until
+     it says DONE.
+   - **Run a script** - one of your `.bat` scripts, with a value.
+   - **Blank** - one empty API call.
+2. Give it a **Name** and say **What it does** - the assistant reads this
+   line to know when to propose it.
+3. Under **Values it needs**, list what you give it each time - for example
+   `policy`, label *Policy number*, check `[A-Z]\d{5}[A-Z]\d{2}`, example
+   `P10234X56`. Steps use it as `{{input.policy}}`. The check makes sure a
+   value looks right before anything runs. Kinds: text, number, date, a
+   choice (UAT, PROD), or **typed by me (secret)** - asked for each time in a
+   password box, never saved, never shown to the assistant.
+4. Fill in the **Steps** (below), and what to say **When it finishes**, for
+   example `COI {{coiNumber}} is ready for {{input.policy}}.`
+5. **Save.** Anything that stops it running is listed in words above the Save
+   button ("{{job}} is used before the step that saves it"), and the list
+   shows it in orange until it is fixed.
+
+The address in a starter is an example (`example.local`): open its
+connection and put in your API's real address.
+
+### What kinds of step are there?
+
+| Step | What it does |
+|---|---|
+| **API call** | One request to a connection: method (GET, POST, PUT, PATCH, DELETE, HEAD), a path after the connection's address, query values, headers, and a body (JSON, form fields, XML or plain text). *Success when* says which answers count: `2xx` (any 200-299), or a list like `200,201` or `2xx,404`, or `any`. |
+| **Script** | One of your scripts from **Menu → Scripts** (`.bat` or `.cmd`), with its values. *Success when exit code is* `0` by default. |
+| **Wait** | Waits a number of seconds (Stop still works). |
+| **Ask me** | Shows you a question - *"About to regenerate the COI for P10234X56. Go on?"* - and stops the run if you say no. |
+
+Each step can have **Only run when** (a condition), **Repeat until** (run it
+again every few seconds until a condition is true, at most a number of
+times) and **If it fails**: stop the run, or carry on with the next step.
+
+### How do I use a value from one step in the next one?
+
+Under a step's **Save from the reply**, give the value a name and say where
+it is:
+
+- **JSON path** - `access_token`, `data.token`, `coi.number`,
+  `items[0].id` (or `$.items.0.id`).
+- **Header** - a header of the reply, like `Location`.
+- **Status code** - the HTTP status.
+- **Pattern** - a regular expression; its first group is kept
+  (`Reference: (\S+)`).
+- **Whole reply**, or for a script its **Output** or **Exit code**.
+
+Every step after it can then write `{{name}}` anywhere: in the path, a
+query value, a header, the body. Click a chip under the step ("Values you
+can use") to type it where your cursor is.
+
+And choose **who may see it**:
+
+| Shown to | Meaning |
+|---|---|
+| 🔒 **Hidden** | Only the next steps can use it. It stays inside the KalKech program for this run, and is gone when the run ends. Right for a token. |
+| **Me only** | Shown on the run card, kept in the run history - never sent to the assistant. |
+| **Me and the assistant** | Also given to the assistant after the run, in one line it reads ("Values: coiNumber = COI-2026-0042"). |
+
+A value marked for you or the assistant that looks like a token or a
+password (or that contains one of the run's secrets) is **kept hidden
+anyway**, and the card says so.
+
+Values are filled in once, each made safe for where it goes: in the path it
+stays one piece (`/` becomes `%2F`), in a JSON body it stays inside its
+string, in XML it is escaped. A value that happens to contain
+`{{secret.password}}` stays text. If you really need a value as it is (part
+of a path, a JSON object), add `|raw`: `{{path|raw}}`. Other filters:
+`|upper`, `|lower`, `|trim`, `|base64`. Values always there: `{{today}}`,
+`{{now}}`, `{{time}}`, `{{uuid}}`, and the record it is run for:
+`{{record.code}}`, `{{record.ticket}}`, `{{record.title}}`,
+`{{record.system}}`. `{{status}}` is the status code (or exit code) of the
+step before.
+
+### How do I sign in to an API and use the token in the next call?
+
+The **Sign in, then call** starter does exactly this:
+
+1. Step 1 posts to the login API, with
+   `{"username": "{{secret.username}}", "password": "{{secret.password}}"}`
+   as its JSON body, and saves `access_token` as `token`, **Hidden**.
+2. Step 2 calls the other API with the header
+   `Authorization: Bearer {{token}}`.
+
+The page never has the token: it lives inside the KalKech program for the
+run, step 2 gets it there, and it is forgotten when the run ends.
+
+An API that signs in the simple way needs no sign-in step: set the
+connection's **Sign-in** (below) and every step on it signs in by itself.
+
+### How do I add a connection (an API address)?
+
+**Menu → Automations → Connections → New connection** (or **New…** beside a
+step's connection):
+
+- **Address** - the start of every address its steps call, like
+  `https://api.example.local/v1`. A step adds its path after it, and **a
+  step is never sent anywhere else**: an address that comes out outside this
+  one is refused.
+- **Sign-in**:
+  - *None (or a sign-in step)* - nothing added.
+  - *My Windows account* - signs in as you, the way the browser does on the
+    intranet. Nothing to save.
+  - *User name and password* - sends the secrets `username` and `password`
+    (Basic sign-in).
+  - *API key in a header* - sends the secret `apiKey` in the header you name
+    (`X-API-Key`).
+  - *A fixed token (Bearer)* - sends the secret `token` as
+    `Authorization: Bearer …`.
+- **Other secrets** - more names, like `clientSecret`, for steps to use as
+  `{{secret.clientSecret}}`.
+- **Time limit** (seconds, at most 120) and **Proxy** (Windows proxy settings,
+  or none).
+
+**Test the connection** sends one GET to the address and says what came back.
+
+### How do I save a password, API key or token for an API?
+
+Open the connection, and under **Secrets** press **Set…** beside the name.
+Type it into the box and **Save the secret**. It goes straight to the KalKech
+program by the clock, which keeps it in
+`%LOCALAPPDATA%\KalKech\secrets.dat`, **encrypted for your Windows account
+on this PC** (Windows' own data protection). It is:
+
+- never saved in your workspace, your exports or the database;
+- never shown again - not on this page, not to the assistant. The panel
+  only says *set on this PC* or *not set*. To change one, set it again;
+- only sent to **that connection's address**. If you change the address,
+  its secrets are not sent until you save them again - so a changed design
+  (by hand, or from an imported file) cannot send them anywhere new;
+- unreadable on another PC or by another Windows user: there, set them again.
+
+Steps write `{{secret.password}}`; the program puts the secret in at the last
+moment. A secret belongs to its own connection: a step on another connection
+cannot use it, and a condition cannot read one.
+
+### How do I wait until a job is done?
+
+Use **Repeat until** on the step that checks the job: for example a GET to
+`/jobs/{{jobId}}` that saves `state`, with *Repeat until*
+`{{state}} == "DONE"`, *every* 10 seconds, *at most* 20 times. The card shows
+"try 3 of 20". If it is still not done after the last try, the step fails and
+says so. The **Submit, then wait** starter is built this way.
+
+### How do I write a condition?
+
+Short tests, the way you would say them:
+
+```
+{{status}} == 200          {{state}} == "DONE"        {{count}} > 0
+{{coiUrl}}                 (it has a value)           not {{error}}
+{{message}} contains "ready"    {{id}} is empty     {{id}} is not empty
+{{ref}} starts with "TMP"       {{file}} ends with ".pdf"
+{{a}} == 1 and ({{b}} != "x" or {{c}} > 5)
+```
+
+`==` and `!=` ignore capitals and spaces at the ends; two numbers are
+compared as numbers. A value that was never set is empty. No code is run -
+KalKech reads these itself.
+
+### How do I run one of my scripts in an automation?
+
+Add a **Script** step and pick the script (a `.bat` or `.cmd` from **Menu →
+Scripts**). Its blanks (the `{{marks}}` in it) become rows of values. Each
+value goes to the script in order, as `%1`, `%2` …, and also as a variable:
+`KK_` and its name in capitals - `%KK_POLICY%`. Save from its **Output** (what
+it printed), **JSON** (if it prints JSON), a **Pattern**, or its **Exit code**.
+
+The script runs from your workspace's `scripts` folder, as you, hidden, with
+a time limit (120 seconds unless you change it). A value with
+`& | < > ^ % ! " ( )` or a line break in it is **refused, not passed** - those
+characters would let a value start a command of its own. Nothing outside the
+`scripts` folder can be run.
+
+### How do I run an automation?
+
+- **Menu → Automations → Run** beside it. KalKech asks for the values it needs
+  (and checks them), and which record it is for, if any. The run card shows
+  each step as it goes: ○ waiting, ◌ running, ✓ done, ↷ skipped, ✕ failed,
+  ⟳ trying again - with the answer's status and how long it took. **Stop**
+  stops it between steps or during a wait.
+- **`Ctrl`+`K`** → *Run: Regenerate COI*.
+- In the chat: *"run regenerate COI for P10234X56"* - the form opens, already
+  filled in from what you wrote. Nothing runs until you press **Run**.
+- Ask the assistant (next question).
+
+Run for a record, the record's work log gets a line: *Automation
+"Regenerate COI": Done - coiNumber: COI-2026-0042* (only the values the
+assistant may see, because work logs go with questions about the record).
+The last 40 runs are listed under **Recent runs** - with no hidden value and
+no secret in them.
+
+### How do I let the assistant run an automation - and stop it asking me?
+
+With the Power Automate flow on, ask for the job in your own words:
+*"regenerate the COI for policy P10234X56 please"*. The assistant knows your
+automations by name, what each is for and the values each needs, and
+proposes the right one with the values from what you said. KalKech then
+shows you **"Run the automation "Regenerate COI" - Policy number:
+P10234X56"** with its steps, and runs it only when you press **Yes**. The
+card appears in the conversation, and afterwards the assistant can read the
+result ("did it work?").
+
+Three switches decide this:
+
+- **The assistant may run automations** (top of the Automations panel) - off:
+  the assistant is told about none of them, and refuses to start one.
+- **The assistant may run it** (in each automation) - off: that one is yours
+  only.
+- **Ask me before the assistant runs it** (in each automation) - **switch it
+  off only for a job you trust completely**: the assistant's proposal then
+  runs straight away, and the card says *"Run by the assistant without
+  asking"*. (The chat's own **Ask before doing things** switch, when off,
+  stops all asking.)
+
+If the assistant leaves a value out, or a value is *typed by me (secret)*,
+KalKech asks you for it - it never guesses. At most one automation runs per
+answer.
+
+### What does the assistant see of my automations?
+
+Before a run: each automation's name, what it does, its system, the values
+it needs (name, label, kind, an example), whether you are asked first, the
+names of its steps, and the names of the values it will be shown. **Never** a
+connection, an address, a header, a script or a secret's name.
+
+After a run: one line - which automation, how it went, the values it was run
+with (not a secret one), and only the values marked *Me and the assistant*.
+Values for you only, hidden values and secrets are not in it.
+
+### How do I test a step while I design it?
+
+Fill in **Test values** at the top of the steps, and press **Try up to here**
+under a step: the steps from the first to that one run for real, and each
+step shows what came back - its status, the values it saved, and the reply
+itself (with passwords and tokens masked). For a JSON reply, every path in it
+is a chip: click one, and it becomes a *Save from the reply* row. It is a real
+run: an API that changes something does change it.
+
+### Why did my automation fail?
+
+The failed step says why, in words. The usual ones:
+
+| It says | What to do |
+|---|---|
+| *Automations need the KalKech icon by the clock* | Start `KalKech.bat`. |
+| *older copy that does not know automations* | Quit KalKech from its icon (right-click → Quit) and run `KalKech.bat` again. |
+| *the secret "password" … has not been saved on this PC* | Open the connection, **Set…** the secret. |
+| *the address … has changed since its secret … was saved* | If the new address is right, set the secret again. |
+| *the answer was 401 Unauthorized* | The sign-in was refused: check the secret, or the sign-in step's saved token. |
+| *{{token}} has no value* | The step that saves it found nothing: check its JSON path with **Try up to here**. |
+| *not in the reply: token* | The path does not match the reply - click the right one under the reply. |
+| *the address answered with a redirect … which is not followed* | Use the address it redirects to, if it is right. |
+| *outside … A step only ever goes to its own connection's address* | Fix the path, or use a connection with that address. |
+| *the server's certificate is not trusted on this PC* | The API's certificate is not one Windows trusts; ask its owners. |
+| *the value for … has & in it* | That value cannot be passed to a script. |
+| *It was still not done after 20 tries* | The job took longer: raise *at most … times* or *every … seconds*. |
+
+The KalKech program also writes one line per step to its log (icon → **Show
+log**): the method, the address (secrets masked), the status and the time -
+never a value.
+
+### Are automations safe?
+
+- **KalKech itself reaches no new place on the internet.** The KalKech
+  program sends requests only to the addresses you put in your own
+  connections, and only when you (or the assistant, with your yes) run an
+  automation.
+- **Secrets** are write-only, encrypted for your Windows account, bound to
+  their connection's address, and masked out of everything that comes back:
+  replies, errors, addresses, saved values, script output.
+- **Hidden values** stay in the KalKech program and are forgotten when the
+  run ends (or after 30 minutes).
+- **Values cannot rewrite a request**: filled in once, escaped for where they
+  land; a header cannot hold a line break; `Host` and the like are KalKech's
+  own; redirects are not followed; the address must stay under the
+  connection's.
+- **Scripts**: only `.bat`/`.cmd` files in your workspace's `scripts`
+  folder, values checked for characters cmd.exe would act on, a time limit,
+  no PowerShell.
+- **The assistant** proposes; you agree - unless you switched that off for
+  one automation you trust. It never sees a secret, a token, or a value you
+  did not mark for it.
+- Exports carry the designs and connections, never a secret. An imported
+  connection gets no secret until you set one on this PC.
 
 ---
 
@@ -3462,6 +3790,13 @@ To add a language: copy `en.xml` to `lang/<culture>.xml`, change `culture` and
   the same action typed as a sentence asked first: one button, two behaviours,
   and the dangerous one was silent. Now both ask.
 - The runner runs **as you**, with no elevation, and touches no network.
+- **Automations** ([§9a](#9a-automations-api-calls-and-scripts-one-step-at-a-time))
+  call only the addresses you put in your own connections, through the
+  KalKech program by the clock - never from the page, and only when you, or
+  the assistant with your yes, run one. Their passwords and keys are kept by
+  that program, encrypted for your Windows account, write-only, and bound to
+  their connection's address; the assistant never sees a secret or a hidden
+  token, and sees only the values you mark for it.
 - `Ctrl`+`Z` undoes the last change.
 - Backups: one snapshot per day into `backups/`, 30 kept.
 
@@ -3694,8 +4029,9 @@ Answering from documents has its tests in the repository, and they are the
 first thing to run after changing anything it touches:
 
 ```
-node --test                 # tests/*.test.js: 54 tests - Sources (every scenario below), names and queries in answers, and diagrams
-node tests/e2e/run.js       # the app in Chrome or Edge: 230 checks on the screen
+node --test                 # tests/*.test.js: 82 tests - Sources (every scenario below), names and queries in answers, diagrams, and automations
+node tests/e2e/run.js       # the app in Chrome or Edge: 257 checks on the screen
+node tests/bridge/run.js    # the KalKech program's automation routes, built and run: 51 checks
 node flow/check-prompt.js   # the prompt's examples against the reply validator
 ```
 
@@ -3789,6 +4125,11 @@ model from scratch was tried, measured, and rejected on the numbers.
 
 ## 17. Known limits
 
+- **Automations** speak HTTP(S) with the sign-ins in [§9a](#9a-automations-api-calls-and-scripts-one-step-at-a-time)
+  (Windows, user name and password, a key, a fixed token, or a sign-in step
+  of your own) - not a sign-in that needs a browser window. Script steps run
+  `.bat` and `.cmd` files only. A run lives in the open page: closing it
+  stops the run between steps.
 - **A folder on disk needs Edge or Chrome.** Other browsers keep the records
   inside the browser, which is theirs to clear; export a copy now and then.
   Scripts cannot run from a browser store, since there is no folder for the

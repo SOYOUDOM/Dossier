@@ -29,15 +29,16 @@ are careful not to attract attention from their security team.
 | `assist.js` | Assist tab arithmetic. |
 | `flow.js` | Client for the optional Power Automate flow (the AI): `ACTIONS` table (every action the model may request), `validate()` of replies, `buildRequest()`, `fillPrompt()`, and `PROMPT_BUILTIN` (an embedded copy of `flow/prompt.txt`). `window.DossierFlow`. |
 | `diagram.js` | **New in 5.11** — draws ```` ```mermaid ```` blocks (flowchart / graph TD·LR·BT·RL, sequenceDiagram, stateDiagram-v2) as SVG: `parse()`, layered layout (ranks doubled so arrow labels get their own place), `render(model, {measure, theme})`, `draw()` → `{ok, svg, boxes, kind}` or `{ok:false, error}`. Pure; `window.DossierDiagram` and `module.exports`. |
+| `automations.js` | **New in 5.22** — Automations, the pure half: `normStore/normAuto/normStep/normConn/normRun` (every design read goes through them), placeholders (`parsePh`, `placeholders`, `show` for display only), conditions (`lexCond`/`parseCond`/`evalCond`, `test`), `check(a, {conns, scripts})` → problem codes, `inputsCheck`, `cmdSafe`, `forAI(store)` (what the model is told), `find`/`fromText`, `jsonPaths`/`jsonGet`, `stepWire`/`connWire`, `run(a, env)` (the step loop; env.call talks to the bridge), `split(a, R)`. `window.DossierAuto` and `module.exports`. |
 | `sources.js` | **New in 5.9** — answering from runbooks/standards: passages, BM25 search, citations, and `ground()`, the check that holds back invented figures. Pure; `window.DossierSources` and `module.exports`. |
 | `ocr.js` | Optional text recogniser for pictures and scanned PDFs. |
 | `flow/relay.html` | The **only** page that touches the network: a sandboxed iframe that posts to the flow URL. |
 | `flow/prompt.txt` | The model's instructions, with `{message} {today} {weekday} {calendar} {workspace} {actions} {history} {memory} {attached} {sources}` filled in per question. A user's own copy can live in the workspace as `dossier-prompt.txt`. |
 | `flow/*.md` | Guides: `CONTRACT.md` (request/reply/actions), `POWER-AUTOMATE.md`, `BAU-RUNBOOKS.md`, `SOURCES.md` (setup + troubleshooting for Sources), `SPEED.md`, `SERVICENOW.md`. |
-| `scripts/bridge/DossierBridge.cs` | The tray program (C# 5, WinForms): serves the page on 127.0.0.1, keeps the workspace in SQL LocalDB when available (or the SQL Server named in Setup, since 5.21), runs scripts. `KalKech.bat` compiles it with the Windows `csc.exe` whenever the `.cs` is newer than the `.exe`. |
+| `scripts/bridge/DossierBridge.cs` | The tray program (C# 5, WinForms): serves the page on 127.0.0.1, keeps the workspace in SQL LocalDB when available (or the SQL Server named in Setup, since 5.21), runs scripts, and (5.22) carries out automation steps and keeps their secrets (DPAPI). `KalKech.bat` compiles it with the Windows `csc.exe` whenever the `.cs` is newer than the `.exe`. |
 | `lang/en.xml`, `lang/km.xml` | Language packs (English, Khmer). Missing keys fall back to the English `STRINGS` table in `dossier.html`. |
-| `docs/` | `HOW-THE-AI-WORKS.md` (the whole AI pipeline for beginners, plus a reusable blueprint) and `how-the-ai-works.html` (the same as a self-contained picture page). Keep both in step with the code when the pipeline changes (numbers: 60 records, 10 notes, 30 lessons, 14,000 characters, 65 actions / 43 writes). |
-| `tests/` | `sources.test.js` and `diagram.test.js` (node:test), `e2e/run.js` + `e2e/sources.scenario.js` (real browser), `fixtures/` (made-up documents; `make-pdf.js` regenerates the PDFs). |
+| `docs/` | `HOW-THE-AI-WORKS.md` (the whole AI pipeline for beginners, plus a reusable blueprint) and `how-the-ai-works.html` (the same as a self-contained picture page). Keep both in step with the code when the pipeline changes (numbers: 60 records, 10 notes, 30 lessons, 14,000 characters, 66 actions / 44 writes). |
+| `tests/` | `sources.test.js`, `diagram.test.js`, `automations.test.js` (node:test), `e2e/run.js` + `e2e/sources.scenario.js` (real browser), `bridge/run.js` (compiles the bridge with mcs/csc, runs it headless against a made-up API: 51 checks), `fixtures/` (made-up documents; `make-pdf.js` regenerates the PDFs; `auto-conditions.json`, the condition cases both readers must agree on). |
 
 A *workspace* is a folder the user picks (File System Access API):
 `dossier.json` (everything), `backups/`, `tasks/<record>/` attachments,
@@ -91,13 +92,14 @@ A *workspace* is a folder the user picks (File System Access API):
 - Commit messages: clear summary + body; no model names in commits, code or
   docs. Do not open a pull request unless the owner asks.
 - Work so far is on branch `claude/chat-panel-pixel-art-gifs-d822hq`
-  (latest: 5.21.0). Follow the branch instructions of your own session.
+  (latest: 5.22.0). Follow the branch instructions of your own session.
 
 ## Testing
 
 ```
-node --test                                   # 54 unit tests (Sources, grounding, names check, code origin, flow reply fields, diagrams)
-node tests/e2e/run.js                         # the app in headless Chrome/Edge: 230 checks (CHROME=<path> to choose)
+node --test                                   # 82 unit tests (Sources, grounding, names check, code origin, flow reply fields, diagrams, automations)
+node tests/e2e/run.js                         # the app in headless Chrome/Edge: 257 checks (CHROME=<path> to choose)
+node tests/bridge/run.js                      # the bridge's automation routes, built and run (mcs+mono or csc): 51 checks
 node flow/check-prompt.js                     # after editing flow/prompt.txt ...
 python3 flow/embed-prompt.py                  # ... then copy it into flow.js (PROMPT_BUILTIN)
 node tests/fixtures/make-pdf.js               # regenerate the PDF fixtures
@@ -108,7 +110,17 @@ Also useful:
 - **Syntax-check the big inline script** in `dossier.html` (extract the
   `<script>` without `src` and `new Function()` it in Node) after edits.
 - **Bridge**: C# 5 only (no `$""`, no `?.`). Check with
-  `mcs -nologo -target:winexe -langversion:5 -r:System.Windows.Forms.dll -r:System.Drawing.dll -r:System.Data.dll scripts/bridge/DossierBridge.cs`.
+  `mcs -nologo -target:winexe -langversion:5 -r:System.Windows.Forms.dll -r:System.Drawing.dll -r:System.Data.dll -r:System.Security.dll scripts/bridge/DossierBridge.cs`
+  (System.Security for DPAPI since 5.22; `KalKech.bat` has the same reference).
+  Keep its *code* ASCII - write `"\u2022"`, not the character: csc reads a
+  file with no BOM in the PC's ANSI code page (`tests/bridge/run.js` checks).
+  In a cloud session Mono may need `apt-get install mono-mcs mono-runtime
+  libmono-system-windows-forms4.0-cil libmono-system-security4.0-cil` (or
+  `mono-complete`).
+- **Screenshots with Playwright**: use `chromium.launchPersistentContext(dir)`.
+  The default (off-the-record) context crashes Chromium (SIGTRAP) when the
+  menu opens with a workspace in the browser's private storage - 5.21 did the
+  same; `tests/e2e/run.js` uses a real profile and is not affected.
 - **Headless browser** (in cloud sessions Chromium is under
   `/opt/pw-browsers`): serve the repo over `http://127.0.0.1`, open
   `dossier.html`, drive it over the DevTools protocol. Make a workspace in the
@@ -119,6 +131,64 @@ Also useful:
   `DossierFlow.validate`. `tests/e2e/run.js` is a working example of all of it.
 
 ## Recent history (newest first)
+
+- **5.22.0** - Owner: "can the AI run a .bat script, or call an API to get a
+  value and use it in another API (regenerate the COI of policy P10234X56:
+  get a token, then call the generate API) - safe, the AI must not see the
+  credential unless I let it; customisable by me for any API; an option to
+  not ask me". Built as **Automations** (Menu → Automations).
+  - *Design*: page orchestrates, bridge executes. `automations.js` `run()`
+    walks the steps (when/repeat/onFail/wait/confirm, Stop via
+    `env.stopped`), each http/script step is one POST to the bridge; hidden
+    values never reach the page. Store `settings.automations`
+    `{v, aiCan, conns, list, runs}` (`autoStore()` normalises once per
+    object; `AUTO.normed`).
+  - *Bridge* (`automations: API calls and scripts` section before "odds and
+    ends"): routes `/auto/info` (GET), `/auto/step` `/auto/check` `/auto/end`
+    (POST JSON) and `/secrets` (GET names / POST set / DELETE), all token-
+    gated and answered before the `DbReady` gate. Own JSON reader/writer
+    (`JsonReader`, `JObj`, `JNum` keeps number text, `JOut`), `StepCtx`,
+    `Render(text, c, "path"|"json"|"xml"|"none")` one pass, `Lookup` (secret →
+    page values → run's hidden), `SecretFor` (DPAPI, entropy "KalKech secret 1",
+    `%LOCALAPPDATA%\KalKech\secrets.dat` or `KALKECH_SECRETS`, bound to
+    `NormBase(base)` - a changed address gets nothing), `UnderBase`, no
+    redirects, TLS 1.2/1.1/1.0, `Extract` (json/header/status/regex/body;
+    output/exit for scripts; a shown value that `Redact` changes or
+    `LooksSecret` is kept hidden instead, `redacted:[]`), `Redact` (known
+    values + base64/escaped forms, JSON keys, form pairs, XML, Bearer/Basic,
+    JWT), `CondLex/CondParser/CondEval` (mirror of automations.js; a secret in
+    a condition is refused), `DoScript` (.bat/.cmd from `<Workspace>\scripts`
+    via `cmd /d /s /c`, .sh under Mono for tests; `CmdBad` refuses
+    `" % ! ^ & | < > ( )` CR LF NUL; args as %1.. and `KK_<NAME>`; taskkill
+    on timeout). Test switches `DOSSIER_NODB=1`, `DOSSIER_NORUNNER=1`.
+  - *Page* (`AUTOMATIONS` banner after THE RUN QUEUE): `autoReq` (retries a
+    refused connection or a 403 once, never a timeout - a step may have run),
+    `autoRun(a, inputs, opts)` → history + record log (AI-visible values
+    only), `autoSayFor` (the line the model reads), `autoCardHtml` (run
+    card; buttons `data-austop/auagain/auopen`), `autoChatRun` (message
+    `{via:"auto", run}`; `chatRenderBot` → `autoRenderMsg`), `autoInputsDialog`
+    (`#auRunDlg`), `autoRunAsk`, `autoPanelRun`, panel `renderAutoPanel` /
+    `renderAutoEditor` (fields `data-f` paths, `autoSetPath`, structural
+    `data-aa`, chips `data-chip`, Try `autoTry` → `AUTO.ui.test`, JSON path
+    chips `data-addsave`) / `renderAutoConn` (secrets `data-acs/acd`,
+    `autoSecretDialog` `#auSecDlg`), starters `autoStarters()` (connections
+    kept on save only if used, `AUTO.ui.newConns`). Strings `Auto*`, CSS
+    `AUTOMATIONS (5.22)` before PALETTE EDITOR.
+  - *Assistant*: flow.js `runAutomation` (66 actions / 44 writes, in
+    `ACTIONS_IN_FULL`), `workspace.automations` = `DossierAuto.forAI` (names,
+    about, inputs, asksFirst, step names, `gives`); `flowDescribe` sets
+    `noAsk` when `ask:false` → `chatAskNext` skips the dialog; `chatRunAsked`
+    draws no receipt (no Undo for an API call); `flowRun(a, quiet, extra)`;
+    one `runAutomation` per reply (`AutoOnePerAnswer`); `SRC_JOB_ACTIONS`;
+    prompt section `=== THEIR AUTOMATIONS ===` + two examples; local
+    `autoLocal` ("run|start|execute <name> …" opens the filled form).
+    `pushUndo(label, "auto")` snapshots the designs. Export part
+    `automations` (designs + connections, no runs, no secrets).
+  - Tested: 28 unit tests, 51 bridge checks under Mono (the real program:
+    secrets never returned, token hidden, injection/redirect/escape cases,
+    shared condition cases, scripts), 27 new e2e checks with a stand-in
+    bridge. Not tested on Windows in the session (DPAPI, cmd.exe, Windows
+    sign-in): the harness runs there too with csc.
 
 - **5.21.0** - Owner: "a setup for the SSMS SQL Server name - not every PC
   has the same local server name; optional, in Setup".

@@ -19,7 +19,8 @@ function findBrowser(){
   if (process.env.CHROME) return process.env.CHROME;
   const list = [];
   try {
-    for (const d of fs.readdirSync("/opt/pw-browsers")) if (/^chromium-\d+/.test(d)) list.push(path.join("/opt/pw-browsers", d, "chrome-linux", "chrome"));
+    for (const d of fs.readdirSync("/opt/pw-browsers")) if (/^chromium-\d+/.test(d))
+      list.push(path.join("/opt/pw-browsers", d, "chrome-linux", "chrome"), path.join("/opt/pw-browsers", d, "chrome-linux64", "chrome"));
   } catch (e) {}
   const pf = [process.env["PROGRAMFILES"], process.env["PROGRAMFILES(X86)"], process.env.LOCALAPPDATA].filter(Boolean);
   pf.forEach(p => { list.push(path.join(p, "Google", "Chrome", "Application", "chrome.exe"));

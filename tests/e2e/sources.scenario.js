@@ -927,7 +927,8 @@
   const xpd = xpExport();
   await until(() => $("xpDlg"));
   const xpRows = [...document.querySelectorAll("#xpDlg [data-xp]")].map(b => b.dataset.xp);
-  check("Export lists the ten parts, Knowledge among them", xpRows.length === 10 && xpRows.indexOf("sources") >= 0 && $("xpUrl"), xpRows.join());
+  check("Export lists the eleven parts, Knowledge and Automations among them",
+        xpRows.length === 11 && xpRows.indexOf("sources") >= 0 && xpRows.indexOf("automations") >= 0 && $("xpUrl"), xpRows.join());
   await shot("18-export-parts");
   $("xpNo").click(); await xpd;
   const libN = srcLib().filter(d => d.status !== "deleted").length;
@@ -1191,5 +1192,258 @@
   hideBanner(); closeModal();
   window.fetch = fetchWas; window.openWorkspace = openWas;
   Object.assign(DB, dbWas); SQLSRV.out = "";
+
+  /* ── 5.22: automations ─────────────────────────────────────────────────
+     The tray program is stood in for, the way it answers (tests/bridge/run.js
+     runs the real one under Mono): /auto/info, /secrets, /auto/step,
+     /auto/check and /auto/end. The sign-in token lives in the stand-in only,
+     as it lives in the tray program only. All names and values made up. */
+  const auWas = { bridge:DB.bridge, port:DB.port, token:DB.token, flow:JSON.parse(JSON.stringify(S.settings.flow || {})) };
+  const fetchAu = window.fetch;
+  const AB = { posts:[], secrets:{}, runs:{}, polls:0, slow:false, paths:[] };
+  const TOKEN = "tok-e2e-" + Math.random().toString(36).slice(2);
+  window.fetch = async (url, init) => {
+    const u = String(url);
+    if (u.indexOf("http://127.0.0.1:1/") !== 0) return fetchAu(url, init);
+    const p = u.slice("http://127.0.0.1:1".length);
+    const J = o => new Response(JSON.stringify(o), { status:200, headers:{ "Content-Type":"application/json" } });
+    const method = (init && init.method) || "GET";
+    if (p === "/auto/info") return J({ ok:true, version:1, workspace:"e2e-sources", scripts:true, windows:true });
+    if (p.indexOf("/secrets") === 0){
+      const q = new URLSearchParams(p.split("?")[1] || "");
+      if (method === "GET"){
+        const names = {};
+        Object.keys(AB.secrets).forEach(k => { if (k.indexOf(q.get("conn") + "/") === 0) names[k.split("/")[1]] = { set:true, same:true, at:"2026-10-29T08:00:00Z" }; });
+        return J({ ok:true, names });
+      }
+      if (method === "POST"){ const b = JSON.parse(init.body); AB.secrets[b.conn + "/" + b.name] = b.value; return J({ ok:true }); }
+      let n = 0;
+      Object.keys(AB.secrets).forEach(k => { if (k.indexOf(q.get("conn") + "/") === 0 && (!q.get("name") || k === q.get("conn") + "/" + q.get("name"))){ delete AB.secrets[k]; n++; } });
+      return J({ ok:true, removed:n });
+    }
+    const b = JSON.parse(init.body);
+    AB.posts.push({ p, b });
+    if (p === "/auto/end"){ delete AB.runs[b.run]; return J({ ok:true }); }
+    const keep = AB.runs[b.run] || (AB.runs[b.run] = {});
+    const look = ph => b.values[ph.full] != null ? b.values[ph.full] : keep[ph.full];
+    if (p === "/auto/check") return J({ ok:true, result:DossierAuto.evalCond(DossierAuto.parseCond(b.when).ast, look) });
+    if (b.when && !DossierAuto.evalCond(DossierAuto.parseCond(b.when).ast, look)) return J({ ok:true, skipped:true });
+    const st = b.step || {};
+    AB.paths.push(String(st.path || "").replace(/\{\{([^{}]*)\}\}/g, (m, inner) => { const v = look(DossierAuto.parsePh(inner)); return v == null ? "" : encodeURIComponent(v); }));
+    await sleep(30);
+    let saved = {}, hidden = [], status = 200, ok = true;
+    if (/\/token$/.test(st.path)){
+      const sec = AB.secrets[(b.conn || {}).id + "/password"];
+      if (!sec){ ok = false; status = 401; } else { keep.token = TOKEN; hidden = ["token"]; }
+    } else if (/\/coi$/.test(st.path)){
+      if (look({ full:"token" }) !== TOKEN){ ok = false; status = 401; } else { status = 202; saved = { job:"J-77" }; }
+    } else if (/\/jobs\//.test(st.path)){
+      AB.polls++;
+      if (AB.slow) await sleep(300);
+      saved = !AB.slow && AB.polls % 2 === 0 ? { state:"DONE", coiNumber:"COI-2026-0042" } : { state:"RUNNING" };
+    } else { ok = false; status = 404; }
+    let until = null;
+    if (ok && b.until) until = DossierAuto.evalCond(DossierAuto.parseCond(b.until).ast, ph => saved[ph.full] != null ? saved[ph.full] : look(ph));
+    return J({ ok, status, ms:30, saved, hidden, missing:[], redacted:[], until, excerpt:"", error:ok ? "" : "the answer was " + status });
+  };
+
+  DB.bridge = false; DB.port = 0; DB.token = "";
+  openModal("auto");
+  await until(() => /Automations need the KalKech icon/.test((($("auBridge") || {}).textContent || "")), 6000);
+  check("(5.22) the menu has Automations; with no tray program it says what is needed",
+        !!document.querySelector('#mt [data-m="auto"]') && /Automations need the KalKech icon/.test($("auBridge").textContent), ($("auBridge") || {}).textContent);
+  closeModal();
+  DB.bridge = true; DB.port = 1; DB.token = "t";
+  openModal("auto");
+  await until(() => /^Ready: the KalKech program/.test((($("auBridge") || {}).textContent || "")), 6000);
+  check("...with it: ready, and which folder its scripts come from", /scripts folder of e2e-sources/.test($("auBridge").textContent), $("auBridge").textContent);
+
+  /* a starter, then the owner's example built on it */
+  $("auNew").click();
+  document.querySelector('[data-austart="signin"]').click();
+  await until(() => AUTO.ui.view === "edit" && $("auProbs"), 4000);
+  check("...'Sign in, then call' opens the designer: two steps, the token saved hidden",
+        AUTO.ui.draft.steps.length === 2 && AUTO.ui.draft.steps[0].save[0].show === "hidden" && document.querySelectorAll("#pAuto .austep").length === 2);
+  const typeIn = (sel, v) => { const el = document.querySelector(sel); el.value = v; el.dispatchEvent(new Event("input", { bubbles:true })); return el; };
+  typeIn('#pAuto [data-f="name"]', "Regenerate COI");
+  typeIn('#pAuto [data-f="steps.1.path"]', "/policies/{{policyy}}/coi");
+  await sleep(400);
+  check("...a value nothing gives is listed as a problem, in words", /\{\{policyy\}\} has no value/.test($("auProbs").textContent), $("auProbs").textContent);
+  const dr = AUTO.ui.draft;
+  dr.inputs = [{ key:"policy", label:"Policy number", kind:"text", required:true, pattern:"[A-Z]\\d{5}[A-Z]\\d{2}", example:"P10234X56", choices:[] }];
+  dr.steps[1].name = "Ask for a new COI";
+  dr.steps[1].path = "/policies/{{input.policy}}/coi";
+  dr.steps[1].expect = "202";
+  dr.steps[1].save = [{ name:"job", from:"json", path:"jobId", show:"me" }];
+  dr.steps.push(DossierAuto.normStep({ kind:"http", name:"Wait until it is ready", conn:dr.steps[1].conn, method:"GET", path:"/jobs/{{job}}",
+    headers:[["Authorization", "Bearer {{token}}"]],
+    save:[{ name:"state", from:"json", path:"state", show:"me" }, { name:"coiNumber", from:"json", path:"coi.number", show:"ai" }],
+    repeat:{ until:'{{state}} == "DONE"', times:4, every:1 } }, 2));
+  dr.result = "COI {{coiNumber}} is ready for {{input.policy}}.";
+  renderAutoEditor();
+  check("...filled in, it has nothing left to fix", /Ready to run/.test($("auProbs").textContent), $("auProbs").textContent);
+  document.querySelector('#pAuto [data-aa="save"]').click();
+  await until(() => AUTO.ui.view === "list" && /Regenerate COI/.test($("pAuto").textContent), 4000);
+  const au = autoStore().list.find(a => a.name === "Regenerate COI");
+  const login = au && autoStore().conns.find(c => c.id === au.steps[0].conn);
+  check("...saved: in the list, with the two connections the starter made", !!au && !!login && autoStore().conns.some(c => c.id === au.steps[1].conn) &&
+        autoStore().list.length === 1, JSON.stringify(autoStore().conns.map(c => c.name)));
+
+  /* a secret: its own box, to the tray program only */
+  login.base = "https://login.example.local/api";
+  autoConnEdit(login.id);
+  await until(() => document.querySelector('#auSecs [data-acs="password"]'), 5000);
+  document.querySelector('#auSecs [data-acs="password"]').click();
+  await until(() => $("auSecIn"), 3000);
+  $("auSecIn").value = "Pw-e2e-Secret!";
+  $("auSecGo").click();
+  await until(() => AB.secrets[login.id + "/password"] === "Pw-e2e-Secret!" && !$("auSecDlg"), 4000);
+  await until(() => /set on this PC/.test(($("auSecs") || {}).textContent || ""), 4000);
+  check("(5.22) a secret goes to the tray program and nowhere else: not the workspace, not the page",
+        AB.secrets[login.id + "/password"] === "Pw-e2e-Secret!" && JSON.stringify(S).indexOf("Pw-e2e-Secret!") < 0 &&
+        document.body.innerHTML.indexOf("Pw-e2e-Secret!") < 0 && /password\s*set on this PC/.test($("auSecs").textContent), ($("auSecs") || {}).textContent);
+  document.querySelector('#pAuto [data-ac="back"]').click();
+  await until(() => AUTO.ui.view === "list", 3000);
+
+  /* run from the panel: the values asked for and checked */
+  document.querySelector('#pAuto [data-auid="' + au.id + '"] [data-aux="run"]').click();
+  await until(() => $("auRunDlg"), 4000);
+  $("auIn_policy").value = "XYZ";
+  $("auRunGo").click();
+  await sleep(100);
+  check("...Run asks for the policy number, and a wrong one is caught before anything is sent",
+        /does not look right - for example P10234X56/.test($("auRunDlg").textContent) && !AB.posts.some(x => x.p === "/auto/step"), $("auRunDlg").textContent.slice(0, 300));
+  $("auIn_policy").value = "P10234X56";
+  $("auRunGo").click();
+  await until(() => AUTO.ui.panelRun && AUTO.ui.panelRun.state !== "running" && !$("auRunDlg"), 12000);
+  const pr = AUTO.ui.panelRun;
+  check("...run: signed in, asked, waited until done - the token used by the steps after, never seen by the page",
+        pr.state === "ok" && pr.steps.map(x => x.state).join() === "ok,ok,ok" && AB.paths.indexOf("/policies/P10234X56/coi") >= 0 &&
+        document.body.innerHTML.indexOf(TOKEN) < 0 && JSON.stringify(S).indexOf(TOKEN) < 0, JSON.stringify(pr.steps));
+  await until(() => /COI-2026-0042/.test(($("auLive") || {}).textContent || ""), 3000);
+  const liveText = ($("auLive") || {}).textContent || "";
+  check("...its card: the values, the hidden one by name only, and the result line",
+        /🔒 token/.test(liveText) && /coiNumber COI-2026-0042/.test(liveText) && /COI COI-2026-0042 is ready for P10234X56\./.test(liveText), liveText);
+  check("...the history keeps it - with no hidden value in it", autoStore().runs[0] && autoStore().runs[0].auto === au.id &&
+        autoStore().runs[0].state === "ok" && !("token" in autoStore().runs[0].values) && autoStore().runs[0].hidden.join() === "token");
+  await shot("23-automations-panel");
+  closeModal();
+
+  /* the assistant: told the names and what they need, never where or how */
+  S.settings.flow = { on:true, url:"https://flow.example/invoke", scope:"live", cap:60, timeout:30, fallback:false, shape:"classic", tiers:{ on:false } };
+  openChat(); chatNew(true); chatPaint();
+  plan = req => ({ say:"I'll run your Regenerate COI automation.", actions:[{ do:"runAutomation", automation:"Regenerate COI", inputs:{ policy:"P10234X56" } }] });
+  await ask("regenerate the COI for policy P10234X56 please");
+  let areq = sent[sent.length - 1].req;
+  const told = JSON.stringify(areq.workspace.automations || []);
+  check("(5.22) the assistant is told its automations: name, inputs, steps - no address, header, connection or secret",
+        (areq.workspace.automations || []).length === 1 && areq.workspace.automations[0].name === "Regenerate COI" &&
+        areq.workspace.automations[0].inputs[0].name === "policy" && areq.workspace.automations[0].gives.join() === "coiNumber" &&
+        !/example\.local|Bearer|secret|password|Login API|My API/.test(told), told);
+  check("...runAutomation is among what it may ask for, as a change that asks first", areq.can.some(a => a.do === "runAutomation" && a.write) &&
+        /=== THEIR AUTOMATIONS/.test(sent[sent.length - 1].prompt));
+  await until(() => $("chatAsk").classList.contains("on"), 4000);
+  check("...it is put to you first, in plain words", /Run the automation “Regenerate COI” — Policy number: P10234X56/.test($("chatAskB").textContent) &&
+        $("chatAskT").textContent === "Run it?" && /Sign in → Ask for a new COI → Wait until it is ready/.test($("chatAskNote").textContent),
+        $("chatAskB").textContent + " | " + $("chatAskNote").textContent);
+  $("chatAskYes").click();
+  await until(() => document.querySelector("#chatLog .aucard.ok"), 12000);
+  const card1 = document.querySelector("#chatLog .aucard.ok");
+  check("...yes: its card in the conversation, each step done", !!card1 && card1.querySelectorAll(".aus.ok").length === 3 &&
+        /Run by the assistant, after you agreed/.test(card1.textContent), card1 && card1.textContent);
+  const runMsg = chatThread().msgs.filter(m => m.reply && m.reply.run).pop();
+  check("...what the assistant reads afterwards: the result and its own values - not yours, not the token",
+        /^\[Automation “Regenerate COI” finished/.test(runMsg.reply.say) && /Values: coiNumber = COI-2026-0042/.test(runMsg.reply.say) &&
+        !/J-77|RUNNING|DONE/.test(runMsg.reply.say) && runMsg.reply.say.indexOf(TOKEN) < 0, runMsg.reply.say);
+  check("...no receipt with Undo for it - an API call cannot be undone",
+        ![...document.querySelectorAll("#chatLog .chrcpt")].some(r => /Regenerate COI/.test(r.textContent)));
+  plan = req => ({ say:"Yes - the new certificate is COI-2026-0042." });
+  await ask("did it work?");
+  check("...the next question carries that result in its conversation",
+        sent[sent.length - 1].req.conversation.some(m => /coiNumber = COI-2026-0042/.test(m.text) && !/J-77/.test(m.text)));
+
+  /* one they trust: asking switched off for it */
+  au.ask = false; touch();
+  plan = req => ({ say:"Running it again.", actions:[{ do:"runAutomation", automation:"Regenerate COI", inputs:{ policy:"P10234X56" } }] });
+  const cards = () => document.querySelectorAll("#chatLog .aucard").length;
+  const before522 = cards();
+  await ask("again please");
+  await until(() => cards() > before522 && document.querySelectorAll("#chatLog .aucard.ok").length > 1, 12000);
+  const card2 = [...document.querySelectorAll("#chatLog .aucard")].pop();
+  check("(5.22) asking switched off for it: it runs without the question, and the card says so",
+        !$("chatAsk").classList.contains("on") && /without asking/.test(card2.textContent) && card2.classList.contains("ok"), card2.textContent);
+  au.ask = true; touch();
+
+  /* a reply asking for the same job several times: only the first is put to you */
+  plan = req => ({ say:"Running it three times.", actions:[1, 2, 3].map(() => ({ do:"runAutomation", automation:"Regenerate COI", inputs:{ policy:"P10234X56" } })) });
+  const many = await ask("run it three times");
+  await until(() => $("chatAsk").classList.contains("on"), 4000);
+  check("(5.22) one automation per answer: the rest are not put to you, and the answer says so",
+        /asked for 2 more automation run\(s\) in the same answer/.test(many.textContent) && ASK.q.length === 0, many.textContent.slice(0, 300) + " | queued " + ASK.q.length);
+  $("chatAskNo").click();
+  await sleep(150);
+
+  /* a value the assistant left out: asked for, not guessed */
+  plan = req => ({ say:"Sure.", actions:[{ do:"runAutomation", automation:"Regenerate COI", inputs:{} }] });
+  await ask("regenerate the coi");
+  await until(() => $("chatAsk").classList.contains("on"), 4000);
+  $("chatAskYes").click();
+  await until(() => $("auRunDlg"), 4000);
+  check("...a value it left out is asked for, not guessed", !!$("auRunDlg") && $("auIn_policy").value === "");
+  $("auRunNo").click();
+  await until(() => /was not run/.test($("chatLog").textContent), 3000);
+  check("...and closing the form says it was not run", /“Regenerate COI” was not run/.test($("chatLog").textContent));
+
+  /* the assistant's switch off: told about none, and a request is refused */
+  autoStore().aiCan = false; touch();
+  plan = req => ({ say:"Running.", actions:[{ do:"runAutomation", automation:"Regenerate COI", inputs:{ policy:"P10234X56" } }] });
+  await ask("regenerate COI for P10234X56");
+  areq = sent[sent.length - 1].req;
+  await until(() => $("chatAsk").classList.contains("on"), 4000);
+  $("chatAskYes").click();
+  await until(() => /is not one the assistant may start/.test($("chatLog").textContent), 4000);
+  check("(5.22) the assistant's switch off: it is told about none, and a run it asks for is refused",
+        (areq.workspace.automations || []).length === 0 && /is not one the assistant may start/.test($("chatLog").textContent));
+  autoStore().aiCan = true; touch();
+
+  /* without the model: "run regenerate COI for P10234X56" */
+  S.settings.flow.on = false;
+  chatAsk("run regenerate COI for P10234X56");
+  await until(() => $("auRunDlg"), 4000);
+  check("(5.22) 'run regenerate COI for P10234X56' with no flow: its form, filled in from the sentence",
+        !!$("auRunDlg") && $("auIn_policy").value === "P10234X56" && /filled in from what you wrote/.test($("chatLog").textContent));
+  $("auRunNo").click();
+  await sleep(100);
+
+  /* for a record: its work log says so, with only what the assistant may read */
+  const rec522 = addTask({ title:"COI missing for a member", system:"Portal" }, true);
+  await autoChatRun(au, { policy:"P10234X56" }, { by:"me", record:rec522.code });
+  const logLine = rec522.log[rec522.log.length - 1].text;
+  check("...run for a record: its work log says so, with only the values for the assistant",
+        /^Automation “Regenerate COI”: Done — coiNumber: COI-2026-0042/.test(logLine) && !/J-77/.test(logLine), logLine);
+
+  /* Stop */
+  AB.slow = true;
+  const stopping = autoChatRun(au, { policy:"P10234X56" }, { by:"me" });
+  await until(() => document.querySelector("#chatLog [data-austop]") && AB.polls > 0, 6000);
+  document.querySelector("#chatLog [data-austop]").click();
+  const stopped = await stopping;
+  check("(5.22) Stop: the run stops between tries, and the card says so", stopped.state === "stopped" &&
+        /Stopped/.test([...document.querySelectorAll("#chatLog .aucard")].pop().textContent), stopped.state);
+  AB.slow = false;
+  await shot("24-automations-chat");
+
+  /* export: the designs and connections, never a run's values or a secret */
+  const xb = await xpBuild(["automations"], {});
+  const xd = JSON.parse(await xb.blob.text());
+  check("(5.22) export: Automations is a part - the designs and connections, no run history, no secret",
+        xd.parts.join() === "automations" && xd.settings.automations.list.length === 1 && xd.settings.automations.conns.length === 2 &&
+        !("runs" in xd.settings.automations) && JSON.stringify(xd).indexOf("Pw-e2e-Secret!") < 0 && JSON.stringify(xd).indexOf(TOKEN) < 0,
+        JSON.stringify(xd.settings && Object.keys(xd.settings.automations || {})));
+
+  closeChat();
+  window.fetch = fetchAu;
+  Object.assign(DB, { bridge:auWas.bridge, port:auWas.port, token:auWas.token });
+  S.settings.flow = auWas.flow;
   return { checks };
 })()

@@ -17,6 +17,9 @@
 //      transaction, and keeps the previous state before it replaces it.
 //    - starts the script runner for your workspace, hidden, and stops it
 //      again when it quits.
+//    - carries out the steps of your automations (5.22): the API calls and
+//      scripts KalKech's Automations panel designs, with the secrets they
+//      need kept here, encrypted, where the page cannot read them back.
 //
 //  With no LocalDB on the machine it still hands out the page, and Dossier
 //  keeps its records in dossier.json as it always did.
@@ -47,10 +50,12 @@ using System.Data;
 using System.Data.SqlClient;
 using System.Diagnostics;
 using System.Drawing;
+using System.Globalization;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -233,7 +238,10 @@ public class DossierBridge
         // file instead.
         Thread db = new Thread(delegate()
         {
-            Migrate();
+            //  DOSSIER_NODB=1: no database at all - for the automation tests,
+            //  which must not create one on a PC that has LocalDB
+            if (Environment.GetEnvironmentVariable("DOSSIER_NODB") == "1") { DbOk = false; DbError = "switched off (DOSSIER_NODB)"; }
+            else Migrate();
             DbReady = true;
             WriteHandshake();
             Log("  database  " + (DbOk ? Database + " on " + Server + " - ready" : "none - " + DbError));
@@ -484,6 +492,7 @@ public class DossierBridge
     static void StartRunner()
     {
         if (Workspace == null) return;
+        if (Environment.GetEnvironmentVariable("DOSSIER_NORUNNER") == "1") return;
         string scripts = Path.Combine(Workspace, "scripts");
         if (!Directory.Exists(scripts)) { Log("  runner    no scripts folder in the workspace - nothing to run"); return; }
 
@@ -727,7 +736,7 @@ public class DossierBridge
                 // a checkout of a public repository. Your records are not in
                 // that folder, and nothing below will serve them if they are.
                 bool api = (path == "/health" || path == "/workspace" || path == "/attachment" || path == "/history" ||
-                            path == "/sqlserver");
+                            path == "/sqlserver" || path == "/secrets" || path.StartsWith("/auto/"));
                 if (!api)
                 {
                     if ((method == "GET" || method == "HEAD") && Static(net, path, method == "HEAD")) return;
@@ -750,6 +759,10 @@ public class DossierBridge
                     //  which SQL Server: asked and changed from Setup, and it
                     //  has to work most of all when the database does not
                     if (path == "/sqlserver") { SqlServerRoute(net, method, query); return; }
+                    //  automations (5.22) need no database: an API call, a
+                    //  script, and the secrets they use
+                    if (path == "/secrets") { SecretsRoute(net, method, query, body); return; }
+                    if (path.StartsWith("/auto/")) { AutoRoute(net, method, path, body); return; }
                     if (!DbReady)
                     {
                         Respond(net, method == "GET" && path == "/health" ? 200 : 503, "application/json",
@@ -904,6 +917,8 @@ public class DossierBridge
         if (s == 400) return "Bad Request";
         if (s == 403) return "Forbidden";
         if (s == 404) return "Not Found";
+        if (s == 405) return "Method Not Allowed";
+        if (s == 413) return "Payload Too Large";
         if (s == 409) return "Conflict";
         if (s == 500) return "Internal Server Error";
         if (s == 503) return "Service Unavailable";
@@ -1626,6 +1641,1477 @@ public class DossierBridge
             }
         }
         return "";
+    }
+
+    // ── automations: API calls and scripts, one step at a time (5.22) ───────
+    //  The page designs the job and walks it, step by step; each step comes
+    //  here, because a page in a browser can neither call a company API (its
+    //  own rules allow it to talk to this program and nothing else) nor start
+    //  a script. So this is where a request is made, and where the secrets
+    //  are - which is the point:
+    //
+    //    - A SECRET (a password, an API key) is typed into the page once and
+    //      sent here, write-only. It is kept encrypted for this Windows user
+    //      (DPAPI) in %LOCALAPPDATA%\KalKech\secrets.dat, bound to its
+    //      connection AND to that connection's address when it was saved: a
+    //      connection whose address has changed since does not get it, so a
+    //      design that was altered - by hand, by an import - cannot send it
+    //      anywhere new. No route returns one.
+    //    - A value a step saves as HIDDEN (a sign-in token) stays in this
+    //      process, under its run, and is gone when the run ends or after
+    //      thirty minutes. The page is told only its name.
+    //    - Everything that goes back - the reply's text, an error, the
+    //      address - has every secret and hidden value of the run taken out
+    //      first, with the forms they travel in (base64, %-escaped), and
+    //      anything shaped like a token or a password field besides.
+    //
+    //  Placeholders - {{input.policy}}, {{token}}, {{secret.password}} - are
+    //  filled in here, once, each escaped for where it lands (a path, a JSON
+    //  string, XML), so a value cannot rewrite the request around it and a
+    //  value that contains "{{secret.password}}" stays text. The address that
+    //  comes out must still be under the connection's own address, a header
+    //  cannot hold a line break, and redirects are not followed.
+    //
+    //  A script step runs a .bat or .cmd from the workspace's own scripts\
+    //  folder, nothing else, with its values as arguments and as KK_ variables;
+    //  a value with a character cmd.exe would act on (& | < > ^ % ! " ( ))
+    //  is refused rather than passed.
+    //
+    //  The conditions ("only when", "repeat until") are read by a small reader
+    //  of their own, the same as the page's (automations.js): the two are
+    //  checked against one list of cases (tests/fixtures/auto-conditions.json).
+
+    static readonly object AutoLock = new object();
+    static readonly Dictionary<string, AutoRun> AutoRuns = new Dictionary<string, AutoRun>();
+    static readonly object SecretLock = new object();
+    static readonly byte[] SecretEntropy = Encoding.UTF8.GetBytes("KalKech secret 1");
+    const string Dots = "\u2022\u2022\u2022\u2022";
+    const int AutoBodyMax = 4 * 1024 * 1024;     // the most of a reply that is read
+    const int AutoValueMax = 4000;               // a value shown to you or the assistant
+    static bool TlsSet;
+
+    class AutoRun
+    {
+        public Dictionary<string, string> Hidden = new Dictionary<string, string>();
+        //  what must never go back to the page: every secret used, every
+        //  hidden value, the values typed as secret - and their encodings
+        public List<string> Known = new List<string>();
+        public DateTime Last = DateTime.UtcNow;
+    }
+
+    static bool IsWindows { get { return Environment.OSVersion.Platform == PlatformID.Win32NT; } }
+
+    static void AutoRoute(NetworkStream net, string method, string path, byte[] body)
+    {
+        if (path == "/auto/info")
+        {
+            string ws = Workspace == null ? "" : Path.GetFileName(Workspace);
+            bool scripts = Workspace != null && Directory.Exists(Path.Combine(Workspace, "scripts"));
+            Respond(net, 200, "application/json", Bytes(new JOut().B("ok", true).N("version", 1)
+                .S("workspace", ws).B("scripts", scripts).B("windows", IsWindows).S("user", Environment.UserName).ToString()));
+            return;
+        }
+        if (method != "POST") { Respond(net, 405, "application/json", Bytes("{\"error\":\"POST only\"}")); return; }
+        if (body.Length > 1024 * 1024) { Respond(net, 413, "application/json", Bytes("{\"error\":\"too big\"}")); return; }
+        JObj req;
+        try { req = JsonReader.Parse(Encoding.UTF8.GetString(body)) as JObj; }
+        catch (Exception e) { Respond(net, 400, "application/json", Bytes("{\"error\":" + Json("not JSON: " + e.Message) + "}")); return; }
+        if (req == null) { Respond(net, 400, "application/json", Bytes("{\"error\":\"not an object\"}")); return; }
+        string runId = JS(req, "run");
+        if (!Regex.IsMatch(runId, "^[A-Za-z0-9_-]{4,64}$"))
+        {
+            Respond(net, 400, "application/json", Bytes("{\"error\":\"no run id\"}"));
+            return;
+        }
+        string op = path.Substring("/auto/".Length);
+        if (op == "end")
+        {
+            lock (AutoLock) { AutoRuns.Remove(runId); }
+            Respond(net, 200, "application/json", Bytes("{\"ok\":true}"));
+            return;
+        }
+        if (op != "step" && op != "check") { Respond(net, 404, "application/json", Bytes("{\"error\":\"no such route\"}")); return; }
+
+        AutoRun run = RunFor(runId);
+        StepCtx c = new StepCtx(req, run);
+        string answer;
+        try
+        {
+            if (op == "check")
+            {
+                bool result;
+                string err = CondEval(JS(req, "when"), c, null, out result);
+                answer = err != null ? Failed(err, c) : new JOut().B("ok", true).B("result", result).ToString();
+            }
+            else
+            {
+                string when = JS(req, "when");
+                bool go = true;
+                string err = when.Length > 0 ? CondEval(when, c, null, out go) : null;
+                JObj step = JO(req, "step") ?? new JObj();
+                string kind = JS(req, "kind");
+                if (err != null) answer = Failed("its \"only when\": " + err, c);
+                else if (!go) answer = new JOut().B("ok", true).B("skipped", true).ToString();
+                else if (kind == "http") answer = DoHttp(c, step, JS(req, "until"), JB(req, "test"));
+                else if (kind == "script") answer = DoScript(c, step, JS(req, "until"), JB(req, "test"));
+                else answer = Failed("a step of kind \"" + kind + "\" is not one this program runs", c);
+            }
+        }
+        catch (Exception e)
+        {
+            Log("  ! automation " + runId + ": " + e.Message);
+            answer = Failed(e.Message, c);
+        }
+        lock (run) { run.Last = DateTime.UtcNow; }
+        Respond(net, 200, "application/json", Bytes(answer));
+    }
+
+    //  this run's place for hidden values; runs left over by a closed page
+    //  are let go after half an hour
+    static AutoRun RunFor(string id)
+    {
+        lock (AutoLock)
+        {
+            DateTime old = DateTime.UtcNow.AddMinutes(-30);
+            List<string> gone = new List<string>();
+            foreach (KeyValuePair<string, AutoRun> kv in AutoRuns) if (kv.Value.Last < old) gone.Add(kv.Key);
+            foreach (string k in gone) AutoRuns.Remove(k);
+            AutoRun r;
+            if (!AutoRuns.TryGetValue(id, out r))
+            {
+                if (AutoRuns.Count >= 50)
+                {
+                    string oldest = null;
+                    foreach (KeyValuePair<string, AutoRun> kv in AutoRuns)
+                        if (oldest == null || kv.Value.Last < AutoRuns[oldest].Last) oldest = kv.Key;
+                    if (oldest != null) AutoRuns.Remove(oldest);
+                }
+                r = new AutoRun();
+                AutoRuns[id] = r;
+            }
+            r.Last = DateTime.UtcNow;
+            return r;
+        }
+    }
+
+    //  one step's view of the world: the values the page sent (inputs, the
+    //  built-ins, the values shown so far), this run's hidden ones, and the
+    //  step's connection - whose secrets, and only whose, it may use
+    class StepCtx
+    {
+        public AutoRun Run;
+        public Dictionary<string, string> Values = new Dictionary<string, string>();
+        public JObj Conn;
+        public string ConnId = "", ConnName = "", ConnBase = "";
+        public List<string> ConnSecrets = new List<string>();
+        public List<string> Errors = new List<string>();
+        public StepCtx(JObj req, AutoRun run)
+        {
+            Run = run;
+            JObj v = JO(req, "values");
+            if (v != null) foreach (string k in v.Keys) if (k.Length <= 80) Values[k] = TextOf(v.Get(k));
+            foreach (object m in JA(req, "mask"))
+            {
+                string val;
+                if (m is string && Values.TryGetValue((string)m, out val)) AddKnown(run, val);
+            }
+            Conn = JO(req, "conn");
+            if (Conn != null)
+            {
+                ConnId = JS(Conn, "id");
+                ConnName = JS(Conn, "name");
+                if (ConnName.Length == 0) ConnName = "this connection";
+                ConnBase = JS(Conn, "base");
+                foreach (object s in JA(Conn, "secrets")) if (s is string) ConnSecrets.Add((string)s);
+                if (!Regex.IsMatch(ConnId, "^[A-Za-z0-9_-]{1,40}$")) { Conn = null; ConnId = ""; }
+            }
+        }
+    }
+
+    static string Failed(string error, StepCtx c)
+    {
+        return new JOut().B("ok", false).S("error", c == null ? error : Redact(error, c.Run)).ToString();
+    }
+
+    static void AddKnown(AutoRun run, string v)
+    {
+        if (v == null || v.Length < 4) return;
+        lock (run)
+        {
+            List<string> forms = new List<string>();
+            forms.Add(v);
+            forms.Add(Convert.ToBase64String(Encoding.UTF8.GetBytes(v)));
+            try { forms.Add(Uri.EscapeDataString(v)); } catch (Exception) { }
+            string j = Json(v);
+            forms.Add(j.Substring(1, j.Length - 2));
+            foreach (string f in forms) if (f.Length >= 4 && !run.Known.Contains(f)) run.Known.Add(f);
+        }
+    }
+
+    //  ── filling in placeholders ────────────────────────────────────────────
+    static readonly Regex PhRe = new Regex(@"\{\{([^{}]*)\}\}");
+
+    class Ph
+    {
+        public string Ns = "", Name = "", Full = "", Raw = "", Bad = "";
+        public List<string> Filters = new List<string>();
+    }
+    static readonly string[] PhFilters = { "upper", "lower", "trim", "base64", "raw" };
+
+    static Ph ParsePh(string inner)
+    {
+        Ph p = new Ph();
+        p.Raw = inner;
+        string[] bits = inner.Split('|');
+        Match m = Regex.Match(bits[0].Trim(), @"^(?:(input|secret|record)\.)?([A-Za-z_][A-Za-z0-9_]*)$");
+        for (int i = 1; i < bits.Length; i++) p.Filters.Add(bits[i].Trim().ToLowerInvariant());
+        if (!m.Success) { p.Bad = "name"; return p; }
+        p.Ns = m.Groups[1].Value;
+        p.Name = m.Groups[2].Value;
+        p.Full = (p.Ns.Length > 0 ? p.Ns + "." : "") + p.Name;
+        foreach (string f in p.Filters) if (Array.IndexOf(PhFilters, f) < 0) p.Bad = "filter";
+        return p;
+    }
+
+    static string Filtered(string v, List<string> filters)
+    {
+        foreach (string f in filters)
+        {
+            if (f == "upper") v = v.ToUpperInvariant();
+            else if (f == "lower") v = v.ToLowerInvariant();
+            else if (f == "trim") v = v.Trim();
+            else if (f == "base64") v = Convert.ToBase64String(Encoding.UTF8.GetBytes(v));
+        }
+        return v;
+    }
+
+    //  a value by name: a secret of the step's connection, else what the page
+    //  sent, else a hidden one of this run. null when there is none - and,
+    //  for a secret, the reason is in c.Errors.
+    static string Lookup(Ph p, StepCtx c, bool secretsToo)
+    {
+        if (p.Ns == "secret")
+        {
+            if (!secretsToo) { c.Errors.Add("{{" + p.Full + "}}: a condition cannot read a secret"); return null; }
+            return SecretFor(c, p.Name);
+        }
+        string v;
+        if (c.Values.TryGetValue(p.Full, out v)) return v;
+        lock (c.Run) { if (c.Run.Hidden.TryGetValue(p.Full, out v)) return v; }
+        return null;
+    }
+
+    //  how: "path" (each value %-escaped, so it stays one piece of the
+    //  path), "json" (escaped as the inside of a JSON string), "xml", "none"
+    static string Render(string text, StepCtx c, string how)
+    {
+        if (string.IsNullOrEmpty(text)) return "";
+        return PhRe.Replace(text, delegate(Match m)
+        {
+            Ph p = ParsePh(m.Groups[1].Value);
+            if (p.Bad == "name") { c.Errors.Add("\"{{" + p.Raw + "}}\" is not a name KalKech knows"); return ""; }
+            if (p.Bad == "filter") { c.Errors.Add("{{" + p.Raw + "}} has a filter KalKech does not know"); return ""; }
+            int before = c.Errors.Count;
+            string v = Lookup(p, c, true);
+            if (v == null)
+            {
+                if (c.Errors.Count == before) c.Errors.Add("{{" + p.Full + "}} has no value - nothing gave it one before this step");
+                return "";
+            }
+            v = Filtered(v, p.Filters);
+            if (p.Filters.Contains("raw")) return v;
+            if (how == "path") return Uri.EscapeDataString(v);
+            if (how == "json") { string j = Json(v); return j.Substring(1, j.Length - 2); }
+            if (how == "xml") return XmlText(v);
+            return v;
+        });
+    }
+
+    static string XmlText(string v)
+    {
+        return v.Replace("&", "&amp;").Replace("<", "&lt;").Replace(">", "&gt;").Replace("\"", "&quot;").Replace("'", "&apos;");
+    }
+
+    //  ── secrets ────────────────────────────────────────────────────────────
+    static string SecretsPath()
+    {
+        string over = Environment.GetEnvironmentVariable("KALKECH_SECRETS");
+        if (over != null && over.Length > 0) return over;
+        string dir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "KalKech");
+        return Path.Combine(dir, "secrets.dat");
+    }
+
+    static JObj SecretsLoad()
+    {
+        string p = SecretsPath();
+        try
+        {
+            if (!File.Exists(p)) return new JObj();
+            JObj root = JsonReader.Parse(File.ReadAllText(p, Encoding.UTF8)) as JObj;
+            JObj items = root == null ? null : root.Get("items") as JObj;
+            return items ?? new JObj();
+        }
+        catch (Exception e)
+        {
+            Log("  ! secrets: could not read " + p + ": " + e.Message);
+            return new JObj();
+        }
+    }
+
+    static void SecretsSave(JObj items)
+    {
+        string p = SecretsPath();
+        string dir = Path.GetDirectoryName(p);
+        if (dir != null && dir.Length > 0 && !Directory.Exists(dir)) Directory.CreateDirectory(dir);
+        string text = "{\"v\":1,\"note\":" + Json("KalKech secrets - encrypted for one Windows user on one PC; useless anywhere else") +
+                      ",\"items\":" + JsonOf(items) + "}";
+        string tmp = p + ".new";
+        File.WriteAllText(tmp, text, new UTF8Encoding(false));
+        if (File.Exists(p))
+        {
+            try { File.Replace(tmp, p, null); return; }
+            catch (Exception) { File.Delete(p); }
+        }
+        File.Move(tmp, p);
+    }
+
+    //  "https://Api.Example.local/v2/" -> "https://api.example.local:443/v2"
+    static string NormBase(string b)
+    {
+        Uri u;
+        if (!BaseOk(b, out u)) return "";
+        return u.Scheme + "://" + u.Host.ToLowerInvariant() + ":" + u.Port + u.AbsolutePath.TrimEnd('/');
+    }
+
+    static bool BaseOk(string b, out Uri u)
+    {
+        u = null;
+        if (string.IsNullOrEmpty(b)) return false;
+        if (!Uri.TryCreate(b.Trim(), UriKind.Absolute, out u)) return false;
+        if (u.Scheme != "http" && u.Scheme != "https") return false;
+        if (u.UserInfo.Length > 0 || u.Query.Length > 0 || u.Fragment.Length > 0) return false;
+        return true;
+    }
+
+    static string SecretFor(StepCtx c, string name)
+    {
+        if (c.Conn == null) { c.Errors.Add("{{secret." + name + "}} needs the step to have a connection"); return null; }
+        if (!c.ConnSecrets.Contains(name))
+        {
+            c.Errors.Add("\"" + name + "\" is not one of the secrets of " + c.ConnName);
+            return null;
+        }
+        JObj item;
+        lock (SecretLock) { item = SecretsLoad().Get(c.ConnId + "/" + name) as JObj; }
+        if (item == null)
+        {
+            c.Errors.Add("the secret \"" + name + "\" of " + c.ConnName + " has not been saved on this PC (Menu, Automations, Connections)");
+            return null;
+        }
+        if (JS(item, "origin") != NormBase(c.ConnBase))
+        {
+            c.Errors.Add("the address of " + c.ConnName + " has changed since its secret \"" + name +
+                         "\" was saved, so it is not sent there. If the new address is right, save the secret again.");
+            return null;
+        }
+        string v;
+        try
+        {
+            byte[] plain = ProtectedData.Unprotect(Convert.FromBase64String(JS(item, "v")), SecretEntropy, DataProtectionScope.CurrentUser);
+            v = Encoding.UTF8.GetString(plain);
+        }
+        catch (Exception)
+        {
+            c.Errors.Add("the secret \"" + name + "\" of " + c.ConnName + " cannot be read - it was saved by another Windows user or on another PC. Save it again.");
+            return null;
+        }
+        AddKnown(c.Run, v);
+        return v;
+    }
+
+    //  GET    /secrets?conn=<id>&base=<address>   which are saved (never what)
+    //  POST   /secrets  {conn, base, name, value}  save one (empty value: remove)
+    //  DELETE /secrets?conn=<id>[&name=<name>]     remove one, or all of a connection's
+    static void SecretsRoute(NetworkStream net, string method, string query, byte[] body)
+    {
+        if (method == "GET")
+        {
+            string conn = QueryValue(query, "conn");
+            string want = NormBase(QueryValue(query, "base"));
+            JOut names = new JOut();
+            lock (SecretLock)
+            {
+                JObj items = SecretsLoad();
+                foreach (string k in items.Keys)
+                {
+                    if (!k.StartsWith(conn + "/")) continue;
+                    JObj it = items.Get(k) as JObj;
+                    if (it == null) continue;
+                    names.Raw(k.Substring(conn.Length + 1), new JOut().B("set", true).S("at", JS(it, "at"))
+                        .B("same", want.Length > 0 && JS(it, "origin") == want).ToString());
+                }
+            }
+            Respond(net, 200, "application/json", Bytes(new JOut().B("ok", true).Raw("names", names.ToString()).ToString()));
+            return;
+        }
+        if (method == "DELETE")
+        {
+            string conn = QueryValue(query, "conn"), name = QueryValue(query, "name");
+            if (!Regex.IsMatch(conn, "^[A-Za-z0-9_-]{1,40}$")) { Respond(net, 400, "application/json", Bytes("{\"error\":\"bad connection\"}")); return; }
+            int n = 0;
+            lock (SecretLock)
+            {
+                JObj items = SecretsLoad(), keep = new JObj();
+                foreach (string k in items.Keys)
+                {
+                    bool drop = name.Length > 0 ? k == conn + "/" + name : k.StartsWith(conn + "/");
+                    if (drop) n++; else keep.Set(k, items.Get(k));
+                }
+                if (n > 0) SecretsSave(keep);
+            }
+            Log("  secrets   " + n + " removed from " + conn);
+            Respond(net, 200, "application/json", Bytes(new JOut().B("ok", true).N("removed", n).ToString()));
+            return;
+        }
+        if (method != "POST") { Respond(net, 405, "application/json", Bytes("{\"error\":\"GET, POST or DELETE\"}")); return; }
+        JObj req = null;
+        try { req = JsonReader.Parse(Encoding.UTF8.GetString(body)) as JObj; } catch (Exception) { }
+        if (req == null) { Respond(net, 400, "application/json", Bytes("{\"error\":\"not JSON\"}")); return; }
+        string cid = JS(req, "conn"), nm = JS(req, "name"), value = JS(req, "value"), origin = NormBase(JS(req, "base"));
+        if (!Regex.IsMatch(cid, "^[A-Za-z0-9_-]{1,40}$") || !Regex.IsMatch(nm, "^[A-Za-z_][A-Za-z0-9_]{0,39}$"))
+        { Respond(net, 400, "application/json", Bytes("{\"ok\":false,\"error\":\"a bad connection or secret name\"}")); return; }
+        if (origin.Length == 0)
+        { Respond(net, 400, "application/json", Bytes("{\"ok\":false,\"error\":\"the connection needs an http:// or https:// address before a secret can be saved for it\"}")); return; }
+        if (value.Length > 16000)
+        { Respond(net, 400, "application/json", Bytes("{\"ok\":false,\"error\":\"that is too long for a secret\"}")); return; }
+        lock (SecretLock)
+        {
+            JObj items = SecretsLoad();
+            JObj keep = new JObj();
+            foreach (string k in items.Keys) if (k != cid + "/" + nm) keep.Set(k, items.Get(k));
+            if (value.Length > 0)
+            {
+                byte[] sealedBytes = ProtectedData.Protect(Encoding.UTF8.GetBytes(value), SecretEntropy, DataProtectionScope.CurrentUser);
+                JObj it = new JObj();
+                it.Set("v", Convert.ToBase64String(sealedBytes));
+                it.Set("origin", origin);
+                it.Set("at", DateTime.UtcNow.ToString("o"));
+                keep.Set(cid + "/" + nm, it);
+            }
+            SecretsSave(keep);
+        }
+        Log("  secrets   " + (value.Length > 0 ? "saved " : "removed ") + nm + " for " + cid);
+        Respond(net, 200, "application/json", Bytes("{\"ok\":true}"));
+    }
+
+    //  ── an API call ────────────────────────────────────────────────────────
+    static readonly string[] Methods = { "GET", "POST", "PUT", "PATCH", "DELETE", "HEAD" };
+    static readonly string[] ForbiddenHeaders = { "host", "content-length", "connection", "transfer-encoding", "expect", "te",
+                                                  "upgrade", "keep-alive", "proxy-authorization", "proxy-connection", "trailer" };
+
+    static void EnsureTls()
+    {
+        if (TlsSet) return;
+        //  TLS 1.2 (and 1.1, 1.0 for an old server). A program built by the
+        //  csc in the Windows folder starts with the framework's oldest
+        //  defaults, which modern servers refuse.
+        try { ServicePointManager.SecurityProtocol = (SecurityProtocolType)(3072 | 768 | 192); } catch (Exception) { }
+        ServicePointManager.Expect100Continue = false;
+        TlsSet = true;
+    }
+
+    static bool UnderBase(Uri u, Uri b)
+    {
+        if (u.Scheme != b.Scheme || !string.Equals(u.Host, b.Host, StringComparison.OrdinalIgnoreCase) || u.Port != b.Port) return false;
+        if (u.UserInfo.Length > 0) return false;
+        string bp = b.AbsolutePath.TrimEnd('/');
+        string up = u.AbsolutePath;
+        return bp.Length == 0 || up == bp || up.StartsWith(bp + "/", StringComparison.Ordinal);
+    }
+
+    static bool ExpectMatch(string expect, int status)
+    {
+        string e = (expect ?? "").Trim().ToLowerInvariant();
+        if (e.Length == 0) e = "2xx";
+        if (e == "any") return true;
+        foreach (string part in e.Split(','))
+        {
+            string p = part.Trim();
+            if (p.Length == 3 && p.EndsWith("xx") && p[0] >= '1' && p[0] <= '5') { if (status / 100 == p[0] - '0') return true; }
+            else { int n; if (int.TryParse(p, out n) && n == status) return true; }
+        }
+        return false;
+    }
+
+    static string NetError(WebException we, int seconds)
+    {
+        switch (we.Status)
+        {
+            case WebExceptionStatus.Timeout: return "no answer within " + seconds + " seconds";
+            case WebExceptionStatus.NameResolutionFailure: return "the address's name could not be found (DNS) - check the connection's address, and that this PC is on the company network";
+            case WebExceptionStatus.ConnectFailure: return "nothing answered at that address - the service may be down, or blocked from this PC";
+            case WebExceptionStatus.TrustFailure: return "the server's certificate is not trusted on this PC";
+            case WebExceptionStatus.SecureChannelFailure: return "a secure (TLS) connection could not be made with the server";
+            case WebExceptionStatus.ProxyNameResolutionFailure: return "the proxy could not be found - try the connection with \"no proxy\"";
+            case WebExceptionStatus.ConnectionClosed:
+            case WebExceptionStatus.ReceiveFailure:
+            case WebExceptionStatus.SendFailure: return "the connection was closed before an answer came (" + we.Message + ")";
+        }
+        return we.Message;
+    }
+
+    static string DoHttp(StepCtx c, JObj step, string until, bool test)
+    {
+        if (c.Conn == null) return Failed("this step has no connection - choose one in the step", c);
+        string baseUrl = JS(c.Conn, "base").Trim().TrimEnd('/');
+        Uri baseUri;
+        if (!BaseOk(baseUrl, out baseUri))
+            return Failed("the address of " + c.ConnName + " is not an http:// or https:// address: " + baseUrl, c);
+        string method = JS(step, "method").ToUpperInvariant();
+        if (Array.IndexOf(Methods, method) < 0) method = "GET";
+
+        string path = Render(JS(step, "path"), c, "path");
+        StringBuilder q = new StringBuilder();
+        foreach (object o in JA(step, "query"))
+        {
+            List<object> pr = o as List<object>;
+            if (pr == null || pr.Count < 2) continue;
+            string k = Render(TextOf(pr[0]), c, "none"), v = Render(TextOf(pr[1]), c, "none");
+            if (k.Length == 0) continue;
+            q.Append(q.Length > 0 ? "&" : "").Append(Uri.EscapeDataString(k)).Append('=').Append(Uri.EscapeDataString(v));
+        }
+        List<string[]> hdrs = new List<string[]>();
+        foreach (object o in JA(step, "headers"))
+        {
+            List<object> pr = o as List<object>;
+            if (pr == null || pr.Count < 2) continue;
+            string name = TextOf(pr[0]).Trim();
+            if (!Regex.IsMatch(name, @"^[A-Za-z0-9!#$%&'*+.^_`|~-]{1,100}$")) { c.Errors.Add("\"" + name + "\" is not a header name"); continue; }
+            if (Array.IndexOf(ForbiddenHeaders, name.ToLowerInvariant()) >= 0) { c.Errors.Add(name + " is set by KalKech itself"); continue; }
+            string val = Render(TextOf(pr[1]), c, "none");
+            if (val.IndexOf('\r') >= 0 || val.IndexOf('\n') >= 0 || val.IndexOf('\0') >= 0)
+            { c.Errors.Add("the header " + name + " would hold a line break - refused, it could add headers of its own"); continue; }
+            hdrs.Add(new string[] { name, val });
+        }
+        string bodyType = JS(step, "bodyType");
+        string bodyText = null, ctype = null;
+        if (bodyType == "json")
+        {
+            bodyText = Render(JS(step, "body"), c, "json");
+            ctype = "application/json; charset=utf-8";
+            if (c.Errors.Count == 0 && bodyText.Trim().Length > 0)
+            {
+                try { JsonReader.Parse(bodyText); }
+                catch (Exception e) { c.Errors.Add("the body is not valid JSON once filled in (" + e.Message + ")"); }
+            }
+        }
+        else if (bodyType == "xml") { bodyText = Render(JS(step, "body"), c, "xml"); ctype = "application/xml; charset=utf-8"; }
+        else if (bodyType == "text") { bodyText = Render(JS(step, "body"), c, "none"); ctype = "text/plain; charset=utf-8"; }
+        else if (bodyType == "form")
+        {
+            StringBuilder f = new StringBuilder();
+            foreach (object o in JA(step, "form"))
+            {
+                List<object> pr = o as List<object>;
+                if (pr == null || pr.Count < 2) continue;
+                string k = Render(TextOf(pr[0]), c, "none"), v = Render(TextOf(pr[1]), c, "none");
+                if (k.Length == 0) continue;
+                f.Append(f.Length > 0 ? "&" : "").Append(Uri.EscapeDataString(k)).Append('=').Append(Uri.EscapeDataString(v));
+            }
+            bodyText = f.ToString();
+            ctype = "application/x-www-form-urlencoded";
+        }
+        if (bodyText != null && (method == "GET" || method == "HEAD")) c.Errors.Add("a " + method + " request cannot carry a body");
+
+        //  the connection signs in by itself, unless the step does it
+        string auth = JS(c.Conn, "auth");
+        bool stepAuth = false;
+        foreach (string[] h in hdrs) if (h[0].ToLowerInvariant() == "authorization") stepAuth = true;
+        if (auth == "basic" && !stepAuth)
+        {
+            string user = SecretFor(c, "username"), pass = SecretFor(c, "password");
+            if (user != null && pass != null)
+            {
+                string pair = Convert.ToBase64String(Encoding.UTF8.GetBytes(user + ":" + pass));
+                AddKnown(c.Run, pair);
+                hdrs.Add(new string[] { "Authorization", "Basic " + pair });
+            }
+        }
+        else if (auth == "bearer" && !stepAuth)
+        {
+            string tok = SecretFor(c, "token");
+            if (tok != null) hdrs.Add(new string[] { "Authorization", "Bearer " + tok });
+        }
+        else if (auth == "header")
+        {
+            string hn = JS(c.Conn, "header").Trim();
+            if (!Regex.IsMatch(hn, @"^[A-Za-z0-9!#$%&'*+.^_`|~-]{1,100}$") || Array.IndexOf(ForbiddenHeaders, hn.ToLowerInvariant()) >= 0)
+                c.Errors.Add("the connection's key header \"" + hn + "\" is not a header name");
+            else
+            {
+                bool has = false;
+                foreach (string[] h in hdrs) if (string.Equals(h[0], hn, StringComparison.OrdinalIgnoreCase)) has = true;
+                string key = has ? "" : SecretFor(c, "apiKey");
+                if (!has && key != null) hdrs.Add(new string[] { hn, key });
+            }
+        }
+        if (c.Errors.Count > 0) return Failed(string.Join("; ", c.Errors.ToArray()), c);
+
+        string full = baseUrl + path;
+        if (q.Length > 0) full += (full.IndexOf('?') >= 0 ? "&" : "?") + q.ToString();
+        Uri u;
+        if (!Uri.TryCreate(full, UriKind.Absolute, out u)) return Failed("the address this makes is not a valid one: " + full, c);
+        if (!UnderBase(u, baseUri))
+            return Failed("the address this makes (" + u.GetLeftPart(UriPartial.Path) + ") is outside " + c.ConnName +
+                          " (" + baseUrl + "). A step only ever goes to its own connection's address.", c);
+        string shownUrl = Redact(u.GetLeftPart(UriPartial.Path) + u.Query, c.Run);
+
+        int seconds = Math.Max(1, Math.Min(120, JN(c.Conn, "timeout", 30)));
+        EnsureTls();
+        Stopwatch sw = Stopwatch.StartNew();
+        HttpWebRequest req = (HttpWebRequest)WebRequest.Create(u);
+        req.Method = method;
+        req.AllowAutoRedirect = false;
+        req.Timeout = seconds * 1000;
+        req.ReadWriteTimeout = seconds * 1000;
+        req.UserAgent = "KalKech";
+        req.KeepAlive = false;
+        if (auth == "windows") { req.UseDefaultCredentials = true; req.PreAuthenticate = true; }
+        if (JS(c.Conn, "proxy") == "none") req.Proxy = null;
+        else
+        {
+            IWebProxy px = WebRequest.DefaultWebProxy;
+            if (px != null) px.Credentials = CredentialCache.DefaultCredentials;
+            req.Proxy = px;
+        }
+        foreach (string[] h in hdrs)
+        {
+            string low = h[0].ToLowerInvariant();
+            try
+            {
+                if (low == "content-type") req.ContentType = h[1];
+                else if (low == "accept") req.Accept = h[1];
+                else if (low == "user-agent") req.UserAgent = h[1];
+                else if (low == "referer") req.Referer = h[1];
+                else if (low == "date" || low == "if-modified-since" || low == "range") c.Errors.Add(h[0] + " cannot be set on a step");
+                else req.Headers[h[0]] = h[1];
+            }
+            catch (Exception e) { c.Errors.Add("the header " + h[0] + " was refused: " + e.Message); }
+        }
+        if (c.Errors.Count > 0) return Failed(string.Join("; ", c.Errors.ToArray()), c);
+
+        HttpWebResponse resp = null;
+        string netErr = null;
+        try
+        {
+            if (bodyText != null)
+            {
+                byte[] bb = Encoding.UTF8.GetBytes(bodyText);
+                if (req.ContentType == null) req.ContentType = ctype;
+                req.ContentLength = bb.Length;
+                using (Stream rs = req.GetRequestStream()) rs.Write(bb, 0, bb.Length);
+            }
+            resp = (HttpWebResponse)req.GetResponse();
+        }
+        catch (WebException we)
+        {
+            resp = we.Response as HttpWebResponse;
+            if (resp == null) netErr = NetError(we, seconds);
+        }
+        catch (Exception e) { netErr = e.Message; }
+        if (resp == null)
+        {
+            Log("  auto      " + method + " " + Redact(u.GetLeftPart(UriPartial.Path), c.Run) + " - " + Redact(netErr ?? "", c.Run));
+            return new JOut().B("ok", false).S("url", shownUrl).N("ms", sw.ElapsedMilliseconds)
+                .S("error", Redact(netErr ?? "no answer", c.Run)).ToString();
+        }
+
+        int status;
+        string text = "", rtype = "";
+        bool cut = false;
+        Dictionary<string, string> rh = new Dictionary<string, string>();
+        using (resp)
+        {
+            status = (int)resp.StatusCode;
+            rtype = resp.ContentType ?? "";
+            foreach (string k in resp.Headers.AllKeys) rh[k.ToLowerInvariant()] = resp.Headers[k];
+            if (method != "HEAD")
+            {
+                try
+                {
+                    using (Stream s = resp.GetResponseStream())
+                    {
+                        MemoryStream ms = new MemoryStream();
+                        byte[] buf = new byte[65536];
+                        int n;
+                        while ((n = s.Read(buf, 0, buf.Length)) > 0)
+                        {
+                            int room = AutoBodyMax - (int)ms.Length;
+                            if (room <= 0) { cut = true; break; }
+                            ms.Write(buf, 0, Math.Min(n, room));
+                        }
+                        text = Decoded(ms.ToArray(), rtype);
+                    }
+                }
+                catch (Exception e) { text = ""; rh["x-kalkech-read"] = e.Message; }
+            }
+        }
+        long took = sw.ElapsedMilliseconds;
+        Log("  auto      " + method + " " + Redact(u.GetLeftPart(UriPartial.Path), c.Run) + " - " + status + " (" + took + " ms)");
+
+        bool ok = ExpectMatch(JS(step, "expect"), status);
+        Dictionary<string, string> saved = new Dictionary<string, string>();
+        List<string> hidden = new List<string>(), missing = new List<string>(), redacted = new List<string>();
+        if (ok) Extract(c, step, text, rh, status, -1, saved, hidden, missing, redacted);
+        return StepAnswer(c, ok, status, -1, took, shownUrl, text, cut, rtype, rh, saved, hidden, missing, redacted, until, test,
+            ok ? "" : status >= 300 && status < 400
+                ? "the address answered with a redirect (" + status + ") to " + (rh.ContainsKey("location") ? rh["location"] : "somewhere else") + ", which is not followed"
+                : "the answer was " + status + (StatusWords(status).Length > 0 ? " " + StatusWords(status) : "") + ", not what this step expects (" + (JS(step, "expect").Length > 0 ? JS(step, "expect") : "2xx") + ")");
+    }
+
+    static string StatusWords(int s)
+    {
+        switch (s)
+        {
+            case 400: return "Bad Request"; case 401: return "Unauthorized - the sign-in was refused"; case 403: return "Forbidden";
+            case 404: return "Not Found"; case 405: return "Method Not Allowed"; case 408: return "Request Timeout";
+            case 409: return "Conflict"; case 415: return "Unsupported Media Type"; case 422: return "Unprocessable Entity";
+            case 429: return "Too Many Requests"; case 500: return "Internal Server Error"; case 502: return "Bad Gateway";
+            case 503: return "Service Unavailable"; case 504: return "Gateway Timeout";
+        }
+        return "";
+    }
+
+    static string Decoded(byte[] b, string contentType)
+    {
+        Encoding enc = new UTF8Encoding(false);
+        Match m = Regex.Match(contentType ?? "", @"charset=""?([A-Za-z0-9_\-.:]+)", RegexOptions.IgnoreCase);
+        if (m.Success) { try { enc = Encoding.GetEncoding(m.Groups[1].Value); } catch (Exception) { } }
+        return enc.GetString(b);
+    }
+
+    //  the values a step saves - from a reply (status -1 for a script) or a
+    //  script's output (exit >= 0)
+    static void Extract(StepCtx c, JObj step, string text, Dictionary<string, string> heads, int status, int exit,
+                        Dictionary<string, string> saved, List<string> hidden, List<string> missing, List<string> redacted)
+    {
+        object json = null;
+        bool jsonTried = false;
+        foreach (object o in JA(step, "save"))
+        {
+            JObj sv = o as JObj;
+            if (sv == null) continue;
+            string name = JS(sv, "name"), from = JS(sv, "from"), path = JS(sv, "path"), show = JS(sv, "show");
+            if (!Regex.IsMatch(name, "^[A-Za-z_][A-Za-z0-9_]{0,39}$")) continue;
+            string v = null;
+            if (from == "json")
+            {
+                if (!jsonTried) { jsonTried = true; try { json = JsonReader.Parse(text.Trim()); } catch (Exception) { json = null; } }
+                object found;
+                if (json != null && JsonAt(json, path, out found)) v = TextOf(found);
+            }
+            else if (from == "header") { string hv; if (heads != null && heads.TryGetValue(path.ToLowerInvariant(), out hv)) v = hv; }
+            else if (from == "status") v = status.ToString();
+            else if (from == "exit") v = exit.ToString();
+            else if (from == "body" || from == "output") v = from == "output" ? text.Trim() : text;
+            else if (from == "regex")
+            {
+                try
+                {
+                    Match m = new Regex(path, RegexOptions.None, TimeSpan.FromSeconds(2)).Match(text);
+                    if (m.Success) v = m.Groups.Count > 1 && m.Groups[1].Success ? m.Groups[1].Value : m.Value;
+                }
+                catch (ArgumentException) { c.Errors.Add("the pattern for " + name + " is not a valid one"); }
+                catch (RegexMatchTimeoutException) { c.Errors.Add("the pattern for " + name + " took too long"); }
+            }
+            if (v == null) { missing.Add(name); continue; }
+            if (show == "hidden")
+            {
+                lock (c.Run) { c.Run.Hidden[name] = v; }
+                AddKnown(c.Run, v);
+                hidden.Add(name);
+                saved.Remove(name);
+            }
+            else
+            {
+                lock (c.Run) { c.Run.Hidden.Remove(name); }
+                if (v.Length > AutoValueMax) v = v.Substring(0, AutoValueMax);
+                saved[name] = v;
+            }
+        }
+        //  A shown value must not be a way to carry a secret out. One that
+        //  holds a secret or a hidden value of this run, or is shaped like a
+        //  token or a password field, is kept HIDDEN instead - the steps
+        //  after it still get it; the page is told it was held back.
+        List<string> keys = new List<string>(saved.Keys);
+        foreach (string k in keys)
+        {
+            string v = saved[k];
+            if (Redact(v, c.Run) == v && !LooksSecret(v)) continue;
+            lock (c.Run) { c.Run.Hidden[k] = v; }
+            AddKnown(c.Run, v);
+            saved.Remove(k);
+            if (!hidden.Contains(k)) hidden.Add(k);
+            redacted.Add(k);
+        }
+    }
+
+    static string StepAnswer(StepCtx c, bool ok, int status, int exit, long ms, string url, string text, bool cut, string type,
+                             Dictionary<string, string> heads, Dictionary<string, string> saved, List<string> hidden,
+                             List<string> missing, List<string> redacted, string until, bool test, string error)
+    {
+        if (c.Errors.Count > 0) { ok = false; error = (error.Length > 0 ? error + "; " : "") + string.Join("; ", c.Errors.ToArray()); }
+        bool hasUntil = false, met = false;
+        if (ok && until.Length > 0)
+        {
+            //  what this step saved, shown or hidden, and its own status
+            Dictionary<string, string> extra = new Dictionary<string, string>(saved);
+            extra["status"] = (exit >= 0 ? exit : status).ToString();
+            string err = CondEval(until, c, extra, out met);
+            if (err != null) { ok = false; error = "its \"repeat until\": " + err; }
+            else hasUntil = true;
+        }
+        JOut o = new JOut().B("ok", ok);
+        if (status >= 0) o.N("status", status);
+        if (exit >= 0) o.N("exit", exit).N("status", exit);
+        o.N("ms", ms);
+        if (url != null) o.S("url", url);
+        JOut sv = new JOut();
+        foreach (KeyValuePair<string, string> kv in saved) sv.S(kv.Key, kv.Value);
+        o.Raw("saved", sv.ToString()).Raw("hidden", JsonList(hidden)).Raw("missing", JsonList(missing)).Raw("redacted", JsonList(redacted));
+        if (hasUntil) o.B("until", met);
+        string ex = Redact(text ?? "", c.Run);
+        int lim = test ? 20000 : 600;
+        if (ex.Length > lim) { ex = ex.Substring(0, lim); cut = true; }
+        o.S("excerpt", ex).B("cut", cut).S("contentType", type ?? "");
+        if (test && heads != null)
+        {
+            JOut hh = new JOut();
+            foreach (string k in new string[] { "content-type", "location", "retry-after", "x-request-id", "x-correlation-id" })
+                if (heads.ContainsKey(k)) hh.S(k, Redact(heads[k], c.Run));
+            o.Raw("headers", hh.ToString());
+        }
+        if (!ok) o.S("error", Redact(error, c.Run));
+        return o.ToString();
+    }
+
+    //  ── a script ───────────────────────────────────────────────────────────
+    static readonly Regex CmdBad = new Regex("[\"%!^&|<>()\\r\\n\\0]");
+
+    static string DoScript(StepCtx c, JObj step, string until, bool test)
+    {
+        if (Workspace == null)
+            return Failed("KalKech does not know your workspace folder, so it cannot find your scripts. " +
+                          "Choose it from the icon by the clock: Workspace folder...", c);
+        string file = JS(step, "file");
+        bool kindOk = IsWindows ? Regex.IsMatch(file, @"^[A-Za-z0-9 _.\-]{1,120}\.(bat|cmd)$", RegexOptions.IgnoreCase)
+                                : Regex.IsMatch(file, @"^[A-Za-z0-9 _.\-]{1,120}\.(sh)$", RegexOptions.IgnoreCase);
+        if (!kindOk || file.StartsWith(".") || file.IndexOf("..") >= 0)
+            return Failed("\"" + file + "\" is not a script this can run - a .bat or .cmd file in your scripts folder, with a plain name", c);
+        string dir = Path.Combine(Workspace, "scripts");
+        string full = Path.Combine(dir, file);
+        if (!File.Exists(full)) return Failed("there is no " + file + " in " + dir, c);
+
+        StringBuilder line = new StringBuilder();
+        Dictionary<string, string> env = new Dictionary<string, string>();
+        foreach (object o in JA(step, "args"))
+        {
+            List<object> pr = o as List<object>;
+            if (pr == null || pr.Count < 2) continue;
+            string name = TextOf(pr[0]).Trim();
+            if (!Regex.IsMatch(name, @"^[A-Za-z0-9_ .\-]{1,40}$")) { c.Errors.Add("\"" + name + "\" is not a value name a script can be given"); continue; }
+            string v = Render(TextOf(pr[1]), c, "none");
+            Match bad = CmdBad.Match(v);
+            if (bad.Success)
+            {
+                string ch = bad.Value == "\r" || bad.Value == "\n" ? "a line break" : bad.Value == "\0" ? "a NUL" : bad.Value;
+                c.Errors.Add("the value for " + name + " has " + ch + " in it, which a script's command line would act on - it was not passed");
+                continue;
+            }
+            line.Append(" \"").Append(v).Append('"');
+            env["KK_" + Regex.Replace(name.ToUpperInvariant(), "[^A-Z0-9_]", "_")] = v;
+        }
+        if (c.Errors.Count > 0) return Failed(string.Join("; ", c.Errors.ToArray()), c);
+
+        int seconds = Math.Max(1, Math.Min(600, JN(step, "timeout", 120)));
+        ProcessStartInfo psi = IsWindows
+            ? new ProcessStartInfo("cmd.exe", "/d /s /c \"\"" + full + "\"" + line.ToString() + "\"")
+            : new ProcessStartInfo("/bin/sh", "\"" + full + "\"" + line.ToString());
+        psi.UseShellExecute = false;
+        psi.CreateNoWindow = true;
+        psi.WindowStyle = ProcessWindowStyle.Hidden;
+        psi.RedirectStandardOutput = true;
+        psi.RedirectStandardError = true;
+        psi.RedirectStandardInput = true;
+        psi.WorkingDirectory = dir;
+        if (IsWindows)
+        {
+            try
+            {
+                Encoding oem = Encoding.GetEncoding(CultureInfo.CurrentCulture.TextInfo.OEMCodePage);
+                psi.StandardOutputEncoding = oem;
+                psi.StandardErrorEncoding = oem;
+            }
+            catch (Exception) { }
+        }
+        foreach (KeyValuePair<string, string> kv in env) psi.EnvironmentVariables[kv.Key] = kv.Value;
+        psi.EnvironmentVariables["KALKECH"] = "1";
+
+        StringBuilder outB = new StringBuilder(), errB = new StringBuilder();
+        Stopwatch sw = Stopwatch.StartNew();
+        Process p;
+        try { p = Process.Start(psi); }
+        catch (Exception e) { return Failed("the script could not be started: " + e.Message, c); }
+        bool finished;
+        int exit = -1;
+        using (p)
+        {
+            p.OutputDataReceived += delegate(object s, DataReceivedEventArgs e) { if (e.Data != null) lock (outB) { if (outB.Length < 1024 * 1024) outB.Append(e.Data).Append('\n'); } };
+            p.ErrorDataReceived += delegate(object s, DataReceivedEventArgs e) { if (e.Data != null) lock (errB) { if (errB.Length < 256 * 1024) errB.Append(e.Data).Append('\n'); } };
+            try { p.StandardInput.Close(); } catch (Exception) { }      // a "pause" in it does not wait for ever
+            p.BeginOutputReadLine();
+            p.BeginErrorReadLine();
+            finished = p.WaitForExit(seconds * 1000);
+            if (!finished)
+            {
+                try
+                {
+                    if (IsWindows)
+                    {
+                        ProcessStartInfo kill = new ProcessStartInfo("taskkill", "/PID " + p.Id + " /T /F");
+                        kill.UseShellExecute = false;
+                        kill.CreateNoWindow = true;
+                        Process.Start(kill).WaitForExit(5000);
+                    }
+                    else p.Kill();
+                }
+                catch (Exception) { }
+            }
+            else { p.WaitForExit(); exit = p.ExitCode; }
+        }
+        long took = sw.ElapsedMilliseconds;
+        string output, errors;
+        lock (outB) output = outB.ToString();
+        lock (errB) errors = errB.ToString();
+        Log("  auto      script " + file + " - " + (finished ? "exit " + exit : "stopped after " + seconds + " s") + " (" + took + " ms)");
+        if (!finished)
+            return new JOut().B("ok", false).N("ms", took).S("excerpt", Redact(Tail(output + errors, 600), c.Run))
+                .S("error", "it ran for longer than " + seconds + " seconds and was stopped").ToString();
+
+        string expect = JS(step, "expect").Trim().ToLowerInvariant();
+        if (expect.Length == 0) expect = "0";
+        bool ok = expect == "any";
+        if (!ok) foreach (string part in expect.Split(',')) { int n; if (int.TryParse(part.Trim(), out n) && n == exit) ok = true; }
+        Dictionary<string, string> saved = new Dictionary<string, string>();
+        List<string> hidden = new List<string>(), missing = new List<string>(), redacted = new List<string>();
+        if (ok) Extract(c, step, output, null, -1, exit, saved, hidden, missing, redacted);
+        string shown = errors.Trim().Length > 0 && !ok ? output + "\n" + errors : output;
+        return StepAnswer(c, ok, -1, exit, took, null, test ? shown : Tail(shown, 600), false, "text/plain", null,
+                          saved, hidden, missing, redacted, until, test,
+                          ok ? "" : "it finished with exit code " + exit + ", not " + expect);
+    }
+
+    static string Tail(string s, int n) { return s.Length <= n ? s : s.Substring(s.Length - n); }
+
+    //  ── keeping secrets out of what goes back ──────────────────────────────
+    static readonly Regex RedactJsonKey = new Regex(
+        "(\"[^\"\\r\\n]{0,60}?(?:password|passwd|passphrase|pwd|secret|token(?![_-]?type\")|apikey|api_key|api-key|authorization|cookie|session|credential|private_?key|signature)[^\"\\r\\n]{0,40}\"\\s*:\\s*)(\"(?:[^\"\\\\]|\\\\.)*\"|[^,}\\]\\s]+)",
+        RegexOptions.IgnoreCase);
+    static readonly Regex RedactForm = new Regex(
+        "((?<![A-Za-z0-9_])(?:access_token|refresh_token|id_token|token|password|passwd|pwd|secret|client_secret|api_key|apikey|session|code)=)[^&\\s\"'<]+",
+        RegexOptions.IgnoreCase);
+    static readonly Regex RedactXml = new Regex(
+        "(<(?:[A-Za-z0-9_]+:)?(?:password|passwd|token|secret|apikey|api_key|sessionid|session|credential)[^>]*>)([^<]*)",
+        RegexOptions.IgnoreCase);
+    static readonly Regex RedactAuth = new Regex("\\b(Bearer|Basic|Negotiate|NTLM|Digest)\\s+[A-Za-z0-9\\-._~+/=]{8,}", RegexOptions.IgnoreCase);
+    static readonly Regex RedactJwt = new Regex("\\beyJ[A-Za-z0-9_-]{5,}\\.[A-Za-z0-9_-]{5,}\\.[A-Za-z0-9_-]*");
+
+    static string Redact(string text, AutoRun run)
+    {
+        if (string.IsNullOrEmpty(text)) return text ?? "";
+        if (run != null)
+        {
+            List<string> known;
+            lock (run) known = new List<string>(run.Known);
+            known.Sort(delegate(string a, string b) { return b.Length.CompareTo(a.Length); });
+            foreach (string k in known) if (k.Length >= 4) text = text.Replace(k, Dots);
+        }
+        text = RedactJsonKey.Replace(text, "$1\"" + Dots + "\"");
+        text = RedactForm.Replace(text, "$1" + Dots);
+        text = RedactXml.Replace(text, "$1" + Dots);
+        text = RedactAuth.Replace(text, "$1 " + Dots);
+        text = RedactJwt.Replace(text, Dots);
+        return text;
+    }
+
+    static bool LooksSecret(string v)
+    {
+        string t = (v ?? "").Trim();
+        return RedactJwt.IsMatch(t) || Regex.IsMatch(t, "^(Bearer|Basic|Negotiate|NTLM)\\s+\\S{8,}$", RegexOptions.IgnoreCase);
+    }
+
+    //  ── conditions ─────────────────────────────────────────────────────────
+    class CondTok { public string T; public string V; public Ph P; }
+    class CondNode { public string Op = "", Cmp = "", Lit; public CondNode A, B; public Ph P; public bool Neg; }
+    static readonly string[] CondWords = { "and", "or", "not", "contains", "is", "empty", "starts", "ends", "with" };
+
+    static List<CondTok> CondLex(string s, out string error)
+    {
+        error = null;
+        List<CondTok> t = new List<CondTok>();
+        int i = 0;
+        while (i < s.Length)
+        {
+            char ch = s[i];
+            if (char.IsWhiteSpace(ch)) { i++; continue; }
+            if (ch == '{' && i + 1 < s.Length && s[i + 1] == '{')
+            {
+                int j = s.IndexOf("}}", i + 2, StringComparison.Ordinal);
+                if (j < 0) { error = "a {{ with no }}"; return null; }
+                CondTok k = new CondTok(); k.T = "ph"; k.P = ParsePh(s.Substring(i + 2, j - i - 2));
+                t.Add(k); i = j + 2; continue;
+            }
+            if (ch == '"' || ch == '\'')
+            {
+                StringBuilder v = new StringBuilder();
+                int j = i + 1;
+                while (j < s.Length && s[j] != ch)
+                {
+                    if (s[j] == '\\' && j + 1 < s.Length) { v.Append(s[j + 1]); j += 2; }
+                    else v.Append(s[j++]);
+                }
+                if (j >= s.Length) { error = "a quote that does not end"; return null; }
+                CondTok k = new CondTok(); k.T = "lit"; k.V = v.ToString();
+                t.Add(k); i = j + 1; continue;
+            }
+            Match num = Regex.Match(s.Substring(i), @"^-?\d+(?:\.\d+)?");
+            if (num.Success && (ch != '-' || t.Count == 0 || t[t.Count - 1].T == "op"))
+            {
+                CondTok k = new CondTok(); k.T = "lit"; k.V = num.Value;
+                t.Add(k); i += num.Value.Length; continue;
+            }
+            Match op = Regex.Match(s.Substring(i), @"^(==|!=|>=|<=|&&|\|\||=|>|<|!|\(|\))");
+            if (op.Success)
+            {
+                string v = op.Value == "=" ? "==" : op.Value == "&&" ? "and" : op.Value == "||" ? "or" : op.Value == "!" ? "not" : op.Value;
+                CondTok k = new CondTok(); k.T = "op"; k.V = v;
+                t.Add(k); i += op.Value.Length; continue;
+            }
+            Match w = Regex.Match(s.Substring(i), "^[A-Za-z]+");
+            if (w.Success)
+            {
+                string lw = w.Value.ToLowerInvariant();
+                CondTok k = new CondTok();
+                if (Array.IndexOf(CondWords, lw) >= 0) { k.T = "op"; k.V = lw; }
+                else if (lw == "true" || lw == "false") { k.T = "lit"; k.V = lw; }
+                else { error = "\"" + w.Value + "\" is not a word a condition knows"; return null; }
+                t.Add(k); i += w.Value.Length; continue;
+            }
+            error = "\"" + ch + "\" cannot be in a condition";
+            return null;
+        }
+        return t;
+    }
+
+    class CondParser
+    {
+        List<CondTok> t; int i;
+        public CondParser(List<CondTok> toks) { t = toks; }
+        bool Peek(string v) { return i < t.Count && t[i].T == "op" && t[i].V == v; }
+        static Exception Bad(string why) { return new FormatException(why); }
+        public CondNode Parse()
+        {
+            if (t.Count == 0) throw Bad("it is empty");
+            CondNode n = Or();
+            if (i < t.Count) throw Bad("there is more after the end of it");
+            return n;
+        }
+        CondNode Atom()
+        {
+            if (i >= t.Count) throw Bad("it ends too soon");
+            CondTok k = t[i];
+            if (k.T == "ph")
+            {
+                if (k.P.Bad.Length > 0) throw Bad("{{" + k.P.Raw + "}} is not a name it knows");
+                i++; CondNode n = new CondNode(); n.Op = "val"; n.P = k.P; return n;
+            }
+            if (k.T == "lit") { i++; CondNode n = new CondNode(); n.Op = "val"; n.Lit = k.V; return n; }
+            if (Peek("("))
+            {
+                i++; CondNode e = Or();
+                if (!Peek(")")) throw Bad("a ( with no )");
+                i++; return e;
+            }
+            throw Bad("a value was expected");
+        }
+        CondNode Node(string op, string cmp, CondNode a, CondNode b) { CondNode n = new CondNode(); n.Op = op; n.Cmp = cmp; n.A = a; n.B = b; return n; }
+        CondNode Cmp()
+        {
+            CondNode a = Atom();
+            if (Peek("is"))
+            {
+                i++;
+                bool neg = false;
+                if (Peek("not")) { neg = true; i++; }
+                if (!Peek("empty")) throw Bad("\"is\" is followed by \"empty\" or \"not empty\"");
+                i++;
+                CondNode n = Node("empty", "", a, null); n.Neg = neg; return n;
+            }
+            if (Peek("not") && i + 1 < t.Count && t[i + 1].T == "op" && t[i + 1].V == "contains")
+            {
+                i += 2;
+                return Node("not", "", Node("cmp", "contains", a, Atom()), null);
+            }
+            if (Peek("starts") || Peek("ends"))
+            {
+                string which = t[i].V; i++;
+                if (!Peek("with")) throw Bad("\"" + which + "\" is followed by \"with\"");
+                i++;
+                return Node("cmp", which, a, Atom());
+            }
+            foreach (string o in new string[] { "==", "!=", ">=", "<=", ">", "<", "contains" })
+                if (Peek(o)) { i++; return Node("cmp", o, a, Atom()); }
+            return a;
+        }
+        CondNode Not() { if (Peek("not")) { i++; return Node("not", "", Not(), null); } return Cmp(); }
+        CondNode And() { CondNode a = Not(); while (Peek("and")) { i++; a = Node("and", "", a, Not()); } return a; }
+        CondNode Or() { CondNode a = And(); while (Peek("or")) { i++; a = Node("or", "", a, And()); } return a; }
+    }
+
+    //  null when it was read, with its answer in result; else why not
+    static string CondEval(string src, StepCtx c, Dictionary<string, string> extra, out bool result)
+    {
+        result = false;
+        string lexErr;
+        List<CondTok> toks = CondLex(src ?? "", out lexErr);
+        if (toks == null) return lexErr;
+        CondNode root;
+        try { root = new CondParser(toks).Parse(); }
+        catch (FormatException e) { return e.Message; }
+        int before = c.Errors.Count;
+        Func<Ph, string> look = delegate(Ph p)
+        {
+            string v;
+            if (extra != null && p.Ns.Length == 0 && extra.TryGetValue(p.Full, out v)) return Filtered(v, p.Filters);
+            v = Lookup(p, c, false);
+            return v == null ? null : Filtered(v, p.Filters);
+        };
+        result = CondNodeEval(root, look);
+        if (c.Errors.Count > before)
+        {
+            string e = c.Errors[c.Errors.Count - 1];
+            c.Errors.RemoveRange(before, c.Errors.Count - before);
+            return e;
+        }
+        return null;
+    }
+
+    static readonly Regex NumRe = new Regex(@"^\s*-?\d+(?:\.\d+)?\s*$");
+    static bool Truthy(string v)
+    {
+        if (v == null) return false;
+        string s = v.Trim();
+        return s.Length > 0 && !Regex.IsMatch(s, "^(false|0|null|undefined|no)$", RegexOptions.IgnoreCase);
+    }
+    static string CondVal(CondNode n, Func<Ph, string> look)
+    {
+        if (n.Op == "val") return n.P != null ? look(n.P) : n.Lit;
+        return CondNodeEval(n, look) ? "true" : "false";
+    }
+    static bool CondNodeEval(CondNode n, Func<Ph, string> look)
+    {
+        switch (n.Op)
+        {
+            case "or": return CondNodeEval(n.A, look) || CondNodeEval(n.B, look);
+            case "and": return CondNodeEval(n.A, look) && CondNodeEval(n.B, look);
+            case "not": return !CondNodeEval(n.A, look);
+            case "val": return Truthy(n.P != null ? look(n.P) : n.Lit);
+            case "empty":
+            {
+                string v = CondVal(n.A, look);
+                bool e = v == null || v.Trim().Length == 0;
+                return n.Neg ? !e : e;
+            }
+            case "cmp":
+            {
+                string a = CondVal(n.A, look), b = CondVal(n.B, look);
+                string sa = a == null ? "" : a.Trim(), sb = b == null ? "" : b.Trim();
+                bool nums = NumRe.IsMatch(sa) && NumRe.IsMatch(sb);
+                double da = 0, db = 0;
+                if (nums)
+                {
+                    da = double.Parse(sa, NumberStyles.Float, CultureInfo.InvariantCulture);
+                    db = double.Parse(sb, NumberStyles.Float, CultureInfo.InvariantCulture);
+                }
+                string la = sa.ToLowerInvariant(), lb = sb.ToLowerInvariant();
+                int c = string.CompareOrdinal(la, lb);
+                switch (n.Cmp)
+                {
+                    case "==": return nums ? da == db : la == lb;
+                    case "!=": return nums ? da != db : la != lb;
+                    case ">": return nums ? da > db : c > 0;
+                    case "<": return nums ? da < db : c < 0;
+                    case ">=": return nums ? da >= db : c >= 0;
+                    case "<=": return nums ? da <= db : c <= 0;
+                    case "contains": return la.IndexOf(lb, StringComparison.Ordinal) >= 0;
+                    case "starts": return la.StartsWith(lb, StringComparison.Ordinal);
+                    case "ends": return la.EndsWith(lb, StringComparison.Ordinal);
+                }
+                return false;
+            }
+        }
+        return false;
+    }
+
+    //  ── JSON, read and written ─────────────────────────────────────────────
+    //  The few hundred lines a framework would bring, without the framework:
+    //  numbers are kept as they were written (an id of twenty digits stays
+    //  twenty digits), objects keep their order, and nothing nests deeper
+    //  than 64.
+    class JNum { public string Raw; public JNum(string r) { Raw = r; } }
+    class JObj
+    {
+        public List<string> Keys = new List<string>();
+        public Dictionary<string, object> Map = new Dictionary<string, object>();
+        public void Set(string k, object v) { if (!Map.ContainsKey(k)) Keys.Add(k); Map[k] = v; }
+        public bool Has(string k) { return Map.ContainsKey(k); }
+        public object Get(string k) { object v; return Map.TryGetValue(k, out v) ? v : null; }
+    }
+    class JsonReader
+    {
+        string s; int i; int depth;
+        public static object Parse(string text)
+        {
+            JsonReader r = new JsonReader();
+            r.s = text ?? "";
+            if (r.s.Length > 0 && r.s[0] == '\uFEFF') r.s = r.s.Substring(1);
+            r.Ws();
+            object v = r.Value();
+            r.Ws();
+            if (r.i != r.s.Length) throw new FormatException("there is more after the JSON, at " + r.i);
+            return v;
+        }
+        void Ws() { while (i < s.Length && (s[i] == ' ' || s[i] == '\t' || s[i] == '\r' || s[i] == '\n')) i++; }
+        object Value()
+        {
+            if (i >= s.Length) throw new FormatException("the JSON ends too soon");
+            char c = s[i];
+            if (c == '{') return Obj();
+            if (c == '[') return Arr();
+            if (c == '"') return Str();
+            if (Lit("true")) return true;
+            if (Lit("false")) return false;
+            if (Lit("null")) return null;
+            if (c == '-' || (c >= '0' && c <= '9')) return Num();
+            throw new FormatException("\"" + c + "\" was not expected at " + i);
+        }
+        bool Lit(string w)
+        {
+            if (i + w.Length <= s.Length && string.CompareOrdinal(s, i, w, 0, w.Length) == 0) { i += w.Length; return true; }
+            return false;
+        }
+        JObj Obj()
+        {
+            if (++depth > 64) throw new FormatException("the JSON is nested too deeply");
+            JObj o = new JObj();
+            i++; Ws();
+            if (i < s.Length && s[i] == '}') { i++; depth--; return o; }
+            while (true)
+            {
+                Ws();
+                if (i >= s.Length || s[i] != '"') throw new FormatException("a name in quotes was expected at " + i);
+                string k = Str();
+                Ws();
+                if (i >= s.Length || s[i] != ':') throw new FormatException("\":\" was expected at " + i);
+                i++; Ws();
+                o.Set(k, Value());
+                Ws();
+                if (i < s.Length && s[i] == ',') { i++; continue; }
+                if (i < s.Length && s[i] == '}') { i++; break; }
+                throw new FormatException("\",\" or \"}\" was expected at " + i);
+            }
+            depth--;
+            return o;
+        }
+        List<object> Arr()
+        {
+            if (++depth > 64) throw new FormatException("the JSON is nested too deeply");
+            List<object> a = new List<object>();
+            i++; Ws();
+            if (i < s.Length && s[i] == ']') { i++; depth--; return a; }
+            while (true)
+            {
+                Ws();
+                a.Add(Value());
+                Ws();
+                if (i < s.Length && s[i] == ',') { i++; continue; }
+                if (i < s.Length && s[i] == ']') { i++; break; }
+                throw new FormatException("\",\" or \"]\" was expected at " + i);
+            }
+            depth--;
+            return a;
+        }
+        string Str()
+        {
+            StringBuilder b = new StringBuilder();
+            i++;
+            while (i < s.Length)
+            {
+                char c = s[i++];
+                if (c == '"') return b.ToString();
+                if (c != '\\') { b.Append(c); continue; }
+                if (i >= s.Length) break;
+                char e = s[i++];
+                switch (e)
+                {
+                    case '"': b.Append('"'); break;
+                    case '\\': b.Append('\\'); break;
+                    case '/': b.Append('/'); break;
+                    case 'b': b.Append('\b'); break;
+                    case 'f': b.Append('\f'); break;
+                    case 'n': b.Append('\n'); break;
+                    case 'r': b.Append('\r'); break;
+                    case 't': b.Append('\t'); break;
+                    case 'u':
+                        if (i + 4 > s.Length) throw new FormatException("a \\u escape is cut short");
+                        b.Append((char)Convert.ToInt32(s.Substring(i, 4), 16));
+                        i += 4;
+                        break;
+                    default: throw new FormatException("\\" + e + " is not an escape JSON has");
+                }
+            }
+            throw new FormatException("a string in the JSON does not end");
+        }
+        JNum Num()
+        {
+            int st = i;
+            if (s[i] == '-') i++;
+            while (i < s.Length && "0123456789.eE+-".IndexOf(s[i]) >= 0) i++;
+            string raw = s.Substring(st, i - st);
+            double d;
+            if (!double.TryParse(raw, NumberStyles.Float, CultureInfo.InvariantCulture, out d))
+                throw new FormatException("\"" + raw + "\" is not a number");
+            return new JNum(raw);
+        }
+    }
+
+    static string JsonOf(object v)
+    {
+        if (v == null) return "null";
+        if (v is string) return Json((string)v);
+        if (v is bool) return (bool)v ? "true" : "false";
+        JNum n = v as JNum;
+        if (n != null) return n.Raw;
+        JObj o = v as JObj;
+        if (o != null)
+        {
+            StringBuilder b = new StringBuilder("{");
+            for (int i = 0; i < o.Keys.Count; i++)
+                b.Append(i > 0 ? "," : "").Append(Json(o.Keys[i])).Append(':').Append(JsonOf(o.Map[o.Keys[i]]));
+            return b.Append('}').ToString();
+        }
+        List<object> a = v as List<object>;
+        if (a != null)
+        {
+            StringBuilder b = new StringBuilder("[");
+            for (int i = 0; i < a.Count; i++) b.Append(i > 0 ? "," : "").Append(JsonOf(a[i]));
+            return b.Append(']').ToString();
+        }
+        return Json(v.ToString());
+    }
+
+    //  a value as text: a string as it is, a number as it was written,
+    //  anything bigger as its JSON
+    static string TextOf(object v)
+    {
+        if (v == null) return "";
+        if (v is string) return (string)v;
+        if (v is bool) return (bool)v ? "true" : "false";
+        JNum n = v as JNum;
+        if (n != null) return n.Raw;
+        return JsonOf(v);
+    }
+
+    static string JsonList(List<string> l)
+    {
+        StringBuilder b = new StringBuilder("[");
+        for (int i = 0; i < l.Count; i++) b.Append(i > 0 ? "," : "").Append(Json(l[i]));
+        return b.Append(']').ToString();
+    }
+
+    //  "coi.files[0].url", "$.data.token", "items.0.id", ["odd key"]
+    static List<string> JsonPathParts(string path)
+    {
+        string p = (path ?? "").Trim();
+        if (p.StartsWith("$")) { p = p.Substring(1); if (p.StartsWith(".")) p = p.Substring(1); }
+        List<string> parts = new List<string>();
+        int i = 0;
+        while (i < p.Length)
+        {
+            if (p[i] == '.') { i++; continue; }
+            if (p[i] == '[')
+            {
+                int j = p.IndexOf(']', i);
+                if (j < 0) return null;
+                string k = p.Substring(i + 1, j - i - 1).Trim();
+                if (k.Length >= 2 && (k[0] == '"' || k[0] == '\'') && (k[k.Length - 1] == '"' || k[k.Length - 1] == '\'')) k = k.Substring(1, k.Length - 2);
+                parts.Add(k);
+                i = j + 1;
+                continue;
+            }
+            int e = i;
+            while (e < p.Length && p[e] != '.' && p[e] != '[') e++;
+            parts.Add(p.Substring(i, e - i));
+            i = e;
+        }
+        return parts;
+    }
+
+    static bool JsonAt(object root, string path, out object found)
+    {
+        found = null;
+        List<string> parts = JsonPathParts(path);
+        if (parts == null) return false;
+        object cur = root;
+        foreach (string k in parts)
+        {
+            JObj o = cur as JObj;
+            List<object> a = cur as List<object>;
+            if (o != null) { if (!o.Has(k)) return false; cur = o.Get(k); }
+            else if (a != null)
+            {
+                int n;
+                if (!Regex.IsMatch(k, "^[0-9]+$") || !int.TryParse(k, out n) || n >= a.Count) return false;
+                cur = a[n];
+            }
+            else return false;
+        }
+        found = cur;
+        return true;
+    }
+
+    static string JS(JObj o, string k) { if (o == null) return ""; object v = o.Get(k); return v == null ? "" : TextOf(v); }
+    static bool JB(JObj o, string k) { if (o == null) return false; object v = o.Get(k); return v is bool && (bool)v; }
+    static JObj JO(JObj o, string k) { return o == null ? null : o.Get(k) as JObj; }
+    static List<object> JA(JObj o, string k) { List<object> a = o == null ? null : o.Get(k) as List<object>; return a ?? new List<object>(); }
+    static int JN(JObj o, string k, int d)
+    {
+        double v;
+        string s = JS(o, k);
+        return s.Length > 0 && double.TryParse(s, NumberStyles.Float, CultureInfo.InvariantCulture, out v) ? (int)Math.Round(v) : d;
+    }
+
+    //  a JSON object, written a field at a time
+    class JOut
+    {
+        StringBuilder b = new StringBuilder("{");
+        bool first = true;
+        JOut K(string k) { if (!first) b.Append(','); first = false; b.Append(Json(k)).Append(':'); return this; }
+        public JOut S(string k, string v) { K(k); b.Append(Json(v ?? "")); return this; }
+        public JOut N(string k, long v) { K(k); b.Append(v); return this; }
+        public JOut B(string k, bool v) { K(k); b.Append(v ? "true" : "false"); return this; }
+        public JOut Raw(string k, string json) { K(k); b.Append(json); return this; }
+        public override string ToString() { return b.ToString() + "}"; }
     }
 
     // ── odds and ends ───────────────────────────────────────────────────────

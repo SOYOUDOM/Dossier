@@ -1425,6 +1425,202 @@ kbd{font-family:var(--f-mono);font-size:9.5px;border:1px solid var(--rule-hi);bo
 .prm{display:grid;grid-template-columns:104px 1fr;gap:7px;align-items:center;margin-top:6px}
 .prm label{font-family:var(--f-mono);font-size:10.5px;color:var(--ink-3);overflow:hidden;text-overflow:ellipsis}
 
+/* ═══ AUTOMATIONS (5.22) ════════════════════════════════════════════════
+   Menu → Automations: the list, the designer, a connection; and the run
+   card, drawn in the panel and in the conversation. */
+#pAuto{font-size:12.5px}
+#pAuto .ib{width:28px;height:28px;font-size:12px}
+.auintro{font-size:12px;color:var(--ink-2);line-height:1.7;margin:0 0 12px}
+.aunote{font-size:11.5px;color:var(--ink-2);line-height:1.65;margin:0 0 10px}
+.auhint{display:block;font-size:10.5px;color:var(--ink-3);line-height:1.5;margin-top:4px}
+.auhint.warn,.srchint.warn{color:var(--p2)}
+.aubridge{font-size:11.5px;padding:7px 10px;border-radius:var(--r-sm);border:1px solid var(--rule);
+  background:var(--paper-2);color:var(--ink-2);margin-bottom:10px;line-height:1.55}
+.aubridge.ok{border-color:color-mix(in srgb,var(--st-done) 40%,var(--rule));color:var(--st-done)}
+.aubridge.bad{border-color:color-mix(in srgb,var(--p2) 45%,var(--rule));color:var(--p2)}
+.auopt{display:flex;gap:9px;align-items:flex-start;padding:6px 0;cursor:pointer}
+.auopt .cb{margin-top:2px;flex:0 0 auto}
+.auopt b{display:block;font-size:12px;font-weight:650}
+.auopt small{display:block;font-size:10.5px;color:var(--ink-3);line-height:1.5;margin-top:2px}
+.auopts{display:grid;grid-template-columns:1fr 1fr;gap:4px 16px;margin:6px 0 4px}
+.auh{margin:18px 0 8px}
+.aubar{margin-bottom:10px;align-items:center}
+.aunewmenu{display:flex;flex-wrap:wrap;gap:6px}
+.aunewmenu[hidden]{display:none}
+.aurow{display:flex;gap:10px;align-items:flex-start;border:1px solid var(--rule);border-radius:var(--r-sm);
+  background:var(--paper-2);padding:9px 11px;margin-bottom:7px}
+.aurt{flex:1;min-width:0}
+.aurt b{display:block;font-size:12.5px;font-weight:650}
+.aurt small{display:block;font-size:11px;color:var(--ink-2);margin-top:2px;overflow-wrap:anywhere}
+.aurt small.mono{font-family:var(--f-mono);font-size:10.5px}
+.aurm{display:inline;font-size:10.5px;color:var(--ink-3)}
+.aurt>.aurm{display:block;margin-top:4px}
+.aurb{display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end;flex:0 0 auto;max-width:48%}
+.auwarn{display:block;font-size:10.5px;color:var(--p2);margin-top:4px;line-height:1.5}
+.auempty{font-size:12px;color:var(--ink-3);margin-bottom:10px}
+.ausec{display:inline-flex;flex-wrap:wrap;gap:4px;margin-top:4px;vertical-align:middle}
+.auchip{display:inline-block;font-family:var(--f-mono);font-size:10.5px;padding:2px 7px;border-radius:999px;
+  border:1px solid var(--rule);background:var(--paper);color:var(--ink-2);white-space:nowrap;line-height:1.5}
+button.auchip{cursor:pointer}
+button.auchip:hover{border-color:var(--accent);color:var(--accent)}
+.auchip.ok{color:var(--st-done);border-color:color-mix(in srgb,var(--st-done) 40%,var(--rule))}
+.auchip.no{color:var(--ink-3)}
+.auchip.moved{color:var(--p2);border-color:color-mix(in srgb,var(--p2) 45%,var(--rule))}
+.auchip.sec{color:var(--accent)}
+.auruns{display:flex;flex-direction:column;gap:4px}
+.aurun{display:grid;grid-template-columns:auto 1fr auto auto auto;gap:10px;align-items:center;text-align:left;width:100%;
+  border:1px solid var(--rule);background:var(--paper-2);border-radius:var(--r-xs);padding:6px 9px;font-size:11.5px;
+  color:var(--ink);cursor:pointer;font-family:inherit}
+.aurun:hover,.aurun.open{border-color:var(--rule-hi)}
+.aurun b{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.aurun .w,.aurun .by,.aurun .t{color:var(--ink-3);font-size:10.5px}
+.aurun .t{font-family:var(--f-mono)}
+.aurun .s{font-size:10.5px;font-weight:650}
+.aurun.ok .s{color:var(--st-done)}
+.aurun.failed .s,.aurun.partial .s{color:var(--p1)}
+.aurun.stopped .s{color:var(--ink-3)}
+/* the designer */
+.aueh{display:flex;align-items:center;gap:10px;margin:-4px 0 14px;position:sticky;top:0;z-index:3;
+  background:var(--paper);padding:8px 0;border-bottom:1px solid var(--rule)}
+.aueh b{font-size:13px}
+.aueh .sp{flex:1}
+.augrid{display:grid;grid-template-columns:118px minmax(0,1fr);gap:8px 10px;align-items:start}
+.augrid>label{font-size:11.5px;color:var(--ink-2);padding-top:7px}
+.augrid.top{margin-bottom:8px}
+.aurow2{display:flex;gap:6px;align-items:center;flex-wrap:wrap;min-width:0}
+.aurow2 .in{flex:1;min-width:120px}
+.aurow2 .in.aushort,.in.aushort{flex:0 0 auto;width:84px;min-width:0}
+.aurow2 small{font-size:11px;color:var(--ink-3)}
+.aurow2 .in.aumeth{flex:0 0 auto;width:96px;min-width:0}
+.aubase{font-family:var(--f-mono);font-size:10.5px;color:var(--ink-3);max-width:220px;overflow:hidden;
+  text-overflow:ellipsis;white-space:nowrap}
+.in.mono{font-family:var(--f-mono);font-size:11.5px}
+.aupairs{display:flex;flex-direction:column;gap:5px;align-items:flex-start;min-width:0}
+.aupair{display:grid;grid-template-columns:minmax(90px,.8fr) minmax(0,1.4fr) auto;gap:5px;width:100%}
+.austep{border:1px solid var(--rule);border-radius:var(--r);background:var(--paper-2);margin-bottom:10px}
+.aush{display:flex;align-items:center;gap:7px;padding:7px 9px;border-bottom:1px solid var(--rule);background:var(--paper-3);
+  border-radius:var(--r) var(--r) 0 0}
+.aun{font-family:var(--f-mono);font-size:11px;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;
+  background:var(--paper);border:1px solid var(--rule);flex:0 0 auto}
+.auk{font-size:9.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;padding:2px 7px;border-radius:999px;
+  background:var(--accent-soft);color:var(--accent);flex:0 0 auto}
+.auk.script{background:color-mix(in srgb,var(--teal) 14%,transparent);color:var(--teal)}
+.auk.wait,.auk.confirm{background:var(--paper);color:var(--ink-2);border:1px solid var(--rule)}
+.aush .in.auname{flex:1;min-width:0;font-weight:600}
+.aub{padding:10px 11px}
+.ausaves{margin-top:10px;padding-top:9px;border-top:1px dashed var(--rule)}
+.ausl{font-size:11.5px;color:var(--ink-2);margin-bottom:6px}
+.ausl small{display:block;font-size:10.5px;color:var(--ink-3);margin-top:2px}
+.ausave{display:grid;grid-template-columns:minmax(80px,.7fr) minmax(110px,.8fr) minmax(0,1.3fr) minmax(130px,.9fr) auto;
+  gap:5px;margin-bottom:5px}
+.in.aushow.hidden{color:var(--ink-2)}
+.in.aushow.ai{color:var(--accent);font-weight:600}
+.aumore{margin-top:10px}
+.aumore summary{cursor:pointer;font-size:11.5px;color:var(--ink-2)}
+.aumore .augrid{margin-top:8px}
+.ausub{margin-top:5px}
+.auchips,.aupaths{display:flex;flex-wrap:wrap;gap:4px;align-items:center;margin-top:10px}
+.auchips>span,.aupaths>span{font-size:10.5px;color:var(--ink-3);margin-right:2px}
+.autry{margin-top:10px;align-items:center}
+.autry .auhint{margin:0}
+.autest{margin-top:8px;border:1px solid var(--rule);border-radius:var(--r-sm);background:var(--paper);padding:8px 10px;font-size:11.5px}
+.autest.ok{border-color:color-mix(in srgb,var(--st-done) 45%,var(--rule))}
+.autest.fail{border-color:color-mix(in srgb,var(--p1) 45%,var(--rule))}
+.autest .autl{overflow-wrap:anywhere}
+.autest .mono{font-family:var(--f-mono);font-size:10.5px;color:var(--ink-3)}
+.autest .nt{color:var(--p1);margin-top:4px;font-size:11px;overflow-wrap:anywhere;line-height:1.5}
+.autest.ok .nt{color:var(--ink-2)}
+.auex{margin:7px 0 0;max-height:220px;overflow:auto;font-family:var(--f-mono);font-size:10.5px;background:var(--paper-3);
+  border:1px solid var(--rule);border-radius:var(--r-xs);padding:7px 9px;white-space:pre-wrap;word-break:break-all}
+.auins{display:flex;flex-direction:column;gap:5px;margin-bottom:8px}
+.auinh,.auin{display:grid;grid-template-columns:minmax(70px,.8fr) minmax(0,1fr) minmax(96px,.75fr) minmax(0,1.1fr) minmax(0,.9fr) 34px auto;
+  gap:5px;align-items:center}
+.auinh span{font-size:9.5px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.06em}
+.auin .cb{justify-self:center}
+.autvals{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:10px}
+.autvals span{font-size:11px;color:var(--ink-2)}
+.autvals .in{width:auto;flex:1;min-width:140px}
+.auadd{align-items:center;margin:4px 0 10px}
+.auadd span{font-size:11.5px;color:var(--ink-2)}
+.auprobs{margin:12px 0;font-size:11.5px;border:1px solid var(--rule);border-radius:var(--r-sm);padding:8px 11px;background:var(--paper-2)}
+.auprobs.bad{border-color:color-mix(in srgb,var(--p1) 40%,var(--rule))}
+.auprobs ul{margin:5px 0 0;padding-left:18px}
+.auprobs li{color:var(--p1);margin:2px 0;line-height:1.5}
+.auprobs li.warn{color:var(--p2)}
+.auprobs .ok{color:var(--st-done)}
+.auend{margin-top:10px}
+.ausecs{display:flex;flex-direction:column;gap:6px;font-size:12px}
+.ausecrow{display:flex;gap:9px;align-items:center;flex-wrap:wrap}
+.ausecrow .mono{font-family:var(--f-mono);min-width:110px}
+.ausecrow .ok{color:var(--st-done)}
+.ausecrow .no{color:var(--ink-3)}
+.ausecrow .moved{color:var(--p2)}
+.audlg .srcdlgb{width:min(480px,100%)}
+.audlg .in[type=password]{font-family:var(--f-mono);letter-spacing:.12em}
+.aufld{display:block;margin:0 0 10px}
+.aufld>span{display:block;font-size:11.5px;font-weight:600;color:var(--ink-2);margin-bottom:4px}
+.aufld small{display:block;font-size:10.5px;color:var(--ink-3);margin-top:3px}
+.auerr{display:block;font-style:normal;font-size:11px;color:var(--p1);margin-top:3px}
+.auerr:empty{display:none}
+/* the run card - in the panel, and (wearing the chat's colours) in a conversation */
+.aulive:empty{display:none}
+.aucard{border:1px solid var(--rule);border-radius:var(--r);background:var(--paper);padding:10px 12px;font-size:12px;margin:6px 0;
+  max-width:100%}
+.auch{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.auch b{flex:1;min-width:0;font-size:12.5px;font-weight:650}
+.auico{font-size:14px;color:var(--accent);line-height:1}
+.aust{font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:999px;background:var(--paper-3);color:var(--ink-2);
+  display:inline-flex;align-items:center;gap:5px}
+.aust.ok{background:color-mix(in srgb,var(--st-done) 14%,transparent);color:var(--st-done)}
+.aust.failed,.aust.partial{background:color-mix(in srgb,var(--p1) 12%,transparent);color:var(--p1)}
+.aust.running{background:var(--accent-soft);color:var(--accent)}
+.aums{font-family:var(--f-mono);font-size:10.5px;color:var(--ink-3)}
+.auspin{display:inline-block;width:8px;height:8px;border-radius:50%;border:2px solid currentColor;border-right-color:transparent;
+  animation:auSpin .8s linear infinite}
+@keyframes auSpin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.auspin{animation:none}}
+.aumeta{font-size:10.5px;color:var(--ink-3);margin:4px 0 7px;overflow-wrap:anywhere;line-height:1.5}
+.austeps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:3px}
+.aus{display:grid;grid-template-columns:16px minmax(0,1fr) auto;gap:6px;align-items:baseline;font-size:11.5px}
+.aus i{font-style:normal;text-align:center;color:var(--ink-3)}
+.aus.ok i{color:var(--st-done)}
+.aus.fail i{color:var(--p1)}
+.aus.run i,.aus.sleep i,.aus.again i,.aus.ask i{color:var(--accent)}
+.aus.wait .n{color:var(--ink-3)}
+.aus .m{font-family:var(--f-mono);font-size:10px;color:var(--ink-3);text-align:right}
+.aus .nt{grid-column:2 / -1;font-size:10.5px;color:var(--p1);overflow-wrap:anywhere;line-height:1.5}
+.aus.no .nt{color:var(--ink-3)}
+.auvals{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
+.auv{font-size:10.5px;padding:2px 8px;border-radius:var(--r-xs);background:var(--paper-3);border:1px solid var(--rule);
+  overflow-wrap:anywhere;max-width:100%;line-height:1.6}
+.auv b{font-family:var(--f-mono);font-weight:600;color:var(--ink-2)}
+.auv.ai{border-color:color-mix(in srgb,var(--accent) 35%,var(--rule))}
+.auv em{font-style:normal;color:var(--accent)}
+.auv.hid{color:var(--ink-3)}
+.auresult{margin-top:8px;font-size:12px;font-weight:600;overflow-wrap:anywhere}
+.auf{display:flex;gap:6px;margin-top:9px;flex-wrap:wrap}
+.auf:empty{display:none}
+.chat .aumsg .aucard{background:var(--ch-panel);color:var(--ch-ink);border-color:var(--ch-line)}
+.chat .aumsg .aumeta,.chat .aumsg .aus .m,.chat .aumsg .aums,.chat .aumsg .aus i,.chat .aumsg .aus.wait .n,
+.chat .aumsg .auv.hid{color:var(--ch-dim)}
+.chat .aumsg .aust{background:var(--ch-bg);color:var(--ch-dim)}
+.chat .aumsg .aust.running,.chat .aumsg .auico,.chat .aumsg .aus.run i,.chat .aumsg .aus.again i,
+.chat .aumsg .aus.sleep i,.chat .aumsg .auv em{color:var(--ch-acc)}
+.chat .aumsg .auv{background:var(--ch-bg);border-color:var(--ch-line)}
+.chat .aumsg .auv b{color:var(--ch-ink)}
+.chat .aumsg .auv.ai{border-color:var(--ch-acc)}
+.chat .aumsg .btn{background:var(--ch-bg);color:var(--ch-ink);border-color:var(--ch-line)}
+.chat .aumsg .btn:hover{border-color:var(--ch-acc);color:var(--ch-acc)}
+@media (max-width:640px){
+  .augrid{grid-template-columns:1fr}
+  .augrid>label{padding-top:0}
+  .auopts{grid-template-columns:1fr}
+  .ausave,.auinh,.auin{grid-template-columns:1fr 1fr}
+  .auinh{display:none}
+  .aurow{flex-direction:column}
+  .aurb{max-width:none;justify-content:flex-start}
+}
+
 /* ═══ PALETTE EDITOR ═════════════════════════════════════════════════════ */
 .pal{display:grid;grid-template-columns:repeat(auto-fill,minmax(146px,1fr));gap:9px;margin-bottom:6px}
 .pcard{border:1px solid var(--rule);border-radius:var(--r-sm);padding:10px 11px;background:var(--paper-2);
@@ -6355,6 +6551,7 @@ body.chsizing .app,body.chsizing .pet{transition:none!important}
     <button data-m="report" data-i18n="Tab_Reports">Reports</button>
     <button data-m="routine" data-i18n="Tab_Routines">Routines</button>
     <button data-m="scripts" data-i18n="Tab_Scripts">Scripts</button>
+    <button data-m="auto" data-i18n="Tab_Automations">Automations</button>
     <button data-m="look" data-i18n="Tab_Appearance">Appearance</button>
     <button data-m="setup" data-i18n="Tab_Setup">Setup</button>
     <button data-m="help" data-i18n="Tab_Help">Help</button>
@@ -6364,6 +6561,7 @@ body.chsizing .app,body.chsizing .pet{transition:none!important}
     <div class="mp" data-m="report" id="pReport"></div>
     <div class="mp" data-m="routine" id="pRoutine"></div>
     <div class="mp" data-m="scripts" id="pScripts"></div>
+    <div class="mp" data-m="auto" id="pAuto"></div>
     <div class="mp" data-m="look" id="pLook"></div>
     <div class="mp" data-m="setup" id="pSetup"></div>
     <div class="mp" data-m="help" id="pHelp"></div>
@@ -6469,6 +6667,10 @@ body.chsizing .app,body.chsizing .pet{transition:none!important}
 <!-- Diagrams the assistant writes as ```mermaid blocks, drawn here as pictures
      (diagram.js). Absent, they show as code, exactly as before. -->
 <script src="diagram.js"></script>
+<!-- Automations (5.22): the designs, their checks and the run loop
+     (automations.js). The steps themselves are carried out by the KalKech
+     tray program. Absent, the Automations panel says so. -->
+<script src="automations.js"></script>
 <script src="flow.js"></script>
 <!-- optional: with ocr.js beside this file, a screenshot attached to a question is read here -->
 <script src="ocr.js"></script>
@@ -8990,7 +9192,342 @@ const STRINGS = {
   FlowRan: "Done.",
   FlowVersions: "flow.js {app} · relay {relay}",
   FlowStaleRelay: "The relay in the frame is an older copy than flow.js expects. Hard-refresh with Ctrl+Shift+R.",
-  AiOpenRoutines: "Open Routines"
+  AiOpenRoutines: "Open Routines",
+
+  /* ── Automations (5.22) ─────────────────────────────────────────────── */
+  Tab_Automations: "Automations",
+  AutoIntro: "An automation does one support job for you. It calls your APIs and runs your scripts, one step after another, and passes values from one step to the next - for example: sign in, then regenerate a certificate with the token. You design it once here. Then you run it, or ask the assistant to. Passwords and keys are kept by the KalKech program by the clock, encrypted for your Windows account: the assistant never sees them, and it sees only the values you mark for it.",
+  AutoNoModule: "automations.js is missing from the KalKech folder, so automations are not available. Download KalKech again, or put automations.js back next to dossier.html.",
+  AutoNoBridge: "Automations need the KalKech icon by the clock (start KalKech.bat). It is not running, or this page cannot reach it.",
+  AutoOldBridge: "The KalKech program by the clock is an older copy that does not know automations. Quit it (right-click the icon, Quit) and start KalKech.bat again.",
+  AutoBridgeSaid: "The KalKech program answered {n}.",
+  AutoTimedOut: "No answer from the KalKech program in time. The step may still have run - check before you run it again.",
+  AutoBridgeOk: "Ready: the KalKech program by the clock runs the steps. Scripts come from the scripts folder of {ws}.",
+  AutoNoWs: "(no workspace folder chosen - scripts cannot run)",
+  AutoBridgeOtherWs: "Note: it uses the folder {ws}, but this page has {here} open. Scripts run from {ws}.",
+  AutoAiCan: "The assistant may run automations",
+  AutoAiCanHint: "It can propose one when you ask for that job. Each automation has its own switches too. Off: the assistant is not told about any of them.",
+  AutoListHead: "Your automations",
+  AutoNew: "New automation",
+  AutoNone: "No automations yet. Press New automation and pick a starter.",
+  AutoNSteps: "{n} step(s)",
+  AutoNeeds: "needs {list}",
+  AutoOnlyYou: "only you run it",
+  AutoAiAsks: "the assistant can run it - asks you first",
+  AutoAiNoAsk: "the assistant can run it without asking",
+  AutoLast: "last run: {state}, {when}",
+  AutoNever: "never run",
+  AutoRunBtn: "Run",
+  AutoDuplicate: "Duplicate",
+  AutoCopyOf: "{name} (copy)",
+  AutoDelTitle: "Remove “{name}”?",
+  AutoDelSay: "The design is removed. Its past runs stay in the list. Undo brings it back.",
+  AutoUndo: "automation",
+  AutoConnsHead: "Connections",
+  AutoConnsIntro: "A connection is one API: its address and how it signs in. A step picks a connection and adds a path to its address - KalKech never sends a step anywhere else. Its passwords and keys are saved one by one, and only the KalKech program can use them.",
+  AutoConnNew: "New connection",
+  AutoNoConns: "No connections yet.",
+  AutoNoAddress: "(no address yet)",
+  AutoConnDelTitle: "Remove the connection “{name}”?",
+  AutoConnDelUsed: "These automations use it: {list}.",
+  AutoConnDelSay: "Its saved secrets are removed from this PC too.",
+  AutoRunsHead: "Recent runs",
+  AutoNoRuns: "Nothing has run yet.",
+  AutoByAssistantShort: "assistant",
+  AutoByYouShort: "you",
+  AutoState_ok: "Done",
+  AutoState_failed: "Failed",
+  AutoState_partial: "Done, a step failed",
+  AutoState_stopped: "Stopped",
+  AutoState_running: "Running",
+  AutoByYou: "Run by you",
+  AutoByAssistant: "Run by the assistant, after you agreed",
+  AutoByAssistantNoAsk: "Run by the assistant without asking (you switched asking off)",
+  AutoForRecord: "for {code}",
+  AutoExit: "exit {n}",
+  AutoTry: "try {n} of {of}",
+  AutoWaiting: "waiting…",
+  AutoSkipped: "skipped",
+  AutoMissing: "not in the reply: {list}",
+  AutoValAi: "Shown to you and the assistant",
+  AutoValMe: "Shown to you only",
+  AutoValHidden: "Hidden: it stays inside the KalKech program for this run",
+  AutoStop: "Stop",
+  AutoStopping: "Stopping…",
+  AutoRunAgain: "Run again",
+  AutoOpenDesign: "Open in Automations",
+  AutoGone: "That automation is not here any more.",
+  AutoStillNot: "It was still not done after {n} tries.",
+  AutoNoAnswer: "The KalKech program gave no answer.",
+  AutoAskDefault: "Go on with the next step?",
+  AutoAskGoOn: "Go on",
+  AutoAskGoOnHint: "Run the rest of the steps",
+  AutoAskStop: "Stop here",
+  AutoAskStopHint: "Nothing after this step runs",
+  AutoLogLine: "Automation “{name}”: {state}",
+  AutoPetDone: "{name}: {state}",
+  AutoRunTitle: "Run “{name}”",
+  AutoInputEg: "for example {eg}",
+  AutoOptional: "optional",
+  AutoRecordOpt: "For record",
+  AutoNoRecord: "(none)",
+  AutoRecordHint: "Optional. Its work log gets a line, and steps can use {{record.code}} and {{record.ticket}}.",
+  AutoRunGo: "Run",
+  AutoTryGo: "Try",
+  AutoIn_needed: "{label} is needed.",
+  AutoIn_typeIt: "Type {label} here - it is not saved anywhere.",
+  AutoIn_long: "{label} is too long.",
+  AutoIn_lines: "{label} must be one line.",
+  AutoIn_number: "{label} must be a number.",
+  AutoIn_date: "{label} must be a date (YYYY-MM-DD).",
+  AutoIn_choice: "{label} must be one of: {choices}.",
+  AutoIn_pattern: "{label} does not look right - for example {example}.",
+  AutoCannotRun: "“{name}” cannot run yet:",
+  AutoNotRun: "“{name}” was not run.",
+  AutoLocalFound: "This is your automation “{name}”, filled in from what you wrote. Check the values and press Run.",
+  AutoStepN: "Step {n} ({name})",
+  AutoChk_noSteps: "It has no steps.",
+  AutoChk_inputKey: "The value name “{name}” cannot be used - use letters, digits and _, not starting with a digit.",
+  AutoChk_inputTwice: "Two values are called “{name}”.",
+  AutoChk_noChoices: "“{name}” is a choice, but has no choices.",
+  AutoChk_badPattern: "The check for “{name}” is not a valid pattern.",
+  AutoChk_badPh: "“{{{name}}}” is not a name KalKech knows.",
+  AutoChk_badFilter: "{{{name}}} has a filter KalKech does not know ({filters}). Use upper, lower, trim, base64 or raw.",
+  AutoChk_secretNoConn: "{{{name}}} needs the step to have a connection - secrets belong to a connection.",
+  AutoChk_secretUnknown: "{{{name}}} is not a secret of {conn}. Add it to the connection's secrets first.",
+  AutoChk_secretInCond: "A condition cannot read a secret ({{{name}}}).",
+  AutoChk_usedTooEarly: "{{{name}}} is used before the step that saves it.",
+  AutoChk_unknownPh: "{{{name}}} has no value - no input or earlier step gives it one.",
+  AutoChk_badCond: "The condition cannot be read: {why}.",
+  AutoChk_noConn: "Choose a connection for this API call.",
+  AutoChk_connGone: "Its connection was removed. Choose another.",
+  AutoChk_badBase: "The connection {conn} has no valid address (http:// or https://).",
+  AutoChk_pathSlash: "The path should start with / - it goes after the connection's address.",
+  AutoChk_badHeader: "“{name}” is not a valid header name.",
+  AutoChk_setByKalKech: "The header {name} is set by KalKech itself.",
+  AutoChk_getBody: "A GET or HEAD request cannot have a body.",
+  AutoChk_badExpect: "“Success when” must look like 2xx, 200, 200,201 or any (for a script: 0, or 0,1, or any).",
+  AutoChk_noScript: "Choose a script.",
+  AutoChk_scriptGone: "Its script is not in the Scripts list any more.",
+  AutoChk_scriptKind: "{name} is not a .bat or .cmd file. Automations run .bat and .cmd scripts only.",
+  AutoChk_argMissing: "The script has a blank called “{name}” and no value is given for it.",
+  AutoChk_saveName: "“{name}” cannot be the name of a saved value - use letters, digits and _.",
+  AutoChk_savePath: "Say where in the reply “{name}” is (a JSON path, a header name or a pattern).",
+  AutoChk_badRegex: "The pattern for “{name}” is not valid.",
+  AutoChk_aiSeesSecret: "“{name}” looks like a token or password, and it is set to be shown to the assistant. Choose Hidden unless you are sure.",
+  AutoChk_noModule: "automations.js is missing.",
+  AutoCondWhy_brace: "a {{ with no }}",
+  AutoCondWhy_quote: "a quote that does not end",
+  AutoCondWhy_word: "a word it does not know (use and, or, not, contains, starts with, ends with, is empty)",
+  AutoCondWhy_char: "a character it cannot use",
+  AutoCondWhy_empty: "it is empty",
+  AutoCondWhy_isEmpty: "“is” must be followed by “empty” or “not empty”",
+  AutoCondWhy_end: "it ends too soon",
+  AutoCondWhy_name: "a {{…}} that is not a name",
+  AutoCondWhy_paren: "a ( with no )",
+  AutoCondWhy_operand: "a value was expected",
+  AutoCondWhy_with: "“starts” and “ends” must be followed by “with”",
+  AutoCondWhy_extra: "there is more after the end",
+  AutoT_blank: "Blank",
+  AutoT_blankHint: "One empty API call to start from",
+  AutoT_call: "Call the API",
+  AutoT_signin: "Sign in, then call",
+  AutoT_signinHint: "Get a token from a login API (kept hidden), then call another API with it",
+  AutoT_loginConn: "Login API",
+  AutoT_apiConn: "My API",
+  AutoT_signinName: "Sign in and regenerate",
+  AutoT_signinAbout: "Signs in, then asks the API to regenerate the item for a reference.",
+  AutoT_refLabel: "Reference",
+  AutoT_signInStep: "Sign in",
+  AutoT_callStep: "Regenerate",
+  AutoT_signinResult: "Done: {{result}}",
+  AutoT_apikey: "API key in a header",
+  AutoT_apikeyHint: "One call to an API that takes a key in a header",
+  AutoT_apikeyName: "Look up a status",
+  AutoT_lookStep: "Look it up",
+  AutoT_apikeyResult: "Status: {{status}}",
+  AutoT_windows: "Windows sign-in",
+  AutoT_windowsHint: "An internal API that knows you by your Windows account - no password to save",
+  AutoT_intranetConn: "Intranet API",
+  AutoT_windowsName: "Find the owner",
+  AutoT_poll: "Submit, then wait",
+  AutoT_pollHint: "Start a job, then check every 10 seconds until it says DONE",
+  AutoT_pollName: "Submit a job and wait",
+  AutoT_submitStep: "Submit the job",
+  AutoT_waitStep: "Wait until it is done",
+  AutoT_pollResult: "Finished: {{output}}",
+  AutoT_script: "Run a script",
+  AutoT_scriptHint: "One of your .bat scripts, with a value",
+  AutoT_scriptName: "Run my script",
+  AutoT_scriptStep: "Run the script",
+  AutoNewName: "New automation",
+  AutoKind_http: "API call",
+  AutoKind_script: "Script",
+  AutoKind_wait: "Wait",
+  AutoKind_confirm: "Ask me",
+  AutoKindNew_http: "Call the API",
+  AutoKindNew_script: "Run a script",
+  AutoKindNew_wait: "Wait",
+  AutoKindNew_confirm: "Check with me",
+  AutoConn: "Connection",
+  AutoPickConn: "- choose -",
+  AutoConnNewShort: "New…",
+  AutoRequest: "Request",
+  AutoQuery: "Query",
+  AutoHeaders: "Headers",
+  AutoName: "Name",
+  AutoValue: "Value",
+  AutoBody: "Body",
+  AutoBody_none: "No body",
+  AutoBody_json: "JSON",
+  AutoBody_form: "Form fields",
+  AutoBody_xml: "XML",
+  AutoBody_text: "Plain text",
+  AutoExpect: "Success when",
+  AutoExpectHint: "the answer is 2xx (any 200-299). Or list them: 200,201 - or 2xx,404 - or any.",
+  AutoScript: "Script",
+  AutoPickScript: "- choose a script -",
+  AutoScriptBatOnly: "Automations run .bat and .cmd scripts only.",
+  AutoScriptValues: "Values",
+  AutoScriptConn: "Secrets from",
+  AutoNoConn: "(none)",
+  AutoTimeLimit: "Time limit",
+  AutoSeconds: "seconds",
+  AutoExitOk: "Success when exit code is",
+  AutoScriptHow: "Each value goes to the script in order (%1, %2 …) and also as a variable: KK_ and its name in capitals (%KK_POLICY%). A value with & | < > ^ % ! \" ( ) in it is refused, so it cannot start a command of its own.",
+  AutoWaitFor: "Wait",
+  AutoAskText: "Ask",
+  AutoAskTextPh: "About to regenerate the COI for {{input.policy}}. Go on?",
+  AutoSaves: "Save from the reply",
+  AutoSavesHint: "Name it, say where it is, and who may see it. Hidden: only the next steps can use it - right for a token.",
+  AutoFrom_json: "JSON path",
+  AutoFrom_header: "Header",
+  AutoFrom_status: "Status code",
+  AutoFrom_regex: "Pattern",
+  AutoFrom_body: "Whole reply",
+  AutoFrom_output: "Output",
+  AutoFrom_exit: "Exit code",
+  AutoShow_hidden: "🔒 Hidden",
+  AutoShow_me: "Me only",
+  AutoShow_ai: "Me and the assistant",
+  AutoAddSave: "Save a value",
+  AutoAddRow: "Add",
+  AutoMore: "Conditions, repeat, and failure",
+  AutoWhen: "Only run when",
+  AutoUntil: "Repeat until",
+  AutoEvery: "every",
+  AutoSecondsUpTo: "seconds, at most",
+  AutoTimes: "times",
+  AutoOnFail: "If it fails",
+  AutoOnFail_stop: "Stop the run",
+  AutoOnFail_continue: "Carry on with the next step",
+  AutoCondHow: "Write a test like {{status}} == 200, {{state}} == \"DONE\", {{count}} > 0, {{id}} is not empty or {{message}} contains \"ready\", and join tests with and / or. Repeat until runs this step again until its test is true.",
+  AutoChipsLab: "Values you can use:",
+  AutoChipCopied: "Copied {what}",
+  AutoTryHere: "Try up to here",
+  AutoTryHint: "Runs the steps from the first to this one, for real, with the test values - and shows each reply.",
+  AutoTestWith: "Test values:",
+  AutoPathsLab: "In the reply - click one to save it:",
+  AutoBack: "All automations",
+  AutoEditTitle: "Edit automation",
+  AutoNewTitle: "New automation",
+  AutoSave: "Save",
+  AutoAbout: "What it does",
+  AutoAboutPh: "Regenerates the certificate of insurance for a policy",
+  AutoMayAi: "The assistant may run it",
+  AutoMayAiHint: "When you ask for this job in a conversation, the assistant can propose this automation.",
+  AutoMayAiOff: "Automations are switched off for the assistant (the switch above the list).",
+  AutoAskFirst: "Ask me before the assistant runs it",
+  AutoAskFirstHint: "Off: it runs as soon as the assistant proposes it. Keep this on unless you trust it completely.",
+  AutoInputsHead: "Values it needs",
+  AutoInputsIntro: "What you (or the assistant) give it each time - a policy number, an environment. Steps use them as {{input.name}}. The check makes sure a value looks right before anything runs.",
+  AutoInKey: "Name",
+  AutoInLabel: "Label",
+  AutoInKind: "Kind",
+  AutoInPattern: "Check (pattern)",
+  AutoInExample: "Example",
+  AutoInReq: "Needed",
+  AutoInLabelPh: "Policy number",
+  AutoInKind_text: "Text",
+  AutoInKind_number: "Number",
+  AutoInKind_date: "Date",
+  AutoInKind_choice: "Choice",
+  AutoInKind_secret: "Typed by me (secret)",
+  AutoAddInput: "Add a value",
+  AutoStepsHead: "Steps",
+  AutoStepsIntro: "They run in order. Each one can save values from its reply for the steps after it.",
+  AutoAddStep: "Add a step:",
+  AutoResultHead: "When it finishes, say",
+  AutoResultPh: "COI {{coiNumber}} is ready for {{input.policy}}.",
+  AutoProbsHead: "To fix before it can run:",
+  AutoProbsNone: "Ready to run.",
+  AutoLeaveTitle: "Save your changes?",
+  AutoLeaveSay: "This automation has changes that are not saved.",
+  AutoDiscard: "Don't save",
+  AutoNeedsName: "Give it a name.",
+  AutoSaved: "Saved “{name}”.",
+  AutoSavedWithProbs: "Saved - but it has {n} problem(s) to fix before it can run.",
+  AutoTryFix: "Fix this first:",
+  AutoTryConnFirst: "Open and save the new connection first (give it its real address) - then try.",
+  AutoConnNewName: "New connection",
+  AutoConnEditTitle: "Edit connection",
+  AutoConnNewTitle: "New connection",
+  AutoAddress: "Address",
+  AutoAddressHint: "The start of every address its steps call, like https://api.example.local/v1. A step adds its path after it.",
+  AutoPlainHttp: "This address is http://, not https:// - anything sent, a password too, crosses the network unencrypted. Use https:// if the API has it.",
+  AutoSignIn: "Sign-in",
+  AutoAuth_none: "None (or a sign-in step)",
+  AutoAuth_windows: "My Windows account",
+  AutoAuth_basic: "User name and password",
+  AutoAuth_header: "API key in a header",
+  AutoAuth_bearer: "A fixed token (Bearer)",
+  AutoAuthHint_none: "Nothing is added. For an API that gives a token: make the first step sign in, and save the token as Hidden.",
+  AutoAuthHint_windows: "Signs in as you, the way the browser does on the intranet. No password is saved.",
+  AutoAuthHint_basic: "Sends the secrets username and password with every step (Basic sign-in).",
+  AutoAuthHint_header: "Sends the secret apiKey in the header named below, with every step.",
+  AutoAuthHint_bearer: "Sends the secret token as \"Authorization: Bearer …\" with every step.",
+  AutoKeyHeader: "Key header",
+  AutoExtraSecrets: "Other secrets",
+  AutoExtraHint: "More secret names for this connection, like clientSecret. Steps use them as {{secret.clientSecret}}.",
+  AutoProxy: "Proxy",
+  AutoProxy_system: "Windows proxy settings",
+  AutoProxy_none: "No proxy",
+  AutoNote: "Note",
+  AutoSecretsHead: "Secrets",
+  AutoSecretsIntro: "Typed once, kept by the KalKech program by the clock, encrypted for your Windows account on this PC. Nothing can read them back - not this page, not the assistant, not an export. If the address changes, they are not sent until you save them again.",
+  AutoSaveConnFirst: "Save the connection first - then its secrets can be set.",
+  AutoNoSecrets: "This sign-in needs no secrets.",
+  AutoConnTest: "Test the connection",
+  AutoConnAnswered: "It answered {n}.",
+  AutoBadAddress: "The address must start with http:// or https://, with no ? or # in it.",
+  AutoConnSaved: "Saved “{name}”.",
+  AutoConnMoved: "Saved. The address changed, so its secrets are not sent there until you save them again.",
+  AutoSecretNotSet: "not set",
+  AutoSecretSet: "set on this PC",
+  AutoSecretSetOn: "set on this PC, {when}",
+  AutoSecretMoved: "set for the old address - save it again",
+  AutoSecretChange: "Change…",
+  AutoSecretSetBtn: "Set…",
+  AutoSecretTitle: "Secret: {name}",
+  AutoSecretWhy: "It goes to the KalKech program by the clock and is kept there, encrypted for your Windows account. It is not saved in your workspace, and it can never be shown again - not here, not to the assistant.",
+  AutoSecretPlainHttp: "This connection uses http://, so the secret will cross the network unencrypted.",
+  AutoSecretSave: "Save the secret",
+  AutoSecretEmpty: "Type the secret first.",
+  AutoSecretSaved: "Saved {name}. It cannot be shown again.",
+  AutoFlowNoSuch: "there is no automation called “{name}” that it may run. It may run: {list}.",
+  AutoFlowNoSuchShort: "Run the automation “{name}” (there is none by that name)",
+  AutoFlowNone: "none",
+  AutoFlowNotAllowed: "“{name}” is not one the assistant may start (Menu → Automations).",
+  AutoProposeRun: "Run the automation “{name}”",
+  AutoCmdHint: "API calls and scripts you designed",
+  AutoOnePerAnswer: "The assistant asked for {n} more automation run(s) in the same answer - only the first is put to you.",
+  AutoCmdRun: "Run: {name}",
+  AutoProposeSteps: "Steps: {steps}",
+  AutoRunConfirm: "Run it?",
+  XpAutoCheck: "The automations brought in call the addresses in their connections - look at them before you run one, and set their secrets on this PC.",
+  Xp_automations: "Automations",
+  XpHint_automations: "The designs and their connections - never a password or key",
+  XpN_automations: "{n} automation(s) and connection(s)"
 };
 
 /* Loaded files, keyed by culture code. "en" is always present, from STRINGS. */
@@ -9483,8 +10020,8 @@ const STATUSES = [
    the status bar, and clicking it copies a line you can paste into a bug
    report — build date and flow protocol included, because those are the two
    things that actually differ between copies. */
-const APP_VERSION = "5.21.0";
-const APP_BUILT = "2026-10-07";
+const APP_VERSION = "5.22.0";
+const APP_BUILT = "2026-10-29";
 function buildLine(){
   return "KalKech v" + APP_VERSION + " \u00b7 built " + APP_BUILT +
          " \u00b7 flow protocol " + (window.DossierFlow ? DossierFlow.version : "\u2014") +
@@ -10595,6 +11132,8 @@ function getTask(id){ return S.tasks.find(t => t.id === id); }
    touch. */
 function pushUndo(label, lib){
   const u = { label, tasks: clone(S.tasks) };
+  /* an automation's design (5.22) - never a run: an API call has no undo */
+  if (lib === "auto"){ u.auto = clone(S.settings.automations || {}); lib = null; }
   if (lib) u.lib = { memory: clone(memoryStore()),
                      runbooks: clone(runbookStore()),
                      profiles: clone(profileStore()) };
@@ -10605,6 +11144,7 @@ function doUndo(){
   const u = S.undo.pop();
   if (!u) return toast(L("NothingLeftToUndo"));
   S.tasks = u.tasks.map(normalise);
+  if (u.auto){ S.settings.automations = u.auto; if ($("modal").classList.contains("on")) renderAutoPanel(); }
   if (u.lib){
     S.settings.memory = u.lib.memory;
     S.settings.runbooks = u.lib.runbooks;
@@ -14966,8 +15506,9 @@ function chatAskNext(){
   if (ASK.cur) return;
   const it = ASK.q.shift();
   if (!it) return;
-  /* switched off, so the thing you asked for simply happens */
-  if (!chatUI().confirm) return chatRunAsked(it, true);
+  /* switched off, so the thing you asked for simply happens - for every
+     action, or (5.22) for an automation whose asking was switched off */
+  if (!chatUI().confirm || it.noAsk) return chatRunAsked(it, true);
   ASK.cur = it;
   const mark = $("chatAskIcon");
   if (mark){ mark.innerHTML = chatPix("ask"); pixFix(mark); }
@@ -14991,7 +15532,11 @@ function chatRunAsked(it, auto){
   const was = ASK.cur;
   if (was) chatAskClose(); else ASK.cur = null;
   try {
-    if (it.act && it.act.kind === "flow"){
+    if (it.act && it.act.kind === "flow" && it.act.a && it.act.a.do === "runAutomation"){
+      /* an automation's card is its own receipt - and an API call has no
+         Undo, so the line that would offer one is not drawn */
+      flowRun(it.act.a, true, { asked:!auto });
+    } else if (it.act && it.act.kind === "flow"){
       /* run it without letting it speak, and put the one line up ourselves */
       const r = flowRun(it.act.a, true);
       chatReceipt((r && r.say) || it.say || "", false, auto);
@@ -17208,6 +17753,8 @@ function chatProse(t){
    addressed by id, so nothing has to survive a round trip through HTML. */
 function chatRenderBot(r, sourceText, replaying, at){
   r = r || {};
+  /* an automation's run: its card, nothing else (5.22) */
+  if (r.run) return autoRenderMsg(r);
   const id = "c" + (++CHAT.n);
   const d = document.createElement("div");
   d.className = "chb bot";
@@ -17924,6 +18471,10 @@ function chatAsk(text, opts){
      and put to you before it is set */
   const al = !CHAT.files.length && !opts.flow && !opts.tier && !opts.force && alertLocal(q);
   if (al){ chatBot(al, q); chatSide(); return; }
+  /* "run regenerate COI for P10234X56" - one of their automations by name:
+     its form, filled in from the sentence, to look at and run (5.22) */
+  const au = !CHAT.files.length && !opts.flow && !opts.tier && !opts.force && autoLocal(q);
+  if (au){ chatBot(au, q); chatSide(); return; }
   /* "what's new?", "which version is this?" - from Resolv's own
      CHANGELOG, at once; the flow can still be asked for more */
   /* "which source supports this answer?", "why was it not found?" - from
@@ -18220,7 +18771,7 @@ function aboutSearch(q, n){
   }).filter(x => x.score > 0).sort((a, b) => b.score - a.score).slice(0, n || 3);
 }
 /* is this question about Resolv itself, rather than about their work */
-const ABOUT_OWN = /\u1780\u17b6\u179b\u1780\u17b7\u1785\u17d2\u1785|\b(resolv|kalkech|kal kech|this app|the app|in the app|your(self)? (version|features?)|what'?s new|what is new|new (in|feature|version)|release notes?|change ?log|changelog|version|feature|setting|settings|set ?up|preset|skin|theme|lumen|nova|nebula|aurora|carbon|prism|halo|crimson|neon|cyberpunk|character|power[- ]?up|rainbow|mind ?map|lightning|fonts?|typefaces?|export(?:ing)?|import(?:ing)?|pixel|desk pet|shortcut|keyboard|alerts?|bell|reminders?|notifications?|bridge|localdb|mssqllocaldb|sql ?server name|power automate|prompt|language|khmer|menu|button|look and behaviou?r|sources?|document indexing|index(?:ing)?|re-?index(?:ing|ed)?|citations?|pdf runbooks?|(?:add|upload|import|update|replace) (?:a |an |my |the )?(?:new |updated )?(?:pdf|markdown|word|document|runbook|guideline|standard|policy)s?|answer was not found|not found|supports? (?:this|that|the) answer)\b/i;
+const ABOUT_OWN = /\u1780\u17b6\u179b\u1780\u17b7\u1785\u17d2\u1785|\b(resolv|kalkech|kal kech|this app|the app|in the app|your(self)? (version|features?)|what'?s new|what is new|new (in|feature|version)|release notes?|change ?log|changelog|version|feature|setting|settings|set ?up|preset|skin|theme|lumen|nova|nebula|aurora|carbon|prism|halo|crimson|neon|cyberpunk|character|power[- ]?up|rainbow|mind ?map|lightning|fonts?|typefaces?|export(?:ing)?|import(?:ing)?|pixel|desk pet|shortcut|keyboard|alerts?|bell|reminders?|notifications?|bridge|localdb|mssqllocaldb|sql ?server name|automations?|power automate|prompt|language|khmer|menu|button|look and behaviou?r|sources?|document indexing|index(?:ing)?|re-?index(?:ing|ed)?|citations?|pdf runbooks?|(?:add|upload|import|update|replace) (?:a |an |my |the )?(?:new |updated )?(?:pdf|markdown|word|document|runbook|guideline|standard|policy)s?|answer was not found|not found|supports? (?:this|that|the) answer)\b/i;
 const ABOUT_HELP = /\b(how (do|can|to|should|does)|where (is|are|do|can)|can (i|you|it)|is there|does it|what does|what is|turn (on|off)|switch (on|off)|enable|disable|configure|change|show me how|why (did|does|do|is|was)|which (source|document))\b/i;
 const ABOUT_NEWS = /\b(what'?s new|what is new|what changed|what has changed|what (?:was|were|has been|have been|got) (?:added|new|changed|fixed|improved)|new in|release notes?|change ?log|changelog|(?:latest|last|newest|current|this) (?:resolv )?(?:version|release|update)|which version|what version|version (are you|is this|am i))\b/i;
 function aboutForFlow(q){
@@ -18396,6 +18947,9 @@ function flowContext(q, opts){
     focus: flowFocus(),
     thread: threadForFlow(c),
     mentioned: rbIdents(q),
+    /* the automations it may propose (5.22): names, the values each needs,
+       step names - no address, header, connection or secret */
+    automations: autoForFlow(),
     incidents: incidentsForFlow(big ? FLOW_BIG.incidentDays : 30),
     profiles: profilesForFlow(mq),
     settable: flowSettable(),
@@ -18810,7 +19364,11 @@ function flowReply(out, asked){
     r.note = (r.note ? r.note + "\n" : "") + L("FlowRefused") + " " + out.refused.join(" · ");
 
   const reads = out.actions.filter(a => !a.write);
-  const writes = out.actions.filter(a => a.write);
+  /* one automation per answer (5.22): a reply that asks for the same job
+     twice - or five times - has gone wrong; it is not five jobs */
+  let autos = 0;
+  const writes = out.actions.filter(a => a.write && (a.do !== "runAutomation" || ++autos === 1));
+  if (autos > 1) r.note = (r.note ? r.note + "\n" : "") + L("AutoOnePerAnswer", { n:autos - 1 });
 
   /* reading changes nothing, so it happens now and its results come back
      inside this same answer */
@@ -18832,7 +19390,7 @@ function flowReply(out, asked){
      to you once the answer itself is on screen. */
   r.pending = writes.map(a => {
     const d = flowDescribe(a);
-    return { say:d.say, note:d.note || "", confirm:d.confirm,
+    return { say:d.say, note:d.note || "", confirm:d.confirm, noAsk:!!d.noAsk,
              act:{ kind:"flow", a:a, confirm:d.confirm } };
   });
 
@@ -18896,6 +19454,20 @@ function flowDescribe(a){
     case "runScript":
       return { say:"Run " + g.script + " on " + ref(),
                note:g.args ? JSON.stringify(g.args) : "", confirm:"Run it?" };
+    case "runAutomation": {
+      const au = autoFind(g.automation);
+      if (!au) return { say:L("AutoFlowNoSuchShort", { name:g.automation }), confirm:L("AutoRunConfirm") };
+      const ins = Object.keys(g.inputs || {}).map(k => {
+        const inp = au.inputs.find(i => i.key.toLowerCase() === k.toLowerCase() || (i.label || "").toLowerCase() === k.toLowerCase());
+        return (inp ? inp.label || inp.key : k) + ": " + g.inputs[k];
+      }).join(" \u00b7 ");
+      const t = g.record ? findByRef(g.record) : null;
+      return { say:L("AutoProposeRun", { name:au.name }) + (ins ? " \u2014 " + ins : "") + (t ? " \u00b7 " + t.code : ""),
+               note:L("AutoProposeSteps", { steps:au.steps.map(s => s.name).join(" \u2192 ") }),
+               confirm:L("AutoRunConfirm"),
+               /* asked only when they want to be (5.22) */
+               noAsk:autoAiMay(au) && au.ask === false };
+    }
     case "createRoutine":
       return { say:"Create the schedule “" + g.title + "” — " + g.freq +
                    (g.cron ? " " + g.cron : g.time ? " at " + g.time : ""),
@@ -19031,7 +19603,7 @@ function alertSpecFromFlow(g){
   if (g.time) return { by:"at", at:today() + "T" + g.time };
   return null;
 }
-function flowRun(a, quiet){
+function flowRun(a, quiet, extra){
   if (!a || !a.do) return null;
   const g = a.args || {};
   const need = ref => {
@@ -19439,6 +20011,18 @@ function flowRun(a, quiet){
       }
       touch(); renderAll(); if (S.open === t.id) renderDrawer();
       return done(L("ChatScriptAttached", { file:sc.file || "", code:t.code }));
+    }
+    case "runAutomation": {
+      /* one of their automations, by name (5.22): only one they let the
+         assistant start; the values it needs checked, and asked for when
+         one is missing, wrong, or typed by them only */
+      const au = autoFind(g.automation);
+      if (!au) return flowNeed(a, L("AutoFlowNoSuch", { name:g.automation,
+        list:autoForFlow().map(x => x.name).join(", ") || L("AutoFlowNone") }));
+      if (!autoAiMay(au)) return flowNeed(a, L("AutoFlowNotAllowed", { name:au.name }));
+      if (g.record && !findByRef(g.record)) return need(g.record);
+      autoRunAsk(au, g.inputs || {}, { where:"chat", by:"assistant", asked:!!(extra && extra.asked), record:g.record || "" });
+      return null;
     }
     case "runScript": {
       const t = need(g.record); if (!t) return null;
@@ -21207,6 +21791,12 @@ function chatDo(act){
     case "view":     closeChat(); return setView(act.view);
     case "panel":    closeChat(); return openModal(act.panel);
     case "chaseSheet": closeChat(); return openChase();
+    /* an automation, its form filled in from what was typed (5.22) */
+    case "autorun": {
+      const a = autoFind(act.id);
+      if (!a) return toast(L("AutoGone"), { bad:true });
+      return autoRunAsk(a, act.inputs || {}, { where:"chat", by:"me", form:true });
+    }
     case "filter":   closeChat(); return aiPin(act.ids, act.label);
     case "filterSys": closeChat();
       return aiPin(S.tasks.filter(t => t.system === act.system).map(t => t.id), act.system);
@@ -24369,6 +24959,8 @@ async function renderModal(){
       L("FromCountingWordsInYourOwn");
   ["pWs","pReport","pScripts","pLook","pSetup","pHelp"].forEach(foldSections);
   wireModal();
+  /* its own views and layout, so not folded like the others */
+  renderAutoPanel();
 }
 /* What the schedule does, in words. freqLabel() gives the shape; this adds
    the time, because "Every weekday" alone tells you nothing about when. */
@@ -25192,6 +25784,10 @@ function buildCommands(q){
   add(L("Tab_Setup"),"⚙",L("Settings"),"Systems, types, templates", () => openModal("setup"));
   add(L("Tab_Setup"),"Aa",L("Tab_Appearance"),L("FontsAndTheme"), () => openModal("look"));
   add(L("Tab_Setup"),"↻",L("Tab_Routines"),"", () => openModal("routine"));
+  /* your automations: the panel, and each one by name (5.22) */
+  add(L("Tab_Setup"),"\u2699",L("Tab_Automations"),L("AutoCmdHint"), () => openModal("auto"));
+  if (autoOk()) autoStore().list.forEach(a => add(L("Tab_Automations"),"\u25b8",L("AutoCmdRun", { name:a.name }), a.about || "",
+    () => autoRunAsk(a, {}, { where:"panel", form:true })));
   add(L("Tab_Setup"),"?",L("HelpFolderLayout"),"", () => openModal("help"));
   STATUSES.forEach(s => add(L("Filter"),"•",L("Only") + s.label, "", () => {
     Object.keys(S.filters.st).forEach(x => S.filters.st[x] = (x === s.id));
@@ -26416,7 +27012,8 @@ function srcForFlow(q, thread, pin, big, match){
    done ("close D-0153 with these steps"), not an answer about what a
    document says, and it gets no sources box under it. */
 const SRC_JOB_ACTIONS = ["createRecord", "updateRecord", "setStatus", "setDue", "setAlert", "clearAlert", "addLog", "addSteps",
-  "tickStep", "setWait", "clearWait", "chase", "attachScript", "runScript", "logTime", "timer", "block", "unblock", "tags", "deleteRecord"];
+  "tickStep", "setWait", "clearWait", "chase", "attachScript", "runScript", "logTime", "timer", "block", "unblock", "tags", "deleteRecord",
+  "runAutomation"];
 /* their runbooks that matched the question, as the check reads them: a
    figure in one is theirs, not an invention */
 function srcOwnTexts(runbooks){
@@ -27597,6 +28194,1183 @@ async function queueRun(t, sc, vals){
   }
   PENDING.delete(id);
   toast(L("NoAnswerFromTheRunnerIs"), { bad:true });
+}
+
+/* ═══ AUTOMATIONS — API calls and scripts, one step at a time ═════════════
+   (5.22) The owner: "can the assistant do the support itself - run a .bat
+   script, call an API to get a value and use it in another API (sign in,
+   then regenerate the COI of policy P10234X56) - but safe: the assistant
+   must not see the credentials, unless I let it see a value".
+
+     - You design a job once, here in Menu → Automations: the values it
+       needs (a policy number), then its steps - an API call, one of your
+       scripts, a wait, a question to you - each saving what it needs from
+       the reply for the steps after it. Starters build the usual shapes.
+     - You run it from the panel; or the assistant proposes it in a
+       conversation (runAutomation) and you say yes - or, for one you
+       trust, you switched the asking off.
+     - The steps are carried out by the KalKech tray program, because a
+       page cannot reach a company API or start a script. Passwords and
+       keys are typed into a box that sends them straight there, where they
+       are kept encrypted for your Windows account and cannot be read back;
+       a sign-in token saved as hidden stays there too, and is forgotten
+       when the run ends.
+     - The assistant is told the names of the jobs, the values each needs,
+       and - after a run - only the values you marked for it.
+
+   automations.js is the pure half (designs, checks, conditions, the run
+   loop); this is the panel, the run card, and the wiring to the chat.
+   ════════════════════════════════════════════════════════════════════════ */
+const AUTO = { normed:null, live:{}, info:null, infoAt:0, secrets:{},
+               ui:{ view:"list", id:"", draft:null, newConns:[], conn:"", connDraft:null,
+                    test:{}, tvals:{}, focus:null, hist:"", panelRun:null, timer:0 } };
+
+function autoOk(){ return typeof DossierAuto !== "undefined"; }
+/* the store in settings.automations, made safe once per workspace */
+function autoStore(){
+  if (!autoOk()) return { v:1, aiCan:false, conns:[], list:[], runs:[] };
+  const st = S.settings;
+  if (!st.automations || AUTO.normed !== st.automations){
+    st.automations = DossierAuto.normStore(st.automations);
+    AUTO.normed = st.automations;
+  }
+  return st.automations;
+}
+function autoFind(q){ return autoOk() ? DossierAuto.find(autoStore(), q) : null; }
+function autoConnOf(id){ return autoStore().conns.concat(AUTO.ui.newConns).find(c => c.id === id) || null; }
+function autoSecs(ms){ ms = +ms || 0; return ms < 1000 ? ms + " ms" : (ms / 1000).toFixed(ms < 10000 ? 1 : 0) + " s"; }
+function autoScripts(){ return S.scripts.map(sc => ({ id:sc.id, name:sc.name, file:sc.file, params:(sc.params || []).slice() })); }
+
+/* ── the tray program ───────────────────────────────────────────────────
+   One request. A stale token (KalKech was restarted) is fetched again once;
+   so is a refused connection - the request never reached anything. A
+   request that timed out is NOT sent again: it may have been carried out,
+   and calling a "regenerate" twice is not a harmless retry. */
+async function autoReq(method, path, body, ms){
+  for (let i = 0; i < 2; i++){
+    const hand = await sqlHand(i > 0);
+    if (!hand) return { ok:false, nobridge:true, error:L("AutoNoBridge") };
+    const init = { method:method, headers:{ "X-Dossier-Token":hand.token }, cache:"no-store" };
+    if (body !== undefined){ init.headers["Content-Type"] = "application/json"; init.body = JSON.stringify(body); }
+    let r;
+    try { r = await fetchIn("http://127.0.0.1:" + hand.port + path, init, ms || 20000); }
+    catch(e){
+      if (e && e.name === "AbortError") return { ok:false, error:L("AutoTimedOut") };
+      if (i === 0) continue;
+      return { ok:false, nobridge:true, error:L("AutoNoBridge") };
+    }
+    if (r.status === 403 && i === 0) continue;
+    if (r.status === 404) return { ok:false, old:true, error:L("AutoOldBridge") };
+    let j = null;
+    try { j = await r.json(); } catch(e){}
+    return j || { ok:false, error:L("AutoBridgeSaid", { n:r.status }) };
+  }
+  return { ok:false, nobridge:true, error:L("AutoNoBridge") };
+}
+/* how long a step may take before the page stops waiting: its own limit,
+   and a margin for the tray program to answer */
+function autoMs(op, body){
+  if (op !== "step") return 20000;
+  const s = (body && body.step) || {}, c = (body && body.conn) || {};
+  return ((body.kind === "script" ? +s.timeout || 120 : +c.timeout || 30) + 15) * 1000;
+}
+async function autoInfo(fresh){
+  if (!fresh && AUTO.info && Date.now() - AUTO.infoAt < 20000) return AUTO.info;
+  const r = await autoReq("GET", "/auto/info", undefined, 6000);
+  AUTO.info = r; AUTO.infoAt = Date.now();
+  return r;
+}
+
+/* ── secrets: in, never out ─────────────────────────────────────────── */
+async function autoSecretsOf(c, fresh){
+  if (!c || !c.base) return { ok:true, names:{} };
+  const key = c.id + "|" + c.base;
+  if (!fresh && AUTO.secrets[key]) return AUTO.secrets[key];
+  const r = await autoReq("GET", "/secrets?conn=" + encodeURIComponent(c.id) + "&base=" + encodeURIComponent(c.base), undefined, 8000);
+  if (r && r.ok) AUTO.secrets[key] = r;
+  return r;
+}
+async function autoSecretSet(c, name, value){
+  const r = await autoReq("POST", "/secrets", { conn:c.id, base:c.base, name:name, value:value }, 10000);
+  AUTO.secrets = {};
+  return r;
+}
+async function autoSecretsDrop(c, name){
+  const r = await autoReq("DELETE", "/secrets?conn=" + encodeURIComponent(c.id) + (name ? "&name=" + encodeURIComponent(name) : ""), undefined, 10000);
+  AUTO.secrets = {};
+  return r;
+}
+/* The box a secret is typed into. It goes from here to the tray program
+   and nowhere else: not into the workspace, not into the chat, not to the
+   assistant; and the box is emptied whatever happens. */
+function autoSecretDialog(c, name){
+  return new Promise(resolve => {
+    const old = $("auSecDlg"); if (old) old.remove();
+    const el = document.createElement("div");
+    el.id = "auSecDlg"; el.className = "srcdlg audlg"; el.setAttribute("role", "dialog"); el.setAttribute("aria-modal", "true");
+    el.innerHTML = '<div class="srcdlgb"><h3>' + LE("AutoSecretTitle", { name:name }) + "</h3>" +
+      '<p class="srcfile">' + esc(c.name) + " · " + esc(c.base) + "</p>" +
+      '<input class="in" id="auSecIn" type="password" autocomplete="new-password" spellcheck="false" aria-label="' + LE("AutoSecretTitle", { name:name }) + '">' +
+      '<p class="srchint">' + LE("AutoSecretWhy") + "</p>" +
+      (/^http:/i.test(c.base) ? '<p class="srchint warn">' + LE("AutoSecretPlainHttp") + "</p>" : "") +
+      '<div class="brow"><button class="btn pri" id="auSecGo" type="button">' + LE("AutoSecretSave") + "</button>" +
+      '<button class="btn" id="auSecNo" type="button">' + LE("Cancel") + "</button></div></div>";
+    document.body.appendChild(el);
+    const inp = $("auSecIn");
+    const done = async ok => {
+      const v = inp.value;
+      inp.value = "";
+      if (!ok){ el.remove(); return resolve(false); }
+      if (!v){ toast(L("AutoSecretEmpty"), { bad:true }); return; }
+      $("auSecGo").disabled = true;
+      const r = await autoSecretSet(c, name, v);
+      el.remove();
+      if (!r || !r.ok){ toast((r && r.error) || L("AutoNoBridge"), { bad:true }); return resolve(false); }
+      toast(L("AutoSecretSaved", { name:name }));
+      resolve(true);
+    };
+    $("auSecGo").onclick = () => done(true);
+    $("auSecNo").onclick = () => done(false);
+    inp.addEventListener("keydown", e => { if (e.key === "Enter") done(true); });
+    el.addEventListener("keydown", e => { if (e.key === "Escape"){ e.stopPropagation(); done(false); } });
+    setTimeout(() => inp.focus(), 30);
+  });
+}
+
+/* ═══ RUNNING ONE ═════════════════════════════════════════════════════════ */
+
+function autoRec(t){ return t ? { code:t.code, ticket:t.ticket || "", title:t.title || "", system:t.system || "" } : null; }
+function autoSleep(ms, live){
+  return new Promise(res => {
+    const end = Date.now() + ms;
+    const step = () => {
+      if (live.stop) return res(false);
+      const left = end - Date.now();
+      if (left <= 0) return res(true);
+      setTimeout(step, Math.min(250, left));
+    };
+    step();
+  });
+}
+async function autoAskStep(a, text, step){
+  const r = await askUser(a.name + " · " + step.name, text || L("AutoAskDefault"),
+    [{ label:L("AutoAskGoOn"), hint:L("AutoAskGoOnHint") }, { label:L("AutoAskStop"), hint:L("AutoAskStopHint") }]);
+  return !!r && r.choice === 0;
+}
+/* the problems that stop a run (warnings do not) */
+function autoBlockers(a){
+  if (!autoOk()) return [{ code:"noModule" }];
+  return DossierAuto.check(a, { conns:autoStore().conns.concat(AUTO.ui.newConns), scripts:autoScripts() }).filter(p => !p.warn);
+}
+
+/* The run itself. opts: by ("me" | "assistant"), record (a record or its
+   code), asked (the assistant asked first), test + upTo (the editor's Try
+   it), onTick(R, live). Resolves to the run, or null when it could not
+   start (it says why). */
+async function autoRun(a, inputs, opts){
+  opts = opts || {};
+  const st = autoStore();
+  const t = opts.record ? (typeof opts.record === "object" ? opts.record : findByRef(opts.record) || getTask(opts.record)) : null;
+  const chk = DossierAuto.inputsCheck(a, inputs || {});
+  const live = { stop:false, a:a, R:null, id:DossierAuto.newId("r") };
+  AUTO.live[live.id] = live;
+  const values = DossierAuto.builtins(new Date(), autoRec(t));
+  Object.keys(chk.values).forEach(k => { values["input." + k] = chk.values[k]; });
+  let R;
+  try {
+    R = await DossierAuto.run(a, {
+      runId:live.id, conns:st.conns.concat(AUTO.ui.newConns), scripts:autoScripts(), values:values,
+      mask:a.inputs.filter(i => i.kind === "secret").map(i => "input." + i.key),
+      by:opts.by, record:t ? t.code : "", upTo:opts.upTo, test:!!opts.test,
+      call:(op, body) => autoReq("POST", "/auto/" + op, body, autoMs(op, body)),
+      sleep:ms => autoSleep(ms, live),
+      ask:(text, step) => autoAskStep(a, text, step),
+      tick:R => { live.R = R; if (opts.onTick) try { opts.onTick(R, live); } catch(e){} },
+      stopped:() => live.stop
+    });
+  } finally { delete AUTO.live[live.id]; }
+  R.asked = opts.asked;
+  if (!opts.test){
+    st.runs.unshift(Object.assign(DossierAuto.normRun(R), { asked:opts.asked }));
+    if (st.runs.length > DossierAuto.LIMIT.runs) st.runs.length = DossierAuto.LIMIT.runs;
+    /* the record's work log says so - with only what the assistant may
+       read, because work logs go with questions about the record */
+    if (t){
+      t.log = t.log || [];
+      t.log.push({ at:new Date().toISOString(), text:autoLogLine(a, R) });
+      if (!t.started) t.started = new Date().toISOString();
+      if (S.open === t.id) renderDrawer();
+    }
+    touch();
+    if (AUTO.ui.view === "list" && $("modal").classList.contains("on")) renderAutoPanel();
+  }
+  return R;
+}
+
+/* What the assistant reads about a finished run: which job, how it went,
+   the values it was run with (not a secret one) and the values marked for
+   it - never one shown to you only, never a hidden one. In plain English:
+   it is the model's to read, and the card is what you see. */
+function autoSayFor(a, R){
+  const sp = DossierAuto.split(a, R);
+  const L2 = [];
+  L2.push("[Automation “" + a.name + "” " + (R.state === "ok" ? "finished" : R.state === "partial" ? "finished, with a step that failed"
+          : R.state === "stopped" ? "was stopped" : "failed") + " in " + autoSecs(R.ms) +
+          (R.by === "assistant" ? " - you asked for it" + (R.asked === false ? ", and it ran without asking them" : ", and they agreed") : " - they ran it") + "]");
+  const ins = Object.keys(R.inputs || {}).filter(k => R.inputs[k] && R.inputs[k] !== "🔒").map(k => k + " = " + R.inputs[k]);
+  if (ins.length) L2.push("Run with: " + ins.join(", "));
+  L2.push("Steps: " + R.steps.map(s => s.name + " " + ({ ok:"✓", skip:"(skipped)", fail:"✗", wait:"(not reached)", no:"(they said no)", stop:"(stopped)" }[s.state] || s.state) +
+          (s.state === "fail" && s.note ? " - " + autoNoteText(s, a) : "")).join("; "));
+  const ai = Object.keys(sp.ai);
+  if (ai.length) L2.push("Values: " + ai.map(k => k + " = " + sp.ai[k]).join(", "));
+  const me = Object.keys(sp.me).length + R.hidden.length;
+  if (me) L2.push("(" + me + " other value(s) were shown only to them or kept hidden - you do not have them)");
+  if (sp.resultForAI) L2.push(sp.resultForAI);
+  return L2.join("\n");
+}
+function autoLogLine(a, R){
+  const sp = DossierAuto.split(a, R);
+  const ai = Object.keys(sp.ai).map(k => k + ": " + sp.ai[k]);
+  return L("AutoLogLine", { name:a.name, state:L("AutoState_" + R.state) }) + (ai.length ? " — " + ai.join(", ") : "") +
+         (sp.resultForAI ? "\n" + sp.resultForAI : "");
+}
+/* a step's note in words: the run loop's own codes, or what the tray
+   program said (already in words, and with any secret taken out) */
+function autoNoteText(s, a){
+  if (!s.note) return "";
+  if (s.note === "stillNot"){
+    const step = a && a.steps.find(x => x.name === s.name);
+    return L("AutoStillNot", { n:step && step.repeat ? step.repeat.times : "" });
+  }
+  if (s.note === "noAnswer") return L("AutoNoAnswer");
+  return s.note;
+}
+
+/* ═══ THE RUN CARD ═══════════════════════════════════════════════════════
+   One for every run: in the conversation when it was started there, in the
+   panel when it was started there. Live while it runs - each step's state,
+   its answer, how long it took - with Stop; afterwards the result, the
+   values (🔒 for a hidden one, ✦ beside one the assistant may read) and
+   Run again. */
+const AUTO_ICON = { wait:"○", run:"◌", ok:"✓", skip:"↷", fail:"✕", sleep:"⏱", again:"⟳",
+                    ask:"?", no:"—", stop:"■" };
+function autoCardHtml(run, opts){
+  opts = opts || {};
+  const a = autoFind(run.auto);
+  const live = !!AUTO.live[run.id];
+  const state = run.state === "running" && !live ? "stopped" : run.state;
+  let h = '<div class="aucard ' + esc(state) + '" data-autorun="' + esc(run.id) + '">';
+  h += '<div class="auch"><span class="auico" aria-hidden="true">⚙</span><b>' + esc(run.name) + "</b>" +
+       '<span class="aust ' + esc(state) + '">' + (state === "running" ? '<i class="auspin"></i>' : "") + LE("AutoState_" + state) + "</span>" +
+       (run.ms ? '<span class="aums">' + autoSecs(run.ms) + "</span>" : "") + "</div>";
+  const meta = [];
+  meta.push(run.by === "assistant" ? L(run.asked === false ? "AutoByAssistantNoAsk" : "AutoByAssistant") : L("AutoByYou"));
+  if (run.record) meta.push(L("AutoForRecord", { code:run.record }));
+  const ins = Object.keys(run.inputs || {}).filter(k => run.inputs[k]);
+  if (ins.length) meta.push(ins.map(k => {
+    const inp = a && a.inputs.find(i => i.key === k);
+    return (inp && inp.label || k) + ": " + run.inputs[k];
+  }).join(" · "));
+  h += '<div class="aumeta">' + esc(meta.join("  ·  ")) + "</div>";
+  h += '<ol class="austeps">' + (run.steps || []).map((s, i) => {
+    const bits = [];
+    if (s.status != null && s.status !== "") bits.push(s.kind === "script" ? L("AutoExit", { n:s.status }) : String(s.status));
+    if (s.tries) bits.push(L("AutoTry", { n:s.tries, of:(a && a.steps[i] && a.steps[i].repeat ? a.steps[i].repeat.times : "") }));
+    if (s.ms && s.state !== "run") bits.push(autoSecs(s.ms));
+    if (s.state === "sleep" || s.state === "again") bits.push(L("AutoWaiting"));
+    if (s.state === "skip") bits.push(L("AutoSkipped"));
+    if ((s.missing || []).length) bits.push(L("AutoMissing", { list:s.missing.join(", ") }));
+    return '<li class="aus ' + esc(s.state) + '"><i aria-hidden="true">' + (AUTO_ICON[s.state] || "○") + "</i>" +
+      '<span class="n">' + esc(s.name) + "</span>" + '<span class="m">' + esc(bits.join(" · ")) + "</span>" +
+      (s.note && (s.state === "fail" || s.state === "no") ? '<div class="nt">' + esc(autoNoteText(s, a)) + "</div>" : "") + "</li>";
+  }).join("") + "</ol>";
+  const vals = run.values || {}, keys = Object.keys(vals), hid = run.hidden || [];
+  if (keys.length || hid.length){
+    h += '<div class="auvals">' + keys.map(k => '<span class="auv' + (vals[k].show === "ai" ? " ai" : "") + '" title="' +
+           LE(vals[k].show === "ai" ? "AutoValAi" : "AutoValMe") + '"><b>' + esc(k) + "</b> " + esc(String(vals[k].v).slice(0, 300)) +
+           (vals[k].show === "ai" ? " <em>✦</em>" : "") + "</span>").join("") +
+         hid.map(k => '<span class="auv hid" title="' + LE("AutoValHidden") + '"><b>🔒 ' + esc(k) + "</b></span>").join("") + "</div>";
+  }
+  if (run.result) h += '<div class="auresult">' + esc(run.result) + "</div>";
+  h += '<div class="auf">' +
+       (live ? '<button class="btn sm danger" data-austop="' + esc(run.id) + '">' + LE("AutoStop") + "</button>"
+             : (a && !opts.noAgain ? '<button class="btn sm" data-auagain="' + esc(a.id) + '" data-aurec="' + esc(run.record || "") + '">' + LE("AutoRunAgain") + "</button>" : "") +
+               (a ? '<button class="btn sm" data-auopen="' + esc(a.id) + '">' + LE("AutoOpenDesign") + "</button>" : "")) +
+       "</div></div>";
+  return h;
+}
+/* the card's own buttons, wherever it is drawn */
+document.addEventListener("click", e => {
+  const b = e.target.closest("[data-austop],[data-auagain],[data-auopen]");
+  if (!b) return;
+  if (b.dataset.austop){ const l = AUTO.live[b.dataset.austop]; if (l){ l.stop = true; b.disabled = true; b.textContent = L("AutoStopping"); } return; }
+  const a = autoFind(b.dataset.auagain || b.dataset.auopen);
+  if (!a) return toast(L("AutoGone"), { bad:true });
+  if (b.dataset.auopen){ closeChat(); AUTO.ui.view = "edit"; autoEdit(a.id); openModal("auto"); return; }
+  const inChat = !!b.closest("#chatLog");
+  autoRunAsk(a, {}, { where:inChat ? "chat" : "panel", record:b.dataset.aurec || "", by:"me" });
+});
+
+/* ── in the conversation ─────────────────────────────────────────────── */
+function autoRunData(R){ return Object.assign(DossierAuto.normRun(R), { state:R.state, asked:R.asked }); }
+/* the card as a message of its own: drawn now, kept with the thread, and
+   what the assistant reads of it is its say (autoSayFor) */
+function autoChatRun(a, inputs, opts){
+  opts = opts || {};
+  const t = opts.record ? (findByRef(opts.record) || getTask(opts.record)) : null;
+  const r = { say:"", via:"auto", run:{ id:"", auto:a.id, name:a.name, by:opts.by || "me", asked:opts.asked, record:t ? t.code : "",
+              state:"running", inputs:{}, values:{}, hidden:[], steps:a.steps.map(s => ({ name:s.name, kind:s.kind, state:"wait" })) } };
+  let painted = false;
+  const paint = () => {
+    const el = r.run.id && document.querySelector('#chatLog [data-autorun="' + r.run.id + '"]');
+    if (el){ el.outerHTML = autoCardHtml(r.run); chatScroll(); }
+  };
+  if (!$("chat").classList.contains("on")) openChat();
+  return autoRun(a, inputs, Object.assign({}, opts, { record:t, onTick:(R, live) => {
+    r.run = autoRunData(R);
+    r.run.id = live.id;
+    if (!painted){ painted = true; chatBot(r); } else paint();
+  } })).then(R => {
+    r.run = autoRunData(R);
+    r.say = autoSayFor(a, R);
+    paint(); touch();
+    petNews({ say:L("AutoPetDone", { name:a.name, state:L("AutoState_" + R.state) }) });
+    return R;
+  });
+}
+/* chatRenderBot hands a run's message here */
+function autoRenderMsg(r){
+  const d = document.createElement("div");
+  d.className = "chb bot ans aumsg";
+  d.innerHTML = r.run ? autoCardHtml(r.run) : "";
+  if (r.note) d.insertAdjacentHTML("beforeend", '<div class="note">' + esc(r.note) + "</div>");
+  $("chatLog").appendChild(d);
+  chatScroll();
+}
+
+/* ── the values it needs, asked for ──────────────────────────────────────
+   Shown when a run is started without all of them: from the panel, from
+   "run regenerate COI for …" in the chat, or when the assistant left one
+   out or one is typed by you only (a secret one). Resolves to
+   { inputs, record } or null. */
+function autoInputsDialog(a, prefill, opts){
+  opts = opts || {};
+  return new Promise(resolve => {
+    const old = $("auRunDlg"); if (old) old.remove();
+    const el = document.createElement("div");
+    el.id = "auRunDlg"; el.className = "srcdlg audlg"; el.setAttribute("role", "dialog"); el.setAttribute("aria-modal", "true");
+    const pre = prefill || {};
+    const recs = S.tasks.filter(t => LIVE.indexOf(t.status) >= 0).slice(-80).reverse();
+    const recNow = opts.record ? (findByRef(opts.record) || getTask(opts.record)) : (S.open ? getTask(S.open) : null);
+    el.innerHTML = '<div class="srcdlgb aurunb"><h3>' + LE("AutoRunTitle", { name:a.name }) + "</h3>" +
+      (a.about ? '<p class="srcfile">' + esc(a.about) + "</p>" : "") +
+      (opts.why ? '<p class="srchint">' + esc(opts.why) + "</p>" : "") +
+      a.inputs.map(inp => {
+        const id = "auIn_" + inp.key, v = pre[inp.key] != null ? String(pre[inp.key]) : "";
+        const hint = [inp.example ? L("AutoInputEg", { eg:inp.example }) : "", inp.required ? "" : L("AutoOptional")].filter(Boolean).join(" · ");
+        let field;
+        if (inp.kind === "choice") field = '<select class="in" id="' + id + '"><option value=""></option>' +
+          inp.choices.map(c => "<option" + (c.toLowerCase() === v.toLowerCase() ? " selected" : "") + ">" + esc(c) + "</option>").join("") + "</select>";
+        else field = '<input class="in" id="' + id + '" type="' + (inp.kind === "secret" ? "password" : inp.kind === "date" ? "date" : "text") + '"' +
+          (inp.kind === "secret" ? ' autocomplete="new-password"' : ' autocomplete="off"') + ' spellcheck="false" value="' + (inp.kind === "secret" ? "" : esc(v)) + '"' +
+          (inp.example && inp.kind !== "date" ? ' placeholder="' + esc(inp.example) + '"' : "") + ">";
+        return '<label class="aufld"><span>' + esc(inp.label || inp.key) + (inp.kind === "secret" ? " 🔒" : "") + "</span>" + field +
+               (hint ? "<small>" + esc(hint) + "</small>" : "") + '<em class="auerr" data-auerr="' + esc(inp.key) + '"></em></label>';
+      }).join("") +
+      (opts.test ? "" : '<label class="aufld"><span>' + LE("AutoRecordOpt") + "</span>" +
+        '<select class="in" id="auInRec"><option value="">' + LE("AutoNoRecord") + "</option>" +
+        recs.map(t => '<option value="' + esc(t.code) + '"' + (recNow && recNow.id === t.id ? " selected" : "") + ">" + esc((t.code + " — " + t.title).slice(0, 90)) + "</option>").join("") +
+        "</select><small>" + LE("AutoRecordHint") + "</small></label>") +
+      '<div class="brow"><button class="btn pri" id="auRunGo" type="button">' + LE(opts.test ? "AutoTryGo" : "AutoRunGo") + "</button>" +
+      '<button class="btn" id="auRunNo" type="button">' + LE("Cancel") + "</button></div></div>";
+    document.body.appendChild(el);
+    const done = v => {
+      el.querySelectorAll('input[type="password"]').forEach(x => { x.value = ""; });
+      el.remove(); resolve(v);
+    };
+    const go = () => {
+      const given = {};
+      a.inputs.forEach(inp => { const f = $("auIn_" + inp.key); given[inp.key] = f ? f.value : ""; });
+      const chk = DossierAuto.inputsCheck(a, given);
+      el.querySelectorAll("[data-auerr]").forEach(x => { x.textContent = ""; });
+      if (chk.errors.length){
+        chk.errors.forEach(e => { const x = el.querySelector('[data-auerr="' + e.key + '"]'); if (x) x.textContent = autoInErr(e); });
+        return;
+      }
+      const rec = $("auInRec");
+      done({ inputs:chk.values, record:rec ? rec.value : "" });
+    };
+    $("auRunGo").onclick = go;
+    $("auRunNo").onclick = () => done(null);
+    el.addEventListener("keydown", e => {
+      if (e.key === "Escape"){ e.stopPropagation(); done(null); }
+      if (e.key === "Enter" && e.target.tagName === "INPUT"){ e.preventDefault(); go(); }
+    });
+    setTimeout(() => {
+      const f = a.inputs.map(i => $("auIn_" + i.key)).find(x => x && !x.value) || $("auRunGo");
+      if (f) f.focus();
+    }, 30);
+  });
+}
+function autoInErr(e){ return L("AutoIn_" + e.code, { label:e.label, example:e.example || "", choices:e.choices || "" }); }
+
+/* Run one, asking for what it still needs. where: "chat" (the card goes in
+   the conversation) or "panel". */
+async function autoRunAsk(a, given, opts){
+  opts = opts || {};
+  const probs = autoBlockers(a);
+  if (probs.length){
+    const msg = L("AutoCannotRun", { name:a.name }) + " " + autoProbText(probs[0], a);
+    if (opts.where === "chat") chatBot({ say:"", note:msg, chips:[{ label:L("AutoOpenDesign"), act:{ kind:"panel", panel:"auto" } }] });
+    else toast(msg, { bad:true, life:6000 });
+    return null;
+  }
+  const info = await autoInfo();
+  if (!info || !info.ok){
+    const msg = (info && info.old) ? L("AutoOldBridge") : L("AutoNoBridge");
+    if (opts.where === "chat") chatBot({ say:"", note:msg });
+    else toast(msg, { bad:true, life:7000 });
+    return null;
+  }
+  let inputs = given || {}, record = opts.record || "";
+  const chk = DossierAuto.inputsCheck(a, inputs);
+  const needForm = chk.errors.length || a.inputs.some(i => i.kind === "secret") || (opts.form && a.inputs.length);
+  if (needForm){
+    const r = await autoInputsDialog(a, inputs, { record:record, why:opts.why });
+    if (!r){
+      /* said in its own words, with the "left alone" mark and no Undo */
+      if (opts.where === "chat" && opts.by === "assistant"){
+        const line = L("AutoNotRun", { name:a.name });
+        chatReceiptEl(line, true, false);
+        chatPush({ who:"receipt", text:line, no:true });
+      }
+      return null;
+    }
+    inputs = r.inputs; record = r.record || record;
+  } else inputs = chk.values;
+  if (opts.where === "chat") return autoChatRun(a, inputs, { by:opts.by || "me", asked:opts.asked, record:record });
+  return autoPanelRun(a, inputs, { by:"me", record:record });
+}
+
+/* ── in the panel ─────────────────────────────────────────────────────── */
+function autoPanelRun(a, inputs, opts){
+  AUTO.ui.panelRun = { id:"", auto:a.id, name:a.name, by:"me", record:"", state:"running", inputs:{}, values:{}, hidden:[],
+                       steps:a.steps.map(s => ({ name:s.name, kind:s.kind, state:"wait" })) };
+  const paint = () => { const box = $("auLive"); if (box) box.innerHTML = autoCardHtml(AUTO.ui.panelRun); };
+  paint();
+  return autoRun(a, inputs, Object.assign({}, opts, { onTick:(R, live) => {
+    AUTO.ui.panelRun = autoRunData(R); AUTO.ui.panelRun.id = live.id; paint();
+  } })).then(R => { AUTO.ui.panelRun = autoRunData(R); paint(); return R; });
+}
+
+/* ═══ THE ASSISTANT'S SIDE ════════════════════════════════════════════════
+   workspace.automations: the jobs it may propose (DossierAuto.forAI);
+   runAutomation: one of them, proposed - put to you like any other change,
+   unless you switched the asking off for that one. */
+function autoForFlow(){ return autoOk() ? DossierAuto.forAI(autoStore()) : []; }
+/* is the assistant allowed to start this one at all */
+function autoAiMay(a){ return !!a && autoStore().aiCan && a.ai; }
+/* "run regenerate COI for P10234X56" (or start, do): one of theirs, by its
+   name - the form, filled in from the sentence, to look at and run. Never
+   runs anything by itself. */
+const AUTO_RUN_WORDS = /^\s*(?:please\s+|pls\s+|can you\s+|could you\s+)?(?:run|start|execute)\b/i;
+function autoLocal(q){
+  if (!autoOk() || !AUTO_RUN_WORDS.test(q)) return null;
+  const hit = DossierAuto.fromText(autoStore(), q);
+  if (!hit) return null;
+  const a = hit.auto;
+  setTimeout(() => autoRunAsk(a, hit.inputs, { where:"chat", by:"me", form:true }), 60);
+  return { say:L("AutoLocalFound", { name:a.name }),
+           chips:[{ label:L("AutoRunBtn"), act:{ kind:"autorun", id:a.id, inputs:hit.inputs } }] };
+}
+
+/* ═══ THE PANEL ═══════════════════════════════════════════════════════════
+   Menu → Automations. Three views: the list (your automations, your
+   connections, recent runs), the designer for one automation, and the
+   form for one connection. */
+function autoProbText(p, a){
+  const step = p.step >= 0 && a && a.steps[p.step] ? L("AutoStepN", { n:p.step + 1, name:a.steps[p.step].name }) + " · " : "";
+  return step + L("AutoChk_" + p.code, { name:p.name || "", conn:p.conn || "", why:p.why ? L("AutoCondWhy_" + p.why) : "", filters:p.filters || "" });
+}
+function autoWhen(iso){ return iso ? stamp(iso) : "—"; }
+
+/* each view sets its own handlers on the panel, and none are left over
+   from the one before */
+function autoBoxReset(box){ box.onclick = box.oninput = box.onchange = box.onfocusin = null; }
+async function renderAutoPanel(){
+  const box = $("pAuto"); if (!box) return;
+  autoBoxReset(box);
+  if (!autoOk()){ box.innerHTML = '<p class="auintro">' + LE("AutoNoModule") + "</p>"; return; }
+  if (AUTO.ui.view === "edit" && AUTO.ui.draft) return renderAutoEditor();
+  if (AUTO.ui.view === "conn" && AUTO.ui.connDraft) return renderAutoConn();
+  AUTO.ui.view = "list";
+  const st = autoStore();
+  const lastOf = id => st.runs.find(r => r.auto === id);
+  box.innerHTML =
+    '<p class="auintro">' + LE("AutoIntro") + "</p>" +
+    '<div class="aubridge" id="auBridge">' + LE("VaultLooking") + "</div>" +
+    '<label class="auopt"><input type="checkbox" class="cb" id="auAiCan"' + (st.aiCan ? " checked" : "") + "><span><b>" + LE("AutoAiCan") +
+      "</b><small>" + LE("AutoAiCanHint") + "</small></span></label>" +
+    '<div class="aulive" id="auLive">' + (AUTO.ui.panelRun ? autoCardHtml(AUTO.ui.panelRun) : "") + "</div>" +
+
+    '<h5 class="eyebrow auh">' + LE("AutoListHead") + "</h5>" +
+    '<div class="brow aubar"><button class="btn pri" id="auNew" type="button">' + LE("AutoNew") + "</button>" +
+      '<span class="aunewmenu" id="auStarters" hidden>' + autoStarters().map(s =>
+        '<button class="btn sm" data-austart="' + s.id + '" type="button" title="' + esc(s.hint) + '">' + esc(s.name) + "</button>").join("") + "</span></div>" +
+    (st.list.length ? st.list.map(a => {
+      const last = lastOf(a.id);
+      const probs = autoBlockers(a);
+      return '<div class="aurow" data-auid="' + esc(a.id) + '">' +
+        '<div class="aurt"><b>' + esc(a.name) + "</b>" + (a.about ? "<small>" + esc(a.about) + "</small>" : "") +
+        '<span class="aurm">' + esc([L("AutoNSteps", { n:a.steps.length }),
+          a.inputs.length ? L("AutoNeeds", { list:a.inputs.map(i => i.label || i.key).join(", ") }) : "",
+          !st.aiCan || !a.ai ? L("AutoOnlyYou") : a.ask ? L("AutoAiAsks") : L("AutoAiNoAsk"),
+          last ? L("AutoLast", { state:L("AutoState_" + last.state), when:autoWhen(last.started) }) : L("AutoNever")].filter(Boolean).join(" · ")) + "</span>" +
+          (probs.length ? '<span class="auwarn">' + esc(autoProbText(probs[0], a)) + (probs.length > 1 ? " (+" + (probs.length - 1) + ")" : "") + "</span>" : "") +
+        "</div>" +
+        '<div class="aurb"><button class="btn sm pri" data-aux="run"' + (probs.length ? " disabled" : "") + ">" + LE("AutoRunBtn") + "</button>" +
+          '<button class="btn sm" data-aux="edit">' + LE("Edit") + "</button>" +
+          '<button class="btn sm" data-aux="dup">' + LE("AutoDuplicate") + "</button>" +
+          '<button class="btn sm danger" data-aux="del">' + LE("Remove2") + "</button></div></div>";
+    }).join("") : '<div class="auempty">' + LE("AutoNone") + "</div>") +
+
+    '<h5 class="eyebrow auh">' + LE("AutoConnsHead") + "</h5>" +
+    '<p class="aunote">' + LE("AutoConnsIntro") + "</p>" +
+    '<div class="brow aubar"><button class="btn" id="auConnNew" type="button">' + LE("AutoConnNew") + "</button></div>" +
+    (st.conns.length ? st.conns.map(c => '<div class="aurow conn" data-aucid="' + esc(c.id) + '">' +
+        '<div class="aurt"><b>' + esc(c.name) + '</b><small class="mono">' + esc(c.base || L("AutoNoAddress")) + "</small>" +
+        '<span class="aurm">' + esc(L("AutoAuth_" + c.auth)) + "</span>" +
+        '<span class="ausec" data-ausec="' + esc(c.id) + '">' + (DossierAuto.connSecrets(c).length ? LE("VaultLooking") : "") + "</span></div>" +
+        '<div class="aurb"><button class="btn sm" data-auc="edit">' + LE("Edit") + "</button>" +
+        '<button class="btn sm danger" data-auc="del">' + LE("Remove2") + "</button></div></div>").join("")
+      : '<div class="auempty">' + LE("AutoNoConns") + "</div>") +
+
+    '<h5 class="eyebrow auh">' + LE("AutoRunsHead") + "</h5>" +
+    (st.runs.length ? '<div class="auruns">' + st.runs.slice(0, 20).map(r =>
+        '<button class="aurun ' + esc(r.state) + (AUTO.ui.hist === r.id ? " open" : "") + '" data-auhist="' + esc(r.id) + '" type="button">' +
+        '<span class="w">' + esc(autoWhen(r.started)) + '</span><b>' + esc(r.name) + "</b>" +
+        '<span class="s">' + LE("AutoState_" + r.state) + "</span>" +
+        '<span class="by">' + LE(r.by === "assistant" ? "AutoByAssistantShort" : "AutoByYouShort") + "</span>" +
+        '<span class="t">' + autoSecs(r.ms) + "</span></button>" +
+        (AUTO.ui.hist === r.id ? autoCardHtml(r, { noAgain:false }) : "")).join("") + "</div>"
+      : '<div class="auempty">' + LE("AutoNoRuns") + "</div>");
+  autoWirePanel(box);
+  /* what only the tray program knows, filled in when it answers */
+  const info = await autoInfo(true);
+  const b = $("auBridge");
+  if (b){
+    b.className = "aubridge " + (info && info.ok ? "ok" : "bad");
+    b.textContent = info && info.ok ? L("AutoBridgeOk", { ws:info.workspace || L("AutoNoWs") }) + (info.workspace && FS.name && info.workspace !== FS.name ? " " + L("AutoBridgeOtherWs", { ws:info.workspace, here:FS.name }) : "")
+                  : info && info.old ? L("AutoOldBridge") : L("AutoNoBridge");
+  }
+  for (const c of st.conns){
+    const el = box.querySelector('[data-ausec="' + c.id + '"]');
+    if (!el || !DossierAuto.connSecrets(c).length) continue;
+    if (!info || !info.ok){ el.textContent = ""; continue; }
+    const s = await autoSecretsOf(c);
+    el.innerHTML = autoSecretChips(c, s);
+  }
+}
+function autoSecretChips(c, s){
+  const names = (s && s.names) || {};
+  return DossierAuto.connSecrets(c).map(n => {
+    const x = names[n];
+    const cls = !x ? "no" : x.same ? "ok" : "moved";
+    return '<span class="auchip ' + cls + '" title="' + LE(!x ? "AutoSecretNotSet" : x.same ? "AutoSecretSet" : "AutoSecretMoved") + '">' +
+      (cls === "ok" ? "✓ " : cls === "moved" ? "⚠ " : "○ ") + esc(n) + "</span>";
+  }).join("");
+}
+function autoWirePanel(box){
+  const st = autoStore();
+  const ai = $("auAiCan");
+  if (ai) ai.onchange = () => { st.aiCan = ai.checked; touch(); renderAutoPanel(); };
+  const nw = $("auNew");
+  if (nw) nw.onclick = () => { const m = $("auStarters"); if (m) m.hidden = !m.hidden; };
+  box.querySelectorAll("[data-austart]").forEach(b => { b.onclick = () => autoFromStarter(b.dataset.austart); });
+  box.querySelectorAll("[data-aux]").forEach(b => {
+    b.onclick = async () => {
+      const id = b.closest("[data-auid]").dataset.auid;
+      const a = st.list.find(x => x.id === id); if (!a) return;
+      const what = b.dataset.aux;
+      if (what === "run") return autoRunAsk(a, {}, { where:"panel", form:true });
+      if (what === "edit") return autoEdit(id);
+      if (what === "dup"){
+        const c = DossierAuto.normAuto(Object.assign(clone(a), { id:"", name:L("AutoCopyOf", { name:a.name }), updated:new Date().toISOString() }));
+        c.steps = c.steps.map(s => Object.assign(s, { id:"" })).map(DossierAuto.normStep);
+        st.list.push(c); touch(); return renderAutoPanel();
+      }
+      if (what === "del"){
+        const r = await askUser(L("AutoDelTitle", { name:a.name }), L("AutoDelSay"), [{ label:L("Remove2") }, { label:L("Cancel") }]);
+        if (!r || r.choice !== 0) return;
+        pushUndo(L("AutoUndo"), "auto");
+        st.list = st.list.filter(x => x.id !== id); touch(); renderAutoPanel();
+      }
+    };
+  });
+  const cn = $("auConnNew");
+  if (cn) cn.onclick = () => autoConnEdit("");
+  box.querySelectorAll("[data-auc]").forEach(b => {
+    b.onclick = async () => {
+      const id = b.closest("[data-aucid]").dataset.aucid;
+      const c = st.conns.find(x => x.id === id); if (!c) return;
+      if (b.dataset.auc === "edit") return autoConnEdit(id);
+      const users = st.list.filter(a => a.steps.some(s => s.conn === id)).map(a => a.name);
+      const r = await askUser(L("AutoConnDelTitle", { name:c.name }),
+        (users.length ? L("AutoConnDelUsed", { list:users.join(", ") }) + " " : "") + L("AutoConnDelSay"),
+        [{ label:L("Remove2") }, { label:L("Cancel") }]);
+      if (!r || r.choice !== 0) return;
+      st.conns = st.conns.filter(x => x.id !== id);
+      touch();
+      autoSecretsDrop(c).catch(() => {});
+      renderAutoPanel();
+    };
+  });
+  box.querySelectorAll("[data-auhist]").forEach(b => {
+    b.onclick = () => { AUTO.ui.hist = AUTO.ui.hist === b.dataset.auhist ? "" : b.dataset.auhist; renderAutoPanel(); };
+  });
+}
+
+/* ── starters: the usual shapes, ready to fill in ─────────────────────
+   Their addresses are examples (example.local) to replace with your own;
+   a connection a starter makes is only kept if the design is saved and
+   still uses it. */
+function autoStarters(){
+  const C = (name, base, auth, extra) => DossierAuto.normConn({ id:DossierAuto.newId("C"), name:name, base:base, auth:auth, extra:extra || [] });
+  return [
+    { id:"blank", name:L("AutoT_blank"), hint:L("AutoT_blankHint"), make:() => ({ conns:[],
+      auto:{ name:L("AutoNewName"), steps:[{ kind:"http", name:L("AutoT_call") }] } }) },
+    { id:"signin", name:L("AutoT_signin"), hint:L("AutoT_signinHint"), make:() => {
+      const c1 = C(L("AutoT_loginConn"), "https://login.example.local/api", "none", ["username", "password"]);
+      const c2 = C(L("AutoT_apiConn"), "https://api.example.local/v1", "none");
+      return { conns:[c1, c2], auto:{ name:L("AutoT_signinName"), about:L("AutoT_signinAbout"),
+        inputs:[{ key:"ref", label:L("AutoT_refLabel"), example:"P10234X56" }],
+        steps:[
+          { kind:"http", name:L("AutoT_signInStep"), conn:c1.id, method:"POST", path:"/token", bodyType:"json",
+            body:'{\n  "username": "{{secret.username}}",\n  "password": "{{secret.password}}"\n}',
+            save:[{ name:"token", from:"json", path:"access_token", show:"hidden" }] },
+          { kind:"http", name:L("AutoT_callStep"), conn:c2.id, method:"POST", path:"/items/{{input.ref}}/regenerate",
+            headers:[["Authorization", "Bearer {{token}}"]],
+            save:[{ name:"result", from:"json", path:"id", show:"ai" }] }],
+        result:L("AutoT_signinResult") } };
+    } },
+    { id:"apikey", name:L("AutoT_apikey"), hint:L("AutoT_apikeyHint"), make:() => {
+      const c = C(L("AutoT_apiConn"), "https://api.example.local/v1", "header");
+      return { conns:[c], auto:{ name:L("AutoT_apikeyName"), inputs:[{ key:"ref", label:L("AutoT_refLabel"), example:"P10234X56" }],
+        steps:[{ kind:"http", name:L("AutoT_lookStep"), conn:c.id, method:"GET", path:"/items/{{input.ref}}",
+                 save:[{ name:"status", from:"json", path:"status", show:"ai" }] }],
+        result:L("AutoT_apikeyResult") } };
+    } },
+    { id:"windows", name:L("AutoT_windows"), hint:L("AutoT_windowsHint"), make:() => {
+      const c = C(L("AutoT_intranetConn"), "https://intranet.example.local/api", "windows");
+      return { conns:[c], auto:{ name:L("AutoT_windowsName"), inputs:[{ key:"ref", label:L("AutoT_refLabel"), example:"P10234X56" }],
+        steps:[{ kind:"http", name:L("AutoT_lookStep"), conn:c.id, method:"GET", path:"/records/{{input.ref}}",
+                 save:[{ name:"owner", from:"json", path:"owner", show:"ai" }] }] } };
+    } },
+    { id:"poll", name:L("AutoT_poll"), hint:L("AutoT_pollHint"), make:() => {
+      const c = C(L("AutoT_apiConn"), "https://api.example.local/v1", "bearer");
+      return { conns:[c], auto:{ name:L("AutoT_pollName"), inputs:[{ key:"ref", label:L("AutoT_refLabel"), example:"P10234X56" }],
+        steps:[
+          { kind:"http", name:L("AutoT_submitStep"), conn:c.id, method:"POST", path:"/jobs", bodyType:"json",
+            body:'{\n  "reference": "{{input.ref}}",\n  "requestedBy": "KalKech"\n}',
+            save:[{ name:"jobId", from:"json", path:"id", show:"me" }] },
+          { kind:"http", name:L("AutoT_waitStep"), conn:c.id, method:"GET", path:"/jobs/{{jobId}}",
+            save:[{ name:"state", from:"json", path:"state", show:"me" }, { name:"output", from:"json", path:"result.url", show:"ai" }],
+            repeat:{ until:'{{state}} == "DONE"', times:20, every:10 } }],
+        result:L("AutoT_pollResult") } };
+    } },
+    { id:"script", name:L("AutoT_script"), hint:L("AutoT_scriptHint"), make:() => {
+      const sc = S.scripts.find(x => /\.(bat|cmd)$/i.test(x.file || ""));
+      return { conns:[], auto:{ name:L("AutoT_scriptName"), inputs:[{ key:"ref", label:L("AutoT_refLabel"), example:"P10234X56" }],
+        steps:[{ kind:"script", name:L("AutoT_scriptStep"), script:sc ? sc.id : "",
+                 args:sc ? (sc.params || []).map((p, i) => [p, i === 0 ? "{{input.ref}}" : ""]) : [],
+                 save:[{ name:"output", from:"output", show:"me" }] }] } };
+    } }
+  ];
+}
+function autoFromStarter(id){
+  const s = autoStarters().find(x => x.id === id); if (!s) return;
+  const made = s.make();
+  AUTO.ui.newConns = made.conns.slice();
+  AUTO.ui.draft = DossierAuto.normAuto(made.auto);
+  AUTO.ui.id = "";
+  AUTO.ui.view = "edit";
+  AUTO.ui.test = {};
+  AUTO.ui.tvals = {};
+  renderAutoPanel();
+}
+function autoEdit(id){
+  const a = autoStore().list.find(x => x.id === id); if (!a) return;
+  AUTO.ui.draft = DossierAuto.normAuto(clone(a));
+  AUTO.ui.id = id;
+  AUTO.ui.newConns = [];
+  AUTO.ui.view = "edit";
+  AUTO.ui.test = {};
+  AUTO.ui.tvals = {};
+  if ($("pAuto")) renderAutoPanel();
+}
+
+/* ── the designer ─────────────────────────────────────────────────────
+   Every field carries data-f, the path of what it sets in the draft
+   ("steps.1.path", "steps.1.headers.0.1"); typing sets it and re-checks
+   without drawing the page again, so the box keeps its focus. Adding,
+   removing, moving and switching kinds draw it again. */
+function autoField(path, value, opts){
+  opts = opts || {};
+  const v = value == null ? "" : value;
+  if (opts.area) return '<textarea class="in mono' + (opts.cls ? " " + opts.cls : "") + '" data-f="' + path + '" rows="' + (opts.rows || 4) + '" spellcheck="false"' +
+    (opts.ph ? ' placeholder="' + esc(opts.ph) + '"' : "") + ">" + esc(v) + "</textarea>";
+  if (opts.select) return '<select class="in' + (opts.cls ? " " + opts.cls : "") + '" data-f="' + path + '"' + (opts.redraw ? " data-redraw" : "") + ">" +
+    opts.select.map(o => '<option value="' + esc(o[0]) + '"' + (String(o[0]) === String(v) ? " selected" : "") + ">" + esc(o[1]) + "</option>").join("") + "</select>";
+  if (opts.check) return '<input type="checkbox" class="cb" data-f="' + path + '"' + (v ? " checked" : "") + (opts.redraw ? " data-redraw" : "") + ">";
+  return '<input class="in' + (opts.mono ? " mono" : "") + (opts.cls ? " " + opts.cls : "") + '" data-f="' + path + '" value="' + esc(v) + '"' +
+    (opts.num ? ' type="number" min="' + (opts.min || 0) + '" max="' + (opts.max || 999) + '"' : ' spellcheck="false"') +
+    (opts.ph ? ' placeholder="' + esc(opts.ph) + '"' : "") + ">";
+}
+function autoPairs(i, list, rows, kph, vph){
+  return '<div class="aupairs">' + (rows || []).map((p, j) =>
+    '<div class="aupair">' + autoField("steps." + i + "." + list + "." + j + ".0", p[0], { mono:true, ph:kph }) +
+    autoField("steps." + i + "." + list + "." + j + ".1", p[1], { mono:true, ph:vph }) +
+    '<button class="ib" data-aa="delPair" data-i="' + i + '" data-l="' + list + '" data-j="' + j + '" title="' + LE("Remove2") + '" type="button">✕</button></div>').join("") +
+    '<button class="btn sm" data-aa="addPair" data-i="' + i + '" data-l="' + list + '" type="button">+ ' + LE("AutoAddRow") + "</button></div>";
+}
+/* the values a step can use, as chips that type themselves into the box
+   last used */
+function autoChips(a, i){
+  const out = [];
+  a.inputs.forEach(inp => out.push("{{input." + inp.key + "}}"));
+  a.steps.slice(0, i).forEach(s => (s.save || []).forEach(v => { const t = "{{" + v.name + "}}"; if (out.indexOf(t) < 0) out.push(t); }));
+  const s = a.steps[i];
+  if (s && (s.kind === "http" || s.kind === "script") && i > 0) out.push("{{status}}");
+  const c = s && s.conn ? autoConnOf(s.conn) : null;
+  if (c) DossierAuto.connSecrets(c).forEach(n => out.push("{{secret." + n + "}}"));
+  out.push("{{today}}", "{{now}}", "{{uuid}}", "{{record.code}}", "{{record.ticket}}");
+  return '<div class="auchips"><span>' + LE("AutoChipsLab") + "</span>" + out.map(t =>
+    '<button class="auchip' + (/^\{\{secret\./.test(t) ? " sec" : "") + '" data-chip="' + esc(t) + '" type="button">' + esc(t) + "</button>").join("") + "</div>";
+}
+function autoStepHtml(a, s, i){
+  const P = "steps." + i + ".";
+  const conns = autoStore().conns.concat(AUTO.ui.newConns);
+  const connSel = (blank) => [["", blank]].concat(conns.map(c => [c.id, c.name]));
+  const t = AUTO.ui.test[s.id];
+  let body = "";
+  if (s.kind === "http"){
+    const c = autoConnOf(s.conn);
+    body +=
+      '<div class="augrid">' +
+        '<label>' + LE("AutoConn") + "</label>" + '<div class="aurow2">' + autoField(P + "conn", s.conn, { select:connSel(L("AutoPickConn")), redraw:true }) +
+          '<button class="btn sm" data-aa="newConn" data-i="' + i + '" type="button">' + LE("AutoConnNewShort") + "</button></div>" +
+        '<label>' + LE("AutoRequest") + "</label>" + '<div class="aurow2">' + autoField(P + "method", s.method, { select:DossierAuto.METHODS.map(m => [m, m]), cls:"aumeth", redraw:true }) +
+          '<span class="aubase mono" title="' + esc(c ? c.base : "") + '">' + esc(c ? c.base || L("AutoNoAddress") : "…") + "</span>" +
+          autoField(P + "path", s.path, { mono:true, ph:"/items/{{input.ref}}" }) + "</div>" +
+        '<label>' + LE("AutoQuery") + "</label>" + autoPairs(i, "query", s.query, L("AutoName"), L("AutoValue")) +
+        '<label>' + LE("AutoHeaders") + "</label>" + autoPairs(i, "headers", s.headers, "Authorization", "Bearer {{token}}") +
+        (s.method === "GET" || s.method === "HEAD" ? "" :
+          '<label>' + LE("AutoBody") + "</label>" + '<div>' + autoField(P + "bodyType", s.bodyType, { select:DossierAuto.BODIES.map(b => [b, L("AutoBody_" + b)]), redraw:true }) +
+          (s.bodyType === "form" ? autoPairs(i, "form", s.form, L("AutoName"), L("AutoValue"))
+           : s.bodyType !== "none" ? autoField(P + "body", s.body, { area:true, rows:6, ph:s.bodyType === "json" ? '{\n  "policy": "{{input.ref}}"\n}' : "" }) : "") + "</div>") +
+        '<label>' + LE("AutoExpect") + "</label>" + '<div class="aurow2">' + autoField(P + "expect", s.expect, { mono:true, ph:"2xx", cls:"aushort" }) +
+          '<small class="auhint">' + LE("AutoExpectHint") + "</small></div>" +
+      "</div>";
+  } else if (s.kind === "script"){
+    const sc = S.scripts.find(x => x.id === s.script);
+    body +=
+      '<div class="augrid">' +
+        '<label>' + LE("AutoScript") + "</label>" + autoField(P + "script", s.script,
+          { select:[["", L("AutoPickScript")]].concat(S.scripts.map(x => [x.id, x.name + " (" + x.file + ")"])), redraw:true }) +
+        (sc && !/\.(bat|cmd)$/i.test(sc.file || "") ? '<label></label><div class="auwarn">' + LE("AutoScriptBatOnly") + "</div>" : "") +
+        '<label>' + LE("AutoScriptValues") + "</label>" + autoPairs(i, "args", s.args, sc && (sc.params || [])[0] || L("AutoName"), "{{input.ref}}") +
+        '<label>' + LE("AutoScriptConn") + "</label>" + autoField(P + "conn", s.conn, { select:connSel(L("AutoNoConn")), redraw:true }) +
+        '<label>' + LE("AutoTimeLimit") + "</label>" + '<div class="aurow2">' + autoField(P + "timeout", s.timeout, { num:true, min:1, max:600, cls:"aushort" }) +
+          "<small>" + LE("AutoSeconds") + "</small></div>" +
+        '<label>' + LE("AutoExitOk") + "</label>" + autoField(P + "expect", s.expect, { mono:true, ph:"0", cls:"aushort" }) +
+      "</div>" + '<p class="auhint">' + LE("AutoScriptHow") + "</p>";
+  } else if (s.kind === "wait"){
+    body += '<div class="augrid"><label>' + LE("AutoWaitFor") + "</label>" + '<div class="aurow2">' +
+      autoField(P + "seconds", s.seconds, { num:true, min:1, max:600, cls:"aushort" }) + "<small>" + LE("AutoSeconds") + "</small></div></div>";
+  } else if (s.kind === "confirm"){
+    body += '<div class="augrid"><label>' + LE("AutoAskText") + "</label>" + autoField(P + "text", s.text, { area:true, rows:2, ph:L("AutoAskTextPh") }) + "</div>";
+  }
+  if (s.kind === "http" || s.kind === "script"){
+    const froms = DossierAuto.FROM[s.kind];
+    body += '<div class="ausaves"><div class="ausl">' + LE("AutoSaves") + '<small>' + LE("AutoSavesHint") + "</small></div>" +
+      s.save.map((v, j) => '<div class="ausave">' +
+        autoField(P + "save." + j + ".name", v.name, { mono:true, ph:"token" }) +
+        autoField(P + "save." + j + ".from", v.from, { select:froms.map(f => [f, L("AutoFrom_" + f)]), redraw:true }) +
+        (["json", "header", "regex"].indexOf(v.from) >= 0 ? autoField(P + "save." + j + ".path", v.path, { mono:true, ph:v.from === "json" ? "data.access_token" : v.from === "header" ? "Location" : "Ref: (\\S+)" }) : "<span></span>") +
+        autoField(P + "save." + j + ".show", v.show, { select:DossierAuto.SHOWS.map(x => [x, L("AutoShow_" + x)]), cls:"aushow " + v.show, redraw:true }) +
+        '<button class="ib" data-aa="delSave" data-i="' + i + '" data-j="' + j + '" title="' + LE("Remove2") + '" type="button">✕</button></div>').join("") +
+      '<button class="btn sm" data-aa="addSave" data-i="' + i + '" type="button">+ ' + LE("AutoAddSave") + "</button></div>";
+    body += '<details class="aumore"' + (s.when || (s.repeat && s.repeat.until) || s.onFail === "continue" ? " open" : "") + "><summary>" + LE("AutoMore") + "</summary>" +
+      '<div class="augrid">' +
+        '<label>' + LE("AutoWhen") + "</label>" + autoField(P + "when", s.when, { mono:true, ph:'{{input.env}} == "UAT"' }) +
+        '<label>' + LE("AutoUntil") + "</label>" + '<div>' + autoField(P + "repeat.until", s.repeat.until, { mono:true, ph:'{{state}} == "DONE"' }) +
+          '<div class="aurow2 ausub"><small>' + LE("AutoEvery") + "</small>" + autoField(P + "repeat.every", s.repeat.every, { num:true, min:1, max:300, cls:"aushort" }) +
+          "<small>" + LE("AutoSecondsUpTo") + "</small>" + autoField(P + "repeat.times", s.repeat.times, { num:true, min:1, max:30, cls:"aushort" }) +
+          "<small>" + LE("AutoTimes") + "</small></div></div>" +
+        '<label>' + LE("AutoOnFail") + "</label>" + autoField(P + "onFail", s.onFail, { select:[["stop", L("AutoOnFail_stop")], ["continue", L("AutoOnFail_continue")]] }) +
+      "</div><p class=\"auhint\">" + LE("AutoCondHow") + "</p></details>";
+  } else {
+    body += '<div class="augrid"><label>' + LE("AutoWhen") + "</label>" + autoField(P + "when", s.when, { mono:true, ph:'{{input.env}} == "PROD"' }) + "</div>";
+  }
+  body += autoChips(a, i);
+  if (s.kind === "http" || s.kind === "script")
+    body += '<div class="brow autry"><button class="btn sm" data-aa="try" data-i="' + i + '" type="button">' + LE("AutoTryHere") + "</button>" +
+            '<small class="auhint">' + LE("AutoTryHint") + "</small></div>" + (t ? autoTestHtml(s, i, t) : "");
+  return '<div class="austep" data-si="' + i + '">' +
+    '<div class="aush"><span class="aun">' + (i + 1) + '</span><span class="auk ' + s.kind + '">' + LE("AutoKind_" + s.kind) + "</span>" +
+      autoField(P + "name", s.name, { cls:"auname" }) +
+      '<button class="ib" data-aa="up" data-i="' + i + '" title="' + LE("AutoMoveUp") + '" type="button"' + (i ? "" : " disabled") + ">↑</button>" +
+      '<button class="ib" data-aa="down" data-i="' + i + '" title="' + LE("AutoMoveDown") + '" type="button"' + (i < a.steps.length - 1 ? "" : " disabled") + ">↓</button>" +
+      '<button class="ib" data-aa="dupStep" data-i="' + i + '" title="' + LE("AutoDuplicate") + '" type="button">⎘</button>' +
+      '<button class="ib" data-aa="delStep" data-i="' + i + '" title="' + LE("Remove2") + '" type="button">✕</button></div>' +
+    '<div class="aub">' + body + "</div></div>";
+}
+/* what a "Try it" brought back for one step: its answer, what it saved,
+   and - for a JSON reply - the paths in it, each one a click from being a
+   "save" row */
+function autoTestHtml(s, i, t){
+  const paths = t.excerpt && /json/i.test(t.type || "") || /^\s*[{[]/.test(t.excerpt || "") ? DossierAuto.jsonPaths(t.excerpt, 60) : [];
+  const vals = Object.keys(t.saved || {});
+  return '<div class="autest ' + esc(t.state) + '">' +
+    '<div class="autl"><b>' + (AUTO_ICON[t.state] || "") + " " + esc(t.status != null ? (s.kind === "script" ? L("AutoExit", { n:t.status }) : String(t.status)) : LE("AutoState_" + (t.state === "ok" ? "ok" : "failed"))) + "</b>" +
+      (t.ms ? " · " + autoSecs(t.ms) : "") + (t.url ? ' · <span class="mono">' + esc(t.url) + "</span>" : "") + "</div>" +
+    (t.note ? '<div class="nt">' + esc(t.note) + "</div>" : "") +
+    (vals.length || (t.hidden || []).length ? '<div class="auvals">' + vals.map(k => '<span class="auv"><b>' + esc(k) + "</b> " + esc(String(t.saved[k]).slice(0, 200)) + "</span>").join("") +
+      (t.hidden || []).map(k => '<span class="auv hid"><b>🔒 ' + esc(k) + "</b></span>").join("") + "</div>" : "") +
+    ((t.missing || []).length ? '<div class="auwarn">' + esc(L("AutoMissing", { list:t.missing.join(", ") })) + "</div>" : "") +
+    (paths.length ? '<div class="aupaths"><span>' + LE("AutoPathsLab") + "</span>" + paths.map(p =>
+      '<button class="auchip" data-addsave="' + i + '" data-path="' + esc(p.path) + '" type="button" title="' + esc(p.sample) + '">' + esc(p.path) + "</button>").join("") + "</div>" : "") +
+    (t.excerpt ? '<pre class="auex">' + esc(t.excerpt) + "</pre>" : "") + "</div>";
+}
+
+function renderAutoEditor(){
+  const box = $("pAuto"); if (!box) return;
+  autoBoxReset(box);
+  const a = AUTO.ui.draft;
+  const sys = (S.settings.systems || []).map(x => [x.name, x.name]);
+  const scrollEl = box.closest(".mb2") || box;
+  const keep = scrollEl.scrollTop;
+  box.innerHTML =
+    '<div class="aueh"><button class="btn sm" data-aa="back" type="button">← ' + LE("AutoBack") + "</button>" +
+      "<b>" + LE(AUTO.ui.id ? "AutoEditTitle" : "AutoNewTitle") + "</b>" +
+      '<span class="sp"></span><button class="btn pri" data-aa="save" type="button">' + LE("AutoSave") + "</button></div>" +
+    '<div class="augrid top">' +
+      '<label>' + LE("AutoName") + "</label>" + autoField("name", a.name) +
+      '<label>' + LE("AutoAbout") + "</label>" + autoField("about", a.about, { ph:L("AutoAboutPh") }) +
+      '<label>' + LE("System") + "</label>" + autoField("system", a.system, { select:[["", L("None")]].concat(sys) }) +
+    "</div>" +
+    '<div class="auopts">' +
+      '<label class="auopt"><input type="checkbox" class="cb" data-f="ai"' + (a.ai ? " checked" : "") + " data-redraw><span><b>" + LE("AutoMayAi") + "</b><small>" +
+        LE(autoStore().aiCan ? "AutoMayAiHint" : "AutoMayAiOff") + "</small></span></label>" +
+      '<label class="auopt"><input type="checkbox" class="cb" data-f="ask"' + (a.ask ? " checked" : "") + (a.ai ? "" : " disabled") + "><span><b>" + LE("AutoAskFirst") + "</b><small>" +
+        LE("AutoAskFirstHint") + "</small></span></label>" +
+    "</div>" +
+
+    '<h5 class="eyebrow auh">' + LE("AutoInputsHead") + "</h5>" +
+    '<p class="aunote">' + LE("AutoInputsIntro") + "</p>" +
+    (a.inputs.length ? '<div class="auins"><div class="auinh"><span>' + LE("AutoInKey") + "</span><span>" + LE("AutoInLabel") + "</span><span>" + LE("AutoInKind") +
+      "</span><span>" + LE("AutoInPattern") + "</span><span>" + LE("AutoInExample") + "</span><span>" + LE("AutoInReq") + "</span><span></span></div>" +
+      a.inputs.map((inp, i) => '<div class="auin">' +
+        autoField("inputs." + i + ".key", inp.key, { mono:true, ph:"policy" }) +
+        autoField("inputs." + i + ".label", inp.label, { ph:L("AutoInLabelPh") }) +
+        autoField("inputs." + i + ".kind", inp.kind, { select:DossierAuto.INPUT_KINDS.map(k => [k, L("AutoInKind_" + k)]), redraw:true }) +
+        (inp.kind === "choice" ? autoField("inputs." + i + ".choices", inp.choices.join(", "), { ph:"UAT, PROD" })
+          : inp.kind === "secret" ? "<span></span>" : autoField("inputs." + i + ".pattern", inp.pattern, { mono:true, ph:"[A-Z]\\d{5}[A-Z]\\d{2}" })) +
+        (inp.kind === "secret" ? "<span></span>" : autoField("inputs." + i + ".example", inp.example, { ph:"P10234X56" })) +
+        autoField("inputs." + i + ".required", inp.required, { check:true }) +
+        '<button class="ib" data-aa="delInput" data-i="' + i + '" title="' + LE("Remove2") + '" type="button">✕</button></div>').join("") + "</div>" : "") +
+    '<button class="btn sm" data-aa="addInput" type="button">+ ' + LE("AutoAddInput") + "</button>" +
+
+    '<h5 class="eyebrow auh">' + LE("AutoStepsHead") + "</h5>" +
+    '<p class="aunote">' + LE("AutoStepsIntro") + "</p>" +
+    (a.inputs.length ? '<div class="autvals"><span>' + LE("AutoTestWith") + "</span>" + a.inputs.map(inp =>
+      '<input class="in mono" data-tval="' + esc(inp.key) + '" ' + (inp.kind === "secret" ? 'type="password" autocomplete="new-password"' : 'spellcheck="false"') +
+      ' placeholder="' + esc(inp.label || inp.key) + '" value="' + esc(inp.kind === "secret" ? "" : (AUTO.ui.tvals[inp.key] != null ? AUTO.ui.tvals[inp.key] : inp.example)) + '">').join("") + "</div>" : "") +
+    a.steps.map((s, i) => autoStepHtml(a, s, i)).join("") +
+    '<div class="brow auadd"><span>' + LE("AutoAddStep") + "</span>" + DossierAuto.KINDS.map(k =>
+      '<button class="btn sm" data-aa="addStep" data-k="' + k + '" type="button">+ ' + LE("AutoKind_" + k) + "</button>").join("") + "</div>" +
+
+    '<h5 class="eyebrow auh">' + LE("AutoResultHead") + "</h5>" +
+    autoField("result", a.result, { area:true, rows:2, ph:L("AutoResultPh") }) +
+    '<div class="auprobs" id="auProbs"></div>' +
+    '<div class="brow auend"><button class="btn pri" data-aa="save" type="button">' + LE("AutoSave") + "</button>" +
+      '<button class="btn" data-aa="back" type="button">' + LE("Cancel") + "</button></div>";
+  autoWireEditor(box);
+  autoShowProbs();
+  scrollEl.scrollTop = keep;
+}
+function autoShowProbs(){
+  const el = $("auProbs"); if (!el || !AUTO.ui.draft) return;
+  const a = AUTO.ui.draft;
+  const probs = DossierAuto.check(a, { conns:autoStore().conns.concat(AUTO.ui.newConns), scripts:autoScripts() });
+  el.innerHTML = probs.length ? "<b>" + LE("AutoProbsHead") + "</b><ul>" + probs.map(p =>
+    '<li class="' + (p.warn ? "warn" : "") + '">' + esc(autoProbText(p, a)) + "</li>").join("") + "</ul>"
+    : '<span class="ok">✓ ' + LE("AutoProbsNone") + "</span>";
+  el.className = "auprobs" + (probs.some(p => !p.warn) ? " bad" : "");
+}
+/* one value into the draft, by its path */
+function autoSetPath(o, path, v){
+  const ks = path.split(".");
+  for (let i = 0; i < ks.length - 1; i++){
+    const k = /^\d+$/.test(ks[i]) ? +ks[i] : ks[i];
+    if (o[k] == null) o[k] = /^\d+$/.test(ks[i + 1]) ? [] : {};
+    o = o[k];
+  }
+  const last = ks[ks.length - 1];
+  o[/^\d+$/.test(last) ? +last : last] = v;
+}
+function autoWireEditor(box){
+  const a = AUTO.ui.draft;
+  const read = el => {
+    const p = el.dataset.f;
+    let v = el.type === "checkbox" ? el.checked : el.value;
+    if (el.type === "number") v = Math.round(+v || 0);
+    if (/^inputs\.\d+\.choices$/.test(p)) v = String(v).split(/\s*,\s*/).filter(Boolean);
+    autoSetPath(a, p, v);
+  };
+  box.oninput = e => {
+    const el = e.target;
+    /* test values are kept while the designer is open - a secret one is not kept at all */
+    if (el.dataset && el.dataset.tval != null){ if (el.type !== "password") AUTO.ui.tvals[el.dataset.tval] = el.value; return; }
+    if (!el.dataset || !el.dataset.f) return;
+    read(el);
+    clearTimeout(AUTO.ui.timer);
+    AUTO.ui.timer = setTimeout(autoShowProbs, 250);
+  };
+  box.onchange = e => {
+    const el = e.target;
+    if (!el.dataset || !el.dataset.f) return;
+    read(el);
+    if (el.dataset.redraw != null){
+      /* a script picked: its blanks become the rows of values */
+      const m = /^steps\.(\d+)\.script$/.exec(el.dataset.f);
+      if (m){
+        const s = a.steps[+m[1]], sc = S.scripts.find(x => x.id === s.script);
+        if (sc && !s.args.length) s.args = (sc.params || []).map(p => [p, ""]);
+      }
+      renderAutoEditor();
+    } else autoShowProbs();
+  };
+  box.onfocusin = e => { if (e.target.dataset && e.target.dataset.f) AUTO.ui.focus = e.target.dataset.f; };
+  box.onclick = async e => {
+    const chip = e.target.closest("[data-chip]");
+    if (chip){ autoInsert(chip.dataset.chip); return; }
+    const add = e.target.closest("[data-addsave]");
+    if (add){
+      const i = +add.dataset.addsave, s = a.steps[i], path = add.dataset.path;
+      let name = (path.match(/[A-Za-z_][A-Za-z0-9_]*(?=[^A-Za-z0-9_]*$)/) || ["value"])[0];
+      if (!DossierAuto.nameOk(name)) name = "value";
+      let n = name, k = 2;
+      while (a.steps.some(x => (x.save || []).some(v => v.name === n))) n = name + k++;
+      s.save.push({ name:n, from:"json", path:path, show:/token|secret|pass|key|session|cookie/i.test(path) ? "hidden" : "me" });
+      renderAutoEditor();
+      return;
+    }
+    const b = e.target.closest("[data-aa]");
+    if (!b) return;
+    const i = +b.dataset.i, j = +b.dataset.j;
+    switch (b.dataset.aa){
+      case "back": return autoLeaveEditor();
+      case "save": return autoSaveDraft();
+      case "addInput": a.inputs.push({ key:"value" + (a.inputs.length + 1), label:"", kind:"text", required:true, pattern:"", example:"", choices:[] }); break;
+      case "delInput": a.inputs.splice(i, 1); break;
+      case "addStep": a.steps.push(DossierAuto.normStep({ kind:b.dataset.k, name:L("AutoKindNew_" + b.dataset.k),
+                                     conn:b.dataset.k === "http" ? ((a.steps.slice().reverse().find(s => s.kind === "http") || {}).conn || "") : "" }, a.steps.length)); break;
+      case "delStep": a.steps.splice(i, 1); break;
+      case "dupStep": { const c = DossierAuto.normStep(Object.assign(clone(a.steps[i]), { id:"" })); c.name = L("AutoCopyOf", { name:c.name }); a.steps.splice(i + 1, 0, c); break; }
+      case "up": if (i > 0) a.steps.splice(i - 1, 0, a.steps.splice(i, 1)[0]); break;
+      case "down": if (i < a.steps.length - 1) a.steps.splice(i + 1, 0, a.steps.splice(i, 1)[0]); break;
+      case "addPair": a.steps[i][b.dataset.l].push(["", ""]); break;
+      case "delPair": a.steps[i][b.dataset.l].splice(j, 1); break;
+      case "addSave": a.steps[i].save.push({ name:"", from:DossierAuto.FROM[a.steps[i].kind][0], path:"", show:"me" }); break;
+      case "delSave": a.steps[i].save.splice(j, 1); break;
+      case "newConn": return autoConnEdit("", i);
+      case "try": return autoTry(i);
+      default: return;
+    }
+    renderAutoEditor();
+  };
+}
+/* a chip's {{name}} into the box last typed in, at the caret */
+function autoInsert(text){
+  const el = AUTO.ui.focus && $("pAuto").querySelector('[data-f="' + AUTO.ui.focus + '"]');
+  if (!el || el.tagName === "SELECT" || el.type === "checkbox"){ copyText(text, L("AutoChipCopied", { what:text })); return; }
+  const at = el.selectionStart != null ? el.selectionStart : el.value.length;
+  const end = el.selectionEnd != null ? el.selectionEnd : at;
+  el.value = el.value.slice(0, at) + text + el.value.slice(end);
+  el.focus();
+  try { el.setSelectionRange(at + text.length, at + text.length); } catch(e){}
+  el.dispatchEvent(new Event("input", { bubbles:true }));
+}
+async function autoLeaveEditor(){
+  const a = AUTO.ui.draft;
+  const was = AUTO.ui.id ? autoStore().list.find(x => x.id === AUTO.ui.id) : null;
+  const changed = !was || JSON.stringify(DossierAuto.normAuto(clone(was))) !== JSON.stringify(DossierAuto.normAuto(clone(a)));
+  if (changed){
+    const r = await askUser(L("AutoLeaveTitle"), L("AutoLeaveSay"), [{ label:L("AutoSave") }, { label:L("AutoDiscard") }, { label:L("Cancel") }]);
+    if (!r || r.choice === 2) return;
+    if (r.choice === 0) return autoSaveDraft();
+  }
+  AUTO.ui.view = "list"; AUTO.ui.draft = null; AUTO.ui.newConns = []; AUTO.ui.test = {};
+  renderAutoPanel();
+}
+function autoSaveDraft(){
+  const st = autoStore();
+  const a = DossierAuto.normAuto(Object.assign(AUTO.ui.draft, { updated:new Date().toISOString() }));
+  if (!a.name.trim()) return toast(L("AutoNeedsName"), { bad:true });
+  /* the connections a starter made, kept if the design still uses them */
+  AUTO.ui.newConns.forEach(c => { if (a.steps.some(s => s.conn === c.id) && !st.conns.some(x => x.id === c.id)) st.conns.push(c); });
+  AUTO.ui.newConns = [];
+  pushUndo(L("AutoUndo"), "auto");
+  const i = st.list.findIndex(x => x.id === a.id);
+  if (i >= 0) st.list[i] = a; else st.list.push(a);
+  touch();
+  const probs = autoBlockers(a);
+  toast(probs.length ? L("AutoSavedWithProbs", { n:probs.length }) : L("AutoSaved", { name:a.name }), { bad:!!probs.length });
+  AUTO.ui.view = "list"; AUTO.ui.draft = null; AUTO.ui.test = {};
+  renderAutoPanel();
+}
+/* "Try up to here": the steps from the first to this one, for real, with
+   the test values, and each one's answer shown under it */
+async function autoTry(i){
+  const a = DossierAuto.normAuto(clone(AUTO.ui.draft));
+  const probs = DossierAuto.check(Object.assign({}, a, { steps:a.steps.slice(0, i + 1), result:"" }),
+    { conns:autoStore().conns.concat(AUTO.ui.newConns), scripts:autoScripts() }).filter(p => !p.warn);
+  if (probs.length) return toast(L("AutoTryFix") + " " + autoProbText(probs[0], a), { bad:true, life:6000 });
+  const unsaved = a.steps.slice(0, i + 1).map(s => s.conn).filter(Boolean).find(id => AUTO.ui.newConns.some(c => c.id === id));
+  if (unsaved) return toast(L("AutoTryConnFirst"), { bad:true, life:6000 });
+  const info = await autoInfo();
+  if (!info || !info.ok) return toast(info && info.old ? L("AutoOldBridge") : L("AutoNoBridge"), { bad:true, life:7000 });
+  let inputs = {};
+  $("pAuto").querySelectorAll("[data-tval]").forEach(x => { inputs[x.dataset.tval] = x.value; });
+  const chk = DossierAuto.inputsCheck(a, inputs);
+  if (chk.errors.length){
+    const r = await autoInputsDialog(a, inputs, { test:true });
+    if (!r) return;
+    inputs = r.inputs;
+  } else inputs = chk.values;
+  const write = R => {
+    a.steps.forEach((s, k) => {
+      const st = R.steps[k];
+      if (k > i || !st || st.state === "wait") return;
+      AUTO.ui.test[s.id] = { state:st.state, status:st.status, ms:st.ms, note:autoNoteText(st, a), excerpt:st.excerpt || "", type:st.type || "",
+                             url:st.url || "", missing:st.missing || [],
+                             saved:Object.keys(R.values).reduce((o, n) => { if ((s.save || []).some(v => v.name === n)) o[n] = R.values[n].v; return o; }, {}),
+                             hidden:R.hidden.filter(n => (s.save || []).some(v => v.name === n)) };
+    });
+  };
+  AUTO.ui.test = {};
+  const R = await autoRun(a, inputs, { test:true, upTo:i, by:"me", onTick:R2 => { write(R2); } });
+  write(R);
+  if (AUTO.ui.view === "edit") renderAutoEditor();
+}
+
+/* ── one connection ───────────────────────────────────────────────────── */
+function autoConnEdit(id, forStep){
+  const st = autoStore();
+  const c = id ? st.conns.find(x => x.id === id) : null;
+  AUTO.ui.connDraft = DossierAuto.normConn(c ? clone(c) : { name:L("AutoConnNewName"), base:"https://", auth:"none" });
+  AUTO.ui.conn = c ? c.id : "";
+  AUTO.ui.connFor = forStep == null ? -1 : forStep;
+  AUTO.ui.connBack = AUTO.ui.view === "edit" ? "edit" : "list";
+  AUTO.ui.view = "conn";
+  renderAutoPanel();
+}
+async function renderAutoConn(){
+  const box = $("pAuto"); if (!box) return;
+  autoBoxReset(box);
+  const c = AUTO.ui.connDraft;
+  const saved = !!AUTO.ui.conn && autoStore().conns.some(x => x.id === AUTO.ui.conn);
+  const names = DossierAuto.connSecrets(c);
+  box.innerHTML =
+    '<div class="aueh"><button class="btn sm" data-ac="back" type="button">← ' + LE("AutoBack") + "</button>" +
+      "<b>" + LE(saved ? "AutoConnEditTitle" : "AutoConnNewTitle") + "</b><span class=\"sp\"></span>" +
+      '<button class="btn pri" data-ac="save" type="button">' + LE("AutoSave") + "</button></div>" +
+    '<div class="augrid top">' +
+      "<label>" + LE("AutoName") + "</label>" + '<input class="in" data-cf="name" value="' + esc(c.name) + '">' +
+      "<label>" + LE("AutoAddress") + "</label>" + '<div><input class="in mono" data-cf="base" spellcheck="false" value="' + esc(c.base) + '" placeholder="https://api.example.local/v1">' +
+        '<small class="auhint">' + LE("AutoAddressHint") + "</small>" + (/^http:/i.test(c.base) ? '<small class="auhint warn">' + LE("AutoPlainHttp") + "</small>" : "") + "</div>" +
+      "<label>" + LE("AutoSignIn") + "</label>" + '<div><select class="in" data-cf="auth" data-redraw>' + DossierAuto.AUTHS.map(k =>
+        '<option value="' + k + '"' + (c.auth === k ? " selected" : "") + ">" + LE("AutoAuth_" + k) + "</option>").join("") + "</select>" +
+        '<small class="auhint">' + LE("AutoAuthHint_" + c.auth) + "</small></div>" +
+      (c.auth === "header" ? "<label>" + LE("AutoKeyHeader") + "</label>" + '<input class="in mono" data-cf="header" value="' + esc(c.header) + '" placeholder="X-API-Key">' : "") +
+      "<label>" + LE("AutoExtraSecrets") + "</label>" + '<div><input class="in mono" data-cf="extra" spellcheck="false" value="' + esc(c.extra.join(", ")) + '" placeholder="clientId, clientSecret">' +
+        '<small class="auhint">' + LE("AutoExtraHint") + "</small></div>" +
+      "<label>" + LE("AutoTimeLimit") + "</label>" + '<div class="aurow2"><input class="in aushort" type="number" min="1" max="120" data-cf="timeout" value="' + c.timeout + '"><small>' + LE("AutoSeconds") + "</small></div>" +
+      "<label>" + LE("AutoProxy") + "</label>" + '<select class="in" data-cf="proxy"><option value="system"' + (c.proxy === "system" ? " selected" : "") + ">" + LE("AutoProxy_system") +
+        '</option><option value="none"' + (c.proxy === "none" ? " selected" : "") + ">" + LE("AutoProxy_none") + "</option></select>" +
+      "<label>" + LE("AutoNote") + "</label>" + '<input class="in" data-cf="note" value="' + esc(c.note) + '">' +
+    "</div>" +
+    '<h5 class="eyebrow auh">' + LE("AutoSecretsHead") + "</h5>" +
+    '<p class="aunote">' + LE("AutoSecretsIntro") + "</p>" +
+    (names.length ? '<div class="ausecs" id="auSecs">' + (saved ? LE("VaultLooking") : LE("AutoSaveConnFirst")) + "</div>" : '<div class="auempty">' + LE("AutoNoSecrets") + "</div>") +
+    '<div class="brow auend"><button class="btn pri" data-ac="save" type="button">' + LE("AutoSave") + "</button>" +
+      (saved ? '<button class="btn" data-ac="test" type="button">' + LE("AutoConnTest") + "</button>" : "") +
+      '<button class="btn" data-ac="back" type="button">' + LE("Cancel") + "</button></div>" +
+    '<div id="auConnOut"></div>';
+  box.oninput = box.onchange = e => {
+    const el = e.target, k = el.dataset && el.dataset.cf;
+    if (!k) return;
+    if (k === "extra") c.extra = el.value.split(/\s*,\s*/).filter(x => DossierAuto.nameOk(x));
+    else if (k === "timeout") c.timeout = Math.max(1, Math.min(120, Math.round(+el.value || 30)));
+    else c[k] = el.value;
+    if (e.type === "change" && el.dataset.redraw != null){ Object.assign(c, DossierAuto.normConn(c)); renderAutoConn(); }
+  };
+  box.onclick = async e => {
+    const b = e.target.closest("[data-ac],[data-acs],[data-acd]");
+    if (!b) return;
+    if (b.dataset.acs || b.dataset.acd){
+      const real = autoStore().conns.find(x => x.id === AUTO.ui.conn);
+      if (!real) return toast(L("AutoSaveConnFirst"), { bad:true });
+      if (real.base !== c.base) return toast(L("AutoSaveConnFirst"), { bad:true });
+      if (b.dataset.acs){ if (await autoSecretDialog(real, b.dataset.acs)) renderAutoConn(); }
+      else { await autoSecretsDrop(real, b.dataset.acd); renderAutoConn(); }
+      return;
+    }
+    const what = b.dataset.ac;
+    if (what === "back"){ AUTO.ui.view = AUTO.ui.connBack || "list"; AUTO.ui.connDraft = null; return renderAutoPanel(); }
+    if (what === "save"){
+      const n = DossierAuto.normConn(c);
+      if (!DossierAuto.baseParts(n.base)) return toast(L("AutoBadAddress"), { bad:true });
+      const st = autoStore();
+      const i = st.conns.findIndex(x => x.id === n.id);
+      const moved = i >= 0 && st.conns[i].base !== n.base;
+      if (i >= 0) st.conns[i] = n; else st.conns.push(n);
+      AUTO.ui.newConns = AUTO.ui.newConns.filter(x => x.id !== n.id);
+      if (AUTO.ui.connFor >= 0 && AUTO.ui.draft && AUTO.ui.draft.steps[AUTO.ui.connFor]) AUTO.ui.draft.steps[AUTO.ui.connFor].conn = n.id;
+      touch();
+      AUTO.secrets = {};
+      toast(moved ? L("AutoConnMoved") : L("AutoConnSaved", { name:n.name }), { bad:moved, life:moved ? 7000 : 2700 });
+      AUTO.ui.conn = n.id;
+      AUTO.ui.connDraft = clone(n);
+      return renderAutoConn();
+    }
+    if (what === "test"){
+      const out = $("auConnOut");
+      out.innerHTML = '<div class="aunote">' + LE("VaultLooking") + "</div>";
+      const real = autoStore().conns.find(x => x.id === AUTO.ui.conn);
+      const id = DossierAuto.newId("t");
+      const r = await autoReq("POST", "/auto/step", { run:id, kind:"http", conn:DossierAuto.connWire(real), values:{},
+        step:{ kind:"http", method:"GET", path:"", expect:"any", save:[] }, test:true }, (real.timeout + 15) * 1000);
+      autoReq("POST", "/auto/end", { run:id }).catch(() => {});
+      out.innerHTML = autoTestHtml({ kind:"http" }, -1, { state:r.ok ? "ok" : "fail", status:r.status, ms:r.ms, url:r.url,
+        note:r.ok ? L("AutoConnAnswered", { n:r.status }) : r.error, excerpt:(r.excerpt || "").slice(0, 1500), type:r.contentType });
+    }
+  };
+  if (!names.length || !saved) return;
+  const info = await autoInfo();
+  const el = $("auSecs"); if (!el) return;
+  if (!info || !info.ok){ el.textContent = info && info.old ? L("AutoOldBridge") : L("AutoNoBridge"); return; }
+  const real = autoStore().conns.find(x => x.id === AUTO.ui.conn);
+  const s = await autoSecretsOf(real, true);
+  const got = (s && s.names) || {};
+  el.innerHTML = DossierAuto.connSecrets(real).map(n => {
+    const x = got[n];
+    return '<div class="ausecrow"><span class="mono">' + esc(n) + "</span>" +
+      '<span class="' + (!x ? "no" : x.same ? "ok" : "moved") + '">' + esc(!x ? L("AutoSecretNotSet") : x.same ? L("AutoSecretSetOn", { when:autoWhen(x.at) }) : L("AutoSecretMoved")) + "</span>" +
+      '<button class="btn sm" data-acs="' + esc(n) + '" type="button">' + LE(x ? "AutoSecretChange" : "AutoSecretSetBtn") + "</button>" +
+      (x ? '<button class="btn sm danger" data-acd="' + esc(n) + '" type="button">' + LE("Remove2") + "</button>" : "") + "</div>";
+  }).join("");
 }
 
 /* ═══ PRINT ══════════════════════════════════════════════════════════════
@@ -33063,13 +34837,16 @@ function lastTouch(t){
    only. Nothing here reaches the network: the file is made in the browser
    and saved as a download. */
 const XP_KIND = "kalkech.export";
-const XP_PARTS = ["records", "routines", "scripts", "runbooks", "notes", "sources",
+const XP_PARTS = ["records", "routines", "scripts", "automations", "runbooks", "notes", "sources",
                   "chats", "incidents", "calendar", "settings"];
 /* the settings that belong to a part of their own, not to "settings" */
 const XP_SET_KEYS = { runbooks:["runbooks", "profiles"],
                       notes:["memory", "lessons", "learnSignals", "chatLearn", "chatAlias"],
-                      calendar:["holidays", "specialDays"] };
-const XP_OWN = [].concat(XP_SET_KEYS.runbooks, XP_SET_KEYS.notes, XP_SET_KEYS.calendar);
+                      calendar:["holidays", "specialDays"],
+                      /* the designs and connections - never a secret, which
+                         is kept by the tray program on one PC (5.22) */
+                      automations:["automations"] };
+const XP_OWN = [].concat(XP_SET_KEYS.runbooks, XP_SET_KEYS.notes, XP_SET_KEYS.calendar, XP_SET_KEYS.automations);
 /* past this the dialog says it may take a while */
 const XP_BIG = 200 * 1024 * 1024;
 
@@ -33080,7 +34857,8 @@ function xpCountsHere(){
            notes:memoryStore().length + lessonStore().length,
            sources:FS.ok ? srcLib().filter(d => d.status !== "deleted").length : 0,
            chats:S.chats.length, incidents:(S.incidents || []).length,
-           calendar:holidays().length + specialDays().length, settings:-1 };
+           calendar:holidays().length + specialDays().length,
+           automations:autoStore().list.length + autoStore().conns.length, settings:-1 };
 }
 /* ...and in a file: only the parts it has. A 5.17 file says which parts it
    holds; an older one is a whole workspace and holds what it has keys for. */
@@ -33101,6 +34879,7 @@ function xpCountsIn(d){
   put("chats", Array.isArray(d.chats), len(d.chats));
   put("incidents", Array.isArray(d.incidents), len(d.incidents));
   put("calendar", XP_SET_KEYS.calendar.some(has), len(st.holidays) + len(st.specialDays));
+  put("automations", has("automations"), st.automations ? len(st.automations.list) + len(st.automations.conns) : 0);
   put("settings", Object.keys(st).some(k => XP_OWN.indexOf(k) < 0), -1);
   return out;
 }
@@ -33182,6 +34961,12 @@ async function xpBuild(picks, opts){
     sum.counts.notes = memoryStore().length + lessonStore().length;
   }
   if (on("calendar")){ st.holidays = holidays(); st.specialDays = specialDays(); sum.counts.calendar = st.holidays.length + st.specialDays.length; }
+  if (on("automations")){
+    const au = autoStore();
+    /* the designs and connections; not the run history, and never a secret */
+    st.automations = { v:1, aiCan:au.aiCan, conns:au.conns, list:au.list };
+    sum.counts.automations = au.list.length + au.conns.length;
+  }
   if (Object.keys(st).length){
     d.settings = JSON.parse(JSON.stringify(st));
     /* the flow's address works like a key: only when asked for */
@@ -33435,6 +35220,15 @@ async function xpApply(d, picks, replace){
       counts.calendar = n + xpAdd(specialDays(), st.specialDays);
     }
     holidays().sort((a, b) => a.d < b.d ? -1 : a.d > b.d ? 1 : 0);
+  }
+  if (on("automations") && autoOk() && st.automations && typeof st.automations === "object"){
+    const theirs = DossierAuto.normStore(st.automations), mine = autoStore();
+    if (replace){
+      mine.conns = theirs.conns; mine.list = theirs.list; mine.aiCan = theirs.aiCan;
+      counts.automations = mine.list.length + mine.conns.length;
+    } else counts.automations = xpAdd(mine.conns, theirs.conns) + xpAdd(mine.list, theirs.list);
+    /* addresses from another file: worth a look before a run */
+    if (theirs.conns.length) notes.push(L("XpAutoCheck"));
   }
   if (on("settings")){
     const url = flowCfg().url;

@@ -6,6 +6,57 @@ holds — which is what to paste into a bug report.
 
 ---
 
+## 5.22.0 - 2026-10-29
+
+**Automations: the assistant can do the support job itself - call your APIs and run your scripts - without ever seeing a password.**
+
+- **Menu → Automations.** Design a job once: the values it needs (a policy
+  number), then its steps - an **API call**, one of your **scripts**, a
+  **wait**, or a question to you (**Ask me**) - each saving what it needs
+  from the reply (`token`, `jobId`, `coiNumber`) for the steps after it, as
+  `{{name}}`. Starters build the usual shapes: *Sign in, then call*, *API key
+  in a header*, *Windows sign-in*, *Submit, then wait*, *Run a script*.
+- **Only when, repeat until, if it fails.** A step can run only when a
+  condition holds (`{{status}} == 200`, `{{state}} == "DONE"`,
+  `{{id}} is not empty`), repeat every few seconds until one does (wait for a
+  job to finish), and stop the run or carry on when it fails.
+- **Try up to here** runs the steps so far, for real, and shows each reply -
+  every JSON path in it a click from being saved.
+- **Connections** hold an API's address and how it signs in: your Windows
+  account, user name and password, an API key in a header, a fixed token, or
+  a sign-in step of your own. A step only ever goes to its connection's
+  address.
+- **Secrets stay on your PC.** A password or key is typed into its own box
+  and goes straight to the KalKech program by the clock, which keeps it
+  encrypted for your Windows account and never gives it back - not to the
+  page, not to the assistant, not in an export. It is only sent to the
+  address it was saved for. A sign-in token saved as **Hidden** stays inside
+  that program for the run and is forgotten when it ends.
+- **The assistant can run them.** Ask for the job in your own words -
+  *"regenerate the COI for policy P10234X56"* - and it proposes the right
+  automation with the values from what you said; you are asked first, then a
+  card shows each step as it runs. It is told the names of your automations
+  and the values each needs - never an address or a secret - and afterwards
+  only the values you marked **Me and the assistant**. Per automation you can
+  switch the asking off for a job you trust, or keep it yours only; one
+  switch turns the assistant's use of automations off altogether.
+- **Or yourself:** the **Run** button, `Ctrl`+`K` → *Run: …*, or *"run
+  regenerate COI for P10234X56"* in the chat, which opens the form already
+  filled in. Run for a record, its work log says what happened.
+- **Safe by design.** Values are filled in once and escaped for where they
+  go, so one cannot rewrite the request; a header cannot hold a line break;
+  redirects are not followed; anything shaped like a password or token is
+  masked out of replies, errors and the log. Scripts run only from your
+  workspace's `scripts` folder (`.bat` and `.cmd`), with a time limit, and a
+  value with `& | < > ^ % ! " ( )` is refused rather than passed.
+- **Export** has a new part, *Automations*: the designs and connections,
+  never a secret.
+- **To get it:** after updating, quit KalKech from the icon by the clock
+  (right-click → Quit) and run `KalKech.bat` again. It rebuilds its program by
+  itself. Until then the Automations panel says an older copy is running.
+
+---
+
 ## 5.21.0 - 2026-10-09
 
 **Choose your SQL Server in Setup, when it is not LocalDB.**

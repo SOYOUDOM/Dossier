@@ -124,6 +124,31 @@
         "desc": "Windows toast reminders while Dossier is closed"
       }
     ],
+    "automations": [
+      {
+        "name": "Regenerate COI",
+        "about": "Makes a new certificate of insurance for a policy.",
+        "system": "Portal",
+        "inputs": [
+          {
+            "name": "policy",
+            "label": "Policy number",
+            "kind": "text",
+            "required": true,
+            "example": "P10234X56"
+          }
+        ],
+        "asksFirst": true,
+        "steps": [
+          "Sign in",
+          "Ask for a new COI",
+          "Wait until it is ready"
+        ],
+        "gives": [
+          "coiNumber"
+        ]
+      }
+    ],
     "routines": [
       {
         "id": "Rmorningtour",

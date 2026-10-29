@@ -623,6 +623,37 @@ question once more with the new `sources`, `runbooksMatched` and
 
 One extra round per question in all: `needRecords` or `needSources`.
 
+### Their automations (5.22)
+
+`workspace.automations` lists the jobs they designed in **Menu → Automations**
+that the assistant may start: API calls and scripts that run in order, carried
+out by the KalKech program on their PC.
+
+```jsonc
+"automations": [
+  { "name": "Regenerate COI",
+    "about": "Makes a new certificate of insurance for a policy.",
+    "system": "Portal",
+    "inputs": [ { "name": "policy", "label": "Policy number", "kind": "text",
+                  "required": true, "example": "P10234X56" } ],
+    "asksFirst": true,
+    "steps": [ "Sign in", "Ask for a new COI", "Wait until it is ready" ],
+    "gives": [ "coiNumber" ] }
+]
+```
+
+There is no address, header, connection, script or secret in it - those
+stay on the PC. An input of kind `"typed by them"` is always typed by the
+person. Empty when there are none, or when they switched the assistant's use
+of them off.
+
+To run one, return `runAutomation` with its name and its inputs. KalKech
+puts it to the person first (unless they switched that off for that one),
+asks them for any input left out, runs the steps, and shows a card. **At most
+one per reply**; more are refused. The result reaches the model afterwards as
+one bot message in `conversation`, starting `[Automation "…"`, with only the
+values the person marked for the assistant.
+
 ---
 
 ## 4. What your flow returns
@@ -717,7 +748,7 @@ answer than deleting, and keeps the history.
 ## 6. The action reference
 
 Generated from `flow.js`. `ref` means a record code (`D-0004`), a ticket
-number, or an id. **62 actions — 21 that read, 41 that write.**
+number, or an id. **66 actions — 22 that read, 44 that write.**
 
 ### Actions that only read
 
@@ -1164,6 +1195,16 @@ Run a script against a record. Needs the runner to be listening.
 | `record` | ref | **yes** |
 | `script` | string | **yes** |
 | `args` | object of name/value | no |
+
+#### `runAutomation`
+
+Run one of their automations (workspace.automations) - a job they designed: API calls and scripts in order. automation is its name; inputs holds each of its inputs by name, taken from what they said or from the record (never guessed - leave one out and the app asks them); record is the record it is for, when there is one. The app asks them first unless they switched that off for it, then shows the result in the conversation. You never see passwords, keys or tokens: do not ask for them and never put one in inputs. Do not say it worked - you will see the result afterwards, with only the values they chose to show you.
+
+| argument | shape | required |
+|---|---|---|
+| `automation` | string | **yes** |
+| `inputs` | object of name/value | no |
+| `record` | ref | no |
 
 #### `createRoutine`
 

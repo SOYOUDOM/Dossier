@@ -173,7 +173,7 @@ wrong. So KalKech *chooses*, on your PC, what this question needs.
 | Attachments | the chat tray | each file's text (up to 80,000 characters); a picture at the size the model reads |
 | Special days | **Week** / **Month** (the ✦ on a day) | the days you marked yourself — a release freeze, month-end, a team day — for the next half year, with their notes |
 | Which model, and your name for it | the pill beside Send; "I named you…" | `workspace.tier` (fast, deep or reason) and `workspace.yourName` |
-| The allowed actions | `flow.js` | the list of the **65** things it may ask KalKech to do |
+| The allowed actions | `flow.js` | the list of the **66** things it may ask KalKech to do |
 
 **What the question is about, not only what was typed (5.16).** Everything
 above that is *matched* — document passages, runbooks, scripts, notes, past
@@ -252,7 +252,7 @@ same for every question. In the order the file has them:
 
 ```
  === WHO YOU ARE TALKING TO ===             {memory}     ← notes you taught it
- === WHAT YOU CAN ASK THE APP TO DO ===     {actions}    ← the 65 allowed actions
+ === WHAT YOU CAN ASK THE APP TO DO ===     {actions}    ← the 66 allowed actions
  === THEIR WORKSPACE ===                    {workspace}  ← records, totals, runbooks,
                                                            lessons, what is on screen…
  === WHEN ===                               {today} {weekday} {calendar}
@@ -355,7 +355,7 @@ checked*, never as an order. KalKech checks, in this order:
 
 1. **Is it the right shape?** A short reply in plain text (not JSON) is shown
    as a plain answer; anything else unusable is dropped, with a reason.
-2. **Is every action allowed?** Only the 65 actions in KalKech's own list are
+2. **Is every action allowed?** Only the 66 actions in KalKech's own list are
    accepted, each with the right kind of details (a date must be a date, a
    record must exist). Anything else is refused *by name*, so you can see what
    was refused and why.
@@ -444,9 +444,15 @@ this"* — when they did. Now only the line goes.
 
 - **Reading actions** (show a list, open a record) happen at once — they change
   nothing.
-- **Changing actions** (43 of the 65: raise a record, close one, set a due
+- **Changing actions** (44 of the 66: raise a record, close one, set a due
   date…) are **shown to you one at a time and wait for your yes**. However
   confident the AI is, it cannot change your records by itself.
+- **Running an automation** (since 5.22) is one of them: a job you designed in
+  Menu → Automations - API calls and scripts, one step after another. The AI
+  only names the job and the values it needs; the KalKech program on your PC
+  carries out the steps, with your passwords and keys kept there, encrypted.
+  The AI never sees a secret or a sign-in token, and afterwards it reads only
+  the values you marked for it.
 - Under an answer about your documents: **one short line** — the source, its
   page and the confidence. Click it to open **Source** (click that to open the
   document at those lines), **Evidence** (the exact words), **Confidence**
@@ -578,7 +584,7 @@ longer grows as you use the app.
 | 5 | **Fast for chat, strong for hard jobs, reasoning when you choose** | stronger models are slower and cost more; use each where it earns it, and let the person choose | up to three models; the pill beside Send (Auto · Fast · Strong · Reason); **Think harder** and **◆ Reason** under answers |
 | 6 | **At most one extra round trip** | every extra call is another full wait | `needRecords` or `needSources` once; the safety-net retry once |
 | 7 | **Always set a time limit, and fall back** | a silent app is worse than a simple answer | 30 s for chat, up to 115 s for the strong and reasoning models; if the flow fails, the local assistant answers and says why |
-| 8 | **Never trust the reply; check it** | a model can return the wrong shape or an action that does not exist | the validator; only the 65 known actions |
+| 8 | **Never trust the reply; check it** | a model can return the wrong shape or an action that does not exist | the validator; only the 66 known actions |
 | 9 | **Never let it change anything by itself** | a confident mistake must not become a real change | every change waits for your yes |
 | 10 | **Measure, and show what you measured** | "it feels slow" cannot be fixed; a number can | the time under each answer; **Preview** of the exact bytes; the Sources log |
 
@@ -757,7 +763,7 @@ traps its design was built to avoid.
 | **Relay** | The small page (`flow/relay.html`) that is the only door to the network. |
 | **Token** | A piece of a word; models measure how much they read in tokens. More tokens = longer wait and higher cost. |
 | **JSON** | A simple, strict text format for data, like `{"say":"hello"}`. The reply must be JSON so it can be checked. |
-| **Action** | Something the AI may ask KalKech to do, like `find` or `createRecord`. Only 65 exist; the 43 that change data always ask first. |
+| **Action** | Something the AI may ask KalKech to do, like `find` or `createRecord`. Only 66 exist; the 44 that change data ask you first - always, except an automation you chose to let run without asking. |
 | **Retrieval** | Finding the pieces of your data that a question needs. |
 | **Reasoning model** | A model that thinks a problem through before it answers. Slower and dearer; KalKech asks one (KalKech reason) only when you choose it. |
 | **Special day** | A day you marked yourself, with a note, that is not a holiday — a release freeze, month-end, a team day. The assistant is told the next half year of them. |
@@ -789,7 +795,7 @@ traps its design was built to avoid.
 |---|---|
 | `dossier.html` | The app: the front door (step 1), gathering (step 2), showing and asking (step 7), and the notebook (step 8). Search for `ASKING THROUGH A FLOW`, `LEARNING`, `SOURCES`. |
 | `chat.js` | The local assistant: answers about forty kinds of question with no AI. |
-| `flow.js` | Packing (step 3), sending (step 4), and checking the shape and actions (step 6). Holds the list of 65 actions. |
+| `flow.js` | Packing (step 3), sending (step 4), and checking the shape and actions (step 6). Holds the list of 66 actions. |
 | `sources.js` | Documents: cutting into passages, the index, the search, citations, and the figure check. |
 | `flow/prompt.txt` | The prompt template: the rules and the examples. |
 | `flow/relay.html` | The one door to the network. |

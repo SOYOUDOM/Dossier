@@ -193,6 +193,7 @@ echo   Setting KalKech up - a few seconds, and only this once.
         /reference:System.Data.dll ^
         /reference:System.Windows.Forms.dll ^
         /reference:System.Drawing.dll ^
+        /reference:System.Security.dll ^
         /out:"%EXE%" "%SRC%"
 if errorlevel 1 (
   echo.
