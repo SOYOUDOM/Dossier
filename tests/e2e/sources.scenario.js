@@ -1295,6 +1295,11 @@
   await until(() => document.querySelector('#auSecs [data-acs="password"]'), 5000);
   document.querySelector('#auSecs [data-acs="password"]').click();
   await until(() => $("auSecIn"), 3000);
+  await sleep(80);
+  $("auSecIn").focus();
+  await sleep(120);
+  check("(5.22.1) the secret box can be typed into: the menu behind it does not take the focus back",
+        document.activeElement === $("auSecIn"), document.activeElement && (document.activeElement.id || document.activeElement.tagName));
   $("auSecIn").value = "Pw-e2e-Secret!";
   $("auSecGo").click();
   await until(() => AB.secrets[login.id + "/password"] === "Pw-e2e-Secret!" && !$("auSecDlg"), 4000);
@@ -1308,6 +1313,11 @@
   /* run from the panel: the values asked for and checked */
   document.querySelector('#pAuto [data-auid="' + au.id + '"] [data-aux="run"]').click();
   await until(() => $("auRunDlg"), 4000);
+  await sleep(80);
+  $("auIn_policy").focus();
+  await sleep(120);
+  check("...and so can the run's values, over the menu", document.activeElement === $("auIn_policy"),
+        document.activeElement && (document.activeElement.id || document.activeElement.tagName));
   $("auIn_policy").value = "XYZ";
   $("auRunGo").click();
   await sleep(100);

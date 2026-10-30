@@ -6,6 +6,21 @@ holds — which is what to paste into a bug report.
 
 ---
 
+## 5.22.1 - 2026-10-30
+
+**The secret box can be typed into again.**
+
+- **The fix.** Setting up a connection, the box for a user name, password or
+  key could not be clicked into: the cursor jumped back to the Menu behind
+  it. The Menu keeps the keyboard inside itself (so Tab cannot wander behind
+  it), and it did not know about a box opened on top of it. Now a box opened
+  over the Menu keeps the cursor. The same fix lets you type the values for a
+  run (**Run** in Menu → Automations), and use the keyboard in the export
+  and import choices.
+- When such a box closes, the cursor goes back to where it was.
+
+---
+
 ## 5.22.0 - 2026-10-29
 
 **Automations: the assistant can do the support job itself - call your APIs and run your scripts - without ever seeing a password.**

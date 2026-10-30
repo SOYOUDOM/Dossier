@@ -92,13 +92,13 @@ A *workspace* is a folder the user picks (File System Access API):
 - Commit messages: clear summary + body; no model names in commits, code or
   docs. Do not open a pull request unless the owner asks.
 - Work so far is on branch `claude/chat-panel-pixel-art-gifs-d822hq`
-  (latest: 5.22.0). Follow the branch instructions of your own session.
+  (latest: 5.22.1). Follow the branch instructions of your own session.
 
 ## Testing
 
 ```
 node --test                                   # 82 unit tests (Sources, grounding, names check, code origin, flow reply fields, diagrams, automations)
-node tests/e2e/run.js                         # the app in headless Chrome/Edge: 257 checks (CHROME=<path> to choose)
+node tests/e2e/run.js                         # the app in headless Chrome/Edge: 259 checks (CHROME=<path> to choose)
 node tests/bridge/run.js                      # the bridge's automation routes, built and run (mcs+mono or csc): 51 checks
 node flow/check-prompt.js                     # after editing flow/prompt.txt ...
 python3 flow/embed-prompt.py                  # ... then copy it into flow.js (PROMPT_BUILTIN)
@@ -131,6 +131,18 @@ Also useful:
   `DossierFlow.validate`. `tests/e2e/run.js` is a working example of all of it.
 
 ## Recent history (newest first)
+
+- **5.22.1** - Owner: "I cannot focus the input to type the username and
+  password while setting up a new connection". The menu modal's focus trap
+  (`trapIn` + the document `focusout` handler) pulled focus back from any
+  element outside `#modal`, and `#auSecDlg` / `#auRunDlg` (and `#xpDlg`) are
+  `.srcdlg` overlays on `<body>`. Now `trapAbove(el)` (inside
+  `[role="dialog"][aria-modal="true"]`, `.srcdlg` or `.ask.on`) is left
+  alone by both. `autoFocusBack(back)` returns focus when those two close.
+  The 5.22 e2e set the values by code, so it missed this; two checks now
+  focus the boxes and assert focus stays (they fail on 5.22.0 with focus on
+  `mClose`). Lesson: for a new input in an overlay, test focus, not only
+  `.value`.
 
 - **5.22.0** - Owner: "can the AI run a .bat script, or call an API to get a
   value and use it in another API (regenerate the COI of policy P10234X56:

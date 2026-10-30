@@ -4030,7 +4030,7 @@ first thing to run after changing anything it touches:
 
 ```
 node --test                 # tests/*.test.js: 82 tests - Sources (every scenario below), names and queries in answers, diagrams, and automations
-node tests/e2e/run.js       # the app in Chrome or Edge: 257 checks on the screen
+node tests/e2e/run.js       # the app in Chrome or Edge: 259 checks on the screen
 node tests/bridge/run.js    # the KalKech program's automation routes, built and run: 51 checks
 node flow/check-prompt.js   # the prompt's examples against the reply validator
 ```

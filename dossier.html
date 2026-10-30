@@ -10020,8 +10020,8 @@ const STATUSES = [
    the status bar, and clicking it copies a line you can paste into a bug
    report — build date and flow protocol included, because those are the two
    things that actually differ between copies. */
-const APP_VERSION = "5.22.0";
-const APP_BUILT = "2026-10-29";
+const APP_VERSION = "5.22.1";
+const APP_BUILT = "2026-10-30";
 function buildLine(){
   return "KalKech v" + APP_VERSION + " \u00b7 built " + APP_BUILT +
          " \u00b7 flow protocol " + (window.DossierFlow ? DossierFlow.version : "\u2014") +
@@ -24156,13 +24156,21 @@ function focusables(el){
                         'textarea:not([disabled]),summary,[tabindex]:not([tabindex="-1"])'),
     x => x.offsetParent !== null || x === document.activeElement);
 }
+/* A dialog opened ON TOP of the trapped one - the box a secret is typed
+   into, the values for a run, the export choices - lives outside it, on
+   <body>. Focus there is where it should be: pulling it back made those
+   boxes impossible to type into (5.22.1). */
+function trapAbove(a){
+  return !!(a && a !== document.body && a.closest &&
+            a.closest('[role="dialog"][aria-modal="true"], .srcdlg, .ask.on'));
+}
 function trapIn(id){
   const el = $(id); if (!el) return;
   if (!TRAP.el) TRAP.from = document.activeElement;
   TRAP.el = el;
   const grab = () => {
     if (TRAP.el !== el || !el.classList.contains("on")) return;
-    if (el.contains(document.activeElement)) return;
+    if (el.contains(document.activeElement) || trapAbove(document.activeElement)) return;
     const f = focusables(el);
     if (f.length) f[0].focus();
     else { el.setAttribute("tabindex", "-1"); el.focus(); }
@@ -24180,7 +24188,7 @@ document.addEventListener("focusout", () => {
   setTimeout(() => {
     const el = TRAP.el;
     if (!el || !el.classList.contains("on")) return;
-    if (el.contains(document.activeElement)) return;
+    if (el.contains(document.activeElement) || trapAbove(document.activeElement)) return;
     const f = focusables(el);
     if (f.length) f[0].focus();
   }, 0);
@@ -28300,6 +28308,14 @@ async function autoSecretsDrop(c, name){
   AUTO.secrets = {};
   return r;
 }
+function autoFocusBack(back){
+  setTimeout(() => {
+    try {
+      if (back && document.body.contains(back) && back !== document.body) return back.focus();
+      if (TRAP.el && TRAP.el.classList.contains("on")){ const f = focusables(TRAP.el); if (f.length) f[0].focus(); }
+    } catch(e){}
+  }, 0);
+}
 /* The box a secret is typed into. It goes from here to the tray program
    and nowhere else: not into the workspace, not into the chat, not to the
    assistant; and the box is emptied whatever happens. */
@@ -28307,6 +28323,7 @@ function autoSecretDialog(c, name){
   return new Promise(resolve => {
     const old = $("auSecDlg"); if (old) old.remove();
     const el = document.createElement("div");
+    const back = document.activeElement;
     el.id = "auSecDlg"; el.className = "srcdlg audlg"; el.setAttribute("role", "dialog"); el.setAttribute("aria-modal", "true");
     el.innerHTML = '<div class="srcdlgb"><h3>' + LE("AutoSecretTitle", { name:name }) + "</h3>" +
       '<p class="srcfile">' + esc(c.name) + " · " + esc(c.base) + "</p>" +
@@ -28317,14 +28334,16 @@ function autoSecretDialog(c, name){
       '<button class="btn" id="auSecNo" type="button">' + LE("Cancel") + "</button></div></div>";
     document.body.appendChild(el);
     const inp = $("auSecIn");
+    /* focus goes back where it came from (or into the menu), not to nowhere */
+    const close = () => { el.remove(); autoFocusBack(back); };
     const done = async ok => {
       const v = inp.value;
       inp.value = "";
-      if (!ok){ el.remove(); return resolve(false); }
+      if (!ok){ close(); return resolve(false); }
       if (!v){ toast(L("AutoSecretEmpty"), { bad:true }); return; }
       $("auSecGo").disabled = true;
       const r = await autoSecretSet(c, name, v);
-      el.remove();
+      close();
       if (!r || !r.ok){ toast((r && r.error) || L("AutoNoBridge"), { bad:true }); return resolve(false); }
       toast(L("AutoSecretSaved", { name:name }));
       resolve(true);
@@ -28558,6 +28577,7 @@ function autoInputsDialog(a, prefill, opts){
   return new Promise(resolve => {
     const old = $("auRunDlg"); if (old) old.remove();
     const el = document.createElement("div");
+    const back = document.activeElement;
     el.id = "auRunDlg"; el.className = "srcdlg audlg"; el.setAttribute("role", "dialog"); el.setAttribute("aria-modal", "true");
     const pre = prefill || {};
     const recs = S.tasks.filter(t => LIVE.indexOf(t.status) >= 0).slice(-80).reverse();
@@ -28586,7 +28606,7 @@ function autoInputsDialog(a, prefill, opts){
     document.body.appendChild(el);
     const done = v => {
       el.querySelectorAll('input[type="password"]').forEach(x => { x.value = ""; });
-      el.remove(); resolve(v);
+      el.remove(); autoFocusBack(back); resolve(v);
     };
     const go = () => {
       const given = {};
