@@ -279,7 +279,8 @@ const ACTIONS = {
     args:{ record:REF, script:STR, args:"object" },
     what:"Run a script against a record. Needs the runner to be listening." },
 
-  /* One of the jobs they designed in Menu → Automations (5.22): a chain of
+  /* One of the jobs they designed on the Automations page (5.22; a page of
+     its own since 5.24): a chain of
      API calls and scripts - sign in, call, wait until done. The app asks
      them first unless they switched that off for this one, asks them for a
      value the model left out, and carries the steps out through the

@@ -625,9 +625,14 @@ One extra round per question in all: `needRecords` or `needSources`.
 
 ### Their automations (5.22)
 
-`workspace.automations` lists the jobs they designed in **Menu → Automations**
-that the assistant may start: API calls and scripts that run in order, carried
-out by the KalKech program on their PC.
+`workspace.automations` lists the jobs they designed on the **Automations**
+page (a Menu panel in 5.22-5.23) that the assistant may start: API calls and
+scripts that run in order, carried out by the KalKech program on their PC.
+Since 5.24 a step can be a **Condition** with Yes and No branches; `steps`
+then lists every step's name, those inside the branches too, in the order a
+run meets them - and after a run, the line the assistant reads says which way
+each Condition went (`(test: yes)`) and leaves out the steps of the branch
+that did not run.
 
 ```jsonc
 "automations": [

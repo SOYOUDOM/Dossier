@@ -447,8 +447,9 @@ this"* — when they did. Now only the line goes.
 - **Changing actions** (44 of the 66: raise a record, close one, set a due
   date…) are **shown to you one at a time and wait for your yes**. However
   confident the AI is, it cannot change your records by itself.
-- **Running an automation** (since 5.22) is one of them: a job you designed in
-  Menu → Automations - API calls and scripts, one step after another. The AI
+- **Running an automation** (since 5.22) is one of them: a job you designed on
+  the Automations page - API calls and scripts, one step after another, with
+  Conditions that go one way or the other (5.24). The AI
   only names the job and the values it needs; the KalKech program on your PC
   carries out the steps, with your passwords and keys kept there, encrypted.
   The AI never sees a secret or a sign-in token, and afterwards it reads only

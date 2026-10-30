@@ -1261,57 +1261,96 @@
   };
 
   DB.bridge = false; DB.port = 0; DB.token = "";
-  openModal("auto");
-  await until(() => /Automations need the KalKech icon/.test((($("auBridge") || {}).textContent || "")), 6000);
-  check("(5.22) the menu has Automations; with no tray program it says what is needed",
-        !!document.querySelector('#mt [data-m="auto"]') && /Automations need the KalKech icon/.test($("auBridge").textContent), ($("auBridge") || {}).textContent);
-  closeModal();
+  setView("auto");
+  await until(() => /not running/.test((($("apBridge") || {}).textContent || "")), 6000);
+  check("(5.24) Automations is a page of its own (8 in the list of views), not a Menu panel; with no tray program it says so",
+        !!document.querySelector('#tabs [data-v="auto"]') && !document.querySelector('#mt [data-m="auto"]') && S.view === "auto" &&
+        /Tray program not running/.test($("apBridge").textContent) && /Automations need the KalKech icon/.test($("apBridge").title),
+        ($("apBridge") || {}).textContent + " | " + ($("apBridge") || {}).title);
   DB.bridge = true; DB.port = 1; DB.token = "t";
-  openModal("auto");
-  await until(() => /^Ready: the KalKech program/.test((($("auBridge") || {}).textContent || "")), 6000);
-  check("...with it: ready, and which folder its scripts come from", /scripts folder of e2e-sources/.test($("auBridge").textContent), $("auBridge").textContent);
+  setView("day"); setView("auto");
+  await until(() => /Tray program ready/.test((($("apBridge") || {}).textContent || "")), 6000);
+  check("...with it: ready, and (on the dot) which folder its scripts come from", /scripts folder of e2e-sources/.test($("apBridge").title), $("apBridge").title);
+  check("(5.24) with none yet: what an automation is, and the starters to begin from",
+        !!document.querySelector('#vAuto .apempty [data-austart="signin"]') && !!document.querySelector('#vAuto .apempty [data-austart="check"]'));
 
   /* a starter, then the owner's example built on it */
-  $("auNew").click();
-  document.querySelector('[data-austart="signin"]').click();
-  await until(() => AUTO.ui.view === "edit" && $("auProbs"), 4000);
-  check("...'Sign in, then call' opens the designer: two steps, the token saved hidden",
-        AUTO.ui.draft.steps.length === 2 && AUTO.ui.draft.steps[0].save[0].show === "hidden" && document.querySelectorAll("#pAuto .austep").length === 2);
+  document.querySelector('#vAuto [data-austart="signin"]').click();
+  await until(() => AUTO.ui.draft && document.querySelector("#vAuto .apflow"), 4000);
+  const cardOf = id => document.querySelector('#vAuto .apc[data-sid="' + id + '"]');
+  check("...'Sign in, then call' opens the designer: two step cards between 'When you run it' and 'When it ends', the token saved hidden",
+        AUTO.ui.draft.steps.length === 2 && AUTO.ui.draft.steps[0].save[0].show === "hidden" &&
+        document.querySelectorAll("#vAuto .apc[data-sid]").length === 4 && !!cardOf("trigger") && !!cardOf("finish"),
+        document.querySelectorAll("#vAuto .apc[data-sid]").length);
+  check("(5.24) compact: a card is a name and one line; only the picked one's settings are open, in the side panel",
+        !!$("apPane") && AUTO.ui.sel === AUTO.ui.draft.steps[0].id && !document.querySelector('#vAuto [data-f="steps.1.path"]') &&
+        /POST \/token/.test(cardOf(AUTO.ui.draft.steps[0].id).textContent));
   const typeIn = (sel, v) => { const el = document.querySelector(sel); el.value = v; el.dispatchEvent(new Event("input", { bubbles:true })); return el; };
-  typeIn('#pAuto [data-f="name"]', "Regenerate COI");
-  typeIn('#pAuto [data-f="steps.1.path"]', "/policies/{{policyy}}/coi");
+  typeIn('#vAuto .apbar2 [data-f="name"]', "Regenerate COI");
+  cardOf(AUTO.ui.draft.steps[1].id).click();
+  await until(() => document.querySelector('#apPane [data-f="steps.1.path"]'), 3000);
+  typeIn('#apPane [data-f="steps.1.path"]', "/policies/{{policyy}}/coi");
   await sleep(400);
-  check("...a value nothing gives is listed as a problem, in words", /\{\{policyy\}\} has no value/.test($("auProbs").textContent), $("auProbs").textContent);
+  check("...a value nothing gives: the checker counts it and the card is marked",
+        /1 to fix/.test($("apChk").textContent) && !!cardOf(AUTO.ui.draft.steps[1].id).querySelector(".apwarn"), $("apChk").textContent);
+  $("apChk").click();
+  await until(() => $("apPop"), 2000);
+  check("...its list says it in words", /\{\{policyy\}\} has no value/.test($("apPop").textContent), ($("apPop") || {}).textContent);
+  apPopClose();
+  /* the value picker: everything this field can use, by where it comes from */
+  const pathBox = document.querySelector('#apPane [data-f="steps.1.path"]');
+  pathBox.focus(); pathBox.setSelectionRange(10, 21);
+  pathBox.parentNode.querySelector("[data-apfx]").click();
+  await until(() => $("apPop") && $("apPop").classList.contains("fxpop"), 2000);
+  check("(5.24) {x} lists the values this step can use - the token from the step before, the record, the built-ins",
+        /\{\{token\}\}/.test($("apPop").textContent) && /from “Sign in”/.test($("apPop").textContent) && /\{\{record\.code\}\}/.test($("apPop").textContent) &&
+        /\{\{today\}\}/.test($("apPop").textContent), $("apPop").textContent.slice(0, 300));
+  $("apPop").querySelector('[data-pk="{{token}}"]').click();
+  await sleep(250);
+  check("...and a click puts one in at the caret", AUTO.ui.draft.steps[1].path === "/policies/{{token}}/coi" && document.activeElement === document.querySelector('#apPane [data-f="steps.1.path"]'),
+        AUTO.ui.draft.steps[1].path);
+  /* typing is never interrupted by the app drawing itself again */
+  const pbox = document.querySelector('#apPane [data-f="steps.1.path"]');
+  pbox.focus();
+  renderAll();
+  check("(5.24) a refresh of the app while you type leaves the box, its text and the caret alone",
+        document.activeElement === pbox && document.body.contains(pbox) && pbox.value === "/policies/{{token}}/coi");
+  apUndo(true);
+  check("(5.24) Undo in the designer takes back what was typed in one box as one step", AUTO.ui.draft.steps[1].path === "/policies/{{policyy}}/coi", AUTO.ui.draft.steps[1].path);
   const dr = AUTO.ui.draft;
   dr.inputs = [{ key:"policy", label:"Policy number", kind:"text", required:true, pattern:"[A-Z]\\d{5}[A-Z]\\d{2}", example:"P10234X56", choices:[] }];
   dr.steps[1].name = "Ask for a new COI";
   dr.steps[1].path = "/policies/{{input.policy}}/coi";
   dr.steps[1].expect = "202";
-  dr.steps[1].save = [{ name:"job", from:"json", path:"jobId", show:"me" }];
+  dr.steps[1].save = [{ name:"job", from:"json", path:"jobId", show:"me", on:"ok" }];
   dr.steps.push(DossierAuto.normStep({ kind:"http", name:"Wait until it is ready", conn:dr.steps[1].conn, method:"GET", path:"/jobs/{{job}}",
     headers:[["Authorization", "Bearer {{token}}"]],
     save:[{ name:"state", from:"json", path:"state", show:"me" }, { name:"coiNumber", from:"json", path:"coi.number", show:"ai" }],
     repeat:{ until:'{{state}} == "DONE"', times:4, every:1 } }, 2));
   dr.result = "COI {{coiNumber}} is ready for {{input.policy}}.";
-  renderAutoEditor();
-  check("...filled in, it has nothing left to fix", /Ready to run/.test($("auProbs").textContent), $("auProbs").textContent);
-  document.querySelector('#pAuto [data-aa="save"]').click();
-  await until(() => AUTO.ui.view === "list" && /Regenerate COI/.test($("pAuto").textContent), 4000);
+  apPaint();
+  check("...filled in, it has nothing left to fix", /Ready/.test($("apChk").textContent) && !$("apDirty").hidden, $("apChk").textContent);
+  document.querySelector('#vAuto [data-ap="save"]').click();
+  await until(() => autoStore().list.some(a => a.name === "Regenerate COI") && $("apDirty") && $("apDirty").hidden, 4000);
   const au = autoStore().list.find(a => a.name === "Regenerate COI");
   const login = au && autoStore().conns.find(c => c.id === au.steps[0].conn);
-  check("...saved: in the list, with the two connections the starter made", !!au && !!login && autoStore().conns.some(c => c.id === au.steps[1].conn) &&
-        autoStore().list.length === 1, JSON.stringify(autoStore().conns.map(c => c.name)));
+  check("...saved, and still in the designer: in the list, with the two connections the starter made", !!au && !!login && autoStore().conns.some(c => c.id === au.steps[1].conn) &&
+        autoStore().list.length === 1 && !!AUTO.ui.draft, JSON.stringify(autoStore().conns.map(c => c.name)));
+  document.querySelector('#vAuto [data-ap="back"]').click();
+  await until(() => document.querySelector('#vAuto [data-apid="' + au.id + '"]'), 3000);
+  check("(5.24) back to the list: one line for it, with its kinds of step and Run", !!document.querySelector('#vAuto [data-apid="' + au.id + '"] [data-apx="run"]') &&
+        document.querySelectorAll('#vAuto [data-apid="' + au.id + '"] .apmini i').length === 3);
 
   /* a secret: its own box, to the tray program only */
-  login.base = "https://login.example.local/api";
-  autoConnEdit(login.id);
+  document.querySelector('#vAuto [data-aphtab="conns"]').click();
+  document.querySelector('#vAuto [data-apcid="' + login.id + '"]').click();
   await until(() => document.querySelector('#auSecs [data-acs="password"]'), 5000);
   document.querySelector('#auSecs [data-acs="password"]').click();
   await until(() => $("auSecIn"), 3000);
   await sleep(80);
   $("auSecIn").focus();
   await sleep(120);
-  check("(5.22.1) the secret box can be typed into: the menu behind it does not take the focus back",
+  check("(5.22.1) the secret box can be typed into: nothing behind it takes the focus back",
         document.activeElement === $("auSecIn"), document.activeElement && (document.activeElement.id || document.activeElement.tagName));
   $("auSecIn").value = "Pw-e2e-Secret!";
   $("auSecGo").click();
@@ -1320,16 +1359,16 @@
   check("(5.22) a secret goes to the tray program and nowhere else: not the workspace, not the page",
         AB.secrets[login.id + "/password"] === "Pw-e2e-Secret!" && JSON.stringify(S).indexOf("Pw-e2e-Secret!") < 0 &&
         document.body.innerHTML.indexOf("Pw-e2e-Secret!") < 0 && /password\s*set on this PC/.test($("auSecs").textContent), ($("auSecs") || {}).textContent);
-  document.querySelector('#pAuto [data-ac="back"]').click();
-  await until(() => AUTO.ui.view === "list", 3000);
+  document.querySelector('#vAuto [data-ac="close"]').click();
+  document.querySelector('#vAuto [data-aphtab="list"]').click();
 
-  /* run from the panel: the values asked for and checked */
-  document.querySelector('#pAuto [data-auid="' + au.id + '"] [data-aux="run"]').click();
+  /* run from the list: the values asked for and checked */
+  document.querySelector('#vAuto [data-apid="' + au.id + '"] [data-apx="run"]').click();
   await until(() => $("auRunDlg"), 4000);
   await sleep(80);
   $("auIn_policy").focus();
   await sleep(120);
-  check("...and so can the run's values, over the menu", document.activeElement === $("auIn_policy"),
+  check("...and so can the run's values", document.activeElement === $("auIn_policy"),
         document.activeElement && (document.activeElement.id || document.activeElement.tagName));
   $("auIn_policy").value = "XYZ";
   $("auRunGo").click();
@@ -1338,19 +1377,39 @@
         /does not look right - for example P10234X56/.test($("auRunDlg").textContent) && !AB.posts.some(x => x.p === "/auto/step"), $("auRunDlg").textContent.slice(0, 300));
   $("auIn_policy").value = "P10234X56";
   $("auRunGo").click();
-  await until(() => AUTO.ui.panelRun && AUTO.ui.panelRun.state !== "running" && !$("auRunDlg"), 12000);
-  const pr = AUTO.ui.panelRun;
+  await until(() => AUTO.ui.run && AUTO.ui.run.state !== "running" && !$("auRunDlg") && !AUTO.live[AUTO.ui.run.id], 12000);
+  await sleep(250);
+  const pr = AUTO.ui.run;
   check("...run: signed in, asked, waited until done - the token used by the steps after, never seen by the page",
         pr.state === "ok" && pr.steps.map(x => x.state).join() === "ok,ok,ok" && AB.paths.indexOf("/policies/P10234X56/coi") >= 0 &&
         document.body.innerHTML.indexOf(TOKEN) < 0 && JSON.stringify(S).indexOf(TOKEN) < 0, JSON.stringify(pr.steps));
-  await until(() => /COI-2026-0042/.test(($("auLive") || {}).textContent || ""), 3000);
-  const liveText = ($("auLive") || {}).textContent || "";
-  check("...its card: the values, the hidden one by name only, and the result line",
-        /🔒 token/.test(liveText) && /coiNumber COI-2026-0042/.test(liveText) && /COI COI-2026-0042 is ready for P10234X56\./.test(liveText), liveText);
+  check("(5.24) the run is drawn on the canvas: every step's card marked done, the end card with the result line",
+        au.steps.every(st => cardOf(st.id) && cardOf(st.id).classList.contains("st-ok")) &&
+        /COI COI-2026-0042 is ready for P10234X56\./.test(cardOf("finish").textContent), cardOf("finish") && cardOf("finish").textContent);
+  cardOf("finish").click();
+  await until(() => $("apPane"), 2000);
+  const endText = $("apPane").textContent;
+  check("...its values in the side panel: the hidden one by name only",
+        /🔒 token/.test(endText) && /coiNumber COI-2026-0042/.test(endText) && endText.indexOf(TOKEN) < 0, endText);
+  cardOf(au.steps[2].id).click();
+  await until(() => $("apPane") && /try 2 of 4/.test($("apPane").textContent), 2000);
+  check("...and a step's own: its status, its tries, what it kept", /try 2 of 4/.test($("apPane").textContent) && /coiNumber/.test($("apPane").textContent),
+        ($("apPane") || {}).textContent);
   check("...the history keeps it - with no hidden value in it", autoStore().runs[0] && autoStore().runs[0].auto === au.id &&
         autoStore().runs[0].state === "ok" && !("token" in autoStore().runs[0].values) && autoStore().runs[0].hidden.join() === "token");
-  await shot("23-automations-panel");
-  closeModal();
+  await shot("23-automations-page");
+  document.querySelector('#vAuto [data-ap="back"]').click();
+  await sleep(100);
+  document.querySelector('#vAuto [data-aphtab="runs"]').click();
+  check("(5.24) Run history: one line for each run", document.querySelectorAll("#vAuto [data-aprun]").length === autoStore().runs.length &&
+        autoStore().runs.length >= 1);
+  document.querySelector('#vAuto [data-aprun="' + autoStore().runs[0].id + '"]').click();
+  await until(() => AUTO.ui.mode === "run" && document.querySelector("#vAuto .apflow.isrun"), 2000);
+  document.querySelector('#vAuto [data-ap="back"]').click();
+  await sleep(100);
+  check("...opening one draws it; Back returns to the history", AUTO.ui.tab === "runs" && !AUTO.ui.run && !!document.querySelector("#vAuto [data-aprun]"));
+  check("(5.24) the old way in (Menu → Automations) opens the page", (openModal("auto"), S.view === "auto" && !$("modal").classList.contains("on")));
+  setView("day");
 
   /* the assistant: told the names and what they need, never where or how */
   S.settings.flow = { on:true, url:"https://flow.example/invoke", scope:"live", cap:60, timeout:30, fallback:false, shape:"classic", tiers:{ on:false } };
@@ -1457,13 +1516,69 @@
   await shot("24-automations-chat");
 
   /* 5.23: success and failure answer differently; the whole reply */
-  openModal("auto");
   autoEdit(au.id);
-  await until(() => document.querySelector('#pAuto [data-f="steps.0.okWhen"]'), 4000);
+  await until(() => AUTO.ui.draft && document.querySelector("#vAuto .apflow"), 4000);
+  document.querySelector('#vAuto .apc[data-sid="' + au.steps[0].id + '"]').click();
+  await until(() => $("apPane"), 2000);
+  document.querySelector('#apPane [data-aptab="settings"]').click();
+  const has523a = !!document.querySelector('#apPane [data-f="steps.0.okWhen"]');
+  document.querySelector('#apPane [data-aptab="values"]').click();
+  const has523b = !!document.querySelector('#apPane [data-f="steps.0.reply"]') && !!document.querySelector('#apPane [data-f="steps.0.save.0.on"]');
+  document.querySelector('#vAuto .apc[data-sid="finish"]').click();
+  await until(() => document.querySelector('#apPane [data-f="resultFail"]'), 2000);
   check("(5.23) the designer has 'Success also needs', 'Keep the whole reply', when to keep each value, and a failure line",
-        !!document.querySelector('#pAuto [data-f="steps.0.reply"]') && !!document.querySelector('#pAuto [data-f="steps.0.save.0.on"]') &&
-        !!document.querySelector('#pAuto [data-f="resultFail"]') && /When it fails/.test($("pAuto").textContent));
-  AUTO.ui.view = "list"; AUTO.ui.draft = null; closeModal();
+        has523a && has523b && !!document.querySelector('#apPane [data-f="resultFail"]') && /When it fails/.test($("apPane").textContent));
+
+  /* 5.24: a Condition - the line splits into Yes and No, and joins again */
+  const lastJoin = [...document.querySelectorAll('#vAuto .apj[data-ref="main"]')].pop();
+  lastJoin.querySelector(".apadd").click();
+  await until(() => $("apPop"), 2000);
+  check("(5.24) the + on a line offers the kinds of step - a Condition among them",
+        ["http", "script", "wait", "confirm", "if"].every(k => $("apPop").querySelector('[data-pk="' + k + '"]')), $("apPop").textContent);
+  $("apPop").querySelector('[data-pk="if"]').click();
+  await until(() => document.querySelector("#vAuto .apif") && document.querySelector("#apPane .apcond"), 2000);
+  const cond = AUTO.ui.draft.steps[AUTO.ui.draft.steps.length - 1];
+  check("...a Condition: its card, then two lanes, Yes and No, each with its own +",
+        cond.kind === "if" && AUTO.ui.sel === cond.id && document.querySelectorAll('#vAuto .apif .aplane').length === 2 &&
+        !!document.querySelector('#vAuto .apj[data-ref="' + cond.id + ':yes"] .apadd') && !!document.querySelector('#vAuto .apj[data-ref="' + cond.id + ':no"] .apadd'));
+  typeIn('#apPane .apcond [data-ca="0"]', "{{coiNumber}}");
+  typeIn('#apPane .apcond [data-cb="0"]', "COI-2026-0042");
+  await sleep(250);
+  check("...its test is built in rows - value, how to compare, value - and kept as the text the runner reads",
+        AUTO.ui.draft.steps[3].cond === '{{coiNumber}} == "COI-2026-0042"' && /== "COI-2026-0042"/.test(document.querySelector("#apPane [data-condpre]").textContent),
+        AUTO.ui.draft.steps[3].cond);
+  apInsert(cond.id + ":yes", 0, "wait");
+  apInsert(cond.id + ":no", 0, "http");
+  const ys = AUTO.ui.draft.steps[3].yes[0], ns = AUTO.ui.draft.steps[3].no[0];
+  ys.seconds = 1; ns.path = "/maybe/bad"; ns.onFail = "continue";
+  apPaint();
+  check("...a step in each lane", ys.kind === "wait" && ns.kind === "http" && !!cardOf(ys.id) && !!cardOf(ns.id) &&
+        apPathOf(AUTO.ui.draft, ns.id) === "steps.3.no.0", apPathOf(AUTO.ui.draft, ns.id));
+  check("...a Condition cannot be dropped inside itself", !apCanDrop(cond.id, cond.id + ":yes") && apCanDrop(ns.id, cond.id + ":yes"));
+  apMoveTo(ns.id, "main", 3);
+  check("(5.24) a card dragged to another line moves there", AUTO.ui.draft.steps[3].id === ns.id && AUTO.ui.draft.steps[4].no.length === 0);
+  apUndo(true);
+  check("...and Undo puts it back", AUTO.ui.draft.steps[3].no[0] && AUTO.ui.draft.steps[3].no[0].id === ns.id);
+  cardOf(ns.id).focus();
+  cardOf(ns.id).dispatchEvent(new KeyboardEvent("keydown", { key:"Delete", bubbles:true }));
+  check("...Delete on a picked card removes it; Undo again brings it back",
+        AUTO.ui.draft.steps[3].no.length === 0 && (apUndo(true), AUTO.ui.draft.steps[3].no.length === 1));
+  document.dispatchEvent(new KeyboardEvent("keydown", { key:"s", ctrlKey:true, bubbles:true }));
+  await until(() => autoStore().list.find(a => a.id === au.id).steps.length === 4, 2000);
+  check("(5.24) Ctrl+S saves the design", DossierAuto.flatSteps(autoStore().list.find(a => a.id === au.id).steps).length === 6);
+  const bres = await autoPanelRun(autoStore().list.find(a => a.id === au.id), { policy:"P10234X56" }, { by:"me" });
+  await sleep(250);
+  check("(5.24) run with a Condition: the test is asked of the tray program, one branch runs, the other is shown as not run",
+        bres.state === "ok" && bres.steps.find(x => x.kind === "if").took === "yes" && bres.steps.find(x => x.sid === ns.id).off === true &&
+        AB.posts.some(x => x.p === "/auto/check" && x.b.when === '{{coiNumber}} == "COI-2026-0042"') &&
+        !!document.querySelector("#vAuto .aplane.no.off") && cardOf(ns.id).classList.contains("off"), JSON.stringify(bres.steps.map(x => x.state + (x.off ? "!" : ""))));
+  const bsay = autoSayFor(autoStore().list.find(a => a.id === au.id), bres);
+  check("...the assistant reads the branch it took, not the steps it skipped", /\(test: yes\)/.test(bsay) && bsay.indexOf(ns.name) < 0, bsay);
+  /* put the design back as it was for the rest */
+  const auNow = autoStore().list.find(a => a.id === au.id);
+  auNow.steps = auNow.steps.slice(0, 3); touch();
+  AUTO.ui.draft = null; AUTO.ui.run = null; AUTO.ui.mode = "design";
+  setView("day");
   const look = DossierAuto.normAuto({ name:"Look up policy", inputs:[{ key:"p", label:"Policy" }], result:"Found {{ref}}", resultFail:"Not found: {{errMsg}}",
     steps:[{ kind:"http", name:"Look it up", conn:au.steps[1].conn, method:"GET", path:"/maybe/{{input.p}}", reply:"ai",
              save:[{ name:"ref", from:"json", path:"data.ref", show:"ai" }, { name:"errMsg", from:"json", path:"error.message", show:"ai", on:"fail" }] }] });

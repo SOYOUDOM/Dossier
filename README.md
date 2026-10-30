@@ -429,9 +429,9 @@ weekday    0=Sun 1=Mon 2=Tue 3=Wed 4=Thu 5=Fri 6=Sat   (7 also accepted for Sund
 
 ## 6. The application surface
 
-### 6.1 The seven views
+### 6.1 The eight views
 
-Switch with **1**–**7**, or by clicking the tab.
+Switch with **1**–**8**, or by clicking the tab.
 
 | Key | View | What it shows |
 |---|---|---|
@@ -442,8 +442,9 @@ Switch with **1**–**7**, or by clicking the tab.
 | **5** | **Library** | Every attachment across every record, searchable by file name or record title — the answer to "where did I put that screenshot". |
 | **6** | **Insight** | Counted, not guessed: throughput this week and month, average turnaround, worst system, who raises the most, and the recurring-problem cases written for you. |
 | **7** | **Assist** | The ranked queue and the brief, from `assist.js`. The filter rail is hidden here on purpose — Assist reads closed records too, because that is where its baselines are. |
+| **8** | **Automations** | Jobs KalKech does for you - API calls and scripts, one step after another: the list, the designer (a canvas of small cards, like Power Automate), Connections and Run history ([§9a](#9a-automations-api-calls-and-scripts-one-step-at-a-time)). Since 5.24; before, it was a Menu panel. |
 
-### 6.2 The menu's eight panels
+### 6.2 The menu's seven panels
 
 **Menu** (or `Ctrl`+`K` → *Menu*) opens a tabbed panel:
 
@@ -453,7 +454,6 @@ Switch with **1**–**7**, or by clicking the tab.
 | **Reports** | This week / last week / this month, plus **Stand-up** and **Hand-over** formats. Copy, save into `reports/`, or print. |
 | **Routines** | The schedule editor. ✎ edits in place and keeps the id. Shows *runs itself*, *reminds you*, *paused*, *missing script*, when it last raised, and — loudly — *runs itself but nothing is listening*. |
 | **Scripts** | Register a script, read its `{{params}}`, set the workspace **Folder path**, write the runner, copy the `schtasks` line. |
-| **Automations** | Jobs you design: API calls and scripts in order, each passing values to the next; their connections and secrets; Run; recent runs ([§9a](#9a-automations-api-calls-and-scripts-one-step-at-a-time)). |
 | **Appearance** | Theme (Archive, Vault, or your own), fonts including the bundled Khmer face, "feel" (density and motion), language, and **Reload** for language files. |
 | **Setup** | Your name · Reminders · Chase after · Running a script · Target dates (SLA) · Holidays and festivals · **Understanding harder questions** (the optional model) · **Database (SQL Server)** (the server name, when it is not LocalDB). |
 | **Help** | The keyboard sheet, how your folder is laid out, and the privacy statement. |
@@ -1553,12 +1553,31 @@ P10234X56"* - sign in to the login API, take the token it gives, ask the
 policy API for a new certificate with that token, and wait until the job
 says it is done.
 
-You design an automation once, in **Menu → Automations**. Then you run it -
-from that panel, from the command palette (`Ctrl`+`K` → *Run: …*), by typing
-*"run regenerate COI for P10234X56"* in the chat, or by asking the assistant
-for the job in your own words. **Passwords and keys never reach the
-assistant**, and a sign-in token is never seen by the page or the assistant
-either.
+You design an automation once, on the **Automations** page - the last view
+in the list on the left (key **8**). Then you run it - from that page, from
+the command palette (`Ctrl`+`K` → *Run: …*), by typing *"run regenerate COI
+for P10234X56"* in the chat, or by asking the assistant for the job in your
+own words. **Passwords and keys never reach the assistant**, and a sign-in
+token is never seen by the page or the assistant either.
+
+### Where are automations in KalKech?
+
+**On their own page, since 5.24** - **Automations** in the list of views on
+the left, or press **8**. (In 5.22 and 5.23 they were a panel in the Menu.)
+The page has three tabs:
+
+- **Automations** - your list, one line each: its name and what it does, the
+  kinds of step it has (small marks), its system, who may start it (only you,
+  or the assistant), when it last ran (a green dot: it worked; red: it
+  failed), **Run**, and **⋯** (Edit, Duplicate, Remove). Click a line to open
+  its design. **Find an automation** filters the list.
+- **Connections** - the APIs your steps call, and their secrets.
+- **Run history** - every run, newest first. **Failed** and **Started by
+  the assistant** narrow it down.
+
+At the top right: whether the KalKech program by the clock is ready (point
+at it to see which folder its scripts come from), and **The assistant may
+run them** - one switch for all of them.
 
 ### What do I need on my PC for automations?
 
@@ -1569,39 +1588,97 @@ update KalKech, quit it once from the icon (right-click → **Quit**) and run
 `KalKech.bat` again: it rebuilds itself with automations in it. Until then
 the Automations panel says an older copy is running.
 
-At the top of the panel a line says whether it is ready, and from which
-workspace folder its scripts are run.
+At the top right of the Automations page a dot and a word say whether it is
+ready (*Tray program ready*, *not running*, or *too old*); point at it to see
+from which workspace folder its scripts are run.
 
 ### How do I make an automation?
 
-1. **Menu → Automations → New automation**, and pick a starter:
+1. On the **Automations** page press **New automation** and pick a starter
+   (with none yet, the starters are on the page itself):
+   - **Blank** - one empty API call.
    - **Sign in, then call** - get a token from a login API (kept hidden),
      then call another API with it.
+   - **Check, then decide** - look a status up, and regenerate only when it
+     is ACTIVE: a **Condition** with Yes and No (since 5.24).
    - **API key in a header** - one call to an API that takes a key.
    - **Windows sign-in** - an internal API that knows you by your Windows
      account; no password to save.
    - **Submit, then wait** - start a job, then check every 10 seconds until
      it says DONE.
    - **Run a script** - one of your `.bat` scripts, with a value.
-   - **Blank** - one empty API call.
-2. Give it a **Name** and say **What it does** - the assistant reads this
-   line to know when to propose it.
-3. Under **Values it needs**, list what you give it each time - for example
-   `policy`, label *Policy number*, check `[A-Z]\d{5}[A-Z]\d{2}`, example
-   `P10234X56`. Steps use it as `{{input.policy}}`. The check makes sure a
-   value looks right before anything runs. Kinds: text, number, date, a
-   choice (UAT, PROD), or **typed by me (secret)** - asked for each time in a
-   password box, never saved, never shown to the assistant.
-4. Fill in the **Steps** (below), and what to say **When it finishes**, for
-   example `COI {{coiNumber}} is ready for {{input.policy}}.` - and **When it
-   fails**, for example `Not regenerated for {{input.policy}}: {{errorMessage}}`
-   (since 5.23).
-5. **Save.** Anything that stops it running is listed in words above the Save
-   button ("{{job}} is used before the step that saves it"), and the list
-   shows it in orange until it is fixed.
+2. The **designer** opens: its name at the top, and a column of cards -
+   **When you run it**, the steps, **When it ends** - joined by lines. Type
+   the name in the box at the top.
+3. Click **When you run it**. In its **Inputs** tab, list the values you
+   give it each time - for example name `policy`, label *Policy number*,
+   check `[A-Z]\d{5}[A-Z]\d{2}`, example `P10234X56`. Steps use it as
+   `{{input.policy}}`. The check makes sure a value looks right before
+   anything runs. Kinds: text, number, date, a choice (UAT, PROD), or
+   **typed by me (secret)** - asked for each time in a password box, never
+   saved, never shown to the assistant. Its **Settings** tab has **What it
+   does** (the assistant reads this line to know when to propose it), the
+   system, and who may start it.
+4. Click each step and fill it in, in the panel at the side (below). The
+   **+** on a line adds a step there.
+5. Click **When it ends** for what to say **When it finishes** - for example
+   `COI {{coiNumber}} is ready for {{input.policy}}.` - and **When it fails**
+   - `Not regenerated for {{input.policy}}: {{errorMessage}}`.
+6. **Save** (or `Ctrl`+`S`). You stay in the designer; **Not saved** beside
+   the name says when there are changes. The **checker** at the top says
+   **Ready**, or *2 to fix*: click it for the list in words ("{{job}} is
+   used before the step that saves it"), and click a problem to go straight
+   to its box. A card with a problem has a ⚠ on it. **Run** is greyed out
+   until there is nothing to fix.
 
 The address in a starter is an example (`example.local`): open its
 connection and put in your API's real address.
+
+### How does the designer work?
+
+It is drawn like Power Automate's designer, in KalKech's colours, and it
+keeps out of the way: each card is **one name and one line** - *POST /token
+· Login service → token 🔒* - and nothing else opens until you ask.
+
+- **Click a card** and its settings open in the **panel at the side**, in
+  tabs:
+  - an API call or a script: **Parameters** (what it sends: the connection,
+    the method and path, the body, query values, headers - query values and
+    headers are folded until they have something in them), **Values** (what
+    it keeps from the reply, and the whole reply), **Settings** (when it
+    counts as success, only when, repeat until, if it fails, a time limit),
+    **Test** (try it);
+  - a wait, a question to you, or a Condition: **Parameters** and
+    **Settings**.
+  The **✕** at the top of the panel (or `Esc`) closes it. On a small screen
+  the panel slides over the canvas.
+- **The + on a line** adds a step there: an API call, a script, a wait, a
+  question to you (*Ask me*), or a **Condition**.
+- **⋯ on a card**: *Try up to here*, move it up or down, duplicate it,
+  remove it. A Condition's ⋯ can also fold its branches away.
+- **Drag a card** onto another line to move it there - into a Condition's
+  Yes or No, or out of it.
+- **Small words on a card** say what is special about it: *only when*,
+  *repeats ×20*, *checks the reply*, *carries on*. After a test or a run,
+  the card says how it went: ✓ 200 · 212 ms.
+- **Undo** and **Redo** (the arrows at the top, or `Ctrl`+`Z` / `Ctrl`+`Y`
+  when you are not in a box) take back a change to the design: what you
+  typed in one box counts as one change.
+- **Back** (the arrow at the top left) returns to the list; with changes
+  not saved, it asks first. Going to another view keeps the design open as
+  it is, until you come back.
+
+### What keys work in the designer?
+
+| Key | Does |
+|---|---|
+| `Enter` | Opens the settings of the card you are on |
+| `↑` `↓` | The card above or below |
+| `Alt`+`↑` / `Alt`+`↓` | Moves the card up or down |
+| `Delete` | Removes the card (Undo brings it back) |
+| `Ctrl`+`S` | Saves the design |
+| `Ctrl`+`Z` / `Ctrl`+`Y` | Undo / redo a change to the design |
+| `Esc` | Closes the side panel |
 
 ### What kinds of step are there?
 
@@ -1611,12 +1688,13 @@ connection and put in your API's real address.
 | **Script** | One of your scripts from **Menu → Scripts** (`.bat` or `.cmd`), with its values. *Success when exit code is* `0` by default. |
 | **Wait** | Waits a number of seconds (Stop still works). |
 | **Ask me** | Shows you a question - *"About to regenerate the COI for P10234X56. Go on?"* - and stops the run if you say no. |
+| **Condition** | A test - `{{state}} == "ACTIVE"` - and two lists of steps: **Yes** (when it is true) and **No**. Only one list runs; the run goes on after the Condition either way (since 5.24, next section but two). |
 
-Each step can have **Only run when** (a condition), **Repeat until** (run it
-again every few seconds until a condition is true, at most a number of
-times) and **If it fails**: stop the run, or carry on with the next step.
-API calls and scripts also have **Success also needs** and **Keep the whole
-reply** (next sections).
+In a step's **Settings** tab: **Only run when** (a condition), **Repeat
+until** (run it again every few seconds until a condition is true, at most a
+number of times) and **If it fails**: stop the run, or carry on with the next
+step. API calls and scripts also have **Success also needs** (Settings) and
+**Keep the whole reply** (Values) - next sections.
 
 ### What if the API answers differently when it fails?
 
@@ -1625,18 +1703,20 @@ example `{"data":{"ref":"R-1"}}`, but `{"error":{"code":"NOT_FOUND",
 "message":"Policy not found"}}` with status 404. Since 5.23 KalKech reads
 both:
 
-1. **Save from the reply**: each value has **when to keep it** - *On
-   success* (the default), *On failure*, or *Always*. Save `errorMessage`
+1. **The values it keeps** (the step's **Values** tab): each value has
+   **when to keep it** - *On success* (the default), *On failure*, or
+   *Always*. Save `errorMessage`
    from `error.message` *On failure*, and it is kept when the step fails,
    from the error reply.
-2. **Success also needs**: for an API that answers **200 even when it
-   failed** (`{"success": false, "errorMessage": "Policy is lapsed"}`), write
+2. **Success also needs** (the step's **Settings** tab): for an API that
+   answers **200 even when it failed** (`{"success": false, "errorMessage": "Policy is lapsed"}`), write
    a test on the saved values - `{{success}} == true`, or
    `{{errorCode}} is empty`. The step only counts as done when the status is
    right **and** the test is true; otherwise it fails with *"the reply says
    it did not work"*, and the *On failure* values are kept. (Save the value
    the test reads *Always*, so it is there either way.)
-3. **When it fails, say** writes the last line from the failure values:
+3. **When it fails, say** (click **When it ends**) writes the last line from
+   the failure values:
    `Not regenerated for {{input.policy}}: {{errorMessage}}`. A run that
    worked ends with *When it finishes, say*; a run you stopped, with
    neither.
@@ -1646,13 +1726,14 @@ the failure values too.
 
 ### How do I get the whole reply?
 
-Set the step's **Keep the whole reply**:
+Set **Keep the whole reply**, in the step's **Values** tab:
 
 - **No** (the default).
 - **Yes - for me**: the reply comes back as it was sent (JSON laid out to be
-  read; for a script, everything it printed), folded under the step on the
-  run card - when the step works **and when it fails**, which is when it is
-  most useful.
+  read; for a script, everything it printed) - in the side panel when you
+  click the step on a run, and folded under the step on the run card in a
+  conversation - when the step works **and when it fails**, which is when
+  it is most useful.
 - **Yes - for me and the assistant**: the assistant reads it too, after the
   run (up to about 9,000 characters), so it can explain an error in the
   API's own words.
@@ -1665,8 +1746,8 @@ only a short copy (2,000 characters).
 
 ### How do I use a value from one step in the next one?
 
-Under a step's **Save from the reply**, give the value a name and say where
-it is:
+In the step's **Values** tab press **Save a value**, give it a name and say
+where it is:
 
 - **JSON path** - `access_token`, `data.token`, `coi.number`,
   `items[0].id` (or `$.items.0.id`).
@@ -1677,8 +1758,17 @@ it is:
 - **Whole reply**, or for a script its **Output** or **Exit code**.
 
 Every step after it can then write `{{name}}` anywhere: in the path, a
-query value, a header, the body. Click a chip under the step ("Values you
-can use") to type it where your cursor is.
+query value, a header, the body. You do not need to remember the names:
+**`{x}` in the corner of a box** (it shows when you point at the box or
+type in it) lists every value that box can use - the values you give it,
+what the steps before saved (and which step; 🔒 for a hidden one; *only on
+one path* for one saved inside a Condition), the status of the step before,
+the connection's secrets, the record, and today, now, a new id. Click one
+and it goes in where your cursor is. The list can be searched.
+
+The quickest way to fill a step's values is to test it: in its **Test** tab
+press **Try up to here**, and every part of a JSON reply is a chip - click
+one and it becomes a value the step keeps.
 
 Choose **when to keep it** - *On success* (the default), *On failure* (from
 the error reply) or *Always* - and **who may see it**:
@@ -1722,8 +1812,9 @@ connection's **Sign-in** (below) and every step on it signs in by itself.
 
 ### How do I add a connection (an API address)?
 
-**Menu → Automations → Connections → New connection** (or **New…** beside a
-step's connection):
+On the Automations page, **Connections** tab → **New connection** (or
+**New…** beside a step's connection, in its **Parameters** tab - then the
+step uses the connection as soon as you save it):
 
 - **Address** - the start of every address its steps call, like
   `https://api.example.local/v1`. A step adds its path after it, and **a
@@ -1748,15 +1839,17 @@ step's connection):
 
 ### How do I save a password, API key or token for an API?
 
-Open the connection, and under **Secrets** press **Set…** beside the name.
+Open the connection (**Connections** tab, click it - or **Edit** beside a
+step's connection), and under **Secrets** press **Set…** beside the name.
 Type it into the box and **Save the secret**. It goes straight to the KalKech
 program by the clock, which keeps it in
 `%LOCALAPPDATA%\KalKech\secrets.dat`, **encrypted for your Windows account
 on this PC** (Windows' own data protection). It is:
 
 - never saved in your workspace, your exports or the database;
-- never shown again - not on this page, not to the assistant. The panel
-  only says *set on this PC* or *not set*. To change one, set it again;
+- never shown again - not on this page, not to the assistant. The page
+  only says *set on this PC* or *not set* (✓ or ○ beside each name in the
+  list of connections). To change one, set it again;
 - only sent to **that connection's address**. If you change the address,
   its secrets are not sent until you save them again - so a changed design
   (by hand, or from an imported file) cannot send them anywhere new;
@@ -1768,10 +1861,10 @@ cannot use it, and a condition cannot read one.
 
 ### How do I wait until a job is done?
 
-Use **Repeat until** on the step that checks the job: for example a GET to
-`/jobs/{{jobId}}` that saves `state`, with *Repeat until*
-`{{state}} == "DONE"`, *every* 10 seconds, *at most* 20 times. The card shows
-"try 3 of 20". If it is still not done after the last try, the step fails and
+Use **Repeat until** (the step's **Settings** tab) on the step that checks
+the job: for example a GET to `/jobs/{{jobId}}` that saves `state`, with
+*Repeat until* `{{state}} == "DONE"`, *every* 10 seconds, *at most* 20 times.
+Its card says *repeats ×20*, and during a run "try 3". If it is still not done after the last try, the step fails and
 says so. The **Submit, then wait** starter is built this way.
 
 ### How do I write a condition?
@@ -1788,12 +1881,51 @@ Short tests, the way you would say them:
 
 `==` and `!=` ignore capitals and spaces at the ends; two numbers are
 compared as numbers. A value that was never set is empty. No code is run -
-KalKech reads these itself.
+KalKech reads these itself. Under each condition box a ✓ says *it reads
+well*, or a ✕ says what is wrong ("a quote that does not end").
+
+### How do I make an automation go one way or another (a Condition)?
+
+**Since 5.24.** Press the **+** on a line and pick **Condition**. The line
+splits in two below it - **Yes** on the left, **No** on the right - and the
+two join again under them. Put steps in each with their own **+** (or drag
+cards into them). When it runs, KalKech asks the test; only the steps under
+the answer run, and the run then goes on with the step after the Condition.
+
+The test is built in **rows**: *[a value] [is equal to] [a value]* - for
+example `{{state}}` *is equal to* `ACTIVE`. **Add a test** for another row,
+and *Go to Yes when*: **all of these are true** (and) or **any of these is
+true** (or). The ways to compare: is equal to, is not equal to, is greater
+than, is at least, is less than, is at most, contains, does not contain,
+starts with, ends with, is empty, is not empty, is true (has a value), is
+false (no value). Under the rows you see the test as text. **Write it as
+text** for a test the rows cannot say - brackets, a *not* in front, and and
+or mixed - in the words of the previous section.
+
+Good to know:
+
+- A value saved by a step under **Yes** is not there when **No** ran - it is
+  empty. The checker warns when a step after the Condition uses one ("only
+  on one path"); the closing lines leave it empty.
+- A Condition can sit inside another Condition's Yes or No, and no deeper.
+  An automation has 40 steps at most, counting those inside Conditions.
+- If the test cannot be read (a value that is not there is simply empty;
+  this is about a broken test), neither list runs - and the Condition's
+  **If the test cannot be read** says whether the run stops (the default)
+  or goes on.
+- A test cannot read a secret.
+- On a run, the branch that did not run is shown faint, its cards marked
+  *not run*; the Condition's card says ✓ Yes or ✓ No. The assistant is told
+  which way it went, and not the steps it skipped.
+
+**Check, then decide** (a starter) is built this way: look the item up, and
+regenerate it only when its status is ACTIVE.
 
 ### How do I run one of my scripts in an automation?
 
-Add a **Script** step and pick the script (a `.bat` or `.cmd` from **Menu →
-Scripts**). Its blanks (the `{{marks}}` in it) become rows of values. Each
+Add a **Script** step (the **+** on a line) and pick the script, in its
+**Parameters** tab (a `.bat` or `.cmd` from **Menu → Scripts**). Its blanks
+(the `{{marks}}` in it) become rows of values. Each
 value goes to the script in order, as `%1`, `%2` …, and also as a variable:
 `KK_` and its name in capitals - `%KK_POLICY%`. Save from its **Output** (what
 it printed), **JSON** (if it prints JSON), a **Pattern**, or its **Exit code**.
@@ -1806,11 +1938,15 @@ characters would let a value start a command of its own. Nothing outside the
 
 ### How do I run an automation?
 
-- **Menu → Automations → Run** beside it. KalKech asks for the values it needs
-  (and checks them), and which record it is for, if any. The run card shows
-  each step as it goes: ○ waiting, ◌ running, ✓ done, ↷ skipped, ✕ failed,
-  ⟳ trying again - with the answer's status and how long it took. **Stop**
-  stops it between steps or during a wait.
+- **Run** on its line on the Automations page (or **Run** at the top of the
+  designer - it saves the design first). KalKech asks for the values it
+  needs (and checks them), and which record it is for, if any. The run is
+  **drawn on the canvas as it goes**: each card says how it went - ✓ done
+  with the answer's status and how long it took, ✕ failed, a spinner while
+  it runs, the clock while it waits or tries again; **When it ends** shows
+  the closing line. Click a card for its status, its tries, what it kept and
+  its reply. **Stop** at the top stops it between steps or during a wait.
+  **Run again** runs it again; **Back** returns to where you were.
 - **`Ctrl`+`K`** → *Run: Regenerate COI*.
 - In the chat: *"run regenerate COI for P10234X56"* - the form opens, already
   filled in from what you wrote. Nothing runs until you press **Run**.
@@ -1819,8 +1955,23 @@ characters would let a value start a command of its own. Nothing outside the
 Run for a record, the record's work log gets a line: *Automation
 "Regenerate COI": Done - coiNumber: COI-2026-0042* (only the values the
 assistant may see, because work logs go with questions about the record).
-The last 40 runs are listed under **Recent runs** - with no hidden value and
-no secret in them.
+The last 40 runs are kept in **Run history** - with no hidden value and no
+secret in them.
+
+### How do I see how a run went?
+
+**Run history** (a tab on the Automations page) lists every run: how it
+went, which automation, who started it (you or the assistant), the record
+and the values, when, and how long it took. Click one and it is **drawn on
+the canvas, as it went** - even if the design has changed since - each card
+with its status; click a card for what it kept and its reply. **Open the
+design** from there opens it in the designer.
+
+In a conversation, a run's card shows every step while it runs. When it has
+finished it folds to **one line** - *3 of 3 steps ran*, or *Failed at "Sign
+in" - the answer was 401* - with **steps** to open them, the values and the
+closing line under it, and **See the run** to draw it on the Automations
+page.
 
 ### How do I let the assistant run an automation - and stop it asking me?
 
@@ -1835,12 +1986,12 @@ result ("did it work?").
 
 Three switches decide this:
 
-- **The assistant may run automations** (top of the Automations panel) - off:
+- **The assistant may run them** (top right of the Automations page) - off:
   the assistant is told about none of them, and refuses to start one.
-- **The assistant may run it** (in each automation) - off: that one is yours
-  only.
-- **Ask me before the assistant runs it** (in each automation) - **switch it
-  off only for a job you trust completely**: the assistant's proposal then
+- **The assistant may run it** (click **When you run it** → **Settings**) -
+  off: that one is yours only.
+- **Ask me before the assistant runs it** (the same place) - **switch it off
+  only for a job you trust completely**: the assistant's proposal then
   runs straight away, and the card says *"Run by the assistant without
   asking"*. (The chat's own **Ask before doing things** switch, when off,
   stops all asking.)
@@ -1853,7 +2004,8 @@ answer.
 
 Before a run: each automation's name, what it does, its system, the values
 it needs (name, label, kind, an example), whether you are asked first, the
-names of its steps, and the names of the values it will be shown. **Never** a
+names of its steps (those inside Conditions too), and the names of the values
+it will be shown. **Never** a
 connection, an address, a header, a script or a secret's name.
 
 After a run: one line - which automation, how it went (and why, when a step
@@ -1866,12 +2018,19 @@ it will read.
 
 ### How do I test a step while I design it?
 
-Fill in **Test values** at the top of the steps, and press **Try up to here**
-under a step: the steps from the first to that one run for real, and each
-step shows what came back - its status, the values it saved, and the reply
-itself (with passwords and tokens masked). For a JSON reply, every path in it
-is a chip: click one, and it becomes a *Save from the reply* row. It is a real
-run: an API that changes something does change it.
+Click the step, open its **Test** tab, fill in the **Test values** (they are
+kept while the design is open) and press **Try up to here** (also in the
+card's **⋯**): the steps from the first to that one run for real. Each card
+then says how it went (✓ 200 · 212 ms), and the step's Test tab shows what
+came back - its status, the values it saved, and the reply itself (with
+passwords and tokens masked). For a JSON reply, every path in it is a chip:
+click one, and the step keeps that value. It is a real run: an API that
+changes something does change it.
+
+**Test** at the top of the designer runs **the whole design** the same way -
+it asks for the test values first, draws the run on the canvas, and keeps
+nothing in the run history. **Test again** repeats it; **Back to the design**
+returns to editing, with each card still showing how it went.
 
 ### Why did my automation fail?
 
@@ -1887,6 +2046,9 @@ The failed step says why, in words. The usual ones:
 | *{{token}} has no value* | The step that saves it found nothing: check its JSON path with **Try up to here**. |
 | *not in the reply: token* | The path does not match the reply - click the right one under the reply. |
 | *the reply says it did not work* | The status was fine, but **Success also needs** was not true: the API said no in its reply. Keep the whole reply for you, or save its error message *On failure*, to see why. |
+| *{{x}} is saved on one path of a Condition only* | A warning, not a stop: that value is empty when the other branch ran. Save it in both branches, or leave it if empty is fine. |
+| *{{x}} is saved in the other branch of a Condition* | A step under **No** uses a value only a step under **Yes** saves (or the other way round): it is never there. |
+| *The Condition has no test yet* | Click the Condition and fill in its test. |
 | *the address answered with a redirect … which is not followed* | Use the address it redirects to, if it is right. |
 | *outside … A step only ever goes to its own connection's address* | Fix the path, or use a connection with that address. |
 | *the server's certificate is not trusted on this PC* | The API's certificate is not one Windows trusts; ask its owners. |

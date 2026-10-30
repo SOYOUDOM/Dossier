@@ -1,6 +1,6 @@
 // node --test
 //
-// Automations (automations.js): the designs you build in Menu → Automations,
+// Automations (automations.js): the designs you build on the Automations page,
 // the checks on them, the placeholder and condition rules, what the
 // assistant may see, and the loop that runs the steps. The tray program that
 // really calls the APIs is tested apart, under tests/bridge/run.js; here it
@@ -432,4 +432,162 @@ test("run: a failed step keeps its failure values and reply; the run ends with t
   /* stopped: neither line */
   assert.equal(A.resultTemplate(a, { state:"stopped" }), "");
   assert.equal(A.resultTemplate(a, { state:"partial" }), "Found {{ref}}");
+});
+
+/* ── Conditions: steps with a Yes and a No branch (5.24) ─────────────── */
+/* a made-up design: look the policy up; when it is active, regenerate the
+   certificate, otherwise only note why; then tell the record either way */
+function branchy(){
+  return A.normAuto({ id:"Ab", name:"Regenerate when active",
+    inputs:[{ key:"policy", label:"Policy number" }],
+    steps:[
+      { id:"look", kind:"http", name:"Look it up", conn:"Cpol", path:"/policies/{{input.policy}}",
+        save:[{ name:"state", from:"json", path:"state", show:"ai" }] },
+      { id:"cond", kind:"if", name:"Is it active?", cond:'{{state}} == "ACTIVE"',
+        yes:[{ id:"regen", kind:"http", name:"Regenerate", conn:"Cpol", method:"POST", path:"/policies/{{input.policy}}/coi",
+               save:[{ name:"job", from:"json", path:"jobId", show:"ai" }] }],
+        no:[{ id:"why", kind:"http", name:"Ask why", conn:"Cpol", path:"/policies/{{input.policy}}/reason",
+              save:[{ name:"reason", from:"json", path:"reason", show:"ai" }] }] },
+      { id:"tell", kind:"http", name:"Tell the record", conn:"Cpol", method:"POST", path:"/notes",
+        bodyType:"json", body:'{"job":"{{job}}","reason":"{{reason}}"}' }
+    ],
+    result:"Done: {{job}}{{reason}}" });
+}
+test("conditions: normalised as a tree - two levels deep at most, 40 steps in all, no id twice", () => {
+  const a = branchy();
+  assert.equal(a.steps.length, 3);
+  assert.equal(a.steps[1].kind, "if");
+  assert.equal(a.steps[1].when, "");
+  assert.deepEqual(a.steps[1].yes.map(s => s.id), ["regen"]);
+  assert.deepEqual(A.flatSteps(a.steps).map(x => x.s.id + ":" + x.depth + x.branch), ["look:0", "cond:0", "regen:1yes", "why:1no", "tell:0"]);
+  assert.equal(A.findStep(a, "why").parent, "cond");
+  assert.equal(A.findStep(a, "nope"), null);
+  /* a Condition in a Condition is kept; one more level is not */
+  const deep = A.normAuto({ steps:[{ kind:"if", cond:"1", yes:[{ kind:"if", cond:"1", yes:[{ kind:"if", cond:"1", yes:[{ kind:"wait" }] }, { kind:"wait" }] }] }] });
+  assert.equal(deep.steps[0].yes[0].kind, "if");
+  assert.deepEqual(deep.steps[0].yes[0].yes.map(s => s.kind), ["wait"], "the third level is dropped");
+  /* the 40 are counted across the branches */
+  const many = A.normAuto({ steps:[{ kind:"if", cond:"1", yes:Array.from({ length:30 }, () => ({ kind:"wait" })),
+                                     no:Array.from({ length:30 }, () => ({ kind:"wait" })) }, { kind:"wait" }] });
+  assert.equal(A.flatSteps(many.steps).length, 40);
+  assert.equal(many.steps.length, 1);
+  /* a pasted copy with the same ids gets new ones */
+  const dup = A.normAuto({ steps:[{ id:"x", kind:"wait" }, { kind:"if", cond:"1", yes:[{ id:"x", kind:"wait" }] }] });
+  const ids = A.flatSteps(dup.steps).map(x => x.s.id);
+  assert.equal(new Set(ids).size, 3);
+  const fresh = A.freshIds(a.steps);
+  assert.notEqual(fresh[1].yes[0].id, "regen");
+  assert.equal(fresh[1].yes[0].name, "Regenerate");
+});
+test("conditions: the checks know which values exist on each path", () => {
+  const conns = [CONN_POL].map(A.normConn);
+  const a = branchy();
+  const c = codes(A.check(a, { conns }));
+  assert.ok(c.indexOf("maybeEmpty:job@4") >= 0, "a value from one branch only is a warning after it: " + c.join());
+  assert.ok(c.indexOf("maybeEmpty:reason@4") >= 0);
+  assert.ok(A.check(a, { conns }).filter(p => !p.warn).length === 0, "and nothing that stops a run: " + c.join());
+  assert.equal(A.check(a, { conns }).find(p => p.code === "maybeEmpty").id, "tell");
+  /* saved in both branches: no warning */
+  const both = branchy();
+  both.steps[1].no[0].save.push({ name:"job", from:"json", path:"x" });
+  both.steps[1].yes[0].save.push({ name:"reason", from:"json", path:"x" });
+  assert.ok(!codes(A.check(both, { conns })).some(x => /^maybeEmpty/.test(x)));
+  /* a value of the other branch, a test with nothing to test, an empty one */
+  const other = branchy();
+  other.steps[1].no[0].path = "/x/{{job}}";
+  other.steps[1].cond = "";
+  other.steps.push(A.normStep({ kind:"if", cond:"{{state}} is empty" }));
+  const oc = codes(A.check(other, { conns }));
+  assert.ok(oc.indexOf("otherBranch:job@3") >= 0, oc.join());
+  assert.ok(oc.indexOf("noCond@1") >= 0, oc.join());
+  assert.ok(oc.indexOf("emptyIf@5") >= 0, oc.join());
+  /* a test that reads a secret, or a value saved later */
+  const sec = branchy();
+  sec.steps[1].cond = "{{secret.clientId}} == 1 or {{job}} == 2";
+  const sc = codes(A.check(sec, { conns }));
+  assert.ok(sc.indexOf("secretInCond:secret.clientId@1") >= 0, sc.join());
+  assert.ok(sc.indexOf("usedTooEarly:job@1") >= 0, sc.join());
+});
+test("conditions: the values a step may read, for the designer", () => {
+  const a = branchy();
+  const at = id => A.valuesAt(a, id);
+  assert.deepEqual(at("look").saved, []);
+  assert.equal(at("look").status, false);
+  assert.deepEqual(at("look").mine.map(v => v.name), ["state"]);
+  assert.deepEqual(at("cond").saved.map(v => v.name), ["state"]);
+  assert.equal(at("cond").status, true);
+  assert.deepEqual(at("why").saved.map(v => v.name), ["state"], "the No branch does not see the Yes branch's values");
+  const end = at("tell").saved;
+  assert.deepEqual(end.map(v => v.name + (v.maybe ? "?" : "")), ["state", "job?", "reason?"]);
+  assert.deepEqual(at("").saved.map(v => v.name), ["state", "job", "reason"], "the end sees everything");
+  assert.deepEqual(at("tell").inputs, [{ name:"input.policy", label:"Policy number", kind:"text" }]);
+});
+test("conditions: the builder's rows, and back to text", () => {
+  const rt = src => { const r = A.condRows(src); return r && A.condText(r.rows, r.join); };
+  assert.deepEqual(A.condRows('{{state}} == "DONE" and {{n}} > 3'),
+    { join:"and", rows:[{ a:"{{state}}", op:"==", b:"DONE" }, { a:"{{n}}", op:">", b:"3" }] });
+  assert.equal(A.condRows("{{d}} not contains x"), null, "a bare word is not a value");
+  const r = A.condRows("{{a}} is not empty or not {{b}} or {{c}} starts with 'TMP' or {{d|lower}} not contains \"x y\"");
+  assert.equal(r.join, "or");
+  assert.deepEqual(r.rows.map(x => x.op), ["is not empty", "is false", "starts with", "not contains"]);
+  assert.equal(r.rows[3].a, "{{d|lower}}", "a value keeps its filters");
+  assert.equal(rt('{{state}} == "DONE" and {{n}} > 3'), '{{state}} == "DONE" and {{n}} > 3');
+  assert.equal(rt("{{a}}"), "{{a}}");
+  assert.deepEqual(A.condRows(""), { join:"and", rows:[] });
+  /* too much for rows: stays text */
+  assert.equal(A.condRows("({{a}} == 1 or {{b}} == 2) and {{c}}"), null);
+  assert.equal(A.condRows("{{a}} == 1 and {{b}} == 2 or {{c}}"), null);
+  assert.equal(A.condRows('{{a}} == "open'), null);
+  /* text written from rows: quotes where needed, and it reads the same */
+  const t = A.condText([{ a:"{{msg}}", op:"contains", b:'say "hi"' }, { a:"{{n}}", op:">=", b:"10" },
+                        { a:"{{x}}", op:"is empty" }, { a:"", op:"==", b:"skipped" }], "and");
+  assert.equal(t, '{{msg}} contains "say \\"hi\\"" and {{n}} >= 10 and {{x}} is empty');
+  assert.equal(A.test(t, { msg:'they say "hi" now', n:"12", x:"" }).result, true);
+  assert.deepEqual(A.condRows(t).rows[0], { a:"{{msg}}", op:"contains", b:'say "hi"' });
+});
+test("run: a Condition runs one branch; the other is marked as never in the running", async () => {
+  const yes = fakeBridge([{ status:200, json:{ state:"ACTIVE" } }, { status:202, json:{ jobId:"J-9" } }, { status:200, json:{} }]);
+  let R = await A.run(branchy(), env(yes));
+  assert.equal(R.state, "ok");
+  assert.deepEqual(R.steps.map(s => s.sid + ":" + s.state + (s.off ? "!" : "")), ["look:ok", "cond:ok", "regen:ok", "why:skip!", "tell:ok"]);
+  assert.equal(R.steps[1].took, "yes");
+  assert.equal(R.steps[2].branch, "yes");
+  assert.equal(R.steps[2].depth, 1);
+  assert.equal(R.steps[2].parent, "cond");
+  assert.equal(R.result, "Done: J-9");
+  assert.equal(yes.calls.filter(c => c.op === "check")[0].b.when, '{{state}} == "ACTIVE"');
+  const no = fakeBridge([{ status:200, json:{ state:"LAPSED" } }, { status:200, json:{ reason:"lapsed in May" } }, { status:200, json:{} }]);
+  R = await A.run(branchy(), env(no));
+  assert.deepEqual(R.steps.map(s => s.sid + ":" + s.state), ["look:ok", "cond:ok", "regen:skip", "why:ok", "tell:ok"]);
+  assert.equal(R.steps[1].took, "no");
+  assert.equal(R.result, "Done: lapsed in May");
+  /* the history keeps where each step sat */
+  const kept = A.normRun(R).steps;
+  assert.deepEqual([kept[1].took, kept[2].off, kept[2].branch, kept[3].depth, kept[3].parent], ["no", true, "yes", 1, "cond"]);
+  /* the assistant is told the steps of both branches */
+  assert.deepEqual(A.forAI(A.normStore({ list:[branchy()] }))[0].steps, ["Look it up", "Is it active?", "Regenerate", "Ask why", "Tell the record"]);
+  assert.deepEqual(A.forAI(A.normStore({ list:[branchy()] }))[0].gives, ["state", "job", "reason"]);
+});
+test("run: a step failing inside a branch stops the run; a test that cannot be read decides nothing", async () => {
+  let b = fakeBridge([{ status:200, json:{ state:"ACTIVE" } }, { status:500, json:{} }]);
+  let R = await A.run(branchy(), env(b));
+  assert.equal(R.state, "failed");
+  assert.deepEqual(R.steps.map(s => s.state), ["ok", "ok", "fail", "skip", "wait"]);
+  const a = branchy();
+  b = fakeBridge([{ status:200, json:{ state:"ACTIVE" } }]);
+  const call = async (op, body) => op === "check" ? { ok:false, error:"cannot read it" } : b.call(op, body);
+  R = await A.run(a, env(b, { call }));
+  assert.equal(R.state, "failed");
+  assert.deepEqual(R.steps.map(s => s.state + (s.off ? "!" : "")), ["ok", "fail", "skip!", "skip!", "wait"]);
+  assert.equal(R.steps[1].note, "cannot read it");
+});
+test("run: 'try up to here' stops after a step inside a branch", async () => {
+  const b = fakeBridge([{ status:200, json:{ state:"LAPSED" } }, { status:200, json:{ reason:"r" } }]);
+  const R = await A.run(branchy(), env(b, { upToId:"why", test:true }));
+  assert.equal(R.state, "ok");
+  assert.deepEqual(R.steps.map(s => s.state), ["ok", "ok", "skip", "ok", "wait"]);
+  /* the older way - a place in the top list - takes a Condition's branch with it */
+  const b2 = fakeBridge([{ status:200, json:{ state:"ACTIVE" } }, { status:202, json:{ jobId:"J" } }]);
+  const R2 = await A.run(branchy(), env(b2, { upTo:1 }));
+  assert.deepEqual(R2.steps.map(s => s.state), ["ok", "ok", "ok", "skip", "wait"]);
 });

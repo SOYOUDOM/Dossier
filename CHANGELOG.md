@@ -6,6 +6,53 @@ holds — which is what to paste into a bug report.
 
 ---
 
+## 5.24.0 - 2026-10-30
+
+**Automations get a page of their own, designed like Power Automate - and Conditions that go one way or the other.**
+
+- **A page, not a panel.** Automations is now the eighth view (key **8**),
+  beside Assist, with three tabs: **Automations** (your list - one line each,
+  with the kinds of step it has, who may start it, when it last ran, and
+  **Run**), **Connections**, and **Run history**. The Menu has seven panels
+  again; anything that opened the old panel opens the page.
+- **The designer is a canvas.** A column of small cards - **When you run
+  it**, the steps, **When it ends** - joined by lines, with a **+** on each
+  line to put a step there. A card is one name and one line (*POST /token ·
+  Login service → token 🔒*); nothing else is shown until you click it.
+- **Settings at the side, in tabs.** Clicking a card opens its panel:
+  **Parameters** (what it sends; query values and headers folded until they
+  have something), **Values** (what it keeps, the whole reply), **Settings**
+  (success, only when, repeat until, if it fails), **Test** (try it). "When
+  you run it" holds the values it needs and who may start it; "When it
+  ends" the closing lines.
+- **Conditions.** A new kind of step: a test - built in rows (*[value] [is
+  equal to] [value]*, all or any of them), or written as text - and two
+  lanes, **Yes** and **No**, that join again after it. Only one runs. One
+  Condition may sit inside another. The checker warns about a value saved on
+  one path only; a run shows the other path faint, as *not run*; the
+  assistant is told which way it went. Starter: **Check, then decide**.
+- **`{x}` in every box** lists the values it can use - the inputs, what each
+  step before saved (and from which step), the status, the connection's
+  secrets, the record, today - and puts one in at the cursor.
+- **Designing is quicker.** Drag a card to another line; ⋯ on a card to
+  move, duplicate, remove or try it; **Undo** / **Redo** (`Ctrl`+`Z` /
+  `Ctrl`+`Y`); `Ctrl`+`S` saves and you stay in the designer; *Not saved*
+  beside the name; the **checker** (*Ready* or *2 to fix*) lists the
+  problems and takes you to each one's box; keyboard: `Enter`, `↑` `↓`,
+  `Alt`+`↑` `↓`, `Delete`, `Esc`.
+- **Runs are drawn on the canvas.** Each card shows how it went (✓ 200 · 212
+  ms, ✕, not run), live while it runs; click one for its status, tries, what
+  it kept and its reply. **Test** runs the whole design with test values and
+  keeps nothing in the history. **Run history** opens any past run the same
+  way - drawn as it went, even if the design changed since.
+- **A shorter card in the chat.** A finished run folds its steps under one
+  line - *3 of 3 steps ran*, or *Failed at "Sign in" - the answer was 401* -
+  with **See the run** to open it on the page.
+- Nothing changed in the KalKech program by the clock: no need to restart it
+  for this version.
+
+---
+
 ## 5.23.0 - 2026-10-30
 
 **Automations: the whole reply, and a different path for failure.**

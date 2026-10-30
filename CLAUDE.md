@@ -24,12 +24,12 @@ are careful not to attract attention from their security team.
 
 | File | What it is |
 |---|---|
-| `dossier.html` | **The app**: one file, ~27,700 lines of vanilla JS + CSS, no build, no framework. CSP allows only `connect-src http://127.0.0.1:*`. |
+| `dossier.html` | **The app**: one file, ~37,000 lines of vanilla JS + CSS, no build, no framework. CSP allows only `connect-src http://127.0.0.1:*`. |
 | `chat.js` | The local assistant: plain-English questions answered on the PC (`window.DossierChat`). |
 | `assist.js` | Assist tab arithmetic. |
 | `flow.js` | Client for the optional Power Automate flow (the AI): `ACTIONS` table (every action the model may request), `validate()` of replies, `buildRequest()`, `fillPrompt()`, and `PROMPT_BUILTIN` (an embedded copy of `flow/prompt.txt`). `window.DossierFlow`. |
 | `diagram.js` | **New in 5.11** — draws ```` ```mermaid ```` blocks (flowchart / graph TD·LR·BT·RL, sequenceDiagram, stateDiagram-v2) as SVG: `parse()`, layered layout (ranks doubled so arrow labels get their own place), `render(model, {measure, theme})`, `draw()` → `{ok, svg, boxes, kind}` or `{ok:false, error}`. Pure; `window.DossierDiagram` and `module.exports`. |
-| `automations.js` | **New in 5.22** — Automations, the pure half: `normStore/normAuto/normStep/normConn/normRun` (every design read goes through them), placeholders (`parsePh`, `placeholders`, `show` for display only), conditions (`lexCond`/`parseCond`/`evalCond`, `test`), `check(a, {conns, scripts})` → problem codes, `inputsCheck`, `cmdSafe`, `forAI(store)` (what the model is told), `find`/`fromText`, `jsonPaths`/`jsonGet`, `stepWire`/`connWire`, `run(a, env)` (the step loop; env.call talks to the bridge), `split(a, R)`. `window.DossierAuto` and `module.exports`. |
+| `automations.js` | **New in 5.22** — Automations, the pure half: `normStore/normAuto/normStep/normConn/normRun` (every design read goes through them), placeholders (`parsePh`, `placeholders`, `show` for display only), conditions (`lexCond`/`parseCond`/`evalCond`, `test`), `check(a, {conns, scripts})` → problem codes, `inputsCheck`, `cmdSafe`, `forAI(store)` (what the model is told), `find`/`fromText`, `jsonPaths`/`jsonGet`, `stepWire`/`connWire`, `run(a, env)` (the step loop; env.call talks to the bridge), `split(a, R)`. 5.24: step kind `"if"` (Condition: `cond`, `yes[]`, `no[]`), `normList`, `flatSteps` (run order, with depth/parent/branch), `findStep`, `freshIds`, `valuesAt(a, id)` (the designer's value list), `condRows`/`condText`/`condOperand` (the builder), `COND_OPS`. `window.DossierAuto` and `module.exports`. |
 | `sources.js` | **New in 5.9** — answering from runbooks/standards: passages, BM25 search, citations, and `ground()`, the check that holds back invented figures. Pure; `window.DossierSources` and `module.exports`. |
 | `ocr.js` | Optional text recogniser for pictures and scanned PDFs. |
 | `flow/relay.html` | The **only** page that touches the network: a sandboxed iframe that posts to the flow URL. |
@@ -92,13 +92,13 @@ A *workspace* is a folder the user picks (File System Access API):
 - Commit messages: clear summary + body; no model names in commits, code or
   docs. Do not open a pull request unless the owner asks.
 - Work so far is on branch `claude/chat-panel-pixel-art-gifs-d822hq`
-  (latest: 5.23.0). Follow the branch instructions of your own session.
+  (latest: 5.24.0). Follow the branch instructions of your own session.
 
 ## Testing
 
 ```
-node --test                                   # 84 unit tests (Sources, grounding, names check, code origin, flow reply fields, diagrams, automations)
-node tests/e2e/run.js                         # the app in headless Chrome/Edge: 265 checks (CHROME=<path> to choose)
+node --test                                   # 91 unit tests (Sources, grounding, names check, code origin, flow reply fields, diagrams, automations)
+node tests/e2e/run.js                         # the app in headless Chrome/Edge: 289 checks (CHROME=<path> to choose)
 node tests/bridge/run.js                      # the bridge's automation routes, built and run (mcs+mono or csc): 60 checks
 node flow/check-prompt.js                     # after editing flow/prompt.txt ...
 python3 flow/embed-prompt.py                  # ... then copy it into flow.js (PROMPT_BUILTIN)
@@ -131,6 +131,89 @@ Also useful:
   `DossierFlow.validate`. `tests/e2e/run.js` is a working example of all of it.
 
 ## Recent history (newest first)
+
+- **5.24.0** - Owner: "Automations deserve a full page, like Task, Weekly,
+  Insight - and rethink the design to not use so much space: like Power
+  Automate, in our style; compact, not always showing the content. A huge
+  update."
+  - *A view*: `VIEWS` (8 names; `setView`, `restoreFilters`, palette, keys
+    1-8 use it), rail button `data-v="auto"` (Studio `\21AF`, Nova
+    `--nxi-auto`, Nova badge `nxbAuto` = failed runs today), section
+    `#vAuto` (`.vauto`); `setView("auto")` hides the filter rail **and** the
+    compose bar, sets `body.vauto`. `renderAll` → `renderAutoPage()`, which
+    paints only when the page was not on screen or the store object changed
+    (`APG.shown/store`), else `apRefresh()` (tab counts) - so a renderAll
+    from elsewhere never replaces a field being typed in (e2e checks it).
+    The Menu tab `data-m="auto"`/`#pAuto` is gone (seven panels);
+    `openModal("auto")` → `autoOpenPage()`. `hydrate` → `autoPageReset()`.
+  - *Page code* (`THE AUTOMATIONS PAGE` banner, after the shared helpers):
+    `AUTO.ui` {tab, q, hq, hf, draft, id, base (JSON of the saved version →
+    `apDirty`), newConns, sel ("trigger" | "finish" | step id), pane ("" |
+    "conn"), ptab (tab per kind), fold, undo/redo (draft JSON snapshots;
+    `apSnap`, `apTypingSnap` = one step per box, reset on focusout and on an
+    `{x}` insert), test (by sid), tvals, trying, fxFor, ctext, condExtra,
+    secOpen, mode ("design" | "run"), run, runFrom, runSel, runTest, conn,
+    connDraft, connFor}. `apPaint()` redraws all, keeping scroll of
+    `#apCanvas/#apPaneBody/#apScroll` and the focused field (by data-f / id /
+    sid / cf / ca / cb) with its caret. Home: `apHomeHtml` (tabs
+    `[data-aphtab]`, `#apBridge`, `#apAiCan`), `apListPage`/`apRowHtml`
+    (`[data-apid]`, `[data-apx="run|menu"]`, `.apmini` kind marks),
+    `apEmptyHtml` (starters `[data-austart]`), `apRunsHtml`
+    (`[data-aprun]`, chips `[data-aphf]`), `apConnsHtml` (`[data-apcid]`,
+    `.apsplit` + `apConnPane`; secrets `#auSecs [data-acs/acd]`, buttons
+    `[data-ac]`). Designer: `apDesignerHtml` = `apBarHtml` (name
+    `data-f="name"`, `#apDirty`, checker `#apChk` → `apCheckMenu` →
+    `apGoProb`, undo/redo/test/run/save `[data-ap]`) + `#apCanvas`
+    (`apCanvas` → `apTrigCard`, `apLaneHtml` (joins `.apj[data-ref][data-i]`
+    with `.apadd`), `apNodeHtml` (`.apif` > card + `.apbr` > `.aplane.yes/.no`),
+    `apCardHtml` (`.apc[data-sid]`, `k-<kind>` sets `--kc`, `.apcl` name +
+    state/problem mark, `.apcs` summary `apSum` + keeps `apKeeps` + flags
+    `apFlags`, `⋯` `[data-apm]`), `apFinCard`) + `#apPane` (`apStepPane` /
+    `apTrigPane` / `apFinPane` / `apConnPane(true)`; `apHead` tabs
+    `[data-aptab]` with red dots; fields keep `autoField(path)` with tree
+    paths `apPathOf` → "steps.2.yes.0.path"; `apFx` adds the `{x}` button
+    `[data-apfx]` → `apFxOpen` (`valuesAt`, groups, search) → `apFxInsert`;
+    `apSec` folds query/headers; `apIfParams` rows `[data-ca/co/cb]`,
+    `[data-cj]` → `apCondRead`; `apTestTab` `[data-ap="try"]` → `apTry(sid)`).
+    One pop-up `#apPop` (`apPop`/`apPopClose`, `.appi[data-pk]`): add menu
+    `apAddMenu` → `apInsert(ref, i, kind)`, `apCardMenu` → `apStepAct`,
+    `apNewMenu`, `apRowMenu`. Moving: `apMoveTo(sid, ref, i)`, `apCanDrop`
+    (no Condition into itself or below depth 2); HTML5 drag on `.apc`
+    → `.apj.over`. Keys on `#vAuto` (Enter, ↑↓, Alt+↑↓, Delete, Esc) and a
+    document Ctrl+S/Z/Y handler. Runs: `autoPanelRun(a, inputs, opts)` sets
+    `U.run`/`mode:"run"` and paints; `apRunCanvas(run, a)` draws from the
+    run's own steps (sid/depth/parent/branch) - `apRunPane` for the picked
+    one; `opts.test` keeps results in `U.test` (`apTestKeep`), no history.
+    `apStoreChanged()` after a run (not while a design is being edited).
+    Shared helpers kept: `autoProbText` (by `p.id`), `autoField`,
+    `autoSetPath`, `autoTestHtml(s, sid, t, noPaths)`, `autoStarters` (+
+    `icon`, `kind`; new starter `check`), `autoSecretChips`.
+  - *Conditions* (automations.js): `KINDS` + `"if"`, `LIMIT.nest` 2,
+    `normStep(s, i, depth, budget)`; 40 steps counted across branches;
+    `dedupeIds`. `check()` walks the tree: problems carry `step` (run-order
+    index) and `id`; new codes `noCond`, `emptyIf` (warn), `otherBranch`,
+    `maybeEmpty` (warn; not in conditions or the closing lines). `run()`:
+    `R.steps` = every step in run order with `sid` (+ depth/branch/parent);
+    an "if" asks `/auto/check` (the bridge needed no change), sets `took`,
+    marks the other branch `skip` + `off`, then runs its branch; `upToId`
+    (any step; `upTo` = top-list index still works). Unset saved values are
+    empty in the closing lines (`unsetOf`). `normRun` keeps sid/depth/
+    branch/parent/took/off. `forAI.steps` flattened. `autoSayFor` skips
+    `off` steps and writes `(test: yes)`.
+  - *Chat card*: `autoCardHtml` folds a finished run's steps into
+    `details.austeps-d[data-aucard]` (open state in `AUTO.cardOpen`), the
+    summary says how many ran or where it failed; `[data-auview]` "See the
+    run" opens it on the page; `autoReplyHtml(s, open)`.
+  - CSS: `THE AUTOMATIONS PAGE (5.24)` block after the 5.22 block (which
+    lost the old panel/designer rules). Only theme tokens; dotted canvas
+    `--paper-2`; lanes joined by `::before/::after` borders on a two-column
+    grid; pane overlays the canvas below 1100 px.
+  - Strings `Ap*`, `AutoKind_if`, `AutoT_check*`, `AutoChk_*` (4 new),
+    `NxSub_auto`, `KeyGroupAuto`/`KeyAp*` (designer keys on the ? sheet).
+  - Tests: 7 unit (tree, checks, valuesAt, builder round trip, branch runs,
+    try inside a branch), e2e rewritten for the page + 24 new checks (289).
+    Screenshot script idea: stand-in fetch for `http://127.0.0.1:1/`, then
+    `setView("auto")`, `autoEdit(id)`, click `.apc[data-sid]`.
 
 - **5.23.0** - Owner: "allow returning the whole body of the response, and a
   condition for fail and success, because success and fail have different

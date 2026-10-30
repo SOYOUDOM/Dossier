@@ -4,7 +4,7 @@
    An automation is a short chain of steps that does one support job:
    sign in to an API, call another one with the token it gave, run one of
    your scripts with a value from the reply, wait until a job says DONE.
-   You design it once (Menu → Automations); after that you, or the
+   You design it once (the Automations page); after that you, or the
    assistant when you ask it to, run it with the few values it needs - a
    policy number, an environment.
 
@@ -36,9 +36,15 @@
    program holds the same limits itself; these are for the editor. */
 const LIMIT = { steps:40, inputs:20, saves:12, pairs:30, conns:60, autos:200, runs:40,
                 times:30, every:300, wait:600, http:120, script:600,
-                value:4000, body:100000, name:80 };
+                value:4000, body:100000, name:80,
+                /* (5.24) a Condition inside a Condition's branch, and no
+                   deeper: two levels already make four lanes side by side */
+                nest:2 };
 
-const KINDS = ["http", "script", "wait", "confirm"];
+/* (5.24) "if" is a Condition: a test, and two lists of steps - the ones
+   for Yes and the ones for No. Only one list runs; the run goes on with
+   the step after the Condition either way. */
+const KINDS = ["http", "script", "wait", "confirm", "if"];
 const METHODS = ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD"];
 const BODIES = ["none", "json", "form", "xml", "text"];
 /* how a connection signs in by itself. "A sign-in step first" is not one of
@@ -150,9 +156,17 @@ function normSave(kind){
   };
 }
 
-function normStep(s, i){
+/* one step. depth: how many Conditions it sits inside (0 at the top);
+   budget: { left } - steps still allowed in the whole design, counted in
+   the order they appear. Both are optional (a step normalised on its own). */
+function normStep(s, i, depth, budget){
   s = obj(s);
+  depth = typeof depth === "number" && depth >= 0 ? depth : 0;
+  budget = budget && typeof budget.left === "number" ? budget : null;
   const kind = KINDS.indexOf(s.kind) >= 0 ? s.kind : "http";
+  /* a Condition deeper than the designer draws is not kept */
+  if (kind === "if" && depth >= LIMIT.nest) return null;
+  if (budget){ if (budget.left <= 0) return null; budget.left--; }
   const out = { id: idOk(s.id) || ("s" + rnd(6)), kind: kind,
                 name: str(s.name, LIMIT.name).trim(),
                 /* run this step only when... (empty: always) */
@@ -181,6 +195,13 @@ function normStep(s, i){
     out.seconds = clamp(int(s.seconds, 10), 1, LIMIT.wait);
   } else if (kind === "confirm"){
     out.text = str(s.text, 2000);
+  } else if (kind === "if"){
+    /* the test, written like any other condition; it has no "only when"
+       of its own - it IS one */
+    out.when = "";
+    out.cond = str(s.cond, 300).trim();
+    out.yes = normList(s.yes, depth + 1, budget);
+    out.no = normList(s.no, depth + 1, budget);
   }
   if (kind === "http" || kind === "script"){
     out.save = arr(s.save).slice(0, LIMIT.saves).map(normSave(kind)).filter(Boolean);
@@ -196,8 +217,61 @@ function normStep(s, i){
                    times: clamp(int(r.times, 10), 1, LIMIT.times),
                    every: clamp(int(r.every, 5), 1, LIMIT.every) };
   }
-  if (!out.name) out.name = "Step " + ((i || 0) + 1);
+  if (!out.name) out.name = kind === "if" ? "Condition" : "Step " + ((i || 0) + 1);
   return out;
+}
+/* a list of steps: a design's own, or one branch of a Condition */
+function normList(list, depth, budget){
+  const out = [];
+  arr(list).forEach(x => {
+    if (budget && budget.left <= 0) return;
+    const st = normStep(x, out.length, depth, budget);
+    if (st) out.push(st);
+  });
+  return out;
+}
+
+/* ── steps inside Conditions (5.24) ──────────────────────────────────────
+   Every step, in the order a run meets it - a Condition, then its Yes
+   steps, then its No steps - with where it sits:
+   [{ s, depth, parent (the Condition's id, or ""), branch ("yes" | "no" | ""),
+      list (the array it is in), index (its place there) }] */
+function flatSteps(steps, depth, parent, branch, out){
+  out = out || [];
+  depth = depth || 0;
+  arr(steps).forEach((s, index, list) => {
+    if (!s || typeof s !== "object") return;
+    out.push({ s:s, depth:depth, parent:parent || "", branch:branch || "", list:list, index:index });
+    if (s.kind === "if"){
+      flatSteps(s.yes, depth + 1, s.id, "yes", out);
+      flatSteps(s.no, depth + 1, s.id, "no", out);
+    }
+  });
+  return out;
+}
+/* one step of a design by its id, with where it sits (or null) */
+function findStep(a, id){
+  if (!id) return null;
+  return flatSteps(obj(a).steps).find(x => x.s.id === id) || null;
+}
+/* the same steps with new ids (a copy of a step, of a design) */
+function freshIds(steps){
+  return arr(steps).map(s => {
+    const c = JSON.parse(JSON.stringify(s || {}));
+    c.id = "s" + rnd(6);
+    if (c.kind === "if"){ c.yes = freshIds(c.yes); c.no = freshIds(c.no); }
+    return c;
+  });
+}
+/* no two steps of one design share an id (a pasted copy, a hand-edited
+   file): the second one gets a new one */
+function dedupeIds(steps){
+  const seen = {};
+  flatSteps(steps).forEach(x => {
+    while (seen[x.s.id]) x.s.id = "s" + rnd(6);
+    seen[x.s.id] = 1;
+  });
+  return steps;
 }
 
 function normInput(x){
@@ -219,7 +293,7 @@ function normAuto(a){
     about: str(a.about, 600).trim(),
     system: str(a.system, 120).trim(),
     inputs: arr(a.inputs).slice(0, LIMIT.inputs).map(normInput).filter(i => i.key),
-    steps: arr(a.steps).slice(0, LIMIT.steps).map(normStep),
+    steps: dedupeIds(normList(a.steps, 0, { left:LIMIT.steps })),
     /* the line shown when it finishes: "COI {{coiNumber}} is ready" */
     result: str(a.result, 1000),
     /* ...and when it fails: "Not regenerated: {{errorMessage}}" */
@@ -251,6 +325,13 @@ function normRun(r, replyMax){
            steps: arr(r.steps).slice(0, LIMIT.steps).map(s => {
              s = obj(s);
              return { name: str(s.name, LIMIT.name), kind: KINDS.indexOf(s.kind) >= 0 ? s.kind : "http",
+                      /* (5.24) which step of the design, and where it sat: the
+                         run is drawn again from these, as it went */
+                      sid: idOk(s.sid) || undefined, depth: clamp(int(s.depth, 0), 0, LIMIT.nest) || undefined,
+                      branch: s.branch === "yes" || s.branch === "no" ? s.branch : undefined,
+                      parent: idOk(s.parent) || undefined,
+                      took: s.took === "yes" || s.took === "no" ? s.took : undefined,
+                      off: s.off ? true : undefined,
                       state: str(s.state, 12), status: int(s.status, 0) || undefined, ms: Math.max(0, int(s.ms, 0)),
                       tries: int(s.tries, 0) || undefined, note: str(s.note, 300) || undefined,
                       reply: s.reply && rmax ? str(s.reply, rmax) : undefined,
@@ -373,7 +454,7 @@ function lexCond(src){
     if (s.startsWith("{{", i)){
       const j = s.indexOf("}}", i + 2);
       if (j < 0) return { error:"brace", at:i };
-      out.push({ t:"ph", p:parsePh(s.slice(i + 2, j)) });
+      out.push({ t:"ph", p:parsePh(s.slice(i + 2, j)), at:i, end:j + 2 });
       i = j + 2; continue;
     }
     if (c === '"' || c === "'"){
@@ -383,22 +464,22 @@ function lexCond(src){
         else v += s[j++];
       }
       if (j >= s.length) return { error:"quote", at:i };
-      out.push({ t:"lit", v:v }); i = j + 1; continue;
+      out.push({ t:"lit", v:v, q:true, at:i, end:j + 1 }); i = j + 1; continue;
     }
     const num = /^-?\d+(?:\.\d+)?/.exec(s.slice(i));
     if (num && (c !== "-" || !out.length || out[out.length - 1].t === "op")){
-      out.push({ t:"lit", v:num[0] }); i += num[0].length; continue;
+      out.push({ t:"lit", v:num[0], at:i, end:i + num[0].length }); i += num[0].length; continue;
     }
     const op = /^(==|!=|>=|<=|&&|\|\||=|>|<|!|\(|\))/.exec(s.slice(i));
     if (op){
       const v = op[0] === "=" ? "==" : op[0] === "&&" ? "and" : op[0] === "||" ? "or" : op[0] === "!" ? "not" : op[0];
-      out.push({ t:"op", v:v }); i += op[0].length; continue;
+      out.push({ t:"op", v:v, at:i, end:i + op[0].length }); i += op[0].length; continue;
     }
     const w = /^[A-Za-z]+/.exec(s.slice(i));
     if (w){
       const lw = w[0].toLowerCase();
-      if (["and", "or", "not", "contains", "is", "empty", "starts", "ends", "with"].indexOf(lw) >= 0) out.push({ t:"op", v:lw });
-      else if (lw === "true" || lw === "false") out.push({ t:"lit", v:lw });
+      if (["and", "or", "not", "contains", "is", "empty", "starts", "ends", "with"].indexOf(lw) >= 0) out.push({ t:"op", v:lw, at:i, end:i + w[0].length });
+      else if (lw === "true" || lw === "false") out.push({ t:"lit", v:lw, at:i, end:i + w[0].length });
       else return { error:"word", at:i, word:w[0] };
       i += w[0].length; continue;
     }
@@ -476,6 +557,70 @@ function condNames(src){
   return lx.error ? [] : lx.tokens.filter(k => k.t === "ph" && !k.p.bad).map(k => k.p);
 }
 
+/* ── the Condition builder's rows (5.24) ────────────────────────────────
+   A condition that is a plain list of tests joined by one word - and, or -
+   is shown as rows: [value] [is equal to] [value]. Anything else (brackets,
+   "and" and "or" mixed, a "not" in front) stays text: condRows gives null.
+   condText writes rows back as the text the runner reads. */
+const COND_OPS = ["==", "!=", ">", ">=", "<", "<=", "contains", "not contains", "starts with", "ends with",
+                  "is empty", "is not empty", "is true", "is false"];
+function condRows(src){
+  src = String(src == null ? "" : src);
+  if (!src.trim()) return { join:"and", rows:[] };
+  const lx = lexCond(src);
+  if (lx.error) return null;
+  const t = lx.tokens;
+  const isOp = (k, v) => k && k.t === "op" && k.v === v;
+  const operand = k => k && (k.t === "ph" || k.t === "lit");
+  const text = k => k.t === "ph" ? src.slice(k.at, k.end) : k.v;
+  /* split on the joining words; one kind only */
+  const parts = [[]];
+  let join = "";
+  for (const k of t){
+    if (isOp(k, "(") || isOp(k, ")")) return null;
+    if (isOp(k, "and") || isOp(k, "or")){
+      if (join && join !== k.v) return null;
+      join = k.v; parts.push([]); continue;
+    }
+    parts[parts.length - 1].push(k);
+  }
+  const rows = [];
+  for (const p of parts){
+    let row = null;
+    if (p.length === 1 && operand(p[0])) row = { a:text(p[0]), op:"is true", b:"" };
+    else if (p.length === 2 && isOp(p[0], "not") && operand(p[1])) row = { a:text(p[1]), op:"is false", b:"" };
+    else if (p.length === 3 && operand(p[0]) && operand(p[2]) && p[1].t === "op" &&
+             ["==", "!=", ">", ">=", "<", "<=", "contains"].indexOf(p[1].v) >= 0) row = { a:text(p[0]), op:p[1].v, b:text(p[2]) };
+    else if (p.length === 3 && operand(p[0]) && isOp(p[1], "is") && isOp(p[2], "empty")) row = { a:text(p[0]), op:"is empty", b:"" };
+    else if (p.length === 4 && operand(p[0]) && isOp(p[1], "is") && isOp(p[2], "not") && isOp(p[3], "empty"))
+      row = { a:text(p[0]), op:"is not empty", b:"" };
+    else if (p.length === 4 && operand(p[0]) && operand(p[3]) && isOp(p[1], "not") && isOp(p[2], "contains"))
+      row = { a:text(p[0]), op:"not contains", b:text(p[3]) };
+    else if (p.length === 4 && operand(p[0]) && operand(p[3]) && (isOp(p[1], "starts") || isOp(p[1], "ends")) && isOp(p[2], "with"))
+      row = { a:text(p[0]), op:p[1].v + " with", b:text(p[3]) };
+    if (!row) return null;
+    rows.push(row);
+  }
+  return { join:join || "and", rows:rows };
+}
+/* one side of a test, as the runner reads it: a {{value}} or a number as it
+   is, anything else in quotes */
+function condOperand(v){
+  v = String(v == null ? "" : v).trim();
+  if (/^\{\{[^{}]*\}\}$/.test(v) || /^-?\d+(?:\.\d+)?$/.test(v) || /^(true|false)$/i.test(v)) return v;
+  return '"' + v.replace(/\\/g, "\\\\").replace(/"/g, '\\"') + '"';
+}
+function condText(rows, join){
+  const j = join === "or" ? " or " : " and ";
+  return arr(rows).filter(r => r && String(r.a == null ? "" : r.a).trim()).map(r => {
+    const a = condOperand(r.a), op = COND_OPS.indexOf(r.op) >= 0 ? r.op : "==";
+    if (op === "is true") return a;
+    if (op === "is false") return "not " + a;
+    if (op === "is empty" || op === "is not empty") return a + " " + op;
+    return a + " " + op + " " + condOperand(r.b);
+  }).join(j);
+}
+
 const NUM_RE = /^\s*-?\d+(?:\.\d+)?\s*$/;
 function truthy(v){
   if (v == null) return false;
@@ -541,7 +686,13 @@ function check(a, ctx){
   ctx = obj(ctx);
   const conns = arr(ctx.conns), scripts = arr(ctx.scripts);
   const out = [];
-  const add = (step, field, code, extra) => out.push(Object.assign({ step:step, field:field, code:code }, extra || {}));
+  /* step: the step's place in run order (flatSteps), -1 for the design
+     itself; id: the step's id (5.24 - the designer finds it by this) */
+  const F = flatSteps(a.steps);
+  const place = {};
+  F.forEach((x, i) => { place[x.s.id] = i; });
+  const add = (step, field, code, extra) => out.push(Object.assign({ step:step, field:field, code:code },
+    step >= 0 && F[step] ? { id:F[step].s.id } : {}, extra || {}));
 
   if (!a.steps.length) add(-1, "steps", "noSteps");
   const keys = {};
@@ -553,14 +704,18 @@ function check(a, ctx){
     if (inp.pattern){ try { new RegExp(inp.pattern); } catch(e){ add(-1, "input" + i, "badPattern", { name:inp.key }); } }
   });
 
-  /* what exists so far: inputs, the built-ins, the record */
+  /* what exists so far: inputs, the built-ins, the record. A value saved
+     in one branch of a Condition only is "maybe" after it - it is empty
+     when the other branch ran. */
   const known = {};
   a.inputs.forEach(inp => { known["input." + inp.key] = "input"; });
   BUILTINS.forEach(k => { known[k] = "builtin"; });
   RECORD_FIELDS.forEach(k => { known["record." + k] = "builtin"; });
-  const saved = {};
+  /* where each name is first saved, so "used too early" can say so */
+  const first = {};
+  F.forEach((x, i) => (x.s.save || []).forEach(v => { if (first[v.name] == null) first[v.name] = i; }));
 
-  const reads = (si, field, text, conn, extra) => {
+  const reads = (si, field, text, conn, kn, extra, quiet) => {
     placeholders(text).forEach(p => {
       if (p.bad === "name") return add(si, field, "badPh", { name:p.raw });
       if (p.bad === "filter") add(si, field, "badFilter", { name:p.full, filters:p.badFilters.join(", ") });
@@ -569,11 +724,16 @@ function check(a, ctx){
         else if (connSecrets(conn).indexOf(p.name) < 0) add(si, field, "secretUnknown", { name:p.full, conn:conn.name });
         return;
       }
-      if (known[p.full] || (extra && extra[p.full])) return;
-      add(si, field, saved[p.full] === "later" ? "usedTooEarly" : "unknownPh", { name:p.full });
+      if (extra && extra[p.full]) return;
+      if (kn[p.full]){
+        if (kn[p.full] === "maybe" && !quiet) add(si, field, "maybeEmpty", { name:p.full, warn:true });
+        return;
+      }
+      const f = first[p.full];
+      add(si, field, f == null ? "unknownPh" : (si < 0 || f > si) ? "usedTooEarly" : "otherBranch", { name:p.full });
     });
   };
-  const readsCond = (si, field, src, conn, extra) => {
+  const readsCond = (si, field, src, conn, kn, extra) => {
     if (!src) return;
     const pc = parseCond(src);
     if (pc.error) return add(si, field, "badCond", { why:pc.error });
@@ -581,30 +741,42 @@ function check(a, ctx){
        character at a time; the tray program refuses one, and so does this */
     const names = condNames(src);
     names.filter(p => p.ns === "secret").forEach(p => add(si, field, "secretInCond", { name:p.full }));
-    reads(si, field, names.filter(p => p.ns !== "secret").map(p => "{{" + p.raw + "}}").join(" "), conn, extra);
+    /* a test is where an empty value is expected - no "maybe" warning */
+    reads(si, field, names.filter(p => p.ns !== "secret").map(p => "{{" + p.raw + "}}").join(" "), conn, kn, extra, true);
   };
 
-  /* every name saved anywhere, so "used too early" can say so */
-  a.steps.forEach(s => (s.save || []).forEach(v => { if (!saved[v.name]) saved[v.name] = "later"; }));
-
-  a.steps.forEach((s, si) => {
+  const walk = (list, kn) => list.forEach(s => {
+    const si = place[s.id];
     const conn = s.conn ? conns.find(c => c.id === s.conn) || null : null;
-    readsCond(si, "when", s.when, conn);
+    if (s.kind === "if"){
+      if (!s.cond) add(si, "cond", "noCond");
+      else readsCond(si, "cond", s.cond, null, kn);
+      if (!s.yes.length && !s.no.length) add(si, "cond", "emptyIf", { warn:true });
+      const ky = Object.assign({}, kn), kno = Object.assign({}, kn);
+      walk(s.yes, ky); walk(s.no, kno);
+      Object.keys(ky).concat(Object.keys(kno)).forEach(k => {
+        if (kn[k] && kn[k] !== "maybe") return;
+        kn[k] = ky[k] && kno[k] && ky[k] !== "maybe" && kno[k] !== "maybe" ? "saved" : "maybe";
+      });
+      if (ky.status || kno.status) kn.status = "builtin";
+      return;
+    }
+    readsCond(si, "when", s.when, conn, kn);
     if (s.kind === "http"){
       if (!s.conn) add(si, "conn", "noConn");
       else if (!conn) add(si, "conn", "connGone");
       else if (!baseParts(conn.base)) add(si, "conn", "badBase", { conn:conn.name });
       if (s.path && !/^[\/?]/.test(s.path) && !/^\{\{/.test(s.path)) add(si, "path", "pathSlash");
-      reads(si, "path", s.path, conn);
-      s.query.forEach(q => { reads(si, "query", q[0] + " " + q[1], conn); });
+      reads(si, "path", s.path, conn, kn);
+      s.query.forEach(q => { reads(si, "query", q[0] + " " + q[1], conn, kn); });
       s.headers.forEach(h => {
         if (!/^[A-Za-z0-9!#$%&'*+.^_`|~-]+$/.test(h[0])) add(si, "headers", "badHeader", { name:h[0] });
         else if (FORBIDDEN_HEADERS.indexOf(h[0].toLowerCase()) >= 0) add(si, "headers", "setByKalKech", { name:h[0] });
-        reads(si, "headers", h[1], conn);
+        reads(si, "headers", h[1], conn, kn);
       });
       if ((s.method === "GET" || s.method === "HEAD") && s.bodyType !== "none") add(si, "body", "getBody");
-      if (s.bodyType === "form") s.form.forEach(f => reads(si, "body", f[0] + " " + f[1], conn));
-      else if (s.bodyType !== "none") reads(si, "body", s.body, conn);
+      if (s.bodyType === "form") s.form.forEach(f => reads(si, "body", f[0] + " " + f[1], conn, kn));
+      else if (s.bodyType !== "none") reads(si, "body", s.body, conn, kn);
       if (!expectOk(s.expect)) add(si, "expect", "badExpect");
     } else if (s.kind === "script"){
       const sc = scripts.find(x => x.id === s.script) || null;
@@ -612,13 +784,13 @@ function check(a, ctx){
       else if (!sc) add(si, "script", "scriptGone");
       else if (!/\.(bat|cmd)$/i.test(sc.file || "")) add(si, "script", "scriptKind", { name:sc.file });
       if (s.conn && !conn) add(si, "conn", "connGone");
-      s.args.forEach(p => reads(si, "args", p[1], conn));
+      s.args.forEach(p => reads(si, "args", p[1], conn, kn));
       if (sc) arr(sc.params).forEach(pn => {
         if (!s.args.some(p => p[0].toLowerCase() === String(pn).toLowerCase())) add(si, "args", "argMissing", { name:pn, warn:true });
       });
       if (!/^(any|\d+(,\d+)*)$/i.test(s.expect)) add(si, "expect", "badExpect");
     } else if (s.kind === "confirm"){
-      reads(si, "text", s.text, null);
+      reads(si, "text", s.text, null, kn);
     }
     /* what this step saves exists from here on: for its own "repeat
        until", and for every step after it */
@@ -631,15 +803,58 @@ function check(a, ctx){
         add(si, "save", "aiSeesSecret", { name:v.name, warn:true });
       mine[v.name] = 1;
     });
-    if (s.repeat && s.repeat.until) readsCond(si, "until", s.repeat.until, conn, Object.assign({ status:1 }, mine));
-    if (s.okWhen) readsCond(si, "okWhen", s.okWhen, conn, Object.assign({ status:1 }, mine));
+    if (s.repeat && s.repeat.until) readsCond(si, "until", s.repeat.until, conn, kn, Object.assign({ status:1 }, mine));
+    if (s.okWhen) readsCond(si, "okWhen", s.okWhen, conn, kn, Object.assign({ status:1 }, mine));
     if (s.reply === "ai") add(si, "reply", "aiSeesReply", { warn:true });
-    Object.keys(mine).forEach(k => { known[k] = "saved"; });
-    if (s.kind === "http" || s.kind === "script") known.status = "builtin";
+    Object.keys(mine).forEach(k => { kn[k] = "saved"; });
+    if (s.kind === "http" || s.kind === "script") kn.status = "builtin";
   });
-  reads(-1, "result", a.result, null);
-  reads(-1, "resultFail", a.resultFail, null);
+  walk(a.steps, known);
+  /* the closing lines: a value may well be empty there - no warning */
+  reads(-1, "result", a.result, null, known, null, true);
+  reads(-1, "resultFail", a.resultFail, null, known, null, true);
   return out;
+}
+
+/* The values a step can read, for the designer's "insert a value" list
+   (5.24): what is known before it - the inputs, what earlier steps saved
+   (from one branch of a Condition only: maybe), the record, the built-ins
+   - and what it saves itself (its own "repeat until" and "success also
+   needs" may read those, and {{status}}). id "" or "finish": the end. */
+function valuesAt(a, id){
+  a = normAuto(a);
+  const kn = {};
+  let hit = null;
+  const walk = (list, k) => {
+    for (const s of list){
+      if (hit) return;
+      if (s.id === id){ hit = { before:Object.assign({}, k), step:s }; return; }
+      if (s.kind === "if"){
+        const ky = Object.assign({}, k), kno = Object.assign({}, k);
+        walk(s.yes, ky); if (hit) return;
+        walk(s.no, kno); if (hit) return;
+        Object.keys(ky).concat(Object.keys(kno)).forEach(n => {
+          if (k[n] && !k[n].maybe) return;
+          const y = ky[n], o = kno[n];
+          k[n] = Object.assign({}, y || o, { maybe:!(y && o && !y.maybe && !o.maybe) });
+        });
+        continue;
+      }
+      (s.save || []).forEach(v => { k[v.name] = { name:v.name, step:s.name, show:v.show, on:v.on, maybe:false }; });
+      if (s.kind === "http" || s.kind === "script") k.status = { name:"status", step:s.name, maybe:false };
+    }
+  };
+  walk(a.steps, kn);
+  const before = hit ? hit.before : kn;
+  const step = hit ? hit.step : null;
+  return {
+    inputs: a.inputs.map(i => ({ name:"input." + i.key, label:i.label || i.key, kind:i.kind })),
+    saved: Object.keys(before).filter(n => n !== "status").map(n => before[n]),
+    status: !!before.status,
+    mine: step && step.save ? step.save.map(v => ({ name:v.name, step:step.name, show:v.show, on:v.on })) : [],
+    builtins: BUILTINS.slice(),
+    record: RECORD_FIELDS.map(f => "record." + f)
+  };
 }
 /* "2xx", "200", "200,201,404", "2xx,404", "any" */
 function expectOk(e){ return /^(any|([1-5]xx|\d{3})(\s*,\s*([1-5]xx|\d{3}))*)$/i.test(String(e || "").trim()); }
@@ -706,12 +921,14 @@ function forAI(store){
   const compact = o => { Object.keys(o).forEach(k => { if (o[k] === undefined) delete o[k]; }); return o; };
   return store.list.filter(a => a.ai && a.steps.length).slice(0, 40).map(a => {
     const gives = [], givesOnFail = [];
-    a.steps.forEach(s => (s.save || []).forEach(v => {
+    /* steps inside a Condition's branches count too (5.24) */
+    const all = flatSteps(a.steps).map(x => x.s);
+    all.forEach(s => (s.save || []).forEach(v => {
       if (v.show !== "ai") return;
       const list = v.on === "fail" ? givesOnFail : gives;
       if (list.indexOf(v.name) < 0) list.push(v.name);
     }));
-    const replies = a.steps.filter(s => s.reply === "ai").map(s => s.name);
+    const replies = all.filter(s => s.reply === "ai").map(s => s.name);
     return compact({
       name: a.name,
       about: a.about || undefined,
@@ -721,7 +938,7 @@ function forAI(store){
         required: i.required, example: i.example || undefined,
         choices: i.choices.length ? i.choices : undefined })),
       asksFirst: a.ask,
-      steps: a.steps.map(s => s.name),
+      steps: all.map(s => s.name),
       gives: gives,
       /* values it is given only when the job fails - the API's error */
       givesOnFail: givesOnFail.length ? givesOnFail : undefined,
@@ -899,14 +1116,23 @@ async function run(a, env){
   const conns = arr(env.conns).map(normConn);
   const vals = Object.assign({}, obj(env.values));
   const mask = arr(env.mask).slice();
+  /* every step in run order, Conditions' branches included (5.24): the
+     card and the run view draw them from here, as they went */
+  const F = flatSteps(a.steps);
   const R = {
     id: idOk(env.runId) || newId("r"),
     auto: a.id, name: a.name, by: env.by === "assistant" ? "assistant" : "me", record: str(env.record, 40),
     started: new Date().toISOString(), state: "running",
     inputs: {}, values: {}, hidden: [],
-    steps: a.steps.map(s => ({ name:s.name, kind:s.kind, state:"wait" })),
+    steps: F.map(x => {
+      const st = { sid:x.s.id, name:x.s.name, kind:x.s.kind, state:"wait" };
+      if (x.depth){ st.depth = x.depth; st.branch = x.branch; st.parent = x.parent; }
+      return st;
+    }),
     result: "", error: ""
   };
+  const stOf = {};
+  F.forEach((x, i) => { stOf[x.s.id] = R.steps[i]; });
   a.inputs.forEach(inp => {
     if (inp.kind === "secret") R.inputs[inp.key] = vals["input." + inp.key] ? "🔒" : "";
     else R.inputs[inp.key] = str(vals["input." + inp.key], 300);
@@ -921,32 +1147,66 @@ async function run(a, env){
   };
   tick();
 
-  let failed = false;
-  const last = env.upTo == null ? a.steps.length - 1 : Math.min(a.steps.length - 1, env.upTo);
-  for (let i = 0; i <= last; i++){
-    const s = a.steps[i], st = R.steps[i];
-    if (stopped()){ R.state = "stopped"; break; }
+  /* "Try up to here": stop after this step. upToId (5.24) names any step;
+     upTo - a place in the top list - is the older way, and still works */
+  let upToId = env.upToId ? String(env.upToId) : "";
+  if (!upToId && env.upTo != null && a.steps.length)
+    upToId = a.steps[Math.max(0, Math.min(a.steps.length - 1, int(env.upTo, 0)))].id;
+  let failed = false, halt = false;
+  /* the branch a Condition did not take: skipped, and marked as never in
+     the running at all */
+  const offAll = list => flatSteps(list).forEach(x => { const st = stOf[x.s.id]; st.state = "skip"; st.off = true; });
+
+  async function runList(list){
+    for (const s of list){
+      if (failed || halt || R.state === "stopped") return;
+      if (stopped()){ R.state = "stopped"; return; }
+      await runOne(s, stOf[s.id]);
+      if (s.id === upToId) halt = true;
+    }
+  }
+
+  async function runOne(s, st){
     st.state = "run"; tick();
     const began = Date.now();
+    if (s.kind === "if"){
+      let c;
+      try { c = await call("check", body({ when:s.cond })); }
+      catch(e){ c = { ok:false, error:str((e && e.message) || e, 300) }; }
+      st.ms = Date.now() - began;
+      if (!c.ok){
+        /* a test that cannot be read decides nothing: neither branch runs */
+        st.state = "fail"; st.note = str(c.error || "check", 300);
+        offAll(s.yes); offAll(s.no); tick();
+        if (s.onFail !== "continue") failed = true;
+        return;
+      }
+      st.took = c.result ? "yes" : "no";
+      st.state = "ok";
+      offAll(c.result ? s.no : s.yes);
+      tick();
+      await runList(c.result ? s.yes : s.no);
+      return;
+    }
     try {
       if (s.kind === "wait" || s.kind === "confirm"){
         if (s.when){
           const c = await call("check", body({ when:s.when }));
-          if (!c.ok){ st.state = "fail"; st.note = c.error || "check"; if (s.onFail !== "continue"){ failed = true; break; } continue; }
-          if (!c.result){ st.state = "skip"; continue; }
+          if (!c.ok){ st.state = "fail"; st.note = c.error || "check"; if (s.onFail !== "continue") failed = true; return; }
+          if (!c.result){ st.state = "skip"; return; }
         }
         if (s.kind === "wait"){
           st.state = "sleep"; st.until = Date.now() + s.seconds * 1000; tick();
           const ok = await env.sleep(s.seconds * 1000);
-          if (!ok){ st.state = "stop"; R.state = "stopped"; break; }
+          if (!ok){ st.state = "stop"; R.state = "stopped"; return; }
           st.state = "ok";
         } else {
           st.state = "ask"; tick();
           const yes = await env.ask(show(s.text, vals, R.hidden), s);
-          if (!yes){ st.state = "no"; R.state = "stopped"; break; }
+          if (!yes){ st.state = "no"; R.state = "stopped"; return; }
           st.state = "ok";
         }
-        continue;
+        return;
       }
 
       const conn = s.conn ? conns.find(c => c.id === s.conn) || null : null;
@@ -994,35 +1254,45 @@ async function run(a, env){
           st.state = "run"; tick();
         }
       }
-      if (R.state === "stopped") break;
-      if (resp.skipped){ st.state = "skip"; continue; }
+      if (R.state === "stopped") return;
+      if (resp.skipped){ st.state = "skip"; return; }
       const gaveUp = resp.ok && s.repeat && s.repeat.until && resp.until !== true;
       if (!resp.ok || gaveUp){
         st.state = "fail";
         st.note = gaveUp ? "stillNot" : str(resp.error || "failed", 300);
-        if (s.onFail === "continue") continue;
-        failed = true; break;
+        if (s.onFail !== "continue") failed = true;
+        return;
       }
       st.state = "ok";
     } catch(e){
       st.state = "fail"; st.note = str((e && e.message) || e, 300);
-      if (s.onFail !== "continue"){ failed = true; break; }
+      if (s.onFail !== "continue") failed = true;
     } finally {
       st.ms = Date.now() - began;
       tick();
     }
   }
+
+  await runList(a.steps);
   if (R.state === "running")
-    R.state = failed ? "failed" : R.steps.slice(0, last + 1).some(x => x.state === "fail") ? "partial" : "ok";
+    R.state = failed ? "failed" : R.steps.some(x => x.state === "fail") ? "partial" : "ok";
   /* the hidden values are forgotten now, not when the tray program next
      tidies up */
   try { await call("end", { run:R.id }); } catch(e){}
   R.ended = new Date().toISOString();
   R.ms = Date.now() - t0;
   const tpl = resultTemplate(a, R);
-  R.result = tpl ? show(tpl, vals, R.hidden) : "";
+  R.result = tpl ? show(tpl, Object.assign(unsetOf(a), vals), R.hidden) : "";
   tick();
   return R;
+}
+/* every value the design saves somewhere, as empty: one a step did not
+   save - its branch did not run, it failed first - reads as nothing in
+   the closing line, not as {{its name}} */
+function unsetOf(a){
+  const o = {};
+  flatSteps(obj(a).steps).forEach(x => arr(x.s.save).forEach(v => { if (v && v.name) o[v.name] = ""; }));
+  return o;
 }
 /* which line it ends with: the success one, or - when it failed - the
    failure one (none when you stopped it) */
@@ -1049,7 +1319,7 @@ function split(a, R){
     const v = R.inputs[k];
     if (v === "\uD83D\uDD12") hidden.push("input." + k); else ins["input." + k] = v;
   });
-  const vals = Object.assign({}, ins, me, ai);
+  const vals = Object.assign(unsetOf(a), ins, me, ai);
   const tpl = resultTemplate(a, R || {});
   /* the whole replies the assistant may read, each as it came (masked by
      the tray program), cut to a size a model reads without trouble */
@@ -1069,7 +1339,9 @@ const api = {
   check, expectOk, inputsCheck, cmdSafe,
   forAI, find, fromText,
   jsonPathParts, jsonGet, jsonPaths, asText,
-  stepWire, connWire, run, split, resultTemplate
+  stepWire, connWire, run, split, resultTemplate,
+  /* 5.24: Conditions and the designer */
+  COND_OPS, normList, flatSteps, findStep, freshIds, valuesAt, condRows, condText, condOperand
 };
 if (typeof module !== "undefined" && module.exports) module.exports = api;
 if (root) root.DossierAuto = api;
