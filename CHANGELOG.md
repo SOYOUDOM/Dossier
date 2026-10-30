@@ -6,6 +6,33 @@ holds — which is what to paste into a bug report.
 
 ---
 
+## 5.23.0 - 2026-10-30
+
+**Automations: the whole reply, and a different path for failure.**
+
+- **Keep the whole reply.** An API call or script step can keep its whole
+  reply - for you, or for you and the assistant. It is folded under the step
+  on the run card (JSON laid out to be read), when the step works and when
+  it fails. Passwords and tokens are masked in it before it leaves the
+  KalKech program.
+- **Values on success, on failure, or always.** Each value saved from a
+  reply now says when it is kept. An API's error reply is usually a
+  different JSON (`{"error":{"message":"Policy not found"}}`): save its
+  message *On failure*, and you have it when the step fails.
+- **Success also needs.** For an API that answers 200 even when it failed
+  (`{"success": false}`), a test on the reply - `{{success}} == true` -
+  decides whether the step worked.
+- **When it fails, say.** A second last line, for a run that failed:
+  `Not regenerated for {{input.policy}}: {{errorMessage}}`.
+- **The assistant** is told which values it gets only on failure and which
+  replies it will read; after a run it gets the failure line, those values
+  and the reply you allowed, and explains the error in plain words. Its
+  conversation keeps an automation's line whole (up to 10,000 characters).
+- **To get it:** quit KalKech from the icon by the clock (right-click →
+  Quit) and run `KalKech.bat` again - the tray program changed too.
+
+---
+
 ## 5.22.1 - 2026-10-30
 
 **The secret box can be typed into again.**

@@ -47,6 +47,12 @@ const BODIES = ["none", "json", "form", "xml", "text"];
 const AUTHS = ["none", "windows", "basic", "header", "bearer"];
 const AUTH_SECRETS = { none:[], windows:[], basic:["username", "password"], header:["apiKey"], bearer:["token"] };
 const SHOWS = ["hidden", "me", "ai"];
+/* when a value is saved: when the step worked, when it failed (an API's
+   error reply is often a different JSON from its success reply), or both */
+const SAVE_ON = ["ok", "fail", "any"];
+/* the whole reply of a step, kept: not at all, for you, or for you and
+   the assistant */
+const REPLY_SHOWS = ["", "me", "ai"];
 const FROM = { http:["json", "header", "status", "regex", "body"], script:["output", "json", "regex", "exit"] };
 const INPUT_KINDS = ["text", "number", "date", "choice", "secret"];
 /* values every step can use without saving them first */
@@ -139,7 +145,8 @@ function normSave(kind){
     const name = str(x.name, 40).trim();
     if (!name) return null;
     return { name: name, from: from.indexOf(x.from) >= 0 ? x.from : from[0],
-             path: str(x.path, 300).trim(), show: SHOWS.indexOf(x.show) >= 0 ? x.show : "me" };
+             path: str(x.path, 300).trim(), show: SHOWS.indexOf(x.show) >= 0 ? x.show : "me",
+             on: SAVE_ON.indexOf(x.on) >= 0 ? x.on : "ok" };
   };
 }
 
@@ -177,6 +184,13 @@ function normStep(s, i){
   }
   if (kind === "http" || kind === "script"){
     out.save = arr(s.save).slice(0, LIMIT.saves).map(normSave(kind)).filter(Boolean);
+    /* the status is not always the whole story: an API that answers 200
+       with {"success": false} has failed. This is read after the values
+       are saved, and the step only counts as done when it is true. */
+    out.okWhen = str(s.okWhen, 300).trim();
+    /* keep the whole reply (or a script's whole output), as it came -
+       passwords and tokens masked - for you, or for you and the assistant */
+    out.reply = REPLY_SHOWS.indexOf(s.reply) >= 0 ? s.reply : "";
     const r = obj(s.repeat);
     out.repeat = { until: str(r.until, 300).trim(),
                    times: clamp(int(r.times, 10), 1, LIMIT.times),
@@ -208,6 +222,8 @@ function normAuto(a){
     steps: arr(a.steps).slice(0, LIMIT.steps).map(normStep),
     /* the line shown when it finishes: "COI {{coiNumber}} is ready" */
     result: str(a.result, 1000),
+    /* ...and when it fails: "Not regenerated: {{errorMessage}}" */
+    resultFail: str(a.resultFail, 1000),
     /* may the assistant start it, and does it ask you first when it does */
     ai: a.ai !== false,
     ask: a.ask !== false,
@@ -217,8 +233,9 @@ function normAuto(a){
 
 /* a past run, as kept in the history: never a hidden value (the page never
    had one), never a secret input, never the reply text */
-function normRun(r){
+function normRun(r, replyMax){
   r = obj(r);
+  const rmax = replyMax == null ? 20000 : replyMax;
   const vals = {};
   Object.keys(obj(r.values)).slice(0, 40).forEach(k => {
     const v = obj(r.values[k]);
@@ -235,7 +252,10 @@ function normRun(r){
              s = obj(s);
              return { name: str(s.name, LIMIT.name), kind: KINDS.indexOf(s.kind) >= 0 ? s.kind : "http",
                       state: str(s.state, 12), status: int(s.status, 0) || undefined, ms: Math.max(0, int(s.ms, 0)),
-                      tries: int(s.tries, 0) || undefined, note: str(s.note, 300) || undefined };
+                      tries: int(s.tries, 0) || undefined, note: str(s.note, 300) || undefined,
+                      reply: s.reply && rmax ? str(s.reply, rmax) : undefined,
+                      replyShow: s.reply && rmax && (s.replyShow === "ai" || s.replyShow === "me") ? s.replyShow : undefined,
+                      replyCut: s.reply && rmax && (s.replyCut || String(s.reply).length > rmax) ? true : undefined };
            }),
            result: str(r.result, 1200), error: str(r.error, 300) };
 }
@@ -612,10 +632,13 @@ function check(a, ctx){
       mine[v.name] = 1;
     });
     if (s.repeat && s.repeat.until) readsCond(si, "until", s.repeat.until, conn, Object.assign({ status:1 }, mine));
+    if (s.okWhen) readsCond(si, "okWhen", s.okWhen, conn, Object.assign({ status:1 }, mine));
+    if (s.reply === "ai") add(si, "reply", "aiSeesReply", { warn:true });
     Object.keys(mine).forEach(k => { known[k] = "saved"; });
     if (s.kind === "http" || s.kind === "script") known.status = "builtin";
   });
   reads(-1, "result", a.result, null);
+  reads(-1, "resultFail", a.resultFail, null);
   return out;
 }
 /* "2xx", "200", "200,201,404", "2xx,404", "any" */
@@ -682,8 +705,13 @@ function forAI(store){
   /* no empty keys: what is not there is not sent */
   const compact = o => { Object.keys(o).forEach(k => { if (o[k] === undefined) delete o[k]; }); return o; };
   return store.list.filter(a => a.ai && a.steps.length).slice(0, 40).map(a => {
-    const gives = [];
-    a.steps.forEach(s => (s.save || []).forEach(v => { if (v.show === "ai" && gives.indexOf(v.name) < 0) gives.push(v.name); }));
+    const gives = [], givesOnFail = [];
+    a.steps.forEach(s => (s.save || []).forEach(v => {
+      if (v.show !== "ai") return;
+      const list = v.on === "fail" ? givesOnFail : gives;
+      if (list.indexOf(v.name) < 0) list.push(v.name);
+    }));
+    const replies = a.steps.filter(s => s.reply === "ai").map(s => s.name);
     return compact({
       name: a.name,
       about: a.about || undefined,
@@ -694,7 +722,11 @@ function forAI(store){
         choices: i.choices.length ? i.choices : undefined })),
       asksFirst: a.ask,
       steps: a.steps.map(s => s.name),
-      gives: gives
+      gives: gives,
+      /* values it is given only when the job fails - the API's error */
+      givesOnFail: givesOnFail.length ? givesOnFail : undefined,
+      /* steps whose whole reply it is shown after a run */
+      replies: replies.length ? replies : undefined
     });
   });
 }
@@ -850,7 +882,9 @@ function stepWire(s, ctx){
     w.timeout = s.timeout;
     w.expect = s.expect;
   }
-  w.save = (s.save || []).map(v => ({ name:v.name, from:v.from, path:v.path, show:v.show }));
+  w.save = (s.save || []).map(v => ({ name:v.name, from:v.from, path:v.path, show:v.show, on:v.on }));
+  w.okWhen = s.okWhen || "";
+  w.reply = s.reply || "";
   return w;
 }
 function connWire(c){
@@ -944,6 +978,12 @@ async function run(a, env){
            that ran last - for the "only when" of the next one */
         if (resp.status != null && resp.status !== "") vals.status = String(resp.status);
         st.missing = arr(resp.missing).length ? arr(resp.missing).slice(0, 12) : undefined;
+        /* the whole reply, when the step keeps it - on success and on
+           failure alike, since the error reply is the one worth reading */
+        if (s.reply && resp.reply != null){
+          st.reply = str(resp.reply, 200000); st.replyShow = s.reply; st.replyCut = !!resp.replyCut;
+          st.type = str(resp.contentType, 120);
+        }
         if (env.test){ st.excerpt = str(resp.excerpt, 20000); st.type = str(resp.contentType, 120); st.url = str(resp.url, 600);
                        st.exit = resp.exit; st.headers = resp.headers; }
         if (!resp.ok || !s.repeat || !s.repeat.until || resp.until === true) break;
@@ -979,9 +1019,16 @@ async function run(a, env){
   try { await call("end", { run:R.id }); } catch(e){}
   R.ended = new Date().toISOString();
   R.ms = Date.now() - t0;
-  R.result = a.result ? show(a.result, vals, R.hidden) : "";
+  const tpl = resultTemplate(a, R);
+  R.result = tpl ? show(tpl, vals, R.hidden) : "";
   tick();
   return R;
+}
+/* which line it ends with: the success one, or - when it failed - the
+   failure one (none when you stopped it) */
+function resultTemplate(a, R){
+  if (!R || R.state === "stopped" || R.state === "running") return "";
+  return R.state === "failed" ? (a.resultFail || "") : (a.result || "");
 }
 
 /* The values a finished run shows, split by who may see them: "ai" ones
@@ -1003,13 +1050,18 @@ function split(a, R){
     if (v === "\uD83D\uDD12") hidden.push("input." + k); else ins["input." + k] = v;
   });
   const vals = Object.assign({}, ins, me, ai);
-  return { ai:ai, me:me,
-           resultForAI: a.result ? show(a.result, vals, hidden, masks) : "",
-           result: a.result ? show(a.result, vals, hidden) : "" };
+  const tpl = resultTemplate(a, R || {});
+  /* the whole replies the assistant may read, each as it came (masked by
+     the tray program), cut to a size a model reads without trouble */
+  const replies = arr(R && R.steps).filter(st => st.replyShow === "ai" && st.reply)
+    .map(st => ({ step:st.name, status:st.status, text:str(st.reply, 4000), cut:!!st.replyCut || String(st.reply).length > 4000 }));
+  return { ai:ai, me:me, replies:replies,
+           resultForAI: tpl ? show(tpl, vals, hidden, masks) : "",
+           result: tpl ? show(tpl, vals, hidden) : "" };
 }
 
 const api = {
-  LIMIT, KINDS, METHODS, BODIES, AUTHS, AUTH_SECRETS, SHOWS, FROM, INPUT_KINDS, BUILTINS, RECORD_FIELDS,
+  LIMIT, KINDS, METHODS, BODIES, AUTHS, AUTH_SECRETS, SHOWS, SAVE_ON, REPLY_SHOWS, FROM, INPUT_KINDS, BUILTINS, RECORD_FIELDS,
   FILTERS, RESERVED, FORBIDDEN_HEADERS,
   newId, nameOk, normConn, normStep, normInput, normAuto, normRun, normStore, connSecrets, baseParts,
   parsePh, placeholders, show, builtins, filtered,
@@ -1017,7 +1069,7 @@ const api = {
   check, expectOk, inputsCheck, cmdSafe,
   forAI, find, fromText,
   jsonPathParts, jsonGet, jsonPaths, asText,
-  stepWire, connWire, run, split
+  stepWire, connWire, run, split, resultTemplate
 };
 if (typeof module !== "undefined" && module.exports) module.exports = api;
 if (root) root.DossierAuto = api;

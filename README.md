@@ -1593,7 +1593,9 @@ workspace folder its scripts are run.
    choice (UAT, PROD), or **typed by me (secret)** - asked for each time in a
    password box, never saved, never shown to the assistant.
 4. Fill in the **Steps** (below), and what to say **When it finishes**, for
-   example `COI {{coiNumber}} is ready for {{input.policy}}.`
+   example `COI {{coiNumber}} is ready for {{input.policy}}.` - and **When it
+   fails**, for example `Not regenerated for {{input.policy}}: {{errorMessage}}`
+   (since 5.23).
 5. **Save.** Anything that stops it running is listed in words above the Save
    button ("{{job}} is used before the step that saves it"), and the list
    shows it in orange until it is fixed.
@@ -1613,6 +1615,53 @@ connection and put in your API's real address.
 Each step can have **Only run when** (a condition), **Repeat until** (run it
 again every few seconds until a condition is true, at most a number of
 times) and **If it fails**: stop the run, or carry on with the next step.
+API calls and scripts also have **Success also needs** and **Keep the whole
+reply** (next sections).
+
+### What if the API answers differently when it fails?
+
+Most APIs send one JSON when it works and another when it does not - for
+example `{"data":{"ref":"R-1"}}`, but `{"error":{"code":"NOT_FOUND",
+"message":"Policy not found"}}` with status 404. Since 5.23 KalKech reads
+both:
+
+1. **Save from the reply**: each value has **when to keep it** - *On
+   success* (the default), *On failure*, or *Always*. Save `errorMessage`
+   from `error.message` *On failure*, and it is kept when the step fails,
+   from the error reply.
+2. **Success also needs**: for an API that answers **200 even when it
+   failed** (`{"success": false, "errorMessage": "Policy is lapsed"}`), write
+   a test on the saved values - `{{success}} == true`, or
+   `{{errorCode}} is empty`. The step only counts as done when the status is
+   right **and** the test is true; otherwise it fails with *"the reply says
+   it did not work"*, and the *On failure* values are kept. (Save the value
+   the test reads *Always*, so it is there either way.)
+3. **When it fails, say** writes the last line from the failure values:
+   `Not regenerated for {{input.policy}}: {{errorMessage}}`. A run that
+   worked ends with *When it finishes, say*; a run you stopped, with
+   neither.
+
+If the step's **If it fails** is *Carry on*, the next steps run and can use
+the failure values too.
+
+### How do I get the whole reply?
+
+Set the step's **Keep the whole reply**:
+
+- **No** (the default).
+- **Yes - for me**: the reply comes back as it was sent (JSON laid out to be
+  read; for a script, everything it printed), folded under the step on the
+  run card - when the step works **and when it fails**, which is when it is
+  most useful.
+- **Yes - for me and the assistant**: the assistant reads it too, after the
+  run (up to about 9,000 characters), so it can explain an error in the
+  API's own words.
+
+Passwords, keys and tokens are masked in it before it leaves the KalKech
+program: every secret and hidden value of the run, and anything that looks
+like a password or token field. Anything else in the reply is shown as it
+is, so give it to the assistant only when that helps. The run history keeps
+only a short copy (2,000 characters).
 
 ### How do I use a value from one step in the next one?
 
@@ -1631,7 +1680,8 @@ Every step after it can then write `{{name}}` anywhere: in the path, a
 query value, a header, the body. Click a chip under the step ("Values you
 can use") to type it where your cursor is.
 
-And choose **who may see it**:
+Choose **when to keep it** - *On success* (the default), *On failure* (from
+the error reply) or *Always* - and **who may see it**:
 
 | Shown to | Meaning |
 |---|---|
@@ -1806,9 +1856,13 @@ it needs (name, label, kind, an example), whether you are asked first, the
 names of its steps, and the names of the values it will be shown. **Never** a
 connection, an address, a header, a script or a secret's name.
 
-After a run: one line - which automation, how it went, the values it was run
-with (not a secret one), and only the values marked *Me and the assistant*.
-Values for you only, hidden values and secrets are not in it.
+After a run: one line - which automation, how it went (and why, when a step
+failed), the values it was run with (not a secret one), only the values
+marked *Me and the assistant*, the *When it finishes* or *When it fails*
+line, and the whole reply of a step set to *for me and the assistant*.
+Values for you only, hidden values and secrets are not in it. Before a run
+it also knows which values it gets only on failure, and which steps' replies
+it will read.
 
 ### How do I test a step while I design it?
 
@@ -1832,6 +1886,7 @@ The failed step says why, in words. The usual ones:
 | *the answer was 401 Unauthorized* | The sign-in was refused: check the secret, or the sign-in step's saved token. |
 | *{{token}} has no value* | The step that saves it found nothing: check its JSON path with **Try up to here**. |
 | *not in the reply: token* | The path does not match the reply - click the right one under the reply. |
+| *the reply says it did not work* | The status was fine, but **Success also needs** was not true: the API said no in its reply. Keep the whole reply for you, or save its error message *On failure*, to see why. |
 | *the address answered with a redirect … which is not followed* | Use the address it redirects to, if it is right. |
 | *outside … A step only ever goes to its own connection's address* | Fix the path, or use a connection with that address. |
 | *the server's certificate is not trusted on this PC* | The API's certificate is not one Windows trusts; ask its owners. |
@@ -4029,9 +4084,9 @@ Answering from documents has its tests in the repository, and they are the
 first thing to run after changing anything it touches:
 
 ```
-node --test                 # tests/*.test.js: 82 tests - Sources (every scenario below), names and queries in answers, diagrams, and automations
-node tests/e2e/run.js       # the app in Chrome or Edge: 259 checks on the screen
-node tests/bridge/run.js    # the KalKech program's automation routes, built and run: 51 checks
+node --test                 # tests/*.test.js: 84 tests - Sources (every scenario below), names and queries in answers, diagrams, and automations
+node tests/e2e/run.js       # the app in Chrome or Edge: 265 checks on the screen
+node tests/bridge/run.js    # the KalKech program's automation routes, built and run: 60 checks
 node flow/check-prompt.js   # the prompt's examples against the reply validator
 ```
 

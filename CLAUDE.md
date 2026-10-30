@@ -38,7 +38,7 @@ are careful not to attract attention from their security team.
 | `scripts/bridge/DossierBridge.cs` | The tray program (C# 5, WinForms): serves the page on 127.0.0.1, keeps the workspace in SQL LocalDB when available (or the SQL Server named in Setup, since 5.21), runs scripts, and (5.22) carries out automation steps and keeps their secrets (DPAPI). `KalKech.bat` compiles it with the Windows `csc.exe` whenever the `.cs` is newer than the `.exe`. |
 | `lang/en.xml`, `lang/km.xml` | Language packs (English, Khmer). Missing keys fall back to the English `STRINGS` table in `dossier.html`. |
 | `docs/` | `HOW-THE-AI-WORKS.md` (the whole AI pipeline for beginners, plus a reusable blueprint) and `how-the-ai-works.html` (the same as a self-contained picture page). Keep both in step with the code when the pipeline changes (numbers: 60 records, 10 notes, 30 lessons, 14,000 characters, 66 actions / 44 writes). |
-| `tests/` | `sources.test.js`, `diagram.test.js`, `automations.test.js` (node:test), `e2e/run.js` + `e2e/sources.scenario.js` (real browser), `bridge/run.js` (compiles the bridge with mcs/csc, runs it headless against a made-up API: 51 checks), `fixtures/` (made-up documents; `make-pdf.js` regenerates the PDFs; `auto-conditions.json`, the condition cases both readers must agree on). |
+| `tests/` | `sources.test.js`, `diagram.test.js`, `automations.test.js` (node:test), `e2e/run.js` + `e2e/sources.scenario.js` (real browser), `bridge/run.js` (compiles the bridge with mcs/csc, runs it headless against a made-up API: 60 checks), `fixtures/` (made-up documents; `make-pdf.js` regenerates the PDFs; `auto-conditions.json`, the condition cases both readers must agree on). |
 
 A *workspace* is a folder the user picks (File System Access API):
 `dossier.json` (everything), `backups/`, `tasks/<record>/` attachments,
@@ -92,14 +92,14 @@ A *workspace* is a folder the user picks (File System Access API):
 - Commit messages: clear summary + body; no model names in commits, code or
   docs. Do not open a pull request unless the owner asks.
 - Work so far is on branch `claude/chat-panel-pixel-art-gifs-d822hq`
-  (latest: 5.22.1). Follow the branch instructions of your own session.
+  (latest: 5.23.0). Follow the branch instructions of your own session.
 
 ## Testing
 
 ```
-node --test                                   # 82 unit tests (Sources, grounding, names check, code origin, flow reply fields, diagrams, automations)
-node tests/e2e/run.js                         # the app in headless Chrome/Edge: 259 checks (CHROME=<path> to choose)
-node tests/bridge/run.js                      # the bridge's automation routes, built and run (mcs+mono or csc): 51 checks
+node --test                                   # 84 unit tests (Sources, grounding, names check, code origin, flow reply fields, diagrams, automations)
+node tests/e2e/run.js                         # the app in headless Chrome/Edge: 265 checks (CHROME=<path> to choose)
+node tests/bridge/run.js                      # the bridge's automation routes, built and run (mcs+mono or csc): 60 checks
 node flow/check-prompt.js                     # after editing flow/prompt.txt ...
 python3 flow/embed-prompt.py                  # ... then copy it into flow.js (PROMPT_BUILTIN)
 node tests/fixtures/make-pdf.js               # regenerate the PDF fixtures
@@ -131,6 +131,35 @@ Also useful:
   `DossierFlow.validate`. `tests/e2e/run.js` is a working example of all of it.
 
 ## Recent history (newest first)
+
+- **5.23.0** - Owner: "allow returning the whole body of the response, and a
+  condition for fail and success, because success and fail have different
+  response JSON bodies".
+  - automations.js: save rows `on` ("ok" default | "fail" | "any",
+    `SAVE_ON`); steps `okWhen` (a condition read after the saves, like
+    `until`; may read the step's own saves and `{{status}}`) and `reply`
+    ("" | "me" | "ai", `REPLY_SHOWS`); automation `resultFail`;
+    `resultTemplate(a, R)` (failed → resultFail, ok/partial → result,
+    stopped → none); `run()` keeps `st.reply/replyShow/replyCut`;
+    `normRun(r, replyMax)` (20,000 default; the history uses 2,000);
+    `split()` → `replies[]` (ai ones, 4,000 each); `forAI` adds
+    `givesOnFail` and `replies`; `check` reads okWhen and resultFail, warns
+    `aiSeesReply`.
+  - Bridge: `Extract` became `Outcome(...)` + `ReadSaves(...)`: every row is
+    read from the reply first (even a failed one), then success = status
+    expected AND okWhen true (`CondEval` with the raw values + status), then
+    only rows for that outcome are kept (hidden/redaction rules as before).
+    `WantsReply(step)`; `StepAnswer(..., replyText)` returns `reply`
+    (Redact, ≤ 200,000 chars) and `replyCut` (`bodyCut`, the 4 MB read
+    limit - not the excerpt's 600).
+  - Page: designer rows `autoOutcomeRows(P, s)` (Success also needs, Keep
+    the whole reply) for API calls and scripts, save row select `on`
+    (`AutoOn_*`), field `resultFail`; card `autoReplyHtml(s)` (folded,
+    JSON pretty-printed); `autoSayFor` adds "Reply of …" blocks (9,000 in
+    all); `flowContext` keeps an automation's message to 10,000 chars
+    (others 1,200). Prompt: a bullet on failures and replies.
+  - Tests: 2 unit, 9 bridge (404 error JSON, 200-but-failed, a sign-in's
+    reply with the token masked, a script's output, end to end), 6 e2e.
 
 - **5.22.1** - Owner: "I cannot focus the input to type the username and
   password while setting up a new connection". The menu modal's focus trap

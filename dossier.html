@@ -1511,8 +1511,17 @@ button.auchip:hover{border-color:var(--accent);color:var(--accent)}
 .ausaves{margin-top:10px;padding-top:9px;border-top:1px dashed var(--rule)}
 .ausl{font-size:11.5px;color:var(--ink-2);margin-bottom:6px}
 .ausl small{display:block;font-size:10.5px;color:var(--ink-3);margin-top:2px}
-.ausave{display:grid;grid-template-columns:minmax(80px,.7fr) minmax(110px,.8fr) minmax(0,1.3fr) minmax(130px,.9fr) auto;
+.ausave{display:grid;grid-template-columns:minmax(76px,.7fr) minmax(100px,.75fr) minmax(0,1.15fr) minmax(150px,1fr) minmax(104px,.7fr) auto;
   gap:5px;margin-bottom:5px}
+.in.auon.fail{color:var(--p1);font-weight:600}
+.in.auon.any{color:var(--ink-2)}
+/* a step's whole reply on the run card (5.23) */
+.aureply{grid-column:2 / -1;margin-top:3px}
+.aureply summary{cursor:pointer;font-size:10.5px;color:var(--ink-3)}
+.aureply pre{margin:5px 0 2px;max-height:280px;overflow:auto;font-family:var(--f-mono);font-size:10.5px;line-height:1.5;
+  background:var(--paper-3);border:1px solid var(--rule);border-radius:var(--r-xs);padding:7px 9px;white-space:pre-wrap;word-break:break-word}
+.chat .aumsg .aureply summary{color:var(--ch-dim)}
+.chat .aumsg .aureply pre{background:var(--ch-bg);border-color:var(--ch-line);color:var(--ch-ink)}
 .in.aushow.hidden{color:var(--ink-2)}
 .in.aushow.ai{color:var(--accent);font-weight:600}
 .aumore{margin-top:10px}
@@ -9399,7 +9408,23 @@ const STRINGS = {
   AutoAskText: "Ask",
   AutoAskTextPh: "About to regenerate the COI for {{input.policy}}. Go on?",
   AutoSaves: "Save from the reply",
-  AutoSavesHint: "Name it, say where it is, and who may see it. Hidden: only the next steps can use it - right for a token.",
+  AutoSavesHint: "Name it, say where it is, who may see it, and when to keep it: when the step works, when it fails (an API's error reply is often a different JSON), or always. Hidden: only the next steps can use it - right for a token.",
+  AutoOn_ok: "On success",
+  AutoOn_fail: "On failure",
+  AutoOn_any: "Always",
+  AutoOkWhen: "Success also needs",
+  AutoOkWhenHint: "A test on the values saved from the reply, for an API that answers 200 even when it failed - for example {{success}} == true, or {{errorCode}} is empty. Empty: the status is enough.",
+  AutoReply: "Keep the whole reply",
+  AutoReply_none: "No",
+  AutoReply_me: "Yes - for me",
+  AutoReply_ai: "Yes - for me and the assistant",
+  AutoReplyHint: "The reply as it came (for a script, everything it printed) - on the run card, when the step works and when it fails. Passwords and tokens are masked.",
+  AutoReplyAi: "Whole reply - you and the assistant",
+  AutoReplyMe: "Whole reply - you only",
+  AutoReplyCut: "cut, it was too long",
+  AutoResultFailHead: "When it fails, say",
+  AutoResultFailPh: "Not regenerated for {{input.policy}}: {{errorMessage}}",
+  AutoChk_aiSeesReply: "The whole reply of this step goes to the assistant. Passwords and tokens are masked, but anything else in it is sent - choose \u201cfor me\u201d unless the assistant needs it.",
   AutoFrom_json: "JSON path",
   AutoFrom_header: "Header",
   AutoFrom_status: "Status code",
@@ -10020,7 +10045,7 @@ const STATUSES = [
    the status bar, and clicking it copies a line you can paste into a bug
    report — build date and flow protocol included, because those are the two
    things that actually differ between copies. */
-const APP_VERSION = "5.22.1";
+const APP_VERSION = "5.23.0";
 const APP_BUILT = "2026-10-30";
 function buildLine(){
   return "KalKech v" + APP_VERSION + " \u00b7 built " + APP_BUILT +
@@ -18883,7 +18908,10 @@ function flowContext(q, opts){
   const msgs = ((c && c.msgs) || []).slice(big ? -FLOW_BIG.msgs : -8).map(m => ({
     who: m.who === "you" ? "person" : "dossier",
     text: (m.who === "you" ? String(m.text || "")
-                           : String((m.reply && m.reply.say) || "")).slice(0, big ? FLOW_BIG.msgChars : 1200)
+                           : String((m.reply && m.reply.say) || "")).slice(0,
+            /* an automation's result line can carry a reply they let it
+               read (5.23); it is the evidence, so it is not cut to 1,200 */
+            m.reply && m.reply.via === "auto" ? Math.max(10000, big ? FLOW_BIG.msgChars : 0) : big ? FLOW_BIG.msgChars : 1200)
   })).filter(m => m.text);
   const live = S.tasks.filter(t => LIVE.indexOf(t.status) >= 0);
   const k = today();
@@ -28410,7 +28438,7 @@ async function autoRun(a, inputs, opts){
   } finally { delete AUTO.live[live.id]; }
   R.asked = opts.asked;
   if (!opts.test){
-    st.runs.unshift(Object.assign(DossierAuto.normRun(R), { asked:opts.asked }));
+    st.runs.unshift(Object.assign(DossierAuto.normRun(R, 2000), { asked:opts.asked }));
     if (st.runs.length > DossierAuto.LIMIT.runs) st.runs.length = DossierAuto.LIMIT.runs;
     /* the record's work log says so - with only what the assistant may
        read, because work logs go with questions about the record */
@@ -28445,6 +28473,15 @@ function autoSayFor(a, R){
   const me = Object.keys(sp.me).length + R.hidden.length;
   if (me) L2.push("(" + me + " other value(s) were shown only to them or kept hidden - you do not have them)");
   if (sp.resultForAI) L2.push(sp.resultForAI);
+  /* whole replies they let it read - the error reply is often the answer */
+  let room = 9000;
+  sp.replies.forEach(x => {
+    if (room <= 200) return;
+    const t = x.text.slice(0, room);
+    room -= t.length;
+    L2.push("Reply of \u201c" + x.step + "\u201d" + (x.status != null ? " (" + x.status + ")" : "") + ":\n" + t +
+            (x.cut || t.length < x.text.length ? "\n(cut)" : ""));
+  });
   return L2.join("\n");
 }
 function autoLogLine(a, R){
@@ -28501,7 +28538,8 @@ function autoCardHtml(run, opts){
     if ((s.missing || []).length) bits.push(L("AutoMissing", { list:s.missing.join(", ") }));
     return '<li class="aus ' + esc(s.state) + '"><i aria-hidden="true">' + (AUTO_ICON[s.state] || "○") + "</i>" +
       '<span class="n">' + esc(s.name) + "</span>" + '<span class="m">' + esc(bits.join(" · ")) + "</span>" +
-      (s.note && (s.state === "fail" || s.state === "no") ? '<div class="nt">' + esc(autoNoteText(s, a)) + "</div>" : "") + "</li>";
+      (s.note && (s.state === "fail" || s.state === "no") ? '<div class="nt">' + esc(autoNoteText(s, a)) + "</div>" : "") +
+      (s.reply ? autoReplyHtml(s) : "") + "</li>";
   }).join("") + "</ol>";
   const vals = run.values || {}, keys = Object.keys(vals), hid = run.hidden || [];
   if (keys.length || hid.length){
@@ -28517,6 +28555,18 @@ function autoCardHtml(run, opts){
                (a ? '<button class="btn sm" data-auopen="' + esc(a.id) + '">' + LE("AutoOpenDesign") + "</button>" : "")) +
        "</div></div>";
   return h;
+}
+/* A step's whole reply on the card: folded under one line saying whose
+   eyes it is for; JSON laid out to be read. Passwords and tokens were
+   masked by the tray program before it ever reached the page. */
+function autoReplyHtml(s){
+  let text = String(s.reply || "");
+  if (/^\s*[\[{]/.test(text) && text.length < 300000){
+    try { text = JSON.stringify(JSON.parse(text), null, 2); } catch(e){}
+  }
+  return '<details class="aureply"><summary>' + LE(s.replyShow === "ai" ? "AutoReplyAi" : "AutoReplyMe") +
+    (s.status != null && s.status !== "" ? " \u00b7 " + esc(String(s.status)) : "") +
+    (s.replyCut ? " \u00b7 " + LE("AutoReplyCut") : "") + "</summary><pre>" + esc(text) + "</pre></details>";
 }
 /* the card's own buttons, wherever it is drawn */
 document.addEventListener("click", e => {
@@ -28967,6 +29017,17 @@ function autoChips(a, i){
   return '<div class="auchips"><span>' + LE("AutoChipsLab") + "</span>" + out.map(t =>
     '<button class="auchip' + (/^\{\{secret\./.test(t) ? " sec" : "") + '" data-chip="' + esc(t) + '" type="button">' + esc(t) + "</button>").join("") + "</div>";
 }
+/* how a step knows it worked, and what it keeps of the reply (5.23):
+   "success also needs" - a test on the values read from the reply, for an
+   API that answers 200 with {"success": false} - and "keep the whole
+   reply", for you or for you and the assistant */
+function autoOutcomeRows(P, s){
+  return '<label>' + LE("AutoOkWhen") + "</label>" + '<div>' + autoField(P + "okWhen", s.okWhen, { mono:true, ph:"{{success}} == true" }) +
+           '<small class="auhint">' + LE("AutoOkWhenHint") + "</small></div>" +
+         '<label>' + LE("AutoReply") + "</label>" + '<div>' + autoField(P + "reply", s.reply,
+           { select:DossierAuto.REPLY_SHOWS.map(x => [x, L("AutoReply_" + (x || "none"))]), redraw:true }) +
+           '<small class="auhint">' + LE("AutoReplyHint") + "</small></div>";
+}
 function autoStepHtml(a, s, i){
   const P = "steps." + i + ".";
   const conns = autoStore().conns.concat(AUTO.ui.newConns);
@@ -28990,6 +29051,7 @@ function autoStepHtml(a, s, i){
            : s.bodyType !== "none" ? autoField(P + "body", s.body, { area:true, rows:6, ph:s.bodyType === "json" ? '{\n  "policy": "{{input.ref}}"\n}' : "" }) : "") + "</div>") +
         '<label>' + LE("AutoExpect") + "</label>" + '<div class="aurow2">' + autoField(P + "expect", s.expect, { mono:true, ph:"2xx", cls:"aushort" }) +
           '<small class="auhint">' + LE("AutoExpectHint") + "</small></div>" +
+        autoOutcomeRows(P, s) +
       "</div>";
   } else if (s.kind === "script"){
     const sc = S.scripts.find(x => x.id === s.script);
@@ -29003,6 +29065,7 @@ function autoStepHtml(a, s, i){
         '<label>' + LE("AutoTimeLimit") + "</label>" + '<div class="aurow2">' + autoField(P + "timeout", s.timeout, { num:true, min:1, max:600, cls:"aushort" }) +
           "<small>" + LE("AutoSeconds") + "</small></div>" +
         '<label>' + LE("AutoExitOk") + "</label>" + autoField(P + "expect", s.expect, { mono:true, ph:"0", cls:"aushort" }) +
+        autoOutcomeRows(P, s) +
       "</div>" + '<p class="auhint">' + LE("AutoScriptHow") + "</p>";
   } else if (s.kind === "wait"){
     body += '<div class="augrid"><label>' + LE("AutoWaitFor") + "</label>" + '<div class="aurow2">' +
@@ -29018,6 +29081,7 @@ function autoStepHtml(a, s, i){
         autoField(P + "save." + j + ".from", v.from, { select:froms.map(f => [f, L("AutoFrom_" + f)]), redraw:true }) +
         (["json", "header", "regex"].indexOf(v.from) >= 0 ? autoField(P + "save." + j + ".path", v.path, { mono:true, ph:v.from === "json" ? "data.access_token" : v.from === "header" ? "Location" : "Ref: (\\S+)" }) : "<span></span>") +
         autoField(P + "save." + j + ".show", v.show, { select:DossierAuto.SHOWS.map(x => [x, L("AutoShow_" + x)]), cls:"aushow " + v.show, redraw:true }) +
+        autoField(P + "save." + j + ".on", v.on, { select:DossierAuto.SAVE_ON.map(x => [x, L("AutoOn_" + x)]), cls:"auon " + v.on, redraw:true }) +
         '<button class="ib" data-aa="delSave" data-i="' + i + '" data-j="' + j + '" title="' + LE("Remove2") + '" type="button">✕</button></div>').join("") +
       '<button class="btn sm" data-aa="addSave" data-i="' + i + '" type="button">+ ' + LE("AutoAddSave") + "</button></div>";
     body += '<details class="aumore"' + (s.when || (s.repeat && s.repeat.until) || s.onFail === "continue" ? " open" : "") + "><summary>" + LE("AutoMore") + "</summary>" +
@@ -29112,6 +29176,8 @@ function renderAutoEditor(){
 
     '<h5 class="eyebrow auh">' + LE("AutoResultHead") + "</h5>" +
     autoField("result", a.result, { area:true, rows:2, ph:L("AutoResultPh") }) +
+    '<h5 class="eyebrow auh">' + LE("AutoResultFailHead") + "</h5>" +
+    autoField("resultFail", a.resultFail, { area:true, rows:2, ph:L("AutoResultFailPh") }) +
     '<div class="auprobs" id="auProbs"></div>' +
     '<div class="brow auend"><button class="btn pri" data-aa="save" type="button">' + LE("AutoSave") + "</button>" +
       '<button class="btn" data-aa="back" type="button">' + LE("Cancel") + "</button></div>";

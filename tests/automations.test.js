@@ -101,7 +101,9 @@ test("normalising: garbage in, a design the runner was written for out", () => {
   assert.equal(a.steps[1].seconds, 1);
   assert.equal(a.steps[2].method, "GET");
   assert.deepEqual(a.steps[2].repeat, { until:"", times:A.LIMIT.times, every:1 });
-  assert.deepEqual(a.steps[2].save, [{ name:"x", from:"json", path:"", show:"me" }]);
+  assert.deepEqual(a.steps[2].save, [{ name:"x", from:"json", path:"", show:"me", on:"ok" }]);
+  assert.equal(a.steps[2].okWhen, "");
+  assert.equal(a.steps[2].reply, "", "the whole reply is not kept unless asked for");
   assert.equal(a.inputs.length, 1);
   assert.equal(a.inputs[0].pattern, "", "a secret input keeps no pattern or example");
   assert.equal(a.inputs[0].example, "");
@@ -379,4 +381,55 @@ test("run: script steps send the file and the values in the script's own order",
   const w = b.calls[0].b.step;
   assert.equal(w.file, "restart.bat");
   assert.deepEqual(w.args, [["env", "{{input.policy}}"], ["server", "IMG02"], ["extra", "1"]]);
+});
+
+/* ── 5.23: success and failure answer differently; the whole reply ───── */
+test("success and failure: what the assistant is told, and the checks", () => {
+  const a = A.normAuto({ name:"Look up", result:"Found {{ref}}", resultFail:"Not found: {{errMsg}} {{nope}}",
+    steps:[{ kind:"http", conn:"Cpol", path:"/maybe", reply:"ai", okWhen:'{{success}} == true and {{code}} != ""',
+             save:[{ name:"ref", from:"json", path:"data.ref", show:"ai" },
+                   { name:"errMsg", from:"json", path:"error.message", show:"ai", on:"fail" },
+                   { name:"success", from:"json", path:"success", show:"me", on:"any" },
+                   { name:"code", from:"status", show:"me", on:"bogus" }] }] });
+  assert.equal(a.steps[0].save[1].on, "fail");
+  assert.equal(a.steps[0].save[3].on, "ok", "an unknown 'on' is 'when it works'");
+  const c = codes(A.check(a, { conns:[CONN_POL].map(A.normConn) }));
+  assert.ok(c.indexOf("unknownPh:nope") >= 0, "the failure line is checked too: " + c.join());
+  assert.ok(c.indexOf("aiSeesReply@0") >= 0, "a reply for the assistant is warned about: " + c.join());
+  const bad = A.normAuto(Object.assign({}, a, { steps:[Object.assign({}, a.steps[0], { okWhen:"{{success}} ==" })] }));
+  assert.ok(codes(A.check(bad, { conns:[CONN_POL].map(A.normConn) })).indexOf("badCond@0") >= 0);
+  const ai = A.forAI(A.normStore({ conns:[CONN_POL], list:[a] }))[0];
+  assert.deepEqual(ai.gives, ["ref"]);
+  assert.deepEqual(ai.givesOnFail, ["errMsg"]);
+  assert.deepEqual(ai.replies, ["Step 1"]);
+  const w = A.stepWire(a.steps[0], {});
+  assert.equal(w.okWhen, a.steps[0].okWhen);
+  assert.equal(w.reply, "ai");
+  assert.equal(w.save[1].on, "fail");
+});
+test("run: a failed step keeps its failure values and reply; the run ends with the failure line", async () => {
+  const a = A.normAuto({ name:"Look up", result:"Found {{ref}}", resultFail:"Not found: {{errMsg}}",
+    steps:[{ kind:"http", conn:"Cpol", path:"/maybe", reply:"ai",
+             save:[{ name:"ref", from:"json", path:"data.ref", show:"ai" }, { name:"errMsg", from:"json", path:"error.message", show:"ai", on:"fail" }] }] });
+  const call = async op => op === "step"
+    ? { ok:false, status:404, saved:{ errMsg:"Policy BAD not found" }, hidden:[], missing:[], error:"the answer was 404",
+        reply:'{"error":{"code":"NOT_FOUND","message":"Policy BAD not found"}}', replyCut:false, contentType:"application/json" }
+    : { ok:true };
+  const R = await A.run(a, { conns:[CONN_POL], call, values:{}, sleep:async () => true, ask:async () => true, tick:() => {}, stopped:() => false });
+  assert.equal(R.state, "failed");
+  assert.equal(R.result, "Not found: Policy BAD not found");
+  assert.equal(R.values.errMsg.v, "Policy BAD not found");
+  assert.equal(R.steps[0].replyShow, "ai");
+  assert.match(R.steps[0].reply, /NOT_FOUND/);
+  const sp = A.split(a, R);
+  assert.equal(sp.resultForAI, "Not found: Policy BAD not found");
+  assert.equal(sp.replies.length, 1);
+  assert.equal(sp.replies[0].status, 404);
+  /* the history keeps a short copy of a reply, or none */
+  assert.equal(A.normRun(R, 10).steps[0].reply, '{"error":{');
+  assert.equal(A.normRun(R, 10).steps[0].replyCut, true);
+  assert.equal(A.normRun(R, 0).steps[0].reply, undefined);
+  /* stopped: neither line */
+  assert.equal(A.resultTemplate(a, { state:"stopped" }), "");
+  assert.equal(A.resultTemplate(a, { state:"partial" }), "Found {{ref}}");
 });

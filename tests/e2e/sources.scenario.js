@@ -1231,7 +1231,7 @@
     const st = b.step || {};
     AB.paths.push(String(st.path || "").replace(/\{\{([^{}]*)\}\}/g, (m, inner) => { const v = look(DossierAuto.parsePh(inner)); return v == null ? "" : encodeURIComponent(v); }));
     await sleep(30);
-    let saved = {}, hidden = [], status = 200, ok = true;
+    let saved = {}, hidden = [], status = 200, ok = true, replyText = null;
     if (/\/token$/.test(st.path)){
       const sec = AB.secrets[(b.conn || {}).id + "/password"];
       if (!sec){ ok = false; status = 401; } else { keep.token = TOKEN; hidden = ["token"]; }
@@ -1241,10 +1241,23 @@
       AB.polls++;
       if (AB.slow) await sleep(300);
       saved = !AB.slow && AB.polls % 2 === 0 ? { state:"DONE", coiNumber:"COI-2026-0042" } : { state:"RUNNING" };
+    } else if (/\/maybe\//.test(st.path)){
+      /* success and failure answer with different JSON (5.23) */
+      const bad = /\/maybe\/bad/.test(AB.paths[AB.paths.length - 1]);
+      const json = bad ? { error:{ code:"NOT_FOUND", message:"Policy BAD not found" } } : { data:{ ref:"R-1" } };
+      ok = !bad; status = bad ? 404 : 200;
+      (st.save || []).forEach(v => {
+        if (v.on !== "any" && v.on !== (ok ? "ok" : "fail")) return;
+        const x = DossierAuto.jsonGet(json, v.path);
+        if (x !== undefined) saved[v.name] = DossierAuto.asText(x);
+      });
+      if (st.reply) replyText = JSON.stringify(json);
     } else { ok = false; status = 404; }
     let until = null;
     if (ok && b.until) until = DossierAuto.evalCond(DossierAuto.parseCond(b.until).ast, ph => saved[ph.full] != null ? saved[ph.full] : look(ph));
-    return J({ ok, status, ms:30, saved, hidden, missing:[], redacted:[], until, excerpt:"", error:ok ? "" : "the answer was " + status });
+    const ans = { ok, status, ms:30, saved, hidden, missing:[], redacted:[], until, excerpt:"", error:ok ? "" : "the answer was " + status };
+    if (replyText != null){ ans.reply = replyText; ans.replyCut = false; }
+    return J(ans);
   };
 
   DB.bridge = false; DB.port = 0; DB.token = "";
@@ -1443,11 +1456,44 @@
   AB.slow = false;
   await shot("24-automations-chat");
 
+  /* 5.23: success and failure answer differently; the whole reply */
+  openModal("auto");
+  autoEdit(au.id);
+  await until(() => document.querySelector('#pAuto [data-f="steps.0.okWhen"]'), 4000);
+  check("(5.23) the designer has 'Success also needs', 'Keep the whole reply', when to keep each value, and a failure line",
+        !!document.querySelector('#pAuto [data-f="steps.0.reply"]') && !!document.querySelector('#pAuto [data-f="steps.0.save.0.on"]') &&
+        !!document.querySelector('#pAuto [data-f="resultFail"]') && /When it fails/.test($("pAuto").textContent));
+  AUTO.ui.view = "list"; AUTO.ui.draft = null; closeModal();
+  const look = DossierAuto.normAuto({ name:"Look up policy", inputs:[{ key:"p", label:"Policy" }], result:"Found {{ref}}", resultFail:"Not found: {{errMsg}}",
+    steps:[{ kind:"http", name:"Look it up", conn:au.steps[1].conn, method:"GET", path:"/maybe/{{input.p}}", reply:"ai",
+             save:[{ name:"ref", from:"json", path:"data.ref", show:"ai" }, { name:"errMsg", from:"json", path:"error.message", show:"ai", on:"fail" }] }] });
+  autoStore().list.push(look); touch();
+  openChat();
+  const LR = await autoChatRun(look, { p:"bad" }, { by:"me" });
+  const lcard = [...document.querySelectorAll("#chatLog .aucard")].pop();
+  check("(5.23) a failed lookup: its failure line, the API's own error, and its whole reply on the card",
+        LR.state === "failed" && /Not found: Policy BAD not found/.test(lcard.textContent) && !!lcard.querySelector("details.aureply") &&
+        /"code": "NOT_FOUND"/.test(lcard.querySelector(".aureply pre").textContent), lcard.textContent.slice(0, 400));
+  const lmsg = chatThread().msgs.filter(m => m.reply && m.reply.run).pop();
+  check("...and the assistant reads the error, and the reply it was allowed to",
+        /Not found: Policy BAD not found/.test(lmsg.reply.say) && /Reply of “Look it up” \(404\):/.test(lmsg.reply.say) && /NOT_FOUND/.test(lmsg.reply.say),
+        lmsg.reply.say);
+  const GR = await autoChatRun(look, { p:"7" }, { by:"me" });
+  check("...the same automation when it works: the success line, the success value", GR.state === "ok" && GR.result === "Found R-1" &&
+        !("errMsg" in GR.values), JSON.stringify(GR.values));
+  lmsg.reply.say = lmsg.reply.say + "\n" + "x".repeat(5000);
+  const fc = flowContext("what went wrong?");
+  check("...an automation's line goes with the next question whole, not cut to 1,200 characters",
+        fc.conversation.some(m => /Reply of/.test(m.text) && m.text.length > 5000));
+  check("...the history keeps only a short copy of a reply", autoStore().runs.every(r => r.steps.every(x => !x.reply || x.reply.length <= 2000)));
+  closeChat();
+
   /* export: the designs and connections, never a run's values or a secret */
   const xb = await xpBuild(["automations"], {});
   const xd = JSON.parse(await xb.blob.text());
   check("(5.22) export: Automations is a part - the designs and connections, no run history, no secret",
-        xd.parts.join() === "automations" && xd.settings.automations.list.length === 1 && xd.settings.automations.conns.length === 2 &&
+        xd.parts.join() === "automations" && xd.settings.automations.list.length === autoStore().list.length &&
+        xd.settings.automations.list.length >= 1 && xd.settings.automations.conns.length === 2 &&
         !("runs" in xd.settings.automations) && JSON.stringify(xd).indexOf("Pw-e2e-Secret!") < 0 && JSON.stringify(xd).indexOf(TOKEN) < 0,
         JSON.stringify(xd.settings && Object.keys(xd.settings.automations || {})));
 

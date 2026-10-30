@@ -638,9 +638,15 @@ out by the KalKech program on their PC.
                   "required": true, "example": "P10234X56" } ],
     "asksFirst": true,
     "steps": [ "Sign in", "Ask for a new COI", "Wait until it is ready" ],
-    "gives": [ "coiNumber" ] }
+    "gives": [ "coiNumber" ],
+    "givesOnFail": [ "errorMessage" ],
+    "replies": [ "Ask for a new COI" ] }
 ]
 ```
+
+`gives` are the values the model sees after a run that worked;
+`givesOnFail`, the values it sees when the job failed (read from the API's
+error reply); `replies`, the steps whose whole reply it reads (5.23).
 
 There is no address, header, connection, script or secret in it - those
 stay on the PC. An input of kind `"typed by them"` is always typed by the
@@ -652,7 +658,10 @@ puts it to the person first (unless they switched that off for that one),
 asks them for any input left out, runs the steps, and shows a card. **At most
 one per reply**; more are refused. The result reaches the model afterwards as
 one bot message in `conversation`, starting `[Automation "…"`, with only the
-values the person marked for the assistant.
+values the person marked for the assistant, the run's last line (its
+success or failure one), and - for a step whose reply they let it read - a
+`Reply of "<step>" (<status>):` block with the reply as it came, passwords
+and tokens masked. That message is kept up to 10,000 characters.
 
 ---
 

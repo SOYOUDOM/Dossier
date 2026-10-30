@@ -75,6 +75,13 @@ function startApi(){
         }
         if (rest === "/key") return req.headers["x-api-key"] === KEY ? send(200, { ok:true }) : send(403, { error:"no key" });
         if (rest === "/text") return send(200, "Reference: REF-998877 ready", { "Content-Type":"text/plain" });
+        /* success and failure answer with different JSON - as real APIs do */
+        let mm = /^\/maybe\/([^/]+)$/.exec(rest);
+        if (mm) return mm[1] === "bad" ? send(404, { error:{ code:"NOT_FOUND", message:"Policy BAD not found" } })
+                                       : send(200, { ok:true, data:{ ref:"R-" + mm[1] } });
+        mm = /^\/soft\/([^/]+)$/.exec(rest);
+        if (mm) return mm[1] === "lapsed" ? send(200, { success:false, errorMessage:"Policy is lapsed", traceId:"T-1" })
+                                          : send(200, { success:true, data:{ ref:"S-" + mm[1] } });
         const signedIn = bearer === API.issued && !!API.issued;
         if (/^\/(policies|jobs|whoami)/.test(rest) && !signedIn) return send(401, { error:"not signed in" });
         let m = /^\/policies\/([^/]+)\/coi$/.exec(rest);
@@ -311,6 +318,50 @@ function startElsewhere(){
     a = await one(CPOL, { conn:"Cpol", method:"GET", path:"/nope", expect:"2xx,404", save:[{ name:"st", from:"status", show:"me" }] }, {});
     check("'expect' decides what counts as success (2xx,404)", a.ok && a.status === 404 && a.saved.st === "404", JSON.stringify(a));
 
+    /* ── success and failure have different replies (5.23) ─────────────── */
+    const outcomeSaves = [{ name:"ref", from:"json", path:"data.ref", show:"ai", on:"ok" },
+                          { name:"errMsg", from:"json", path:"error.message", show:"ai", on:"fail" },
+                          { name:"code", from:"status", show:"me", on:"any" }];
+    a = await one(CPOL, { conn:"Cpol", method:"GET", path:"/maybe/bad", save:outcomeSaves, reply:"me" }, {});
+    check("(5.23) a failed step keeps the values meant for failure, read from its own error reply",
+          a.ok === false && a.status === 404 && a.saved.errMsg === "Policy BAD not found" && a.saved.code === "404" && !("ref" in a.saved) &&
+          a.missing.length === 0, JSON.stringify(a));
+    check("...and its whole reply, when the step keeps it", /"code":"NOT_FOUND"/.test(a.reply || "") && a.replyCut === false, a.reply);
+    a = await one(CPOL, { conn:"Cpol", method:"GET", path:"/maybe/7", save:outcomeSaves }, {});
+    check("...a step that worked keeps the success values, not the failure ones, and no reply unless asked",
+          a.ok === true && a.saved.ref === "R-7" && !("errMsg" in a.saved) && a.saved.code === "200" && !("reply" in a), JSON.stringify(a));
+    const softSaves = [{ name:"success", from:"json", path:"success", show:"me", on:"any" },
+                       { name:"ref", from:"json", path:"data.ref", show:"ai", on:"ok" },
+                       { name:"why", from:"json", path:"errorMessage", show:"ai", on:"fail" }];
+    a = await one(CPOL, { conn:"Cpol", method:"GET", path:"/soft/lapsed", save:softSaves, okWhen:"{{success}} == true" }, {});
+    check("(5.23) 'success also needs': a 200 that says it failed is a failure, with its own values",
+          a.ok === false && a.status === 200 && /the reply says it did not work/.test(a.error) && a.saved.why === "Policy is lapsed" &&
+          a.saved.success === "false" && !("ref" in a.saved), JSON.stringify(a));
+    a = await one(CPOL, { conn:"Cpol", method:"GET", path:"/soft/9", save:softSaves, okWhen:"{{success}} == true" }, {});
+    check("...and one that says it worked is a success", a.ok === true && a.saved.ref === "S-9" && !("why" in a.saved), JSON.stringify(a));
+    a = await one(CPOL, { conn:"Cpol", method:"GET", path:"/soft/9", save:softSaves, okWhen:"{{success}} ==" }, {});
+    check("...a test that cannot be read fails the step and says why", a.ok === false && /success also needs/.test(a.error), JSON.stringify(a));
+    /* the whole reply of a sign-in: the token it saved hidden is masked in it */
+    const sid = "r" + Math.random().toString(36).slice(2, 10);
+    a = await callLogged("step", { run:sid, kind:"http", conn:A.connWire(CAUTH), values:{},
+      step:A.stepWire(A.normStep({ kind:"http", conn:"Cauth", method:"POST", path:"/token", bodyType:"json",
+        body:'{"user":"{{secret.user}}","password":"{{secret.password}}"}', reply:"ai",
+        save:[{ name:"token", from:"json", path:"access_token", show:"hidden" }] }), {}) });
+    await call("end", { run:sid });
+    check("(5.23) the whole reply of a sign-in: the token and the refresh token are masked in it",
+          a.ok && /"access_token":"\u2022\u2022\u2022\u2022"/.test(a.reply) && /"refresh_token":"\u2022\u2022\u2022\u2022"/.test(a.reply) &&
+          a.reply.indexOf(API.issued) < 0 && /"expires_in":3600/.test(a.reply), a.reply);
+    /* end to end: the failure line is written from the error reply */
+    const failing = A.normAuto({ name:"Look up", inputs:[{ key:"p", label:"Policy" }], resultFail:"Not found: {{errMsg}}", result:"Found {{ref}}",
+      steps:[{ kind:"http", conn:"Cpol", method:"GET", path:"/maybe/{{input.p}}", save:outcomeSaves, reply:"ai" }] });
+    const FR = await A.run(failing, { conns:[CPOL], call:callLogged, values:{ "input.p":"bad" }, sleep:async () => true,
+                                      ask:async () => true, tick:() => {}, stopped:() => false });
+    const FS2 = A.split(failing, FR);
+    check("...a run that fails ends with its failure line, and the assistant may read the reply it was given",
+          FR.state === "failed" && FR.result === "Not found: Policy BAD not found" && FR.steps[0].replyShow === "ai" &&
+          FS2.replies.length === 1 && /NOT_FOUND/.test(FS2.replies[0].text) && FS2.resultForAI === "Not found: Policy BAD not found",
+          JSON.stringify({ r:FR.result, s:FR.steps[0], sp:FS2 }).slice(0, 600));
+
     /* ── conditions: the same answers as the page ──────────────────────── */
     const cases = JSON.parse(fs.readFileSync(path.join(ROOT, "tests", "fixtures", "auto-conditions.json"), "utf8")).cases;
     const wrong = [];
@@ -336,6 +387,8 @@ function startElsewhere(){
                                    { name:"code", from:"exit", show:"me" }] }), { "input.policy":"P10234X56" });
     check("a script runs with its value as %1 and as KK_POLICY", a.ok && /policy=P10234X56/.test(a.saved.out) && /first=P10234X56/.test(a.saved.out) &&
           a.saved.ref === "R-P10234X56" && a.saved.code === "0" && a.exit === 0, JSON.stringify(a));
+    a = await script(sstep("show-policy" + ext, [["policy", "{{input.policy}}"]], { reply:"me" }), { "input.policy":"P10234X56" });
+    check("(5.23) a script step can keep its whole output", a.ok && /policy=P10234X56/.test(a.reply) && /first=P10234X56/.test(a.reply), JSON.stringify(a));
     a = await script(sstep("show-policy" + ext, [["policy", "{{input.policy}}"]]), { "input.policy":"A1 & del *" });
     check("a value with & in it is refused, not passed", a.ok === false && /has & in it/.test(a.error), JSON.stringify(a));
     for (const v of ["50%", "a|b", "x>y", 'q"q', "(x)", "!x!", "a^b"]){

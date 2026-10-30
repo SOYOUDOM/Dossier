@@ -2359,15 +2359,18 @@ public class DossierBridge
         long took = sw.ElapsedMilliseconds;
         Log("  auto      " + method + " " + Redact(u.GetLeftPart(UriPartial.Path), c.Run) + " - " + status + " (" + took + " ms)");
 
-        bool ok = ExpectMatch(JS(step, "expect"), status);
+        bool statusOk = ExpectMatch(JS(step, "expect"), status);
+        string why = statusOk ? "" : status >= 300 && status < 400
+            ? "the address answered with a redirect (" + status + ") to " + (rh.ContainsKey("location") ? rh["location"] : "somewhere else") + ", which is not followed"
+            : "the answer was " + status + (StatusWords(status).Length > 0 ? " " + StatusWords(status) : "") + ", not what this step expects (" + (JS(step, "expect").Length > 0 ? JS(step, "expect") : "2xx") + ")";
         Dictionary<string, string> saved = new Dictionary<string, string>();
         List<string> hidden = new List<string>(), missing = new List<string>(), redacted = new List<string>();
-        if (ok) Extract(c, step, text, rh, status, -1, saved, hidden, missing, redacted);
+        bool ok = Outcome(c, step, text, rh, status, -1, statusOk, ref why, saved, hidden, missing, redacted);
         return StepAnswer(c, ok, status, -1, took, shownUrl, text, cut, rtype, rh, saved, hidden, missing, redacted, until, test,
-            ok ? "" : status >= 300 && status < 400
-                ? "the address answered with a redirect (" + status + ") to " + (rh.ContainsKey("location") ? rh["location"] : "somewhere else") + ", which is not followed"
-                : "the answer was " + status + (StatusWords(status).Length > 0 ? " " + StatusWords(status) : "") + ", not what this step expects (" + (JS(step, "expect").Length > 0 ? JS(step, "expect") : "2xx") + ")");
+                          why, WantsReply(step) ? text : null);
     }
+
+    static bool WantsReply(JObj step) { string w = JS(step, "reply"); return w == "me" || w == "ai"; }
 
     static string StatusWords(int s)
     {
@@ -2390,40 +2393,39 @@ public class DossierBridge
         return enc.GetString(b);
     }
 
-    //  the values a step saves - from a reply (status -1 for a script) or a
-    //  script's output (exit >= 0)
-    static void Extract(StepCtx c, JObj step, string text, Dictionary<string, string> heads, int status, int exit,
+    //  Did the step work, and what does it keep? From a reply (status -1 for
+    //  a script) or a script's output (exit >= 0):
+    //    1. every "save" row is read from the reply, whatever happened - an
+    //       API's error reply is a JSON of its own, worth reading;
+    //    2. the step worked when its status was expected AND its "success
+    //       also needs" test (okWhen, which may read those values) is true;
+    //    3. only the rows meant for that outcome are kept: "ok" (when it
+    //       worked, the default), "fail" (when it did not) or "any".
+    //  Returns whether it worked; why holds the reason when it did not.
+    static bool Outcome(StepCtx c, JObj step, string text, Dictionary<string, string> heads, int status, int exit,
+                        bool statusOk, ref string why,
                         Dictionary<string, string> saved, List<string> hidden, List<string> missing, List<string> redacted)
     {
-        object json = null;
-        bool jsonTried = false;
-        foreach (object o in JA(step, "save"))
+        List<string[]> rows = new List<string[]>();      // name, show, on, value (null: not found)
+        ReadSaves(c, step, text, heads, status, exit, rows);
+        bool ok = statusOk;
+        string okWhen = JS(step, "okWhen").Trim();
+        if (ok && okWhen.Length > 0)
         {
-            JObj sv = o as JObj;
-            if (sv == null) continue;
-            string name = JS(sv, "name"), from = JS(sv, "from"), path = JS(sv, "path"), show = JS(sv, "show");
-            if (!Regex.IsMatch(name, "^[A-Za-z_][A-Za-z0-9_]{0,39}$")) continue;
-            string v = null;
-            if (from == "json")
-            {
-                if (!jsonTried) { jsonTried = true; try { json = JsonReader.Parse(text.Trim()); } catch (Exception) { json = null; } }
-                object found;
-                if (json != null && JsonAt(json, path, out found)) v = TextOf(found);
-            }
-            else if (from == "header") { string hv; if (heads != null && heads.TryGetValue(path.ToLowerInvariant(), out hv)) v = hv; }
-            else if (from == "status") v = status.ToString();
-            else if (from == "exit") v = exit.ToString();
-            else if (from == "body" || from == "output") v = from == "output" ? text.Trim() : text;
-            else if (from == "regex")
-            {
-                try
-                {
-                    Match m = new Regex(path, RegexOptions.None, TimeSpan.FromSeconds(2)).Match(text);
-                    if (m.Success) v = m.Groups.Count > 1 && m.Groups[1].Success ? m.Groups[1].Value : m.Value;
-                }
-                catch (ArgumentException) { c.Errors.Add("the pattern for " + name + " is not a valid one"); }
-                catch (RegexMatchTimeoutException) { c.Errors.Add("the pattern for " + name + " took too long"); }
-            }
+            Dictionary<string, string> extra = new Dictionary<string, string>();
+            foreach (string[] r in rows) if (r[3] != null) extra[r[0]] = r[3];
+            extra["status"] = (exit >= 0 ? exit : status).ToString();
+            bool met;
+            string err = CondEval(okWhen, c, extra, out met);
+            if (err != null) { ok = false; why = "its \"success also needs\": " + err; }
+            else if (!met) { ok = false; why = "the reply says it did not work (\"success also needs\" " + okWhen + " is not true)"; }
+        }
+        string outcome = ok ? "ok" : "fail";
+        foreach (string[] r in rows)
+        {
+            string on = r[2] == "fail" || r[2] == "any" ? r[2] : "ok";
+            if (on != "any" && on != outcome) continue;
+            string name = r[0], show = r[1], v = r[3];
             if (v == null) { missing.Add(name); continue; }
             if (show == "hidden")
             {
@@ -2454,12 +2456,52 @@ public class DossierBridge
             if (!hidden.Contains(k)) hidden.Add(k);
             redacted.Add(k);
         }
+        return ok;
+    }
+
+    //  every save row, read from the reply - nothing kept yet
+    static void ReadSaves(StepCtx c, JObj step, string text, Dictionary<string, string> heads, int status, int exit,
+                          List<string[]> rows)
+    {
+        object json = null;
+        bool jsonTried = false;
+        foreach (object o in JA(step, "save"))
+        {
+            JObj sv = o as JObj;
+            if (sv == null) continue;
+            string name = JS(sv, "name"), from = JS(sv, "from"), path = JS(sv, "path"), show = JS(sv, "show"), on = JS(sv, "on");
+            if (!Regex.IsMatch(name, "^[A-Za-z_][A-Za-z0-9_]{0,39}$")) continue;
+            string v = null;
+            if (from == "json")
+            {
+                if (!jsonTried) { jsonTried = true; try { json = JsonReader.Parse(text.Trim()); } catch (Exception) { json = null; } }
+                object found;
+                if (json != null && JsonAt(json, path, out found)) v = TextOf(found);
+            }
+            else if (from == "header") { string hv; if (heads != null && heads.TryGetValue(path.ToLowerInvariant(), out hv)) v = hv; }
+            else if (from == "status") v = status.ToString();
+            else if (from == "exit") v = exit.ToString();
+            else if (from == "body" || from == "output") v = from == "output" ? text.Trim() : text;
+            else if (from == "regex")
+            {
+                try
+                {
+                    Match m = new Regex(path, RegexOptions.None, TimeSpan.FromSeconds(2)).Match(text);
+                    if (m.Success) v = m.Groups.Count > 1 && m.Groups[1].Success ? m.Groups[1].Value : m.Value;
+                }
+                catch (ArgumentException) { c.Errors.Add("the pattern for " + name + " is not a valid one"); }
+                catch (RegexMatchTimeoutException) { c.Errors.Add("the pattern for " + name + " took too long"); }
+            }
+            rows.Add(new string[] { name, show, on, v });
+        }
     }
 
     static string StepAnswer(StepCtx c, bool ok, int status, int exit, long ms, string url, string text, bool cut, string type,
                              Dictionary<string, string> heads, Dictionary<string, string> saved, List<string> hidden,
-                             List<string> missing, List<string> redacted, string until, bool test, string error)
+                             List<string> missing, List<string> redacted, string until, bool test, string error,
+                             string replyText)
     {
+        bool bodyCut = cut;     // the reply itself was longer than was read (not the excerpt)
         if (c.Errors.Count > 0) { ok = false; error = (error.Length > 0 ? error + "; " : "") + string.Join("; ", c.Errors.ToArray()); }
         bool hasUntil = false, met = false;
         if (ok && until.Length > 0)
@@ -2490,6 +2532,15 @@ public class DossierBridge
             foreach (string k in new string[] { "content-type", "location", "retry-after", "x-request-id", "x-correlation-id" })
                 if (heads.ContainsKey(k)) hh.S(k, Redact(heads[k], c.Run));
             o.Raw("headers", hh.ToString());
+        }
+        //  the whole reply, when the step keeps it: with every secret and
+        //  hidden value of the run - this step's included - masked out
+        if (replyText != null)
+        {
+            string rp = Redact(replyText, c.Run);
+            bool rcut = bodyCut;
+            if (rp.Length > 200000) { rp = rp.Substring(0, 200000); rcut = true; }
+            o.S("reply", rp).B("replyCut", rcut);
         }
         if (!ok) o.S("error", Redact(error, c.Run));
         return o.ToString();
@@ -2600,15 +2651,16 @@ public class DossierBridge
 
         string expect = JS(step, "expect").Trim().ToLowerInvariant();
         if (expect.Length == 0) expect = "0";
-        bool ok = expect == "any";
-        if (!ok) foreach (string part in expect.Split(',')) { int n; if (int.TryParse(part.Trim(), out n) && n == exit) ok = true; }
+        bool statusOk = expect == "any";
+        if (!statusOk) foreach (string part in expect.Split(',')) { int n; if (int.TryParse(part.Trim(), out n) && n == exit) statusOk = true; }
+        string why = statusOk ? "" : "it finished with exit code " + exit + ", not " + expect;
         Dictionary<string, string> saved = new Dictionary<string, string>();
         List<string> hidden = new List<string>(), missing = new List<string>(), redacted = new List<string>();
-        if (ok) Extract(c, step, output, null, -1, exit, saved, hidden, missing, redacted);
+        bool ok = Outcome(c, step, output, null, -1, exit, statusOk, ref why, saved, hidden, missing, redacted);
         string shown = errors.Trim().Length > 0 && !ok ? output + "\n" + errors : output;
         return StepAnswer(c, ok, -1, exit, took, null, test ? shown : Tail(shown, 600), false, "text/plain", null,
-                          saved, hidden, missing, redacted, until, test,
-                          ok ? "" : "it finished with exit code " + exit + ", not " + expect);
+                          saved, hidden, missing, redacted, until, test, why,
+                          WantsReply(step) ? (errors.Trim().Length > 0 ? output + "\n" + errors : output) : null);
     }
 
     static string Tail(string s, int n) { return s.Length <= n ? s : s.Substring(s.Length - n); }
