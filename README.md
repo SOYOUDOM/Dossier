@@ -739,10 +739,20 @@ Press the **sidebar button** beside the logo (a square with a line down its
 left side), or the `[` key. The sidebar folds to a narrow column of icons:
 every view is still there, says its name when you point at it, and a count
 becomes a small badge on its icon. The search box becomes an icon too - click
-it and type, and it opens over the page. Press the button (or `[`) again for
-the words back. Where the views are a bar across the top (the Classic and
+it and type, and it opens beside the icons, over the page. Press the button
+(or `[`) again for the words back. Where the views are a bar across the top (the Classic and
 Quiet looks, or any look on a narrow window), the same button turns the tabs
 into icons and hides the name beside the logo.
+
+#### The icons do not fit in my window - how do I reach the rest?
+
+Scroll the column of icons, with the mouse wheel over it or with its thin
+scroll bar on the right (since 5.25.1). On a short window, or with a large
+*Text size*, the folded sidebar is taller than the window, so it scrolls
+instead of squeezing the icons together; every icon keeps its size. When you
+open a page with a key (`1`-`8`), the command palette or the assistant, the
+column scrolls to show that page's icon. The same is true of the narrow
+column the sidebar becomes when the assistant is docked beside it.
 
 #### How do I make the top bar smaller?
 

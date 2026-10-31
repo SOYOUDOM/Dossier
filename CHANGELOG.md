@@ -6,6 +6,25 @@ holds — which is what to paste into a bug report.
 
 ---
 
+## 5.25.1 - 2026-10-31
+
+**The folded sidebar scrolls on a short window, instead of piling its icons up.**
+
+- **A scroll bar for the icons.** With the sidebar folded to icons, a short
+  window (or a large *Text size*) left the column taller than the window and
+  its icons ran over each other at the bottom. The column now scrolls, with a
+  thin scroll bar, and no icon is squeezed: each keeps its size and its gap.
+  In every look (Studio, Nova, Prism, Neon).
+- **The search box opens beside the icons.** It used to grow inside the
+  column, which a scrolling column would cut off; now, while you type, it is
+  drawn beside its icon, over the page, and goes back to an icon after.
+- **The page you open stays in sight.** Opening a page with a key (`1`-`8`),
+  the command palette or the assistant scrolls the column to its icon.
+- **The narrow column beside the docked assistant** (windows 901-1240 px
+  wide) got the same: its two 5.25 buttons go under the logo (beside it they
+  pushed the logo out of the column), a thin scroll bar, the search box
+  beside it while you type.
+
 ## 5.25.0 - 2026-10-31
 
 **A cleaner screen: fold the sidebar to icons and the top bar to one line, on every page - and zoom in the automation designer.**

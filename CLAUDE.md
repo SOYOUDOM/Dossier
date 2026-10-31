@@ -92,13 +92,13 @@ A *workspace* is a folder the user picks (File System Access API):
 - Commit messages: clear summary + body; no model names in commits, code or
   docs. Do not open a pull request unless the owner asks.
 - Work so far is on branch `claude/chat-panel-pixel-art-gifs-d822hq`
-  (latest: 5.25.0). Follow the branch instructions of your own session.
+  (latest: 5.25.1). Follow the branch instructions of your own session.
 
 ## Testing
 
 ```
 node --test                                   # 91 unit tests (Sources, grounding, names check, code origin, flow reply fields, diagrams, automations)
-node tests/e2e/run.js                         # the app in headless Chrome/Edge: 300 checks (CHROME=<path> to choose)
+node tests/e2e/run.js                         # the app in headless Chrome/Edge: 304 checks (CHROME=<path> to choose)
 node tests/bridge/run.js                      # the bridge's automation routes, built and run (mcs+mono or csc): 60 checks
 node flow/check-prompt.js                     # after editing flow/prompt.txt ...
 python3 flow/embed-prompt.py                  # ... then copy it into flow.js (PROMPT_BUILTIN)
@@ -131,6 +131,27 @@ Also useful:
   `DossierFlow.validate`. `tests/e2e/run.js` is a working example of all of it.
 
 ## Recent history (newest first)
+
+- **5.25.1** - Owner: "the icons at the side bar look like a mess when
+  there is no scroll bar, please add it". The 5.25 folded sidebar had
+  `overflow:visible` (so the search box could grow out of it), and on a
+  short window the column ran past the bottom. Now: the folded `.mast`
+  scrolls (`overflow:hidden auto`, `scrollbar-width:thin`, `--scroll`
+  colour except Prism/Neon, which keep their own `scrollbar-color` from
+  `:root`), `.mast > *{flex-shrink:0}`. The search box: `findPop(on)` on
+  `#q` focus/blur, only when `findIsTile()` (in `.mast`, narrower than 120
+  page px, `data-ui="studio"`, `matchMedia("(min-width:901px)")`); it sets
+  `--fx/--fy/--fh` (page px, from the tile's screen rect / `pageZoom()`)
+  and `.find.pop` - the tile keeps its height, input and icon are
+  `position:fixed` beside it (CSS `the search box of a rail (5.25.1)`);
+  re-placed on the rail's scroll, blurred on resize. `navReveal()` from
+  `setView` scrolls the picked tab into the rail. The chat-docked rail
+  (901-1240 px, `body.chatting`) got the same brand column (its `.lytbtns`
+  had pushed the logo out), thin bar and pop-out. Tests: 4 e2e checks
+  (304; text at 200% makes the window short - note that a zoom set from
+  code starts CSS transitions in Chromium: `document.getAnimations()` →
+  `finish()` before measuring). Screenshot tip: Playwright hides scroll
+  bars in headless unless `ignoreDefaultArgs:["--hide-scrollbars"]`.
 
 - **5.25.0** - Owner (a photo of a mock-up made from a screenshot, dark,
   sidebar of icons, the designer bar as a path, zoom at the bottom left):

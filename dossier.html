@@ -6582,7 +6582,12 @@ body.chsizing .app,body.chsizing .pet{transition:none!important}
 /* ── the sidebar as a rail of icons (desk widths) ───────────────────── */
 @media (min-width:901px){
   :root[data-ui="studio"][data-navmin] .app{grid-template-columns:68px minmax(0,1fr)}
-  :root[data-ui="studio"][data-navmin] .mast{padding:14px 10px 10px;gap:10px;overflow:visible}
+  /* 5.25.1: on a short window the rail scrolls, with a thin bar, and
+     nothing in it is squeezed: every icon keeps its size and its gap */
+  :root[data-ui="studio"][data-navmin] .mast{padding:14px 10px 10px;gap:10px;overflow:hidden auto;
+    scrollbar-width:thin;overscroll-behavior:contain}
+  :root[data-ui="studio"][data-navmin]:not([data-prism]):not([data-neon]) .mast{scrollbar-color:var(--scroll) transparent}
+  :root[data-ui="studio"][data-navmin] .mast > *{flex-shrink:0}
   :root[data-ui="studio"][data-navmin] .brand{flex-direction:column;justify-content:center;padding:0;gap:8px}
   :root[data-ui="studio"][data-navmin] .lytbtns{margin:0;flex-direction:column;gap:2px}
   :root[data-ui="studio"][data-navmin] .lyt{width:36px}
@@ -6591,11 +6596,6 @@ body.chsizing .app,body.chsizing .pet{transition:none!important}
   :root[data-ui="studio"][data-navmin] .find input{padding:0 0 0 28px}
   :root[data-ui="studio"][data-navmin] .find input::placeholder{color:transparent}
   :root[data-ui="studio"][data-navmin] .find .ic{left:50%;transform:translateX(-50%)}
-  /* the box is an icon until it is typed in; then it opens over the page */
-  :root[data-ui="studio"][data-navmin] .find:focus-within{width:260px;position:relative;z-index:45}
-  :root[data-ui="studio"][data-navmin] .find:focus-within input{padding-left:30px;box-shadow:var(--shadow)}
-  :root[data-ui="studio"][data-navmin] .find:focus-within input::placeholder{color:var(--ink-3)}
-  :root[data-ui="studio"][data-navmin] .find:focus-within .ic{left:10px;transform:none}
   :root[data-ui="studio"][data-navmin] .tabs button{justify-content:center;padding:10px 0}
   :root[data-ui="studio"][data-navmin] .tabs button::before{width:auto;font-size:16px}
   :root[data-ui="studio"][data-navmin] .mastsp{flex-direction:column;gap:8px}
@@ -6611,10 +6611,35 @@ body.chsizing .app,body.chsizing .pet{transition:none!important}
   :root[data-look="nova"][data-navmin] .wsbtn .fld{display:block}
   :root[data-look="nova"][data-navmin] .wsbtn .dot{margin-left:0}
   :root[data-look="nova"][data-navmin] .find input{padding:0}
-  :root[data-look="nova"][data-navmin] .find:focus-within input{padding-left:34px}
   :root[data-look="nova"][data-navmin] .mastsp{padding:6px;border-radius:12px}
   :root[data-look="nova"][data-navmin] .brand .seal{margin:0 auto}
 }
+/* ── the rail beside the docked assistant (901-1240px) has the same top
+   as the folded sidebar: the two buttons go under the logo, and the rail
+   scrolls with a thin bar (5.25.1; beside the logo they pushed it out) */
+@media (min-width:901px) and (max-width:1240px){
+  :root[data-ui="studio"] body.chatting .brand{flex-direction:column;gap:8px}
+  :root[data-ui="studio"] body.chatting .lytbtns{margin:0;flex-direction:column;gap:2px}
+  :root[data-ui="studio"] body.chatting .lyt{width:36px}
+  :root[data-ui="studio"] body.chatting .mast{scrollbar-width:thin;overscroll-behavior:contain}
+  :root[data-ui="studio"]:not([data-prism]):not([data-neon]) body.chatting .mast{scrollbar-color:var(--scroll) transparent}
+  :root[data-ui="studio"] body.chatting .mast > *{flex-shrink:0}
+  :root[data-look="nova"] body.chatting .brand .seal{margin:0 auto}
+}
+/* ── the search box of a rail (5.25.1) ─────────────────────────────────
+   In a rail the box is an icon tile, and the rail scrolls, so it would
+   cut a wider box off. While it is typed in, findPop() draws the box
+   beside the tile, over the page: the tile keeps its place (its height in
+   --fh), the box and its icon are fixed at the tile's place (--fx, --fy,
+   page pixels). Used by the folded sidebar and by the rail the sidebar
+   becomes beside the docked assistant. */
+:root[data-ui="studio"] .mast .find.pop{height:var(--fh)}
+:root[data-ui="studio"] .mast .find.pop input{position:fixed;left:var(--fx);top:var(--fy);width:300px;height:var(--fh);
+  z-index:70;padding:0 12px 0 34px;background:var(--paper);box-shadow:var(--shadow),0 0 0 3px var(--ring)}
+:root[data-ui="studio"] .mast .find.pop input::placeholder{color:var(--ink-3)}
+:root[data-ui="studio"] .mast .find.pop .ic{position:fixed;left:calc(var(--fx) + 12px);top:calc(var(--fy) + var(--fh) / 2);
+  transform:translateY(-50%);z-index:71}
+:root[data-look="nova"] .mast .find.pop input{box-shadow:var(--nx-sh3),var(--nx-ring)}
 /* ── the line icons a folded navigation shows, in every look (Nova's own
    set; Studio, Classic and Quiet use them only while folded) ────────── */
 :root{
@@ -10709,7 +10734,7 @@ const STATUSES = [
    the status bar, and clicking it copies a line you can paste into a bug
    report — build date and flow protocol included, because those are the two
    things that actually differ between copies. */
-const APP_VERSION = "5.25.0";
+const APP_VERSION = "5.25.1";
 const APP_BUILT = "2026-10-31";
 function buildLine(){
   return "KalKech v" + APP_VERSION + " \u00b7 built " + APP_BUILT +
@@ -11068,6 +11093,37 @@ function navTitles(){
     b.title = n;
     if (document.documentElement.hasAttribute("data-navmin")) b.setAttribute("aria-label", n); else b.removeAttribute("aria-label");
   });
+}
+/* ── the rail scrolls (5.25.1) ─────────────────────────────────────────
+   On a short window the folded sidebar is taller than the window, so it
+   scrolls. Two things follow from that. The search box, a tile in the
+   rail, cannot grow inside it (the rail would cut it off): while it is
+   typed in, it is drawn beside the tile, over the page. And the page
+   picked - by a key, the palette or the assistant - may be an icon
+   scrolled out of sight, so the rail brings it back into view. */
+function findIsTile(f){
+  /* a rail: the folded sidebar, or the one beside the docked assistant */
+  return f && f.closest(".mast") && f.getBoundingClientRect().width / pageZoom() < 120 &&
+         document.documentElement.getAttribute("data-ui") === "studio" && matchMedia("(min-width:901px)").matches;
+}
+function findPop(on){
+  const f = document.querySelector(".mast .find");
+  if (!f) return;
+  if (on && !f.classList.contains("pop") && !findIsTile(f)) return;
+  if (!on){ f.classList.remove("pop"); return; }
+  /* where the tile is on the screen, written in page pixels */
+  const z = pageZoom(), r = f.getBoundingClientRect();
+  f.style.setProperty("--fx", Math.round(r.left / z) + "px");
+  f.style.setProperty("--fy", Math.round(r.top / z) + "px");
+  f.style.setProperty("--fh", Math.round(r.height / z) + "px");
+  f.classList.add("pop");
+}
+function navReveal(){
+  const m = document.querySelector(".mast"), b = document.querySelector("#tabs button.on");
+  if (!m || !b || m.scrollHeight <= m.clientHeight + 1) return;
+  const z = pageZoom(), mr = m.getBoundingClientRect(), br = b.getBoundingClientRect();
+  if (br.top < mr.top) m.scrollTop -= (mr.top - br.top) / z + 10;
+  else if (br.bottom > mr.bottom) m.scrollTop += (br.bottom - mr.bottom) / z + 10;
 }
 /* Choosing Nova also puts on its palette - light or dark, whichever the
    current one was - so it looks the way it was designed the first time.
@@ -33072,6 +33128,7 @@ function setView(v){
   S.view = v;
   $$("#tabs button").forEach(b => b.classList.toggle("on", b.dataset.v === v));
   $$(".view").forEach(s => s.classList.toggle("on", s.dataset.v === v));
+  navReveal();
   /* Assist reads every record on purpose — the baselines it compares against
      live in the closed ones — so the filter rail would be lying if it stayed.
      Automations (5.24) has nothing to do with the record filters, nor with
@@ -36209,6 +36266,13 @@ function clearFilters(){
 }
 $("clearF").addEventListener("click", clearFilters);
 $("q").addEventListener("input", debounce(function(){ S.filters.q = $("q").value.trim().toLowerCase(); renderAll(); }, 180));
+$("q").addEventListener("focus", () => findPop(true));
+$("q").addEventListener("blur", () => findPop(false));
+/* the tile moves with the rail: the box follows it, or closes on a resize */
+document.querySelector(".mast").addEventListener("scroll", () => {
+  if (document.querySelector(".mast .find.pop")) findPop(true);
+}, { passive:true });
+window.addEventListener("resize", () => { if (document.querySelector(".mast .find.pop") && document.activeElement === $("q")) $("q").blur(); });
 
 /* main click routing */
 $("main").addEventListener("click", e => {

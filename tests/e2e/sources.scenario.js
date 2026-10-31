@@ -1637,6 +1637,37 @@
   document.dispatchEvent(new KeyboardEvent("keydown", { key:"]", bubbles:true }));
   await sleep(200);
   check("(5.25) [ and ] do the same from the keyboard", !htmlEl.hasAttribute("data-navmin") && !htmlEl.hasAttribute("data-topmin") && mastW() > 180);
+  /* 5.25.1: the folded rail on a short window (here: text at 200%, so
+     the window is 450 page pixels high) scrolls instead of piling up */
+  const zoomWas = htmlEl.style.zoom;
+  setView("day"); layoutCfg().navMin = true; applyLayout();
+  htmlEl.style.zoom = "2"; await sleep(250);
+  /* a zoom change set from code starts the rail's own transitions (sizes
+     are animated in screen pixels): let them end before measuring */
+  document.getAnimations().forEach(a => { try { a.finish(); } catch (e){} });
+  await sleep(50);
+  const mastEl = document.querySelector(".mast");
+  mastEl.scrollTop = 0;
+  const tabHs = [...document.querySelectorAll("#tabs button")].map(b => Math.round(b.getBoundingClientRect().height / pageZoom()));
+  check("(5.25.1) a folded sidebar taller than the window scrolls, and no icon is squeezed",
+        getComputedStyle(mastEl).overflowY === "auto" && mastEl.scrollHeight > mastEl.clientHeight + 40 &&
+        Math.min(...tabHs) === Math.max(...tabHs) && Math.min(...tabHs) >= 36,
+        mastEl.clientHeight + "/" + mastEl.scrollHeight + " " + tabHs.join(","));
+  $("q").focus(); await sleep(100);
+  const ftR = document.querySelector(".mast .find").getBoundingClientRect(), fiR = $("q").getBoundingClientRect();
+  check("(5.25.1) the rail's search box opens beside it while typed in, at the icon's place, not cut off",
+        !!document.querySelector(".mast .find.pop") && document.activeElement === $("q") && fiR.width > ftR.width * 4 &&
+        Math.abs(fiR.left - ftR.left) < 3 && Math.abs(fiR.top - ftR.top) < 3,
+        [ftR.left, ftR.top, ftR.width, fiR.left, fiR.top, fiR.width].map(Math.round).join(","));
+  $("q").blur(); await sleep(60);
+  check("...and is an icon again after", !document.querySelector(".mast .find.pop") && Math.abs($("q").getBoundingClientRect().width - ftR.width) < 3);
+  mastEl.scrollTop = 0;
+  setView("auto"); await sleep(150);
+  const abR = document.querySelector('#tabs [data-v="auto"]').getBoundingClientRect(), mrR = mastEl.getBoundingClientRect();
+  check("(5.25.1) the page picked (a key, the palette, the assistant) is scrolled into sight in the rail",
+        mastEl.scrollTop > 0 && abR.top >= mrR.top - 1 && abR.bottom <= mrR.bottom + 1,
+        mastEl.scrollTop + " " + [abR.top, abR.bottom, mrR.top, mrR.bottom].map(Math.round).join(","));
+  htmlEl.style.zoom = zoomWas; layoutCfg().navMin = false; applyLayout(); mastEl.scrollTop = 0;
   /* the designer: the bar as a path, the more menu, the zoom */
   autoEdit(au.id);
   await until(() => document.querySelector("#vAuto .apflow") && document.querySelector("#vAuto .apzoom"), 4000);
