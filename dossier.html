@@ -1674,6 +1674,24 @@ button.auchip:hover{border-color:var(--accent);color:var(--accent)}
 .apchk.soft{color:var(--p2);border-color:color-mix(in srgb,var(--p2) 40%,var(--rule))}
 .apchk:empty{display:none}
 .apgrp{display:inline-flex;gap:2px}
+/* 5.25: the bar as a path, the checker as a dot, the zoom at the bottom left */
+.apbar2 .apsl .api{width:12px;height:12px;color:var(--ink-3)}
+.apbar2 .apbk .api{width:15px;height:15px}
+.apbridge[hidden]{display:none}
+.apchk.ok .api{width:8px;height:8px}
+.apchk.ok{border-color:color-mix(in srgb,var(--st-done) 30%,var(--rule));background:color-mix(in srgb,var(--st-done) 6%,var(--paper))}
+.apbar2 .btn .api{width:14px;height:14px}
+.apzoom{position:absolute;left:14px;bottom:14px;z-index:4;display:flex;align-items:center;gap:1px;padding:3px;
+  background:var(--paper);border:1px solid var(--rule);border-radius:11px;box-shadow:0 2px 10px rgba(0,0,0,.10)}
+.apzoom button{height:28px;min-width:28px;padding:0 6px;border:0;border-radius:8px;background:none;color:var(--ink-2);cursor:pointer;
+  display:grid;place-items:center;font:inherit;font-size:11.5px;font-variant-numeric:tabular-nums}
+.apzoom button:hover{background:var(--paper-3);color:var(--ink)}
+.apzoom .pct{min-width:48px;font-weight:600}
+.apzoom .api{width:14px;height:14px}
+.appline{display:flex;align-items:center;gap:8px;padding:7px 9px 5px;margin-top:4px;border-top:1px solid var(--rule);font-size:11px;color:var(--ink-2)}
+.appline .api{width:9px;height:9px}
+.appline.ok .api{color:var(--st-done)}
+.appline.bad .api{color:var(--p1)}
 .apdm{display:flex;flex:1;min-height:0;position:relative}
 .apcv{flex:1;min-width:0;overflow:auto;outline:none;
   background-color:var(--paper-2);background-image:radial-gradient(color-mix(in srgb,var(--ink-3) 30%,transparent) 1px,transparent 1.2px);background-size:18px 18px}
@@ -6533,6 +6551,177 @@ body.chsizing .app,body.chsizing .pet{transition:none!important}
 .pwseg button.on{background:var(--ch-acc);color:#fff}
 /* ═══ /THE MIND MAP ═══ */
 
+/* ═══ THE SIDEBAR AND THE TOP BAR (5.25) ════════════════════════════════
+   The owner: "a button to fold the sidebar to icons only, and the top bar
+   togglable the same way - for every page, not only Automations".
+
+   data-navmin on <html>: the navigation keeps its icons and drops its
+   words. In the sidebar looks (Studio, Nova, Prism, Neon) at desk widths
+   the column becomes a rail of icons - the same rail the sidebar already
+   folded to when the assistant docked beside a middle-sized window; a
+   count becomes a small badge on its icon, and every icon says its name on
+   hover. Where the navigation is a bar across the top (Classic, Quiet, any
+   look on a narrow window), its tabs become glyphs and the wordmark goes.
+
+   data-topmin: the bar across the top of the page is one slim line. Nova's
+   page header keeps its title, small, and its buttons as icons; the bar for
+   a new record is one line high and its examples go; the filters sit
+   closer. Nothing is taken away: every control is still there.
+
+   Both are switches in settings.layout, kept with the workspace, and both
+   buttons live beside the logo, so they are on every page. */
+.lytbtns{display:flex;gap:2px;margin-left:auto;flex:0 0 auto}
+.lyt{width:28px;height:28px;border:1px solid transparent;border-radius:var(--r-xs);background:none;color:var(--ink-3);
+  cursor:pointer;display:grid;place-items:center;padding:0;transition:color .14s,background .14s}
+.lyt:hover{color:var(--ink);background:var(--paper-3)}
+.lyt[aria-pressed="true"]{color:var(--accent)}
+.lyt svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.lyt[aria-pressed="true"] svg .fl{fill:currentColor;fill-opacity:.28}
+:root[data-look="nova"] .lyt:hover{background:var(--nx-hover)}
+
+/* ── the sidebar as a rail of icons (desk widths) ───────────────────── */
+@media (min-width:901px){
+  :root[data-ui="studio"][data-navmin] .app{grid-template-columns:68px minmax(0,1fr)}
+  :root[data-ui="studio"][data-navmin] .mast{padding:14px 10px 10px;gap:10px;overflow:visible}
+  :root[data-ui="studio"][data-navmin] .brand{flex-direction:column;justify-content:center;padding:0;gap:8px}
+  :root[data-ui="studio"][data-navmin] .lytbtns{margin:0;flex-direction:column;gap:2px}
+  :root[data-ui="studio"][data-navmin] .lyt{width:36px}
+  :root[data-ui="studio"][data-navmin] :is(.brand .wm,.tabs button .lb,.tabs button .kb,.wsbtn .nm,.find .k,.dial){display:none}
+  :root[data-ui="studio"][data-navmin] .wsbtn{justify-content:center;padding:0;gap:5px}
+  :root[data-ui="studio"][data-navmin] .find input{padding:0 0 0 28px}
+  :root[data-ui="studio"][data-navmin] .find input::placeholder{color:transparent}
+  :root[data-ui="studio"][data-navmin] .find .ic{left:50%;transform:translateX(-50%)}
+  /* the box is an icon until it is typed in; then it opens over the page */
+  :root[data-ui="studio"][data-navmin] .find:focus-within{width:260px;position:relative;z-index:45}
+  :root[data-ui="studio"][data-navmin] .find:focus-within input{padding-left:30px;box-shadow:var(--shadow)}
+  :root[data-ui="studio"][data-navmin] .find:focus-within input::placeholder{color:var(--ink-3)}
+  :root[data-ui="studio"][data-navmin] .find:focus-within .ic{left:10px;transform:none}
+  :root[data-ui="studio"][data-navmin] .tabs button{justify-content:center;padding:10px 0}
+  :root[data-ui="studio"][data-navmin] .tabs button::before{width:auto;font-size:16px}
+  :root[data-ui="studio"][data-navmin] .mastsp{flex-direction:column;gap:8px}
+  /* Nova, Prism, Neon: line icons, and a count as a badge on the icon */
+  :root[data-look="nova"][data-navmin] .app{grid-template-columns:72px minmax(0,1fr)}
+  :root[data-prism][data-navmin] .app{grid-template-columns:86px minmax(0,1fr)}
+  :root[data-look="nova"][data-navmin] .mast{padding:16px 10px 12px}
+  :root[data-look="nova"][data-navmin] .nxg{display:none}
+  :root[data-look="nova"][data-navmin] .tabs button{justify-content:center;padding:0;height:40px}
+  :root[data-look="nova"][data-navmin] .tabs button::before{width:19px;height:19px}
+  :root[data-look="nova"][data-navmin] .nxb{position:absolute;top:3px;right:3px;margin:0;font-size:9px;min-width:15px;
+    line-height:15px;padding:0 4px;box-shadow:0 0 0 2px var(--nx-side)}
+  :root[data-look="nova"][data-navmin] .wsbtn .fld{display:block}
+  :root[data-look="nova"][data-navmin] .wsbtn .dot{margin-left:0}
+  :root[data-look="nova"][data-navmin] .find input{padding:0}
+  :root[data-look="nova"][data-navmin] .find:focus-within input{padding-left:34px}
+  :root[data-look="nova"][data-navmin] .mastsp{padding:6px;border-radius:12px}
+  :root[data-look="nova"][data-navmin] .brand .seal{margin:0 auto}
+}
+/* ── the line icons a folded navigation shows, in every look (Nova's own
+   set; Studio, Classic and Quiet use them only while folded) ────────── */
+:root{
+  --lyi-day:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='4'/%3E%3Cpath d='M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4'/%3E%3C/svg%3E");
+  --lyi-board:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='3' width='18' height='18' rx='3'/%3E%3Cpath d='M8 7v8M12 7v4M16 7v10'/%3E%3C/svg%3E");
+  --lyi-register:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 6h11M9 12h11M9 18h11'/%3E%3Cpath d='M4 6h.01M4 12h.01M4 18h.01' stroke-width='3'/%3E%3C/svg%3E");
+  --lyi-week:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4.5' width='18' height='16.5' rx='3'/%3E%3Cpath d='M8 2.5v4M16 2.5v4M3 10h18'/%3E%3Cpath d='M8 14h.01M12 14h.01M16 14h.01M8 17.5h.01M12 17.5h.01' stroke-width='2.6'/%3E%3C/svg%3E");
+  --lyi-library:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 7.5A2.5 2.5 0 0 1 5.5 5H9l2 2.5h7.5A2.5 2.5 0 0 1 21 10v7.5a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 17.5z'/%3E%3C/svg%3E");
+  --lyi-insight:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 20V10M10 20V4M16 20v-7M21 20H3'/%3E%3C/svg%3E");
+  --lyi-assist:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 3l1.8 4.9L18.7 9.7l-4.9 1.8L12 16.4l-1.8-4.9L5.3 9.7l4.9-1.8z'/%3E%3Cpath d='M19 15v5M16.5 17.5h5'/%3E%3C/svg%3E");
+  --lyi-auto:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='3' width='8' height='6' rx='1.6'/%3E%3Crect x='13' y='15' width='8' height='6' rx='1.6'/%3E%3Cpath d='M7 9v3.5a2 2 0 0 0 2 2h6a2 2 0 0 1 2 2V15'/%3E%3C/svg%3E");
+}
+@media (min-width:901px){
+  :root[data-ui="studio"][data-navmin]:not([data-look="nova"]) .tabs button[data-v="day"]::before{--ic:var(--lyi-day)}
+  :root[data-ui="studio"][data-navmin]:not([data-look="nova"]) .tabs button[data-v="board"]::before{--ic:var(--lyi-board)}
+  :root[data-ui="studio"][data-navmin]:not([data-look="nova"]) .tabs button[data-v="register"]::before{--ic:var(--lyi-register)}
+  :root[data-ui="studio"][data-navmin]:not([data-look="nova"]) .tabs button[data-v="week"]::before{--ic:var(--lyi-week)}
+  :root[data-ui="studio"][data-navmin]:not([data-look="nova"]) .tabs button[data-v="library"]::before{--ic:var(--lyi-library)}
+  :root[data-ui="studio"][data-navmin]:not([data-look="nova"]) .tabs button[data-v="insight"]::before{--ic:var(--lyi-insight)}
+  :root[data-ui="studio"][data-navmin]:not([data-look="nova"]) .tabs button[data-v="assist"]::before{--ic:var(--lyi-assist)}
+  :root[data-ui="studio"][data-navmin]:not([data-look="nova"]) .tabs button[data-v="auto"]::before{--ic:var(--lyi-auto)}
+  :root[data-ui="studio"][data-navmin]:not([data-look="nova"]) .tabs button::before{content:"";width:18px;height:18px;font-size:0;background:currentColor;flex:0 0 auto;
+    -webkit-mask:var(--ic) center/contain no-repeat;mask:var(--ic) center/contain no-repeat}
+}
+/* ── a navigation bar across the top: icons, no words ──────────────── */
+:root[data-navmin]:is([data-ui="classic"],[data-ui="quiet"]) .tabs button[data-v="day"]::before{--ic:var(--lyi-day)}
+:root[data-navmin]:is([data-ui="classic"],[data-ui="quiet"]) .tabs button[data-v="board"]::before{--ic:var(--lyi-board)}
+:root[data-navmin]:is([data-ui="classic"],[data-ui="quiet"]) .tabs button[data-v="register"]::before{--ic:var(--lyi-register)}
+:root[data-navmin]:is([data-ui="classic"],[data-ui="quiet"]) .tabs button[data-v="week"]::before{--ic:var(--lyi-week)}
+:root[data-navmin]:is([data-ui="classic"],[data-ui="quiet"]) .tabs button[data-v="library"]::before{--ic:var(--lyi-library)}
+:root[data-navmin]:is([data-ui="classic"],[data-ui="quiet"]) .tabs button[data-v="insight"]::before{--ic:var(--lyi-insight)}
+:root[data-navmin]:is([data-ui="classic"],[data-ui="quiet"]) .tabs button[data-v="assist"]::before{--ic:var(--lyi-assist)}
+:root[data-navmin]:is([data-ui="classic"],[data-ui="quiet"]) .tabs button[data-v="auto"]::before{--ic:var(--lyi-auto)}
+:root[data-navmin]:is([data-ui="classic"],[data-ui="quiet"]) .tabs button::before{content:"";width:18px;height:18px;font-size:0;background:currentColor;flex:0 0 auto;
+  -webkit-mask:var(--ic) center/contain no-repeat;mask:var(--ic) center/contain no-repeat}
+:root[data-navmin]:is([data-ui="classic"],[data-ui="quiet"]) .tabs button :is(.lb,.kb){display:none}
+:root[data-navmin]:is([data-ui="classic"],[data-ui="quiet"]) .tabs button{padding:8px 11px}
+:root[data-navmin]:is([data-ui="classic"],[data-ui="quiet"]) .brand .wm{display:none}
+:root[data-navmin]:is([data-ui="classic"],[data-ui="quiet"]) .wsbtn .nm{display:none}
+@media (max-width:900px){
+  :root[data-navmin][data-ui="studio"]:not([data-look="nova"]) .tabs button[data-v="day"]::before{--ic:var(--lyi-day)}
+  :root[data-navmin][data-ui="studio"]:not([data-look="nova"]) .tabs button[data-v="board"]::before{--ic:var(--lyi-board)}
+  :root[data-navmin][data-ui="studio"]:not([data-look="nova"]) .tabs button[data-v="register"]::before{--ic:var(--lyi-register)}
+  :root[data-navmin][data-ui="studio"]:not([data-look="nova"]) .tabs button[data-v="week"]::before{--ic:var(--lyi-week)}
+  :root[data-navmin][data-ui="studio"]:not([data-look="nova"]) .tabs button[data-v="library"]::before{--ic:var(--lyi-library)}
+  :root[data-navmin][data-ui="studio"]:not([data-look="nova"]) .tabs button[data-v="insight"]::before{--ic:var(--lyi-insight)}
+  :root[data-navmin][data-ui="studio"]:not([data-look="nova"]) .tabs button[data-v="assist"]::before{--ic:var(--lyi-assist)}
+  :root[data-navmin][data-ui="studio"]:not([data-look="nova"]) .tabs button[data-v="auto"]::before{--ic:var(--lyi-auto)}
+  :root[data-navmin][data-ui="studio"]:not([data-look="nova"]) .tabs button::before{content:"";width:18px;height:18px;font-size:0;background:currentColor;flex:0 0 auto;
+    -webkit-mask:var(--ic) center/contain no-repeat;mask:var(--ic) center/contain no-repeat}
+  :root[data-navmin][data-ui="studio"]:not([data-look="nova"]) .tabs button :is(.lb,.kb){display:none}
+  :root[data-navmin][data-ui="studio"]:not([data-look="nova"]) .tabs button{padding:8px 11px}
+  :root[data-navmin][data-ui="studio"]:not([data-look="nova"]) .brand .wm{display:none}
+  :root[data-navmin][data-ui="studio"]:not([data-look="nova"]) .wsbtn .nm{display:none}
+  :root[data-look="nova"][data-navmin] .brand .wm{display:none}
+  :root[data-look="nova"][data-navmin] .wsbtn .nm{display:none}
+}
+
+/* ── the top bar, slim ──────────────────────────────────────────────── */
+:root[data-topmin] .readout{display:none}
+:root[data-topmin] .compose{padding-top:8px;padding-bottom:8px}
+:root[data-topmin] .cbar{height:36px;border-radius:var(--r-sm)}
+:root[data-topmin] .cbar input{font-size:13px}
+:root[data-topmin] .cbar .paste span{display:none}
+:root[data-topmin] .cbar .paste::before{content:"\2398";font-size:14px}
+:root[data-topmin] .sugg{top:50px}
+:root[data-topmin] .rail{padding-top:5px;padding-bottom:5px}
+:root[data-ui="studio"][data-topmin] .compose{padding:10px 24px 4px}
+:root[data-ui="studio"][data-topmin] .cbar{height:38px}
+:root[data-ui="studio"][data-topmin] .sugg{top:54px}
+:root[data-look="nova"][data-topmin] .compose{padding-top:8px}
+:root[data-look="nova"][data-topmin] .cbar{height:40px;border-radius:12px}
+:root[data-look="nova"][data-topmin] .cbar .n{width:26px;height:26px;border-radius:8px}
+:root[data-look="nova"][data-topmin] .cbar :is(.paste,.go){height:30px}
+:root[data-look="nova"][data-topmin] .sugg{top:56px}
+:root[data-look="nova"][data-topmin] .rail{padding-top:6px;padding-bottom:6px}
+/* Nova's page header: one line - the title, small, and its buttons as icons */
+:root[data-look="nova"][data-topmin] .nxhead{padding:10px var(--nx-pad) 2px;align-items:center;flex-wrap:nowrap}
+:root[data-look="nova"][data-topmin] .nxhead :is(.nxe,p){display:none}
+:root[data-look="nova"][data-topmin] .nxhead h1{font-size:17px;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+:root[data-look="nova"][data-topmin] .nxt{flex:1 1 auto}
+:root[data-look="nova"][data-topmin] :is(.nxsearch,.nxbtn){height:32px;border-radius:9px}
+:root[data-look="nova"][data-topmin] :is(.nxsearch,.nxbtn,.nxbtn.pri,.nxbtn.sq){width:32px;min-width:0;padding:0;justify-content:center}
+:root[data-look="nova"][data-topmin] .nxsearch{color:var(--ink-2)}
+:root[data-look="nova"][data-topmin] :is(.nxsearch > span,.nxsearch kbd,.nxbtn > span){display:none}
+:root[data-look="nova"][data-topmin][data-neon] .nxhead h1{font-size:17px}
+:root[data-look="nova"][data-topmin] body.chatting .nxbtn.ai{display:none}
+/* on the Automations page the designer's own bar says where you are, so
+   with the top bar slim it is the only bar - as in the owner's picture */
+:root[data-look="nova"][data-topmin] body.vauto .nxhead{display:none}
+/* the wordmark keeps to its line beside the two buttons */
+.brand .wm{min-width:0}
+.brand .wm span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* ── the status bar: a small icon before each count (every look) ────── */
+.sbi{display:inline-block;width:12px;height:12px;flex:0 0 auto;background:currentColor;opacity:.75;vertical-align:-2px;margin-right:5px;
+  -webkit-mask:var(--ic) center/contain no-repeat;mask:var(--ic) center/contain no-repeat}
+.sbi.s-rec{--ic:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M14 3H7.5A2.5 2.5 0 0 0 5 5.5v13A2.5 2.5 0 0 0 7.5 21h9a2.5 2.5 0 0 0 2.5-2.5V8z'/%3E%3Cpath d='M14 3v5h5M9 13h6M9 17h4'/%3E%3C/svg%3E")}
+.sbi.s-done{--ic:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='8.5'/%3E%3Cpath d='M8.2 12.3l2.6 2.6 5-5.4'/%3E%3C/svg%3E")}
+.sbi.s-att{--ic:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 11.5l-8.2 8.2a5.2 5.2 0 0 1-7.4-7.4l8.6-8.6a3.4 3.4 0 0 1 4.8 4.8l-8.6 8.6a1.7 1.7 0 0 1-2.4-2.4l7.9-7.9'/%3E%3C/svg%3E")}
+.sbi.s-time{--ic:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='8.5'/%3E%3Cpath d='M12 7.5V12l3 2'/%3E%3C/svg%3E")}
+#sbStore:not(:empty)::before,#sbRun::before{content:"";display:inline-block;width:12px;height:12px;background:currentColor;opacity:.75;
+  vertical-align:-2px;margin-right:5px;-webkit-mask:var(--ic) center/contain no-repeat;mask:var(--ic) center/contain no-repeat}
+#sbStore{--ic:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cellipse cx='12' cy='6' rx='7.5' ry='3'/%3E%3Cpath d='M4.5 6v12c0 1.7 3.4 3 7.5 3s7.5-1.3 7.5-3V6M4.5 12c0 1.7 3.4 3 7.5 3s7.5-1.3 7.5-3'/%3E%3C/svg%3E")}
+#sbRun{--ic:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M13 2.5L5 13.5h6l-1 8 8-11h-6z'/%3E%3C/svg%3E")}
+/* ═══ /THE SIDEBAR AND THE TOP BAR ═══ */
+
 </style>
 </head>
 <body>
@@ -6543,6 +6732,11 @@ body.chsizing .app,body.chsizing .pet{transition:none!important}
       <span class="seal" id="seal"><img id="brandLogo" src="logo.png" alt=""
             onload="this.parentNode.classList.add('hasimg')" onerror="this.remove()"></span>
       <span class="wm"><b data-i18n="AppName">KalKech</b><span data-i18n="AppTagline">Support operations record</span></span>
+      <!-- 5.25: fold the sidebar to icons, and the top bar to one line -->
+      <span class="lytbtns">
+        <button class="lyt" id="navBtn" type="button" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><path class="fl" d="M3.5 7a2.5 2.5 0 0 1 2.5-2.5h3v15H6A2.5 2.5 0 0 1 3.5 17z" stroke="none"/><path d="M9 4.5v15"/></svg></button>
+        <button class="lyt" id="topBtn" type="button" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><path class="fl" d="M3.5 7A2.5 2.5 0 0 1 6 4.5h12A2.5 2.5 0 0 1 20.5 7v2.5h-17z" stroke="none"/><path d="M3.5 9.5h17"/></svg></button>
+      </span>
     </div>
 
     <button class="wsbtn" id="wsBtn" title="Workspace folder">
@@ -6662,10 +6856,10 @@ body.chsizing .app,body.chsizing .pet{transition:none!important}
   </main>
 
   <footer class="status">
-    <span><b id="sbT">0</b> <span data-i18n="Foot_Records">records</span></span>
-    <span><b id="sbD">0</b> <span data-i18n="Foot_ClosedToday">closed today</span></span>
-    <span><b id="sbF">0</b> <span data-i18n="Foot_Documents">documents</span></span>
-    <span><b id="sbH">0h</b> <span data-i18n="Foot_Tracked">tracked</span></span>
+    <span><i class="sbi s-rec"></i><b id="sbT">0</b> <span data-i18n="Foot_Records">records</span></span>
+    <span><i class="sbi s-done"></i><b id="sbD">0</b> <span data-i18n="Foot_ClosedToday">closed today</span></span>
+    <span><i class="sbi s-att"></i><b id="sbF">0</b> <span data-i18n="Foot_Documents">documents</span></span>
+    <span><i class="sbi s-time"></i><b id="sbH">0h</b> <span data-i18n="Foot_Tracked">tracked</span></span>
     <span id="sbSave" role="button" tabindex="0">—</span>
     <span id="sbStore" title=""></span>
     <span id="sbRun" hidden></span>
@@ -10009,7 +10203,19 @@ const STRINGS = {
   KeyApDel: "Remove the card",
   KeyApSave: "Save the design",
   KeyApUndo: "Undo a change to the design (Ctrl Y: redo)",
-  KeyApEsc: "Close the side panel"
+  KeyApEsc: "Close the side panel",
+  /* ── the sidebar and the top bar (5.25) ────────────────────────────── */
+  LayNavHide: "Sidebar: icons only",
+  LayNavShow: "Sidebar: show the words",
+  LayTopHide: "Top bar: slim",
+  LayTopShow: "Top bar: full",
+  KeyNavMin: "Sidebar: icons only, or with words",
+  KeyTopMin: "Top bar: slim, or full",
+  ApZoomOut: "Zoom out (Ctrl and the mouse wheel)",
+  ApZoomIn: "Zoom in (Ctrl and the mouse wheel)",
+  ApZoomFit: "Fit the whole design in the window",
+  ApZoomReset: "Back to 100%",
+  ApMoreActions: "More"
 };
 
 /* Loaded files, keyed by culture code. "en" is always present, from STRINGS. */
@@ -10178,6 +10384,7 @@ function applyI18n(){
   $$("[data-i18n-ph]").forEach(el => { el.placeholder = L(el.getAttribute("data-i18n-ph")); });
   $$("[data-i18n-title]").forEach(el => { el.title = L(el.getAttribute("data-i18n-title")); });
   if (typeof chatNameShow === "function" && S.settings) chatNameShow();
+  if (S.settings) applyLayout();
 }
 
 /* ═══ FONTS ══════════════════════════════════════════════════════════════
@@ -10502,8 +10709,8 @@ const STATUSES = [
    the status bar, and clicking it copies a line you can paste into a bug
    report — build date and flow protocol included, because those are the two
    things that actually differ between copies. */
-const APP_VERSION = "5.24.0";
-const APP_BUILT = "2026-10-30";
+const APP_VERSION = "5.25.0";
+const APP_BUILT = "2026-10-31";
 function buildLine(){
   return "KalKech v" + APP_VERSION + " \u00b7 built " + APP_BUILT +
          " \u00b7 flow protocol " + (window.DossierFlow ? DossierFlow.version : "\u2014") +
@@ -10819,8 +11026,48 @@ function applyUi(mode){
   else document.documentElement.removeAttribute("data-neon");
   if ((m === "prism" || m === "neon") && typeof prismProbe === "function") prismProbe();
   if (typeof novaSync === "function") novaSync();
+  applyLayout();
   if (typeof prismInd === "function") prismInd();
   applyFonts();
+}
+/* ── the sidebar and the top bar, folded or not (5.25) ──────────────────
+   settings.layout: navMin (the navigation as icons only), topMin (the bar
+   across the top as one slim line), zoom (the automation designer's
+   canvas). The look of each is in THE SIDEBAR AND THE TOP BAR, at the end
+   of the stylesheet; this only sets the two attributes and the buttons. */
+function layoutCfg(){
+  const l = S.settings.layout = Object.assign({ navMin:false, topMin:false, zoom:1 }, S.settings.layout || {});
+  l.navMin = !!l.navMin; l.topMin = !!l.topMin;
+  l.zoom = Math.max(0.3, Math.min(2, +l.zoom || 1));
+  return l;
+}
+function applyLayout(){
+  const l = layoutCfg(), r = document.documentElement;
+  r.toggleAttribute("data-navmin", l.navMin);
+  r.toggleAttribute("data-topmin", l.topMin);
+  const nb = document.getElementById("navBtn"), tb = document.getElementById("topBtn");
+  if (nb){ nb.setAttribute("aria-pressed", String(l.navMin)); nb.title = L(l.navMin ? "LayNavShow" : "LayNavHide") + "  [";
+           nb.setAttribute("aria-label", nb.title); }
+  if (tb){ tb.setAttribute("aria-pressed", String(l.topMin)); tb.title = L(l.topMin ? "LayTopShow" : "LayTopHide") + "  ]";
+           tb.setAttribute("aria-label", tb.title); }
+  navTitles();
+}
+function layoutToggle(which){
+  const l = layoutCfg();
+  l[which] = !l[which];
+  applyLayout();
+  touch();
+  if (typeof prismInd === "function") setTimeout(prismInd, 30);
+}
+/* with the words folded away, each view still says its name - on hover,
+   and to a screen reader */
+function navTitles(){
+  document.querySelectorAll("#tabs button[data-v]").forEach(b => {
+    const lb = b.querySelector(".lb");
+    const n = lb ? lb.textContent : b.dataset.v;
+    b.title = n;
+    if (document.documentElement.hasAttribute("data-navmin")) b.setAttribute("aria-label", n); else b.removeAttribute("aria-label");
+  });
 }
 /* Choosing Nova also puts on its palette - light or dark, whichever the
    current one was - so it looks the way it was designed the first time.
@@ -24611,7 +24858,7 @@ async function saveReportToFolder(name, text){
 /* One table, so the sheet cannot drift from what the keys actually do. */
 const KEYS = [
   ["MovingAround", [
-    ["1 – 8", "KeySwitchView"], ["/", "KeySearch"], ["N", "KeyNewRecord"],
+    ["1 – 8", "KeySwitchView"], ["[", "KeyNavMin"], ["]", "KeyTopMin"], ["/", "KeySearch"], ["N", "KeyNewRecord"],
     ["J  ↓", "NextRecord"], ["K  ↑", "PreviousRecord"], ["Esc", "CloseWhatIsOpen"]]],
   ["OnTheRecordUnderTheCursor", [
     ["Enter  E", "OpenIt"], ["Space", "CycleItsStatus"], ["D", "MarkItDone"],
@@ -26262,6 +26509,9 @@ function buildCommands(q){
   VIEWS.forEach((v, i) =>
     add(L("Views"), String(i+1), v === "auto" ? L("Tab_Automations") : v.charAt(0).toUpperCase()+v.slice(1), "", () => setView(v), String(i+1)));
   add("Do","+",L("NewRecord2"),L("FocusTheComposeBar"), () => $("qa").focus(), "N");
+  /* the sidebar and the top bar (5.25) */
+  add(L("Views"),"\u25E7",L(layoutCfg().navMin ? "LayNavShow" : "LayNavHide"),"", () => layoutToggle("navMin"), "[");
+  add(L("Views"),"\u2B12",L(layoutCfg().topMin ? "LayTopShow" : "LayTopHide"),"", () => layoutToggle("topMin"), "]");
   add("Do","⎘",L("ReadAPastedMessage"),L("TurnATeamsMessageOrA"), async () => {
     let txt = "";
     try { txt = await navigator.clipboard.readText(); } catch(e){}
@@ -29487,7 +29737,12 @@ const AP_IC = {
   ai:'<path d="M12 3l1.8 4.9L18.7 9.7l-4.9 1.8L12 16.4l-1.8-4.9L5.3 9.7l4.9-1.8z"/>',
   lock:'<rect x="5" y="10.5" width="14" height="10" rx="2"/><path d="M8.5 10.5V7.5a3.5 3.5 0 0 1 7 0v3"/>',
   dot:'<circle cx="12" cy="12" r="4"/>',
-  user:'<circle cx="12" cy="8" r="3.6"/><path d="M5 20.5a7 7 0 0 1 14 0"/>'
+  user:'<circle cx="12" cy="8" r="3.6"/><path d="M5 20.5a7 7 0 0 1 14 0"/>',
+  morev:'<circle cx="12" cy="5.5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="18.5" r="1.6"/>',
+  folder:'<path d="M3 7.5A2.5 2.5 0 0 1 5.5 5H9l2 2.5h7.5A2.5 2.5 0 0 1 21 10v7.5a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 17.5z"/>',
+  save:'<path d="M5 3.5h11.5L20.5 7.5V18.5a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2v-13a2 2 0 0 1 2-2z"/><path d="M7.5 3.5v5h8v-5M7.5 20.5v-6h9v6"/>',
+  minus:'<path d="M5 12h14"/>',
+  fit:'<path d="M4 9V5.5A1.5 1.5 0 0 1 5.5 4H9M15 4h3.5A1.5 1.5 0 0 1 20 5.5V9M20 15v3.5a1.5 1.5 0 0 1-1.5 1.5H15M9 20H5.5A1.5 1.5 0 0 1 4 18.5V15"/>'
 };
 function apIc(n, cls){
   return '<svg class="api' + (cls ? " " + cls : "") + '" viewBox="0 0 24 24" aria-hidden="true" focusable="false">' + (AP_IC[n] || "") + "</svg>";
@@ -29675,7 +29930,9 @@ async function apBridgePaint(fresh){
   const info = await autoInfo(!!fresh);
   const b = $("apBridge"); if (!b) return;
   const ok = info && info.ok;
-  b.className = "apbridge " + (ok ? "ok" : "bad");
+  const quiet = b.classList.contains("quiet");
+  b.className = "apbridge " + (ok ? "ok" : "bad") + (quiet ? " quiet" : "");
+  b.hidden = quiet && !!ok;
   b.innerHTML = apIc("dot", "fill") + "<span>" + LE(ok ? "ApBridgeOk" : info && info.old ? "ApBridgeOld" : "ApBridgeBad") + "</span>";
   b.title = ok ? L("AutoBridgeOk", { ws:info.workspace || L("AutoNoWs") }) +
                  (info.workspace && FS.name && info.workspace !== FS.name ? " " + L("AutoBridgeOtherWs", { ws:info.workspace, here:FS.name }) : "")
@@ -29946,16 +30203,17 @@ function apDesignerHtml(){
   const pane = apPaneOpen();
   return '<div class="apd' + (run ? " isrun" : "") + '">' + apBarHtml(a, run) +
     '<div class="apdm' + (pane ? " haspane" : "") + '">' +
-      '<div class="apcv" id="apCanvas" tabindex="-1">' + (run ? apRunCanvas(run, a) : apCanvas(U.draft)) + "</div>" +
+      '<div class="apcv" id="apCanvas" tabindex="-1">' + (run ? apRunCanvas(run, a) : apCanvas(U.draft)) + "</div>" + apZoomHtml() +
       (pane ? '<aside class="appane" id="apPane" aria-label="' + LE("ApPaneLabel") + '">' + (run ? apRunPane(run, a) : apPaneHtml(U.draft)) + "</aside>" : "") +
     "</div></div>";
 }
 function apBarHtml(a, run){
   const U = AUTO.ui;
+  /* where you are, as a path: Automations › its name (5.25) */
   let h = '<div class="apbar2">' +
-    '<button class="apbk" data-ap="back" type="button" title="' + LE(run && U.draft ? "ApBackDesign" : "ApBackTo") + '">' + apIc("back") +
-      "<span>" + LE(run && U.draft ? "ApBackDesign" : "Tab_Automations") + "</span></button>" +
-    '<span class="apsl" aria-hidden="true">/</span>';
+    '<button class="apbk" data-ap="back" type="button" title="' + LE(run && U.draft ? "ApBackDesign" : "ApBackTo") + '">' +
+      apIc(run && U.draft ? "back" : "folder") + "<span>" + LE(run && U.draft ? "ApBackDesign" : "Tab_Automations") + "</span></button>" +
+    '<span class="apsl" aria-hidden="true">' + apIc("chev", "sm") + "</span>";
   if (run){
     const live = !!AUTO.live[run.id];
     const state = run.state === "running" && !live ? "stopped" : run.state;
@@ -29965,7 +30223,7 @@ function apBarHtml(a, run){
       '<span class="apmeta">' + esc([run.started ? stamp(run.started) : "", run.ms ? autoSecs(run.ms) : "",
                                      L(run.by === "assistant" ? "AutoByAssistantShort" : "AutoByYouShort"), run.record].filter(Boolean).join(" · ")) + "</span>" +
       '<span class="sp"></span>' +
-      '<span class="apbridge" id="apBridge"></span>' +
+      '<span class="apbridge quiet" id="apBridge"></span>' +
       (live ? '<button class="btn danger" data-austop="' + esc(run.id) + '" type="button">' + LE("AutoStop") + "</button>"
             : (U.runTest && U.draft ? '<button class="btn" data-ap="test" type="button">' + apIc("test") + "<span>" + LE("ApTestAgain") + "</span></button>"
                : a ? '<button class="btn" data-auagain="' + esc(a.id) + '" data-aurec="' + esc(run.record || "") + '" type="button">' + apIc("play", "fill") + "<span>" + LE("AutoRunAgain") + "</span></button>" : "") +
@@ -29975,17 +30233,85 @@ function apBarHtml(a, run){
     h += '<input class="apnm2" data-f="name" value="' + esc(U.draft.name) + '" aria-label="' + LE("AutoName") + '" spellcheck="false">' +
       '<span class="apdirty" id="apDirty"' + (apDirty() ? "" : " hidden") + ">" + LE("ApUnsaved") + "</span>" +
       '<span class="sp"></span>' +
-      '<span class="apbridge" id="apBridge"></span>' +
+      /* the tray program is only mentioned here when it is NOT ready */
+      '<span class="apbridge quiet" id="apBridge"></span>' +
       '<button class="apchk" id="apChk" data-ap="checker" type="button" aria-haspopup="menu"></button>' +
-      '<span class="apgrp">' +
-        '<button class="ib apib" data-ap="undo" type="button" title="' + LE("ApUndo") + '" aria-label="' + LE("ApUndo") + '"' + (U.undo.length ? "" : " disabled") + ">" + apIc("undo") + "</button>" +
-        '<button class="ib apib" data-ap="redo" type="button" title="' + LE("ApRedo") + '" aria-label="' + LE("ApRedo") + '"' + (U.redo.length ? "" : " disabled") + ">" + apIc("redo") + "</button>" +
-      "</span>" +
-      '<button class="btn" data-ap="test" type="button" title="' + LE("ApTestHint") + '">' + apIc("test") + "<span>" + LE("ApTest") + "</span></button>" +
       '<button class="btn" data-ap="run" type="button"' + (probs.some(p => !p.warn) ? " disabled" : "") + ">" + apIc("play", "fill") + "<span>" + LE("AutoRunBtn") + "</span></button>" +
-      '<button class="btn pri" data-ap="save" type="button" title="Ctrl+S">' + LE("AutoSave") + "</button>";
+      '<button class="btn pri" data-ap="save" type="button" title="Ctrl+S">' + apIc("save") + "<span>" + LE("AutoSave") + "</span></button>" +
+      '<button class="ib apib" data-ap="more" type="button" title="' + LE("ApMoreActions") + '" aria-label="' + LE("ApMoreActions") + '" aria-haspopup="menu">' + apIc("morev", "fill") + "</button>" +
+      '<button class="btn" data-ap="test" type="button" title="' + LE("ApTestHint") + '">' + apIc("test") + "<span>" + LE("ApTest") + "</span></button>";
   }
   return h + "</div>";
+}
+/* the canvas's zoom, bottom left: − 100% + and fit (5.25) */
+function apZoomHtml(){
+  const z = layoutCfg().zoom;
+  return '<div class="apzoom" role="group" aria-label="Zoom">' +
+    '<button type="button" data-ap="zout" title="' + LE("ApZoomOut") + '" aria-label="' + LE("ApZoomOut") + '">' + apIc("minus") + "</button>" +
+    '<button type="button" class="pct" id="apZoomPct" data-ap="zreset" title="' + LE("ApZoomReset") + '">' + Math.round(z * 100) + "%</button>" +
+    '<button type="button" data-ap="zin" title="' + LE("ApZoomIn") + '" aria-label="' + LE("ApZoomIn") + '">' + apIc("plus") + "</button>" +
+    '<button type="button" data-ap="zfit" title="' + LE("ApZoomFit") + '" aria-label="' + LE("ApZoomFit") + '">' + apIc("fit") + "</button></div>";
+}
+function apZoomStyle(){ const z = layoutCfg().zoom; return z === 1 ? "" : ' style="zoom:' + z + '"'; }
+/* zoomed about a point (the pointer, or the middle), so what you look at
+   stays where it is */
+function apZoomSet(z, at){
+  const l = layoutCfg(), cv = $("apCanvas"), fl = cv && cv.querySelector(".apflow");
+  z = Math.round(Math.max(0.3, Math.min(2, z)) * 100) / 100;
+  const old = l.zoom;
+  const lab = $("apZoomPct");
+  if (lab) lab.textContent = Math.round(z * 100) + "%";
+  if (z === old) return;
+  l.zoom = z; touch();
+  if (!fl) return;
+  const r = cv.getBoundingClientRect(), pz = pageZoom();
+  const px = at ? (at.x - r.left) / pz : cv.clientWidth / 2, py = at ? (at.y - r.top) / pz : cv.clientHeight / 2;
+  const cx = (cv.scrollLeft + px) / old, cy = (cv.scrollTop + py) / old;
+  fl.style.zoom = z === 1 ? "" : z;
+  cv.scrollLeft = cx * z - px; cv.scrollTop = cy * z - py;
+}
+const AP_ZOOMS = [0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 1.1, 1.25, 1.5, 1.75, 2];
+function apZoomStep(dir, at){
+  const z = layoutCfg().zoom;
+  const next = dir > 0 ? AP_ZOOMS.find(x => x > z + 0.001) : AP_ZOOMS.slice().reverse().find(x => x < z - 0.001);
+  apZoomSet(next || z, at);
+}
+/* the whole design in the window: measured at 100%, then scaled down to
+   fit (never up past 100%) */
+function apZoomFit(){
+  const cv = $("apCanvas"), fl = cv && cv.querySelector(".apflow");
+  if (!fl) return;
+  const pz = pageZoom(), was = fl.style.zoom;
+  fl.style.zoom = "";
+  let top = Infinity, bottom = -Infinity, left = Infinity, right = -Infinity;
+  [...fl.children].forEach(k => {
+    const r = k.getBoundingClientRect();
+    top = Math.min(top, r.top); bottom = Math.max(bottom, r.bottom); left = Math.min(left, r.left); right = Math.max(right, r.right);
+  });
+  fl.style.zoom = was;
+  if (!isFinite(top)) return;
+  const W = (right - left) / pz + 64, H = (bottom - top) / pz + 64;
+  const z = Math.max(0.3, Math.min(1, cv.clientWidth / W, cv.clientHeight / H));
+  apZoomSet(Math.floor(z * 100) / 100);
+  cv.scrollTop = 0;
+  cv.scrollLeft = Math.max(0, (cv.scrollWidth - cv.clientWidth) / 2);
+}
+/* the designer's other actions: undo, redo, the zoom, the tray program */
+function apMoreMenu(btn){
+  const U = AUTO.ui, info = AUTO.info;
+  const ok = info && info.ok;
+  const html = apItem("undo", "undo", L("ApUndo"), "", { off:!U.undo.length && !U.typing, kind:"finish" }) +
+    apItem("redo", "redo", L("ApRedo"), "", { off:!U.redo.length, kind:"finish" }) +
+    apItem("zfit", "fit", L("ApZoomFit"), "", { kind:"finish" }) +
+    apItem("zreset", "search", L("ApZoomReset"), "", { kind:"finish" }) +
+    '<div class="appline ' + (ok ? "ok" : "bad") + '">' + apIc("dot", "fill") + "<span>" +
+      LE(ok ? "ApBridgeOk" : info && info.old ? "ApBridgeOld" : "ApBridgeBad") + "</span></div>";
+  apPop(btn, html, k => {
+    if (k === "undo") return apUndo(true);
+    if (k === "redo") return apUndo(false);
+    if (k === "zfit") return apZoomFit();
+    if (k === "zreset") return apZoomSet(1);
+  }, "morepop");
 }
 /* the checker on the bar: Ready, or how many to fix */
 function apCheckPaint(){
@@ -29993,18 +30319,16 @@ function apCheckPaint(){
   const probs = apProbs();
   const hard = probs.filter(p => !p.warn).length, soft = probs.length - hard;
   b.className = "apchk " + (hard ? "bad" : soft ? "soft" : "ok");
-  b.innerHTML = apIc(hard || soft ? "warn" : "ok") + "<span>" + esc(hard ? L("ApToFix", { n:hard }) : soft ? L("ApToLook", { n:soft }) : L("ApReady")) + "</span>";
+  b.innerHTML = apIc(hard || soft ? "warn" : "dot", hard || soft ? "" : "fill") + "<span>" + esc(hard ? L("ApToFix", { n:hard }) : soft ? L("ApToLook", { n:soft }) : L("ApReady")) + "</span>";
   const d = $("apDirty"); if (d) d.hidden = !apDirty();
   const run = document.querySelector('#vAuto [data-ap="run"]'); if (run) run.disabled = hard > 0;
-  const u = document.querySelector('#vAuto [data-ap="undo"]'); if (u) u.disabled = !AUTO.ui.undo.length && !AUTO.ui.typing;
-  const r = document.querySelector('#vAuto [data-ap="redo"]'); if (r) r.disabled = !AUTO.ui.redo.length;
 }
 
 /* the canvas: "When you run it", the steps, "When it ends" */
 function apCanvas(a){
   const bad = {};
   apProbs().forEach(p => { const k = apProbKey(p); if (k) (bad[k] = bad[k] || []).push(p); });
-  return '<div class="apflow">' + apTrigCard(a, bad.trigger) + apLaneHtml(a, a.steps, "main", 0, bad) + apFinCard(a, bad.finish) + "</div>";
+  return '<div class="apflow"' + apZoomStyle() + ">" + apTrigCard(a, bad.trigger) + apLaneHtml(a, a.steps, "main", 0, bad) + apFinCard(a, bad.finish) + "</div>";
 }
 function apLaneHtml(a, list, ref, depth, bad){
   let h = apJoin(ref, 0, list.length === 0);
@@ -30054,7 +30378,7 @@ function apCardHtml(s, st, probs, opts){
     '<span class="apct"><span class="apcl"><b class="apcn">' + esc(name) + "</b>" + right + "</span>" +
       '<span class="apcs"><span class="apsm">' + esc(sum) + "</span>" + (keeps ? '<span class="apkp">→ ' + esc(keeps) + "</span>" : "") +
       (s ? apFlags(s) : "") + "</span></span>" +
-    (run ? "" : '<button class="apcm" type="button" data-apm="' + esc(id) + '" title="' + LE("ApMore") + '" aria-label="' + LE("ApMore") + '">' + apIc("more", "fill") + "</button>") +
+    (run ? "" : '<button class="apcm" type="button" data-apm="' + esc(id) + '" title="' + LE("ApMore") + '" aria-label="' + LE("ApMore") + '">' + apIc("morev", "fill") + "</button>") +
   "</div>";
 }
 /* how a step went, on its card: a mark, the status, the time */
@@ -30129,7 +30453,7 @@ function apRunCanvas(run, a){
       list.map(x => '<div class="apj ro"></div>' + node(x)).join("") + '<div class="apj ro end"></div></div>';
     return '<div class="apif">' + card + '<div class="apstem"></div><div class="apbr">' + lane("yes", k.yes) + lane("no", k.no) + "</div></div>";
   };
-  return '<div class="apflow isrun">' + apTrigCard(a, null, run) + top.map(x => '<div class="apj ro"></div>' + node(x)).join("") +
+  return '<div class="apflow isrun"' + apZoomStyle() + ">" + apTrigCard(a, null, run) + top.map(x => '<div class="apj ro"></div>' + node(x)).join("") +
     '<div class="apj ro"></div>' + apFinCard(a, null, run) + "</div>";
 }
 
@@ -31019,6 +31343,21 @@ function apFxInsert(text){
     apMoveTo(sid, j.dataset.ref, +j.dataset.i);
   });
 })();
+/* the canvas zooms with Ctrl and the mouse wheel, about the pointer, and
+   with Ctrl + / - / 0 while a card has the keyboard (5.25) */
+$("vAuto").addEventListener("wheel", e => {
+  if (!(e.ctrlKey || e.metaKey) || !e.target.closest || !e.target.closest("#apCanvas")) return;
+  e.preventDefault();
+  apZoomSet(layoutCfg().zoom * (e.deltaY < 0 ? 1.1 : 1 / 1.1), { x:e.clientX, y:e.clientY });
+}, { passive:false });
+document.addEventListener("keydown", e => {
+  if (S.view !== "auto" || !(e.ctrlKey || e.metaKey) || e.altKey) return;
+  const a = document.activeElement;
+  if (!a || !a.closest || !a.closest("#apCanvas")) return;
+  if (e.key === "=" || e.key === "+"){ e.preventDefault(); apZoomStep(1); }
+  else if (e.key === "-"){ e.preventDefault(); apZoomStep(-1); }
+  else if (e.key === "0"){ e.preventDefault(); apZoomSet(1); }
+});
 /* Ctrl+S saves, Ctrl+Z / Ctrl+Y undo and redo in the designer (outside a
    box - inside one, the box's own undo is the one you mean) */
 document.addEventListener("keydown", e => {
@@ -31055,6 +31394,11 @@ async function apAct(what, b){
     case "undo": return apUndo(true);
     case "redo": return apUndo(false);
     case "checker": return apCheckMenu(b);
+    case "more": return apMoreMenu(b);
+    case "zin": return apZoomStep(1);
+    case "zout": return apZoomStep(-1);
+    case "zreset": return apZoomSet(1);
+    case "zfit": return apZoomFit();
     case "test": return apTry("");
     case "run": {
       if (apDirty() && !autoSaveDraft()) return;
@@ -32741,6 +33085,9 @@ function setView(v){
   renderAll();
 }
 $("tabs").addEventListener("click", e => { const b = e.target.closest("button"); if (b) setView(b.dataset.v); });
+/* the two layout buttons beside the logo (5.25) */
+$("navBtn").addEventListener("click", e => { e.stopPropagation(); layoutToggle("navMin"); });
+$("topBtn").addEventListener("click", e => { e.stopPropagation(); layoutToggle("topMin"); });
 /* Prism's sliding light follows the tabs when the sidebar changes width */
 if (window.ResizeObserver) new ResizeObserver(() => { if (prismOn()) prismInd(); }).observe($("tabs"));
 
@@ -37175,6 +37522,9 @@ document.addEventListener("keydown", e => {
   if (e.key.toLowerCase() === "n"){ e.preventDefault(); return $("qa").focus(); }
   if (e.key.toLowerCase() === "w"){ e.preventDefault(); return openConsole(); }
   if (e.key.toLowerCase() === "a"){ e.preventDefault(); return openChat(); }
+  /* [ folds the sidebar, ] the top bar (5.25) */
+  if (e.key === "[" && !e.ctrlKey && !e.metaKey && !e.altKey){ e.preventDefault(); return layoutToggle("navMin"); }
+  if (e.key === "]" && !e.ctrlKey && !e.metaKey && !e.altKey){ e.preventDefault(); return layoutToggle("topMin"); }
   if (e.key === "j" || e.key === "ArrowDown"){ e.preventDefault(); return moveCursor(1); }
   if (e.key === "k" || e.key === "ArrowUp"){ e.preventDefault(); return moveCursor(-1); }
   if (["1","2","3","4","5","6","7","8"].indexOf(e.key) >= 0)

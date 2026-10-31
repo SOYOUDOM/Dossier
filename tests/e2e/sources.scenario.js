@@ -1612,6 +1612,69 @@
         !("runs" in xd.settings.automations) && JSON.stringify(xd).indexOf("Pw-e2e-Secret!") < 0 && JSON.stringify(xd).indexOf(TOKEN) < 0,
         JSON.stringify(xd.settings && Object.keys(xd.settings.automations || {})));
 
+  /* ── 5.25: the sidebar to icons, the top bar slim, the canvas zoom ─── */
+  closeChat();
+  setView("day"); await sleep(150);
+  const layWas = JSON.parse(JSON.stringify(layoutCfg()));
+  const htmlEl = document.documentElement;
+  const mastW = () => document.querySelector(".mast").getBoundingClientRect().width;
+  const wideW = mastW();
+  $("navBtn").click(); await sleep(250);
+  check("(5.25) the sidebar button folds the sidebar to icons, kept in the settings, every view still named on hover",
+        htmlEl.hasAttribute("data-navmin") && layoutCfg().navMin === true && mastW() < 100 && wideW > 180 &&
+        getComputedStyle(document.querySelector('#tabs [data-v="week"] .lb')).display === "none" &&
+        document.querySelector('#tabs [data-v="week"]').title === "Week" && $("navBtn").getAttribute("aria-pressed") === "true",
+        wideW + " -> " + mastW());
+  const cbarH = () => document.querySelector(".cbar").getBoundingClientRect().height;
+  const tallH = cbarH();
+  $("topBtn").click(); await sleep(250);
+  check("(5.25) the top bar button makes the top bar one slim line: the new-record bar lower, its examples gone",
+        htmlEl.hasAttribute("data-topmin") && layoutCfg().topMin === true && cbarH() < tallH && cbarH() <= 42 &&
+        getComputedStyle($("readout")).display === "none", tallH + " -> " + cbarH());
+  setView("auto"); await sleep(150);
+  check("...on every page: the Automations page keeps them", htmlEl.hasAttribute("data-navmin") && htmlEl.hasAttribute("data-topmin") && mastW() < 100);
+  document.dispatchEvent(new KeyboardEvent("keydown", { key:"[", bubbles:true }));
+  document.dispatchEvent(new KeyboardEvent("keydown", { key:"]", bubbles:true }));
+  await sleep(200);
+  check("(5.25) [ and ] do the same from the keyboard", !htmlEl.hasAttribute("data-navmin") && !htmlEl.hasAttribute("data-topmin") && mastW() > 180);
+  /* the designer: the bar as a path, the more menu, the zoom */
+  autoEdit(au.id);
+  await until(() => document.querySelector("#vAuto .apflow") && document.querySelector("#vAuto .apzoom"), 4000);
+  check("(5.25) the designer's bar: Automations › name, Ready, Run, Save, more, Test - undo and redo in the more menu",
+        /Automations/.test(document.querySelector('#vAuto .apbar2 [data-ap="back"]').textContent) &&
+        ["run", "save", "more", "test"].every(k => document.querySelector('#vAuto .apbar2 [data-ap="' + k + '"]')) &&
+        !document.querySelector('#vAuto .apbar2 [data-ap="undo"]'));
+  const zflow = () => document.querySelector("#vAuto .apflow");
+  const z0 = layoutCfg().zoom;
+  document.querySelector('#vAuto [data-ap="zout"]').click();
+  await sleep(100);
+  check("(5.25) zoom out: the canvas is drawn smaller, the box says by how much",
+        layoutCfg().zoom < z0 && String(zflow().style.zoom) === String(layoutCfg().zoom) &&
+        $("apZoomPct").textContent === Math.round(layoutCfg().zoom * 100) + "%", JSON.stringify(layoutCfg()) + " " + $("apZoomPct").textContent);
+  const zwas = layoutCfg().zoom;
+  const cvs = $("apCanvas"), cr = cvs.getBoundingClientRect();
+  cvs.dispatchEvent(new WheelEvent("wheel", { deltaY:-100, ctrlKey:true, bubbles:true, cancelable:true, clientX:cr.left + 200, clientY:cr.top + 200 }));
+  await sleep(100);
+  check("...Ctrl and the mouse wheel zoom about the pointer", layoutCfg().zoom > zwas, zwas + " -> " + layoutCfg().zoom);
+  document.querySelector('#vAuto [data-ap="zin"]').click();
+  apPaint(); await sleep(100);
+  check("...and the zoom stays when the design is drawn again", String(zflow().style.zoom) === String(layoutCfg().zoom) || layoutCfg().zoom === 1);
+  document.querySelector('#vAuto [data-ap="zreset"]').click();
+  await sleep(100);
+  check("...the % box puts it back to 100%", layoutCfg().zoom === 1 && !zflow().style.zoom && $("apZoomPct").textContent === "100%");
+  document.querySelector('#vAuto [data-ap="zfit"]').click();
+  await sleep(100);
+  check("...fit: the whole design in the window, never larger than 100%", layoutCfg().zoom <= 1 && layoutCfg().zoom >= 0.3);
+  document.querySelector('#vAuto .apbar2 [data-ap="more"]').click();
+  await until(() => $("apPop"), 2000);
+  check("(5.25) the more menu: undo, redo, fit, 100%, and whether the tray program is ready",
+        ["undo", "redo", "zfit", "zreset"].every(k => $("apPop").querySelector('[data-pk="' + k + '"]')) && /Tray program ready/.test($("apPop").textContent),
+        ($("apPop") || {}).textContent);
+  apPopClose();
+  Object.assign(layoutCfg(), layWas); applyLayout();
+  AUTO.ui.draft = null; AUTO.ui.mode = "design"; AUTO.ui.run = null;
+  setView("day");
+
   closeChat();
   window.fetch = fetchAu;
   Object.assign(DB, { bridge:auWas.bridge, port:auWas.port, token:auWas.token });

@@ -6,6 +6,37 @@ holds — which is what to paste into a bug report.
 
 ---
 
+## 5.25.0 - 2026-10-31
+
+**A cleaner screen: fold the sidebar to icons and the top bar to one line, on every page - and zoom in the automation designer.**
+
+- **The sidebar, icons only.** A button beside the logo (or the `[` key)
+  folds the sidebar to a narrow column of icons, in every look: each view
+  still says its name when you point at it, a count becomes a small badge on
+  its icon, and the search box opens over the page when you type in it.
+  Where the views are a bar across the top (Classic, Quiet, or a narrow
+  window), the tabs become icons.
+- **The top bar, slim.** The button next to it (or `]`) makes the bar across
+  the top one slim line: Nova's page header keeps a small title and its
+  buttons as icons, the new-record bar is one line high without its
+  examples, the filters sit closer. On the Automations page its own bar is
+  then the only bar.
+- Both work on every page and in every look, are kept with the workspace,
+  and are in the command palette and on the `?` sheet.
+- **Zoom in the designer.** − 100% + and Fit at the bottom left of the
+  canvas, `Ctrl` + mouse wheel (about the pointer), `Ctrl`+`+` / `-` / `0`.
+  30% to 200%, remembered; runs drawn on the canvas use it too.
+- **The designer's bar, as in the owner's picture**: *📁 Automations › name*
+  on the left; **Ready**, **Run**, **Save**, **⋮** and **Test** on the
+  right. Undo, redo, fit, 100% and the tray program's state are in **⋮**;
+  the tray program is only mentioned on the bar when it is not ready. Cards
+  have a ⋮ for their menu.
+- **The status bar** has a small icon before each count, the store and the
+  script runner.
+- Nothing changed in the KalKech program by the clock.
+
+---
+
 ## 5.24.0 - 2026-10-30
 
 **Automations get a page of their own, designed like Power Automate - and Conditions that go one way or the other.**

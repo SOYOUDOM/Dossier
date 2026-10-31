@@ -92,13 +92,13 @@ A *workspace* is a folder the user picks (File System Access API):
 - Commit messages: clear summary + body; no model names in commits, code or
   docs. Do not open a pull request unless the owner asks.
 - Work so far is on branch `claude/chat-panel-pixel-art-gifs-d822hq`
-  (latest: 5.24.0). Follow the branch instructions of your own session.
+  (latest: 5.25.0). Follow the branch instructions of your own session.
 
 ## Testing
 
 ```
 node --test                                   # 91 unit tests (Sources, grounding, names check, code origin, flow reply fields, diagrams, automations)
-node tests/e2e/run.js                         # the app in headless Chrome/Edge: 289 checks (CHROME=<path> to choose)
+node tests/e2e/run.js                         # the app in headless Chrome/Edge: 300 checks (CHROME=<path> to choose)
 node tests/bridge/run.js                      # the bridge's automation routes, built and run (mcs+mono or csc): 60 checks
 node flow/check-prompt.js                     # after editing flow/prompt.txt ...
 python3 flow/embed-prompt.py                  # ... then copy it into flow.js (PROMPT_BUILTIN)
@@ -131,6 +131,47 @@ Also useful:
   `DossierFlow.validate`. `tests/e2e/run.js` is a working example of all of it.
 
 ## Recent history (newest first)
+
+- **5.25.0** - Owner (a photo of a mock-up made from a screenshot, dark,
+  sidebar of icons, the designer bar as a path, zoom at the bottom left):
+  "make the layout clean, zoom in/out, a button to fold the sidebar to icons
+  only, and the top bar togglable the same way - for all pages, not only
+  Automations".
+  - *Switches*: `settings.layout` {navMin, topMin, zoom} via `layoutCfg()`
+    (fills defaults, clamps zoom 0.3-2); `applyLayout()` (called at the end
+    of `applyUi()` and from `applyI18n`) sets `data-navmin` / `data-topmin`
+    on `<html>`, the buttons' `aria-pressed`/title, and `navTitles()` (each
+    `#tabs button` gets `title`, and `aria-label` while folded);
+    `layoutToggle(which)` (+ `touch()`, `prismInd`). Buttons `#navBtn`,
+    `#topBtn` in `.lytbtns` inside `.brand` (inline SVG, `.lyt`); keys `[`
+    / `]` in the global keydown (not typing, no modifier); palette entries
+    under Views; `KEYS` rows `KeyNavMin`/`KeyTopMin`. Strings `Lay*`.
+  - *CSS* (`THE SIDEBAR AND THE TOP BAR (5.25)`, the last block of the
+    stylesheet): desk widths - Studio family `grid-template-columns` 68px
+    (Nova 72, Prism 86), the rail rules the chat-docked mid-width sidebar
+    already had, now under `[data-navmin]`; `.find:focus-within` opens
+    260px over the page (`.mast{overflow:visible}`); Nova `.nxb` becomes a
+    badge on the icon. Line icons for all looks as `--lyi-<view>` on
+    `:root` (copies of Nova's `--nxi-*`), used by Studio/Classic/Quiet only
+    while folded (mask on `.tabs button::before`). Top bars (Classic, Quiet,
+    any look ≤900px): icons, no words, no wordmark. `data-topmin`:
+    `.readout` hidden, `.compose`/`.cbar` lower, paste button a glyph,
+    `.rail` closer, `.sugg` moved up; Nova `.nxhead` one line (no `.nxe`/p,
+    17px title, 32px icon buttons) and hidden on `body.vauto`. Status bar
+    icons `.sbi.s-rec/s-done/s-att/s-time` (not `.doc`: Library's card
+    class) and `#sbStore`/`#sbRun::before` masks.
+  - *Designer*: `apBarHtml` - `apbk` with `folder` icon + chevron
+    separator, `#apBridge.quiet` (hidden when ready), `#apChk` dot when
+    ready, Run, Save (icon), `[data-ap="more"]` → `apMoreMenu` (undo, redo,
+    zfit, zreset, `.appline` tray state), Test. Undo/redo buttons left the
+    bar. Cards' menu icon `morev`. Zoom: `apZoomHtml()` (`.apzoom` in
+    `.apdm`, `#apZoomPct`), `apZoomStyle()` (inline CSS `zoom` on
+    `.apflow`, both canvases), `apZoomSet(z, at)` (about the pointer,
+    page-px via `pageZoom()`), `AP_ZOOMS` + `apZoomStep(dir)`,
+    `apZoomFit()` (children's rects at 100%, ≤1); Ctrl+wheel on
+    `#apCanvas` (passive:false), Ctrl+=/-/0 when focus is in the canvas.
+  - Tests: 11 e2e checks (300). Screenshots checked in Studio, Nova, Neon,
+    Classic, Quiet and at 860px.
 
 - **5.24.0** - Owner: "Automations deserve a full page, like Task, Weekly,
   Insight - and rethink the design to not use so much space: like Power

@@ -724,12 +724,39 @@ GIFs and the base64 are committed, and the app never generates either.
 
 | Group | Keys |
 |---|---|
-| **Moving around** | `1`–`7` switch view · `/` search · `N` new record · `J`/`↓` next · `K`/`↑` previous · `Esc` close what is open |
+| **Moving around** | `1`–`8` switch view · `[` sidebar: icons only, or with words · `]` top bar: slim, or full · `/` search · `N` new record · `J`/`↓` next · `K`/`↑` previous · `Esc` close what is open |
 | **On the record under the cursor** | `Enter` or `E` open · `Space` cycle status · `D` mark done · `T` move to today · `S` start/stop the clock · `X` select |
 | **Anywhere** | `Ctrl`+`K` command palette · `Ctrl`+`S` save now · `Ctrl`+`Z` undo · `Ctrl`+`V` paste a screenshot onto the open record · `W` work console · `A` ask the assistant · `?` this sheet |
 
 Panels trap focus while open and hand it back when they close, so a keyboard
 or screen-reader user is never tabbing around a page they cannot see.
+
+### 6.4a A cleaner screen: the sidebar and the top bar folded (since 5.25)
+
+#### How do I make the sidebar icons only?
+
+Press the **sidebar button** beside the logo (a square with a line down its
+left side), or the `[` key. The sidebar folds to a narrow column of icons:
+every view is still there, says its name when you point at it, and a count
+becomes a small badge on its icon. The search box becomes an icon too - click
+it and type, and it opens over the page. Press the button (or `[`) again for
+the words back. Where the views are a bar across the top (the Classic and
+Quiet looks, or any look on a narrow window), the same button turns the tabs
+into icons and hides the name beside the logo.
+
+#### How do I make the top bar smaller?
+
+Press the **top bar button** beside it (a square with a line across its
+top), or the `]` key. The bar across the top of the page becomes one slim
+line: in Nova, Prism and Neon the page header keeps its title, small, and its
+buttons as icons; the bar for a new record is one line high and its list of
+examples goes; the filters sit closer. Nothing is taken away. On the
+Automations page the designer's own bar is then the only bar. Press it again
+for the full top bar.
+
+Both work on every page and in every look, and are remembered with your
+workspace. They are also in the command palette (`Ctrl`+`K` → *Sidebar…*,
+*Top bar…*).
 
 ### 6.5 Looks and themes
 
@@ -1654,19 +1681,34 @@ keeps out of the way: each card is **one name and one line** - *POST /token
   the panel slides over the canvas.
 - **The + on a line** adds a step there: an API call, a script, a wait, a
   question to you (*Ask me*), or a **Condition**.
-- **⋯ on a card**: *Try up to here*, move it up or down, duplicate it,
-  remove it. A Condition's ⋯ can also fold its branches away.
+- **⋮ on a card**: *Try up to here*, move it up or down, duplicate it,
+  remove it. A Condition's ⋮ can also fold its branches away.
 - **Drag a card** onto another line to move it there - into a Condition's
   Yes or No, or out of it.
 - **Small words on a card** say what is special about it: *only when*,
   *repeats ×20*, *checks the reply*, *carries on*. After a test or a run,
   the card says how it went: ✓ 200 · 212 ms.
-- **Undo** and **Redo** (the arrows at the top, or `Ctrl`+`Z` / `Ctrl`+`Y`
-  when you are not in a box) take back a change to the design: what you
-  typed in one box counts as one change.
-- **Back** (the arrow at the top left) returns to the list; with changes
-  not saved, it asks first. Going to another view keeps the design open as
-  it is, until you come back.
+- **The bar at the top** (since 5.25, as in the owner's picture): on the
+  left, where you are - *📁 Automations › its name* (click *Automations* to
+  go back to the list; with changes not saved, it asks first); on the right,
+  **Ready** (or *2 to fix*), **Run**, **Save**, **⋮** and **Test**. A
+  warning about the KalKech program by the clock appears there only when it
+  is not ready.
+- **⋮ at the top**: **Undo** and **Redo** (also `Ctrl`+`Z` / `Ctrl`+`Y`
+  when you are not in a box) take back a change to the design - what you
+  typed in one box counts as one change; **Fit the whole design in the
+  window**; **Back to 100%**; and whether the tray program is ready.
+- Going to another view keeps the design open as it is, until you come back.
+
+### How do I zoom the designer in and out?
+
+**Since 5.25.** At the bottom left of the canvas: **−**, the size
+(**100%** - click it to go back to 100%), **+**, and **Fit** (the four
+corners), which makes the whole design fit in the window. Or hold `Ctrl` and
+turn the mouse wheel over the canvas - it zooms about the pointer, so what
+you point at stays under it. With a card picked, `Ctrl`+`+`, `Ctrl`+`-` and
+`Ctrl`+`0` do the same. From 30% to 200%; the size is remembered, and runs
+drawn on the canvas use it too.
 
 ### What keys work in the designer?
 
@@ -1678,6 +1720,7 @@ keeps out of the way: each card is **one name and one line** - *POST /token
 | `Delete` | Removes the card (Undo brings it back) |
 | `Ctrl`+`S` | Saves the design |
 | `Ctrl`+`Z` / `Ctrl`+`Y` | Undo / redo a change to the design |
+| `Ctrl` + mouse wheel, `Ctrl`+`+` / `-` / `0` | Zoom the canvas in, out, back to 100% |
 | `Esc` | Closes the side panel |
 
 ### What kinds of step are there?
@@ -2020,7 +2063,7 @@ it will read.
 
 Click the step, open its **Test** tab, fill in the **Test values** (they are
 kept while the design is open) and press **Try up to here** (also in the
-card's **⋯**): the steps from the first to that one run for real. Each card
+card's **⋮**): the steps from the first to that one run for real. Each card
 then says how it went (✓ 200 · 212 ms), and the step's Test tab shows what
 came back - its status, the values it saved, and the reply itself (with
 passwords and tokens masked). For a JSON reply, every path in it is a chip:
