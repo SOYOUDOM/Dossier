@@ -92,7 +92,7 @@ A *workspace* is a folder the user picks (File System Access API):
 - Commit messages: clear summary + body; no model names in commits, code or
   docs. Do not open a pull request unless the owner asks.
 - Work so far is on branch `claude/chat-panel-pixel-art-gifs-d822hq`
-  (latest: 5.27.0). Follow the branch instructions of your own session.
+  (latest: 5.27.1). Follow the branch instructions of your own session.
 
 ## Testing
 
@@ -131,6 +131,22 @@ Also useful:
   `DossierFlow.validate`. `tests/e2e/run.js` is a working example of all of it.
 
 ## Recent history (newest first)
+
+- **5.27.1** - The owner imported the example pack, ran *Example 1* and got
+  "the secret "username" … has not been saved on this PC (Menu, Automations,
+  Connections)" - they had not set the test secrets, and that place no
+  longer exists (a page since 5.24). They asked for examples that work as
+  soon as they are imported. Fixed the bridge message (Automations page,
+  Connections tab) and the one `flow/prompt.txt` line that said "Menu >
+  Automations". A second example pack was given as a file (still not in
+  the repository): the published test logins written into the steps, no
+  secrets, two connections only (DummyJSON, JSONPlaceholder; Example 6 is
+  now a POST then GET 404 on JSONPlaceholder). Lesson, checked with the
+  real bridge against a stand-in with full replies: a value that is a
+  **secret** is masked everywhere in the run, so the old Example 1 (secret
+  username `emilys`) would also have hidden `/auth/me`'s reply, which
+  contains the same user name - do not make a value a secret when the API
+  hands it back in a reply you want to show.
 
 - **5.27.0** - Owner: "add an export and import function to the
   automation, so I can save it and reuse it next time - and you can help me

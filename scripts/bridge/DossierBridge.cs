@@ -2058,7 +2058,7 @@ public class DossierBridge
         lock (SecretLock) { item = SecretsLoad().Get(c.ConnId + "/" + name) as JObj; }
         if (item == null)
         {
-            c.Errors.Add("the secret \"" + name + "\" of " + c.ConnName + " has not been saved on this PC (Menu, Automations, Connections)");
+            c.Errors.Add("the secret \"" + name + "\" of " + c.ConnName + " has not been saved on this PC (Automations page, Connections tab: open the connection, Set... beside the name)");
             return null;
         }
         if (JS(item, "origin") != NormBase(c.ConnBase))

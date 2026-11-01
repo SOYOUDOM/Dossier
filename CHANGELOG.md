@@ -6,6 +6,21 @@ holds — which is what to paste into a bug report.
 
 ---
 
+## 5.27.1 - 2026-11-01
+
+**A message that pointed to a place that is gone.**
+
+- When an automation needs a secret that was never saved, the tray program
+  said to set it in *Menu, Automations, Connections*. Automations has had a
+  page of its own since 5.24: the message now says **Automations page,
+  Connections tab** - open the connection and press **Set…** beside the
+  name. (The tray program builds itself again the next time `KalKech.bat`
+  starts it.)
+- The assistant's instructions said the same old place when suggesting an
+  automation be built; they now say the Automations page.
+
+---
+
 ## 5.27.0 - 2026-11-01
 
 **Automations: save them to a file, and bring them back in.**
