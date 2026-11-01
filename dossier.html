@@ -1554,6 +1554,12 @@ button.auchip:hover{border-color:var(--accent);color:var(--accent)}
 .k-wait{--kc:var(--p2)}
 .k-confirm{--kc:var(--st-block)}
 .k-if{--kc:var(--accent)}
+/* (5.26) the kinds worked out on the page */
+.k-set{--kc:color-mix(in srgb,var(--teal) 55%,var(--accent))}
+.k-stop{--kc:var(--p1)}
+.k-each{--kc:var(--accent)}
+.k-select{--kc:color-mix(in srgb,var(--p3) 60%,var(--st-done))}
+.k-filter{--kc:color-mix(in srgb,var(--p2) 70%,var(--p3))}
 .k-trigger{--kc:var(--st-done)}
 .k-finish{--kc:var(--ink-2)}
 .k-conn{--kc:var(--ink-2)}
@@ -1776,7 +1782,11 @@ button.auchip:hover{border-color:var(--accent);color:var(--accent)}
 .apfoldn:hover{color:var(--accent);border-color:var(--accent)}
 
 /* the side panel */
-.appane{width:420px;flex:0 0 420px;border-left:1px solid var(--rule);background:var(--paper);display:flex;flex-direction:column;min-height:0;min-width:0}
+.appane{width:var(--appw,420px);flex:0 0 var(--appw,420px);border-left:1px solid var(--rule);background:var(--paper);display:flex;flex-direction:column;min-height:0;min-width:0;position:relative}
+/* (5.26) its left edge, to drag */
+.apgrip{position:absolute;left:-5px;top:0;bottom:0;width:9px;cursor:col-resize;z-index:7;outline:none}
+.apgrip::after{content:"";position:absolute;left:3px;top:0;bottom:0;width:3px;border-radius:2px;background:transparent;transition:background .12s}
+.apgrip:hover::after,.apgrip.on::after,.apgrip:focus-visible::after{background:var(--accent)}
 .apph{display:flex;align-items:center;gap:9px;padding:10px 10px 10px 14px;border-bottom:1px solid var(--rule);flex:0 0 auto}
 .apph .apttl{flex:1;min-width:0;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .apph .in.apnm{flex:1;min-width:0;font-weight:650;font-size:13px}
@@ -1878,6 +1888,63 @@ button.auchip:hover{border-color:var(--accent);color:var(--accent)}
 .appgh{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);padding:6px 8px 3px}
 .appi.fx{flex-direction:column;align-items:flex-start;gap:0;padding:5px 8px}
 .appi.fx code{font-family:var(--f-mono);font-size:11px;color:var(--accent)}
+/* ── 5.26: a For each, the "/" list, values that are lists, Markdown ── */
+/* a For each: one lane, joined to its card above and the next card below */
+.apbr.one{grid-template-columns:1fr}
+.aplane.do{min-width:300px;padding:0 14px 0;border:1px dashed color-mix(in srgb,var(--accent) 45%,var(--rule-hi));border-radius:14px;
+  background:color-mix(in srgb,var(--accent) 3%,transparent)}
+.aplane.do::before,.aplane.do::after{display:none}
+.aplane.do>.aplh{color:var(--accent);border-color:color-mix(in srgb,var(--accent) 40%,var(--rule));background:color-mix(in srgb,var(--accent) 8%,var(--paper));margin-top:-1px}
+.aplane.do>.apstem{display:none}
+.aplane.do>.aplh{transform:translateY(-50%)}
+.aplane.do>.apj:first-of-type{margin-top:-6px}
+.apeach>.apstem{height:14px}
+.apeach+.apj,.apeach{position:relative}
+.aplane.do .apc{width:310px}
+.aplane .aplane.do .apc{width:250px}
+/* a value's fields left out / kept */
+.apshape .in{flex:1 1 90px}
+.apshape small{white-space:nowrap}
+/* the closing message: Markdown, its preview, what can be written */
+.in.apmd{font-family:var(--f-mono);font-size:11.5px;line-height:1.55}
+.apfinbar{margin:-2px 0 10px}
+.apfinbar small{font-size:10.5px;color:var(--ink-3)}
+.apfinbar .btn.on{background:var(--accent-soft);border-color:color-mix(in srgb,var(--accent) 45%,var(--rule));color:var(--accent)}
+.apprev{margin-top:8px;padding:10px 12px;border:1px solid var(--rule);border-radius:var(--r-sm);background:var(--paper-2);font-size:12px;line-height:1.55;overflow:auto;max-height:420px}
+.apprev>:last-child{margin-bottom:0}
+.apcheat{margin-top:8px}
+.apcheatb{padding:0 10px 8px;font-size:11px;color:var(--ink-2);line-height:1.6}
+.apcheatb p{margin:0 0 6px}
+.apcheatb code,.aphint code{font-family:var(--f-mono);font-size:10.5px;background:var(--paper-3);padding:0 4px;border-radius:4px;color:var(--ink)}
+/* a run's message, drawn like an answer */
+.auresult.say{white-space:normal}
+.auresult.say p{margin:0 0 8px}
+.auresult.say>:last-child{margin-bottom:0}
+.auresult.say .sytab{overflow:auto;margin:6px 0 10px}
+.auresult.say table{border-collapse:collapse;font-size:11.5px;min-width:60%}
+.auresult.say th,.auresult.say td{border:1px solid var(--rule);padding:4px 8px;text-align:left;vertical-align:top}
+.auresult.say th{background:var(--paper-3);font-weight:650}
+.auresult.say .chcode{margin:8px 0}
+.auresult.say .chcode pre{max-height:320px;overflow:auto}
+.chat .auresult.say th,.chat .auresult.say td{border-color:var(--ch-line)}
+.chat .auresult.say th{background:var(--ch-bg)}
+/* a value that is a list: how many items, and the items when opened */
+details.auvl{display:inline-block;max-width:100%;vertical-align:top}
+details.auvl>summary{list-style:none;cursor:pointer}
+details.auvl>summary::-webkit-details-marker{display:none}
+details.auvl>summary::after{content:" \25B8";color:var(--ink-3)}
+details.auvl[open]{display:block;width:100%}
+details.auvl[open]>summary::after{content:" \25BE"}
+details.auvl pre{margin:6px 0 2px;max-height:260px;overflow:auto;font-family:var(--f-mono);font-size:10.5px;white-space:pre-wrap;overflow-wrap:anywhere}
+.aucut{font-style:normal;color:var(--ink-3)}
+/* the "/" list: under the caret, the caret stays in the box */
+.slashpop{display:none;width:340px;max-height:320px;padding:4px}
+.slashpop .appi.fx.hi{background:var(--accent-soft)}
+.slashpop .appi.fx.hi code{color:var(--accent)}
+.appi.fx.fn code{color:color-mix(in srgb,var(--accent) 60%,var(--ink))}
+.apslh{position:sticky;bottom:-4px;font-size:10px;color:var(--ink-3);padding:5px 8px 3px;border-top:1px solid var(--rule);background:var(--paper);margin-top:2px}
+/* the add menu: in groups */
+.addpop{width:320px;max-height:min(520px,calc(100vh - 16px))}
 /* the chat's run card: the steps fold away once it has finished (5.24) */
 .austeps-d>summary{list-style:none;display:flex;align-items:baseline;gap:8px;cursor:pointer;font-size:11.5px;margin:2px 0}
 .austeps-d>summary::-webkit-details-marker{display:none}
@@ -1896,7 +1963,7 @@ button.auchip:hover{border-color:var(--accent);color:var(--accent)}
   .apbar2 [data-ap="test"] span,.apbar2 [data-ap="run"] span{display:none}
   .aprow{grid-template-columns:10px minmax(150px,1fr) auto 74px auto}
   .aprow .apmini,.aprow .apsys{display:none}
-  .appane{position:absolute;right:0;top:0;bottom:0;width:min(420px,100%);box-shadow:var(--shadow);z-index:5}
+  .appane{position:absolute;right:0;top:0;bottom:0;width:min(var(--appw,420px),100%);box-shadow:var(--shadow);z-index:5}
 }
 @media (max-width:700px){
   .aprow{grid-template-columns:10px minmax(0,1fr) auto}
@@ -10107,7 +10174,6 @@ const STRINGS = {
   ApAdd_wait: "Pause for some seconds",
   ApAdd_confirm: "Ask you before going on",
   ApAdd_if: "Go one way or the other, on a test",
-  ApAddIfDeep: "Not here - a Condition can sit inside one other Condition, no deeper",
   ApTooMany: "An automation has {n} steps at most.",
   ApYes: "Yes",
   ApNo: "No",
@@ -10169,7 +10235,190 @@ const STRINGS = {
   ApOp_notempty: "is not empty",
   ApOp_true: "is true (has a value)",
   ApOp_false: "is false (no value)",
-  ApFinishHint: "Values from the steps go in with {x}. A value a step did not keep - its branch did not run, or it failed first - is left empty.",
+  ApFinishHint: "Type / (or press {x}) to put in a value, a function or a block. A value a step did not keep - its branch did not run, or it failed first - is left empty.",
+  /* ── more kinds of step, lists and functions (5.26) ─────────────────── */
+  AutoT_list: "A list, written out",
+  AutoT_listHint: "Get a list (documents, say), show it as a table - without each item's download token - and use the token for each one",
+  AutoT_listName: "Policy documents",
+  AutoT_listAbout: "Lists the documents of a policy and downloads each one.",
+  AutoT_listStep: "List the documents",
+  AutoT_listEach: "For each document",
+  AutoT_listDl: "Download it",
+  AutoT_listKeep: "Keep its file name",
+  AutoT_listResult: "## Documents of {{input.ref}}\n\n{{table(docs, \"name\", \"date\")}}\n\n{{#if files}}\nDownloaded:\n{{#each files}}\n- {{this}}\n{{/each}}\n{{else}}\nNothing was downloaded.\n{{/if}}",
+  AutoKind_set: "Set a value",
+  AutoKind_stop: "Stop the run",
+  AutoKind_each: "For each",
+  AutoKind_select: "Shape a list",
+  AutoKind_filter: "Filter a list",
+  AutoKindNew_set: "Set a value",
+  AutoKindNew_stop: "Stop here",
+  AutoKindNew_each: "For each item",
+  AutoKindNew_select: "Shape the list",
+  AutoKindNew_filter: "Filter the list",
+  ApAdd_set: "Keep a value of your own - text, a number, a list - or add to one",
+  ApAdd_stop: "End the run here: as done, as failed or as stopped, with a message",
+  ApAdd_each: "Run the steps inside once for every item of a list",
+  ApAdd_select: "Make a new list with only the fields you name",
+  ApAdd_filter: "Make a new list with only the items a test is true for",
+  ApAddG_call: "Call and run",
+  ApAddG_flow: "Decide and repeat",
+  ApAddG_data: "Values and lists",
+  ApAddFind: "Find an action",
+  ApAddIfDeep: "Not here - a Condition or a For each can sit inside one other, no deeper",
+  ApNoVarYet: "no name yet",
+  ApNoListYet: "no list yet",
+  ApStopSum_ok: "End as done",
+  ApStopSum_fail: "End as failed",
+  ApStopSum_stop: "End as stopped",
+  ApEachSum: "each {as} in {list}",
+  ApFoldedEach: "{n} step(s) inside - show",
+  ApEachLane: "For each {as}",
+  ApEachRan: "{n} of {of} items",
+  ApNofM: "{n} of {of}",
+  ApItemsN: "{n} item(s)",
+  ApFailsN: "{n} failed",
+  ApVarName: "Name of the value",
+  ApSetHow: "How",
+  ApSetHow_set: "Set it to",
+  ApSetHow_append: "Add an item to the list",
+  ApSetHow_add: "Add a number to it",
+  ApSetHow_text: "Add text to the end",
+  ApSetItem: "The item to add",
+  ApSetAddN: "The number to add",
+  ApSetHint_set: "One {{…}} alone keeps what it is - a list stays a list. Anything else is text with the values written in.",
+  ApSetHint_append: "Inside a For each, this collects one item each time round - {{item.name}}, say. The value starts as an empty list.",
+  ApSetHint_add: "A counter: it starts at 0. In a For each, 1 here counts the items.",
+  ApSetHint_text: "The text is put after what the value already holds.",
+  ApStopAs: "End the run as",
+  ApStopAs_ok: "Done (it worked)",
+  ApStopAs_fail: "Failed",
+  ApStopAs_stop: "Stopped",
+  ApStopText: "Its message",
+  ApStopTextPh: "No document found for {{input.policy}}.",
+  ApStopHint: "Shown instead of the closing message. Put it in a Condition, or give it an \"only when\" (Settings), so it stops only when it should. Markdown and / work here.",
+  ApEachFrom: "The list",
+  ApEachFromHint: "One value that is a list: {{docs}}, {{result.items}} - or a function that gives one, {{where(docs, \"type\", \"PDF\")}}.",
+  ApEachAs: "Call each item",
+  ApEachMax: "At most",
+  ApEachHint: "The steps inside run once for each item: {{{as}}} is the item it is on - {{{as}.name}}, {{{as}.id}} - and {{loop.n}} its number. A field the tray program kept back (a token) still works there: {{{as}.downloadToken}}.",
+  ApEachFailsHint: "When the list cannot be read. A step inside that fails stops the run, unless that step says to go on.",
+  ApSelFields: "The fields of each new item",
+  ApSelField: "field name",
+  ApSelHint: "Name on the left, what it holds on the right - {{item.name}}, {{upper(item.ref)}}. Leave one row with no name for a list of plain values.",
+  ApFiltWhere: "Keep the items where",
+  ApFiltHint: "A test on {{item}}: {{item.type}} == \"PDF\", {{item.size}} > 0.",
+  ApDrop: "Leave out",
+  ApDropHint: "Fields to leave out of what you (and the assistant) are shown - downloadToken, links.sig. The tray program keeps the whole of it for the steps after.",
+  ApKeepOnly: "Keep only",
+  ApShapeHint: "A list or an object read from JSON can be shown with fields left out (a download token, say): the tray program keeps the whole of it, hidden, so a later step still reaches it - {{docs[0].downloadToken}}, or {{item.downloadToken}} in a For each.",
+  ApValLocal: "Here",
+  ApValItem: "the item of {list}",
+  ApValLoop_n: "its number: 1, 2, 3 …",
+  ApValLoop_count: "how many items there are",
+  ApValNotHere: "(not here: worked out on this page)",
+  ApValShaped: "fields left out",
+  ApValList: "a list",
+  ApFnG_list: "Functions: lists",
+  ApFnG_text: "Functions: text",
+  ApFnG_num: "Functions: numbers",
+  ApFnG_logic: "Functions: tests",
+  ApFnG_md: "Functions: write a list out",
+  ApFn_upper: "in capitals",
+  ApFn_lower: "in small letters",
+  ApFn_trim: "without spaces at the ends",
+  ApFn_replace: "with one piece of text replaced",
+  ApFn_left: "the first n characters",
+  ApFn_right: "the last n characters",
+  ApFn_concat: "values one after another",
+  ApFn_split: "text cut into a list",
+  ApFn_length: "how long a text is, or how many items",
+  ApFn_default: "the value - or this, when it is empty",
+  ApFn_date: "a date written your way: yyyy-MM-dd, dd MMM yyyy, HH:mm",
+  ApFn_adddays: "a date, days later (or earlier)",
+  ApFn_base64: "in base64",
+  ApFn_json: "as JSON - add |raw in a JSON body",
+  ApFn_count: "how many items",
+  ApFn_first: "the first item",
+  ApFn_last: "the last item",
+  ApFn_join: "the items as one text",
+  ApFn_field: "one field of every item, as a list",
+  ApFn_where: "the items whose field has this value",
+  ApFn_sort: "sorted, by a field if you name one",
+  ApFn_unique: "without repeats",
+  ApFn_take: "the first n items",
+  ApFn_keys: "the field names of an object (or of a list's first item)",
+  ApFn_sum: "added up",
+  ApFn_number: "as a number",
+  ApFn_add: "a + b",
+  ApFn_sub: "a - b",
+  ApFn_mul: "a × b",
+  ApFn_div: "a ÷ b",
+  ApFn_round: "rounded",
+  ApFn_if: "one value or the other, on a test",
+  ApFn_equals: "true when the two are the same",
+  ApFn_contains: "true when it is in the list or the text",
+  ApFn_empty: "true when it is empty",
+  ApFn_not: "the opposite",
+  ApFn_table: "a table: one row per item, the fields you name as columns",
+  ApFn_bullets: "a bulleted list of the items",
+  ApFn_numbered: "a numbered list of the items",
+  ApFn_code: "a code block (JSON for a list)",
+  ApSnG: "Blocks",
+  ApSn_table: "A table of a list",
+  ApSn_each: "A line for each item",
+  ApSn_if: "Only when … otherwise …",
+  ApSn_code: "A code block",
+  ApSn_json: "A list as JSON, in a code block",
+  ApSn_head: "A heading",
+  ApSn_bold: "Bold",
+  ApSn_count: "How many items",
+  ApSlashMatches: "Matching “{q}”",
+  ApSlashKeys: "↑ ↓ choose · Enter put in · Esc close",
+  ApPaneResize: "Width of the side panel",
+  ApPaneResizeHint: "Drag to make it wider or narrower · double-click: back to normal",
+  ApFinMd: "Markdown: headings, lists, tables, code blocks",
+  ApPreview: "Preview",
+  ApPreviewEmpty: "Nothing to show yet.",
+  ApPreviewNoRun: "Run it once (or Test it) to see it with real values.",
+  ApCheat: "What you can write here",
+  ApCheat1: "A value: `{{docs}}`, a part of one: `{{docs[0].name}}`, a function: `{{count(docs)}}`.",
+  ApCheat2: "A table of a list: `{{table(docs, \"name\", \"date\")}}` - or `{{bullets(docs, \"name\")}}` for a list.",
+  ApCheat3: "A line for each item: `{{#each docs}}- {{name}} ({{date}}){{/each}}` - inside, `{{loop.n}}` is its number.",
+  ApCheat4: "Only sometimes: `{{#if count(docs) > 0}}…{{else}}…{{/if}}`.",
+  ApCheat5: "A code block: three backticks on a line before and after - or `{{code(docs)}}` for a list as JSON.",
+  ApCheat6: "Headings `## `, **bold**, - lists, and tables are drawn as they are in the assistant's answers.",
+  ApListN: "{n} item(s)",
+  ApObjN: "{n} field(s)",
+  ApShapedHint: "Some fields were left out - the tray program keeps them for the steps.",
+  AutoNote_hiddenHere: "{{{name}}} is kept hidden by the tray program, so it cannot be used in a step worked out on this page. Show it (you only), or leave the secret field out of it instead.",
+  AutoNote_fromOne: "The list must be one value, written as {{name}}.",
+  AutoNote_notList: "That value is not a list.",
+  AutoNote_maxItems: "Only the first {n} items were gone through.",
+  AutoNote_loopFailed: "A step inside it failed.",
+  AutoNote_tooLong: "The value came out too long to keep.",
+  AutoNote_badCond: "Its test cannot be read.",
+  AutoChk_badFn: "\u201c{name}\u201d is not a function KalKech knows - type / to see them.",
+  AutoChk_fnArgs: "{name}() is given the wrong number of values.",
+  AutoChk_secretHere: "{{{name}}} cannot go in a function: the tray program puts a secret in as it is.",
+  AutoChk_hiddenHere: "{{{name}}} is saved hidden, so it never comes to this page - this step cannot use it. Show it to you, or leave its secret field out.",
+  AutoChk_hiddenInFn: "{{{name}}} is saved hidden, and a function is worked out on this page - use it on its own, or a part of it ({{{name}}[0].field}).",
+  AutoChk_badBlock: "A block is not closed or not opened: {why}.",
+  AutoChk_blockHere: "{{#each}} and {{#if}} work in messages and values, not in what is sent - use a function here.",
+  AutoChk_noFrom: "Which list? Put one value that is a list, like {{docs}}.",
+  AutoChk_fromOne: "The list must be one value alone, like {{docs}} - nothing around it.",
+  AutoChk_varName: "\u201c{name}\u201d cannot be a value's name: letters, digits and _, starting with a letter.",
+  AutoChk_varLocal: "\u201c{name}\u201d is the item of a For each here - give the value another name.",
+  AutoChk_eachAs: "\u201c{name}\u201d cannot name the item: letters, digits and _, starting with a letter.",
+  AutoChk_eachAsTaken: "\u201c{name}\u201d is already a value - call the item something else.",
+  AutoChk_emptyEach: "The For each has no steps inside it yet.",
+  AutoChk_noFields: "Name at least one field for the new items.",
+  AutoCondWhy_else: "an {{else}} with no block to belong to",
+  AutoCondWhy_close: "a closing {{/…}} that does not match",
+  AutoCondWhy_open: "a block with no closing {{/each}} or {{/if}}",
+  AutoCondWhy_block: "a {{#…}} that is not #each or #if",
+  AutoCondWhy_path: "a path that cannot be read",
+  AutoCondWhy_filter: "a | with no filter after it",
   ApAboutHint: "The assistant reads this to know when to propose it.",
   ApMayAiOff: "The assistant may not run any automation now - the switch at the top of the Automations page is off.",
   ApSecretInput: "Typed each time, never kept",
@@ -10734,8 +10983,8 @@ const STATUSES = [
    the status bar, and clicking it copies a line you can paste into a bug
    report — build date and flow protocol included, because those are the two
    things that actually differ between copies. */
-const APP_VERSION = "5.25.1";
-const APP_BUILT = "2026-10-31";
+const APP_VERSION = "5.26.0";
+const APP_BUILT = "2026-11-01";
 function buildLine(){
   return "KalKech v" + APP_VERSION + " \u00b7 built " + APP_BUILT +
          " \u00b7 flow protocol " + (window.DossierFlow ? DossierFlow.version : "\u2014") +
@@ -11061,9 +11310,11 @@ function applyUi(mode){
    canvas). The look of each is in THE SIDEBAR AND THE TOP BAR, at the end
    of the stylesheet; this only sets the two attributes and the buttons. */
 function layoutCfg(){
-  const l = S.settings.layout = Object.assign({ navMin:false, topMin:false, zoom:1 }, S.settings.layout || {});
+  const l = S.settings.layout = Object.assign({ navMin:false, topMin:false, zoom:1, paneW:0 }, S.settings.layout || {});
   l.navMin = !!l.navMin; l.topMin = !!l.topMin;
   l.zoom = Math.max(0.3, Math.min(2, +l.zoom || 1));
+  /* (5.26) the designer's side panel, as wide as you dragged it (0: as drawn) */
+  l.paneW = +l.paneW ? Math.max(300, Math.min(1100, Math.round(+l.paneW))) : 0;
   return l;
 }
 function applyLayout(){
@@ -11077,6 +11328,7 @@ function applyLayout(){
            tb.setAttribute("aria-label", tb.title); }
   navTitles();
 }
+const AP_PANE_MIN = 300, AP_PANE_MAX = 1100;
 function layoutToggle(which){
   const l = layoutCfg();
   l[which] = !l[which];
@@ -29252,6 +29504,7 @@ function autoSayFor(a, R){
   L2.push("Steps: " + R.steps.filter(s => !s.off).map(s => s.name + " " +
           (s.kind === "if" && s.state === "ok" && s.took ? "(test: " + s.took + ")" :
            ({ ok:"✓", skip:"(skipped)", fail:"✗", wait:"(not reached)", no:"(they said no)", stop:"(stopped)" }[s.state] || s.state)) +
+          (s.kind === "each" && s.of != null ? " (" + (s.n || 0) + " of " + s.of + " items)" : s.times > 1 ? " (" + s.times + " times" + (s.fails ? ", " + s.fails + " failed" : "") + ")" : "") +
           (s.state === "fail" && s.note ? " - " + autoNoteText(s, a) : "")).join("; "));
   const ai = Object.keys(sp.ai);
   if (ai.length) L2.push("Values: " + ai.map(k => k + " = " + sp.ai[k]).join(", "));
@@ -29285,6 +29538,10 @@ function autoNoteText(s, a){
     return L("AutoStillNot", { n:step && step.repeat ? step.repeat.times : "" });
   }
   if (s.note === "noAnswer") return L("AutoNoAnswer");
+  /* (5.26) the codes of the kinds worked out on this page */
+  if (/^hiddenHere:/.test(s.note)) return L("AutoNote_hiddenHere", { name:s.note.slice(11) });
+  if (["fromOne", "notList", "maxItems", "loopFailed", "tooLong", "badCond"].indexOf(s.note) >= 0)
+    return L("AutoNote_" + s.note, { n:(a && s.sid && (DossierAuto.findStep(a, s.sid) || {}).s || {}).max || "" });
   return s.note;
 }
 
@@ -29327,10 +29584,12 @@ function autoCardHtml(run, opts){
     if (s.status != null && s.status !== "") bits.push(s.kind === "script" ? L("AutoExit", { n:s.status }) : String(s.status));
     if (s.tries) bits.push(L("AutoTry", { n:s.tries, of:(d && d.repeat ? d.repeat.times : "") }));
     if (s.ms && s.state !== "run") bits.push(autoSecs(s.ms));
+    if (s.of != null) bits.push(s.kind === "each" ? L("ApNofM", { n:s.n || 0, of:s.of }) : L("ApItemsN", { n:s.n || 0 }));
+    if (s.times > 1) bits.push("\u00d7" + s.times + (s.fails ? " (" + L("ApFailsN", { n:s.fails }) + ")" : ""));
     if (s.state === "sleep" || s.state === "again") bits.push(L("AutoWaiting"));
     if (s.state === "skip") bits.push(L("AutoSkipped"));
     if ((s.missing || []).length) bits.push(L("AutoMissing", { list:s.missing.join(", ") }));
-    return '<li class="aus ' + esc(s.state) + '"' + (s.depth ? ' style="--d:' + (+s.depth || 0) + '"' : "") + '><i aria-hidden="true">' + (s.kind === "if" ? "◇" : AUTO_ICON[s.state] || "○") + "</i>" +
+    return '<li class="aus ' + esc(s.state) + '"' + (s.depth ? ' style="--d:' + (+s.depth || 0) + '"' : "") + '><i aria-hidden="true">' + (s.kind === "if" ? "◇" : s.kind === "each" ? "↻" : AUTO_ICON[s.state] || "○") + "</i>" +
       '<span class="n">' + esc(s.name) + "</span>" + '<span class="m">' + esc(bits.join(" · ")) + "</span>" +
       (s.note && (s.state === "fail" || s.state === "no") ? '<div class="nt">' + esc(autoNoteText(s, a)) + "</div>" : "") +
       (s.reply ? autoReplyHtml(s) : "") + "</li>";
@@ -29348,13 +29607,8 @@ function autoCardHtml(run, opts){
       '<span class="ausho">' + LE("ApShowSteps") + "</span></summary>" + list + "</details>";
   }
   const vals = run.values || {}, keys = Object.keys(vals), hid = run.hidden || [];
-  if (keys.length || hid.length){
-    h += '<div class="auvals">' + keys.map(k => '<span class="auv' + (vals[k].show === "ai" ? " ai" : "") + '" title="' +
-           LE(vals[k].show === "ai" ? "AutoValAi" : "AutoValMe") + '"><b>' + esc(k) + "</b> " + esc(String(vals[k].v).slice(0, 300)) +
-           (vals[k].show === "ai" ? " <em>✦</em>" : "") + "</span>").join("") +
-         hid.map(k => '<span class="auv hid" title="' + LE("AutoValHidden") + '"><b>🔒 ' + esc(k) + "</b></span>").join("") + "</div>";
-  }
-  if (run.result) h += '<div class="auresult">' + esc(run.result) + "</div>";
+  if (keys.length || hid.length) h += apValsHtml(keys.map(k => [k, vals[k]]), hid, run.shaped);
+  if (run.result) h += autoResultHtml(run.result);
   h += '<div class="auf">' +
        (live ? '<button class="btn sm danger" data-austop="' + esc(run.id) + '">' + LE("AutoStop") + "</button>"
              : (a && !opts.noAgain ? '<button class="btn sm" data-auagain="' + esc(a.id) + '" data-aurec="' + esc(run.record || "") + '">' + LE("AutoRunAgain") + "</button>" : "") +
@@ -29362,6 +29616,28 @@ function autoCardHtml(run, opts){
                (run.id && autoStore().runs.some(r => r.id === run.id) ? '<button class="btn sm" data-auview="' + esc(run.id) + '">' + LE("ApSeeRun") + "</button>" : "")) +
        "</div></div>";
   return h;
+}
+/* (5.26) a run's closing message: Markdown - headings, lists, a table, a
+   code block with its Copy button - drawn the way an answer is */
+function autoResultHtml(text){
+  return '<div class="auresult say">' + chatSay(String(text || "")) + "</div>";
+}
+/* one value of a run. A list (or an object) says how many items it has
+   and opens to show them; ✂ when the tray program kept fields of it back */
+function autoValHtml(k, v, shaped){
+  const ai = v.show === "ai";
+  const cut = Array.isArray(shaped) && shaped.indexOf(k) >= 0;
+  const tip = LE(ai ? "AutoValAi" : "AutoValMe") + (cut ? " " + LE("ApShapedHint") : "");
+  const tail = (ai ? " <em>✦</em>" : "") + (cut ? ' <i class="aucut">\u2702</i>' : "");
+  const d = DossierAuto.dataOf(String(v.v == null ? "" : v.v));
+  if (d && typeof d === "object"){
+    let pretty = "";
+    try { pretty = JSON.stringify(d, null, 2); } catch(e){ pretty = String(v.v); }
+    return '<details class="auv auvl' + (ai ? " ai" : "") + '" title="' + tip + '"><summary><b>' + esc(k) + "</b> " +
+      esc(Array.isArray(d) ? L("ApListN", { n:d.length }) : L("ApObjN", { n:Object.keys(d).length })) + tail + "</summary><pre>" +
+      esc(pretty.slice(0, 20000)) + (pretty.length > 20000 ? "\n…" : "") + "</pre></details>";
+  }
+  return '<span class="auv' + (ai ? " ai" : "") + '" title="' + tip + '"><b>' + esc(k) + "</b> " + esc(String(v.v).slice(0, 300)) + tail + "</span>";
 }
 /* A step's whole reply on the card: folded under one line saying whose
    eyes it is for; JSON laid out to be read. Passwords and tokens were
@@ -29661,6 +29937,21 @@ function autoStarters(){
             no:[] }],
         result:L("AutoT_checkResult"), resultFail:L("AutoT_checkFail") } };
     } },
+    /* (5.26) a list, each item with a token the assistant must not see:
+       shown without it, the token still used for each download */
+    { id:"list", icon:"each", kind:"each", name:L("AutoT_list"), hint:L("AutoT_listHint"), make:() => {
+      const c = C(L("AutoT_apiConn"), "https://api.example.local/v1", "bearer");
+      return { conns:[c], auto:{ name:L("AutoT_listName"), about:L("AutoT_listAbout"),
+        inputs:[{ key:"ref", label:L("AutoT_refLabel"), example:"P10234X56" }],
+        steps:[
+          { kind:"http", name:L("AutoT_listStep"), conn:c.id, method:"GET", path:"/items/{{input.ref}}/documents",
+            save:[{ name:"docs", from:"json", path:"documents", show:"ai", drop:"downloadToken" }] },
+          { kind:"each", name:L("AutoT_listEach"), from:"{{docs}}", as:"doc", do:[
+            { kind:"http", name:L("AutoT_listDl"), conn:c.id, method:"GET", path:"/documents/{{doc.downloadToken}}/content",
+              save:[{ name:"saved", from:"json", path:"file", show:"ai" }] },
+            { kind:"set", name:L("AutoT_listKeep"), var:"files", how:"append", value:"{{saved}}", show:"ai" }] }],
+        result:L("AutoT_listResult") } };
+    } },
     { id:"apikey", icon:"conn", kind:"http", name:L("AutoT_apikey"), hint:L("AutoT_apikeyHint"), make:() => {
       const c = C(L("AutoT_apiConn"), "https://api.example.local/v1", "header");
       return { conns:[c], auto:{ name:L("AutoT_apikeyName"), inputs:[{ key:"ref", label:L("AutoT_refLabel"), example:"P10234X56" }],
@@ -29773,6 +30064,14 @@ const AP_IC = {
   wait:'<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',
   confirm:'<path d="M5 18.5V6.5A2.5 2.5 0 0 1 7.5 4h9A2.5 2.5 0 0 1 19 6.5v7a2.5 2.5 0 0 1-2.5 2.5H9z"/><path d="M10 9.2a2 2 0 1 1 2.6 1.9c-.4.2-.6.5-.6.9M12 13.6h.01"/>',
   if:'<path d="M12 3.5l8.5 8.5-8.5 8.5L3.5 12z"/>',
+  /* (5.26) the kinds worked out on the page */
+  set:'<path d="M8 4.5C6 4.5 5.5 5.6 5.5 7.5v2c0 1.4-.7 2.5-2 2.5 1.3 0 2 1.1 2 2.5v2c0 1.9.5 3 2.5 3M16 4.5c2 0 2.5 1.1 2.5 3v2c0 1.4.7 2.5 2 2.5-1.3 0-2 1.1-2 2.5v2c0 1.9-.5 3-2.5 3"/><path d="M9.5 9.5l5 5M14.5 9.5l-5 5"/>',
+  stop:'<path d="M8.3 3.5h7.4l5.2 5.2v7.4l-5.2 5.2H8.3l-5.2-5.2V8.7z"/><path d="M9.5 9.5h5v5h-5z"/>',
+  each:'<path d="M17 4.5l3 3-3 3"/><path d="M20 7.5H9a5 5 0 0 0-5 5"/><path d="M7 19.5l-3-3 3-3"/><path d="M4 16.5h11a5 5 0 0 0 5-5"/>',
+  select:'<rect x="3.5" y="4" width="17" height="16" rx="2.5"/><path d="M9.5 4v16M3.5 9.5h17"/>',
+  filter:'<path d="M4 5h16l-6.2 7.6V19l-3.6-1.8v-4.6z"/>',
+  fn:'<path d="M14.5 4.5c-2.2 0-3 1.2-3.3 3L9.8 17c-.3 1.8-1.1 2.5-3.3 2.5M7.5 10h8"/>',
+  md:'<path d="M4 6.5h16M4 12h10M4 17.5h13"/>',
   trigger:'<path d="M13 2.5L5 13.5h6l-1 8 8-11h-6z"/>',
   finish:'<path d="M6 21V4.5M6 4.5h11l-2.2 4 2.2 4H6"/>',
   conn:'<path d="M9 3v4M15 3v4M7 7h10v4a5 5 0 0 1-10 0zM12 16v5"/>',
@@ -29829,12 +30128,19 @@ function apSum(s){
   if (s.kind === "wait") return L("ApWaitSum", { n:s.seconds });
   if (s.kind === "confirm") return s.text ? "“" + s.text.replace(/\s+/g, " ") + "”" : L("AutoAskDefault");
   if (s.kind === "if") return s.cond || L("ApNoCondYet");
+  /* (5.26) */
+  if (s.kind === "set") return s.var ? s.var + (s.how === "append" ? " += " : s.how === "add" ? " + " : s.how === "text" ? " &= " : " = ") + (String(s.value || "").replace(/\s+/g, " ") || "\u2014") : L("ApNoVarYet");
+  if (s.kind === "stop") return L("ApStopSum_" + s.as) + (s.text ? " \u00b7 " + String(s.text).replace(/\s+/g, " ") : "");
+  if (s.kind === "each") return s.from ? L("ApEachSum", { list:s.from, as:s.as }) : L("ApNoListYet");
+  if (s.kind === "select") return s.from ? s.from + " \u2192 " + (s.fields.map(f => f[0] || f[1]).join(", ") || "\u2026") : L("ApNoListYet");
+  if (s.kind === "filter") return s.from ? s.from + " \u00b7 " + (s.cond || "\u2026") : L("ApNoListYet");
   return "";
 }
 /* what it keeps from the reply: "token 🔒, job" */
 function apKeeps(s){
+  if (s && s.var && (s.kind === "select" || s.kind === "filter")) return s.var + (s.show === "ai" ? " ✦" : "");
   const sv = (s && s.save) || [];
-  return sv.map(v => v.name + (v.show === "hidden" ? " 🔒" : v.show === "ai" ? " ✦" : "")).join(", ");
+  return sv.map(v => v.name + (v.show === "hidden" ? " 🔒" : v.show === "ai" ? " ✦" : "") + (v.drop || v.keep ? " \u2702" : "")).join(", ");
 }
 /* the settings that change how it runs, as small words on the card */
 function apFlags(s){
@@ -29854,7 +30160,7 @@ function apPathOf(a, id){
   const walk = (list, p) => list.some((s, i) => {
     const here = p + "." + i;
     if (s.id === id){ out = here; return true; }
-    return s.kind === "if" && (walk(s.yes, here + ".yes") || walk(s.no, here + ".no"));
+    return (DossierAuto.HOLDS[s.kind] || []).some(b => walk(s[b], here + "." + b));
   });
   if (a) walk(a.steps, "steps");
   return out;
@@ -29863,13 +30169,13 @@ function apPathOf(a, id){
 function apListOf(a, ref){
   if (!a) return null;
   if (!ref || ref === "main") return a.steps;
-  const m = /^(.+):(yes|no)$/.exec(ref);
+  const m = /^(.+):(yes|no|do)$/.exec(ref);
   const f = m && DossierAuto.findStep(a, m[1]);
-  return f && f.s.kind === "if" ? f.s[m[2]] : null;
+  return f && (DossierAuto.HOLDS[f.s.kind] || []).indexOf(m[2]) >= 0 ? f.s[m[2]] : null;
 }
 function apDepthOf(a, ref){
   if (!ref || ref === "main") return 0;
-  const m = /^(.+):(yes|no)$/.exec(ref);
+  const m = /^(.+):(yes|no|do)$/.exec(ref);
   const f = m && DossierAuto.findStep(a, m[1]);
   return f ? f.depth + 1 : 0;
 }
@@ -29912,6 +30218,7 @@ function apProbKey(p){
 }
 const AP_FIELD_TAB = { conn:"params", path:"params", query:"params", headers:"params", body:"params", script:"params", args:"params",
   text:"params", cond:"params", seconds:"params", save:"values", reply:"values",
+  var:"params", value:"params", from:"params", as:"params", fields:"params",
   expect:"settings", okWhen:"settings", when:"settings", until:"settings", onFail:"settings", timeout:"settings" };
 const AP_FIELD_PATH = { until:"repeat.until", body:"body" };
 function apTabsFor(sel, s){
@@ -29921,6 +30228,8 @@ function apTabsFor(sel, s){
   if (s.kind === "http" || s.kind === "script") return ["params", "values", "settings", "test"];
   return ["params", "settings"];
 }
+/* (5.26) the kinds that hold steps of their own: a Condition, a For each */
+function apHolds(s){ return !!s && !!DossierAuto.HOLDS[s.kind]; }
 
 /* ═══ DRAWING ═════════════════════════════════════════════════════════════
    apPaint draws the whole page again, keeping where each part was
@@ -29933,6 +30242,7 @@ function renderAutoPage(){
 }
 function apPaint(){
   const box = $("vAuto"); if (!box) return;
+  apSlashClose();
   apPopClose();
   if (!autoOk()){ box.innerHTML = '<div class="apempty"><p>' + LE("AutoNoModule") + "</p></div>"; return; }
   const U = AUTO.ui;
@@ -30260,7 +30570,10 @@ function apDesignerHtml(){
   return '<div class="apd' + (run ? " isrun" : "") + '">' + apBarHtml(a, run) +
     '<div class="apdm' + (pane ? " haspane" : "") + '">' +
       '<div class="apcv" id="apCanvas" tabindex="-1">' + (run ? apRunCanvas(run, a) : apCanvas(U.draft)) + "</div>" + apZoomHtml() +
-      (pane ? '<aside class="appane" id="apPane" aria-label="' + LE("ApPaneLabel") + '">' + (run ? apRunPane(run, a) : apPaneHtml(U.draft)) + "</aside>" : "") +
+      (pane ? '<aside class="appane" id="apPane" aria-label="' + LE("ApPaneLabel") + '"' + (layoutCfg().paneW ? ' style="--appw:' + layoutCfg().paneW + 'px"' : "") + ">" +
+        /* (5.26) its left edge: drag it, or ← → with the keyboard */
+        '<div class="apgrip" id="apGrip" role="separator" aria-orientation="vertical" tabindex="0" aria-label="' + LE("ApPaneResize") + '" title="' + LE("ApPaneResizeHint") + '"></div>' +
+        (run ? apRunPane(run, a) : apPaneHtml(U.draft)) + "</aside>" : "") +
     "</div></div>";
 }
 function apBarHtml(a, run){
@@ -30398,6 +30711,14 @@ function apJoin(ref, i, last){
 }
 function apNodeHtml(a, s, depth, bad){
   const card = apCardHtml(s, null, bad[s.id]);
+  if (s.kind === "each"){
+    /* (5.26) a For each: its card, and one lane of the steps it repeats */
+    const folded = !!AUTO.ui.fold[s.id];
+    return '<div class="apif apeach' + (folded ? " folded" : "") + '" data-ifid="' + esc(s.id) + '">' + card +
+      (folded ? '<button class="apfoldn" type="button" data-apfold="' + esc(s.id) + '">' + esc(L("ApFoldedEach", { n:apStepsCount(s.do) })) + "</button>"
+        : '<div class="apstem"></div><div class="apbr one"><div class="aplane do"><div class="apstem"></div><div class="aplh">' + apIc("each") +
+            esc(L("ApEachLane", { as:s.as })) + "</div>" + apLaneHtml(a, s.do, s.id + ":do", depth + 1, bad) + "</div></div>") + "</div>";
+  }
   if (s.kind !== "if") return card;
   const folded = !!AUTO.ui.fold[s.id];
   return '<div class="apif' + (folded ? " folded" : "") + '" data-ifid="' + esc(s.id) + '">' + card +
@@ -30446,6 +30767,9 @@ function apStateBit(st){
   const bits = [];
   if (st.took) bits.push(L(st.took === "yes" ? "ApYes" : "ApNo"));
   if (st.status != null && st.status !== "") bits.push(st.kind === "script" ? L("AutoExit", { n:st.status }) : String(st.status));
+  /* (5.26) a For each: items done; a step inside one: how many times */
+  if (st.of != null) bits.push(st.kind === "each" ? L("ApNofM", { n:st.n || 0, of:st.of }) : L("ApItemsN", { n:st.n || 0 }));
+  if (st.times > 1) bits.push("\u00d7" + st.times + (st.fails ? " (" + L("ApFailsN", { n:st.fails }) + ")" : ""));
   if (st.ms && st.state !== "wait" && st.state !== "skip") bits.push(autoSecs(st.ms));
   const ic = { ok:"ok", fail:"x", skip:"skip", no:"x", stop:"x" }[st.state];
   if (!ic && !bits.length) return "";
@@ -30476,10 +30800,10 @@ function apFinCard(a, probs, run){
   if (run){
     const live = !!AUTO.live[run.id];
     const state = run.state === "running" && !live ? "stopped" : run.state;
-    sum = run.result || (state === "running" ? L("AutoState_running") : L("AutoState_" + state));
+    sum = run.result ? apFirstLine(run.result) : (state === "running" ? L("AutoState_running") : L("AutoState_" + state));
     cls = " st-" + (state === "ok" ? "ok" : state === "running" ? "wait" : state === "stopped" ? "stop" : "fail");
   } else {
-    sum = a.result || a.resultFail ? (a.result || "—") + (a.resultFail ? "  ·  " + L("ApOnFailShort") + " " + a.resultFail : "") : L("ApNoResult");
+    sum = a.result || a.resultFail ? (apFirstLine(a.result) || "—") + (a.resultFail ? "  ·  " + L("ApOnFailShort") + " " + apFirstLine(a.resultFail) : "") : L("ApNoResult");
     if (probs && probs.length) extra = '<span class="apwarn' + (probs.some(p => !p.warn) ? "" : " soft") + '" title="' + esc(probs.map(p => autoProbText(p, a)).join("\n")) + '">' + apIc("warn") + "</span>";
   }
   return '<div class="apc k-finish' + cls + (sel ? " sel" : "") + '" data-sid="finish" tabindex="0" role="button" aria-pressed="' + sel + '">' +
@@ -30487,6 +30811,16 @@ function apFinCard(a, probs, run){
     '<span class="apct"><span class="apcl"><b class="apcn">' + LE("ApFinish") + "</b>" + extra + '</span><span class="apcs"><span class="apsm plain">' + esc(sum) + "</span></span></span></div>";
 }
 
+/* (5.26) a message on its card: its first line, as words - no block tags,
+   no heading marks, no table - and "…" when there is more */
+function apFirstLine(text){
+  const lines = String(text || "").replace(/\{\{\s*(?:#(?:each|if)\b[^}]*|\/(?:each|if)|else)\s*\}\}/gi, "\n").split(/\r?\n/)
+    .map(l => l.replace(/^\s*(?:#{1,6}\s+|[-*•]\s+|\d+[.)]\s+|>\s*)/, "").replace(/\*\*|```\w*/g, "").trim())
+    .filter(l => l && !/^\|?\s*:?-{2,}/.test(l));
+  if (!lines.length) return "";
+  const one = /^\|/.test(lines[0]) ? lines[0].replace(/^\||\|$/g, "").split("|").map(x => x.trim()).join(" · ") : lines[0];
+  return (one.length > 140 ? one.slice(0, 139) + "…" : one) + (lines.length > 1 && one.length <= 140 ? " …" : "");
+}
 /* a run, drawn from its own record of the steps - so a run of an older
    design is shown as it went, not as the design is now */
 function apRunCanvas(run, a){
@@ -30495,13 +30829,19 @@ function apRunCanvas(run, a){
   steps.forEach((st, i) => {
     keyOf.set(st, st.sid || ("i" + i));
     if (st.parent && steps.some(x => x.sid === st.parent)){
-      const k = kids[st.parent] || (kids[st.parent] = { yes:[], no:[] });
-      (st.branch === "no" ? k.no : k.yes).push(st);
+      const k = kids[st.parent] || (kids[st.parent] = { yes:[], no:[], do:[] });
+      (st.branch === "no" ? k.no : st.branch === "do" ? k.do : k.yes).push(st);
     } else top.push(st);
   });
   const node = st => {
     const f = a && st.sid ? DossierAuto.findStep(a, st.sid) : null;
     const card = apCardHtml(f ? f.s : null, st, null, { run:true, key:keyOf.get(st) });
+    if (st.kind === "each"){
+      const k = kids[st.sid] || { do:[] };
+      return '<div class="apif apeach">' + card + '<div class="apstem"></div><div class="apbr one"><div class="aplane do"><div class="apstem"></div>' +
+        '<div class="aplh">' + apIc("each") + esc(L("ApEachRan", { n:st.n || 0, of:st.of || 0 })) + "</div>" +
+        k.do.map(x => '<div class="apj ro"></div>' + node(x)).join("") + '<div class="apj ro end"></div></div></div></div>';
+    }
     if (st.kind !== "if") return card;
     const k = kids[st.sid] || { yes:[], no:[] };
     const lane = (b, list) => '<div class="aplane ' + b + (st.took && st.took !== b ? " off" : "") + '"><div class="apstem"></div>' +
@@ -30601,6 +30941,30 @@ function apParams(a, s, P){
   if (s.kind === "confirm")
     return apRow(L("AutoAskText"), apFx(autoField(P + "text", s.text, { area:true, rows:3, ph:L("AutoAskTextPh") })), L("ApAskHint"));
   if (s.kind === "if") return apIfParams(a, s, P);
+  /* (5.26) */
+  const showSel = () => apRow(L("ApShownTo"), autoField(P + "show", s.show, { select:[["me", L("AutoShow_me")], ["ai", L("AutoShow_ai")]], cls:"aushow " + s.show, redraw:true }));
+  if (s.kind === "set")
+    return '<div class="aptwo">' + apRow(L("ApVarName"), autoField(P + "var", s.var, { mono:true, ph:"names" })) +
+        apRow(L("ApSetHow"), autoField(P + "how", s.how, { select:DossierAuto.SET_HOW.map(h => [h, L("ApSetHow_" + h)]), redraw:true })) + "</div>" +
+      apRow(L(s.how === "append" ? "ApSetItem" : s.how === "add" ? "ApSetAddN" : "AutoValue"),
+            apFx(autoField(P + "value", s.value, { area:true, rows:3, ph:s.how === "append" ? "{{item.name}}" : s.how === "add" ? "1" : '{{count(docs)}}' })),
+            L("ApSetHint_" + s.how)) + showSel();
+  if (s.kind === "stop")
+    return apRow(L("ApStopAs"), autoField(P + "as", s.as, { select:DossierAuto.STOP_AS.map(x => [x, L("ApStopAs_" + x)]), redraw:true })) +
+      apRow(L("ApStopText"), apFx(autoField(P + "text", s.text, { area:true, rows:5, ph:L("ApStopTextPh"), cls:"apmd" })), L("ApStopHint"));
+  if (s.kind === "each")
+    return apRow(L("ApEachFrom"), apFx(autoField(P + "from", s.from, { mono:true, ph:"{{docs}}" })), L("ApEachFromHint")) +
+      '<div class="aptwo">' + apRow(L("ApEachAs"), autoField(P + "as", s.as, { mono:true, ph:"item" })) +
+        apRow(L("ApEachMax"), autoField(P + "max", s.max, { num:true, min:1, max:DossierAuto.LIMIT.loop, cls:"apshort" })) + "</div>" +
+      '<p class="aphint">' + esc(L("ApEachHint", { as:s.as || "item" })) + "</p>";
+  if (s.kind === "select")
+    return apRow(L("ApEachFrom"), apFx(autoField(P + "from", s.from, { mono:true, ph:"{{docs}}" }))) +
+      apRow(L("ApVarName"), autoField(P + "var", s.var, { mono:true, ph:"docNames" })) +
+      apRow(L("ApSelFields"), apPairs(P + "fields", s.fields, L("ApSelField"), "{{item.name}}"), L("ApSelHint")) + showSel();
+  if (s.kind === "filter")
+    return apRow(L("ApEachFrom"), apFx(autoField(P + "from", s.from, { mono:true, ph:"{{docs}}" }))) +
+      apRow(L("ApVarName"), autoField(P + "var", s.var, { mono:true, ph:"pdfs" })) +
+      apRow(L("ApFiltWhere"), apCond(P + "cond", s.cond, '{{item.type}} == "PDF"'), L("ApFiltHint")) + showSel();
   return "";
 }
 function apValues(a, s, P){
@@ -30614,9 +30978,15 @@ function apValues(a, s, P){
         '<div class="apfr apsub"><small>' + LE("ApShownTo") + "</small>" +
           autoField(P + "save." + j + ".show", v.show, { select:DossierAuto.SHOWS.map(x => [x, L("AutoShow_" + x)]), cls:"aushow " + v.show, redraw:true }) +
           "<small>" + LE("ApKeptWhen") + "</small>" +
-          autoField(P + "save." + j + ".on", v.on, { select:DossierAuto.SAVE_ON.map(x => [x, L("AutoOn_" + x)]), cls:"auon " + v.on, redraw:true }) + "</div></div>").join("")
+          autoField(P + "save." + j + ".on", v.on, { select:DossierAuto.SAVE_ON.map(x => [x, L("AutoOn_" + x)]), cls:"auon " + v.on, redraw:true }) + "</div>" +
+        /* (5.26) a list or an object: only some of its fields */
+        (v.from === "json" ? '<div class="apfr apsub apshape"><small title="' + LE("ApDropHint") + '">' + LE("ApDrop") + "</small>" +
+            autoField(P + "save." + j + ".drop", v.drop || "", { mono:true, ph:"downloadToken" }) +
+            "<small>" + LE("ApKeepOnly") + "</small>" + autoField(P + "save." + j + ".keep", v.keep || "", { mono:true, ph:"name, date" }) + "</div>" : "") +
+        "</div>").join("")
       : '<p class="apnone">' + LE("ApNoValues") + "</p>") +
     '<button class="btn sm apadd2" data-ap="addsave" data-p="' + esc(P + "save") + '" type="button">' + apIc("plus") + "<span>" + LE("AutoAddSave") + "</span></button>" +
+    (s.save.some(v => v.from === "json") ? '<p class="aphint">' + LE("ApShapeHint") + "</p>" : "") +
     '<div class="apsep2"></div>' +
     apRow(L("AutoReply"), autoField(P + "reply", s.reply, { select:DossierAuto.REPLY_SHOWS.map(x => [x, L("AutoReply_" + (x || "none"))]), redraw:true }), L("AutoReplyHint"));
 }
@@ -30643,8 +31013,9 @@ function apSettings(a, s, P){
         "<small>" + LE("AutoSecondsUpTo") + "</small>" + autoField(P + "repeat.times", s.repeat.times, { num:true, min:1, max:30, cls:"apshort" }) +
         "<small>" + LE("AutoTimes") + "</small></div>", L("ApUntilHint"));
   }
-  h += apRow(L(s.kind === "if" ? "ApIfFails" : "AutoOnFail"), autoField(P + "onFail", s.onFail, { select:[["stop", L("AutoOnFail_stop")], ["continue", L("AutoOnFail_continue")]] }),
-             s.kind === "if" ? L("ApIfFailsHint") : "");
+  if (s.kind !== "stop")
+    h += apRow(L(s.kind === "if" ? "ApIfFails" : "AutoOnFail"), autoField(P + "onFail", s.onFail, { select:[["stop", L("AutoOnFail_stop")], ["continue", L("AutoOnFail_continue")]] }),
+               s.kind === "if" ? L("ApIfFailsHint") : s.kind === "each" ? L("ApEachFailsHint") : "");
   if (s.kind !== "wait") h += '<p class="aphint">' + LE("AutoCondHow") + "</p>";
   return h;
 }
@@ -30738,11 +31109,43 @@ function apTrigPane(a){
   return apHead("trigger", '<b class="apttl">' + LE("ApTrigger") + "</b>", tabs, cur, dots) + '<div class="appb" id="apPaneBody">' + body + "</div>";
 }
 function apFinPane(a){
+  const U = AUTO.ui;
+  const pv = !!U.finPrev;
   return apHead("finish", '<b class="apttl">' + LE("ApFinish") + "</b>", ["messages"], "messages") +
     '<div class="appb" id="apPaneBody">' +
-      apRow(L("AutoResultHead"), apFx(autoField("result", a.result, { area:true, rows:3, ph:L("AutoResultPh") }))) +
-      apRow(L("AutoResultFailHead"), apFx(autoField("resultFail", a.resultFail, { area:true, rows:3, ph:L("AutoResultFailPh") }))) +
-      '<p class="aphint">' + LE("ApFinishHint") + "</p></div>";
+      '<div class="apfr apfinbar"><small>' + LE("ApFinMd") + '</small><span class="sp"></span>' +
+        '<button class="btn sm' + (pv ? " on" : "") + '" data-ap="finprev" type="button" aria-pressed="' + pv + '">' + LE("ApPreview") + "</button></div>" +
+      apRow(L("AutoResultHead"), apFx(autoField("result", a.result, { area:true, rows:7, ph:L("AutoResultPh"), cls:"apmd" })) +
+        (pv ? '<div class="apprev say" data-prev="result">' + apPreviewHtml(a, "result") + "</div>" : "")) +
+      apRow(L("AutoResultFailHead"), apFx(autoField("resultFail", a.resultFail, { area:true, rows:4, ph:L("AutoResultFailPh"), cls:"apmd" })) +
+        (pv ? '<div class="apprev say" data-prev="resultFail">' + apPreviewHtml(a, "resultFail") + "</div>" : "")) +
+      '<p class="aphint">' + LE("ApFinishHint") + "</p>" +
+      '<details class="apsec apcheat"><summary>' + apIc("chev") + LE("ApCheat") + "</summary>" +
+        '<div class="apcheatb">' + ["ApCheat1", "ApCheat2", "ApCheat3", "ApCheat4", "ApCheat5", "ApCheat6"].map(k => "<p>" + apCheatLine(L(k)) + "</p>").join("") + "</div></details>" +
+    "</div>";
+}
+/* a line of the cheat sheet: `code` in it drawn as code */
+function apCheatLine(t){ return esc(t).replace(/`([^`]+)`/g, "<code>$1</code>"); }
+/* (5.26) the closing message as it will read: with the values of the last
+   test, or of the last run of this automation - or, with none, as written */
+function apPreviewHtml(a, which){
+  const U = AUTO.ui;
+  const vals = DossierAuto.builtins(new Date(), null);
+  a.inputs.forEach(i => { vals["input." + i.key] = U.tvals[i.key] != null ? U.tvals[i.key] : i.example || ""; });
+  const last = autoStore().runs.find(r => r.auto === U.id);
+  const hidden = [];
+  if (last){
+    Object.keys(last.values || {}).forEach(k => { vals[k] = last.values[k].v; });
+    (last.hidden || []).forEach(k => hidden.push(k));
+  }
+  Object.keys(U.test || {}).forEach(id => {
+    const t = U.test[id];
+    Object.keys(t.saved || {}).forEach(k => { vals[k] = t.saved[k]; });
+    (t.hidden || []).forEach(k => { if (hidden.indexOf(k) < 0) hidden.push(k); });
+  });
+  const text = DossierAuto.render(a[which] || "", { values:Object.assign(DossierAuto.unsetOf(a), vals), hidden:hidden, keep:true });
+  if (!text.trim()) return '<p class="apnone">' + LE("ApPreviewEmpty") + "</p>";
+  return chatSay(text) + (last || Object.keys(U.test || {}).length ? "" : '<p class="apnone">' + LE("ApPreviewNoRun") + "</p>");
 }
 
 /* a run's panel: the step's status, what it kept, its reply */
@@ -30765,8 +31168,8 @@ function apRunPane(run, a){
     return apHead("finish", '<b class="apttl">' + LE("ApFinish") + "</b>", [], "") +
       '<div class="appb" id="apPaneBody">' +
         '<p><span class="aust ' + esc(state) + '">' + LE("AutoState_" + state) + "</span>" + (run.ms ? ' <span class="apmeta">' + esc(autoSecs(run.ms)) + "</span>" : "") + "</p>" +
-        (run.result ? '<div class="auresult">' + esc(run.result) + "</div>" : "") +
-        (keys.length || hid.length ? '<h5 class="apsech">' + LE("ApRunValues") + "</h5>" + apValsHtml(keys.map(k => [k, vals[k]]), hid) : "") +
+        (run.result ? autoResultHtml(run.result) : "") +
+        (keys.length || hid.length ? '<h5 class="apsech">' + LE("ApRunValues") + "</h5>" + apValsHtml(keys.map(k => [k, vals[k]]), hid, run.shaped) : "") +
       "</div>";
   }
   const idx = (run.steps || []).findIndex((st, i) => (st.sid || "i" + i) === U.runSel);
@@ -30800,9 +31203,8 @@ function apStepWord(st){
   return ({ ok:L("AutoState_ok"), fail:L("AutoState_failed"), skip:L("AutoSkipped"), wait:L("ApNotReached"), run:L("AutoState_running"),
             sleep:L("AutoWaiting"), again:L("AutoWaiting"), ask:L("ApAsking"), no:L("ApSaidNo"), stop:L("AutoState_stopped") })[st.state] || st.state;
 }
-function apValsHtml(pairs, hid){
-  return '<div class="auvals">' + pairs.map(p => '<span class="auv' + (p[1].show === "ai" ? " ai" : "") + '" title="' + LE(p[1].show === "ai" ? "AutoValAi" : "AutoValMe") + '"><b>' +
-    esc(p[0]) + "</b> " + esc(String(p[1].v).slice(0, 300)) + (p[1].show === "ai" ? " <em>✦</em>" : "") + "</span>").join("") +
+function apValsHtml(pairs, hid, shaped){
+  return '<div class="auvals">' + pairs.map(p => autoValHtml(p[0], p[1], shaped)).join("") +
     hid.map(k => '<span class="auv hid" title="' + LE("AutoValHidden") + '"><b>🔒 ' + esc(k) + "</b></span>").join("") + "</div>";
 }
 
@@ -30889,6 +31291,19 @@ function apSelect(id){
 function apNewStep(kind){
   const a = AUTO.ui.draft;
   const base = { kind:kind, name:L("AutoKindNew_" + kind) };
+  /* (5.26) a name for the value it makes that is not taken yet */
+  const free = stem => {
+    const used = {};
+    DossierAuto.flatSteps(a.steps).forEach(x => { if (x.s.var) used[x.s.var] = 1; (x.s.save || []).forEach(v => { used[v.name] = 1; }); });
+    let n = stem, k = 2;
+    while (used[n]) n = stem + k++;
+    return n;
+  };
+  if (kind === "set") base.var = free("value");
+  if (kind === "select") base.var = free("shaped");
+  if (kind === "filter") base.var = free("kept");
+  if (kind === "each") base.as = "item";
+  if (kind === "stop") base.as = "fail";
   if (kind === "http"){
     const last = DossierAuto.flatSteps(a.steps).map(x => x.s).reverse().find(s => s.kind === "http" && s.conn);
     base.conn = last ? last.conn : ((autoStore().conns[0] || {}).id || "");
@@ -30899,7 +31314,7 @@ function apInsert(ref, i, kind){
   const U = AUTO.ui, a = U.draft;
   const list = apListOf(a, ref); if (!list) return;
   if (DossierAuto.flatSteps(a.steps).length >= DossierAuto.LIMIT.steps) return toast(L("ApTooMany", { n:DossierAuto.LIMIT.steps }), { bad:true });
-  if (kind === "if" && apDepthOf(a, ref) >= DossierAuto.LIMIT.nest) return toast(L("ApAddIfDeep"), { bad:true });
+  if (DossierAuto.HOLDS[kind] && apDepthOf(a, ref) >= DossierAuto.LIMIT.nest) return toast(L("ApAddIfDeep"), { bad:true });
   apSnap();
   const s = apNewStep(kind);
   list.splice(Math.max(0, Math.min(list.length, i)), 0, s);
@@ -30945,16 +31360,17 @@ function apMoveTo(sid, ref, i){
   U.sel = sid;
   apPaint();
 }
-/* a Condition cannot go inside itself, nor deeper than two levels */
+/* a Condition (or a For each) cannot go inside itself, nor deeper than two levels */
 function apCanDrop(sid, ref){
   const a = AUTO.ui.draft;
   const f = DossierAuto.findStep(a, sid); if (!f) return false;
-  if (f.s.kind !== "if") return !!apListOf(a, ref);
-  const m = /^(.+):(yes|no)$/.exec(ref || "");
+  if (!apHolds(f.s)) return !!apListOf(a, ref);
+  const m = /^(.+):(yes|no|do)$/.exec(ref || "");
   let p = m ? DossierAuto.findStep(a, m[1]) : null;
   while (p){ if (p.s.id === sid) return false; p = p.parent ? DossierAuto.findStep(a, p.parent) : null; }
   const d = apDepthOf(a, ref);
-  const inner = DossierAuto.flatSteps(f.s.yes.concat(f.s.no)).some(x => x.s.kind === "if");
+  const kids = [].concat.apply([], (DossierAuto.HOLDS[f.s.kind] || []).map(b => f.s[b]));
+  const inner = DossierAuto.flatSteps(kids).some(x => apHolds(x.s));
   return d < DossierAuto.LIMIT.nest && !(inner && d + 1 >= DossierAuto.LIMIT.nest);
 }
 
@@ -30986,6 +31402,8 @@ function apAfterEdit(path){
       const f = document.querySelector('#vAuto [data-f="' + el.dataset.cok + '"]');
       el.innerHTML = apCondOk(f ? f.value : "");
     });
+    /* (5.26) the closing message's preview follows what you type */
+    $$("#vAuto [data-prev]").forEach(el => { el.innerHTML = apPreviewHtml(U.draft, el.dataset.prev); });
     apCheckPaint();
   }, 160);
 }
@@ -31094,11 +31512,36 @@ function apItem(key, icon, label, hint, opts){
     (icon ? '<span class="apk k-' + (opts.kind || icon) + '">' + apIc(icon) + "</span>" : "") +
     "<span><b>" + esc(label) + "</b>" + (hint ? "<small>" + esc(hint) + "</small>" : "") + "</span></button>";
 }
+/* (5.26) the kinds, in the groups the add menu shows them in */
+const AP_ADD_GROUPS = [["ApAddG_call", ["http", "script"]], ["ApAddG_flow", ["if", "each", "wait", "confirm", "stop"]],
+                       ["ApAddG_data", ["set", "select", "filter"]]];
 function apAddMenu(btn){
   const ref = btn.dataset.apadd, i = +btn.dataset.i;
   const deep = apDepthOf(AUTO.ui.draft, ref) >= DossierAuto.LIMIT.nest;
-  const html = DossierAuto.KINDS.map(k => apItem(k, k, L("AutoKind_" + k), k === "if" && deep ? L("ApAddIfDeep") : L("ApAdd_" + k), { off:k === "if" && deep })).join("");
-  apPop(btn, html, k => apInsert(ref, i, k), "addpop");
+  const html = '<div class="apfxs">' + apIc("search") + '<input class="in" type="search" placeholder="' + LE("ApAddFind") + '" spellcheck="false" autocomplete="off"></div>' +
+    AP_ADD_GROUPS.map(g => '<div class="appg"><div class="appgh">' + LE(g[0]) + "</div>" + g[1].map(k => {
+      const off = DossierAuto.HOLDS[k] && deep;
+      return apItem(k, k, L("AutoKind_" + k), off ? L("ApAddIfDeep") : L("ApAdd_" + k), { off:off });
+    }).join("") + "</div>").join("");
+  const el = apPop(btn, html, k => apInsert(ref, i, k), "addpop");
+  apPopFilter(el);
+}
+/* a pop-up's search box: hides what does not match, Enter takes the first */
+function apPopFilter(el){
+  const q = el.querySelector(".apfxs input");
+  if (!q) return;
+  q.addEventListener("input", () => {
+    const w = q.value.trim().toLowerCase();
+    el.querySelectorAll(".appg").forEach(g => {
+      let any = false;
+      g.querySelectorAll("[data-pk]").forEach(it => { const on = !w || it.textContent.toLowerCase().indexOf(w) >= 0; it.hidden = !on; any = any || on; });
+      g.hidden = !any;
+    });
+  });
+  q.addEventListener("keydown", e => {
+    if (e.key === "Enter"){ const it = [...el.querySelectorAll("[data-pk]:not([disabled])")].find(x => !x.hidden); if (it){ e.preventDefault(); it.click(); } }
+    if (e.key === "ArrowDown"){ const it = [...el.querySelectorAll("[data-pk]:not([disabled])")].find(x => !x.hidden); if (it){ e.preventDefault(); it.focus(); } }
+  });
 }
 function apCardMenu(btn){
   const U = AUTO.ui, id = btn.dataset.apm;
@@ -31106,11 +31549,12 @@ function apCardMenu(btn){
   const s = f.s;
   const html =
     (s.kind === "http" || s.kind === "script" ? apItem("try", "play", L("AutoTryHere"), "", { kind:"http" }) : "") +
-    (s.kind === "if" ? apItem("fold", "down", L(U.fold[id] ? "ApUnfold" : "ApFold"), "", { kind:"if" }) : "") +
+    (apHolds(s) ? apItem("fold", "down", L(U.fold[id] ? "ApUnfold" : "ApFold"), "", { kind:s.kind }) : "") +
     apItem("up", "", L("AutoMoveUp"), "", { off:f.index === 0 }) +
     apItem("down", "", L("AutoMoveDown"), "", { off:f.index >= f.list.length - 1 }) +
     apItem("dup", "", L("AutoDuplicate"), "") +
-    apItem("del", "", L("Remove2"), s.kind === "if" && (s.yes.length || s.no.length) ? L("ApDelIfHint", { n:apStepsCount(s.yes.concat(s.no)) }) : "", { cls:"danger" });
+    apItem("del", "", L("Remove2"), s.kind === "if" && (s.yes.length || s.no.length) ? L("ApDelIfHint", { n:apStepsCount(s.yes.concat(s.no)) })
+                                   : s.kind === "each" && s.do.length ? L("ApDelIfHint", { n:apStepsCount(s.do) }) : "", { cls:"danger" });
   apPop(btn, html, k => apStepAct(k, id), "cardpop");
 }
 function apNewMenu(btn){
@@ -31164,60 +31608,244 @@ function apGoProb(p){
     if (el){ el.focus(); if (el.scrollIntoView) el.scrollIntoView({ block:"nearest" }); }
   }, 0);
 }
-/* "insert a value": every {{name}} this field can use, by where it comes from */
+/* ── what a box can have put in it (5.26) ─────────────────────────────────
+   The same list behind the {x} button and behind "/" (and Ctrl+Space)
+   while you type: the values the step can read, the functions, and - in a
+   text this page writes itself (a closing message, a Stop's message, a
+   value you set) - ready-made blocks: a table of a list, a list of its
+   items, a code block. Each entry: the text it puts in, and where the
+   caret goes after (inside the brackets of a function). */
+function apFieldKind(field){
+  const path = (field && field.dataset && field.dataset.f) || "";
+  const inCond = /(?:^|\.)(when|okWhen|cond|until)$/.test(path) || !!(field && field.closest && field.closest(".apcond"));
+  const page = /^(result|resultFail)$/.test(path) || /\.(text|value)$/.test(path) || /\.fields\.\d+\.1$/.test(path);
+  const md = /^(result|resultFail)$/.test(path) || /\.text$/.test(path);
+  return { path:path, inCond:inCond, page:page, md:md, own:/(?:okWhen|until)$/.test(path) };
+}
+/* fields where "/" opens the list: the ones that take values - not a name,
+   not an address (whose path is full of slashes), not a JSON path */
+function apSlashOk(el){
+  if (!el || !el.closest || !el.closest("#vAuto .appane")) return false;
+  if (!(el.tagName === "TEXTAREA" || (el.tagName === "INPUT" && (!el.type || el.type === "text" || el.type === "search")))) return false;
+  if (el.dataset.ca != null || el.dataset.cb != null) return true;
+  const p = el.dataset.f || "";
+  return /(?:^|\.)(body|value|text|result|resultFail|cond|when|okWhen|until|from)$/.test(p) ||
+         /\.(query|headers|form|args|fields)\.\d+\.1$/.test(p);
+}
+function apSuggest(field){
+  const U = AUTO.ui, a = U.draft;
+  if (!a) return [];
+  const k = apFieldKind(field);
+  const sid = U.sel === "finish" || U.sel === "trigger" ? "" : U.sel;
+  const v = DossierAuto.valuesAt(a, sid);
+  const f = sid ? DossierAuto.findStep(a, sid) : null, step = f ? f.s : null;
+  const groups = [];
+  const it = (ins, label, hint, caret, extra) => Object.assign({ ins:ins, label:label, hint:hint, caret:caret == null ? ins.length : caret }, extra || {});
+  const ph = n => it("{{" + n + "}}", "{{" + n + "}}", "");
+  if (v.locals.length) groups.push({ t:L("ApValLocal"), items:v.locals.map(x => Object.assign(ph(x.name),
+    { hint:x.kind === "item" ? L("ApValItem", { list:x.from || "…" }) : L("ApValLoop_" + x.name.split(".")[1]), key:x.name })) });
+  if (v.inputs.length) groups.push({ t:L("ApValInputs"), items:v.inputs.map(i => Object.assign(ph(i.name), { hint:i.label + (i.kind === "secret" ? " 🔒" : ""), key:i.name })) });
+  if (v.saved.length) groups.push({ t:L("ApValSaved"), items:v.saved.map(x => {
+    const hid = x.show === "hidden";
+    return Object.assign(ph(x.name), { key:x.name, off:hid && k.page,
+      hint:L("ApValFrom", { step:x.step }) + (hid ? " · 🔒" + (k.page ? " " + L("ApValNotHere") : "") : "") +
+           (x.shaped ? " · ✂ " + L("ApValShaped") : "") + (x.list ? " · " + L("ApValList") : "") + (x.maybe ? " · " + L("ApValMaybe") : "") });
+  }) });
+  if (k.own && v.mine.length) groups.push({ t:L("ApValMine"), items:v.mine.map(x => Object.assign(ph(x.name), { hint:L("ApValThisStep"), key:x.name })) });
+  if (v.status || k.own) groups.push({ t:L("ApValStatus"), items:[Object.assign(ph("status"), { hint:L(k.own ? "ApValStatusOwn" : "ApValStatusLast"), key:"status" })] });
+  if (!k.inCond && !k.page && step && step.conn){
+    const c = autoConnOf(step.conn), sec = DossierAuto.connSecrets(c);
+    if (sec.length) groups.push({ t:L("ApValSecrets", { conn:c.name }), items:sec.map(n => Object.assign(ph("secret." + n), { hint:L("ApValSecretHint"), key:"secret." + n })) });
+  }
+  groups.push({ t:L("ApValRecord"), items:v.record.map(n => Object.assign(ph(n), { hint:L("ApValRec_" + n.split(".")[1]), key:n })) });
+  groups.push({ t:L("ApValBuilt"), items:v.builtins.map(n => Object.assign(ph(n), { hint:L("ApValB_" + n), key:n })) });
+  /* the functions, by what they work on; the caret lands inside the brackets */
+  const fns = DossierAuto.fnList();
+  ["list", "text", "num", "logic"].concat(k.page ? ["md"] : []).forEach(g => {
+    const list = fns.filter(x => x.g === g);
+    if (list.length) groups.push({ t:L("ApFnG_" + g), fn:true, items:list.map(x => it("{{" + x.name + "()}}", x.sig, L("ApFn_" + x.key), x.name.length + 3, { key:x.name, fn:true })) });
+  });
+  /* blocks, for a text this page writes */
+  if (k.page){
+    const lists = v.saved.filter(x => x.list || x.shaped).concat(v.saved.filter(x => x.show !== "hidden"));
+    const LST = (lists[0] && lists[0].name) || (v.locals[0] && v.locals[0].name) || "list";
+    const sn = [];
+    if (k.md || /\.text$/.test(k.path)){
+      sn.push(it("{{table(" + LST + ")}}", L("ApSn_table"), "{{table(" + LST + ', "name", "date")}}', null, { key:"table" }));
+      sn.push(it("{{#each " + LST + "}}\n- {{name}}\n{{/each}}", L("ApSn_each"), "{{#each " + LST + "}} … {{/each}}", ("{{#each " + LST + "}}\n- ").length, { key:"each" }));
+      sn.push(it("{{#if " + LST + "}}\n\n{{else}}\n\n{{/if}}", L("ApSn_if"), "{{#if …}} … {{else}} … {{/if}}", ("{{#if " + LST + "}}\n").length, { key:"if" }));
+      sn.push(it("```\n\n```", L("ApSn_code"), "```", 4, { key:"code" }));
+      sn.push(it("{{code(" + LST + ")}}", L("ApSn_json"), "{{code(" + LST + ")}}", null, { key:"json" }));
+      sn.push(it("## ", L("ApSn_head"), "## …", null, { key:"heading" }));
+      sn.push(it("**", L("ApSn_bold"), "**…**", 2, { key:"bold", ins2:"**" }));
+    } else sn.push(it("{{count(" + LST + ")}}", L("ApSn_count"), "{{count(" + LST + ")}}", null, { key:"count" }));
+    groups.push({ t:L("ApSnG"), items:sn });
+  }
+  return groups;
+}
+function apSuggestHtml(groups, opts){
+  opts = opts || {};
+  let n = 0;
+  return groups.map((g, gi) => {
+    const items = g.items.filter(x => !opts.match || opts.match(x));
+    if (!items.length) return "";
+    return '<div class="appg"><div class="appgh">' + esc(g.t) + "</div>" + items.map(x => {
+      const i = gi + ":" + g.items.indexOf(x);
+      return '<button class="appi fx' + (x.fn ? " fn" : "") + (n++ === 0 && opts.first ? " hi" : "") + '" type="button" role="menuitem" data-pk="' + esc(i) + '"' + (x.off ? " disabled" : "") +
+        "><code>" + esc(x.label) + "</code>" + (x.hint ? "<small>" + esc(x.hint) + "</small>" : "") + "</button>";
+    }).join("") + "</div>";
+  }).join("");
+}
+function apSuggestItem(groups, key){
+  const m = /^(\d+):(\d+)$/.exec(key || "");
+  return m && groups[+m[1]] ? groups[+m[1]].items[+m[2]] : null;
+}
+/* "insert a value": every {{name}} this field can use, by where it comes
+   from - and the functions, and (in a message) the blocks */
 function apFxOpen(btn){
   const U = AUTO.ui, a = U.draft; if (!a) return;
   const field = btn.parentNode.querySelector("input,textarea");
   if (!field) return;
+  apSlashClose();
   U.fxFor = { el:field, at:field.selectionStart, end:field.selectionEnd, done:false };
-  const path = field.dataset.f || "";
-  const inCond = /(?:^|\.)(when|okWhen|cond|until)$/.test(path) || !!field.closest(".apcond");
-  const own = /(?:okWhen|until)$/.test(path);
-  const sid = U.sel === "finish" ? "" : U.sel === "trigger" ? "" : U.sel;
-  const v = DossierAuto.valuesAt(a, sid);
-  const f = sid ? DossierAuto.findStep(a, sid) : null, step = f ? f.s : null;
-  const groups = [];
-  if (v.inputs.length) groups.push([L("ApValInputs"), v.inputs.map(i => ["{{" + i.name + "}}", i.label + (i.kind === "secret" ? " 🔒" : "")])]);
-  if (v.saved.length) groups.push([L("ApValSaved"), v.saved.map(x => ["{{" + x.name + "}}", L("ApValFrom", { step:x.step }) +
-    (x.show === "hidden" ? " · 🔒" : "") + (x.maybe ? " · " + L("ApValMaybe") : "")])]);
-  if (own && v.mine.length) groups.push([L("ApValMine"), v.mine.map(x => ["{{" + x.name + "}}", L("ApValThisStep")])]);
-  if (v.status || own) groups.push([L("ApValStatus"), [["{{status}}", L(own ? "ApValStatusOwn" : "ApValStatusLast")]]]);
-  if (!inCond && step && step.conn){
-    const c = autoConnOf(step.conn), sec = DossierAuto.connSecrets(c);
-    if (sec.length) groups.push([L("ApValSecrets", { conn:c.name }), sec.map(n => ["{{secret." + n + "}}", L("ApValSecretHint")])]);
-  }
-  groups.push([L("ApValRecord"), v.record.map(n => ["{{" + n + "}}", L("ApValRec_" + n.split(".")[1])])]);
-  groups.push([L("ApValBuilt"), v.builtins.map(n => ["{{" + n + "}}", L("ApValB_" + n)])]);
+  const groups = apSuggest(field);
   const html = '<div class="apfxs">' + apIc("search") + '<input class="in" type="search" placeholder="' + LE("ApValFind") + '" spellcheck="false" autocomplete="off"></div>' +
-    groups.map(g => '<div class="appg"><div class="appgh">' + esc(g[0]) + "</div>" + g[1].map(x =>
-      '<button class="appi fx" type="button" role="menuitem" data-pk="' + esc(x[0]) + '"><code>' + esc(x[0]) + "</code><small>" + esc(x[1]) + "</small></button>").join("") + "</div>").join("");
-  const el = apPop(btn, html, pk => apFxInsert(pk), "fxpop", field);
-  const q = el.querySelector(".apfxs input");
-  q.addEventListener("input", () => {
-    const w = q.value.trim().toLowerCase();
-    el.querySelectorAll(".appg").forEach(g => {
-      let any = false;
-      g.querySelectorAll("[data-pk]").forEach(it => { const on = !w || it.textContent.toLowerCase().indexOf(w) >= 0; it.hidden = !on; any = any || on; });
-      g.hidden = !any;
-    });
-  });
-  q.addEventListener("keydown", e => {
-    if (e.key === "Enter"){ const it = [...el.querySelectorAll("[data-pk]")].find(x => !x.hidden); if (it){ e.preventDefault(); it.click(); } }
-  });
+    apSuggestHtml(groups);
+  const el = apPop(btn, html, pk => { const x = apSuggestItem(groups, pk); if (x) apFxInsert(x.ins, x.caret, x.ins2); }, "fxpop", field);
+  apPopFilter(el);
 }
-function apFxInsert(text){
+function apFxInsert(text, caret, after){
   const U = AUTO.ui, f = U.fxFor;
   if (!f || !document.body.contains(f.el)) return;
   const el = f.el;
   const at = f.at != null ? f.at : el.value.length, end = f.end != null ? f.end : at;
-  el.value = el.value.slice(0, at) + text + el.value.slice(end);
+  apPutText(el, at, end, text, caret, after);
   f.done = true;
-  /* a value put in from the list is an undo step of its own */
+}
+/* text into a box in place of [from, to), the caret at caret (an offset in
+   text); after: put after the caret too ("**" … "**"). One undo step. */
+function apPutText(el, from, to, text, caret, after){
+  const U = AUTO.ui;
+  const mid = after ? el.value.slice(from, to) : "";
+  el.value = el.value.slice(0, from) + text + mid + (after || "") + el.value.slice(to);
   U.typing = null;
   el.focus();
-  try { el.setSelectionRange(at + text.length, at + text.length); } catch(e){}
+  const c = from + (caret == null ? text.length : caret) + mid.length;
+  try { el.setSelectionRange(c, c); } catch(e){}
   el.dispatchEvent(new Event("input", { bubbles:true }));
 }
+
+/* ── "/" while typing ───────────────────────────────────────────────────
+   Typing / after a space (or at the start, or after a bracket or a quote)
+   opens the list under the caret; what you type after it narrows the list;
+   ↑ ↓ choose, Enter or Tab puts it in (in place of the / and what you
+   typed), Esc leaves the / as it is. Ctrl+Space opens it anywhere. */
+const SLASH = { el:null, start:0, slash:true, groups:[], shown:[], i:0, box:null };
+function apCaretXY(el, pos){
+  const r = el.getBoundingClientRect(), cs = getComputedStyle(el), z = pageZoom();
+  const d = document.createElement("div");
+  ["boxSizing", "width", "fontFamily", "fontSize", "fontWeight", "lineHeight", "letterSpacing", "paddingTop", "paddingRight", "paddingBottom",
+   "paddingLeft", "borderTopWidth", "borderRightWidth", "borderBottomWidth", "borderLeftWidth", "tabSize", "textIndent"].forEach(k => { d.style[k] = cs[k]; });
+  d.style.position = "absolute"; d.style.visibility = "hidden"; d.style.left = "-9999px"; d.style.top = "0";
+  d.style.whiteSpace = el.tagName === "TEXTAREA" ? "pre-wrap" : "pre"; d.style.overflowWrap = "break-word"; d.style.borderStyle = "solid";
+  d.textContent = el.value.slice(0, pos);
+  const sp = document.createElement("span");
+  sp.textContent = "​";
+  d.appendChild(sp);
+  document.body.appendChild(d);
+  const x = sp.offsetLeft, y = sp.offsetTop + sp.offsetHeight;
+  d.remove();
+  return { x:r.left + Math.min(r.width - 8, Math.max(0, (x - el.scrollLeft) * z)),
+           y:Math.min(r.bottom, r.top + Math.max(0, (y - el.scrollTop) * z)) };
+}
+function apSlashOpen(el, start, slash){
+  apPopClose();
+  SLASH.el = el; SLASH.start = start; SLASH.slash = slash; SLASH.i = 0;
+  SLASH.groups = apSuggest(el);
+  if (!SLASH.box){
+    const b = document.createElement("div");
+    b.id = "apSlash"; b.className = "appop slashpop"; b.setAttribute("role", "listbox");
+    /* a click picks, and the caret stays in the box */
+    b.addEventListener("pointerdown", e => e.preventDefault());
+    b.addEventListener("click", e => {
+      const x = e.target.closest("[data-pk]");
+      if (x && !x.disabled){ const n = SLASH.shown.indexOf(x.dataset.pk); if (n >= 0) SLASH.i = n; apSlashPick(); }
+    });
+    document.body.appendChild(b);
+    SLASH.box = b;
+  }
+  apSlashPaint();
+}
+function apSlashQuery(){
+  const el = SLASH.el;
+  if (!el || !document.body.contains(el)) return null;
+  const from = SLASH.start + (SLASH.slash ? 1 : 0), at = el.selectionStart;
+  if (SLASH.slash && el.value[SLASH.start] !== "/") return null;
+  if (at < from || el.selectionEnd !== at) return null;
+  const q = el.value.slice(from, at);
+  return /[\s{}()"']/.test(q) || q.length > 30 ? null : q;
+}
+function apSlashPaint(){
+  const q = apSlashQuery();
+  if (q == null) return apSlashClose();
+  const w = q.toLowerCase();
+  const score = x => {
+    if (!w) return 1;
+    const key = String(x.key || x.label).toLowerCase();
+    if (key.indexOf(w) === 0) return 3;
+    if (key.indexOf(w) > 0 || String(x.label).toLowerCase().indexOf(w) >= 0) return 2;
+    return String(x.hint || "").toLowerCase().indexOf(w) >= 0 ? 1 : 0;
+  };
+  /* typed letters: the best matches first, across the groups */
+  let groups = SLASH.groups;
+  if (w){
+    const all = [];
+    groups.forEach((g, gi) => g.items.forEach((x, xi) => { const s2 = score(x); if (s2 && !x.off) all.push({ x:x, s:s2, gi:gi, xi:xi }); }));
+    all.sort((p, q2) => q2.s - p.s);
+    if (!all.length) return apSlashClose();
+    groups = [{ t:L("ApSlashMatches", { q:q }), items:all.slice(0, 40).map(o => o.x) }];
+    SLASH.flat = groups;
+  } else SLASH.flat = groups;
+  const html = apSuggestHtml(groups) + '<div class="apslh">' + LE("ApSlashKeys") + "</div>";
+  const b = SLASH.box;
+  b.innerHTML = html;
+  SLASH.shown = [...b.querySelectorAll("[data-pk]:not([disabled])")].map(x => x.dataset.pk);
+  if (SLASH.i >= SLASH.shown.length) SLASH.i = 0;
+  apSlashMark();
+  const p = apCaretXY(SLASH.el, SLASH.start);
+  b.style.display = "block";
+  /* short enough to sit under the caret (popAt would let it be as tall as
+     the window) */
+  b.style.maxHeight = "320px";
+  const sz = popSize(b);
+  let x = Math.min(p.x, window.innerWidth - sz.w - 8), y = p.y + 4;
+  if (y + sz.h > window.innerHeight - 8){
+    const r = SLASH.el.getBoundingClientRect();
+    y = Math.max(8, Math.min(r.top, p.y - 20) - sz.h - 4);
+  }
+  popAt(b, Math.max(8, x), Math.max(8, y));
+  b.style.maxHeight = "320px";
+}
+function apSlashMark(){
+  const b = SLASH.box; if (!b) return;
+  b.querySelectorAll("[data-pk]").forEach(x => x.classList.toggle("hi", x.dataset.pk === SLASH.shown[SLASH.i]));
+  const h = b.querySelector(".hi");
+  if (h && h.scrollIntoView) h.scrollIntoView({ block:"nearest" });
+}
+function apSlashPick(){
+  const el = SLASH.el, key = SLASH.shown[SLASH.i];
+  const x = apSuggestItem(SLASH.flat || SLASH.groups, key);
+  if (!el || !x) return apSlashClose();
+  const to = el.selectionStart;
+  const from = SLASH.start;
+  apSlashClose();
+  apPutText(el, from, to, x.ins, x.caret, x.ins2);
+}
+function apSlashClose(){
+  SLASH.el = null;
+  if (SLASH.box) SLASH.box.style.display = "none";
+}
+function apSlashOn(){ return !!SLASH.el && !!SLASH.box && SLASH.box.style.display !== "none"; }
 
 /* ═══ WIRING ══════════════════════════════════════════════════════════════
    One set of listeners on the page, made once: whatever is drawn in it
@@ -31233,6 +31861,13 @@ function apFxInsert(text){
     const U = AUTO.ui, t = e.target;
     let b;
     if ((b = t.closest("[data-apfx]"))) return apFxOpen(b);
+    /* a code block's Copy, in a closing message (5.26) */
+    if ((b = t.closest("[data-copy]"))){
+      copyText(CHAT.code[b.dataset.copy] || "", L("Copied"));
+      b.textContent = L("Copied"); b.classList.add("ok");
+      setTimeout(() => { b.textContent = L("Copy"); b.classList.remove("ok"); }, 1500);
+      return;
+    }
     if ((b = t.closest("[data-aphtab]"))){ U.tab = b.dataset.aphtab; U.connDraft = null; U.conn = ""; return apPaint(); }
     if ((b = t.closest("[data-austart]"))) return autoFromStarter(b.dataset.austart);
     if ((b = t.closest("#apNew"))) return apNewMenu(b);
@@ -31283,6 +31918,15 @@ function apFxInsert(text){
   });
   box.addEventListener("input", e => {
     const U = AUTO.ui, el = e.target;
+    /* (5.26) "/" opens the list of values and functions; typing narrows it */
+    if (apSlashOk(el)){
+      if (apSlashOn() && SLASH.el === el) apSlashPaint();
+      else if (e.inputType === "insertText" && e.data === "/"){
+        const at = el.selectionStart - 1;
+        const before = at > 0 ? el.value[at - 1] : "";
+        if (!before || /[\s(\[{,:"'=>]/.test(before)) apSlashOpen(el, at, true);
+      }
+    }
     if (el.id === "apQ"){ U.q = el.value; const l = $("apList"); if (l) l.innerHTML = apRowsHtml(); return; }
     if (el.id === "apHq"){ U.hq = el.value; const l = $("apRunList"); if (l) l.innerHTML = apRunRowsHtml(); return; }
     if (el.dataset.tval != null){ if (el.type !== "password") U.tvals[el.dataset.tval] = el.value; return; }
@@ -31327,16 +31971,37 @@ function apFxInsert(text){
   /* leaving a box ends its undo step: coming back to it starts another */
   box.addEventListener("focusout", e => {
     if (e.target.dataset && e.target.dataset.f) AUTO.ui.typing = null;
+    if (SLASH.el === e.target) apSlashClose();
   });
+  /* a click elsewhere in a box moves the caret away from what was typed */
+  box.addEventListener("click", e => { if (apSlashOn() && e.target === SLASH.el) apSlashPaint(); }, true);
   box.addEventListener("toggle", e => {
     const d = e.target;
     if (d && d.matches && d.matches("details[data-sec]")) AUTO.ui.secOpen[d.dataset.sec] = d.open;
   }, true);
   box.addEventListener("keydown", e => {
     const U = AUTO.ui, t = e.target;
+    /* the "/" list, while it is open: it has the arrows, Enter, Tab, Esc */
+    if (apSlashOn() && SLASH.el === t){
+      if (e.key === "ArrowDown" || e.key === "ArrowUp"){
+        e.preventDefault();
+        const n = SLASH.shown.length;
+        if (n) SLASH.i = (SLASH.i + (e.key === "ArrowDown" ? 1 : n - 1)) % n;
+        return apSlashMark();
+      }
+      if (e.key === "Enter" || e.key === "Tab"){ e.preventDefault(); e.stopPropagation(); return apSlashPick(); }
+      if (e.key === "Escape"){ e.preventDefault(); e.stopPropagation(); return apSlashClose(); }
+    }
+    if (e.key === " " && e.ctrlKey && !e.altKey && apSlashOk(t)){ e.preventDefault(); return apSlashOpen(t, t.selectionStart, false); }
     const card = t.closest && t.closest(".apc[data-sid]");
     if (card && t === card){
       if (e.key === "Enter" || e.key === " "){ e.preventDefault(); e.stopPropagation(); return apSelect(card.dataset.sid); }
+      /* (5.26) "/" on a card: add a step after it */
+      if (e.key === "/" && U.mode === "design" && U.draft && card.dataset.sid !== "finish"){
+        const after = card.dataset.sid === "trigger" ? card.nextElementSibling : (card.closest(".apif") || card).nextElementSibling;
+        const add = after && after.matches(".apj") && after.querySelector(".apadd");
+        if (add){ e.preventDefault(); e.stopPropagation(); return apAddMenu(add); }
+      }
       if (U.mode === "design" && U.draft && card.dataset.sid !== "trigger" && card.dataset.sid !== "finish"){
         if (e.key === "Delete" || e.key === "Backspace"){ e.preventDefault(); e.stopPropagation(); return apStepAct("del", card.dataset.sid); }
         if (e.altKey && (e.key === "ArrowUp" || e.key === "ArrowDown")){
@@ -31399,6 +32064,47 @@ function apFxInsert(text){
     apMoveTo(sid, j.dataset.ref, +j.dataset.i);
   });
 })();
+/* (5.26) the side panel is as wide as you drag its left edge; ← → move it
+   by a step, a double-click puts it back. Kept with the workspace. */
+function apPaneWidth(w, save){
+  const pane = $("apPane"); if (!pane) return;
+  const room = (($("vAuto").querySelector(".apdm") || pane.parentNode).getBoundingClientRect().width / pageZoom()) - 180;
+  w = Math.max(AP_PANE_MIN, Math.min(AP_PANE_MAX, room, Math.round(w)));
+  pane.style.setProperty("--appw", w + "px");
+  if (save){ layoutCfg().paneW = w; touch(); }
+  return w;
+}
+$("vAuto").addEventListener("pointerdown", e => {
+  const g = e.target.closest && e.target.closest("#apGrip");
+  if (!g || e.button !== 0) return;
+  e.preventDefault();
+  const pane = $("apPane"), z = pageZoom();
+  const x0 = e.clientX, w0 = pane.getBoundingClientRect().width / z;
+  g.setPointerCapture(e.pointerId);
+  g.classList.add("on");
+  let w = w0;
+  const move = ev => { w = apPaneWidth(w0 + (x0 - ev.clientX) / z, false) || w; };
+  const up = () => {
+    g.removeEventListener("pointermove", move); g.removeEventListener("pointerup", up); g.removeEventListener("pointercancel", up);
+    g.classList.remove("on");
+    apPaneWidth(w, true);
+  };
+  g.addEventListener("pointermove", move); g.addEventListener("pointerup", up); g.addEventListener("pointercancel", up);
+});
+$("vAuto").addEventListener("keydown", e => {
+  if (!e.target || e.target.id !== "apGrip") return;
+  if (e.key !== "ArrowLeft" && e.key !== "ArrowRight" && e.key !== "Home") return;
+  e.preventDefault();
+  const pane = $("apPane");
+  const w = pane.getBoundingClientRect().width / pageZoom();
+  if (e.key === "Home"){ layoutCfg().paneW = 0; touch(); pane.style.removeProperty("--appw"); return; }
+  apPaneWidth(w + (e.key === "ArrowLeft" ? 40 : -40), true);
+});
+$("vAuto").addEventListener("dblclick", e => {
+  if (!e.target || e.target.id !== "apGrip") return;
+  layoutCfg().paneW = 0; touch();
+  const pane = $("apPane"); if (pane) pane.style.removeProperty("--appw");
+});
 /* the canvas zooms with Ctrl and the mouse wheel, about the pointer, and
    with Ctrl + / - / 0 while a card has the keyboard (5.25) */
 $("vAuto").addEventListener("wheel", e => {
@@ -31437,6 +32143,7 @@ function apConnField(el, type){
 async function apAct(what, b){
   const U = AUTO.ui;
   switch (what){
+    case "finprev": U.finPrev = !U.finPrev; return apPaint();
     case "back":
       if (U.mode === "run"){
         if (U.draft){ U.mode = "design"; U.run = null; U.runSel = ""; return apPaint(); }

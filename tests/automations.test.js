@@ -591,3 +591,236 @@ test("run: 'try up to here' stops after a step inside a branch", async () => {
   const R2 = await A.run(branchy(), env(b2, { upTo:1 }));
   assert.deepEqual(R2.steps.map(s => s.state), ["ok", "ok", "ok", "skip", "wait"]);
 });
+
+/* ── 5.26: more kinds of step, lists, functions, messages ─────────────── */
+/* a stand-in tray program that also shapes a list (leave out / keep only),
+   keeps the whole of it hidden, and reads paths into it - as the real one */
+function shapeBridge(replies){
+  const runs = {}, calls = [], paths = [];
+  const shape = (v, keep, drop) => {
+    if (Array.isArray(v)) return v.map(x => shape(x, keep, drop));
+    if (!v || typeof v !== "object") return v;
+    const o = {};
+    Object.keys(v).forEach(k => {
+      if (keep.length && keep.indexOf(k) < 0) return;
+      if (drop.indexOf(k) >= 0) return;
+      o[k] = shape(v[k], [], drop);
+    });
+    return o;
+  };
+  const call = async (op, b) => {
+    calls.push({ op, b:JSON.parse(JSON.stringify(b)) });
+    const keep = runs[b.run] || (runs[b.run] = {});
+    const look = ph => {
+      if (ph.parts && ph.parts.length){
+        const src = (b.shaped || []).indexOf(ph.full) >= 0 || b.values[ph.full] == null ? keep[ph.full] : b.values[ph.full];
+        const d = A.dig(src, ph.parts);
+        return d.found ? A.txt(d.v) : undefined;
+      }
+      return b.values[ph.full] != null ? b.values[ph.full] : keep[ph.full];
+    };
+    if (op === "end"){ delete runs[b.run]; return { ok:true }; }
+    if (op === "check") return { ok:true, result:A.evalCond(A.parseCond(b.when).ast, look) };
+    if (b.when && !A.evalCond(A.parseCond(b.when).ast, look)) return { ok:true, skipped:true };
+    paths.push(String(b.step.path || "").replace(/\{\{([^{}]*)\}\}/g, (m, inner) => { const v = look(A.parsePh(inner)); return v == null ? "<none>" : v; }));
+    const r = replies.shift();
+    if (!r) return { ok:false, error:"no reply scripted" };
+    const saved = {}, hidden = [], shaped = [];
+    (b.step.save || []).forEach(s => {
+      const v = A.jsonGet(r.json || {}, s.path);
+      if (v === undefined) return;
+      if (s.show === "hidden"){ keep[s.name] = A.txt(v); hidden.push(s.name); return; }
+      const fl = x => String(x || "").split(/[,\s]+/).filter(Boolean);
+      if ((s.keep || s.drop) && v && typeof v === "object"){
+        keep[s.name] = JSON.stringify(v);
+        saved[s.name] = JSON.stringify(shape(v, fl(s.keep), fl(s.drop)));
+        shaped.push(s.name);
+      } else saved[s.name] = A.txt(v);
+    });
+    return { ok:r.status < 400, status:r.status, saved, hidden, shaped, error:r.status < 400 ? "" : "HTTP " + r.status };
+  };
+  return { call, calls, runs, paths };
+}
+const DOCS = [{ name:"Schedule.pdf", type:"PDF", date:"2026-10-01", downloadToken:"dl-aaa111" },
+              { name:"Card.png", type:"PNG", date:"2026-10-02", downloadToken:"dl-bbb222" },
+              { name:"Wording.pdf", type:"PDF", date:"2026-10-03", downloadToken:"dl-ccc333" }];
+function docsAuto(extra){
+  return A.normAuto(Object.assign({
+    id:"Adocs", name:"Policy documents", inputs:[{ key:"policy", label:"Policy number" }],
+    steps:[
+      { id:"list", kind:"http", name:"List them", conn:"Cpol", method:"GET", path:"/policies/{{input.policy}}/documents",
+        save:[{ name:"docs", from:"json", path:"documents", show:"ai", drop:"downloadToken" }] },
+      { id:"pdfs", kind:"filter", name:"Only the PDFs", from:"{{docs}}", var:"pdfs", cond:'{{item.type}} == "PDF"', show:"ai" },
+      { id:"names", kind:"select", name:"Their names", from:"{{pdfs}}", var:"names", fields:[["", "{{item.name}}"]], show:"me" },
+      { id:"each", kind:"each", name:"Each document", from:"{{docs}}", as:"doc", do:[
+        { id:"isPdf", kind:"if", name:"A PDF?", cond:'{{doc.type}} == "PDF"', yes:[
+          { id:"dl", kind:"http", name:"Download it", conn:"Cpol", method:"GET", path:"/download/{{doc.downloadToken}}?n={{loop.n}}&u={{upper(doc.name)}}",
+            save:[{ name:"file", from:"json", path:"file", show:"ai" }] },
+          { id:"keep", kind:"set", name:"Keep its name", var:"got", how:"append", value:"{{file}}", show:"ai" }], no:[] }] },
+      { id:"n", kind:"set", name:"Count", var:"n", how:"set", value:"{{count(got)}}", show:"ai" }],
+    result:"## Documents of {{input.policy}}\n\n{{table(docs, \"name\", \"date\")}}\n\n{{#each got}}\n- {{this}}\n{{/each}}\n{{code(names)}}"
+  }, extra || {}));
+}
+const docsReplies = () => [{ status:200, json:{ documents:DOCS } }, { status:200, json:{ file:"Schedule.pdf" } }, { status:200, json:{ file:"Wording.pdf" } }];
+
+test("5.26 normalising: the new kinds, a For each counts as a level, keep/drop only on JSON saves", () => {
+  const a = A.normAuto({ steps:[
+    { kind:"set", var:"x", how:"bogus", value:"1", show:"everyone" },
+    { kind:"stop", as:"maybe", text:"bye" },
+    { kind:"each", from:"{{docs}}", max:9999, do:[{ kind:"each", do:[{ kind:"each" }] }] },
+    { kind:"select", from:"{{docs}}", var:"s", fields:[["", "{{item.name}}"]] },
+    { kind:"select", from:"{{docs}}", var:"t", fields:[["", "x"], ["b", "y"]] },
+    { kind:"filter", from:"{{docs}}", var:"f", cond:"{{item.a}}" },
+    { kind:"http", save:[{ name:"a", from:"json", path:"x", drop:"token, links.sig, no!pe" }, { name:"b", from:"header", path:"x", drop:"y" }] }] });
+  const s = a.steps;
+  assert.deepEqual([s[0].how, s[0].show, s[1].as, s[2].as, s[2].max], ["set", "me", "fail", "item", A.LIMIT.loop]);
+  assert.equal(s[2].do.length, 1, "a For each inside a For each is kept");
+  assert.equal(s[2].do[0].do.length, 0, "...a third level is not");
+  assert.deepEqual(s[3].fields, [["", "{{item.name}}"]], "one row with no name: a list of plain values");
+  assert.deepEqual(s[4].fields, [["b", "y"]], "with more rows, every row needs a name");
+  assert.equal(s[6].save[0].drop, "token, links.sig");
+  assert.equal(s[6].save[1].drop, undefined);
+  assert.deepEqual(A.flatSteps(a.steps).map(x => x.branch).slice(2, 4), ["", "do"]);
+});
+
+test("5.26 placeholders: paths, functions, filters; a secret has no parts", () => {
+  const p = A.parsePh('join(field(docs, "name"), ", ")|upper');
+  assert.equal(p.bad, "");
+  assert.deepEqual(p.refs.map(r => r.full), ["docs"]);
+  assert.deepEqual(p.filters, ["upper"]);
+  assert.deepEqual(A.parsePh("docs[0].links.self").parts, ["0", "links", "self"]);
+  assert.equal(A.parsePh("nosuch(docs)").bad, "fn");
+  assert.equal(A.parsePh("count(a, b)").bad, "args");
+  assert.equal(A.parsePh("secret.password.x").bad, "name");
+  assert.equal(A.parsePh("input.policy").full, "input.policy");
+  const v = { docs:JSON.stringify(DOCS), n:"7" };
+  const t = x => A.show(x, v);
+  assert.equal(t("{{docs[2].name}}"), "Wording.pdf");
+  assert.equal(t('{{count(where(docs, "type", "pdf"))}}'), "2");
+  assert.equal(t('{{join(field(sort(docs, "date", "desc"), "name"), " / ")}}'), "Wording.pdf / Card.png / Schedule.pdf");
+  assert.equal(t("{{add(n, 3)}} {{round(div(n, 3), 2)}} {{default(nothing, \"none\")}}"), "10 2.33 none");
+  assert.equal(t('{{date("2026-10-03", "dd MMM yyyy")}} {{addDays("2026-10-30", 3)}}'), "03 Oct 2026 2026-11-02");
+  assert.equal(t('{{first(docs).name|lower}}'), "schedule.pdf");
+  assert.match(t('{{table(docs, "name", "type")}}'), /^\| name \| type \|\n\| --- \| --- \|\n\| Schedule\.pdf \| PDF \|/);
+  assert.equal(t('{{bullets(take(docs, 2), "name")}}'), "- Schedule.pdf\n- Card.png");
+  assert.match(t("{{code(field(docs, \"type\"))}}"), /^```json\n\[\n  "PDF",/);
+});
+
+test("5.26 messages: {{#each}} and {{#if}}, block lines leave no gaps, masks and hidden values", () => {
+  const vals = { docs:JSON.stringify(DOCS), mine:"[1,2]" };
+  const tpl = "Found {{count(docs)}}:\n{{#each docs}}\n{{loop.n}}. {{name}} ({{type}})\n{{/each}}\n{{#if count(docs) > 5}}\nmany\n{{else}}\nfew\n{{/if}}";
+  assert.equal(A.show(tpl, vals), "Found 3:\n1. Schedule.pdf (PDF)\n2. Card.png (PNG)\n3. Wording.pdf (PDF)\nfew\n");
+  assert.equal(A.show("{{#each docs as d}}{{d.type}}{{#if loop.last}}.{{else}},{{/if}}{{/each}}", vals), "PDF,PNG,PDF.");
+  assert.equal(A.show("{{#each nothing}}x{{else}}empty{{/each}}", vals), "empty");
+  assert.equal(A.show('{{#if docs contains "x"}}y{{else}}n{{/if}} {{#if not mine}}a{{else}}b{{/if}}', vals), "n b");
+  assert.equal(A.show("{{#each mine}}{{this}}{{/each}}", vals, [], { mine:"(shown to you only)" }), "(shown to you only)");
+  assert.equal(A.show("{{token}} {{count(token)}}", {}, ["token"]), "🔒token 🔒token");
+  assert.equal(A.tplParse("{{#each a}}x").error, "open");
+  assert.equal(A.tplParse("x{{/if}}").error, "close");
+});
+
+test("5.26 check: the new kinds, functions, blocks, hidden values where they cannot go", () => {
+  const ok = A.check(docsAuto(), { conns:[CONN_POL].map(A.normConn) });
+  assert.deepEqual(ok.filter(p => !p.warn).map(p => p.code), [], JSON.stringify(ok));
+  const a = docsAuto();
+  a.steps[0].save.push({ name:"tok", from:"json", path:"token", show:"hidden" });
+  a.steps.push(A.normStep({ kind:"set", var:"bad name", value:"{{tok}}" }));
+  a.steps.push(A.normStep({ kind:"http", conn:"Cpol", path:"/x/{{count(tok)}}", body:"" }));
+  a.steps.push(A.normStep({ kind:"http", conn:"Cpol", method:"POST", path:"/x", bodyType:"json", body:"{{#each docs}}{{name}}{{/each}}" }));
+  a.steps.push(A.normStep({ kind:"each", from:"docs", as:"docs" }));
+  a.steps.push(A.normStep({ kind:"select", from:"{{docs}}", var:"s2" }));
+  a.steps.push(A.normStep({ kind:"set", var:"z", value:"{{nosuch(docs)}} {{count(docs, 1)}} {{#each docs}}" }));
+  a.steps.push(A.normStep({ kind:"http", conn:"Cpol", path:"/x/{{doc.name}}" }));
+  const c = codes(A.check(a, { conns:[CONN_POL].map(A.normConn) }));
+  ["varName:bad name", "hiddenHere:tok", "hiddenInFn:tok", "blockHere", "fromOne", "eachAsTaken:docs", "emptyEach", "noFields",
+   "badFn:nosuch", "fnArgs:count", "badBlock", "unknownPh:doc"].forEach(k =>
+    assert.ok(c.some(x => x.indexOf(k) === 0), k + " in " + c.join()));
+  /* the item of a For each is known inside it, not after it */
+  assert.ok(!c.some(x => /^unknownPh:doc@[45]$/.test(x)), c.join());
+});
+
+test("5.26 valuesAt: inside a For each - its item and loop; values set by steps", () => {
+  const v = A.valuesAt(docsAuto(), "dl");
+  assert.deepEqual(v.locals.map(x => x.name), ["doc", "loop.n", "loop.count"]);
+  assert.ok(v.saved.some(x => x.name === "pdfs" && x.list), JSON.stringify(v.saved));
+  assert.ok(v.saved.some(x => x.name === "docs" && x.shaped), "a value with fields left out says so");
+  const end = A.valuesAt(docsAuto(), "");
+  assert.deepEqual(end.saved.map(x => x.name).sort(), ["docs", "file", "got", "n", "names", "pdfs"]);
+  assert.deepEqual(A.valuesAt(docsAuto(), "names").locals.map(x => x.name), ["item", "loop.n"], "Shape a list has its item");
+});
+
+test("5.26 run: a list shown without its tokens, filtered, shaped, gone through - each token still used", async () => {
+  const b = shapeBridge(docsReplies());
+  const R = await A.run(docsAuto(), env(b, { conns:[CONN_POL] }));
+  assert.equal(R.state, "ok", JSON.stringify(R.steps));
+  assert.deepEqual(JSON.parse(R.values.docs.v).map(d => Object.keys(d).join()), ["name,type,date", "name,type,date", "name,type,date"]);
+  assert.deepEqual(R.shaped, ["docs"]);
+  assert.deepEqual(JSON.parse(R.values.pdfs.v).map(d => d.name), ["Schedule.pdf", "Wording.pdf"]);
+  assert.deepEqual(JSON.parse(R.values.names.v), ["Schedule.pdf", "Wording.pdf"]);
+  assert.deepEqual(JSON.parse(R.values.got.v), ["Schedule.pdf", "Wording.pdf"]);
+  assert.equal(R.values.n.v, "2");
+  /* the token was asked for where the item sits; the function and the loop
+     number were worked out here and handed over as values of their own */
+  assert.deepEqual(b.paths.slice(1), ["/download/dl-aaa111?n=1&u=SCHEDULE.PDF", "/download/dl-ccc333?n=3&u=WORDING.PDF"]);
+  const sent = b.calls.filter(c => c.op === "step")[1].b;
+  assert.match(sent.step.path, /^\/download\/\{\{docs\[0\]\.downloadToken\}\}\?n=\{\{__kk\d\}\}&u=\{\{__kk\d\}\}$/);
+  assert.deepEqual(sent.shaped, ["docs"]);
+  assert.ok(JSON.stringify(R).indexOf("dl-aaa111") < 0, "the page never held a token");
+  const st = sid => R.steps.find(s => s.sid === sid);
+  assert.deepEqual([st("each").n, st("each").of, st("isPdf").times, st("dl").times, st("keep").times], [3, 3, 3, 2, 2]);
+  assert.deepEqual([st("pdfs").n, st("pdfs").of], [2, 3]);
+  /* the closing message: a table, a line per item, a code block */
+  assert.match(R.result, /\| Wording\.pdf \| 2026-10-03 \|/);
+  assert.match(R.result, /\n- Schedule\.pdf\n- Wording\.pdf\n/);
+  assert.match(R.result, /```json\n\[\n  "Schedule\.pdf",\n  "Wording\.pdf"\n\]\n```/);
+  /* the assistant's copy: what is yours only is not in it */
+  const sp = A.split(docsAuto(), R);
+  assert.match(sp.resultForAI, /\(shown to you only\)$/);
+  assert.ok(sp.resultForAI.indexOf("\"Schedule.pdf\",") < 0);
+  assert.deepEqual(A.forAI(A.normStore({ list:[docsAuto()] }))[0].gives, ["docs", "file", "pdfs", "got", "n"]);
+  const kept = A.normRun(R, 2000);
+  assert.deepEqual([kept.steps.find(s => s.sid === "dl").times, kept.shaped], [2, ["docs"]]);
+});
+
+test("5.26 run: Stop ends it - inside a loop too - with its own message; for the assistant, masked", async () => {
+  const a = docsAuto();
+  a.steps[3].do[0].no.push(A.normStep({ id:"halt", kind:"stop", as:"fail", text:"{{doc.name}} is not a PDF ({{count(names)}} names so far)" }));
+  const R = await A.run(a, env(shapeBridge(docsReplies()), { conns:[CONN_POL] }));
+  assert.equal(R.state, "failed");
+  assert.equal(R.result, "Card.png is not a PDF (2 names so far)");
+  assert.equal(R.steps.find(s => s.sid === "each").n, 2, "it stopped on the second item");
+  assert.equal(R.steps.find(s => s.sid === "n").state, "wait", "nothing after it ran");
+  assert.equal(A.split(a, R).resultForAI, "Card.png is not a PDF ((shown to you only) names so far)");
+  const b = A.normAuto({ steps:[{ kind:"set", var:"x", value:"1", show:"ai" }, { kind:"stop", as:"ok", when:"{{x}} == 1", text:"" },
+                                { kind:"set", var:"y", value:"2" }], result:"done {{x}}" });
+  const R2 = await A.run(b, env(shapeBridge([])));
+  assert.deepEqual([R2.state, R2.result, R2.steps.map(s => s.state).join()], ["ok", "", "ok,ok,wait"]);
+});
+
+test("5.26 run: a hidden value cannot be used on this page; a list that is not one; append, add, text", async () => {
+  const b = shapeBridge([{ status:200, json:{ token:"t-1", n:"x" } }]);
+  const a = A.normAuto({ steps:[
+    { kind:"http", conn:"Cpol", path:"/t", save:[{ name:"tok", from:"json", path:"token", show:"hidden" }, { name:"n", from:"json", path:"n", show:"me" }] },
+    { kind:"set", var:"v", value:"{{tok}}", onFail:"continue" },
+    { kind:"each", from:"{{n}}", onFail:"continue", do:[{ kind:"set", var:"q", value:"1" }] },
+    { kind:"set", var:"c", how:"add", value:"2" }, { kind:"set", var:"c", how:"add", value:"3" },
+    { kind:"set", var:"t", how:"text", value:"a" }, { kind:"set", var:"t", how:"text", value:"b" },
+    { kind:"set", var:"l", how:"append", value:'{{split("x,y")}}' }] });
+  const R = await A.run(a, env(b, { conns:[CONN_POL] }));
+  assert.equal(R.steps[1].state, "fail");
+  assert.equal(R.steps[1].note, "hiddenHere:tok");
+  assert.equal(R.steps[2].state, "fail");
+  assert.equal(R.steps[2].note, "notList");
+  assert.deepEqual([R.values.c.v, R.values.t.v, R.values.l.v], ["5", "ab", '[["x","y"]]']);
+  assert.equal(R.state, "partial");
+});
+
+test("5.26 wireText: functions and a loop's item go over as values of their own; secrets and names as they are", () => {
+  const temps = {};
+  const scope = { values:{ docs:JSON.stringify([{ name:"a b" }]), "input.x":"P1" }, hidden:["tok"],
+                  locals:[{ loop:true, vars:{ doc:{ name:"a b" }, loop:{ n:1 } }, src:{ as:"doc", path:"docs[0]" } }] };
+  const w = A.wireText("/{{input.x}}/{{doc.name|upper}}/{{doc.downloadToken}}/{{secret.k}}/{{tok}}/{{tok.x}}/{{json(docs)|raw}}/{{loop.n}}", scope, temps);
+  assert.equal(w, "/{{input.x}}/{{__kk1}}/{{docs[0].downloadToken}}/{{secret.k}}/{{tok}}/{{tok.x}}/{{__kk2|raw}}/{{__kk3}}");
+  assert.deepEqual(temps, { __kk1:"A B", __kk2:'[\n  {\n    "name": "a b"\n  }\n]', __kk3:"1" });
+  assert.equal(A.nameOk("__kk1"), false, "a name with two underscores in front is the page's own");
+});

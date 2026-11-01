@@ -6,6 +6,52 @@ holds — which is what to paste into a bug report.
 
 ---
 
+## 5.26.0 - 2026-11-01
+
+**Automations: more kinds of step, lists, functions, "/" suggestions, a wider panel, and closing messages written in Markdown.**
+
+- **Five new kinds of step**, worked out on the page (no tray program
+  needed for them): **For each** (the steps inside run once per item of a
+  list, `{{item}}` the one it is on, `{{loop.n}}` its number), **Stop the
+  run** (as done, failed or stopped, with its own message), **Set a value**
+  (set it, add an item to a list, add a number, add text), **Shape a list**
+  (only the fields you name) and **Filter a list** (only the items a test is
+  true for). The **+** menu lists the ten kinds in three groups, with a box
+  to find one; **/** on a card opens it too.
+- **Lists as values.** A JSON path can save a whole list; it is shown (to
+  you, or to you and the assistant) as a list - *3 item(s)*, opened to see
+  them - and `{{docs[0].name}}`, `{{result.items}}` read parts of it.
+- **Leave out a field** (a save row's **Leave out** / **Keep only**): the
+  list goes to you and the assistant without, say, each document's
+  `downloadToken`; the tray program keeps the whole of it, hidden, so a
+  later step still uses it - `{{docs[2].downloadToken}}`, or
+  `{{doc.downloadToken}}` inside a For each. Left-out values that look like
+  secrets are masked in all that comes back after; the others in that
+  step's whole reply. (Before, a list with a token in it was kept hidden as
+  a whole.)
+- **Functions** in `{{ }}`: `count`, `join`, `field`, `where`, `sort`,
+  `first`, `upper`, `replace`, `date`, `addDays`, `sum`, `round`, `if`,
+  `contains` … and, for messages, `table`, `bullets`, `numbered`, `code`.
+  Worked out on the page and handed to the tray program as a value for that
+  step; never on a hidden value or a secret (the checker says so).
+- **"/" while typing** (or **Ctrl**+**Space**, or the **{x}** button): a
+  list under the caret of the values the box can use, the functions, and -
+  in a message - blocks (a table, a line per item, if/else, a code block).
+  Typing narrows it; Enter puts it in, the caret inside the brackets.
+- **Closing messages in Markdown**: headings, lists, tables, code blocks,
+  `{{#each list}}…{{/each}}` and `{{#if …}}…{{else}}…{{/if}}`; drawn the
+  way answers are, in the run card and the run's panel, and read by the
+  assistant as written. **Preview** shows it with the last test's or run's
+  values; *What you can write here* is a reminder. A Stop's message works
+  the same.
+- **The side panel is resizable**: drag its left edge, or ← / → on it;
+  double-click for the normal width. Kept with the workspace.
+- New starter: **A list, written out** - list documents without their
+  tokens, download each one with its own, end with a table.
+- The tray program (rebuilt by `KalKech.bat`): shaping of saved lists,
+  paths into values (`{{docs[0].field}}`, also in conditions), lists kept
+  up to 200,000 characters (cut by whole items), requests up to 8 MB.
+
 ## 5.25.1 - 2026-10-31
 
 **The folded sidebar scrolls on a short window, instead of piling its icons up.**

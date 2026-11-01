@@ -47,7 +47,13 @@ function compiler(){
 }
 
 /* ── the made-up API ─────────────────────────────────────────────────── */
-const API = { seen:[], issued:"", jobPolls:0, elsewhereHits:0 };
+const API = { seen:[], issued:"", jobPolls:0, elsewhereHits:0, downloads:[] };
+/* (5.26) made-up documents of a policy: the download tokens must never
+   reach the page, and still be usable by the steps after */
+const DOCS = [
+  { name:"Schedule.pdf", type:"PDF", date:"2026-10-01", downloadToken:"dl-7f3a9c11e2" , links:{ self:"/d/1", sig:"sig-aa11bb22cc" } },
+  { name:"Card.png", type:"PNG", date:"2026-10-02", downloadToken:"dl-8e4b0d22f3", links:{ self:"/d/2", sig:"sig-dd33ee44ff" } },
+  { name:"Wording.pdf", type:"PDF", date:"2026-10-03", downloadToken:"dl-9d5c1e33a4", links:{ self:"/d/3", sig:"sig-gg55hh66ii" } }];
 const USER = "svc_test", PASS = "pw-Secret-42", KEY = "key-0123456789abcdef";
 function readBody(req){ return new Promise(r => { const b = []; req.on("data", c => b.push(c)); req.on("end", () => r(Buffer.concat(b).toString("utf8"))); }); }
 function startApi(){
@@ -92,6 +98,16 @@ function startApi(){
                                             : { state:"DONE", coi:{ number:"COI-2026-0042", url:"https://files.example.local/coi/COI-2026-0042.pdf" } });
         }
         if (rest === "/whoami") return send(200, { user:USER, token:bearer });
+        /* (5.26) a list of documents, each with a download token */
+        mm = /^\/documents\/([^/]+)$/.exec(rest);
+        if (mm) return send(200, { policy:decodeURIComponent(mm[1]), documents:DOCS.map(d => Object.assign({}, d)) });
+        mm = /^\/download\/([^/]+)$/.exec(rest);
+        if (mm){
+          const d = DOCS.find(x => x.downloadToken === decodeURIComponent(mm[1]));
+          if (!d) return send(404, { error:"no such token" });
+          API.downloads.push(d.name);
+          return send(200, { file:d.name, bytes:1234 });
+        }
       }
       send(404, { error:"no such thing" });
     }).listen(0, "127.0.0.1", () => res(srv));
@@ -250,6 +266,52 @@ function startElsewhere(){
     const after = await call("step", { run:R.id, kind:"http", conn:A.connWire(CPOL), values:{}, step:A.stepWire(A.normStep(
       { kind:"http", conn:"Cpol", path:"/whoami", headers:[["Authorization", "Bearer {{token}}"]] }), {}) });
     check("after the run ends, its hidden token is gone", after && after.ok === false && /\{\{token\}\} has no value/.test(after.error), JSON.stringify(after));
+
+    /* ── (5.26) a list with a token in each item: shown without it ─────── */
+    const docsAuto = A.normAuto({
+      id:"Adocs", name:"Policy documents", inputs:[{ key:"policy", label:"Policy number" }],
+      steps:[
+        { id:"d1", kind:"http", name:"List them", conn:"Cpol", method:"GET", path:"/documents/{{input.policy}}",
+          save:[{ name:"docs", from:"json", path:"documents", show:"ai", drop:"downloadToken, links.sig" }] },
+        { id:"d2", kind:"if", name:"Has a token?", cond:"{{docs[0].downloadToken}} is not empty", yes:[], no:[
+          { id:"d3", kind:"stop", name:"Stop", as:"fail", text:"No token" }] },
+        { id:"d4", kind:"each", name:"Each document", from:"{{docs}}", as:"doc", do:[
+          { id:"d5", kind:"if", name:"A PDF?", cond:'{{doc.type}} == "PDF"', yes:[
+            { id:"d6", kind:"http", name:"Download it", conn:"Cpol", method:"GET", path:"/download/{{doc.downloadToken}}",
+              save:[{ name:"file", from:"json", path:"file", show:"ai" }] },
+            { id:"d7", kind:"set", name:"Keep its name", var:"got", how:"append", value:"{{file}}", show:"ai" }], no:[] }] }],
+      result:"{{count(docs)}} documents:\n\n{{table(docs, \"name\", \"date\")}}\n\nDownloaded: {{join(got)}}"
+    });
+    const dv = Object.assign({ "input.policy":"P10234X56" }, A.builtins(new Date(), null));
+    const before = everything.length;
+    const D = await A.run(docsAuto, { conns:[CPOL], call:callLogged, values:dv, sleep:async () => true, ask:async () => true,
+                                      tick:() => {}, stopped:() => false });
+    const dtext = everything.slice(before).join("\n") + JSON.stringify(D);
+    let shown = []; try { shown = JSON.parse(D.values.docs.v); } catch (e) {}
+    check("(5.26) a list saved with fields left out is shown without them - every item, and still a list",
+          D.state === "ok" && shown.length === 3 && shown.every(x => x.name && x.type && !("downloadToken" in x) && x.links && x.links.self && !("sig" in x.links)) &&
+          D.shaped.indexOf("docs") >= 0 && D.hidden.indexOf("docs") < 0, JSON.stringify(D.values) + " " + JSON.stringify(D.steps));
+    check("(5.26) a condition can read a field the page was not shown ({{docs[0].downloadToken}})",
+          D.steps.find(x => x.sid === "d2").took === "yes", JSON.stringify(D.steps));
+    check("(5.26) a For each step uses the item's left-out token, from the tray program's copy",
+          API.downloads.join() === "Schedule.pdf,Wording.pdf" && D.values.got && JSON.parse(D.values.got.v).join() === "Schedule.pdf,Wording.pdf",
+          API.downloads.join() + " " + JSON.stringify(D.values));
+    check("(5.26) no download token and no signature ever reached the page",
+          DOCS.every(d => dtext.indexOf(d.downloadToken) < 0 && dtext.indexOf(d.links.sig) < 0), dtext.slice(0, 900));
+    check("(5.26) the closing message writes the list out as a table",
+          /3 documents:/.test(D.result) && /\| name \| date \|/.test(D.result) && /\| Wording\.pdf \| 2026-10-03 \|/.test(D.result) &&
+          /Downloaded: Schedule\.pdf, Wording\.pdf/.test(D.result), D.result);
+    const N = await A.run(A.normAuto({ id:"Adocs2", name:"No leaving out", steps:[
+        { kind:"http", name:"List them", conn:"Cpol", method:"GET", path:"/documents/X1", save:[{ name:"docs", from:"json", path:"documents", show:"ai" }] }] }),
+      { conns:[CPOL], call:callLogged, values:{}, sleep:async () => true, ask:async () => true, tick:() => {}, stopped:() => false });
+    check("(5.26) without leaving the token out, the whole list is kept hidden instead (as before)",
+          N.hidden.indexOf("docs") >= 0 && !N.values.docs, JSON.stringify(N.values) + JSON.stringify(N.hidden));
+    let k = await callLogged("step", { run:"keep" + Date.now(), kind:"http", conn:A.connWire(CPOL), values:{},
+      step:A.stepWire(A.normStep({ kind:"http", conn:"Cpol", path:"/documents/X2", save:[{ name:"names", from:"json", path:"documents", show:"me", keep:"name, links.self" }] }), {}) });
+    let kept = []; try { kept = JSON.parse(k.saved.names); } catch (e) {}
+    check("(5.26) keep: only the fields named (and one inside another)",
+          kept.length === 3 && kept.every(x => Object.keys(x).join() === "name,links" && Object.keys(x.links).join() === "self") && k.shaped.join() === "names",
+          JSON.stringify(k));
 
     /* ── a value cannot rewrite the request around it ─────────────────── */
     const one = async (conn, step, vals, extra) => {

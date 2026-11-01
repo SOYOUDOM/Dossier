@@ -1688,6 +1688,7 @@ public class DossierBridge
     const string Dots = "\u2022\u2022\u2022\u2022";
     const int AutoBodyMax = 4 * 1024 * 1024;     // the most of a reply that is read
     const int AutoValueMax = 4000;               // a value shown to you or the assistant
+    const int AutoListMax = 200000;              // (5.26) one that is a list or an object (JSON)
     static bool TlsSet;
 
     class AutoRun
@@ -1712,7 +1713,8 @@ public class DossierBridge
             return;
         }
         if (method != "POST") { Respond(net, 405, "application/json", Bytes("{\"error\":\"POST only\"}")); return; }
-        if (body.Length > 1024 * 1024) { Respond(net, 413, "application/json", Bytes("{\"error\":\"too big\"}")); return; }
+        //  (5.26) values can be lists now: a step goes with all of them
+        if (body.Length > 8 * 1024 * 1024) { Respond(net, 413, "application/json", Bytes("{\"error\":\"too big\"}")); return; }
         JObj req;
         try { req = JsonReader.Parse(Encoding.UTF8.GetString(body)) as JObj; }
         catch (Exception e) { Respond(net, 400, "application/json", Bytes("{\"error\":" + Json("not JSON: " + e.Message) + "}")); return; }
@@ -1805,11 +1807,19 @@ public class DossierBridge
         public string ConnId = "", ConnName = "", ConnBase = "";
         public List<string> ConnSecrets = new List<string>();
         public List<string> Errors = new List<string>();
+        //  (5.26) the values the page has with fields left out - for a path
+        //  into one, this program's whole copy is read first - and the
+        //  values this step saved that way
+        public List<string> Shaped = new List<string>();
+        public List<string> ShapedOut = new List<string>();
+        //  every value a save row left out: masked in this step's whole reply
+        public List<string> LeftOut = new List<string>();
         public StepCtx(JObj req, AutoRun run)
         {
             Run = run;
             JObj v = JO(req, "values");
             if (v != null) foreach (string k in v.Keys) if (k.Length <= 80) Values[k] = TextOf(v.Get(k));
+            foreach (object o in JA(req, "shaped")) if (o is string) Shaped.Add((string)o);
             foreach (object m in JA(req, "mask"))
             {
                 string val;
@@ -1854,8 +1864,13 @@ public class DossierBridge
     class Ph
     {
         public string Ns = "", Name = "", Full = "", Raw = "", Bad = "";
+        //  (5.26) a way into a value that is a list or an object, after its
+        //  name: ".name", "[0].downloadToken", "[\"x-id\"]"
+        public string Path = "";
         public List<string> Filters = new List<string>();
     }
+    static readonly Regex PhName = new Regex(
+        "^(?:(input|secret|record)\\.)?([A-Za-z_][A-Za-z0-9_]*)((?:\\.[A-Za-z_$][A-Za-z0-9_$-]*|\\.[0-9]+|\\[[0-9]+\\]|\\[\"[^\"\\]]*\"\\])*)$");
     static readonly string[] PhFilters = { "upper", "lower", "trim", "base64", "raw" };
 
     static Ph ParsePh(string inner)
@@ -1863,12 +1878,14 @@ public class DossierBridge
         Ph p = new Ph();
         p.Raw = inner;
         string[] bits = inner.Split('|');
-        Match m = Regex.Match(bits[0].Trim(), @"^(?:(input|secret|record)\.)?([A-Za-z_][A-Za-z0-9_]*)$");
+        Match m = PhName.Match(bits[0].Trim());
         for (int i = 1; i < bits.Length; i++) p.Filters.Add(bits[i].Trim().ToLowerInvariant());
         if (!m.Success) { p.Bad = "name"; return p; }
         p.Ns = m.Groups[1].Value;
         p.Name = m.Groups[2].Value;
+        p.Path = m.Groups[3].Value;
         p.Full = (p.Ns.Length > 0 ? p.Ns + "." : "") + p.Name;
+        if (p.Ns == "secret" && p.Path.Length > 0) { p.Bad = "name"; return p; }
         foreach (string f in p.Filters) if (Array.IndexOf(PhFilters, f) < 0) p.Bad = "filter";
         return p;
     }
@@ -1896,9 +1913,45 @@ public class DossierBridge
             return SecretFor(c, p.Name);
         }
         string v;
+        if (p.Path.Length > 0) return LookupPath(p, c, null);
         if (c.Values.TryGetValue(p.Full, out v)) return v;
         lock (c.Run) { if (c.Run.Hidden.TryGetValue(p.Full, out v)) return v; }
         return null;
+    }
+
+    //  (5.26) {{docs[2].downloadToken}}: a field of a value that is a list or
+    //  an object. The page was shown docs with that field left out; this
+    //  program kept the whole of it, hidden, and reads it from there. extra:
+    //  what a step saved just now (its "repeat until", "success also needs").
+    static string LookupPath(Ph p, StepCtx c, Dictionary<string, string> extra)
+    {
+        List<string> tries = new List<string>();
+        string shown = null, whole = null, own = null;
+        if (extra != null && p.Ns.Length == 0 && extra.TryGetValue(p.Full, out own)) tries.Add(own);
+        c.Values.TryGetValue(p.Full, out shown);
+        lock (c.Run) { c.Run.Hidden.TryGetValue(p.Full, out whole); }
+        if (whole != null && (shown == null || c.Shaped.Contains(p.Full))) tries.Add(whole);
+        if (shown != null) tries.Add(shown);
+        if (tries.Count == 0) return null;
+        foreach (string t in tries)
+        {
+            string found;
+            if (PathInto(t, p.Path, out found)) return found;
+        }
+        c.Errors.Add("{{" + p.Full + p.Path + "}}: " + p.Full + " has nothing at " + p.Path.TrimStart('.'));
+        return null;
+    }
+    static bool PathInto(string text, string path, out string found)
+    {
+        found = null;
+        string t = (text ?? "").Trim();
+        if (t.Length == 0 || (t[0] != '[' && t[0] != '{')) return false;
+        object json;
+        try { json = JsonReader.Parse(t); } catch (Exception) { return false; }
+        object at;
+        if (!JsonAt(json, path, out at)) return false;
+        found = TextOf(at);
+        return true;
     }
 
     //  how: "path" (each value %-escaped, so it stays one piece of the
@@ -2406,14 +2459,14 @@ public class DossierBridge
                         bool statusOk, ref string why,
                         Dictionary<string, string> saved, List<string> hidden, List<string> missing, List<string> redacted)
     {
-        List<string[]> rows = new List<string[]>();      // name, show, on, value (null: not found)
+        List<SaveRow> rows = new List<SaveRow>();
         ReadSaves(c, step, text, heads, status, exit, rows);
         bool ok = statusOk;
         string okWhen = JS(step, "okWhen").Trim();
         if (ok && okWhen.Length > 0)
         {
             Dictionary<string, string> extra = new Dictionary<string, string>();
-            foreach (string[] r in rows) if (r[3] != null) extra[r[0]] = r[3];
+            foreach (SaveRow r in rows) if (r.V != null) extra[r.Name] = r.Whole ?? r.V;
             extra["status"] = (exit >= 0 ? exit : status).ToString();
             bool met;
             string err = CondEval(okWhen, c, extra, out met);
@@ -2421,24 +2474,37 @@ public class DossierBridge
             else if (!met) { ok = false; why = "the reply says it did not work (\"success also needs\" " + okWhen + " is not true)"; }
         }
         string outcome = ok ? "ok" : "fail";
-        foreach (string[] r in rows)
+        foreach (SaveRow r in rows)
         {
-            string on = r[2] == "fail" || r[2] == "any" ? r[2] : "ok";
+            string on = r.On == "fail" || r.On == "any" ? r.On : "ok";
             if (on != "any" && on != outcome) continue;
-            string name = r[0], show = r[1], v = r[3];
+            string name = r.Name, show = r.Show, v = r.V;
             if (v == null) { missing.Add(name); continue; }
+            //  a field left out because it looked like a secret (a download
+            //  token) is masked in whatever goes back from now on
+            foreach (string g in r.Gone)
+            {
+                if (g.StartsWith("secret:")) AddKnown(c.Run, g.Substring(7));
+                string t = g.Substring(g.IndexOf(':') + 1);
+                if (!c.LeftOut.Contains(t)) c.LeftOut.Add(t);
+            }
             if (show == "hidden")
             {
-                lock (c.Run) { c.Run.Hidden[name] = v; }
-                AddKnown(c.Run, v);
+                string all = r.Whole ?? v;
+                lock (c.Run) { c.Run.Hidden[name] = all; }
+                AddKnown(c.Run, all);
                 hidden.Add(name);
                 saved.Remove(name);
+                c.ShapedOut.Remove(name);
             }
             else
             {
-                lock (c.Run) { c.Run.Hidden.Remove(name); }
-                if (v.Length > AutoValueMax) v = v.Substring(0, AutoValueMax);
-                saved[name] = v;
+                //  shown with fields left out: the whole of it stays here,
+                //  hidden, for {{name[0].field}} in the steps after
+                lock (c.Run) { if (r.Whole != null) c.Run.Hidden[name] = r.Whole; else c.Run.Hidden.Remove(name); }
+                if (r.Whole != null) { if (!c.ShapedOut.Contains(name)) c.ShapedOut.Add(name); }
+                else c.ShapedOut.Remove(name);
+                saved[name] = CapValue(v);
             }
         }
         //  A shown value must not be a way to carry a secret out. One that
@@ -2450,8 +2516,10 @@ public class DossierBridge
         {
             string v = saved[k];
             if (Redact(v, c.Run) == v && !LooksSecret(v)) continue;
-            lock (c.Run) { c.Run.Hidden[k] = v; }
+            //  (a shaped one keeps its whole copy, which has the rest)
+            lock (c.Run) { if (!c.ShapedOut.Contains(k)) c.Run.Hidden[k] = v; }
             AddKnown(c.Run, v);
+            c.ShapedOut.Remove(k);
             saved.Remove(k);
             if (!hidden.Contains(k)) hidden.Add(k);
             redacted.Add(k);
@@ -2459,9 +2527,110 @@ public class DossierBridge
         return ok;
     }
 
+    class SaveRow
+    {
+        public string Name, Show, On, V;     // V: null when the reply did not have it
+        public string Whole;                 // (5.26) before fields were left out; null when none were
+        public List<string> Gone = new List<string>();
+    }
+
+    //  a value as it goes back: a list longer than a page should hold is cut
+    //  to the items that fit, so it is still a list; anything else to 4,000
+    static string CapValue(string v)
+    {
+        string t = v.TrimStart();
+        if (t.Length > 0 && (t[0] == '[' || t[0] == '{'))
+        {
+            if (v.Length <= AutoListMax) return v;
+            try
+            {
+                List<object> a = JsonReader.Parse(t) as List<object>;
+                if (a != null)
+                {
+                    StringBuilder b = new StringBuilder("[");
+                    for (int i = 0; i < a.Count; i++)
+                    {
+                        string one = JsonOf(a[i]);
+                        if (b.Length + one.Length + 2 > AutoListMax) break;
+                        b.Append(i > 0 ? "," : "").Append(one);
+                    }
+                    return b.Append(']').ToString();
+                }
+            }
+            catch (Exception) { }
+            return v.Substring(0, AutoListMax);
+        }
+        return v.Length > AutoValueMax ? v.Substring(0, AutoValueMax) : v;
+    }
+
+    //  "name, date" -> its names
+    static List<string> FieldNames(string s)
+    {
+        List<string> o = new List<string>();
+        foreach (string x in (s ?? "").Split(new char[] { ',', ';', ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries))
+            if (Regex.IsMatch(x, "^[A-Za-z_$@][A-Za-z0-9_$@-]*(?:\\.[A-Za-z_$@][A-Za-z0-9_$@-]*)*$") && !o.Contains(x)) o.Add(x);
+        return o;
+    }
+    static readonly Regex SecretKey = new Regex("pass|secret|token|apikey|api_key|key$|session|cookie|credential|signature|authorization|sig$", RegexOptions.IgnoreCase);
+
+    //  (5.26) a list or an object with only some fields: keep (only these,
+    //  "links.self" reaches inside), drop (a plain name wherever it is,
+    //  "links.token" at that place). A new copy; the original is not touched.
+    //  gone: the text of every left-out field that looks like a secret.
+    static object Shape(object v, List<string> keep, List<string> drop, List<string> gone)
+    {
+        List<object> a = v as List<object>;
+        if (a != null)
+        {
+            List<object> o = new List<object>();
+            foreach (object x in a) o.Add(Shape(x, keep, drop, gone));
+            return o;
+        }
+        JObj j = v as JObj;
+        if (j == null) return v;
+        JObj n = new JObj();
+        foreach (string k in j.Keys)
+        {
+            object val = j.Get(k);
+            if (keep.Count > 0)
+            {
+                bool hit = keep.Contains(k);
+                foreach (string x in keep) if (x.StartsWith(k + ".")) hit = true;
+                if (!hit) continue;
+            }
+            if (drop.Contains(k)) { GoneOf(k, val, gone); continue; }
+            List<string> subKeep = new List<string>(), subDrop = new List<string>();
+            foreach (string x in keep) if (x.StartsWith(k + ".")) subKeep.Add(x.Substring(k.Length + 1));
+            foreach (string x in drop)
+            {
+                if (x.IndexOf('.') < 0) subDrop.Add(x);
+                else if (x.StartsWith(k + ".")) subDrop.Add(x.Substring(k.Length + 1));
+            }
+            n.Set(k, Shape(val, subKeep, subDrop, gone));
+        }
+        return n;
+    }
+    //  gone gets "secret:" + the text of one that looks like a secret (masked
+    //  in all that goes back for the rest of the run), and the text of every
+    //  other one (masked in this step's whole reply)
+    static void GoneOf(string key, object v, List<string> gone)
+    {
+        if (v == null || v is bool) return;
+        string t = TextOf(v);
+        if (v is string || v is JNum)
+        {
+            if (t.Length >= 4) gone.Add((SecretKey.IsMatch(key) || LooksSecret(t) ? "secret:" : "plain:") + t);
+            return;
+        }
+        List<object> a = v as List<object>;
+        if (a != null) { foreach (object x in a) GoneOf(key, x, gone); return; }
+        JObj o = v as JObj;
+        if (o != null) foreach (string k in o.Keys) GoneOf(SecretKey.IsMatch(key) ? key : k, o.Get(k), gone);
+    }
+
     //  every save row, read from the reply - nothing kept yet
     static void ReadSaves(StepCtx c, JObj step, string text, Dictionary<string, string> heads, int status, int exit,
-                          List<string[]> rows)
+                          List<SaveRow> rows)
     {
         object json = null;
         bool jsonTried = false;
@@ -2472,11 +2641,21 @@ public class DossierBridge
             string name = JS(sv, "name"), from = JS(sv, "from"), path = JS(sv, "path"), show = JS(sv, "show"), on = JS(sv, "on");
             if (!Regex.IsMatch(name, "^[A-Za-z_][A-Za-z0-9_]{0,39}$")) continue;
             string v = null;
+            SaveRow row = new SaveRow();
             if (from == "json")
             {
                 if (!jsonTried) { jsonTried = true; try { json = JsonReader.Parse(text.Trim()); } catch (Exception) { json = null; } }
                 object found;
-                if (json != null && JsonAt(json, path, out found)) v = TextOf(found);
+                if (json != null && JsonAt(json, path, out found))
+                {
+                    v = TextOf(found);
+                    List<string> keep = FieldNames(JS(sv, "keep")), drop = FieldNames(JS(sv, "drop"));
+                    if ((keep.Count > 0 || drop.Count > 0) && (found is JObj || found is List<object>))
+                    {
+                        string less = TextOf(Shape(found, keep, drop, row.Gone));
+                        if (less != v) { row.Whole = v; v = less; }
+                    }
+                }
             }
             else if (from == "header") { string hv; if (heads != null && heads.TryGetValue(path.ToLowerInvariant(), out hv)) v = hv; }
             else if (from == "status") v = status.ToString();
@@ -2492,7 +2671,8 @@ public class DossierBridge
                 catch (ArgumentException) { c.Errors.Add("the pattern for " + name + " is not a valid one"); }
                 catch (RegexMatchTimeoutException) { c.Errors.Add("the pattern for " + name + " took too long"); }
             }
-            rows.Add(new string[] { name, show, on, v });
+            row.Name = name; row.Show = show; row.On = on; row.V = v;
+            rows.Add(row);
         }
     }
 
@@ -2520,7 +2700,8 @@ public class DossierBridge
         if (url != null) o.S("url", url);
         JOut sv = new JOut();
         foreach (KeyValuePair<string, string> kv in saved) sv.S(kv.Key, kv.Value);
-        o.Raw("saved", sv.ToString()).Raw("hidden", JsonList(hidden)).Raw("missing", JsonList(missing)).Raw("redacted", JsonList(redacted));
+        o.Raw("saved", sv.ToString()).Raw("hidden", JsonList(hidden)).Raw("missing", JsonList(missing)).Raw("redacted", JsonList(redacted))
+         .Raw("shaped", JsonList(c.ShapedOut));
         if (hasUntil) o.B("until", met);
         string ex = Redact(text ?? "", c.Run);
         int lim = test ? 20000 : 600;
@@ -2538,6 +2719,10 @@ public class DossierBridge
         if (replyText != null)
         {
             string rp = Redact(replyText, c.Run);
+            //  (5.26) and what its saves left out, longest first
+            List<string> lo = new List<string>(c.LeftOut);
+            lo.Sort(delegate(string x, string y) { return y.Length.CompareTo(x.Length); });
+            foreach (string t in lo) rp = rp.Replace(t, Dots);
             bool rcut = bodyCut;
             if (rp.Length > 200000) { rp = rp.Substring(0, 200000); rcut = true; }
             o.S("reply", rp).B("replyCut", rcut);
@@ -2844,6 +3029,11 @@ public class DossierBridge
         Func<Ph, string> look = delegate(Ph p)
         {
             string v;
+            if (p.Path.Length > 0 && p.Ns != "secret")
+            {
+                v = LookupPath(p, c, extra);
+                return v == null ? null : Filtered(v, p.Filters);
+            }
             if (extra != null && p.Ns.Length == 0 && extra.TryGetValue(p.Full, out v)) return Filtered(v, p.Filters);
             v = Lookup(p, c, false);
             return v == null ? null : Filtered(v, p.Filters);

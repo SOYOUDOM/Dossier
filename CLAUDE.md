@@ -29,7 +29,7 @@ are careful not to attract attention from their security team.
 | `assist.js` | Assist tab arithmetic. |
 | `flow.js` | Client for the optional Power Automate flow (the AI): `ACTIONS` table (every action the model may request), `validate()` of replies, `buildRequest()`, `fillPrompt()`, and `PROMPT_BUILTIN` (an embedded copy of `flow/prompt.txt`). `window.DossierFlow`. |
 | `diagram.js` | **New in 5.11** — draws ```` ```mermaid ```` blocks (flowchart / graph TD·LR·BT·RL, sequenceDiagram, stateDiagram-v2) as SVG: `parse()`, layered layout (ranks doubled so arrow labels get their own place), `render(model, {measure, theme})`, `draw()` → `{ok, svg, boxes, kind}` or `{ok:false, error}`. Pure; `window.DossierDiagram` and `module.exports`. |
-| `automations.js` | **New in 5.22** — Automations, the pure half: `normStore/normAuto/normStep/normConn/normRun` (every design read goes through them), placeholders (`parsePh`, `placeholders`, `show` for display only), conditions (`lexCond`/`parseCond`/`evalCond`, `test`), `check(a, {conns, scripts})` → problem codes, `inputsCheck`, `cmdSafe`, `forAI(store)` (what the model is told), `find`/`fromText`, `jsonPaths`/`jsonGet`, `stepWire`/`connWire`, `run(a, env)` (the step loop; env.call talks to the bridge), `split(a, R)`. 5.24: step kind `"if"` (Condition: `cond`, `yes[]`, `no[]`), `normList`, `flatSteps` (run order, with depth/parent/branch), `findStep`, `freshIds`, `valuesAt(a, id)` (the designer's value list), `condRows`/`condText`/`condOperand` (the builder), `COND_OPS`. `window.DossierAuto` and `module.exports`. |
+| `automations.js` | **New in 5.22** — Automations, the pure half: `normStore/normAuto/normStep/normConn/normRun` (every design read goes through them), placeholders (`parsePh`, `placeholders`, `show` for display only), conditions (`lexCond`/`parseCond`/`evalCond`, `test`), `check(a, {conns, scripts})` → problem codes, `inputsCheck`, `cmdSafe`, `forAI(store)` (what the model is told), `find`/`fromText`, `jsonPaths`/`jsonGet`, `stepWire`/`connWire`, `run(a, env)` (the step loop; env.call talks to the bridge), `split(a, R)`. 5.24: step kind `"if"` (Condition: `cond`, `yes[]`, `no[]`), `normList`, `flatSteps` (run order, with depth/parent/branch), `findStep`, `freshIds`, `valuesAt(a, id)` (the designer's value list), `condRows`/`condText`/`condOperand` (the builder), `COND_OPS`. 5.26: kinds `set`/`stop`/`each`/`select`/`filter` (`HOLDS` = containers: if → yes/no, each → do), expressions in `{{ }}` (`exParse`, `parsePh` → refs/fns/parts, `FN` + `fnList`, `evalPh`, `dataOf`/`txt`/`dig`), templates (`tplParse`/`render`/`show`/`valueOf`, `#each`/`#if`), `wireText`/`wireStep` (functions and loop items → `__kkN` temps or `docs[i].field` paths for the bridge). `window.DossierAuto` and `module.exports`. |
 | `sources.js` | **New in 5.9** — answering from runbooks/standards: passages, BM25 search, citations, and `ground()`, the check that holds back invented figures. Pure; `window.DossierSources` and `module.exports`. |
 | `ocr.js` | Optional text recogniser for pictures and scanned PDFs. |
 | `flow/relay.html` | The **only** page that touches the network: a sandboxed iframe that posts to the flow URL. |
@@ -38,7 +38,7 @@ are careful not to attract attention from their security team.
 | `scripts/bridge/DossierBridge.cs` | The tray program (C# 5, WinForms): serves the page on 127.0.0.1, keeps the workspace in SQL LocalDB when available (or the SQL Server named in Setup, since 5.21), runs scripts, and (5.22) carries out automation steps and keeps their secrets (DPAPI). `KalKech.bat` compiles it with the Windows `csc.exe` whenever the `.cs` is newer than the `.exe`. |
 | `lang/en.xml`, `lang/km.xml` | Language packs (English, Khmer). Missing keys fall back to the English `STRINGS` table in `dossier.html`. |
 | `docs/` | `HOW-THE-AI-WORKS.md` (the whole AI pipeline for beginners, plus a reusable blueprint) and `how-the-ai-works.html` (the same as a self-contained picture page). Keep both in step with the code when the pipeline changes (numbers: 60 records, 10 notes, 30 lessons, 14,000 characters, 66 actions / 44 writes). |
-| `tests/` | `sources.test.js`, `diagram.test.js`, `automations.test.js` (node:test), `e2e/run.js` + `e2e/sources.scenario.js` (real browser), `bridge/run.js` (compiles the bridge with mcs/csc, runs it headless against a made-up API: 60 checks), `fixtures/` (made-up documents; `make-pdf.js` regenerates the PDFs; `auto-conditions.json`, the condition cases both readers must agree on). |
+| `tests/` | `sources.test.js`, `diagram.test.js`, `automations.test.js` (node:test), `e2e/run.js` + `e2e/sources.scenario.js` (real browser), `bridge/run.js` (compiles the bridge with mcs/csc, runs it headless against a made-up API: 67 checks), `fixtures/` (made-up documents; `make-pdf.js` regenerates the PDFs; `auto-conditions.json`, the condition cases both readers must agree on). |
 
 A *workspace* is a folder the user picks (File System Access API):
 `dossier.json` (everything), `backups/`, `tasks/<record>/` attachments,
@@ -92,14 +92,14 @@ A *workspace* is a folder the user picks (File System Access API):
 - Commit messages: clear summary + body; no model names in commits, code or
   docs. Do not open a pull request unless the owner asks.
 - Work so far is on branch `claude/chat-panel-pixel-art-gifs-d822hq`
-  (latest: 5.25.1). Follow the branch instructions of your own session.
+  (latest: 5.26.0). Follow the branch instructions of your own session.
 
 ## Testing
 
 ```
-node --test                                   # 91 unit tests (Sources, grounding, names check, code origin, flow reply fields, diagrams, automations)
-node tests/e2e/run.js                         # the app in headless Chrome/Edge: 304 checks (CHROME=<path> to choose)
-node tests/bridge/run.js                      # the bridge's automation routes, built and run (mcs+mono or csc): 60 checks
+node --test                                   # 100 unit tests (Sources, grounding, names check, code origin, flow reply fields, diagrams, automations)
+node tests/e2e/run.js                         # the app in headless Chrome/Edge: 321 checks (CHROME=<path> to choose)
+node tests/bridge/run.js                      # the bridge's automation routes, built and run (mcs+mono or csc): 67 checks
 node flow/check-prompt.js                     # after editing flow/prompt.txt ...
 python3 flow/embed-prompt.py                  # ... then copy it into flow.js (PROMPT_BUILTIN)
 node tests/fixtures/make-pdf.js               # regenerate the PDF fixtures
@@ -131,6 +131,78 @@ Also useful:
   `DossierFlow.validate`. `tests/e2e/run.js` is a working example of all of it.
 
 ## Recent history (newest first)
+
+- **5.26.0** - Owner: "more actions; suggestions when we hit slash
+  (options, functions, variables); the right side panel resizable; a stop
+  action, a variable action; customisable results (code blocks …, not one
+  line); results as arrays - listing a policy's documents - whose items
+  carry a download-API token the AI must not see, so we can customise the
+  response without that property" (the text, not the UI).
+  - *automations.js*: `KINDS` + `set` (`var`, `how` ∈ `SET_HOW`
+    set/append/add/text, `value`, `show` me|ai), `stop` (`as` ∈ `STOP_AS`
+    ok/fail/stop, `text`), `each` (`from` = one `{{…}}`, `as` default
+    "item", `max` ≤ `LIMIT.loop` 200, `do[]`), `select` (`from`, `var`,
+    `fields` via `selFields` - one unnamed row = plain list), `filter`
+    (`from`, `var`, `cond` on `{{item}}`). `HOLDS` drives `normStep`
+    (containers at depth < `LIMIT.nest`), `flatSteps` (branch "do"),
+    `freshIds`. Save rows get `keep`/`drop` (`fieldList`, JSON only, only
+    when set), passed by `stepWire`. Expressions: `exLex`/`exParse` (refs
+    with `parts`, calls, literals, filters); `parsePh` keeps the old shape
+    (`ns/name/full/simple`, `bad` "name"|"fn"|"args"|"filter") plus
+    `refs/fns/parts/ast`; `FN` (40 functions, `g` group, `sig`); `evalPh`
+    (scope `{values, hidden, masks, locals:[{vars, fields, src}]}` →
+    ok/hidden/masked/missing+bridge). `cmpOp` shared by `evalCond` and
+    `#if`. Templates: `tplParse` (a block tag alone on a line takes the
+    line), `tplRender` (`keep`, `onHidden`), `render`, `show` (old
+    signature), `valueOf` (one tag keeps its type). `check()` rewritten
+    around `onePh` with modes wire/show/page and locals - new codes `badFn
+    fnArgs secretHere hiddenHere hiddenInFn badBlock blockHere noFrom fromOne
+    varName varLocal eachAs eachAsTaken emptyEach noFields`. `valuesAt` →
+    `locals` (item, loop.n, loop.count) and `list`/`shaped` flags. `run()`:
+    `runOne(s, st, sc)` with scope locals; `cond()` sends conditions through
+    `wireText`; the page kinds; `each` resets its kids per item and counts
+    `times`/`fails` (`n`/`of` on the loop and on select/filter); `stop` sets
+    `R.endText`/`R.endForAI` (masks the "me" values); `body()` sends
+    `shaped`; `R.shaped` from the answers. `normRun` keeps n/of/times/fails/
+    shaped, values up to `LIMIT.list` (history 4,000), result `LIMIT.out`.
+    `split()` uses a Stop's text when there is one.
+  - *Bridge*: `Ph.Path` (`PhName`: `.name`, `.0`, `[0]`, `["x-y"]`),
+    `LookupPath` (the whole hidden copy first when the name is in the page's
+    `shaped` list or not shown; also in `CondEval`'s extra), `PathInto`.
+    `SaveRow` (Whole, Gone), `Shape(found, keep, drop, gone)` (plain drop
+    names at any depth, dotted at that place; keep top-level, dotted reaches
+    inside), `GoneOf` → "secret:" (`SecretKey`: AddKnown for the run) /
+    "plain:" (`c.LeftOut`, masked in this step's whole reply). Shown +
+    shaped → `Hidden[name] = whole`, `c.ShapedOut` → answer `shaped`.
+    `CapValue` (lists ≤ `AutoListMax` 200,000, cut by whole items).
+    Request limit 8 MB.
+  - *Page*: cards/icons/colours (`k-set` …); `apNodeHtml` each lane
+    (`.apif.apeach` > `.apbr.one` > `.aplane.do`, ref `<id>:do`);
+    `apRunCanvas` kids "do"; `apParams` per kind; save rows `.apshape`
+    (Leave out / Keep only); `apSettings` (no onFail for stop); `apNewStep`
+    free var names; `apCanDrop`/`apInsert` via `apHolds`; add menu
+    `AP_ADD_GROUPS` + `apPopFilter`. Suggestions: `apSuggest(field)` →
+    groups (Here/locals, inputs, saved, status, secrets, record, built-ins,
+    functions by group, blocks in page fields), used by `apFxOpen` (pk =
+    "group:item") and the "/" list (`SLASH`, `#apSlash` `.slashpop`,
+    `apSlashOk` - not names, not `.path` fields -, `apSlashOpen/Paint/Pick/
+    Close`, `apCaretXY` mirror div, Ctrl+Space; `apPutText` places the
+    caret; max-height set again after `popAt`). "/" on a focused card →
+    `apAddMenu` for after it. Panel width: `layoutCfg().paneW` (300-1100, 0
+    = the CSS 420), `--appw`, `#apGrip` (pointer drag in page px, ←/→ ±40,
+    Home/dblclick reset), `apPaneWidth`. Finish pane: `.apmd` textareas,
+    `[data-ap="finprev"]` → `apPreviewHtml` (last test/run values;
+    `chatSay`), live in `apAfterEdit`, cheat sheet; `apFirstLine` on the
+    finish card. Results: `autoResultHtml` (`chatSay` in `.auresult.say`),
+    `autoValHtml` (lists as `details.auvl`, ✂ when shaped), copy buttons on
+    `#vAuto`. `autoSayFor`/`autoNoteText` know the new kinds. Starter
+    `list`. Strings `Ap*`, `AutoChk_*`, `AutoNote_*`, `ApFn_*`, `ApSn_*`.
+  - Tests: 9 unit (100), 7 bridge (67: a shaped list, a condition on a
+    hidden path, a For each using the left-out token, nothing leaked, the
+    table, an unshaped list stays hidden, keep), 17 e2e (321; the stand-in
+    tray program reads paths and shapes `docs`). Screenshots in Studio,
+    Nova, Neon. Names inside the one e2e scenario must be unique
+    (`typeIn26`, `LR26`).
 
 - **5.25.1** - Owner: "the icons at the side bar look like a mess when
   there is no scroll bar, please add it". The 5.25 folded sidebar had

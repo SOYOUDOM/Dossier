@@ -1200,7 +1200,10 @@
      as it lives in the tray program only. All names and values made up. */
   const auWas = { bridge:DB.bridge, port:DB.port, token:DB.token, flow:JSON.parse(JSON.stringify(S.settings.flow || {})) };
   const fetchAu = window.fetch;
-  const AB = { posts:[], secrets:{}, runs:{}, polls:0, slow:false, paths:[] };
+  const AB = { posts:[], secrets:{}, runs:{}, polls:0, slow:false, paths:[], downloads:[],
+               docs:[{ name:"Schedule.pdf", type:"PDF", date:"2026-10-01", downloadToken:"dl-e2e-aaa111" },
+                     { name:"Card.png", type:"PNG", date:"2026-10-02", downloadToken:"dl-e2e-bbb222" },
+                     { name:"Wording.pdf", type:"PDF", date:"2026-10-03", downloadToken:"dl-e2e-ccc333" }] };
   const TOKEN = "tok-e2e-" + Math.random().toString(36).slice(2);
   window.fetch = async (url, init) => {
     const u = String(url);
@@ -1225,14 +1228,36 @@
     AB.posts.push({ p, b });
     if (p === "/auto/end"){ delete AB.runs[b.run]; return J({ ok:true }); }
     const keep = AB.runs[b.run] || (AB.runs[b.run] = {});
-    const look = ph => b.values[ph.full] != null ? b.values[ph.full] : keep[ph.full];
+    /* (5.26) a path into a value: the whole hidden copy of one shown with
+       fields left out, as the tray program reads it */
+    const look = ph => {
+      if (ph.parts && ph.parts.length){
+        const src = (b.shaped || []).indexOf(ph.full) >= 0 || b.values[ph.full] == null ? keep[ph.full] : b.values[ph.full];
+        const d = DossierAuto.dig(src, ph.parts);
+        return d.found ? DossierAuto.txt(d.v) : undefined;
+      }
+      return b.values[ph.full] != null ? b.values[ph.full] : keep[ph.full];
+    };
     if (p === "/auto/check") return J({ ok:true, result:DossierAuto.evalCond(DossierAuto.parseCond(b.when).ast, look) });
     if (b.when && !DossierAuto.evalCond(DossierAuto.parseCond(b.when).ast, look)) return J({ ok:true, skipped:true });
     const st = b.step || {};
     AB.paths.push(String(st.path || "").replace(/\{\{([^{}]*)\}\}/g, (m, inner) => { const v = look(DossierAuto.parsePh(inner)); return v == null ? "" : encodeURIComponent(v); }));
     await sleep(30);
-    let saved = {}, hidden = [], status = 200, ok = true, replyText = null;
-    if (/\/token$/.test(st.path)){
+    let saved = {}, hidden = [], status = 200, ok = true, replyText = null, shaped = [];
+    if (/\/documents$/.test(st.path)){
+      /* (5.26) a list, each item with a download token: shown without it */
+      keep.docs = JSON.stringify(AB.docs);
+      saved = { docs:JSON.stringify(AB.docs.map(d => ({ name:d.name, type:d.type, date:d.date }))) };
+      shaped = ["docs"];
+    } else if (/\/documents\/.+\/content$/.test(st.path)){
+      const tok = decodeURIComponent((/\/documents\/([^/]*)\/content/.exec(AB.paths[AB.paths.length - 1]) || [])[1] || "");
+      const d = AB.docs.find(x => x.downloadToken === tok);
+      if (!d){ ok = false; status = 404; }
+      else {
+        (st.save || []).forEach(v => { const x = DossierAuto.jsonGet({ file:d.name }, v.path); if (x !== undefined) saved[v.name] = DossierAuto.asText(x); });
+        AB.downloads.push(d.name);
+      }
+    } else if (/\/token$/.test(st.path)){
       const sec = AB.secrets[(b.conn || {}).id + "/password"];
       if (!sec){ ok = false; status = 401; } else { keep.token = TOKEN; hidden = ["token"]; }
     } else if (/\/coi$/.test(st.path)){
@@ -1255,7 +1280,7 @@
     } else { ok = false; status = 404; }
     let until = null;
     if (ok && b.until) until = DossierAuto.evalCond(DossierAuto.parseCond(b.until).ast, ph => saved[ph.full] != null ? saved[ph.full] : look(ph));
-    const ans = { ok, status, ms:30, saved, hidden, missing:[], redacted:[], until, excerpt:"", error:ok ? "" : "the answer was " + status };
+    const ans = { ok, status, ms:30, saved, hidden, shaped, missing:[], redacted:[], until, excerpt:"", error:ok ? "" : "the answer was " + status };
     if (replyText != null){ ans.reply = replyText; ans.replyCut = false; }
     return J(ans);
   };
@@ -1305,7 +1330,7 @@
   check("(5.24) {x} lists the values this step can use - the token from the step before, the record, the built-ins",
         /\{\{token\}\}/.test($("apPop").textContent) && /from “Sign in”/.test($("apPop").textContent) && /\{\{record\.code\}\}/.test($("apPop").textContent) &&
         /\{\{today\}\}/.test($("apPop").textContent), $("apPop").textContent.slice(0, 300));
-  $("apPop").querySelector('[data-pk="{{token}}"]').click();
+  [...$("apPop").querySelectorAll("[data-pk]")].find(b => (b.querySelector("code") || {}).textContent === "{{token}}").click();
   await sleep(250);
   check("...and a click puts one in at the caret", AUTO.ui.draft.steps[1].path === "/policies/{{token}}/coi" && document.activeElement === document.querySelector('#apPane [data-f="steps.1.path"]'),
         AUTO.ui.draft.steps[1].path);
@@ -1704,6 +1729,109 @@
   apPopClose();
   Object.assign(layoutCfg(), layWas); applyLayout();
   AUTO.ui.draft = null; AUTO.ui.mode = "design"; AUTO.ui.run = null;
+  setView("day");
+
+  /* ── 5.26: more actions, lists, "/" while typing, the panel's width ─── */
+  setView("auto"); await sleep(100);
+  autoFromStarter("list");
+  await until(() => AUTO.ui.draft && document.querySelector("#vAuto .aplane.do"), 3000);
+  const ld = AUTO.ui.draft;
+  check("(5.26) the list starter: a For each drawn with one lane holding the steps it repeats",
+        ld.steps[1].kind === "each" && document.querySelectorAll("#vAuto .aplane.do .apc").length === 2 &&
+        /For each doc/.test(document.querySelector("#vAuto .aplane.do .aplh").textContent), document.querySelector("#vAuto .apflow").textContent.slice(0, 200));
+  document.querySelector("#vAuto .apadd").click();
+  await until(() => $("apPop") && $("apPop").classList.contains("addpop"), 2000);
+  check("(5.26) the add menu: ten kinds in three groups, and a box to find one",
+        $("apPop").querySelectorAll(".appg").length === 3 && $("apPop").querySelectorAll("[data-pk]").length === 10 &&
+        ["set", "stop", "each", "select", "filter"].every(k => $("apPop").querySelector('[data-pk="' + k + '"]')) && !!$("apPop").querySelector(".apfxs input"),
+        $("apPop").textContent.slice(0, 200));
+  const af = $("apPop").querySelector(".apfxs input");
+  af.value = "filter"; af.dispatchEvent(new Event("input", { bubbles:true }));
+  check("...typing finds it", [...$("apPop").querySelectorAll("[data-pk]")].filter(x => !x.hidden).map(x => x.dataset.pk).join() === "filter");
+  apPopClose();
+  const eid = ld.steps[1].id;
+  apInsert(eid + ":do", 2, "stop");
+  await sleep(100);
+  const stopS = ld.steps[1].do[2];
+  check("(5.26) a step put into the lane is inside the For each; its panel asks how to end the run",
+        stopS && stopS.kind === "stop" && !!document.querySelector('#vAuto .aplane.do .apc[data-sid="' + stopS.id + '"]') &&
+        !!document.querySelector('#apPane [data-f="steps.1.do.2.as"]') && !!document.querySelector('#apPane [data-f="steps.1.do.2.text"]'),
+        JSON.stringify(ld.steps[1].do.map(x => x.kind)));
+  apStepAct("del", stopS.id); await sleep(50);
+  /* "/" in the closing message: values, functions, blocks */
+  apSelect("finish"); await sleep(80);
+  const rbox = document.querySelector('#apPane [data-f="result"]');
+  rbox.focus();
+  const typeIn26 = (el, t) => { for (const ch of t){ const at = el.selectionStart; el.value = el.value.slice(0, at) + ch + el.value.slice(el.selectionEnd); el.setSelectionRange(at + 1, at + 1);
+                              el.dispatchEvent(new InputEvent("input", { inputType:"insertText", data:ch, bubbles:true })); } };
+  rbox.setSelectionRange(rbox.value.length, rbox.value.length);
+  typeIn26(rbox, "\nTotal: /");
+  await sleep(60);
+  const sl26 = $("apSlash");
+  check("(5.26) typing / opens a list under the caret: values, functions and blocks (a table, a code block)",
+        sl26 && sl26.style.display !== "none" && /count\(list\)/.test(sl26.textContent) && /\{\{docs\}\}/.test(sl26.textContent) &&
+        /A table of a list/.test(sl26.textContent) && /A code block/.test(sl26.textContent) && document.activeElement === rbox, sl26 && sl26.textContent.slice(0, 300));
+  typeIn26(rbox, "cou");
+  await sleep(40);
+  check("...what is typed after it narrows the list", /Matching/.test(sl26.textContent) && /count\(list\)/.test(sl26.querySelector(".appi.hi").textContent),
+        sl26.textContent.slice(0, 200));
+  rbox.dispatchEvent(new KeyboardEvent("keydown", { key:"Enter", bubbles:true, cancelable:true }));
+  await sleep(40);
+  check("...Enter puts it in, in place of /cou, with the caret inside the brackets",
+        /Total: \{\{count\(\)\}\}$/.test(rbox.value) && rbox.selectionStart === rbox.value.length - 3 && /\{\{count\(\)\}\}$/.test(AUTO.ui.draft.result) &&
+        sl26.style.display === "none", rbox.value.slice(-40) + " @" + rbox.selectionStart);
+  typeIn26(rbox, "docs");
+  rbox.dispatchEvent(new KeyboardEvent("keydown", { key:" ", ctrlKey:true, bubbles:true, cancelable:true }));
+  await sleep(40);
+  check("(5.26) Ctrl+Space opens it anywhere; Esc closes it and leaves the text", sl26.style.display !== "none", sl26.style.display);
+  rbox.dispatchEvent(new KeyboardEvent("keydown", { key:"Escape", bubbles:true, cancelable:true }));
+  check("...", sl26.style.display === "none" && /\{\{count\(docs\)\}\}$/.test(rbox.value) && !!$("apPane"));
+  document.querySelector('#apPane [data-ap="finprev"]').click();
+  await until(() => document.querySelector("#apPane .apprev h4"), 2000);
+  check("(5.26) Preview draws the closing message as it will read (Markdown)", /Documents of P10234X56/.test(document.querySelector("#apPane .apprev h4").textContent) &&
+        /Total: 0/.test(document.querySelector("#apPane .apprev").textContent), document.querySelector("#apPane .apprev").textContent.slice(0, 200));
+  /* the panel as wide as you make it */
+  const paneW = () => Math.round($("apPane").getBoundingClientRect().width / pageZoom());
+  const pw0 = paneW();
+  $("apGrip").focus();
+  $("apGrip").dispatchEvent(new KeyboardEvent("keydown", { key:"ArrowLeft", bubbles:true, cancelable:true }));
+  await sleep(40);
+  check("(5.26) the side panel's edge: ← makes it wider, kept with the workspace", paneW() === pw0 + 40 && layoutCfg().paneW === pw0 + 40, pw0 + " -> " + paneW());
+  apPaint(); await sleep(40);
+  check("...and it stays that wide when the page is drawn again", paneW() === pw0 + 40, paneW());
+  $("apGrip").dispatchEvent(new MouseEvent("dblclick", { bubbles:true }));
+  await sleep(40);
+  check("...a double-click puts it back", paneW() === pw0 && layoutCfg().paneW === 0, paneW());
+  /* "/" on a card: add a step after it */
+  const c1 = document.querySelector('#vAuto .apc[data-sid="' + ld.steps[0].id + '"]');
+  c1.focus();
+  c1.dispatchEvent(new KeyboardEvent("keydown", { key:"/", bubbles:true, cancelable:true }));
+  await until(() => $("apPop") && $("apPop").classList.contains("addpop"), 2000);
+  check("(5.26) / on a card opens the add menu for after it", !!$("apPop") && $("apPop").classList.contains("addpop"));
+  apPopClose();
+  /* run it: the list shown without its tokens, each token still used */
+  ld.result = ld.result.replace(/\nTotal: .*$/, "");
+  await autoSaveDraft();
+  const la = autoStore().list.find(x => x.name === ld.name);
+  AB.downloads = [];
+  const LR26 = await autoRun(la, { ref:"P10234X56" }, { by:"me" });
+  let lshown = []; try { lshown = JSON.parse(LR26.values.docs.v); } catch(e){}
+  check("(5.26) a run: the list shown without its tokens, and every document downloaded with its own",
+        LR26.state === "ok" && lshown.length === 3 && lshown.every(d => !("downloadToken" in d)) && LR26.shaped.join() === "docs" &&
+        AB.downloads.join() === "Schedule.pdf,Card.png,Wording.pdf" && JSON.stringify(LR26).indexOf("dl-e2e-") < 0 &&
+        JSON.parse(LR26.values.files.v).length === 3, JSON.stringify(LR26.values) + " " + AB.downloads.join());
+  check("...its message is the table and the list the design writes", /\| Card\.png \| 2026-10-02 \|/.test(LR26.result) && /\n- Wording\.pdf/.test(LR26.result), LR26.result);
+  autoChatRun(la, { ref:"P10234X56" }, { by:"me" });
+  await until(() => document.querySelector("#chatLog .aumsg .auresult table") && !document.querySelector("#chatLog .aumsg .auspin"), 6000);
+  const lcard26 = [...document.querySelectorAll("#chatLog .aumsg")].pop();
+  check("(5.26) in the conversation the message is drawn - a table, a list - and a list value says how many items",
+        lcard26.querySelectorAll(".auresult table tr").length === 4 && lcard26.querySelectorAll(".auresult li").length === 3 &&
+        /docs\s*3 item\(s\)/.test(lcard26.querySelector("details.auvl").textContent) && !!lcard26.querySelector(".aucut"),
+        lcard26.textContent.slice(0, 300));
+  closeChat();
+  autoStore().list = autoStore().list.filter(x => x.id !== la.id); touch();
+  AUTO.ui.draft = null; AUTO.ui.mode = "design"; AUTO.ui.run = null;
+  layoutCfg().paneW = 0;
   setView("day");
 
   closeChat();

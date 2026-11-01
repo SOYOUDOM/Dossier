@@ -1731,6 +1731,8 @@ drawn on the canvas use it too.
 | `Ctrl`+`S` | Saves the design |
 | `Ctrl`+`Z` / `Ctrl`+`Y` | Undo / redo a change to the design |
 | `Ctrl` + mouse wheel, `Ctrl`+`+` / `-` / `0` | Zoom the canvas in, out, back to 100% |
+| `/` (on a card) | Opens the list of steps, to add one after it (since 5.26) |
+| `/` or `Ctrl`+`Space` (in a box) | Opens the list of values, functions and blocks (since 5.26) |
 | `Esc` | Closes the side panel |
 
 ### What kinds of step are there?
@@ -1742,6 +1744,14 @@ drawn on the canvas use it too.
 | **Wait** | Waits a number of seconds (Stop still works). |
 | **Ask me** | Shows you a question - *"About to regenerate the COI for P10234X56. Go on?"* - and stops the run if you say no. |
 | **Condition** | A test - `{{state}} == "ACTIVE"` - and two lists of steps: **Yes** (when it is true) and **No**. Only one list runs; the run goes on after the Condition either way (since 5.24, next section but two). |
+| **For each** | Runs the steps inside it once for every item of a list - `{{docs}}` - with `{{item}}` the one it is on (since 5.26, below). |
+| **Stop the run** | Ends the run there - as *done*, *failed* or *stopped* - with a message of its own (since 5.26). |
+| **Set a value** | Keeps a value of your own - text, a number, a list - or adds to one: one more item on a list, a number up, more text (since 5.26). |
+| **Shape a list** | Makes a new list with only the fields you name from each item (since 5.26). |
+| **Filter a list** | Makes a new list with only the items a test is true for (since 5.26). |
+
+The **+** between two cards opens the list of steps in three groups - *Call
+and run*, *Decide and repeat*, *Values and lists* - with a box to find one.
 
 In a step's **Settings** tab: **Only run when** (a condition), **Repeat
 until** (run it again every few seconds until a condition is true, at most a
@@ -1796,6 +1806,171 @@ program: every secret and hidden value of the run, and anything that looks
 like a password or token field. Anything else in the reply is shown as it
 is, so give it to the assistant only when that helps. The run history keeps
 only a short copy (2,000 characters).
+
+### How do I put a value or a function in a box quickly?
+
+Type **/** in a box that takes values (since 5.26) - the path of a request,
+a header, a body, a condition, the closing message. A list opens under the
+caret with everything the box can use:
+
+- **Here** - inside a *For each*: its item (`{{item}}`), `{{loop.n}}` (1, 2,
+  3 …) and `{{loop.count}}`;
+- **Values you give it**, **From the steps before** (a list says so; ✂
+  when fields were left out of it), **Status**, the connection's
+  **Secrets**, **The record it is run for**, **Built in** (`{{today}}` …);
+- **Functions**, by what they work on: lists, text, numbers, tests - and,
+  in a message, *write a list out*;
+- **Blocks**, in a message: a table of a list, a line for each item, *only
+  when … otherwise …*, a code block, a heading.
+
+Keep typing to narrow it (`/cou` finds `count`), **↑ ↓** to choose,
+**Enter** or **Tab** to put it in - the **/** and what you typed go, and
+the caret lands inside the brackets of a function. **Esc** closes it and
+leaves what you typed. **Ctrl**+**Space** opens it anywhere, without a /.
+The **{x}** button in the corner of a box shows the same list with a box to
+search. (A / in the middle of a word - an address like `/items/` - does not
+open it; Ctrl+Space does.)
+
+### What functions can I use?
+
+Write a function inside `{{ }}`, with values or other functions in its
+brackets: `{{count(docs)}}`, `{{join(field(docs, "name"), ", ")}}`,
+`{{upper(input.policy)}}`. Text in quotes, numbers as they are.
+
+| For | Functions |
+|---|---|
+| Lists | `count` `first` `last` `join(list, ", ")` `field(list, "name")` (one field of every item) `where(list, "type", "PDF")` `sort(list, "date", "desc")` `unique` `take(list, 5)` `keys` |
+| Text | `upper` `lower` `trim` `replace(text, "a", "b")` `left(text, 4)` `right` `concat(a, b, …)` `split(text, ",")` `length` `default(value, "if empty")` `date(value, "dd MMM yyyy")` `addDays(date, 7)` `base64` `json` |
+| Numbers | `sum(list, "amount")` `number` `add` `sub` `mul` `div` `round(n, 2)` |
+| Tests | `if(test, "yes", "no")` `equals(a, b)` `contains(list or text, value)` `empty(value)` `not(value)` |
+| Writing a list out (in a message) | `table(list, "name", "date")` `bullets(list, "name")` `numbered(list, "name")` `code(value)` |
+
+A part of a value is written with dots and brackets: `{{docs[0].name}}`,
+`{{result.items}}`, `{{first(docs).date}}`. Filters still work after a bar:
+`{{docs[0].name|upper}}`. In a JSON body, a list goes in with `|raw`:
+`{"ids": {{json(field(docs, "id"))|raw}}}`.
+
+Functions are worked out on this page, then handed to the tray program as a
+value for that one step - so a function cannot read a **hidden** value or a
+secret (the checker says so). Use the hidden value on its own, or a part of
+it: `{{token}}`, `{{docs[0].downloadToken}}`.
+
+### How do I make an automation return a list, like a policy's documents?
+
+1. In the step that gets the list, open **Values**, **+ Save a value**:
+   name `docs`, *JSON path* `documents` (where the list is in the reply),
+   shown to **Me and the assistant**.
+2. If each item has something the assistant must not see - a download
+   token, a signature - write it in **Leave out**: `downloadToken` (several
+   with commas; `links.sig` for one inside another). **Keep only** does the
+   opposite: `name, date`.
+3. Write the list out in the closing message (click **When it ends**):
+   `{{table(docs, "name", "date")}}`, or a line for each:
+
+   ```
+   ## Documents of {{input.policy}}
+   {{#each docs}}
+   - {{name}} ({{date}})
+   {{/each}}
+   ```
+
+What you and the assistant are shown is the list **without** the fields
+left out. The tray program keeps the whole of it, hidden, for the rest of
+the run - so a later step can still use them: `{{docs[0].downloadToken}}`,
+or `{{doc.downloadToken}}` inside a *For each*. A left-out value that looks
+like a secret is masked in every reply after it. Without **Leave out**, a
+list with a field named like a token or password is kept hidden as a whole
+(as before 5.26), and nobody sees it. The starter **A list, written out**
+(on the Automations page, **New**) is this, ready to fill in.
+
+### How do I do something for each item of a list (a For each)?
+
+Add a **For each** step (the **+**, *Decide and repeat*). In its
+**Parameters**: **The list** - one value that is a list, `{{docs}}` (or a
+function that gives one, `{{where(docs, "type", "PDF")}}`); **Call each
+item** - `doc`, say; **At most** - how many items it goes through (50; up to
+200). It is drawn with a lane under it: the steps you put in the lane (its
+**+**) run once for each item, with `{{doc}}` the item (`{{doc.name}}`,
+`{{doc.id}}`) and `{{loop.n}}` its number.
+
+- A field the tray program kept back still works inside it:
+  `/documents/{{doc.downloadToken}}/content`.
+- To collect something from each item, add **Set a value** inside it with
+  *Add an item to the list*: `files` ← `{{saved}}`. After the For each,
+  `{{files}}` is the list, and `{{count(files)}}` how many.
+- A Condition inside it decides for each item (`{{doc.type}} == "PDF"`).
+- A step inside that fails stops the run, unless its own *If it fails* says
+  to go on. On the run, the For each card says *3 of 3*, and each step
+  inside it how many times it ran (×3) and failed.
+
+A For each counts as one level: one can sit inside a Condition or another
+For each, no deeper.
+
+### How do I end a run early (Stop the run)?
+
+Add **Stop the run** where it should end - in a Condition's branch, or with
+an **Only run when** (Settings): `{{count(docs)}} == 0`. **End the run as**:
+*Done*, *Failed* or *Stopped*; **Its message** is shown instead of the
+closing message: `No document found for {{input.policy}}.` (Markdown, and /
+works). Inside a For each it can name the item: `{{doc.name}} is not a PDF`.
+Nothing after it runs.
+
+### How do I keep a value of my own, or count something (Set a value)?
+
+**Set a value**: a name (`total`), **How** - *Set it to*, *Add an item to
+the list*, *Add a number to it*, *Add text to the end* - and the value. One
+`{{…}}` alone keeps what it is (a list stays a list): `{{where(docs, "type",
+"PDF")}}`; anything else is text with the values written in. *Add a number*
+starts at 0 - `1` in a For each counts the items. The value is shown to you,
+or to you and the assistant (**Shown to**). It is worked out on this page,
+so it cannot read a hidden value.
+
+### How do I make a list with only some fields, or only some items?
+
+- **Shape a list**: **The list** `{{docs}}`, a name for the new one
+  (`short`), and **The fields of each new item** - name on the left, what it
+  holds on the right: `name` ← `{{item.name}}`, `ref` ←
+  `{{upper(item.ref)}}`. One row with no name makes a list of plain values
+  (`{{item.name}}` alone: just the names).
+- **Filter a list**: **The list**, a name, and **Keep the items where** - a
+  test on `{{item}}`: `{{item.type}} == "PDF"`.
+
+Both make a new value (a list) for the steps after and for the closing
+message; the run card shows *2 of 3*. For one quick list in a message, the
+functions do the same: `{{field(docs, "name")}}`, `{{where(docs, "type",
+"PDF")}}`.
+
+### How do I format what an automation says at the end (tables, code blocks)?
+
+Click **When it ends**. *When it finishes, say* and *When it fails, say*
+are **Markdown** (since 5.26): `## headings`, `**bold**`, `- lists`,
+`1. numbered`, tables, and code blocks (three backticks on a line before
+and after). They are drawn the way the assistant's answers are - on the run
+card in the conversation, and in the run's panel - and the assistant reads
+the same text. Write in it:
+
+- a value, a part of one, a function: `{{docs}}`, `{{docs[0].name}}`,
+  `{{count(docs)}}`;
+- a list as a table or a list: `{{table(docs, "name", "date")}}`,
+  `{{bullets(docs, "name")}}`, as JSON in a code block: `{{code(docs)}}`;
+- a line for each item: `{{#each docs}}…{{/each}}` - inside it the item's
+  fields are names (`{{name}}`), `{{this}}` is the item, `{{loop.n}}` its
+  number; `{{#each docs as d}}` names it; `{{else}}` before `{{/each}}` is
+  what to say when the list is empty;
+- only sometimes: `{{#if count(docs) > 0}}…{{else}}…{{/if}}` (also
+  `{{#if docs}}`, `== != > < contains`, `is empty`, `not`).
+
+A block tag alone on its line leaves no empty line behind. **Preview**
+(top of the panel) draws it as it will read, with the values of your last
+test or run; **What you can write here** (at the bottom) is a short
+reminder. A value shown to you only reads *(shown to you only)* in the
+assistant's copy; a hidden one, 🔒name.
+
+### How do I make the side panel wider?
+
+Drag its left edge (since 5.26). With the keyboard: click the edge (or Tab
+to it), then **←** / **→**. A double-click puts it back. The width is kept
+with your workspace, for every automation.
 
 ### How do I use a value from one step in the next one?
 
@@ -2068,6 +2243,13 @@ line, and the whole reply of a step set to *for me and the assistant*.
 Values for you only, hidden values and secrets are not in it. Before a run
 it also knows which values it gets only on failure, and which steps' replies
 it will read.
+
+Since 5.26 a value can be a whole list (*Me and the assistant*): the
+assistant gets it **without** the fields you left out (**Leave out**), and
+the closing message as you formatted it - tables and lists included - so it
+can answer from them. Values made by *Set a value*, *Shape a list* and
+*Filter a list* follow their own **Shown to**. A whole step's reply set to
+*for me and the assistant* has the left-out fields masked too.
 
 ### How do I test a step while I design it?
 
