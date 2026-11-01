@@ -1,6 +1,6 @@
 # KalKech Automations - the complete guide
 
-Version: 5.27.2
+Version: 5.27.3
 Effective date: 1 November 2026
 
 Everything about Automations in KalKech: what each step does, every box and
@@ -58,7 +58,10 @@ These do not exist in KalKech - an answer that uses one is wrong:
   token.
 - **No address outside the connection**, and redirects are not followed.
 - **No other placeholder syntax**: not `${name}`, `$name` or Power Automate's
-  `@{...}` - only `{{name}}`.
+  `@{...}`. KalKech's own `{{ }}` does it all: names, parts
+  (`{{users[0].name}}`), the 40 functions, and - in messages - the
+  `{{#each}}` and `{{#if}}` blocks, which are loops and if / else in the
+  text.
 - **No functions on hidden values or secrets**, and **no secret in a
   condition**.
 
@@ -279,6 +282,9 @@ Without **Leave out**, a list with a field named like a token or password is
 kept hidden as a whole, and nobody sees it. **Keep only** and **Leave out**
 work only on values read from JSON.
 
+When the reply itself is the list - it starts with `[`, with no name around
+it - the JSON path is `$`.
+
 ## How do I use a value from one step in the next one?
 
 Write its name in double braces anywhere after the step that saves it: in
@@ -455,6 +461,12 @@ One row with no name makes a list of plain values (`{{item.name}}` alone:
 just the names). Then show it at the end with `{{table(short)}}`. To only
 drop fields, **Keep only** on the save row is simpler (no extra step).
 
+Every new item gets every field you name: a field cannot be on some items
+only. Its value can differ per item - this gives the first item its photo
+and the others an empty `""`:
+
+`{{if(equals(loop.n, 1), item.photo, "")}}`
+
 ## How do I keep only some items of a list (Filter a list)?
 
 **Filter a list** (+ → *Values and lists*):
@@ -593,7 +605,7 @@ In the step's **Values** tab, **Keep the whole reply**:
 Passwords, keys and tokens are masked in it first. The run history keeps a
 short copy (2,000 characters).
 
-## How do I format the message at the end (When it ends)?
+## How do I format the closing message at the end (When it ends)?
 
 Click **When it ends**: **When it finishes, say** and **When it fails,
 say** are Markdown - headings, **bold**, lists, tables, code blocks. Write:
@@ -602,7 +614,8 @@ say** are Markdown - headings, **bold**, lists, tables, code blocks. Write:
 - a list as a table or lines: `{{table(docs, "name", "date")}}`,
   `{{bullets(docs, "name")}}`, `{{numbered(docs, "name")}}`, as JSON:
   `{{code(docs)}}`;
-- a line for each item - the block tags on lines of their own:
+- a line for each item (a loop in the closing message) - the block tags
+  on lines of their own:
 
   ```
   {{#each docs}}
@@ -618,6 +631,35 @@ say** are Markdown - headings, **bold**, lists, tables, code blocks. Write:
 **Preview** draws it with the values of your last test or run. A run that
 was stopped says neither message. Blocks (`#each`, `#if`) work in messages
 and values, not in what is sent to an API.
+
+## How do I show a list (an array) as a JSON code block?
+
+Click **When it ends** and write, in **When it finishes, say**:
+
+```
+Here are the users:
+{{code(users)}}
+```
+
+`{{code(users)}}` writes the list as JSON, one field per line, in a code
+block with a copy button:
+
+```json
+[
+  {
+    "id": 1,
+    "name": "Ann Lee",
+    "company": "Example Ltd"
+  }
+]
+```
+
+- To choose the fields, use **Keep only** (or **Leave out**) on the save
+  row of the step that gets the list: the code block shows only those.
+- Putting `{{users}}` between your own json fences also works, but prints
+  the whole list on one line.
+- A table instead: `{{table(users)}}`. One line per item:
+  `{{#each users}}`, the line, `{{/each}}`. Both work in the same message.
 
 ## How do I test a step or the whole automation?
 

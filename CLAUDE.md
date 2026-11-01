@@ -92,7 +92,7 @@ A *workspace* is a folder the user picks (File System Access API):
 - Commit messages: clear summary + body; no model names in commits, code or
   docs. Do not open a pull request unless the owner asks.
 - Work so far is on branch `claude/chat-panel-pixel-art-gifs-d822hq`
-  (latest: 5.27.2). Follow the branch instructions of your own session.
+  (latest: 5.27.3). Follow the branch instructions of your own session.
 
 ## Testing
 
@@ -131,6 +131,19 @@ Also useful:
   `DossierFlow.validate`. `tests/e2e/run.js` is a working example of all of it.
 
 ## Recent history (newest first)
+
+- **5.27.3** - First real question answered from the guide (a list in a
+  code block with only some fields): steps right, but "loops are not
+  supported in the closing message" - wrong, from the guide's "only
+  `{{name}}`" (a "cannot do" passage ranks high: rule cues). Guide 5.27.3:
+  that line says what `{{ }}` covers; new section *How do I show a list
+  (an array) as a JSON code block?* (`{{code(x)}}` pretty; `{{x}}` in own
+  fences = one line - checked with `render`); `$` for a reply that is a
+  list; a Shape a list field is on every item (`if(equals(loop.n, 1), …)`
+  gives `""` to the others - checked with `run`); "closing message" and
+  "loop" words in the formatting section (search ranked it 4th, now 1st).
+  Tip: `gather()` returns passages in reading order - rank with
+  `search().hits` when checking what a question finds.
 
 - **5.27.2** - The assistant told the owner to use "Set a value → Mode:
   JavaScript" with `steps.Users.users.map(...)` - invented (no code runs

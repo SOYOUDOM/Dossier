@@ -1890,8 +1890,9 @@ it: `{{token}}`, `{{docs[0].downloadToken}}`.
 ### How do I make an automation return a list, like a policy's documents?
 
 1. In the step that gets the list, open **Values**, **+ Save a value**:
-   name `docs`, *JSON path* `documents` (where the list is in the reply),
-   shown to **Me and the assistant**.
+   name `docs`, *JSON path* `documents` (where the list is in the reply -
+   `$` when the reply itself is the list, starting with `[`), shown to
+   **Me and the assistant**.
 2. If each item has something the assistant must not see - a download
    token, a signature - write it in **Leave out**: `downloadToken` (several
    with commas; `links.sig` for one inside another). **Keep only** does the
@@ -1984,7 +1985,9 @@ the same text. Write in it:
 - a value, a part of one, a function: `{{docs}}`, `{{docs[0].name}}`,
   `{{count(docs)}}`;
 - a list as a table or a list: `{{table(docs, "name", "date")}}`,
-  `{{bullets(docs, "name")}}`, as JSON in a code block: `{{code(docs)}}`;
+  `{{bullets(docs, "name")}}`, as JSON in a code block: `{{code(docs)}}`
+  (laid out one field per line - `{{docs}}` between your own fences prints
+  it on one line);
 - a line for each item: `{{#each docs}}…{{/each}}` - inside it the item's
   fields are names (`{{name}}`), `{{this}}` is the item, `{{loop.n}}` its
   number; `{{#each docs as d}}` names it; `{{else}}` before `{{/each}}` is

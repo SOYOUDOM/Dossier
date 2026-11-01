@@ -6,6 +6,29 @@ holds — which is what to paste into a bug report.
 
 ---
 
+## 5.27.3 - 2026-11-01
+
+**The automations guide, corrected after its first real question.**
+
+Asked whether a list could be shown in a code block with only some fields,
+the assistant gave the right steps (Keep only, a code block in the closing
+message) but also said loops were not supported in the closing message -
+they are (`{{#each}}`, `{{#if}}`). The cause was one line of the guide
+("only `{{name}}`"). The guide (`docs/kalkech-automations-guide.md`, now
+version 5.27.3 - replace it in **Library → Sources**):
+
+- says what `{{ }}` covers: names, parts, the 40 functions, and the
+  `#each` / `#if` blocks in messages;
+- has a new section, *How do I show a list (an array) as a JSON code
+  block?* - `{{code(users)}}`, one field per line;
+- says the JSON path is `$` when the reply itself is the list;
+- says a **Shape a list** field is on every item (its value can differ per
+  item, with `if()`).
+
+The README says the same about `$` and `code()`.
+
+---
+
 ## 5.27.2 - 2026-11-01
 
 **One guide to automations, for you and the assistant.**
