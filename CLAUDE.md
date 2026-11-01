@@ -37,7 +37,7 @@ are careful not to attract attention from their security team.
 | `flow/*.md` | Guides: `CONTRACT.md` (request/reply/actions), `POWER-AUTOMATE.md`, `BAU-RUNBOOKS.md`, `SOURCES.md` (setup + troubleshooting for Sources), `SPEED.md`, `SERVICENOW.md`. |
 | `scripts/bridge/DossierBridge.cs` | The tray program (C# 5, WinForms): serves the page on 127.0.0.1, keeps the workspace in SQL LocalDB when available (or the SQL Server named in Setup, since 5.21), runs scripts, and (5.22) carries out automation steps and keeps their secrets (DPAPI). `KalKech.bat` compiles it with the Windows `csc.exe` whenever the `.cs` is newer than the `.exe`. |
 | `lang/en.xml`, `lang/km.xml` | Language packs (English, Khmer). Missing keys fall back to the English `STRINGS` table in `dossier.html`. |
-| `docs/` | `HOW-THE-AI-WORKS.md` (the whole AI pipeline for beginners, plus a reusable blueprint) and `how-the-ai-works.html` (the same as a self-contained picture page). Keep both in step with the code when the pipeline changes (numbers: 60 records, 10 notes, 30 lessons, 14,000 characters, 66 actions / 44 writes). |
+| `docs/` | `kalkech-automations-guide.md` (5.27.2: the whole of Automations for the owner's Sources - keep it in step with every automations change, verify its facts against the code; one `##` question per topic, ~1,100-character passages), `HOW-THE-AI-WORKS.md` (the whole AI pipeline for beginners, plus a reusable blueprint) and `how-the-ai-works.html` (the same as a self-contained picture page). Keep both in step with the code when the pipeline changes (numbers: 60 records, 10 notes, 30 lessons, 14,000 characters, 66 actions / 44 writes). |
 | `tests/` | `sources.test.js`, `diagram.test.js`, `automations.test.js` (node:test), `e2e/run.js` + `e2e/sources.scenario.js` (real browser), `bridge/run.js` (compiles the bridge with mcs/csc, runs it headless against a made-up API: 67 checks), `fixtures/` (made-up documents; `make-pdf.js` regenerates the PDFs; `auto-conditions.json`, the condition cases both readers must agree on). |
 
 A *workspace* is a folder the user picks (File System Access API):
@@ -92,7 +92,7 @@ A *workspace* is a folder the user picks (File System Access API):
 - Commit messages: clear summary + body; no model names in commits, code or
   docs. Do not open a pull request unless the owner asks.
 - Work so far is on branch `claude/chat-panel-pixel-art-gifs-d822hq`
-  (latest: 5.27.1). Follow the branch instructions of your own session.
+  (latest: 5.27.2). Follow the branch instructions of your own session.
 
 ## Testing
 
@@ -131,6 +131,24 @@ Also useful:
   `DossierFlow.validate`. `tests/e2e/run.js` is a working example of all of it.
 
 ## Recent history (newest first)
+
+- **5.27.2** - The assistant told the owner to use "Set a value → Mode:
+  JavaScript" with `steps.Users.users.map(...)` - invented (no code runs
+  in automations). Owner: "add a file onto the knowledge source folder for
+  everything about the automation". `docs/kalkech-automations-guide.md`
+  (Version 5.27.2 - detectMeta reads it): 49 passages, every label checked
+  against `STRINGS`, every `{{…}}` parsed (`parsePh`), every condition
+  read (`parseCond`), its file example imported (`planImport`, no
+  problems), its worked examples built and `check()`ed, and searched with
+  `DossierSources` in a mixed library (javascript, remove properties,
+  schedule, loop, if else, hide token from the AI, secret not saved,
+  import, browser cookie → the right section first). Note: the README
+  reaches the model only when a question matches `ABOUT_OWN` **and**
+  `ABOUT_HELP`; Sources are searched on every question. Also: README
+  *Can I write JavaScript or code in an automation?* and *Is there one
+  guide…*, and a prompt bullet under THEIR AUTOMATIONS (build/change
+  questions: only what the manual and SOURCES describe; no code; say when
+  not sure). The prompt has no `{{` - keep it that way.
 
 - **5.27.1** - The owner imported the example pack, ran *Example 1* and got
   "the secret "username" … has not been saved on this PC (Menu, Automations,

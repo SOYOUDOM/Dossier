@@ -1759,6 +1759,38 @@ number of times) and **If it fails**: stop the run, or carry on with the next
 step. API calls and scripts also have **Success also needs** (Settings) and
 **Keep the whole reply** (Values) - next sections.
 
+### Can I write JavaScript or code in an automation?
+
+**No** - automations run no code, on purpose: a design (yours, an imported
+file, or one the assistant suggests) can never run a program. There is no
+*Mode: JavaScript*, no code box, no *Function* or *Run code* step, and
+nothing like `steps.Users.users.map(...)` works. Code typed into a box - the
+Value of **Set a value**, say - stays plain text. Instead:
+
+| You want to | Use |
+|---|---|
+| keep only some fields of each item | **Keep only** on the save row: `id, name, email` |
+| remove fields (a password, a token) | **Leave out** on the save row |
+| rename or change fields | **Shape a list**: `name` ← `{{item.firstName}}` |
+| keep only some items | **Filter a list**: `{{item.price}} < 20` |
+| work something out | a function: `{{count(users)}}` |
+| a loop, an if / else, a variable | **For each**, **Condition**, **Set a value** |
+
+A saved value is written `{{users}}`, never `steps.Users.users`. If the
+assistant ever describes a button or mode you cannot find, it made it up -
+the guide below is the full list.
+
+### Is there one guide to automations I can give the assistant?
+
+Yes, since 5.27.2: **`docs/kalkech-automations-guide.md`** in your KalKech
+folder - every step, box, switch, function and limit, what automations
+cannot do, the checker's messages and worked examples, in one Markdown
+file written to be searched. Add it to **Library → Sources → + Add
+documents** (leave *Systems* and *Environment* empty, keep *Its passages may
+go to the assistant* ticked). It is then searched with every question, so
+the assistant answers how-to questions about automations from it and cites
+it. After a KalKech update, add the new copy and choose **Replace**.
+
 ### What if the API answers differently when it fails?
 
 Most APIs send one JSON when it works and another when it does not - for

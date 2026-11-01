@@ -6,6 +6,28 @@ holds — which is what to paste into a bug report.
 
 ---
 
+## 5.27.2 - 2026-11-01
+
+**One guide to automations, for you and the assistant.**
+
+- New: **`docs/kalkech-automations-guide.md`** - everything about
+  automations in one Markdown file: every kind of step and every box, the
+  40 functions, conditions, lists (Keep only, Leave out, Shape a list,
+  Filter a list), secrets and who sees what, the assistant's switches,
+  export and import, the limits, the checker's and the runs' messages with
+  what to do, and worked examples. Add it to **Library → Sources**: it is
+  searched with every question, so how-to answers about automations come
+  from it, with a citation.
+- It says plainly what automations **cannot** do. The assistant had told
+  the owner to put JavaScript in a *Set a value* step ("Mode: JavaScript")
+  - there is no such thing: automations run no code. The README has the
+  same question now (*Can I write JavaScript or code in an automation?*),
+  and the assistant's instructions tell it to name only the steps, boxes
+  and switches the manual and Sources describe, and to say when it is not
+  sure.
+
+---
+
 ## 5.27.1 - 2026-11-01
 
 **A message that pointed to a place that is gone.**
