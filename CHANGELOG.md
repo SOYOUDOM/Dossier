@@ -6,6 +6,32 @@ holds — which is what to paste into a bug report.
 
 ---
 
+## 5.27.0 - 2026-11-01
+
+**Automations: save them to a file, and bring them back in.**
+
+- **Export** on the Automations page: **⋯ → Export to a file** on an
+  automation's line, **⋮ → Export this automation** in the designer (as it
+  is on the screen), or **Export** at the top of the list for all of them
+  and every connection. A `.json` file in your Downloads folder - the
+  designs and their connections, **never** a password, key or token, never
+  the run history.
+- **Import**: choose a file, drop it on the page, or **paste the JSON** (an
+  assistant can write one for you). Before anything changes it shows each
+  automation - ready or what to fix - and what will happen to it: *Add*,
+  *Replace yours* (the same automation), *Skip* (already here, unchanged);
+  each connection - **yours** when the address is the same (your saved
+  secrets keep working) or new, with the secrets to set; a script it needs
+  that is not in Menu → Scripts. **Undo** takes it back.
+- Safe on the way in: every design is checked and normalised like your own;
+  nothing runs; and the assistant always asks you before it runs an
+  imported automation, whatever the file says.
+- Menu → Import of an automation file opens the same window, and in the
+  assistant's answers a JSON block that is an automation file has an
+  **Import into Automations** button.
+- The README describes the file (*What does an automation file look
+  like?*), so it can be written by hand or by an assistant.
+
 ## 5.26.0 - 2026-11-01
 
 **Automations: more kinds of step, lists, functions, "/" suggestions, a wider panel, and closing messages written in Markdown.**

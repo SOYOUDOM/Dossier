@@ -2274,6 +2274,220 @@ function split(a, R){
            result: own ? str(R.endText, LIMIT.out) : tpl ? render(tpl, { values:vals, hidden:hidden, keep:false }) : "" };
 }
 
+/* ═══ SAVING TO A FILE, AND BRINGING ONE IN (5.27) ════════════════════════
+   An automation file is plain JSON - written by KalKech's Export, or by
+   hand, or by an assistant - and it is the same file Import reads:
+
+     {
+       "kind": "kalkech.automations",
+       "version": 1,
+       "exported": "2026-11-01T10:00:00.000Z",
+       "automations": [ { "id": …, "name": …, "inputs": […], "steps": […],
+                          "result": …, "resultFail": … } ],
+       "connections": [ { "id": …, "name": …, "base": "https://…",
+                          "auth": "none" | "basic" | "header" | "bearer" | "windows",
+                          "extra": ["clientId"] } ]
+     }
+
+   What is never in it: a secret (they are kept by the tray program, on one
+   PC, and a step only names one - {{secret.password}}), the run history
+   (it holds values), and anything of the records.
+
+   Bringing one in: every design and connection goes through the same
+   normalising as a workspace's own (normAuto, normConn), so a file written
+   by hand cannot put a shape in front of the runner that it was not made
+   for; a connection with the same address as one here is that one (its
+   secrets keep working); a script step finds its script by file name; and
+   whatever the file says, the assistant asks you before it runs one. */
+const FILE_KIND = "kalkech.automations";
+
+/* an address as it is compared: scheme, host, path - no trailing slash */
+function baseKey(b){
+  const p = baseParts(b);
+  return p ? p.scheme + "://" + p.host + p.path : "";
+}
+/* "Policy documents" -> "Policy documents (2)" when that is taken */
+function freeName(name, list){
+  const taken = {};
+  arr(list).forEach(x => { taken[flat(x && x.name)] = 1; });
+  if (!taken[flat(name)]) return name;
+  const stem = String(name).replace(/\s*\(\d+\)$/, "");
+  for (let k = 2; k < 1000; k++){ const n = stem + " (" + k + ")"; if (!taken[flat(n)]) return n; }
+  return stem + " (" + rnd(3) + ")";
+}
+
+/* the file for some automations (ids), or for all of them (ids null).
+   ctx: { scripts (to write a script step's file name beside its id),
+   allConns (every connection, not only the ones these use), app } */
+function exportFile(store, ids, ctx){
+  store = normStore(store);
+  ctx = obj(ctx);
+  const scripts = arr(ctx.scripts);
+  const want = Array.isArray(ids) ? ids : null;
+  const list = want ? store.list.filter(a => want.indexOf(a.id) >= 0) : store.list;
+  const used = {};
+  const autos = list.map(a => {
+    const c = JSON.parse(JSON.stringify(a));
+    flatSteps(c.steps).forEach(x => {
+      if (x.s.conn) used[x.s.conn] = 1;
+      if (x.s.kind === "script"){
+        const sc = scripts.find(y => y.id === x.s.script);
+        if (sc && sc.file) x.s.scriptFile = String(sc.file);
+      }
+    });
+    return c;
+  });
+  const conns = store.conns.filter(c => (ctx.allConns && !want) || used[c.id]).map(c => JSON.parse(JSON.stringify(c)));
+  const out = { kind:FILE_KIND, version:1, exported:new Date().toISOString() };
+  if (ctx.app) out.app = str(ctx.app, 40);
+  out.automations = autos;
+  out.connections = conns;
+  return out;
+}
+
+/* A file's text (or what it holds) -> { autos, conns } as written, or
+   { error: "json" | "shape" | "empty", why }. Generous in what it takes:
+   KalKech's own file; a workspace export (Menu → Export) with its
+   automations; a list of designs; one design alone; and any of these
+   pasted with the ``` fence it was copied with. */
+function readFile(input){
+  let d = input;
+  if (typeof input === "string"){
+    let t = input.replace(/^﻿/, "").trim();
+    const fence = /^(`{3,}|~{3,})[^\n]*\n([\s\S]*?)\n?\s*\1\s*$/.exec(t);
+    if (fence) t = fence[2];
+    if (!t) return { error:"empty" };
+    try { d = JSON.parse(t); }
+    catch(e){ return { error:"json", why:str((e && e.message) || e, 200) }; }
+  }
+  if (Array.isArray(d)) d = { automations:d };
+  if (!d || typeof d !== "object") return { error:"shape" };
+  let autos = null, conns = [];
+  const st = obj(obj(d.settings).automations);
+  if (Array.isArray(st.list)){ autos = st.list; conns = arr(st.conns); }
+  else if (Array.isArray(d.automations) || Array.isArray(d.list)){ autos = arr(d.automations || d.list); conns = arr(d.connections || d.conns); }
+  else if (d.automation && typeof d.automation === "object"){ autos = [d.automation]; conns = arr(d.connections || d.conns); }
+  else if (Array.isArray(d.steps)){ autos = [d]; conns = arr(d.connections || d.conns); }
+  if (!autos) return { error:"shape" };
+  autos = autos.filter(a => a && typeof a === "object" && !Array.isArray(a)).slice(0, LIMIT.autos);
+  conns = conns.filter(c => c && typeof c === "object" && !Array.isArray(c)).slice(0, LIMIT.conns);
+  if (!autos.length) return { error:"empty" };
+  return { autos:autos, conns:conns, kind:str(d.kind, 40), app:str(d.app || d.appVersion, 40), exported:str(d.exported || d.savedAt, 40) };
+}
+
+/* What bringing a file in would do, before anything is changed:
+   { autos: [{ a (the design as it would be kept), existing (the one here
+     it matches, by id or by name), match: "id" | "name" | "", how: "add" |
+     "replace" | "skip" (the default), same (it is already here, unchanged),
+     probs (the checker's, as it would be here), scripts (script files it
+     needs that are not here), noAsk (the file let the assistant run it
+     without asking) }],
+     conns: [{ c, how: "new" | "reuse", use (the id here), mine (the
+     connection here, for "reuse"), secrets (names its steps may use) }],
+     error: "tooMany" when it would not fit }
+   ctx: { scripts } - the workspace's, to find a script by its file name */
+function planImport(file, store, ctx){
+  store = normStore(store);
+  ctx = obj(ctx);
+  const scripts = arr(ctx.scripts);
+  const out = { autos:[], conns:[], error:"" };
+  if (!file || file.error) return Object.assign(out, { error:(file && file.error) || "shape" });
+  /* connections: the same address (and sign-in) as one here is that one */
+  const map = {}, taken = {};
+  store.conns.forEach(c => { taken[c.id] = 1; });
+  file.conns.forEach(raw => {
+    const c = normConn(raw);
+    const key = str(raw.id, 80) || c.id;
+    const k = baseKey(c.base);
+    const mine = k ? store.conns.find(x => baseKey(x.base) === k && x.auth === c.auth) : null;
+    if (mine){
+      map[key] = mine.id;
+      out.conns.push({ c:mine, how:"reuse", use:mine.id, mine:mine, from:c.name, secrets:connSecrets(mine) });
+      return;
+    }
+    if (taken[c.id]) c.id = newId("C");
+    taken[c.id] = 1;
+    map[key] = c.id;
+    out.conns.push({ c:c, how:"new", use:c.id, secrets:connSecrets(c) });
+  });
+  const connsAfter = store.conns.concat(out.conns.filter(x => x.how === "new").map(x => x.c));
+  file.autos.forEach(raw => {
+    const r = JSON.parse(JSON.stringify(raw));
+    const need = [];
+    /* connections and scripts, as they are called here */
+    flatSteps(r.steps).forEach(x => {
+      const s = x.s;
+      if (s.conn != null && map[String(s.conn)]) s.conn = map[String(s.conn)];
+      if (s.kind === "script"){
+        const f = str(s.scriptFile, 200).trim();
+        const sc = f ? scripts.find(y => String(y.file || "").toLowerCase() === f.toLowerCase()) : null;
+        if (sc) s.script = sc.id;
+        else if (f){ if (!scripts.some(y => y.id === s.script)) need.push(f); }
+        delete s.scriptFile;
+      }
+    });
+    const a = normAuto(r);
+    const noAsk = a.ai && a.ask === false;
+    /* whatever the file says: the assistant asks you before it runs one */
+    a.ask = true;
+    const byId = raw.id != null ? store.list.find(x => x.id === a.id) : null;
+    const byName = byId ? null : store.list.find(x => flat(x.name) === flat(a.name));
+    const ex = byId || byName || null;
+    const strip = x => JSON.stringify(Object.assign({}, x, { updated:"", ask:true }));
+    const same = !!byId && strip(normAuto(byId)) === strip(a);
+    out.autos.push({ a:a, existing:ex, match:byId ? "id" : byName ? "name" : "", how:same ? "skip" : byId ? "replace" : "add",
+                     same:same, noAsk:noAsk, scripts:uniq(need),
+                     probs:check(a, { conns:connsAfter, scripts:scripts }) });
+  });
+  const adds = out.autos.filter(p => p.how !== "skip" && p.how !== "replace").length;
+  if (store.list.length + adds > LIMIT.autos) out.error = "tooMany";
+  if (store.conns.length + out.conns.filter(x => x.how === "new").length > LIMIT.conns) out.error = "tooMany";
+  return out;
+}
+
+/* Bring it in: plan from planImport, choices { index: "add" | "replace" |
+   "skip" } (else each one's default), into store - the live one, changed
+   in place. A new connection comes in when a design brought in uses it, or
+   when no design in the file does (a file of connections). Returns
+   { added, replaced, skipped, conns, ids (the designs now here) }. */
+function applyImport(plan, choices, store){
+  choices = obj(choices);
+  const out = { added:0, replaced:0, skipped:0, conns:0, ids:[] };
+  if (!plan || plan.error) return out;
+  const used = {}, wanted = {};
+  plan.autos.forEach(p => flatSteps(p.a.steps).forEach(x => { if (x.s.conn) wanted[x.s.conn] = 1; }));
+  const now = new Date().toISOString();
+  plan.autos.forEach((p, i) => {
+    let how = choices[i] || p.how;
+    if (how === "replace" && !p.existing) how = "add";
+    if (how === "skip"){ out.skipped++; return; }
+    const a = JSON.parse(JSON.stringify(p.a));
+    a.updated = now;
+    if (how === "replace"){
+      /* it keeps the id of the one it replaces: its runs stay its own */
+      a.id = p.existing.id;
+      const k = store.list.findIndex(x => x.id === p.existing.id);
+      if (k >= 0) store.list[k] = a; else store.list.push(a);
+      out.replaced++;
+    } else {
+      if (store.list.some(x => x.id === a.id)) a.id = newId("A");
+      a.name = freeName(a.name, store.list);
+      store.list.push(a);
+      out.added++;
+    }
+    out.ids.push(a.id);
+    flatSteps(a.steps).forEach(x => { if (x.s.conn) used[x.s.conn] = 1; });
+  });
+  plan.conns.forEach(x => {
+    if (x.how !== "new") return;
+    if (!used[x.use] && wanted[x.use]) return;
+    if (store.conns.some(c => c.id === x.c.id)) return;
+    store.conns.push(JSON.parse(JSON.stringify(x.c)));
+    out.conns++;
+  });
+  return out;
+}
+
 const api = {
   LIMIT, KINDS, METHODS, BODIES, AUTHS, AUTH_SECRETS, SHOWS, SAVE_ON, REPLY_SHOWS, FROM, INPUT_KINDS, BUILTINS, RECORD_FIELDS,
   FILTERS, RESERVED, FORBIDDEN_HEADERS,
@@ -2288,7 +2502,9 @@ const api = {
   COND_OPS, normList, flatSteps, findStep, freshIds, valuesAt, condRows, condText, condOperand,
   /* 5.26: more kinds, lists, functions, templates */
   HOLDS, SET_HOW, STOP_AS, FN, fnList, fieldList, exParse, evalPh, dataOf, txt, dig, asList, partsPath,
-  tplParse, render, valueOf, wireText, wireStep, cmpOp, mdTable, unsetOf
+  tplParse, render, valueOf, wireText, wireStep, cmpOp, mdTable, unsetOf,
+  /* 5.27: automation files */
+  FILE_KIND, exportFile, readFile, planImport, applyImport, baseKey, freeName
 };
 if (typeof module !== "undefined" && module.exports) module.exports = api;
 if (root) root.DossierAuto = api;

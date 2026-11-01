@@ -1945,6 +1945,38 @@ details.auvl pre{margin:6px 0 2px;max-height:260px;overflow:auto;font-family:var
 .apslh{position:sticky;bottom:-4px;font-size:10px;color:var(--ink-3);padding:5px 8px 3px;border-top:1px solid var(--rule);background:var(--paper);margin-top:2px}
 /* the add menu: in groups */
 .addpop{width:320px;max-height:min(520px,calc(100vh - 16px))}
+/* ── 5.27: Import and Export ─────────────────────────────────────────── */
+.apor{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;font-weight:500;color:var(--ink-2)}
+.auimp .srcdlgb{width:min(640px,100%)}
+.auimp .api{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:0 0 auto}
+.auimp .btn{display:inline-flex;align-items:center;gap:6px}
+.auimpsrc{display:flex;align-items:center;gap:10px;margin:6px 0 10px;flex-wrap:wrap}
+.auimpname{font-size:11.5px;color:var(--ink-3);overflow-wrap:anywhere}
+.auimplab{display:block;font-size:11px;font-weight:650;color:var(--ink-2);margin:0 0 4px}
+.auimp textarea.in{width:100%;font-size:11px;min-height:64px;resize:vertical}
+.auimpplan:empty{display:none}
+.auimpplan{margin:10px 0 4px;padding:10px 12px;border:1px solid var(--rule);border-radius:11px;background:var(--paper-2);max-height:min(46vh,420px);overflow:auto}
+.auimph{margin:0 0 6px;font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3)}
+.auimph:not(:first-child){margin-top:12px}
+.auimprow,.auimpc{display:flex;align-items:center;gap:10px;padding:7px 0;border-top:1px solid var(--rule)}
+.auimph+.auimprow,.auimph+.auimpc{border-top:0}
+.auimprow.off .auimpn{opacity:.5}
+.auimpn{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+.auimpn b{font-size:12.5px;font-weight:650;overflow-wrap:anywhere}
+.auimpn small{font-size:11px;color:var(--ink-3);line-height:1.45;overflow-wrap:anywhere}
+.auimpn small.mono{font-family:var(--f-mono);font-size:10.5px;color:var(--ink-2)}
+.auimpn .ok,.auimpn small.ok{color:var(--st-done)}
+.auimpn .bad{color:var(--p1)}
+.auimpn small.warn{color:var(--p2)}
+.auimprow select.in{flex:0 1 230px;max-width:46%;font-size:11.5px}
+.auimpc .apk{width:26px;height:26px}
+.auimperr{margin:0;color:var(--p1);font-size:12px;overflow-wrap:anywhere}
+.auimp .apmini i{width:20px;height:20px;border-radius:5px;display:grid;place-items:center;background:color-mix(in srgb,var(--kc) 13%,transparent);color:var(--kc)}
+.auimp .apmini i .api{width:12px;height:12px}
+.auimp .apmini em{font-style:normal;font-size:10.5px;color:var(--ink-3)}
+.chcode .cch .auimpb{margin-left:auto;margin-right:6px}
+.chcode .cch .auimpb+.cpy{margin-left:0}
+@media (max-width:1100px){ .aptool #apImp span,.aptool #apExpAll span{display:none} }
 /* the chat's run card: the steps fold away once it has finished (5.24) */
 .austeps-d>summary{list-style:none;display:flex;align-items:baseline;gap:8px;cursor:pointer;font-size:11.5px;margin:2px 0}
 .austeps-d>summary::-webkit-details-marker{display:none}
@@ -10237,6 +10269,55 @@ const STRINGS = {
   ApOp_false: "is false (no value)",
   ApFinishHint: "Type / (or press {x}) to put in a value, a function or a block. A value a step did not keep - its branch did not run, or it failed first - is left empty.",
   /* ── more kinds of step, lists and functions (5.26) ─────────────────── */
+  /* ── automation files (5.27) ──────────────────────────────────────── */
+  AutoImp: "Import",
+  AutoExp: "Export",
+  AutoImpHint: "Bring automations in from a file - or from JSON you paste",
+  AutoExpAllHint: "Save all your automations and connections to one file (never a password or key)",
+  AutoExpOne: "Export to a file",
+  AutoExpThis: "Export this automation",
+  AutoExpOneHint: "A .json file you can import again - never a password or key",
+  AutoExpDone: "Saved {n} automation(s) to {file}, in your Downloads folder.",
+  AutoExpUnsaved: "(Changes you have not saved yet are in it.)",
+  AutoExpNoSecrets: "Passwords and keys are never in it.",
+  AutoExpNone: "There is nothing to export yet.",
+  AutoImpFile: "Import a file",
+  ApEmptyImport: "…or bring one in that you (or someone) saved before:",
+  AutoImpTitle: "Import automations",
+  AutoImpPick: "Choose a file…",
+  AutoImpDrop: "…or drop it here",
+  AutoImpPaste: "…or paste the JSON here",
+  AutoImpPastePh: "{\"kind\": \"kalkech.automations\", \"automations\": [ … ], \"connections\": [ … ]}",
+  AutoImpSafe: "Nothing runs now. Passwords and keys are never in a file - set them in Connections. Look at the addresses before you run one: the assistant will ask you before it runs any of these.",
+  AutoImpGo: "Import ({n})",
+  AutoImpGo0: "Import",
+  AutoImpAutos: "Automations in it ({n})",
+  AutoImpConns: "Connections ({n})",
+  AutoImpAdd: "Add",
+  AutoImpAddAs: "Add as \u201c{name}\u201d",
+  AutoImpReplace: "Replace yours: \u201c{name}\u201d",
+  AutoImpSkip: "Skip",
+  AutoImpSame: "Already here, unchanged",
+  AutoImpEditing: "You are changing this one in the designer - it comes in as a copy.",
+  AutoImpNoAsk: "The file let the assistant run it without asking - here it will ask you first (change it in the designer).",
+  AutoImpScripts: "Needs {list} in your scripts (Menu → Scripts).",
+  AutoImpSteps: "{n} step(s)",
+  AutoImpReady: "ready",
+  AutoImpFix: "{n} thing(s) to fix - shown in the designer",
+  AutoImpConnNew: "new connection",
+  AutoImpConnMine: "your connection \u201c{name}\u201d (same address)",
+  AutoImpSecrets: "secrets to set: {list}",
+  AutoImpErr_json: "That is not JSON: {why}",
+  AutoImpErr_shape: "There is no automation in that.",
+  AutoImpErr_empty: "There is no automation in that.",
+  AutoImpErr_tooMany: "That is more than KalKech keeps ({n} automations, {c} connections at most).",
+  AutoImpDone: "Imported: {what}.",
+  AutoImpAddedN: "{n} added",
+  AutoImpReplacedN: "{n} replaced",
+  AutoImpConnsN: "{n} connection(s)",
+  AutoImpSetSecrets: "Set the secrets of {list} (Connections) before you run it.",
+  AutoImpNothing: "Nothing was imported.",
+  AutoImpFromChat: "Import into Automations",
   AutoT_list: "A list, written out",
   AutoT_listHint: "Get a list (documents, say), show it as a table - without each item's download token - and use the token for each one",
   AutoT_listName: "Policy documents",
@@ -10983,7 +11064,7 @@ const STATUSES = [
    the status bar, and clicking it copies a line you can paste into a bug
    report — build date and flow protocol included, because those are the two
    things that actually differ between copies. */
-const APP_VERSION = "5.26.0";
+const APP_VERSION = "5.27.0";
 const APP_BUILT = "2026-11-01";
 function buildLine(){
   return "KalKech v" + APP_VERSION + " \u00b7 built " + APP_BUILT +
@@ -18663,6 +18744,9 @@ function chatSay(text){
     CHAT.code[id] = body;
     out += dgNote + '<div class="chcode"><div class="cch"><span class="lang">' +
              esc(lang || "text") + "</span>" +
+             /* (5.27) an automation file, written in an answer: a click
+                from the Import window */
+             (lang === "json" && autoFileLooks(body) ? '<button class="cpy auimpb" data-autoimp="' + id + '">' + esc(L("AutoImpFromChat")) + "</button>" : "") +
              '<button class="cpy" data-copy="' + id + '">' + esc(L("Copy")) + "</button></div>" +
            chatCodeFrom(body, lang) + "<pre>" + esc(body) + "</pre></div>";
     i = m.index + m[0].length;
@@ -30071,6 +30155,9 @@ const AP_IC = {
   select:'<rect x="3.5" y="4" width="17" height="16" rx="2.5"/><path d="M9.5 4v16M3.5 9.5h17"/>',
   filter:'<path d="M4 5h16l-6.2 7.6V19l-3.6-1.8v-4.6z"/>',
   fn:'<path d="M14.5 4.5c-2.2 0-3 1.2-3.3 3L9.8 17c-.3 1.8-1.1 2.5-3.3 2.5M7.5 10h8"/>',
+  /* (5.27) a file out, a file in */
+  exp:'<path d="M12 15V3.5M7.5 8L12 3.5 16.5 8"/><path d="M4.5 13.5v4a2.5 2.5 0 0 0 2.5 2.5h10a2.5 2.5 0 0 0 2.5-2.5v-4"/>',
+  imp:'<path d="M12 3.5V15M7.5 10.5L12 15l4.5-4.5"/><path d="M4.5 13.5v4a2.5 2.5 0 0 0 2.5 2.5h10a2.5 2.5 0 0 0 2.5-2.5v-4"/>',
   md:'<path d="M4 6.5h16M4 12h10M4 17.5h13"/>',
   trigger:'<path d="M13 2.5L5 13.5h6l-1 8 8-11h-6z"/>',
   finish:'<path d="M6 21V4.5M6 4.5h11l-2.2 4 2.2 4H6"/>',
@@ -30342,6 +30429,9 @@ function apListPage(){
   return '<div class="aptool">' +
       '<label class="apsearch">' + apIc("search") + '<input id="apQ" type="search" value="' + esc(U.q) + '" placeholder="' + LE("ApFind") + '" spellcheck="false" autocomplete="off"></label>' +
       '<span class="sp"></span>' +
+      /* (5.27) to a file and back */
+      '<button class="btn" id="apImp" type="button" title="' + LE("AutoImpHint") + '">' + apIc("imp") + "<span>" + LE("AutoImp") + "</span></button>" +
+      '<button class="btn" id="apExpAll" type="button" title="' + LE("AutoExpAllHint") + '">' + apIc("exp") + "<span>" + LE("AutoExp") + "</span></button>" +
       '<button class="btn pri" id="apNew" type="button">' + apIc("plus") + "<span>" + LE("AutoNew") + "</span>" + apIc("down", "sm") + "</button>" +
     "</div>" +
     '<div class="aplist" id="apList" role="list">' + apRowsHtml() + "</div>" +
@@ -30385,7 +30475,9 @@ function apEmptyHtml(){
     '<div class="apgal">' + autoStarters().map(s =>
       '<button class="aptpl" data-austart="' + s.id + '" type="button"><span class="apk k-' + (s.kind || "http") + '">' + apIc(s.icon || "http") + "</span>" +
       "<b>" + esc(s.name) + "</b><small>" + esc(s.hint) + "</small></button>").join("") +
-    "</div></div>";
+    "</div>" +
+    '<p class="apsub apor">' + LE("ApEmptyImport") + ' <button class="btn" id="apImp" type="button">' + apIc("imp") + "<span>" + LE("AutoImpFile") + "</span></button></p>" +
+    "</div>";
 }
 
 /* ── run history ──────────────────────────────────────────────────────── */
@@ -30673,6 +30765,7 @@ function apMoreMenu(btn){
     apItem("redo", "redo", L("ApRedo"), "", { off:!U.redo.length, kind:"finish" }) +
     apItem("zfit", "fit", L("ApZoomFit"), "", { kind:"finish" }) +
     apItem("zreset", "search", L("ApZoomReset"), "", { kind:"finish" }) +
+    apItem("exp", "exp", L("AutoExpThis"), L("AutoExpOneHint"), { kind:"finish" }) +
     '<div class="appline ' + (ok ? "ok" : "bad") + '">' + apIc("dot", "fill") + "<span>" +
       LE(ok ? "ApBridgeOk" : info && info.old ? "ApBridgeOld" : "ApBridgeBad") + "</span></div>";
   apPop(btn, html, k => {
@@ -30680,6 +30773,7 @@ function apMoreMenu(btn){
     if (k === "redo") return apUndo(false);
     if (k === "zfit") return apZoomFit();
     if (k === "zreset") return apZoomSet(1);
+    if (k === "exp") return apExportDraft();
   }, "morepop");
 }
 /* the checker on the bar: Ready, or how many to fix */
@@ -31562,12 +31656,14 @@ function apNewMenu(btn){
   apPop(btn, html, k => autoFromStarter(k), "newpop");
 }
 function apRowMenu(btn, a){
-  const html = apItem("edit", "", L("Edit"), "") + apItem("dup", "", L("AutoDuplicate"), "") + apItem("del", "", L("Remove2"), "", { cls:"danger" });
+  const html = apItem("edit", "", L("Edit"), "") + apItem("dup", "", L("AutoDuplicate"), "") +
+    apItem("exp", "", L("AutoExpOne"), L("AutoExpOneHint")) + apItem("del", "", L("Remove2"), "", { cls:"danger" });
   apPop(btn, html, k => apRowAct(k, a), "rowpop");
 }
 async function apRowAct(what, a){
   const st = autoStore();
   if (what === "edit") return autoEdit(a.id);
+  if (what === "exp") return autoExport([a.id]);
   if (what === "dup"){
     const c = DossierAuto.normAuto(Object.assign(clone(a), { id:"", name:L("AutoCopyOf", { name:a.name }), updated:new Date().toISOString(),
                                                              steps:DossierAuto.freshIds(a.steps) }));
@@ -31581,6 +31677,202 @@ async function apRowAct(what, a){
     st.list = st.list.filter(x => x.id !== a.id); touch(); apPaint();
   }
 }
+/* ═══ AUTOMATION FILES (5.27) ═════════════════════════════════════════════
+   The owner: "an export and import for automations, so I can save one and
+   use it again next time - and you can help me by just giving me the JSON
+   file". Export writes a file for one automation (a row's ⋯, the
+   designer's ⋮) or for all of them (Export on the list); Import reads one
+   - chosen, dropped on the page, or pasted (an assistant's answer) - says
+   what is in it and what bringing it in will do, and brings in what you
+   pick. The file's shape, and the checks on the way in, are in
+   automations.js (exportFile, readFile, planImport, applyImport). Nothing
+   here touches the network: the file is made in the browser and saved as a
+   download, and an imported design does not run until you run it. ══════ */
+function autoFileName(name){
+  const n = String(name || "").replace(/[\\/:*?"<>|\u0000-\u001f]+/g, " ").replace(/\s+/g, " ").trim().slice(0, 80);
+  return (n || "automation") + ".kalkech-automation.json";
+}
+/* ids: the automations to write (null: all of them, and every connection);
+   opts.store: another store to write from (the designer's draft) */
+function autoExport(ids, opts){
+  opts = opts || {};
+  if (!autoOk()) return null;
+  const f = DossierAuto.exportFile(opts.store || autoStore(), ids, { scripts:autoScripts(), allConns:!ids, app:APP_VERSION });
+  if (!f.automations.length) return toast(L("AutoExpNone"), { bad:true }), null;
+  const name = ids && f.automations.length === 1 ? autoFileName(f.automations[0].name)
+             : "kalkech-automations-" + today() + ".json";
+  downloadBlob(name, new Blob([JSON.stringify(f, null, 2) + "\n"], { type:"application/json" }));
+  toast(L("AutoExpDone", { n:f.automations.length, file:name }) + (opts.unsaved ? " " + L("AutoExpUnsaved") : "") + " " + L("AutoExpNoSecrets"),
+        { life:8000 });
+  return f;
+}
+/* the design open in the designer, as it is on the screen */
+function apExportDraft(){
+  const U = AUTO.ui;
+  if (!U.draft) return null;
+  const a = DossierAuto.normAuto(clone(U.draft));
+  return autoExport([a.id], { store:{ conns:autoStore().conns.concat(U.newConns), list:[a] }, unsaved:apDirty() });
+}
+/* is this text (a code block in an answer) an automation file? */
+function autoFileLooks(text){
+  if (!autoOk() || !text || text.length > 2000000) return false;
+  let d;
+  try { d = JSON.parse(text); } catch(e){ return false; }
+  if (!d || typeof d !== "object") return false;
+  if (d.kind === DossierAuto.FILE_KIND) return true;
+  const isDesign = a => !!a && typeof a === "object" && Array.isArray(a.steps);
+  if (Array.isArray(d)) return d.length > 0 && d.every(isDesign);
+  return (Array.isArray(d.automations) && d.automations.some(isDesign)) || (isDesign(d) && typeof d.name === "string");
+}
+async function autoImportFile(f){
+  let text = "";
+  try { text = await f.text(); } catch(e){ return toast(L("ThatIsNotValidJson"), { bad:true }); }
+  return autoImportDialog({ text:text, name:f.name });
+}
+
+/* The import window. opts: { text, name } - a file's text already read,
+   or JSON from an answer. Resolves to what applyImport did, or null. */
+function autoImportDialog(opts){
+  opts = opts || {};
+  if (!autoOk()) return Promise.resolve(null);
+  const live = $("auImpDlg");
+  /* one open already: what was dropped goes into it */
+  if (live && live.__load){ live.__load(opts.text || "", opts.name || ""); return Promise.resolve(null); }
+  if ($("modal").classList.contains("on")) closeModal();
+  return new Promise(resolve => {
+    const back = document.activeElement;
+    const el = document.createElement("div");
+    el.id = "auImpDlg"; el.className = "srcdlg audlg auimp"; el.setAttribute("role", "dialog"); el.setAttribute("aria-modal", "true");
+    el.setAttribute("aria-labelledby", "auImpH");
+    el.innerHTML = '<div class="srcdlgb">' +
+      '<h3 id="auImpH">' + LE("AutoImpTitle") + "</h3>" +
+      '<div class="auimpsrc"><button class="btn" id="auImpPick" type="button">' + apIc("folder") + "<span>" + LE("AutoImpPick") + "</span></button>" +
+        '<span class="auimpname" id="auImpName">' + LE("AutoImpDrop") + "</span>" +
+        '<input type="file" id="auImpFile" accept=".json,application/json,text/plain" hidden></div>' +
+      '<label class="auimplab" for="auImpText">' + LE("AutoImpPaste") + "</label>" +
+      '<textarea class="in mono" id="auImpText" rows="4" spellcheck="false" autocomplete="off" placeholder="' + LE("AutoImpPastePh") + '"></textarea>' +
+      '<div class="auimpplan" id="auImpPlan" aria-live="polite"></div>' +
+      '<p class="srchint">' + LE("AutoImpSafe") + "</p>" +
+      '<div class="brow"><button class="btn pri" id="auImpGo" type="button" disabled>' + LE("AutoImpGo0") + "</button>" +
+      '<button class="btn" id="auImpNo" type="button">' + LE("Cancel") + "</button></div></div>";
+    document.body.appendChild(el);
+    let plan = null, choices = {}, timer = 0;
+    const U = AUTO.ui;
+    /* the one open in the designer, with changes not saved: never replaced
+       under your hands - it comes in as a copy */
+    const editing = id => !!U.draft && U.id === id && apDirty();
+    const how = (p, i) => choices[i] || (p.how === "replace" && editing(p.existing.id) ? "add" : p.how);
+    const paint = () => {
+      const box = $("auImpPlan"), go = $("auImpGo");
+      if (!plan){ box.innerHTML = ""; go.disabled = true; go.textContent = L("AutoImpGo0"); return; }
+      if (plan.error){
+        box.innerHTML = '<p class="auimperr">' + esc(L("AutoImpErr_" + plan.error, { why:plan.why || "", n:DossierAuto.LIMIT.autos, c:DossierAuto.LIMIT.conns })) + "</p>";
+        go.disabled = true; go.textContent = L("AutoImpGo0");
+        return;
+      }
+      const n = plan.autos.filter((p, i) => how(p, i) !== "skip").length;
+      box.innerHTML = '<h4 class="auimph">' + LE("AutoImpAutos", { n:plan.autos.length }) + "</h4>" +
+        plan.autos.map((p, i) => {
+          const hard = p.probs.filter(x => !x.warn).length;
+          const ex = p.existing;
+          const opts2 = [["add", ex && p.match === "name" || (ex && how(p, i) === "add") ? L("AutoImpAddAs", { name:DossierAuto.freeName(p.a.name, autoStore().list) }) : L("AutoImpAdd")]];
+          if (ex && !editing(ex.id)) opts2.push(["replace", L("AutoImpReplace", { name:ex.name })]);
+          opts2.push(["skip", L("AutoImpSkip")]);
+          const notes = [];
+          if (p.same) notes.push('<small class="ok">' + LE("AutoImpSame") + "</small>");
+          if (ex && editing(ex.id)) notes.push("<small>" + LE("AutoImpEditing") + "</small>");
+          if (p.noAsk) notes.push("<small>" + LE("AutoImpNoAsk") + "</small>");
+          if (p.scripts.length) notes.push('<small class="warn">' + esc(L("AutoImpScripts", { list:p.scripts.join(", ") })) + "</small>");
+          return '<div class="auimprow' + (how(p, i) === "skip" ? " off" : "") + '">' + apMini(p.a) +
+            '<span class="auimpn"><b>' + esc(p.a.name) + "</b><small>" + esc(L("AutoImpSteps", { n:DossierAuto.flatSteps(p.a.steps).length })) +
+              (p.a.inputs.length ? " · " + esc(p.a.inputs.map(x => x.label || x.key).join(", ")) : "") + " · " +
+              (hard ? '<span class="bad">' + esc(L("AutoImpFix", { n:hard })) + "</span>" : '<span class="ok">' + LE("AutoImpReady") + "</span>") +
+              "</small>" + notes.join("") + "</span>" +
+            '<select class="in" data-impi="' + i + '" aria-label="' + esc(p.a.name) + '">' + opts2.map(o =>
+              '<option value="' + o[0] + '"' + (how(p, i) === o[0] ? " selected" : "") + ">" + esc(o[1]) + "</option>").join("") + "</select></div>";
+        }).join("") +
+        (plan.conns.length ? '<h4 class="auimph">' + LE("AutoImpConns", { n:plan.conns.length }) + "</h4>" + plan.conns.map(x =>
+          '<div class="auimpc"><span class="apk k-conn">' + apIc("conn") + "</span><span class=\"auimpn\"><b>" + esc(x.how === "reuse" ? x.from || x.c.name : x.c.name) + "</b>" +
+            '<small class="mono">' + esc(x.c.base || L("AutoNoAddress")) + "</small>" +
+            "<small>" + (x.how === "reuse" ? esc(L("AutoImpConnMine", { name:x.mine.name })) : LE("AutoImpConnNew")) +
+              (x.secrets.length ? " · " + esc(L("AutoImpSecrets", { list:x.secrets.join(", ") })) : "") + "</small></span></div>").join("") : "");
+      go.disabled = !n;
+      go.textContent = n ? L("AutoImpGo", { n:n }) : L("AutoImpGo0");
+    };
+    const load = (text, name) => {
+      choices = {};
+      if (!String(text || "").trim()){ plan = null; paint(); return; }
+      const f = DossierAuto.readFile(String(text));
+      plan = DossierAuto.planImport(f, autoStore(), { scripts:autoScripts() });
+      if (f.error === "json") plan.why = f.why;
+      if (name) $("auImpName").textContent = name;
+      paint();
+    };
+    el.__load = (text, name) => { $("auImpText").value = ""; load(text, name); };
+    const close = v => { clearTimeout(timer); el.remove(); autoFocusBack(back); resolve(v); };
+    $("auImpPick").onclick = () => $("auImpFile").click();
+    $("auImpFile").onchange = async e => {
+      const f = e.target.files && e.target.files[0];
+      e.target.value = "";
+      if (!f) return;
+      let t = "";
+      try { t = await f.text(); } catch(x){ return toast(L("ThatIsNotValidJson"), { bad:true }); }
+      $("auImpText").value = "";
+      load(t, f.name);
+    };
+    $("auImpText").addEventListener("input", () => {
+      clearTimeout(timer);
+      timer = setTimeout(() => { $("auImpName").textContent = L("AutoImpDrop"); load($("auImpText").value, ""); }, 250);
+    });
+    el.addEventListener("change", e => {
+      const s = e.target.closest && e.target.closest("[data-impi]");
+      if (!s) return;
+      choices[+s.dataset.impi] = s.value;
+      paint();
+    });
+    $("auImpNo").onclick = () => close(null);
+    $("auImpGo").onclick = () => {
+      if (!plan || plan.error) return;
+      const final = {};
+      plan.autos.forEach((p, i) => { final[i] = how(p, i); });
+      pushUndo(L("AutoUndo"), "auto");
+      const out = DossierAuto.applyImport(plan, final, autoStore());
+      touch();
+      close(out);
+      const bits = [];
+      if (out.added) bits.push(L("AutoImpAddedN", { n:out.added }));
+      if (out.replaced) bits.push(L("AutoImpReplacedN", { n:out.replaced }));
+      if (out.conns) bits.push(L("AutoImpConnsN", { n:out.conns }));
+      const need = plan.conns.filter(x => x.how === "new" && x.secrets.length && autoStore().conns.some(c => c.id === x.c.id)).map(x => "“" + x.c.name + "”");
+      toast(bits.length ? L("AutoImpDone", { what:bits.join(", ") }) + (need.length ? " " + L("AutoImpSetSecrets", { list:need.join(", ") }) : "")
+                        : L("AutoImpNothing"), { life:10000, action:L("Undo"), onAction:doUndo });
+      /* one design brought in: opened, to look at before it runs */
+      AUTO.ui.tab = "list";
+      if (out.ids.length === 1 && !(AUTO.ui.draft && apDirty())) autoOpenPage({ edit:out.ids[0] });
+      else autoOpenPage();
+    };
+    el.addEventListener("keydown", e => { if (e.key === "Escape"){ e.stopPropagation(); close(null); } });
+    /* a file dropped on the window */
+    el.addEventListener("dragover", e => { if (e.dataTransfer && [].indexOf.call(e.dataTransfer.types || [], "Files") >= 0){ e.preventDefault(); e.stopPropagation(); } });
+    el.addEventListener("drop", async e => {
+      const f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+      if (!f) return;
+      e.preventDefault(); e.stopPropagation();
+      dragDepth = 0; dragVeil(false);
+      let t = "";
+      try { t = await f.text(); } catch(x){ return; }
+      $("auImpText").value = "";
+      load(t, f.name);
+    });
+    if (opts.text) load(opts.text, opts.name || "");
+    setTimeout(() => {
+      if (!document.body.contains(el)) return;
+      const b = $("auImpGo"), f = b && !b.disabled ? b : $("auImpPick");
+      if (f) f.focus();
+    }, 30);
+  });
+}
+
 /* the checker's list: each problem, a click from its field */
 function apCheckMenu(btn){
   const U = AUTO.ui, probs = apProbs();
@@ -31871,6 +32163,9 @@ function apSlashOn(){ return !!SLASH.el && !!SLASH.box && SLASH.box.style.displa
     if ((b = t.closest("[data-aphtab]"))){ U.tab = b.dataset.aphtab; U.connDraft = null; U.conn = ""; return apPaint(); }
     if ((b = t.closest("[data-austart]"))) return autoFromStarter(b.dataset.austart);
     if ((b = t.closest("#apNew"))) return apNewMenu(b);
+    if ((b = t.closest("#apImp"))) return autoImportDialog();
+    if ((b = t.closest("#apExpAll"))) return autoExport(null);
+    if ((b = t.closest("[data-autoimp]"))) return autoImportDialog({ text:CHAT.code[b.dataset.autoimp] || "" });
     if ((b = t.closest("[data-apx]"))){
       const a = autoStore().list.find(x => x.id === b.closest("[data-apid]").dataset.apid); if (!a) return;
       if (b.dataset.apx === "run") return autoRunAsk(a, {}, { where:"panel", form:true });
@@ -36831,6 +37126,8 @@ function chatResolve(el, outcome, no){
 $("chatLog").addEventListener("click", e => {
   const dgb = e.target.closest("[data-dgact]");
   if (dgb) return diagAct(dgb);
+  const aib = e.target.closest("[data-autoimp]");
+  if (aib) return autoImportDialog({ text:CHAT.code[aib.dataset.autoimp] || "" });
   const cs = e.target.closest("[data-copysay]");
   if (cs){
     copyText(CHAT.code[cs.dataset.copysay] || "", L("Copied"));
@@ -37562,6 +37859,8 @@ document.addEventListener("drop", async e => {
   /* the FileList belongs to an event that is about to be over; the toast
      below can be pressed seconds later */
   const files = Array.prototype.slice.call(e.dataTransfer.files);
+  /* (5.27) a .json dropped on the Automations page: an automation file */
+  if (e.target.closest && e.target.closest("#vAuto") && files.length === 1 && /\.json$/i.test(files[0].name)) return autoImportFile(files[0]);
   if (!FS.ok) return toast(L("ChooseAWorkspaceFolderBeforeAttaching"), { bad:true });
   const onRow = e.target.closest ? e.target.closest("[data-id]") : null;
   let t = S.open ? getTask(S.open) : null;
@@ -37975,6 +38274,11 @@ async function xpImportFile(f){
   try { text = await f.text(); } catch(e){ return toast(L("ThatIsNotValidJson"), { bad:true }); }
   let d;
   try { d = JSON.parse(text); } catch(e){ return toast(L("ThatIsNotValidJson"), { bad:true }); }
+  /* (5.27) an automation file: the Automations page's own Import window */
+  if (d && d.kind === "kalkech.automations"){
+    if (S.view !== "auto") setView("auto");
+    return autoImportDialog({ text:text, name:f.name });
+  }
   /* a runbook library (Library → Export library) brought in the same way */
   if (d && d.kind === RB_BUNDLE){
     const got = rbImportBundle(text);

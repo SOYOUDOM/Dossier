@@ -1834,6 +1834,94 @@
   layoutCfg().paneW = 0;
   setView("day");
 
+  /* ── 5.27: automations to a file, and back ────────────────────────── */
+  setView("auto"); AUTO.ui.tab = "list"; AUTO.ui.draft = null; AUTO.ui.mode = "design"; AUTO.ui.run = null; apPaint();
+  await sleep(80);
+  const dlWas = window.downloadBlob, dl27 = [];
+  window.downloadBlob = (name, blob) => { dl27.push({ name, blob }); };
+  const dlText = async i => await dl27[i].blob.text();
+  $("apExpAll").click();
+  await until(() => dl27.length === 1, 2000);
+  const all27 = JSON.parse(await dlText(0));
+  check("(5.27) Export on the list: one file of every automation and connection - no run history, no secret",
+        all27.kind === "kalkech.automations" && all27.version === 1 && all27.automations.length === autoStore().list.length &&
+        all27.connections.length === autoStore().conns.length && !("runs" in all27) && /^kalkech-automations-\d{4}-\d{2}-\d{2}\.json$/.test(dl27[0].name) &&
+        Object.keys(AB.secrets).every(k => JSON.stringify(all27).indexOf(AB.secrets[k]) < 0),
+        dl27[0].name + " " + JSON.stringify(Object.keys(all27)));
+  const one27 = autoStore().list.find(a => a.steps.some(x => x.conn));
+  document.querySelector('#vAuto [data-apid="' + one27.id + '"] [data-apx="menu"]').click();
+  await until(() => $("apPop") && $("apPop").querySelector('[data-pk="exp"]'), 2000);
+  $("apPop").querySelector('[data-pk="exp"]').click();
+  await until(() => dl27.length === 2, 2000);
+  const f27 = JSON.parse(await dlText(1));
+  const usedC = {}; DossierAuto.flatSteps(one27.steps).forEach(x => { if (x.s.conn) usedC[x.s.conn] = 1; });
+  check("(5.27) a row's ⋯ → Export to a file: that automation, and only the connections it uses",
+        f27.automations.length === 1 && f27.automations[0].id === one27.id && f27.connections.map(c => c.id).sort().join() === Object.keys(usedC).sort().join() &&
+        /\.kalkech-automation\.json$/.test(dl27[1].name), dl27[1].name + " " + f27.connections.map(c => c.id));
+  autoEdit(one27.id); await sleep(80);
+  AUTO.ui.draft.about = "Changed, not saved yet";
+  document.querySelector('#vAuto .apbar2 [data-ap="more"]').click();
+  await until(() => $("apPop") && $("apPop").querySelector('[data-pk="exp"]'), 2000);
+  $("apPop").querySelector('[data-pk="exp"]').click();
+  await until(() => dl27.length === 3, 2000);
+  check("(5.27) the designer's ⋮ → Export this automation: as it is on the screen", JSON.parse(await dlText(2)).automations[0].about === "Changed, not saved yet");
+  AUTO.ui.draft = null; AUTO.ui.tab = "list"; apPaint(); await sleep(50);
+  /* bringing it back: the same file is already here; changed, it replaces */
+  const before27 = autoStore().list.length;
+  const ch27 = JSON.parse(JSON.stringify(f27));
+  ch27.automations[0].about = "Brought back in";
+  ch27.automations[0].ask = false;
+  const other27 = JSON.parse(JSON.stringify(ch27.automations[0]));
+  other27.id = "Ae2eOther"; other27.name = one27.name;
+  ch27.automations.push(other27);
+  $("apImp").click();
+  await until(() => $("auImpDlg"), 2000);
+  const ta27 = $("auImpText");
+  ta27.value = "{ not json"; ta27.dispatchEvent(new Event("input", { bubbles:true }));
+  await until(() => /not JSON/.test($("auImpPlan").textContent), 2000);
+  check("(5.27) Import: pasted text that is not JSON says so, and nothing can be imported", $("auImpGo").disabled, $("auImpPlan").textContent);
+  ta27.value = JSON.stringify(ch27); ta27.dispatchEvent(new Event("input", { bubbles:true }));
+  await until(() => $("auImpPlan").querySelectorAll(".auimprow").length === 2, 2000);
+  const sel27 = [...$("auImpPlan").querySelectorAll("[data-impi]")];
+  check("(5.27) ...pasted JSON: what is in it, and what each will do - replace yours (same id), add as a copy (same name)",
+        sel27[0].value === "replace" && sel27[1].value === "add" && /Replace yours/.test(sel27[0].textContent) &&
+        new RegExp("Add as .*\\(2\\)").test(sel27[1].textContent) && /will ask you first/.test($("auImpPlan").textContent) &&
+        /\(same address\)/.test($("auImpPlan").textContent) && $("auImpGo").textContent === "Import (2)",
+        $("auImpPlan").textContent.slice(0, 400));
+  $("auImpGo").click();
+  await until(() => !$("auImpDlg"), 2000);
+  const back27 = autoStore().list.find(a => a.id === one27.id), copy27 = autoStore().list.find(a => a.name === one27.name + " (2)");
+  check("(5.27) ...Import: one replaced (its id kept), one added beside it - both ask before the assistant runs them",
+        autoStore().list.length === before27 + 1 && back27 && back27.about === "Brought back in" && back27.ask === true && copy27 && copy27.id !== one27.id &&
+        copy27.ask === true, JSON.stringify(autoStore().list.map(a => [a.id, a.name, a.ask])));
+  doUndo(); await sleep(80);
+  check("(5.27) ...and Undo takes it back", autoStore().list.length === before27 && autoStore().list.find(a => a.id === one27.id).about !== "Brought back in");
+  /* other ways in: Menu → Import, a file dropped on the page, an answer */
+  xpImportFile(new File([JSON.stringify(f27)], "from-menu.json", { type:"application/json" }));
+  await until(() => $("auImpDlg") && /from-menu\.json/.test($("auImpName").textContent), 2000);
+  check("(5.27) Menu → Import of an automation file opens this Import window", S.view === "auto" && /Already here, unchanged/.test($("auImpPlan").textContent),
+        ($("auImpPlan") || {}).textContent);
+  $("auImpNo").click(); await sleep(40);
+  const dt27 = new DataTransfer();
+  dt27.items.add(new File([JSON.stringify(ch27)], "dropped.json", { type:"application/json" }));
+  document.querySelector("#vAuto .aplist").dispatchEvent(new DragEvent("drop", { dataTransfer:dt27, bubbles:true, cancelable:true }));
+  await until(() => $("auImpDlg") && /dropped\.json/.test($("auImpName").textContent), 2000);
+  check("(5.27) a .json dropped on the Automations page opens it too", $("auImpPlan").querySelectorAll(".auimprow").length === 2);
+  $("auImpNo").click(); await sleep(40);
+  openChat();
+  chatBot({ say:"Here it is:\n\n```json\n" + JSON.stringify(f27, null, 2) + "\n```" });
+  await sleep(200);
+  const aib27 = [...document.querySelectorAll("#chatLog [data-autoimp]")].pop();
+  check("(5.27) an automation file in an answer gets an Import button; a plain JSON block does not",
+        !!aib27 && (chatBot({ say:"```json\n{\"list\":[{\"a\":1}]}\n```" }), true) &&
+        ![...document.querySelectorAll("#chatLog .chb")].pop().querySelector("[data-autoimp]"));
+  aib27.click();
+  await until(() => $("auImpDlg"), 2000);
+  check("...and it opens the Import window with it", /Policy|Already here|Replace|Add/.test($("auImpPlan").textContent));
+  $("auImpNo").click();
+  closeChat();
+  window.downloadBlob = dlWas;
+
   closeChat();
   window.fetch = fetchAu;
   Object.assign(DB, { bridge:auWas.bridge, port:auWas.port, token:auWas.token });

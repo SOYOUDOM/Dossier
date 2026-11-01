@@ -29,7 +29,7 @@ are careful not to attract attention from their security team.
 | `assist.js` | Assist tab arithmetic. |
 | `flow.js` | Client for the optional Power Automate flow (the AI): `ACTIONS` table (every action the model may request), `validate()` of replies, `buildRequest()`, `fillPrompt()`, and `PROMPT_BUILTIN` (an embedded copy of `flow/prompt.txt`). `window.DossierFlow`. |
 | `diagram.js` | **New in 5.11** — draws ```` ```mermaid ```` blocks (flowchart / graph TD·LR·BT·RL, sequenceDiagram, stateDiagram-v2) as SVG: `parse()`, layered layout (ranks doubled so arrow labels get their own place), `render(model, {measure, theme})`, `draw()` → `{ok, svg, boxes, kind}` or `{ok:false, error}`. Pure; `window.DossierDiagram` and `module.exports`. |
-| `automations.js` | **New in 5.22** — Automations, the pure half: `normStore/normAuto/normStep/normConn/normRun` (every design read goes through them), placeholders (`parsePh`, `placeholders`, `show` for display only), conditions (`lexCond`/`parseCond`/`evalCond`, `test`), `check(a, {conns, scripts})` → problem codes, `inputsCheck`, `cmdSafe`, `forAI(store)` (what the model is told), `find`/`fromText`, `jsonPaths`/`jsonGet`, `stepWire`/`connWire`, `run(a, env)` (the step loop; env.call talks to the bridge), `split(a, R)`. 5.24: step kind `"if"` (Condition: `cond`, `yes[]`, `no[]`), `normList`, `flatSteps` (run order, with depth/parent/branch), `findStep`, `freshIds`, `valuesAt(a, id)` (the designer's value list), `condRows`/`condText`/`condOperand` (the builder), `COND_OPS`. 5.26: kinds `set`/`stop`/`each`/`select`/`filter` (`HOLDS` = containers: if → yes/no, each → do), expressions in `{{ }}` (`exParse`, `parsePh` → refs/fns/parts, `FN` + `fnList`, `evalPh`, `dataOf`/`txt`/`dig`), templates (`tplParse`/`render`/`show`/`valueOf`, `#each`/`#if`), `wireText`/`wireStep` (functions and loop items → `__kkN` temps or `docs[i].field` paths for the bridge). `window.DossierAuto` and `module.exports`. |
+| `automations.js` | **New in 5.22** — Automations, the pure half: `normStore/normAuto/normStep/normConn/normRun` (every design read goes through them), placeholders (`parsePh`, `placeholders`, `show` for display only), conditions (`lexCond`/`parseCond`/`evalCond`, `test`), `check(a, {conns, scripts})` → problem codes, `inputsCheck`, `cmdSafe`, `forAI(store)` (what the model is told), `find`/`fromText`, `jsonPaths`/`jsonGet`, `stepWire`/`connWire`, `run(a, env)` (the step loop; env.call talks to the bridge), `split(a, R)`. 5.24: step kind `"if"` (Condition: `cond`, `yes[]`, `no[]`), `normList`, `flatSteps` (run order, with depth/parent/branch), `findStep`, `freshIds`, `valuesAt(a, id)` (the designer's value list), `condRows`/`condText`/`condOperand` (the builder), `COND_OPS`. 5.26: kinds `set`/`stop`/`each`/`select`/`filter` (`HOLDS` = containers: if → yes/no, each → do), expressions in `{{ }}` (`exParse`, `parsePh` → refs/fns/parts, `FN` + `fnList`, `evalPh`, `dataOf`/`txt`/`dig`), templates (`tplParse`/`render`/`show`/`valueOf`, `#each`/`#if`), `wireText`/`wireStep` (functions and loop items → `__kkN` temps or `docs[i].field` paths for the bridge). 5.27: automation files - `FILE_KIND` "kalkech.automations", `exportFile`, `readFile` (lenient), `planImport`, `applyImport`, `baseKey`, `freeName`. `window.DossierAuto` and `module.exports`. |
 | `sources.js` | **New in 5.9** — answering from runbooks/standards: passages, BM25 search, citations, and `ground()`, the check that holds back invented figures. Pure; `window.DossierSources` and `module.exports`. |
 | `ocr.js` | Optional text recogniser for pictures and scanned PDFs. |
 | `flow/relay.html` | The **only** page that touches the network: a sandboxed iframe that posts to the flow URL. |
@@ -92,13 +92,13 @@ A *workspace* is a folder the user picks (File System Access API):
 - Commit messages: clear summary + body; no model names in commits, code or
   docs. Do not open a pull request unless the owner asks.
 - Work so far is on branch `claude/chat-panel-pixel-art-gifs-d822hq`
-  (latest: 5.26.0). Follow the branch instructions of your own session.
+  (latest: 5.27.0). Follow the branch instructions of your own session.
 
 ## Testing
 
 ```
-node --test                                   # 100 unit tests (Sources, grounding, names check, code origin, flow reply fields, diagrams, automations)
-node tests/e2e/run.js                         # the app in headless Chrome/Edge: 321 checks (CHROME=<path> to choose)
+node --test                                   # 104 unit tests (Sources, grounding, names check, code origin, flow reply fields, diagrams, automations)
+node tests/e2e/run.js                         # the app in headless Chrome/Edge: 332 checks (CHROME=<path> to choose)
 node tests/bridge/run.js                      # the bridge's automation routes, built and run (mcs+mono or csc): 67 checks
 node flow/check-prompt.js                     # after editing flow/prompt.txt ...
 python3 flow/embed-prompt.py                  # ... then copy it into flow.js (PROMPT_BUILTIN)
@@ -131,6 +131,58 @@ Also useful:
   `DossierFlow.validate`. `tests/e2e/run.js` is a working example of all of it.
 
 ## Recent history (newest first)
+
+- **5.27.0** - Owner: "add an export and import function to the
+  automation, so I can save it and reuse it next time - and you can help me
+  by just giving me the JSON file".
+  - *automations.js* (`SAVING TO A FILE, AND BRINGING ONE IN`): file
+    `{kind:"kalkech.automations", version:1, exported, app, automations[],
+    connections[]}`. `exportFile(store, ids|null, {scripts, allConns,
+    app})` - designs as normAuto gives them, a script step also gets
+    `scriptFile` (its file name), only the connections used (all of them for
+    Export all), never runs/secrets. `readFile(text|obj)` - takes its own
+    file, a ``` / ~~~ fenced paste, a list of designs, one design (with
+    `connections` beside it), a workspace export's
+    `settings.automations` → `{autos, conns}` or `{error: json|shape|empty}`.
+    `planImport(file, store, {scripts})` - connections: same `baseKey`
+    (scheme://host/path, host lower-case, no trailing slash) **and** same
+    `auth` → reuse the local one (secrets are bound to id + address, so they
+    keep working); an id taken → `newId("C")`; steps' `conn` remapped;
+    `scriptFile` → local script id by file name (else listed in
+    `scripts`); `normAuto`; **`ask` forced true** (`noAsk` reports a file
+    that said otherwise); match by id (default replace; `same` → skip) or by
+    name (default add, `freeName` "(2)"); `probs` = `check()` with the
+    connections as they will be; `error:"tooMany"` past LIMIT.autos/conns.
+    `applyImport(plan, choices, store)` - replace keeps the existing id;
+    add gets a new id when taken; a new connection comes in when a design
+    brought in uses it, or when no design in the file does.
+  - *Page* (`AUTOMATION FILES (5.27)` banner, after `apRowAct`):
+    `autoExport(ids, {store, unsaved})` (→ `downloadBlob`, name
+    `autoFileName` / `kalkech-automations-<date>.json`), `apExportDraft()`,
+    `autoFileLooks(text)` (strict: kind, or designs with `steps`),
+    `autoImportFile(f)`, `autoImportDialog({text, name})` (`#auImpDlg`
+    `.srcdlg.audlg.auimp`: `#auImpPick`/`#auImpFile`, drop on the window,
+    `#auImpText` paste (debounced), `#auImpPlan` rows with
+    `select[data-impi]` add/replace/skip, connection rows, `#auImpGo`
+    "Import (n)"; a design open and dirty in the designer is never replaced
+    - it comes in as a copy; `pushUndo(…,"auto")` before
+    `applyImport`; toast with Undo and the secrets to set; one imported →
+    opened in the designer). Buttons: list toolbar `#apImp`/`#apExpAll`
+    (icons `imp`/`exp`), empty page `#apImp`, row menu `exp`, designer
+    more menu `exp`. The document drop handler sends a single `.json`
+    dropped on `#vAuto` to `autoImportFile`; `xpImportFile` sends
+    `kind:"kalkech.automations"` files to the dialog; `chatSay` adds
+    `[data-autoimp]` "Import into Automations" to a json code card that
+    `autoFileLooks` (click handlers on `#chatLog` and `#vAuto`). Strings
+    `AutoImp*`/`AutoExp*`, CSS `5.27: Import and Export`.
+  - README: export, import, and *What does an automation file look like?*
+    (the format, every field; the example in it imports with no problem).
+  - Tests: 4 unit (104), 11 e2e (332: Export all / one / the draft; paste
+    not-JSON; replace + add-as-copy defaults; ask forced; Undo; Menu →
+    Import; drop on the page; chat code card button). An example pack for
+    free public test APIs (DummyJSON, JSONPlaceholder, httpbin) was given to
+    the owner as a file - deliberately **not** in the repository (it calls
+    the internet; they were told to try it at home).
 
 - **5.26.0** - Owner: "more actions; suggestions when we hit slash
   (options, functions, variables); the right side panel resizable; a stop

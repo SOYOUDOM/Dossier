@@ -824,3 +824,99 @@ test("5.26 wireText: functions and a loop's item go over as values of their own;
   assert.deepEqual(temps, { __kk1:"A B", __kk2:'[\n  {\n    "name": "a b"\n  }\n]', __kk3:"1" });
   assert.equal(A.nameOk("__kk1"), false, "a name with two underscores in front is the page's own");
 });
+
+/* ── 5.27: saving automations to a file, and bringing them in ─────────── */
+test("5.27 export: the designs asked for, the connections they use, script file names - no secrets, no runs", () => {
+  const store = A.normStore({
+    conns:[CONN_AUTH, CONN_POL, { id:"Cnot", name:"Unused", base:"https://unused.example.local" }],
+    list:[coi(), A.normAuto({ id:"Ascr", name:"Clear cache", steps:[{ kind:"script", script:"S1", args:[["env", "UAT"]] }] })],
+    runs:[{ id:"r1", auto:"Acoi", state:"ok", values:{ coiNumber:{ v:"COI-1", show:"ai" } } }] });
+  const one = A.exportFile(store, ["Acoi"], { scripts:[{ id:"S1", file:"clear-cache.bat" }], app:"5.27.0" });
+  assert.equal(one.kind, "kalkech.automations");
+  assert.equal(one.version, 1);
+  assert.deepEqual(one.automations.map(a => a.id), ["Acoi"]);
+  assert.deepEqual(one.connections.map(c => c.id).sort(), ["Cauth", "Cpol"], "only the connections it uses");
+  const text = JSON.stringify(one);
+  assert.ok(text.indexOf("COI-1") < 0 && text.indexOf("\"runs\"") < 0, "no run history");
+  assert.ok(text.indexOf("{{secret.password}}") >= 0, "a secret only by its name");
+  const all = A.exportFile(store, null, { scripts:[{ id:"S1", file:"clear-cache.bat" }], allConns:true });
+  assert.equal(all.automations.length, 2);
+  assert.equal(all.connections.length, 3, "Export all keeps every connection");
+  assert.equal(all.automations[1].steps[0].scriptFile, "clear-cache.bat");
+});
+
+test("5.27 readFile: its own file, pasted with a fence, a list, one design, a workspace export; junk refused", () => {
+  const f = A.exportFile(A.normStore({ conns:[CONN_POL], list:[coi()] }), null, {});
+  assert.equal(A.readFile(JSON.stringify(f)).autos.length, 1);
+  assert.equal(A.readFile("```json\n" + JSON.stringify(f, null, 2) + "\n```").autos.length, 1);
+  assert.equal(A.readFile("~~~\n" + JSON.stringify(f) + "\n~~~").conns.length, 1);
+  assert.equal(A.readFile([{ name:"a", steps:[] }, { name:"b", steps:[] }]).autos.length, 2);
+  const bare = A.readFile({ name:"Look it up", steps:[{ kind:"http", conn:"C1", path:"/x" }], connections:[{ id:"C1", base:"https://x.example.local" }] });
+  assert.deepEqual([bare.autos.length, bare.conns.length], [1, 1]);
+  assert.equal(A.readFile({ kind:"kalkech.export", settings:{ automations:{ list:[coi()], conns:[CONN_POL] } } }).autos.length, 1);
+  assert.equal(A.readFile("{ not json").error, "json");
+  assert.equal(A.readFile({ hello:"world" }).error, "shape");
+  assert.equal(A.readFile({ automations:[] }).error, "empty");
+  assert.equal(A.readFile("").error, "empty");
+});
+
+test("5.27 planImport: the same address is that connection, an id taken gets a new one, scripts by file name, the assistant asks first", () => {
+  const mine = A.normStore({ conns:[{ id:"Cmine", name:"My policy API", base:"https://POLICY.example.local/v2/", auth:"none" },
+                                    { id:"Cauth", name:"Something else", base:"https://other.example.local", auth:"none" }],
+                             list:[A.normAuto({ id:"Aold", name:"Regenerate COI", steps:[{ kind:"wait" }] })] });
+  const design = coi();
+  design.ai = true; design.ask = false;
+  design.steps.push(A.normStep({ kind:"script", name:"Tidy", script:"Sx" }), A.normStep({ kind:"script", name:"Gone", script:"Sy" }));
+  const file = A.exportFile(A.normStore({ conns:[CONN_AUTH, CONN_POL], list:[design] }), null,
+                            { scripts:[{ id:"Sx", file:"tidy.bat" }, { id:"Sy", file:"missing.bat" }] });
+  const plan = A.planImport(A.readFile(JSON.stringify(file)), mine, { scripts:[{ id:"S7", file:"TIDY.BAT" }] });
+  const byFrom = n => plan.conns.find(x => (x.from || x.c.name) === n);
+  assert.equal(byFrom("Policy API (UAT)").how, "reuse", "same address (any case, trailing slash) and sign-in");
+  assert.equal(byFrom("Policy API (UAT)").use, "Cmine");
+  const auth = byFrom("Login service (UAT)");
+  assert.equal(auth.how, "new");
+  assert.notEqual(auth.use, "Cauth", "its id is taken here by another address: a new one");
+  const p = plan.autos[0];
+  assert.deepEqual([p.how, p.match, p.existing.id], ["add", "name", "Aold"], "same name, other id: added beside it");
+  assert.equal(p.a.ask, true);
+  assert.equal(p.noAsk, true);
+  assert.equal(p.a.steps[0].conn, auth.use);
+  assert.equal(p.a.steps[1].conn, "Cmine");
+  assert.equal(p.a.steps[3].script, "S7");
+  assert.deepEqual(p.scripts, ["missing.bat"]);
+  assert.ok(p.probs.some(x => x.code === "scriptGone"), "the checker says what is missing");
+  /* bringing it in */
+  const out = A.applyImport(plan, {}, mine);
+  assert.deepEqual([out.added, out.replaced, out.conns], [1, 0, 1]);
+  assert.equal(mine.list[1].name, "Regenerate COI (2)");
+  assert.equal(mine.conns.length, 3);
+  /* the same file again: now it is here unchanged - left alone; changed - replaced */
+  const again = A.planImport(A.readFile(JSON.stringify(file)), A.normStore({ conns:mine.conns, list:[Object.assign({}, p.a, { id:"Acoi" })] }), { scripts:[{ id:"S7", file:"tidy.bat" }] });
+  assert.equal(again.autos[0].how, "skip");
+  assert.equal(again.autos[0].same, true);
+  const changed = JSON.parse(JSON.stringify(file));
+  changed.automations[0].about = "changed";
+  const st2 = A.normStore({ conns:mine.conns, list:[Object.assign({}, p.a, { id:"Acoi" })], runs:[{ id:"r9", auto:"Acoi", state:"ok" }] });
+  const plan2 = A.planImport(A.readFile(changed), st2, {});
+  assert.equal(plan2.autos[0].how, "replace");
+  const out2 = A.applyImport(plan2, {}, st2);
+  assert.deepEqual([out2.replaced, st2.list.length, st2.list[0].id, st2.list[0].about], [1, 1, "Acoi", "changed"]);
+  /* a choice the other way: added as a copy, with a new id */
+  const st3 = A.normStore({ conns:mine.conns, list:[Object.assign({}, p.a, { id:"Acoi" })] });
+  const out3 = A.applyImport(A.planImport(A.readFile(changed), st3, {}), { 0:"add" }, st3);
+  assert.equal(out3.added, 1);
+  assert.notEqual(st3.list[1].id, "Acoi");
+});
+
+test("5.27 import: a file of connections only brings them in; skipped designs leave theirs out; too many is refused", () => {
+  const st = A.normStore({});
+  const file = A.readFile({ automations:[A.normAuto({ name:"A", steps:[{ kind:"http", conn:"C1" }] })],
+                            connections:[{ id:"C1", name:"One", base:"https://one.example.local" }, { id:"C2", name:"Two", base:"https://two.example.local" }] });
+  const plan = A.planImport(file, st, {});
+  const out = A.applyImport(plan, { 0:"skip" }, st);
+  assert.deepEqual([out.skipped, out.conns, st.conns.map(c => c.name).join()], [1, 1, "Two"], "C1 is only for the skipped design");
+  const many = A.readFile({ automations:Array.from({ length:5 }, (x, i) => ({ name:"n" + i, steps:[] })) });
+  const full = A.normStore({ list:Array.from({ length:A.LIMIT.autos - 2 }, (x, i) => ({ name:"m" + i, steps:[] })) });
+  assert.equal(A.planImport(many, full, {}).error, "tooMany");
+  assert.equal(A.planImport({ error:"json" }, st, {}).error, "json");
+});

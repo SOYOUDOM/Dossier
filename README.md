@@ -1966,6 +1966,118 @@ test or run; **What you can write here** (at the bottom) is a short
 reminder. A value shown to you only reads *(shown to you only)* in the
 assistant's copy; a hidden one, 🔒name.
 
+### How do I save an automation to a file (export)?
+
+On the **Automations** page (since 5.27):
+
+- **One automation**: click **⋯** at the end of its line → **Export to a
+  file**. Or, in the designer, **⋮** (top right) → **Export this
+  automation** - that saves it as it is on the screen, changes not saved
+  yet included.
+- **All of them**: **Export** (top right of the list) - every automation
+  and every connection, in one file.
+
+The file goes to your **Downloads** folder: `Policy
+documents.kalkech-automation.json`, or `kalkech-automations-2026-11-01.json`
+for all. It holds the designs and the connections they use (name, address,
+how they sign in). **Never** a password, key or token - those stay in the
+tray program on your PC - and never the run history. Keep it, copy it to
+another PC, send it to someone, or give it to an assistant to change.
+
+### How do I bring automations in from a file (import)?
+
+On the **Automations** page, **Import** (top right of the list; on an
+empty page, **Import a file**). Then either **Choose a file…**, drop the
+file on the window (or anywhere on the Automations page), or **paste the
+JSON** into the box - for example one an assistant wrote for you. A file
+from **Menu → Import** that is an automation file opens this same window.
+In the assistant's answers, a JSON block that is an automation file has an
+**Import into Automations** button.
+
+The window shows what is in the file before anything changes:
+
+- each automation - its steps, the values it asks for, **ready** or how
+  many things there are to fix - and what will happen to it: **Add**,
+  **Replace yours** (the same automation is here: same id), or **Skip**.
+  One with the same name as one of yours is added as *"name (2)"*; one
+  that is already here, unchanged, is skipped. Change any of them in the
+  list beside it.
+- each connection: **your connection** when you already have one with the
+  same address and sign-in (your saved secrets keep working), or **new
+  connection**, and which secrets it needs.
+- a script step's script, found by its file name in **Menu → Scripts** -
+  or which file is missing.
+
+**Import** brings in what you picked; **Undo** (on the message) takes it
+back. Nothing runs, and whatever the file says, **the assistant asks you
+before it runs any of them** (turn that off in the designer if you want).
+Then: set the secrets of a new connection (**Connections** tab), look at the
+addresses, and test it.
+
+### What does an automation file look like?
+
+Plain JSON - this is enough (KalKech fills in everything not written):
+
+```json
+{
+  "kind": "kalkech.automations",
+  "version": 1,
+  "automations": [
+    {
+      "id": "Ausers",
+      "name": "Test users",
+      "about": "Lists a few users, without their passwords.",
+      "inputs": [ { "key": "howMany", "label": "How many", "kind": "number", "example": "5" } ],
+      "steps": [
+        { "kind": "http", "name": "List users", "conn": "Cusers", "method": "GET",
+          "path": "/users", "query": [ ["limit", "{{input.howMany}}"] ],
+          "save": [ { "name": "users", "from": "json", "path": "users", "show": "ai",
+                      "drop": "password, bank, crypto" } ] }
+      ],
+      "result": "## {{count(users)}} users\n\n{{table(users, \"firstName\", \"lastName\", \"email\")}}"
+    }
+  ],
+  "connections": [
+    { "id": "Cusers", "name": "Users API", "base": "https://api.example.com", "auth": "none" }
+  ]
+}
+```
+
+- **automations**: each has `name`, `steps`, and as it needs: `id` (keep the
+  same one to replace it next time), `about`, `system`, `inputs` (`key`,
+  `label`, `kind`: text / number / date / choice / secret, `pattern`,
+  `example`, `choices`, `required`), `result`, `resultFail`, `ai` (may the
+  assistant run it).
+- **steps**: `kind` is one of `http`, `script`, `wait`, `confirm`, `if`,
+  `each`, `set`, `select`, `filter`, `stop`; every step has `name`, `when`,
+  `onFail` (`stop` / `continue`).
+  - `http`: `conn` (a connection's id), `method`, `path`, `query` and
+    `headers` (lists of `["name", "value"]`), `bodyType` (`none` / `json` /
+    `form` / `xml` / `text`), `body`, `form`, `expect` (`2xx`), `save`,
+    `okWhen`, `reply` (`""` / `me` / `ai`), `repeat` (`until`, `times`,
+    `every`).
+  - `script`: `scriptFile` (`clear-cache.bat`), `args` (`[["env",
+    "{{input.env}}"]]`), `timeout`, `expect`, `save`.
+  - `save` rows: `name`, `from` (`json` / `header` / `status` / `regex` /
+    `body`; a script's `output` / `exit`), `path` (a JSON path: `data.id`,
+    `items[0].name`, `$` for the whole reply), `show` (`hidden` / `me` /
+    `ai`), `on` (`ok` / `fail` / `any`), `keep`, `drop`.
+  - `if`: `cond`, `yes` and `no` (lists of steps). `each`: `from`
+    (`{{docs}}`), `as`, `max`, `do` (a list of steps). `set`: `var`, `how`
+    (`set` / `append` / `add` / `text`), `value`, `show`. `select`: `from`,
+    `var`, `fields` (`[["name", "{{item.title}}"]]`), `show`. `filter`:
+    `from`, `var`, `cond`, `show`. `wait`: `seconds`. `confirm`: `text`.
+    `stop`: `as` (`ok` / `fail` / `stop`), `text`.
+- **connections**: `id`, `name`, `base` (the address every step's path goes
+  after), `auth` (`none` / `basic` / `header` / `bearer` / `windows`),
+  `header` (for `header`: the API key's header name), `extra` (names of
+  your own secrets: `["username", "password"]`), `timeout`. A secret's
+  **value** is never written here: a step names it, `{{secret.password}}`,
+  and you type it once in **Connections**.
+
+KalKech's own Export writes every field out; a file written by hand, or by
+an assistant, can leave the defaults out.
+
 ### How do I make the side panel wider?
 
 Drag its left edge (since 5.26). With the keyboard: click the edge (or Tab
