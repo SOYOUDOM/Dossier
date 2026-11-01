@@ -92,13 +92,13 @@ A *workspace* is a folder the user picks (File System Access API):
 - Commit messages: clear summary + body; no model names in commits, code or
   docs. Do not open a pull request unless the owner asks.
 - Work so far is on branch `claude/chat-panel-pixel-art-gifs-d822hq`
-  (latest: 5.27.3). Follow the branch instructions of your own session.
+  (latest: 5.27.4). Follow the branch instructions of your own session.
 
 ## Testing
 
 ```
 node --test                                   # 104 unit tests (Sources, grounding, names check, code origin, flow reply fields, diagrams, automations)
-node tests/e2e/run.js                         # the app in headless Chrome/Edge: 332 checks (CHROME=<path> to choose)
+node tests/e2e/run.js                         # the app in headless Chrome/Edge: 334 checks (CHROME=<path> to choose)
 node tests/bridge/run.js                      # the bridge's automation routes, built and run (mcs+mono or csc): 67 checks
 node flow/check-prompt.js                     # after editing flow/prompt.txt ...
 python3 flow/embed-prompt.py                  # ... then copy it into flow.js (PROMPT_BUILTIN)
@@ -131,6 +131,26 @@ Also useful:
   `DossierFlow.validate`. `tests/e2e/run.js` is a working example of all of it.
 
 ## Recent history (newest first)
+
+- **5.27.4** - Owner: "is the new document fill all the knowledge yet?" -
+  an audit of the guide against the README and the code found gaps, now
+  sections: the assistant cannot build/change designs (only
+  `runAutomation`; it can write a file → **Import into Automations**; a
+  `~~~json` fence becomes ``` in `chatMend`), the / list, names (`NAME_RE`,
+  `RESERVED`; case-sensitive), headers (Content-Type per body type, a
+  user Content-Type replaces it, Accept only when given, `FORBIDDEN_HEADERS`,
+  a step's own Authorization wins), where saved (workspace + backups, Menu →
+  Export part), no retries (timeouts never re-sent), secrets Change…/
+  Remove, the chat run card, the field reference split in four
+  (`Automation file fields: …`; one long section lost to common words),
+  limits. 60 passages. Search notes: `for`/`each` are stop words; common
+  words (file, field, step) carry little - distinctive words in headings
+  do. **Bug found and fixed**: the designer's Ctrl+Z handler and the global
+  one (`doUndo`, which restores `S.tasks` and `settings.automations`) both
+  ran - the global ignored `defaultPrevented`, and a focused SELECT
+  skipped the designer's but not the global. `autoDesigning()` now keeps
+  the global Ctrl+Z out of the designer. 2 e2e checks (334; both failed on
+  5.27.3: one app undo entry lost per press).
 
 - **5.27.3** - First real question answered from the guide (a list in a
   code block with only some fields): steps right, but "loops are not

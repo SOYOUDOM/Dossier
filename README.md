@@ -1729,7 +1729,7 @@ drawn on the canvas use it too.
 | `Alt`+`↑` / `Alt`+`↓` | Moves the card up or down |
 | `Delete` | Removes the card (Undo brings it back) |
 | `Ctrl`+`S` | Saves the design |
-| `Ctrl`+`Z` / `Ctrl`+`Y` | Undo / redo a change to the design |
+| `Ctrl`+`Z` / `Ctrl`+`Y` | Undo / redo a change to the design (only the design - since 5.27.4 it no longer also takes back your last change to the records) |
 | `Ctrl` + mouse wheel, `Ctrl`+`+` / `-` / `0` | Zoom the canvas in, out, back to 100% |
 | `/` (on a card) | Opens the list of steps, to add one after it (since 5.26) |
 | `/` or `Ctrl`+`Space` (in a box) | Opens the list of values, functions and blocks (since 5.26) |
@@ -2368,7 +2368,7 @@ Three switches decide this:
 - **Ask me before the assistant runs it** (the same place) - **switch it off
   only for a job you trust completely**: the assistant's proposal then
   runs straight away, and the card says *"Run by the assistant without
-  asking"*. (The chat's own **Ask before doing things** switch, when off,
+  asking"*. (The chat's own **Ask before doing anything** switch, when off,
   stops all asking.)
 
 If the assistant leaves a value out, or a value is *typed by me (secret)*,

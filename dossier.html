@@ -11064,7 +11064,7 @@ const STATUSES = [
    the status bar, and clicking it copies a line you can paste into a bug
    report — build date and flow protocol included, because those are the two
    things that actually differ between copies. */
-const APP_VERSION = "5.27.3";
+const APP_VERSION = "5.27.4";
 const APP_BUILT = "2026-11-01";
 function buildLine(){
   return "KalKech v" + APP_VERSION + " \u00b7 built " + APP_BUILT +
@@ -32415,6 +32415,13 @@ document.addEventListener("keydown", e => {
   else if (e.key === "-"){ e.preventDefault(); apZoomStep(-1); }
   else if (e.key === "0"){ e.preventDefault(); apZoomSet(1); }
 });
+/* the designer is open on a design (not on a run): Ctrl+Z there belongs to
+   the design, and the app's own undo (the global keys at the end) stays out
+   of it - both used to run, so taking back a step in a design also took
+   back the last change to the records (5.27.4) */
+function autoDesigning(){
+  return S.view === "auto" && !!AUTO.ui.draft && AUTO.ui.mode === "design";
+}
 /* Ctrl+S saves, Ctrl+Z / Ctrl+Y undo and redo in the designer (outside a
    box - inside one, the box's own undo is the one you mean) */
 document.addEventListener("keydown", e => {
@@ -38559,7 +38566,11 @@ document.addEventListener("keydown", e => {
   const mod = e.ctrlKey || e.metaKey;
   if (mod && e.key.toLowerCase() === "k"){ e.preventDefault(); return openCmd(); }
   if (mod && e.key.toLowerCase() === "s"){ e.preventDefault(); return saveNow().then(ok => ok && toast(L("SavedTo") + FS.name)); }
-  if (mod && e.key.toLowerCase() === "z" && !typing){ e.preventDefault(); return doUndo(); }
+  if (mod && e.key.toLowerCase() === "z" && !typing){
+    /* in the Automations designer Ctrl+Z is the design's own (5.27.4) */
+    if (e.defaultPrevented || autoDesigning()) return;
+    e.preventDefault(); return doUndo();
+  }
   /* Tab must not wander out of an open panel onto the page behind it */
   if (e.key === "Tab" && TRAP.el && TRAP.el.classList.contains("on")){
     const f = focusables(TRAP.el);

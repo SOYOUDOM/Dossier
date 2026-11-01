@@ -1,6 +1,6 @@
 # KalKech Automations - the complete guide
 
-Version: 5.27.3
+Version: 5.27.4
 Effective date: 1 November 2026
 
 Everything about Automations in KalKech: what each step does, every box and
@@ -64,6 +64,11 @@ These do not exist in KalKech - an answer that uses one is wrong:
   text.
 - **No functions on hidden values or secrets**, and **no secret in a
   condition**.
+- **No step runs another automation**, and **nothing is remembered between
+  runs**: values live for one run (the run history keeps what was shown).
+- **The assistant cannot change your designs** - it can only run one, with
+  your yes (see *Can the assistant (the AI) create, build or change an
+  automation for me?*).
 
 ## Where are automations in KalKech?
 
@@ -81,6 +86,23 @@ press **8**. The page has three tabs:
 
 At the top right: whether the KalKech program by the clock is ready, and
 **The assistant may run them** - one switch for all automations.
+
+## Where are my automations saved, and are they backed up?
+
+With everything else in your workspace - `dossier.json`, or the database
+when the KalKech program keeps the workspace - so the workspace's backups
+have them too: the designs, the connections (address and sign-in kind) and
+the run history (the last 40 runs, without hidden values or secrets).
+
+- **Secrets are not in the workspace.** They are only in
+  `%LOCALAPPDATA%\KalKech\secrets.dat` on this PC, encrypted for your
+  Windows account. On another PC, set them again.
+- **Menu → Export** has an **Automations** part: the designs and
+  connections, never a secret or a run. The Automations page's own
+  **Export** writes an automation file you can import anywhere.
+- **⋯ → Remove** on an automation's line asks first; `Ctrl`+`Z` on the
+  Automations list (not in a box) brings it back. **Duplicate** makes a
+  copy to change.
 
 ## What do I need on my PC for automations?
 
@@ -109,7 +131,9 @@ itself.
 5. Click **When it ends** for the message when it finishes, and when it
    fails.
 6. **Save** (or `Ctrl`+`S`). The checker at the top says **Ready**, or how
-   many things there are to fix - click it for the list.
+   many things there are to fix - click it for the list, and click a
+   problem to go to its box. **Run** is greyed out until nothing is left
+   to fix; a warning (like *only on one path*) does not stop it.
 
 The address in a starter is an example (`example.local`): open its
 connection and put in your API's real address.
@@ -184,6 +208,20 @@ In a step's **Settings** tab:
 - **Success also needs** (API calls and scripts) - a test on the saved
   values, for an API that answers 200 even when it failed.
 
+## Does a step try again by itself when it fails?
+
+**No** - each step runs once. To try again:
+
+- **Repeat until** (Settings) runs an API call or a script again every few
+  seconds until a test is true - for a job that is not ready yet (up to 30
+  times);
+- **If it fails** → **Carry on with the next step** lets the run go on,
+  and a **Condition** on `{{status}}` can decide what to do;
+- **Run again** on the run runs the whole automation again.
+
+An API call that took too long (the connection's **Time limit**) is not
+sent again by itself: it may already have done its work on the API's side.
+
 ## How do I give an automation values each time it runs (inputs)?
 
 Click **When you run it** → **Inputs**. Each input has:
@@ -197,7 +235,7 @@ Click **When you run it** → **Inputs**. Each input has:
 - **Check (pattern)** - a regular expression the value must match, like
   `[A-Z]\d{5}[A-Z]\d{2}`; nothing runs until it does.
 - **Example** - shown in the box, like `P10234X56`.
-- Whether it is required.
+- **Needed** - ticked unless you untick it: the run waits for a value.
 
 Up to 20 inputs. The **Settings** tab of the same card has **What it does**
 (the assistant reads this line to know when to propose it), the system, and
@@ -224,6 +262,23 @@ when**, **Repeat until**, **If it fails**.
 A value in a JSON body stays inside its string. To put a list or an object
 in as JSON, add `|raw`: `{"ids": {{json(field(docs, "id"))|raw}}}`.
 
+## Which headers does KalKech add by itself?
+
+- **Content-Type** comes from the **Body** you choose: JSON →
+  `application/json; charset=utf-8`, Form fields →
+  `application/x-www-form-urlencoded`, XML → `application/xml;
+  charset=utf-8`, Plain text → `text/plain; charset=utf-8`. You do not need
+  to add it; a **Content-Type** header of your own replaces it.
+- **Accept** is sent only when you add it as a header.
+- **Authorization** comes from the connection's **Sign-in** (*User name and
+  password*, *A fixed token*) - unless the step has an `Authorization`
+  header of its own (`Bearer {{token}}`), which is then used instead. *API
+  key in a header* adds the header you named.
+- These are KalKech's own and cannot be set: `Host`, `Content-Length`,
+  `Connection`, `Transfer-Encoding`, `Expect`, `TE`, `Upgrade`,
+  `Keep-Alive`, `Proxy-Authorization`, `Proxy-Connection`, `Trailer`.
+- A header value cannot hold a line break.
+
 ## How do I keep a value from a reply (Save a value)?
 
 In the step's **Values** tab press **Save a value** (up to 12 per step):
@@ -233,14 +288,30 @@ In the step's **Values** tab press **Save a value** (up to 12 per step):
   regular expression; its first group is kept, e.g. `Reference: (\S+)`),
   **Whole reply**; for a script also **Output** and **Exit code**.
 - **Path** (for a JSON path) - `access_token`, `data.token`,
-  `items[0].id`, `$.items.0.id`, or `$` for the whole reply.
-- **Shown to** - **🔒 Hidden**, **Me only**, or **Me and the assistant**.
+  `items[0].id`, `$.items.0.id`, or `$` for the whole reply - also when the
+  reply is itself a list (an array with no name, starting with `[`).
+- **Shown to** - **🔒 Hidden**, **Me only** (the default), or **Me and the
+  assistant**.
 - **When to keep it** - **On success** (the default), **On failure** (read
   from the error reply), or **Always**.
 - **Keep only** / **Leave out** - for a list or object read from JSON.
 
 The quickest way: open the **Test** tab, press **Try up to here**, and click
 a part of the reply - it becomes a saved value.
+
+## Which names can I give a value, and which are not allowed?
+
+A saved value, a **Set a value** name, an input's **Name** and a For each's
+item: letters, digits and `_`, starting with a letter (or `_`), up to 40
+characters - `token`, `coiNumber`, `docs_2`. Capitals count: `Token` is not
+`token`.
+
+These names are reserved - they already mean something - and are not
+allowed (you cannot use them): `input`, `secret`,
+`record`, `today`, `now`, `time`, `uuid`, `status`, `true`, `false`,
+`empty`, `not`, `and`, `or`, `contains`, `is`, `starts`, `ends`, `with`,
+`loop`, `this`, `null`. Inside a For each, its item's name (`item`) is
+taken too.
 
 ## Who can see a value: Hidden, Me only, or Me and the assistant (the AI)?
 
@@ -309,6 +380,27 @@ Values are filled in once and made safe for where they go: in the path a
 value stays one piece (`/` becomes `%2F`), in a JSON body it stays in its
 string, in XML it is escaped. Filters after a bar: `|upper`, `|lower`,
 `|trim`, `|base64`, and `|raw` (put it in exactly as it is).
+
+## What does the / (slash) list in a box show?
+
+Type **/** (a slash) in a box that takes values - a path, a header, a body, a
+condition, a message - or press `Ctrl`+`Space` anywhere in it, or the
+**{x}** button in its corner. The list shows everything that box can use, in
+groups:
+
+- **Here** - inside a For each: its item, `{{loop.n}}`, `{{loop.count}}`;
+- **Values you give it** (inputs), **From the steps before** (🔒 for a
+  hidden one, ✂ when fields were left out, *only on one path* for one
+  saved inside a Condition), **Status**, the connection's **Secrets**,
+  **The record it is run for**, **Built in** (`{{today}}` …);
+- **Functions**, by what they work on;
+- **Blocks**, in a message: a table, a line for each item, *only when …
+  otherwise …*, a code block, a heading.
+
+Keep typing to narrow it (`/cou` finds `count`); **↑ ↓** to choose,
+**Enter** or **Tab** to put it in (the caret lands inside a function's
+brackets); **Esc** closes it. A / in the middle of a word (`/items/`) does
+not open it.
 
 ## How do I write a value or a function ({{ }} expressions)?
 
@@ -537,7 +629,7 @@ beside a step's connection):
   fixed token (Bearer)** (secret `token`).
 - **Other secrets** - more names, like `clientSecret`, used as
   `{{secret.clientSecret}}`.
-- **Time limit** - seconds, at most 120. **Proxy** - **Windows proxy
+- **Time limit** - seconds: 30 unless you change it, at most 120. **Proxy** - **Windows proxy
   settings** or **No proxy**.
 
 **Test the connection** sends one GET to the address and says what came
@@ -546,7 +638,11 @@ back. Up to 60 connections.
 ## How do I save a password, API key or token (secrets)?
 
 Open the connection, and under **Secrets** press **Set…** beside the name;
-type it and **Save the secret**. It goes straight to the KalKech program,
+type it and **Save the secret**. Beside a saved one: **Change…** and
+**Remove**. *set for the old address - save it again* means the address
+changed since. Removing a connection removes its saved secrets from this PC
+too. A connection on `http://` (not https) warns that its secret would
+cross the network unencrypted. It goes straight to the KalKech program,
 which keeps it in `%LOCALAPPDATA%\KalKech\secrets.dat`, **encrypted for your
 Windows account on this PC**. A secret is:
 
@@ -687,6 +783,11 @@ The run is drawn on the canvas as it goes: ✓ with status and time, ✕
 failed, a spinner while running. Click a card for what it kept and its
 reply. **Stop** stops it between steps or during a wait.
 
+In a conversation, the run's card shows every step while it runs, then
+folds to one line - *3 of 3 steps ran*, or *Failed at "Sign in"* - with the
+steps, the values and the closing message under it, and **See the run** to
+draw it on the Automations page.
+
 **Run history** keeps the last 40 runs, with no hidden value or secret.
 Run for a record, the record's work log gets one line with the values the
 assistant may see.
@@ -709,7 +810,8 @@ Three switches:
   you trust completely.
 
 If a value is missing, or is *Typed by me (secret)*, KalKech asks you - it
-never guesses.
+never guesses. (The chat's own **Ask before doing anything** switch, when
+off, stops all asking.)
 
 ## What does the assistant (the AI) see of my automations?
 
@@ -725,6 +827,25 @@ assistant*. Lists come without the fields you left out.
 
 It reads about 10,000 characters of one run - roughly 50 short list items.
 For more, give it fewer fields (**Keep only**) or fewer items.
+
+## Can the assistant (the AI) create, build or change an automation for me?
+
+**Not directly.** The assistant (the AI) can only **run** an automation, and
+only with your yes. It cannot create, change or remove a design, a connection or
+a secret.
+
+What it can do: **write an automation file** for you. Ask it, for example,
+*"write me an automation file that lists the users of
+https://api.example.com/users without their phone numbers"*. Its answer has
+a JSON code block; a block that is an automation file has an **Import into
+Automations** button. Press it: the Import window shows what would come in
+and anything to fix, and nothing changes until you press **Import**. Then
+set the connection's secrets, check the address, and **Test** it.
+
+To write a good file it needs the API's address, its sign-in kind, and what
+a reply looks like (paste one, without real data or passwords). The format
+is in *What does an automation file look like?* below - a file written by
+hand or by the assistant can leave out anything that has a default.
 
 ## How do I export or import automations (files)?
 
@@ -775,11 +896,62 @@ new connection on the **Connections** tab.
 }
 ```
 
-Step `kind` values: `http` (API call), `script`, `wait`, `confirm` (Ask
-me), `if` (Condition), `each` (For each), `set` (Set a value), `select`
-(Shape a list), `filter` (Filter a list), `stop` (Stop the run). Save-row
-`show`: `hidden`, `me`, `ai`. Connection `auth`: `none`, `windows`,
-`basic`, `header`, `bearer`. KalKech fills in anything not written.
+KalKech fills in anything not written (the default is in brackets).
+
+## Automation file fields: the file, an automation, its inputs
+
+How to write an automation file (JSON) by hand or with the assistant. The
+default is in brackets; anything with a default can be left out.
+
+- **The file**: `kind` `"kalkech.automations"`, `version` `1`,
+  `automations` (a list), `connections` (a list).
+- **An automation**: `name`, `steps`; `id` (keep it to replace the same
+  one next time), `about` (what it does - the assistant reads it),
+  `system`, `inputs`, `result` (*When it finishes, say*), `resultFail`
+  (*When it fails, say*), `ai` (may the assistant run it; `true`), `ask`
+  (ask before the assistant runs it; always `true` after an import).
+- **An input**: `key`, `label`, `kind` (`text` / `number` / `date` /
+  `choice` / `secret`; `text`), `required` (`true`), `pattern`, `example`,
+  `choices` (a list, for `choice`).
+- **Every step**: `kind`, `name`, `when` (only run when), `onFail`
+  (`stop` / `continue`; `stop`).
+
+## Automation file fields: an API call step (http) and a script step
+
+- **`http`** (API call): `conn` (a connection's `id`), `method` (`GET`),
+  `path`, `query` and `headers` (lists of `["name", "value"]`), `bodyType`
+  (`none` / `json` / `form` / `xml` / `text`; `none`), `body`, `form` (a
+  list of pairs), `expect` (`2xx`), `save`, `okWhen` (success also needs),
+  `reply` (`""` / `me` / `ai`), `repeat` (`until`, `times` 10, `every` 5).
+- **`script`**: `scriptFile` (the file name, `clear-cache.bat`), `args`
+  (`[["env", "{{input.env}}"]]`), `conn` (secrets from), `timeout` (120),
+  `expect` (`0`), `save`, `okWhen`, `reply`, `repeat`.
+- **A save row** (in `save`): `name`, `from` (`json` / `header` /
+  `status` / `regex` / `body`, a script's `output` / `exit`; `json`),
+  `path`, `show` (`hidden` / `me` / `ai`; `me`), `on` (`ok` / `fail` /
+  `any`; `ok`), `keep`, `drop` (text, names with commas).
+
+## Automation file fields: Condition, For each, Set, Shape, Filter, Wait, Ask me, Stop
+
+- **`if`** (Condition): `cond`, `yes`, `no` (lists of steps).
+- **`each`** (For each): `from` (`{{docs}}`), `as` (`item`), `max` (50),
+  `do` (a list of steps).
+- **`set`** (Set a value): `var`, `how` (`set` / `append` / `add` /
+  `text`; `set`), `value`, `show` (`me` / `ai`; `me`).
+- **`select`** (Shape a list): `from`, `var`, `fields`
+  (`[["name", "{{item.title}}"]]`), `show`.
+- **`filter`** (Filter a list): `from`, `var`, `cond`, `show`.
+- **`wait`**: `seconds` (10). **`confirm`** (Ask me): `text`.
+- **`stop`** (Stop the run): `as` (`ok` / `fail` / `stop`; `fail`), `text`.
+
+## Automation file fields: a connection
+
+`id`, `name`, `base` (the address), `auth` (`none` / `windows` / `basic` /
+`header` / `bearer`; `none`), `header` (for `header`: its name, like
+`X-API-Key`), `extra` (names of more secrets: `["clientSecret"]`),
+`timeout` (30), `proxy` (`system` / `none`; `system`), `note`. Never a
+secret's value: a step names it, `{{secret.password}}`, and you set it on
+the **Connections** tab.
 
 ## What are the limits?
 
@@ -787,16 +959,20 @@ me), `if` (Condition), `each` (For each), `set` (Set a value), `select`
 |---|---|
 | Steps in one automation | 40 (inside Conditions and For each too) |
 | Levels | a Condition or For each inside one more, no deeper |
+| Names (values, inputs) | 40 characters; an automation's name 80 |
 | Inputs | 20 |
 | Saved values per step | 12 |
 | Query rows, header rows | 30 each |
 | Items a For each goes through | 50 unless changed, up to 200 |
 | Repeat until | up to 30 times, every up to 300 seconds |
 | Wait | up to 600 seconds |
-| API call time limit (connection) | up to 120 seconds |
+| API call time limit (connection) | 30 seconds unless changed, up to 120 |
 | Script time limit | 120 seconds unless changed, up to 600 |
 | A request body | 100,000 characters |
 | A saved text value | 4,000 characters |
+| A saved list or object (JSON) | about 100,000 characters |
+| A reply read from an API | 4 MB |
+| The closing message, lists written out | 20,000 characters |
 | Automations / connections | 200 / 60 |
 | Run history | the last 40 runs |
 | What the assistant reads of one run | about 10,000 characters |

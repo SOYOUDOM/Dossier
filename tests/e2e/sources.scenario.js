@@ -1922,6 +1922,36 @@
   closeChat();
   window.downloadBlob = dlWas;
 
+  /* (5.27.4) Ctrl+Z in the designer takes back a change to the design - and
+     only that. The app's own undo (the records, the automations as a whole)
+     must be left alone: before, both ran, so a design undo also took back
+     the last change to the records. */
+  setView("auto"); AUTO.ui.tab = "list"; AUTO.ui.draft = null; AUTO.ui.mode = "design"; AUTO.ui.run = null; apPaint();
+  const au274 = autoStore().list[0];
+  autoEdit(au274.id); await sleep(80);
+  pushUndo("e2e: the last change to the records");
+  const undo274 = S.undo.length, steps274 = AUTO.ui.draft.steps.length;
+  apInsert("main", steps274, "wait"); await sleep(40);
+  const card274 = document.querySelector("#vAuto .apc[data-sid]");
+  card274.focus();
+  card274.dispatchEvent(new KeyboardEvent("keydown", { key:"z", ctrlKey:true, bubbles:true, cancelable:true }));
+  await sleep(60);
+  check("(5.27.4) Ctrl+Z on a card in the designer undoes the design change only - not the app's last change too",
+        AUTO.ui.draft.steps.length === steps274 && S.undo.length === undo274,
+        "steps " + AUTO.ui.draft.steps.length + " (was " + steps274 + "), app undo entries " + S.undo.length + " (was " + undo274 + ")");
+  document.querySelector("#vAuto .apc[data-sid]").click(); await sleep(60);
+  const sel274 = document.querySelector("#apPane select");
+  if (sel274){
+    sel274.focus();
+    sel274.dispatchEvent(new KeyboardEvent("keydown", { key:"z", ctrlKey:true, bubbles:true, cancelable:true }));
+    await sleep(60);
+  }
+  check("...and with a list box (a select) in the side panel picked, Ctrl+Z leaves the app's undo alone too",
+        !!sel274 && S.undo.length === undo274, "select " + !!sel274 + ", app undo entries " + S.undo.length + " (was " + undo274 + ")");
+  AUTO.ui.draft = null; AUTO.ui.mode = "design"; AUTO.ui.run = null; AUTO.ui.tab = "list"; apPaint();
+  const marks274 = S.undo.filter(u => u.label === "e2e: the last change to the records").length;
+  if (marks274) S.undo = S.undo.filter(u => u.label !== "e2e: the last change to the records");
+
   closeChat();
   window.fetch = fetchAu;
   Object.assign(DB, { bridge:auWas.bridge, port:auWas.port, token:auWas.token });

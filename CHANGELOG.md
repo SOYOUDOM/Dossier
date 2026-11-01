@@ -6,6 +6,33 @@ holds — which is what to paste into a bug report.
 
 ---
 
+## 5.27.4 - 2026-11-01
+
+**The automations guide is complete - and a Ctrl+Z fix in the designer.**
+
+- **Fixed: Ctrl+Z in the designer also undid your last change to the
+  records.** With a card picked (or a list box in the side panel), Ctrl+Z
+  took back the change to the design *and* ran KalKech's own Undo, which
+  puts the records (and the automations as a whole) back to before the
+  last change you made anywhere - a record you had just added could go.
+  Now Ctrl+Z in the designer is the design's only. On the Automations list
+  and everywhere else it is KalKech's Undo, as before.
+- **The guide** (`docs/kalkech-automations-guide.md`, version 5.27.4 -
+  replace it in **Library → Sources**) was checked against everything
+  automations can do, and now also answers: can the assistant build or
+  change an automation for me (no - it writes an automation file you
+  import), what the **/** list shows, which names a value can have (and
+  the reserved ones), which headers KalKech adds by itself (Content-Type
+  from the body, Authorization from the sign-in, the ones you cannot set),
+  where automations are saved and backed up, whether a step tries again by
+  itself, how to change or remove a secret, what the run card in the chat
+  shows, every field of an automation file (in four short parts), and the
+  remaining limits (names, lists, replies, the closing message, the
+  connection's 30 seconds).
+- README: the chat's switch is **Ask before doing anything**.
+
+---
+
 ## 5.27.3 - 2026-11-01
 
 **The automations guide, corrected after its first real question.**
