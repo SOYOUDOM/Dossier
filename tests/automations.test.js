@@ -1005,3 +1005,25 @@ test("5.29 a run keeps what each step read and gave - never a secret, never a hi
   const whole = JSON.stringify(R.steps) + JSON.stringify(kept.steps);
   assert.ok(whole.indexOf("s3cretpw") < 0, "the secret is in no step's record");
 });
+
+test("5.30 a function in a column of table() is worked out for each item - date(\"createDate\", …) formats every row", () => {
+  const docs = [{ fileName:"A_COI.pdf", fileType:"COI", folderType:"Policy", createDate:"2026-10-20T08:15:00" },
+                { fileName:"B_CON.pdf", fileType:"Contract", folderType:"Policy", createDate:"2026-10-21T09:30:00" }];
+  const sc = { values:{ Documents:JSON.stringify(docs), "input.policy":"P000123X00" } };
+  /* the owner's closing message, word for word (made-up values) */
+  const out = A.render('Regeneration of {{input.policy}} is completed.\n{{table(Documents, "fileName", "fileType", "folderType", date("createDate","yyyy-MM-dd"))}}', sc);
+  assert.match(out, /\| fileName \| fileType \| folderType \| createDate \|/);
+  assert.match(out, /\| A_COI\.pdf \| COI \| Policy \| 2026-10-20 \|/);
+  assert.match(out, /\| B_CON\.pdf \| Contract \| Policy \| 2026-10-21 \|/);
+  /* bare field names, a heading of its own, and the other list functions */
+  assert.match(A.render('{{table(Documents, fileName, as(date(createDate, "dd MMM yyyy"), "Created"))}}', sc), /\| fileName \| Created \|\n\| --- \| --- \|\n\| A_COI\.pdf \| 20 Oct 2026 \|/);
+  assert.equal(A.render('{{bullets(Documents, concat(fileName, " (", lower(fileType), ")"))}}', sc), "- A_COI.pdf (coi)\n- B_CON.pdf (contract)");
+  assert.equal(A.render('{{join(field(sort(Documents, createDate, "desc"), date(createDate, "dd MMM")), ", ")}}', sc), "21 Oct, 20 Oct");
+  assert.equal(A.render('{{count(where(Documents, upper(fileType), "COI"))}}', sc), "1");
+  /* the item's fields are not names of the run: the checker does not ask where they come from */
+  const a = A.normAuto({ name:"x", inputs:[{ key:"policy", label:"Policy" }], steps:[{ kind:"set", var:"Documents", value:"[]" }],
+    result:'{{table(Documents, fileName, as(date(createDate, "dd MMM"), "Created"), date("createDate"))}}' });
+  assert.deepEqual(A.check(a, {}), []);
+  /* outside a column a quoted word stays a word */
+  assert.equal(A.render('{{upper("createDate")}}', sc), "CREATEDATE");
+});

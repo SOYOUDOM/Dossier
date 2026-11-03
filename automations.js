@@ -631,17 +631,19 @@ function parsePh(inner){
   const x = exParse(raw);
   if (x.error) return { bad:"name", raw:raw, filters:[], refs:[], fns:[], badFns:[], argBad:[], badFilters:[], parts:[], ns:"", name:"", full:"" };
   const refs = [], fns = [], badFns = [], argBad = [];
-  const walk = n => {
-    if (n.t === "ref") refs.push({ ns:n.ns, name:n.name, full:n.full, parts:n.parts.slice() });
+  /* inCol: inside a column of table(), field() … - a plain name there is
+     a field of each item (5.30), not a value of the run */
+  const walk = (n, inCol) => {
+    if (n.t === "ref"){ if (!(inCol && !n.ns)) refs.push({ ns:n.ns, name:n.name, full:n.full, parts:n.parts.slice() }); }
     else if (n.t === "call"){
       fns.push(n.fn);
       const f = FN[n.fn];
       if (!f) badFns.push(n.name);
       else if (n.args.length < f.min || n.args.length > f.max) argBad.push(f.name || n.fn);
-      n.args.forEach(walk);
+      n.args.forEach((x, i) => walk(x, inCol || colArg(f, i)));
     }
   };
-  walk(x.ast);
+  walk(x.ast, false);
   const a = x.ast;
   const root = a.t === "ref" ? refs[0] : null;
   const bf = x.filters.filter(f => FILTERS.indexOf(f) < 0);
@@ -730,6 +732,8 @@ function isEmpty(v){
 }
 /* a field of an item: "name", "links.self", "" for the item itself */
 function fieldOf(x, f){
+  /* (5.30) a column worked out for each item: date(createDate, "dd MMM yyyy") */
+  if (f && f.__col) return f.get(x);
   f = txt(f);
   if (!f) return x;
   const d = dig(x, jsonPathParts(f) || [f]);
@@ -748,16 +752,17 @@ function mdTable(list, fields){
   if (!rows.length) return "";
   const first = dataOf(rows[0]);
   const objs = !!first && typeof first === "object" && !Array.isArray(first);
-  let f = fields.map(txt).filter(Boolean);
+  let f = fields.map(k => k && k.__col ? k : txt(k)).filter(Boolean);
   if (!f.length) f = objs ? Object.keys(first).slice(0, 8) : ["value"];
   /* a table needs two columns to be one: a single field gets a number */
   const num = f.length < 2;
-  const head = "| " + (num ? "# | " : "") + f.join(" | ") + " |";
+  const label = k => k.__col ? cellOf(k.label) || "value" : k;
+  const head = "| " + (num ? "# | " : "") + f.map(label).join(" | ") + " |";
   const rule = "| " + (num ? "--- | " : "") + f.map(() => "---").join(" | ") + " |";
   const body = rows.map((r, i) => {
     const d = dataOf(r);
     const isObj = !!d && typeof d === "object" && !Array.isArray(d);
-    return "| " + (num ? (i + 1) + " | " : "") + f.map(k => (isObj ? cellOf(fieldOf(d, k)) : cellOf(d)) || " ").join(" | ") + " |";
+    return "| " + (num ? (i + 1) + " | " : "") + f.map(k => (k.__col ? cellOf(k.get(d, i)) : isObj ? cellOf(fieldOf(d, k)) : cellOf(d)) || " ").join(" | ") + " |";
   });
   return [head, rule].concat(body).join("\n");
 }
@@ -806,10 +811,10 @@ const FN = {
   first:   { g:"list", sig:"first(list)", min:1, max:1, f:a => asList(a[0])[0] },
   last:    { g:"list", sig:"last(list)", min:1, max:1, f:a => { const l = asList(a[0]); return l[l.length - 1]; } },
   join:    { g:"list", sig:'join(list, ", ")', min:1, max:2, f:a => asList(a[0]).map(cellOf).join(a.length > 1 ? txt(a[1]) : ", ") },
-  field:   { g:"list", sig:'field(list, "name")', min:2, max:2, f:a => asList(a[0]).map(x => fieldOf(x, a[1])) },
-  where:   { g:"list", sig:'where(list, "field", "value")', min:3, max:3,
+  field:   { g:"list", sig:'field(list, "name")', min:2, max:2, col:1, f:a => asList(a[0]).map(x => fieldOf(x, a[1])) },
+  where:   { g:"list", sig:'where(list, "field", "value")', min:3, max:3, col:1,
              f:a => asList(a[0]).filter(x => txt(fieldOf(x, a[1])).trim().toLowerCase() === txt(a[2]).trim().toLowerCase()) },
-  sort:    { g:"list", sig:'sort(list, "field", "desc")', min:1, max:3, f:a => {
+  sort:    { g:"list", sig:'sort(list, "field", "desc")', min:1, max:3, col:1, f:a => {
                const f = a.length > 1 ? a[1] : "", down = a.length > 2 && /^desc/i.test(txt(a[2]));
                const key = x => fieldOf(x, f);
                const l = asList(a[0]).slice();
@@ -827,7 +832,7 @@ const FN = {
                const o = Array.isArray(v) ? dataOf(v[0]) : v;
                return o && typeof o === "object" && !Array.isArray(o) ? Object.keys(o) : []; } },
   /* numbers */
-  sum:     { g:"num", sig:'sum(list, "field")', min:1, max:2, f:a => asList(a[0]).reduce((n, x) => n + numOf(a.length > 1 ? fieldOf(x, a[1]) : x), 0) },
+  sum:     { g:"num", sig:'sum(list, "field")', min:1, max:2, col:1, f:a => asList(a[0]).reduce((n, x) => n + numOf(a.length > 1 ? fieldOf(x, a[1]) : x), 0) },
   number:  { g:"num", sig:"number(text)", min:1, max:1, f:a => numOf(a[0]) },
   add:     { g:"num", sig:"add(a, b)", min:2, max:2, f:a => numOf(a[0]) + numOf(a[1]) },
   sub:     { g:"num", sig:"sub(a, b)", min:2, max:2, f:a => numOf(a[0]) - numOf(a[1]) },
@@ -843,9 +848,11 @@ const FN = {
   empty:   { g:"logic", sig:"empty(value)", min:1, max:1, f:a => isEmpty(a[0]) },
   not:     { g:"logic", sig:"not(test)", min:1, max:1, f:a => { const v = dataOf(a[0]); return Array.isArray(v) ? !v.length : !truthy(txt(v)); } },
   /* written out, for a closing message (Markdown) */
-  table:   { g:"md", sig:'table(list, "field", …)', min:1, max:12, f:a => mdTable(a[0], a.slice(1)) },
-  bullets: { g:"md", sig:'bullets(list, "field")', min:1, max:2, f:a => asList(a[0]).slice(0, 500).map(x => "- " + cellOf(a.length > 1 ? fieldOf(x, a[1]) : x)).join("\n") },
-  numbered:{ g:"md", sig:'numbered(list, "field")', min:1, max:2, f:a => asList(a[0]).slice(0, 500).map((x, i) => (i + 1) + ". " + cellOf(a.length > 1 ? fieldOf(x, a[1]) : x)).join("\n") },
+  table:   { g:"md", sig:'table(list, "field", …)', min:1, max:12, cols:1, f:a => mdTable(a[0], a.slice(1)) },
+  bullets: { g:"md", sig:'bullets(list, "field")', min:1, max:2, col:1, f:a => asList(a[0]).slice(0, 500).map(x => "- " + cellOf(a.length > 1 ? fieldOf(x, a[1]) : x)).join("\n") },
+  numbered:{ g:"md", sig:'numbered(list, "field")', min:1, max:2, col:1, f:a => asList(a[0]).slice(0, 500).map((x, i) => (i + 1) + ". " + cellOf(a.length > 1 ? fieldOf(x, a[1]) : x)).join("\n") },
+  /* (5.30) a column's own heading: as(date(createDate, "dd MMM yyyy"), "Created") */
+  as:      { g:"md", sig:'as(value, "Heading")', min:2, max:2, f:a => a[0] },
   code:    { g:"md", sig:'code(value, "json")', min:1, max:2, f:a => {
                const v = dataOf(a[0]);
                const body = typeof v === "string" ? v : JSON.stringify(v == null ? null : v, null, 2);
@@ -853,6 +860,51 @@ const FN = {
                /* a fence inside the value would end the block early */
                return "```" + lang + "\n" + String(body).replace(/```/g, "``​`") + "\n```"; } }
 };
+/* ── columns (5.30) ─────────────────────────────────────────────────────
+   In table(list, …), bullets, numbered, field, sort, where and sum the
+   values after the list are COLUMNS: what to show (or sort, or test) for
+   each item. A field name in quotes always was one. A function there is
+   worked out once for every item - date(createDate, "yyyy-MM-dd") - with
+   the item's own fields as names (createDate, item.createDate) and, since
+   people write it that way too, a quoted field name read as the field:
+   date("createDate", "yyyy-MM-dd"). Before 5.30 the function was worked
+   out once, on the words "createDate", and the column came out raw. A
+   bare name there (fileName) is a field too. as(value, "Heading") names
+   the column. */
+function colArg(f, i){ return !!f && (f.cols != null ? i >= f.cols : f.col != null && i === f.col); }
+function isField(item, name){
+  const d = dataOf(item);
+  if (!name || !d || typeof d !== "object" || Array.isArray(d)) return false;
+  if (Object.prototype.hasOwnProperty.call(d, name)) return true;
+  return /[.[]/.test(name) && dig(d, jsonPathParts(name) || [name]).found;
+}
+function colLabel(n){
+  if (n.t === "ref") return n.full + partsPath(n.parts);
+  if (n.t === "lit") return txt(n.v);
+  if (n.t === "call"){
+    if (n.fn === "as" && n.args[1] && n.args[1].t === "lit") return txt(n.args[1].v);
+    for (const x of n.args){
+      if (x.t === "ref" && !x.ns) return x.full + partsPath(x.parts);
+      if (x.t === "lit" && typeof x.v === "string" && /^[A-Za-z_][A-Za-z0-9_.]*$/.test(x.v)) return x.v;
+      if (x.t === "call"){ const l = colLabel(x); if (l) return l; }
+    }
+    return n.name;
+  }
+  return "";
+}
+function colOf(node, scope){
+  return { __col:true, label:colLabel(node), get:(item, i) => {
+    const d = dataOf(item);
+    const fields = d && typeof d === "object" && !Array.isArray(d) ? d : {};
+    const sc = Object.assign({}, scope, { locals:[{ vars:{ item:d, this:d, loop:{ n:(i || 0) + 1, index:i || 0 } }, fields:fields }].concat(arr(scope && scope.locals)) });
+    const c = { hidden:"", masked:null, missing:"", bridge:null, item:d };
+    try {
+      const v = exEval(node, sc, c, false);
+      return c.hidden || c.masked != null ? undefined : v;
+    } catch(e){ return ""; }
+  } };
+}
+
 /* the list the designer shows: name as written, how, which group */
 function fnList(){
   return Object.keys(FN).map(k => ({ key:k, name:FN[k].name || k, sig:FN[k].sig, g:FN[k].g }));
@@ -896,7 +948,11 @@ function refGet(n, scope){
   return { missing:n.full, bridge:src ? src + partsPath(n.parts) : null };
 }
 function exEval(n, scope, ctx, top){
-  if (n.t === "lit") return n.v;
+  if (n.t === "lit"){
+    /* inside a column, "createDate" is the item's field (5.30) */
+    if (ctx.item !== undefined && typeof n.v === "string" && isField(ctx.item, n.v)) return fieldOf(ctx.item, n.v);
+    return n.v;
+  }
   if (n.t === "ref"){
     const r = refGet(n, scope);
     if (r.found) return r.v;
@@ -909,7 +965,8 @@ function exEval(n, scope, ctx, top){
   if (!f) throw new Error("“" + n.name + "” is not a function KalKech knows");
   if (n.args.length < f.min || n.args.length > f.max)
     throw new Error((f.name || n.fn) + " takes " + (f.min === f.max ? f.min : f.min + "-" + f.max) + " value(s): " + f.sig);
-  const args = n.args.map(x => exEval(x, scope, ctx, false));
+  const args = n.args.map((x, i) => colArg(f, i) && (x.t === "call" || (x.t === "ref" && !x.ns)) ? colOf(x, scope)
+                                                                                                    : exEval(x, scope, ctx, false));
   if (ctx.masked != null || ctx.hidden) return undefined;
   let v = f.f(args);
   if (n.parts.length){ const d = dig(v, n.parts); v = d.found ? d.v : undefined; }

@@ -1923,7 +1923,7 @@ brackets: `{{count(docs)}}`, `{{join(field(docs, "name"), ", ")}}`,
 | Text | `upper` `lower` `trim` `replace(text, "a", "b")` `left(text, 4)` `right` `concat(a, b, …)` `split(text, ",")` `length` `default(value, "if empty")` `date(value, "dd MMM yyyy")` `addDays(date, 7)` `base64` `json` |
 | Numbers | `sum(list, "amount")` `number` `add` `sub` `mul` `div` `round(n, 2)` |
 | Tests | `if(test, "yes", "no")` `equals(a, b)` `contains(list or text, value)` `empty(value)` `not(value)` |
-| Writing a list out (in a message) | `table(list, "name", "date")` `bullets(list, "name")` `numbered(list, "name")` `code(value)` |
+| Writing a list out (in a message) | `table(list, "name", "date")` `bullets(list, "name")` `numbered(list, "name")` `code(value)` `as(value, "Heading")` (a column's heading) |
 
 A part of a value is written with dots and brackets: `{{docs[0].name}}`,
 `{{result.items}}`, `{{first(docs).date}}`. Filters still work after a bar:
@@ -1934,6 +1934,36 @@ Functions are worked out on this page, then handed to the tray program as a
 value for that one step - so a function cannot read a **hidden** value or a
 secret (the checker says so). Use the hidden value on its own, or a part of
 it: `{{token}}`, `{{docs[0].downloadToken}}`.
+
+### How do I format a date (or use any function) in a column of a table?
+
+**Since 5.30.** Put the function where the column's field name goes - it is
+worked out **for each item**, with the item's fields as names:
+
+```
+{{table(Documents, "fileName", "fileType", date(createDate, "yyyy-MM-dd"))}}
+```
+
+`createDate` there is each document's own field (the quotes are optional:
+`date("createDate", "yyyy-MM-dd")` works too). Give the column its own
+heading with `as`:
+`{{table(Documents, fileName, as(date(createDate, "dd MMM yyyy"), "Created"))}}`.
+The same works in `bullets`, `numbered`, `field`, `sort`, `where` and `sum`:
+`{{bullets(Documents, concat(fileName, " (", date(createDate, "dd MMM"), ")"))}}`.
+
+Before 5.30 the function was worked out once, on the word "createDate"
+itself, so the column came out as the raw dates. (A **Shape a list** step
+with `{{date(item.createDate, "dd MMM yyyy")}}` still works as before.)
+
+### Why are parts of a box in colour?
+
+**Since 5.30**, a box that takes values colours what is not plain text, so it
+is easy to see what KalKech fills in: the `{{ }}` (tinted), a value's name,
+a **function** (in another colour - red and wavy when KalKech does not know
+it), words in quotes, numbers, a filter after `|`, and blocks (`#each`,
+`#if`). The text itself is unchanged - only coloured. Don't want it? The
+designer's **⋮** (more) → **Plain boxes: no colours for {{ }}**; the same
+place switches it back on.
 
 ### Why does my Condition with empty() or lower() always go one way?
 
@@ -3545,6 +3575,43 @@ Fixed in 5.11. The choices under an answer used to sit on one line that
 scrolled sideways with no scroll bar, so the third choice and the ones after
 it could not be seen or reached. Now they wrap onto the next line, and a long
 choice wraps its own words. Every choice is always in view.
+
+#### How do I get help with several requests at once? (task groups)
+
+**Since 5.30.** Ask for the same job on several values - "regenerate the COI
+for P10234X56 and P10234X58 and the contract for P10234X57" - and the answer
+comes as **one card per request**, not one long list:
+
+- each card has the value and the job as its title (*P10234X56 - COI*), its
+  steps with **tick boxes**, and how many are done (*2/3*);
+- the first card not finished says **Working on**; a finished one says
+  **Done** and folds to one line (click its title to open it again);
+- over two cards or more a line says *1 of 3 done - Now: P10234X57 …* with a
+  bar;
+- **✓✓** on a card ticks (or unticks) all its steps; the copy button copies the
+  card as text (`- [x] step`).
+
+Your ticks are kept with the answer: close the panel, reopen KalKech, and they
+are still there. The assistant writes these cards when it supports several
+values at once (its instructions ask for it). Anyone can write one too: a
+`### heading` with a checklist under it (`- [ ] step`, `- [x] done step`).
+
+#### What are the boxes, numbered steps and coloured tags in an answer? (Answer layout)
+
+**Since 5.30**, answers are laid out to be easy to work from:
+
+| You see | It is |
+|---|---|
+| A box titled **Note**, **Tip**, **Important**, **Warning** or **Caution** | The one thing not to miss (`> [!WARNING]`, or a paragraph starting *Warning:*) |
+| Numbered discs joined by a line | Steps in order (`1.`, `2.` …) |
+| A small table of labels and values | Facts (`**Policy:** P10234X56` lines) - **click a value to copy it** |
+| A coloured tag: *Done*, *Failed*, *Pending*, *Working*, *Blocked* | A status (`[Done]`, `[Failed]` …) |
+| A value in `code` style | Click it to copy it |
+| Cards with tick boxes | Task groups (above) |
+
+Prefer answers as plain text, as before? Open the chat's settings (the sliders
+button in its header) → **Answers** → **Answer layout**: off. Nothing else
+changes; switch it on again any time.
 
 #### How do I give the assistant a name?
 

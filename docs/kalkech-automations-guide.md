@@ -1,6 +1,6 @@
 # KalKech Automations - the complete guide
 
-Version: 5.29.0
+Version: 5.30.0
 Effective date: 3 November 2026
 
 Everything about Automations in KalKech: what each step does, every box and
@@ -59,7 +59,7 @@ These do not exist in KalKech - an answer that uses one is wrong:
 - **No address outside the connection**, and redirects are not followed.
 - **No other placeholder syntax**: not `${name}`, `$name` or Power Automate's
   `@{...}`. KalKech's own `{{ }}` does it all: names, parts
-  (`{{users[0].name}}`), the 40 functions, and - in messages - the
+  (`{{users[0].name}}`), the 41 functions, and - in messages - the
   `{{#each}}` and `{{#if}}` blocks, which are loops and if / else in the
   text.
 - **No functions on hidden values or secrets**, and **no secret in a
@@ -157,6 +157,10 @@ connection and put in your API's real address.
   and the mouse wheel.
 - **The side panel is wider** when you drag its left edge.
 - **A ⚠ on a card** means the checker found a problem there.
+- **Colours in the boxes** (since 5.30): `{{ }}` is tinted, a value's name,
+  a function (red and wavy when KalKech does not know it), words in quotes,
+  numbers and blocks each have a colour - only how it looks; the text is
+  the same. **⋮ → Plain boxes** turns it off.
 
 ## What keys work in the designer?
 
@@ -492,8 +496,31 @@ Use the hidden value on its own, or a part of it: `{{token}}`,
 | `table(list, "field", …)` | a Markdown table (no fields: every field) |
 | `bullets(list, "field")` / `numbered(list, "field")` | a list, one line per item |
 | `code(value)` | a JSON code block |
+| `as(value, "Heading")` | a column with its own heading, in `table()` |
 
-That is all 40. There are no others.
+That is all 41. There are no others. In `table`, `bullets`, `numbered`,
+`field`, `sort`, `where` and `sum`, a function in a column is worked out for
+each item - see the next question.
+
+## How do I format a date in a table column (a function for each item)?
+
+Put the function where the column's field goes; it runs once for **each
+item**, and the item's fields are names in it:
+
+| You want | Write |
+|---|---|
+| a date column formatted | `{{table(Documents, "fileName", "fileType", date(createDate, "yyyy-MM-dd"))}}` |
+| the same, field in quotes | `date("createDate", "yyyy-MM-dd")` - read as the field too |
+| a column with its own heading | `as(date(createDate, "dd MMM yyyy"), "Created")` |
+| capitals in one column | `upper(fileType)` |
+| a line per item, two fields | `{{bullets(Documents, concat(fileName, " - ", date(createDate, "dd MMM")))}}` |
+| sorted by a date, newest first | `{{sort(Documents, createDate, "desc")}}` |
+
+Since 5.30. Before, `date("createDate", …)` in a table was worked out once,
+on the word itself, so the dates came out raw - the table function did not
+"work". Fields named in a column are not checked as values of the run.
+**Shape a list** with `{{date(item.createDate, "dd MMM yyyy")}}` gives the
+same, as a list you keep.
 
 ## How do I write a condition (a test)?
 

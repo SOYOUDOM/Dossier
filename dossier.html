@@ -1863,6 +1863,27 @@ button.auchip:hover{border-color:var(--accent);color:var(--accent)}
 .apkv{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:12px;margin:0}
 .apkv dt{color:var(--ink-3)}
 .apkv dd{margin:0;overflow-wrap:anywhere}
+/* (5.30) {{ }} in colour: the box's own text is see-through, a coloured
+   copy lies exactly over it and lets clicks through (apHlWire) */
+.apfx>.in.hlon{color:transparent;caret-color:var(--ink)}
+.apfx>.in.hlon::placeholder{color:var(--ink-3)}
+.apfx>.in.hlon::selection{color:transparent;background:color-mix(in srgb,var(--accent) 28%,transparent)}
+.aphl{position:absolute;box-sizing:border-box;border-style:solid;border-color:transparent;overflow:hidden;pointer-events:none;margin:0;
+  z-index:1;background:transparent}
+.aphlt{will-change:transform}
+.aphl i,.aphl .htag{display:inline;font-style:normal;width:auto;height:auto;margin:0;padding:0;line-height:inherit;font-size:inherit;letter-spacing:inherit;vertical-align:baseline}
+.aphl .htag{border-radius:3px;background:color-mix(in srgb,var(--accent) 9%,transparent);box-shadow:0 0 0 1px color-mix(in srgb,var(--accent) 14%,transparent) inset}
+.aphl .hb{color:color-mix(in srgb,var(--accent) 55%,var(--ink-3))}
+.aphl .hv{color:var(--accent);font-weight:600}
+.aphl .hns{color:color-mix(in srgb,var(--accent) 70%,var(--ink-2))}
+.aphl .hs{color:var(--p2);font-weight:600}
+.aphl .hf{color:var(--teal);font-weight:600}
+.aphl .hf.bad{color:var(--p1);text-decoration:underline wavy color-mix(in srgb,var(--p1) 70%,transparent)}
+.aphl .hq{color:var(--st-done)}
+.aphl .hn{color:var(--p2)}
+.aphl .hp{color:var(--ink-2);font-style:italic}
+.aphl .hk{color:var(--st-block);font-weight:700}
+.apfxb{z-index:2}
 /* (5.29) a step's values in the run view */
 .apdbg{font-size:11.5px;margin-bottom:6px}
 .apdbg dt{min-width:0;max-width:220px}
@@ -6930,6 +6951,114 @@ input.in:not([type="checkbox"]):not([type="radio"]),select.in{line-height:16px}
 }
 /* ═══ /LINING THINGS UP ═══ */
 
+/* ═══ ANSWER LAYOUT (5.30) ═══════════════════════════════════════════════
+   The richer layout of an answer (chatProse, the "Answer layout" switch):
+   task groups, callouts, numbered steps, facts, status tags, copyable
+   values. Only the chat's own tokens (--ch-*), so every skin keeps its
+   colours; the status colours are mixed with the skin's ink so they read
+   on a light panel and on a dark one. */
+.say{--ok:color-mix(in srgb,#1d9e6a 78%,var(--ch-ink,var(--ink)));--bad:color-mix(in srgb,#d64545 80%,var(--ch-ink,var(--ink)));
+  --wait:color-mix(in srgb,#d9902a 80%,var(--ch-ink,var(--ink)));--blk:color-mix(in srgb,#8a63d2 80%,var(--ch-ink,var(--ink)));
+  --run:var(--ch-acc,var(--accent))}
+/* a section heading: a short bar in the skin's colour before it */
+.say.rich > h4{display:flex;align-items:center;gap:8px}
+.say.rich > h4::before{content:"";width:3px;height:14px;border-radius:2px;background:var(--ch-acc,var(--accent));flex:0 0 auto}
+/* status tags */
+.chst{display:inline-flex;align-items:center;gap:4px;font-size:10.5px;font-weight:700;letter-spacing:.02em;line-height:1.5;padding:0 7px;border-radius:999px;
+  vertical-align:1px;white-space:nowrap;border:1px solid color-mix(in srgb,currentColor 35%,transparent);background:color-mix(in srgb,currentColor 11%,transparent)}
+.chst::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+.chst.ok{color:var(--ok)} .chst.bad{color:var(--bad)} .chst.wait{color:var(--wait)} .chst.run{color:var(--run)}
+.chst.block{color:var(--blk)} .chst.skip{color:var(--ch-dim,var(--ink-3))}
+/* a value in `code`: copied with a click */
+.say code.inl[data-cp]{cursor:copy}
+.say code.inl[data-cp]:hover{outline:1px solid color-mix(in srgb,var(--ch-acc,var(--accent)) 45%,transparent);outline-offset:1px}
+/* callouts */
+.chcall{margin:4px 0 11px;border:1px solid color-mix(in srgb,var(--cc) 34%,var(--ch-line,var(--rule)));border-left:3px solid var(--cc);
+  border-radius:var(--r-sm);background:color-mix(in srgb,var(--cc) 7%,var(--ch-bg,var(--paper)));padding:8px 11px 9px}
+.chcall.note{--cc:var(--run)} .chcall.tip{--cc:var(--ok)} .chcall.imp{--cc:var(--blk)} .chcall.warn{--cc:var(--wait)} .chcall.caut{--cc:var(--bad)}
+.chcallh{display:flex;align-items:center;gap:7px;font-size:11px;font-weight:750;letter-spacing:.05em;text-transform:uppercase;color:var(--cc);margin-bottom:3px}
+.chcalli{width:14px;height:14px;flex:0 0 auto;background:var(--cc);
+  -webkit-mask:var(--cci) center/contain no-repeat;mask:var(--cci) center/contain no-repeat;
+  --cci:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='M12 11v6M12 7.5v.01'/%3E%3C/svg%3E")}
+.chcall.tip .chcalli{--cci:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z'/%3E%3C/svg%3E")}
+.chcall.warn .chcalli,.chcall.caut .chcalli{--cci:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 3.5 2.5 20h19z'/%3E%3Cpath d='M12 10v4.5M12 17.5v.01'/%3E%3C/svg%3E")}
+.chcall.imp .chcalli{--cci:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 3v12M12 19.5v.01'/%3E%3C/svg%3E")}
+.chcallb > :last-child{margin-bottom:0}
+.chcallb p{margin:0 0 6px}
+/* numbered steps: a disc with the number, joined by a line */
+.say ol.chsteps.chsteps{list-style:none;padding-left:0;counter-reset:chstep;margin:2px 0 11px}
+.say ol.chsteps.chsteps > li{counter-increment:chstep;position:relative;padding:1px 0 9px 34px;margin:0}
+.say ol.chsteps.chsteps > li::before{content:counter(chstep);position:absolute;left:0;top:0;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;
+  font-size:11px;font-weight:750;color:var(--ch-acc,var(--accent));background:color-mix(in srgb,var(--ch-acc,var(--accent)) 13%,transparent);
+  border:1px solid color-mix(in srgb,var(--ch-acc,var(--accent)) 35%,transparent);font-variant-numeric:tabular-nums}
+.say ol.chsteps.chsteps > li:not(:last-child)::after{content:"";position:absolute;left:11px;top:24px;bottom:1px;width:1px;background:var(--ch-line,var(--rule))}
+.say ol.chsteps.chsteps > li:last-child{padding-bottom:0}
+/* facts: label and value, the value copied with a click */
+.chfacts{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:0;margin:2px 0 11px;border:1px solid var(--ch-line,var(--rule));
+  border-radius:var(--r-sm);overflow:hidden;font-size:12.5px}
+.chfacts dt,.chfacts dd{margin:0;padding:6px 10px;border-top:1px solid var(--ch-line,var(--rule))}
+.chfacts dt:first-of-type,.chfacts dt:first-of-type + dd{border-top:0}
+.chfacts dt{color:var(--ch-dim,var(--ink-3));background:var(--ch-panel,var(--paper-2));font-weight:600}
+.chfacts dd{overflow-wrap:anywhere}
+.chfv{cursor:copy;border-radius:4px}
+.chfv:hover{background:color-mix(in srgb,var(--ch-acc,var(--accent)) 12%,transparent)}
+/* task groups: one card per request value */
+.tksum{display:flex;align-items:center;flex-wrap:wrap;gap:4px 10px;margin:0 0 10px;padding:8px 11px;border-radius:var(--r-sm);
+  background:var(--ch-panel,var(--paper-2));border:1px solid var(--ch-line,var(--rule));font-size:12px}
+.tksum b{font-weight:700}
+.tksum span{color:var(--ch-dim,var(--ink-3));min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1 1 120px}
+.tksum span.ok{color:var(--ok)}
+.tksbar{flex:1 0 100%;height:4px;border-radius:4px;background:var(--ch-line,var(--rule));overflow:hidden;display:block}
+.tksbar i{display:block;height:100%;background:var(--ok);border-radius:4px;transition:width .25s}
+.tkg{margin:0 0 9px;border:1px solid var(--ch-line,var(--rule));border-radius:var(--r-sm);background:var(--ch-bg,var(--paper));overflow:hidden;
+  transition:border-color .2s,box-shadow .2s}
+.tkg.cur{border-color:color-mix(in srgb,var(--run) 60%,var(--ch-line,var(--rule)));box-shadow:0 0 0 3px color-mix(in srgb,var(--run) 13%,transparent)}
+.tkgh{display:flex;align-items:center;gap:8px;padding:7px 8px 7px 9px;background:var(--ch-panel,var(--paper-2))}
+.tkgn{width:22px;height:22px;flex:0 0 auto;border-radius:7px;display:grid;place-items:center;font-size:11px;font-weight:750;cursor:pointer;
+  color:var(--ch-dim,var(--ink-3));background:var(--ch-bg,var(--paper));border:1px solid var(--ch-line,var(--rule));font-variant-numeric:tabular-nums}
+.tkg.cur .tkgn{color:var(--run);border-color:color-mix(in srgb,var(--run) 50%,transparent)}
+.tkg.done .tkgn{color:#fff;background:var(--ok);border-color:var(--ok)}
+.tkgt{flex:1;min-width:0;font-weight:650;font-size:12.5px;cursor:pointer;overflow-wrap:anywhere}
+.tkgt :is(h4,h5){margin:0}
+.tkgs i{display:none;font-style:normal;font-size:10.5px;font-weight:700;padding:1px 7px;border-radius:999px;white-space:nowrap}
+.tkg:not(.cur):not(.done) .tkgs .s0{display:inline;color:var(--ch-dim,var(--ink-3));background:color-mix(in srgb,var(--ch-dim,var(--ink-3)) 12%,transparent)}
+.tkg.cur .tkgs .s1{display:inline;color:var(--run);background:color-mix(in srgb,var(--run) 14%,transparent)}
+.tkg.done .tkgs .s2{display:inline;color:var(--ok);background:color-mix(in srgb,var(--ok) 14%,transparent)}
+.tkgc{font-size:11px;color:var(--ch-dim,var(--ink-3));font-variant-numeric:tabular-nums;white-space:nowrap}
+.tkgh button{width:24px;height:24px;flex:0 0 auto;border:0;border-radius:7px;background:transparent;cursor:pointer;color:var(--ch-dim,var(--ink-3));
+  display:grid;place-items:center;padding:0}
+.tkgh button:hover{background:color-mix(in srgb,var(--ch-ink,var(--ink)) 8%,transparent);color:var(--ch-ink,var(--ink))}
+.tkgh button::before{content:"";width:14px;height:14px;background:currentColor;-webkit-mask:var(--bi) center/contain no-repeat;mask:var(--bi) center/contain no-repeat}
+.tkga{--bi:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 12.5l4 4 8-9M12 16.5l1 1 8-9'/%3E%3C/svg%3E")}
+.tkgcp{--bi:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='8' y='8' width='12' height='12' rx='2.5'/%3E%3Cpath d='M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2'/%3E%3C/svg%3E")}
+.tkgf{--bi:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")}
+.tkgf::before{transition:transform .15s}
+.tkgbar{height:3px;background:var(--ch-line,var(--rule))}
+.tkgbar i{display:block;height:100%;background:var(--ok);transition:width .25s}
+.tkg.cur .tkgbar i{background:var(--run)}
+.tkgb{padding:8px 11px 9px}
+.tkgb > :last-child{margin-bottom:0}
+/* a finished group folds to its line; a click opens it (and folds one
+   still being worked on) */
+.tkg.done:not(.flip) :is(.tkgb,.tkgbar),.tkg.flip:not(.done) :is(.tkgb,.tkgbar){display:none}
+.tkg.done:not(.flip) .tkgf::before,.tkg.flip:not(.done) .tkgf::before{transform:rotate(-90deg)}
+.tkg.done .tkgt{color:var(--ch-dim,var(--ink-3))}
+/* the tick boxes */
+.say ul.tkl.tkl{list-style:none;padding:0;margin:0 0 7px}
+.say ul.tkl.tkl li{display:flex;align-items:flex-start;gap:9px;margin:0;padding:4px 0}
+.tkb{width:18px;height:18px;flex:0 0 auto;margin-top:1px;border-radius:5px;border:1.5px solid color-mix(in srgb,var(--ch-ink,var(--ink)) 35%,transparent);
+  background:var(--ch-bg,var(--paper));cursor:pointer;display:grid;place-items:center;padding:0;transition:background .15s,border-color .15s}
+.tkb:hover{border-color:var(--ok)}
+.tkb[aria-checked="true"]{background:var(--ok);border-color:var(--ok)}
+.tkb[aria-checked="true"]::before{content:"";width:11px;height:11px;background:#fff;
+  -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4.5 12.5l5 5 10-11'/%3E%3C/svg%3E") center/contain no-repeat;
+  mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4.5 12.5l5 5 10-11'/%3E%3C/svg%3E") center/contain no-repeat}
+.tkt{flex:1;min-width:0}
+.say ul.tkl.tkl li.on .tkt{color:var(--ch-dim,var(--ink-3));text-decoration:line-through;text-decoration-color:color-mix(in srgb,var(--ch-dim,var(--ink-3)) 60%,transparent)}
+/* the dark skins: the tick on a light green reads in both */
+.chat[data-skin="neon"] :is(.tkg,.chcall,.chfacts,.tksum,.tkb,.tkgn){border-radius:0}
+@media (prefers-reduced-motion:reduce){ .tksbar i,.tkgbar i,.tkg{transition:none} }
+
 </style>
 </head>
 <body>
@@ -10640,6 +10769,29 @@ const STRINGS = {
   ApRunStarted: "When",
   ApRunValues: "Values",
   ApStepKept: "Values it kept",
+  Call_note: "Note",
+  Call_tip: "Tip",
+  Call_imp: "Important",
+  Call_warn: "Warning",
+  Call_caut: "Caution",
+  ClickToCopy: "Click to copy",
+  TaskTick: "Done",
+  TaskGroupPlain: "Checklist",
+  TaskToDo: "To do",
+  TaskWorking: "Working on",
+  TaskDone: "Done",
+  TaskAllHint: "Tick all, or untick all",
+  TaskCopyHint: "Copy this group as text",
+  TaskFold: "Fold or open",
+  TaskSum: "{n} of {of} done",
+  TaskSumNow: "Now: {what}",
+  TaskSumAll: "All done",
+  FxRich: "Answer layout",
+  FxRichWhy: "Checklists grouped per request (tick boxes, what you are working on), notes and warnings in boxes, numbered steps, facts and values you copy with a click. Off: answers as plain text, as before.",
+  ChatAnswers: "Answers",
+  ApHlOff: "Plain boxes: no colours for {{ }}",
+  ApHlOn: "Colour {{ }} in the boxes",
+  ApHlHint: "Values, functions, words in quotes and blocks in their own colours",
   ApRead: "Values it read",
   ApReadHint: "Every {{\u2026}} this step uses, as it was when the step ran - a function's answer, and the names inside it.",
   ApGave: "Values it gave",
@@ -11170,7 +11322,7 @@ const STATUSES = [
    the status bar, and clicking it copies a line you can paste into a bug
    report — build date and flow protocol included, because those are the two
    things that actually differ between copies. */
-const APP_VERSION = "5.29.0";
+const APP_VERSION = "5.30.0";
 const APP_BUILT = "2026-11-01";
 function buildLine(){
   return "KalKech v" + APP_VERSION + " \u00b7 built " + APP_BUILT +
@@ -16430,6 +16582,8 @@ function chatUI(){
   if (typeof st.chatUI.icons !== "boolean") st.chatUI.icons = !chatCalm();
   /* and the Reason power-up in 5.19 */
   if (typeof st.chatUI.power !== "boolean") st.chatUI.power = !chatCalm();
+  /* (5.30) the richer answer layout: on - it moves nothing, only lays out */
+  if (typeof st.chatUI.rich !== "boolean") st.chatUI.rich = true;
   return st.chatUI;
 }
 
@@ -16690,6 +16844,9 @@ function renderChatFx(){
         ["think", "orb", "done", "no", "ask", "oops", "new", "slow"]
           .map(n => chatPix(n)).join("") + "</div>" : "") +
 
+    "<h6>" + esc(L("ChatAnswers")) + "</h6>" +
+    sw("rich", L("FxRich"), L("FxRichWhy")) +
+
     "<h6>" + esc(L("ChatDoing")) + "</h6>" +
     sw("confirm", L("FxConfirm"), u.confirm ? L("FxConfirmOn") : L("FxConfirmOff"));
 
@@ -16708,7 +16865,7 @@ function renderChatFx(){
       if (k === "confirm" || k === "pixel" || k === "power") renderChatFx();
       /* the thread is already on the screen and half of it is wearing the
          set, so it is repainted rather than left in two minds */
-      if (k === "pixel") chatPaint();
+      if (k === "pixel" || k === "rich") chatPaint();
     };
   });
   box.querySelectorAll("[data-skin]").forEach(b => {
@@ -18817,6 +18974,9 @@ function chatCodeFrom(body, lang){
 function chatSay(text){
   const src = chatMend(text == null ? "" : text);
   if (!src) return "";
+  /* (5.30) the checklist items and groups of this one answer are counted
+     across all of its parts, so a tick is kept against the same item */
+  CHAT.tkn = 0; CHAT.tgn = 0;
   let out = "", i = 0;
   const fence = /```([A-Za-z0-9_+-]*)\r?\n?([\s\S]*?)```/g;
   let m;
@@ -18874,7 +19034,14 @@ function chatSay(text){
    table. Asterisks that are not a pair, underscores anywhere - policy_no,
    insured_name - and angle brackets are left exactly as they arrived. */
 const PROSE_SCHEME = /^(https?:\/\/|mailto:)/i;
+/* (5.30) a status in square brackets - [Done], [Failed], [Pending] - as a
+   coloured tag, in the richer layout */
+const PROSE_ST = { done:"ok", ok:"ok", passed:"ok", failed:"bad", error:"bad", pending:"wait", "to do":"wait", todo:"wait", waiting:"wait",
+                   working:"run", "in progress":"run", running:"run", blocked:"block", skipped:"skip", "on hold":"block" };
+let PROSE_RICH = false;
 function proseInline(s){
+  if (PROSE_RICH) s = s.replace(/\[(Done|OK|Passed|Failed|Error|Pending|To do|Todo|Waiting|Working|In progress|Running|Blocked|Skipped|On hold)\](?!\()/gi,
+    (x, w) => '<span class="chst ' + PROSE_ST[w.toLowerCase()] + '">' + w + "</span>");
   return s
     /* [what it is](where it goes) - and only somewhere a browser should go */
     .replace(/\[([^\]\n]{1,120})\]\(([^)\s]{1,400})\)/g, (x, t, u) =>
@@ -18894,8 +19061,62 @@ function proseIsRule(line){
   const c = proseCells(line);
   return c.length > 0 && c.every(x => /^:?-{2,}:?$/.test(x));
 }
+/* ── the richer layout (5.30) ─────────────────────────────────────────────
+   On by default, a switch in Look and behaviour ("Answer layout"); off, an
+   answer is drawn exactly as before. What it adds, all from plain Markdown
+   the assistant (or anyone) writes:
+   - a checklist (- [ ] step, - [x] done) under a ### heading is a GROUP:
+     one card per request value - "### P10234X56" - with tick boxes, how
+     many are done, "Working on" on the first group not finished and "Done"
+     on the finished ones (folded). Ticks are kept with the answer.
+   - > [!NOTE] / [!TIP] / [!IMPORTANT] / [!WARNING] / [!CAUTION], and a
+     paragraph that starts "Note:", "Tip:", "Warning:" …: a callout box.
+   - 1. 2. 3.: numbered steps on a line, each with its number in a disc.
+   - two or more lines like "**Policy:** P10234X56": a facts card, every
+     value copied with a click.
+   - [Done] [Failed] [Pending] [Working] [Blocked]: a coloured tag.
+   - `a value`: copied with a click. */
+function chatRich(){ try { return chatUI().rich !== false; } catch(e){ return true; } }
+const CALL_KINDS = { note:"note", tip:"tip", important:"imp", warning:"warn", caution:"caut" };
+const FACT_RE = /^\*\*([^*\n]{1,48}?)(?::\*\*|\*\*\s*:)\s*(.+)$/;
+function proseCallout(kind, title, body){
+  const k = CALL_KINDS[kind.toLowerCase()] || "note";
+  return '<div class="chcall ' + k + '"><div class="chcallh"><i class="chcalli" aria-hidden="true"></i>' +
+    esc(title || L("Call_" + k)) + '</div><div class="chcallb">' + body + "</div></div>";
+}
+function proseFacts(pairs){
+  return '<dl class="chfacts">' + pairs.map(p => "<dt>" + proseInline(p[0]) + '</dt><dd><span class="chfv" data-cp title="' + LE("ClickToCopy") + '">' +
+    proseInline(p[1]) + "</span></dd>").join("") + "</dl>";
+}
+function proseTasks(items){
+  const ticks = CHAT.ticks || {};
+  return '<ul class="tkl">' + items.map(x => {
+    const m = /^\[( |x|X)\]\s+([\s\S]*)$/.exec(x);
+    const k = CHAT.tkn = (CHAT.tkn || 0) + 1;
+    const on = ticks[k] != null ? !!ticks[k] : !!m && m[1] !== " ";
+    return '<li' + (on ? ' class="on"' : "") + '><button type="button" class="tkb" role="checkbox" data-tk="' + k + '" aria-checked="' + on + '" aria-label="' +
+      LE("TaskTick") + '"></button><span class="tkt">' + proseInline(m ? m[2] : x) + "</span></li>";
+  }).join("") + "</ul>";
+}
+/* one group: its heading, what was under it, with a count and a state */
+function proseGroup(head, parts){
+  const g = CHAT.tgn = (CHAT.tgn || 0) + 1;
+  const body = parts.join("");
+  const all = (body.match(/data-tk="/g) || []).length, on = (body.match(/aria-checked="true"/g) || []).length;
+  const done = all > 0 && on === all;
+  return '<section class="tkg' + (done ? " done" : "") + '" data-tg="' + g + '">' +
+    '<div class="tkgh"><span class="tkgn">' + g + '</span><span class="tkgt">' + (head || LE("TaskGroupPlain")) + "</span>" +
+      '<span class="tkgs"><i class="s0">' + LE("TaskToDo") + '</i><i class="s1">' + LE("TaskWorking") + '</i><i class="s2">' + LE("TaskDone") + "</i></span>" +
+      '<span class="tkgc">' + on + "/" + all + "</span>" +
+      '<button type="button" class="tkga" data-tkall title="' + LE("TaskAllHint") + '" aria-label="' + LE("TaskAllHint") + '"></button>' +
+      '<button type="button" class="tkgcp" data-tkcopy title="' + LE("TaskCopyHint") + '" aria-label="' + LE("TaskCopyHint") + '"></button>' +
+      '<button type="button" class="tkgf" data-tkfold aria-label="' + LE("TaskFold") + '"></button></div>' +
+    '<div class="tkgbar"><i style="width:' + (all ? Math.round(on / all * 100) : 0) + '%"></i></div>' +
+    '<div class="tkgb">' + body + "</div></section>";
+}
 function chatProse(t){
   if (!t) return "";
+  const rich = PROSE_RICH = chatRich();
   let s = esc(String(t).replace(/\u0000/g, "")).replace(/^\n+|\n+$/g, "");
   if (!s) return "";
   /* inline code is held aside first, so nothing below reaches inside it */
@@ -18909,6 +19130,18 @@ function chatProse(t){
   let para = [];
   const flush = () => {
     if (!para.length) return;
+    if (rich){
+      /* **Label:** value, two lines or more: a facts card */
+      const facts = para.map(l => FACT_RE.exec(l.trim()));
+      if (para.length >= 2 && facts.every(Boolean)){ out.push(proseFacts(facts.map(f => [f[1], f[2]]))); para = []; return; }
+      /* Note: / Warning: … at the start: a callout */
+      const c = /^(?:\*\*)?(Note|Tip|Important|Warning|Caution)(?:\*\*\s*:|:\*\*|:)\s*/i.exec(para[0]);
+      if (c){
+        const rest = [para[0].slice(c[0].length)].concat(para.slice(1)).filter((x, i) => i || x.trim());
+        out.push(proseCallout(c[1], "", "<p>" + proseInline(rest.join("<br>")) + "</p>"));
+        para = []; return;
+      }
+    }
     out.push("<p>" + proseInline(para.join("<br>")) + "</p>");
     para = [];
   };
@@ -18919,7 +19152,8 @@ function chatProse(t){
     /* ## a section of the answer */
     let m = /^(#{1,6})\s+(.+?)\s*#*$/.exec(trimmed);
     if (m){ flush(); const tag = m[1].length >= 3 ? "h5" : "h4";
-      out.push("<" + tag + ">" + proseInline(m[2]) + "</" + tag + ">"); continue; }
+      const hh = "<" + tag + ">" + proseInline(m[2]) + "</" + tag + ">";
+      out.push(rich ? { head:hh, title:proseInline(m[2]) } : hh); continue; }
 
     /* a line across, between two halves of an answer */
     if (/^(-{3,}|_{3,}|\*{3,})$/.test(trimmed)){ flush(); out.push("<hr>"); continue; }
@@ -18945,6 +19179,8 @@ function chatProse(t){
       const q = [];
       while (i < lines.length && /^\s*&gt;\s?/.test(lines[i])){ q.push(lines[i].replace(/^\s*&gt;\s?/, "")); i++; }
       i--;
+      const ck = rich && /^\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\]\s*(.*)$/i.exec(q[0]);
+      if (ck){ out.push(proseCallout(ck[1], ck[2].trim(), q.length > 1 ? "<p>" + proseInline(q.slice(1).join("<br>")) + "</p>" : "")); continue; }
       out.push("<blockquote>" + proseInline(q.join("<br>")) + "</blockquote>");
       continue;
     }
@@ -18969,8 +19205,13 @@ function chatProse(t){
         i++;
       }
       i--;
+      if (rich && !ordered && items.length && items.every(x => /^\[( |x|X)\]\s+/.test(x))){ out.push({ tasks:proseTasks(items) }); continue; }
+      if (rich && !ordered && items.length >= 2 && items.every(x => FACT_RE.test(x))){
+        out.push(proseFacts(items.map(x => { const f = FACT_RE.exec(x); return [f[1], f[2]]; }))); continue;
+      }
       out.push(ordered
-        ? "<ol" + (start > 1 ? ' start="' + start + '"' : "") + ">" + items.map(x => "<li>" + proseInline(x) + "</li>").join("") + "</ol>"
+        ? "<ol" + (rich ? ' class="chsteps"' : "") + (start > 1 ? ' start="' + start + '"' : "") + (rich && start > 1 ? ' style="counter-reset:chstep ' + (start - 1) + '"' : "") + ">" +
+            items.map(x => "<li>" + proseInline(x) + "</li>").join("") + "</ol>"
         : "<ul>" + items.map(x => "<li>" + proseInline(x) + "</li>").join("") + "</ul>");
       continue;
     }
@@ -18978,9 +19219,65 @@ function chatProse(t){
     para.push(line);
   }
   flush();
-  let html = out.join("");
-  html = html.replace(/\u0000(\d+)\u0000/g, (x, k) => held[+k] || "");
+  let html;
+  if (rich){
+    /* a heading with a checklist under it is a group; so is a checklist
+       with no heading over it */
+    const secs = [{ head:null, parts:[] }];
+    out.forEach(x => { if (x && x.head) secs.push({ head:x, parts:[] }); else secs[secs.length - 1].parts.push(x); });
+    html = secs.map(sec => {
+      const tasky = sec.parts.some(x => x && x.tasks);
+      const parts = sec.parts.map(x => x && x.tasks ? x.tasks : x);
+      if (!tasky) return (sec.head ? sec.head.head : "") + parts.join("");
+      /* the card holds the heading's checklist and what is between; what
+         comes after the last checklist (a note on all of them, the steps
+         for each) stays outside it. With no heading, what came before the
+         first checklist stays outside too. */
+      let last = -1;
+      sec.parts.forEach((x, k) => { if (x && x.tasks) last = k; });
+      const after = parts.slice(last + 1).join("");
+      if (sec.head) return proseGroup(sec.head.title, parts.slice(0, last + 1)) + after;
+      const k = sec.parts.findIndex(x => x && x.tasks);
+      return parts.slice(0, k).join("") + proseGroup("", parts.slice(k, last + 1)) + after;
+    }).join("");
+  } else html = out.join("");
+  PROSE_RICH = false;
+  html = html.replace(/\u0000(\d+)\u0000/g, (x, k) => (held[+k] || "").replace('<code class="inl">', rich ? '<code class="inl" data-cp>' : '<code class="inl">'));
   return html;
+}
+/* (5.30) a task group's count, state and bar, after a tick - and, over an
+   answer with two groups or more, how many are done */
+function chatTasksRefresh(root){
+  if (!root) return;
+  const groups = [...root.querySelectorAll(".tkg")];
+  let cur = false;
+  groups.forEach(g => {
+    const all = g.querySelectorAll("[data-tk]").length, on = g.querySelectorAll('[data-tk][aria-checked="true"]').length;
+    const done = all > 0 && on === all;
+    g.classList.toggle("done", done);
+    g.classList.toggle("cur", !done && !cur);
+    if (!done && !cur) cur = true;
+    const c = g.querySelector(".tkgc"); if (c) c.textContent = on + "/" + all;
+    const b = g.querySelector(".tkgbar i"); if (b) b.style.width = (all ? Math.round(on / all * 100) : 0) + "%";
+  });
+  const say = root.classList && root.classList.contains("say") ? root : root.querySelector(".say");
+  if (!say) return;
+  let sum = say.querySelector(":scope > .tksum");
+  if (groups.length < 2){ if (sum) sum.remove(); return; }
+  const n = groups.filter(g => g.classList.contains("done")).length;
+  if (!sum){ sum = document.createElement("div"); sum.className = "tksum"; say.insertBefore(sum, say.firstChild); }
+  const curG = groups.find(g => g.classList.contains("cur"));
+  sum.innerHTML = '<b>' + esc(L("TaskSum", { n:n, of:groups.length })) + "</b>" +
+    (curG ? '<span>' + esc(L("TaskSumNow", { what:(curG.querySelector(".tkgt") || {}).textContent || "" })) + "</span>" : '<span class="ok">' + LE("TaskSumAll") + "</span>") +
+    '<i class="tksbar"><i style="width:' + Math.round(n / groups.length * 100) + '%"></i></i>';
+}
+/* a tick, kept with the answer it belongs to */
+function chatTick(btn, on){
+  btn.setAttribute("aria-checked", on ? "true" : "false");
+  const li = btn.closest("li"); if (li) li.classList.toggle("on", on);
+  const bot = btn.closest(".chb");
+  const r = bot && CHAT.botRef.get(bot);
+  if (r){ r.ticks = r.ticks || {}; r.ticks[btn.dataset.tk] = on ? 1 : 0; }
 }
 
 /* render one answer. Everything clickable is registered in CHAT.acts and
@@ -19047,7 +19344,9 @@ function chatRenderBot(r, sourceText, replaying, at){
     if (grounded) h += '<div class="srclab">' + LE("SrcAnswerLab") + "</div>";
     /* each code block says where it came from (5.16): chatSay reads this */
     CHAT.codeFrom = r.codeFrom || null;
-    try { h += '<div class="say">' + chatSay(r.say || "") + "</div>"; } finally { CHAT.codeFrom = null; }
+    /* (5.30) the ticks of its checklists, kept with the answer */
+    CHAT.ticks = r.ticks || null;
+    try { h += '<div class="say' + (chatRich() ? " rich" : "") + '">' + chatSay(r.say || "") + "</div>"; } finally { CHAT.codeFrom = null; CHAT.ticks = null; }
     if (grounded || r.suggest) h += srcAnswerHtml(r, id);
     /* "run the SQL" with no SQL and none of their scripts named (5.16) */
     if (r.runNoCode) h += '<div class="srcwarn namewarn">' + LE("RunNoCode") + "</div>";
@@ -19182,6 +19481,7 @@ function chatRenderBot(r, sourceText, replaying, at){
 
   d.innerHTML = h;
   pixFix(d);
+  chatTasksRefresh(d);
   $("chatLog").appendChild(d);
   if (!replaying && r.tier === "reason") pwLand(d);
 
@@ -19368,6 +19668,25 @@ function chatRateSet(id, v, fixText){
   else if (!v && was) toast(L("RateTakenBack"));
 }
 $("chatLog").addEventListener("click", e => {
+  /* (5.30) a checklist: a tick, a whole group, its copy, folding it */
+  const tk = e.target.closest("[data-tk]");
+  if (tk){ chatTick(tk, tk.getAttribute("aria-checked") !== "true"); chatTasksRefresh(tk.closest(".chb") || tk.closest(".say")); touch(); return; }
+  const tg = e.target.closest(".tkg");
+  if (tg && e.target.closest("[data-tkall]")){
+    const bs = [...tg.querySelectorAll("[data-tk]")], on = !bs.every(b => b.getAttribute("aria-checked") === "true");
+    bs.forEach(b => chatTick(b, on));
+    chatTasksRefresh(tg.closest(".chb") || tg.closest(".say")); touch(); return;
+  }
+  if (tg && e.target.closest("[data-tkcopy]")){
+    const t = (tg.querySelector(".tkgt") || {}).textContent || "";
+    const lines = [...tg.querySelectorAll(".tkl li")].map(li => "- [" + (li.classList.contains("on") ? "x" : " ") + "] " + li.textContent.trim());
+    return copyText((t ? t + "\n" : "") + lines.join("\n"), L("Copied"));
+  }
+  /* a finished group is folded; a click opens it (or folds another) */
+  if (tg && e.target.closest("[data-tkfold], .tkgt, .tkgn")){ tg.classList.toggle("flip"); return; }
+  /* a value written as `code`, or a fact's value: copied with a click */
+  const cp = e.target.closest("[data-cp]");
+  if (cp && !String(window.getSelection && window.getSelection()).trim()){ return copyText(cp.textContent.trim(), L("Copied")); }
   /* the sources under an answer, opened or folded */
   const st = e.target.closest("[data-srctog]");
   if (st) return srcToggle(st);
@@ -30470,6 +30789,7 @@ function apPaint(){
   apCheckPaint();
   apBridgePaint(fresh);
   apSecretsPaint();
+  apHlWire(box);
 }
 /* the small parts that may change without anything being typed */
 function apRefresh(){
@@ -30880,6 +31200,7 @@ function apMoreMenu(btn){
     apItem("zfit", "fit", L("ApZoomFit"), "", { kind:"finish" }) +
     apItem("zreset", "search", L("ApZoomReset"), "", { kind:"finish" }) +
     apItem("exp", "exp", L("AutoExpThis"), L("AutoExpOneHint"), { kind:"finish" }) +
+    apItem("hl", apHlOn() ? "ok" : "dot", L(apHlOn() ? "ApHlOff" : "ApHlOn"), L("ApHlHint"), { kind:"finish" }) +
     '<div class="appline ' + (ok && info.stale ? "warn" : ok ? "ok" : "bad") + '"' + (ok && info.stale ? ' title="' + LE("AutoStaleBridge") + '"' : "") + ">" + apIc("dot", "fill") + "<span>" +
       LE(ok && info.stale ? "ApBridgeStale" : ok ? "ApBridgeOk" : info && info.old ? "ApBridgeOld" : "ApBridgeBad") + "</span></div>";
   apPop(btn, html, k => {
@@ -30888,6 +31209,7 @@ function apMoreMenu(btn){
     if (k === "zfit") return apZoomFit();
     if (k === "zreset") return apZoomSet(1);
     if (k === "exp") return apExportDraft();
+    if (k === "hl"){ S.settings.apHl = !apHlOn(); touch(); return apPaint(); }
   }, "morepop");
 }
 /* the checker on the bar: Ready, or how many to fix */
@@ -31070,6 +31392,101 @@ function apRow(label, html, hint, hintIsHtml){
 /* a box with the "insert a value" button in its corner */
 function apFx(html){
   return '<div class="apfx">' + html + '<button class="apfxb" type="button" tabindex="-1" data-apfx title="' + LE("ApInsertValue") + '" aria-label="' + LE("ApInsertValue") + '">{x}</button></div>';
+}
+/* ── {{ }} in colour (5.30) ─────────────────────────────────────────────
+   A box that takes values shows what is not plain text in colour: the
+   {{ }} themselves, a value's name, a function, words in quotes, numbers,
+   a filter after |, a block (#each, #if). A box cannot colour part of its
+   own text, so the box's text is made see-through (the caret and the
+   selection stay its own) and a copy of it, coloured, is laid exactly over
+   it - same font, same padding, same line height, scrolled with it - and
+   lets every click through. Nothing about the text itself changes. Off in
+   the designer's more menu (⋮), for anyone who would rather not. */
+function apHlOn(){ return !(S.settings && S.settings.apHl === false); }
+function apHlTag(inner){
+  /* a tag's inside, as coloured pieces; any character is kept as it was */
+  let out = "", i = 0;
+  const t = inner;
+  const put = (cls, x) => { out += cls ? '<i class="' + cls + '">' + esc(x) + "</i>" : esc(x); };
+  const blk = /^(\s*)([#\/](?:each|if)\b|else\b)/.exec(t);
+  if (blk){ put("", blk[1]); put("hk", blk[2]); i = blk[0].length; }
+  while (i < t.length){
+    const rest = t.slice(i);
+    let m;
+    if ((m = /^\s+/.exec(rest))){ put("", m[0]); i += m[0].length; continue; }
+    if ((m = /^("([^"\\]|\\.)*"?|'([^'\\]|\\.)*'?)/.exec(rest))){ put("hq", m[0]); i += m[0].length; continue; }
+    if ((m = /^-?\d+(?:\.\d+)?/.exec(rest))){ put("hn", m[0]); i += m[0].length; continue; }
+    if ((m = /^\|\s*([A-Za-z_]+)/.exec(rest))){ put("hb", "|"); put("hp", m[0].slice(1)); i += m[0].length; continue; }
+    if ((m = /^[A-Za-z_][A-Za-z0-9_]*/.exec(rest))){
+      const w = m[0], after = t.slice(i + w.length);
+      if (/^\s*\(/.test(after)) put(DossierAuto.FN[w.toLowerCase()] ? "hf" : "hf bad", w);
+      else if (/^(as|true|false|null|and|or|not|is|empty|contains)$/i.test(w) && blk) put("hk", w);
+      else if (w === "secret") put("hs", w);
+      else if (w === "input" || w === "record") put("hns", w);
+      else put("hv", w);
+      i += w.length; continue;
+    }
+    put("hb", t[i]); i++;
+  }
+  return out;
+}
+function apHlHtml(text){
+  const s = String(text == null ? "" : text);
+  let out = "", i = 0;
+  const re = /\{\{([^{}]*)\}\}/g;
+  let m;
+  while ((m = re.exec(s))){
+    out += esc(s.slice(i, m.index)) + '<span class="htag"><i class="hb">{{</i>' + apHlTag(m[1]) + '<i class="hb">}}</i></span>';
+    i = m.index + m[0].length;
+  }
+  out += esc(s.slice(i));
+  /* a last empty line is a line too */
+  return out + (/\n$/.test(s) ? " " : "");
+}
+const AP_HL_RO = window.ResizeObserver ? new ResizeObserver(es => es.forEach(e => { const f = e.target.__hl; if (f) f(); })) : null;
+function apHlWire(root){
+  if (!root || !apHlOn()) return;
+  root.querySelectorAll(".apfx > .in").forEach(el => {
+    if (el.__hl || !/^(INPUT|TEXTAREA)$/.test(el.tagName)) return;
+    const cs = getComputedStyle(el);
+    const hl = document.createElement("div");
+    hl.className = "aphl"; hl.setAttribute("aria-hidden", "true");
+    const tx = document.createElement("div");
+    tx.className = "aphlt";
+    hl.appendChild(tx);
+    const area = el.tagName === "TEXTAREA";
+    ["fontFamily", "fontSize", "fontWeight", "fontStyle", "letterSpacing", "wordSpacing", "lineHeight", "textIndent", "tabSize", "textTransform",
+     "paddingTop", "paddingRight", "paddingBottom", "paddingLeft", "borderTopWidth", "borderRightWidth", "borderBottomWidth", "borderLeftWidth"
+    ].forEach(k => { hl.style[k] = cs[k]; });
+    hl.style.color = cs.color;
+    hl.style.whiteSpace = area ? "pre-wrap" : "pre";
+    hl.style.overflowWrap = area ? "break-word" : "normal";
+    el.parentNode.insertBefore(hl, el.nextSibling);
+    el.classList.add("hlon");
+    const paint = () => {
+      if (!hl.isConnected) return;
+      hl.style.width = el.offsetWidth + "px";
+      hl.style.height = el.offsetHeight + "px";
+      hl.style.left = el.offsetLeft + "px";
+      hl.style.top = el.offsetTop + "px";
+      /* a scroll bar takes width from the text: the copy wraps as the box does */
+      if (area){ const bar = el.offsetWidth - el.clientWidth - (parseFloat(cs.borderLeftWidth) || 0) - (parseFloat(cs.borderRightWidth) || 0);
+                 hl.style.paddingRight = "calc(" + cs.paddingRight + " + " + Math.max(0, bar) + "px)"; }
+      /* a one-line box shows its text only between its paddings - the
+         rest is scrolled out of sight, so the copy is cut there too */
+      else hl.style.clipPath = "inset(0 " + ((parseFloat(cs.paddingRight) || 0) + (parseFloat(cs.borderRightWidth) || 0)) + "px 0 " +
+                                ((parseFloat(cs.paddingLeft) || 0) + (parseFloat(cs.borderLeftWidth) || 0)) + "px)";
+      tx.innerHTML = el.value ? apHlHtml(el.value) : "";
+      tx.style.transform = "translate(" + (-el.scrollLeft) + "px," + (-el.scrollTop) + "px)";
+    };
+    const scroll = () => { tx.style.transform = "translate(" + (-el.scrollLeft) + "px," + (-el.scrollTop) + "px)"; };
+    el.__hl = paint;
+    el.addEventListener("input", paint);
+    el.addEventListener("scroll", scroll);
+    ["keyup", "select", "mouseup", "focus"].forEach(k => el.addEventListener(k, scroll));
+    if (AP_HL_RO) AP_HL_RO.observe(el);
+    paint();
+  });
 }
 function apHead(kind, titleHtml, tabs, cur, dots){
   return '<div class="apph"><span class="apk k-' + kind + '">' + apIc(kind) + "</span>" + titleHtml +

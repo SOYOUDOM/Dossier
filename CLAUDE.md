@@ -37,7 +37,7 @@ are careful not to attract attention from their security team.
 | `flow/*.md` | Guides: `CONTRACT.md` (request/reply/actions), `POWER-AUTOMATE.md`, `BAU-RUNBOOKS.md`, `SOURCES.md` (setup + troubleshooting for Sources), `SPEED.md`, `SERVICENOW.md`. |
 | `scripts/bridge/DossierBridge.cs` | The tray program (C# 5, WinForms): serves the page on 127.0.0.1, keeps the workspace in SQL LocalDB when available (or the SQL Server named in Setup, since 5.21), runs scripts, and (5.22) carries out automation steps and keeps their secrets (DPAPI). `KalKech.bat` compiles it with the Windows `csc.exe` whenever the `.cs` is newer than the `.exe`. |
 | `lang/en.xml`, `lang/km.xml` | Language packs (English, Khmer). Missing keys fall back to the English `STRINGS` table in `dossier.html`. |
-| `docs/` | `kalkech-automations-guide.md` (5.27.2, now 5.29.0: the whole of Automations for the owner's Sources - keep it in step with every automations change, verify its facts against the code; one `##` question per topic, ~1,100-character passages), `HOW-THE-AI-WORKS.md` (the whole AI pipeline for beginners, plus a reusable blueprint) and `how-the-ai-works.html` (the same as a self-contained picture page). Keep both in step with the code when the pipeline changes (numbers: 60 records, 10 notes, 30 lessons, 14,000 characters, 66 actions / 44 writes). |
+| `docs/` | `kalkech-automations-guide.md` (5.27.2, now 5.30.0: the whole of Automations for the owner's Sources - keep it in step with every automations change, verify its facts against the code; one `##` question per topic, ~1,100-character passages), `HOW-THE-AI-WORKS.md` (the whole AI pipeline for beginners, plus a reusable blueprint) and `how-the-ai-works.html` (the same as a self-contained picture page). Keep both in step with the code when the pipeline changes (numbers: 60 records, 10 notes, 30 lessons, 14,000 characters, 66 actions / 44 writes). |
 | `tests/` | `sources.test.js`, `diagram.test.js`, `automations.test.js` (node:test), `e2e/run.js` + `e2e/sources.scenario.js` (real browser), `bridge/run.js` (compiles the bridge with mcs/csc, runs it headless against a made-up API: 74 checks), `fixtures/` (made-up documents; `make-pdf.js` regenerates the PDFs; `auto-conditions.json`, the condition cases both readers must agree on). |
 
 A *workspace* is a folder the user picks (File System Access API):
@@ -92,13 +92,13 @@ A *workspace* is a folder the user picks (File System Access API):
 - Commit messages: clear summary + body; no model names in commits, code or
   docs. Do not open a pull request unless the owner asks.
 - Work so far is on branch `claude/chat-panel-pixel-art-gifs-d822hq`
-  (latest: 5.29.0). Follow the branch instructions of your own session.
+  (latest: 5.30.0). Follow the branch instructions of your own session.
 
 ## Testing
 
 ```
-node --test                                   # 108 unit tests (Sources, grounding, names check, code origin, flow reply fields, diagrams, automations)
-node tests/e2e/run.js                         # the app in headless Chrome/Edge: 352 checks (CHROME=<path> to choose)
+node --test                                   # 109 unit tests (Sources, grounding, names check, code origin, flow reply fields, diagrams, automations)
+node tests/e2e/run.js                         # the app in headless Chrome/Edge: 359 checks (CHROME=<path> to choose)
 node tests/bridge/run.js                      # the bridge's automation routes, built and run (mcs+mono or csc): 74 checks
 node flow/check-prompt.js                     # after editing flow/prompt.txt ...
 python3 flow/embed-prompt.py                  # ... then copy it into flow.js (PROMPT_BUILTIN)
@@ -131,6 +131,73 @@ Also useful:
   `DossierFlow.validate`. `tests/e2e/run.js` is a working example of all of it.
 
 ## Recent history (newest first)
+
+- **5.30.0** - Owner: "the chat sends a bullet list when it supports
+  several requests - I get confused which one I am on or finished: group
+  them"; "functions in automations really work: date() inside table()";
+  "highlight functions/variables apart from normal text"; "more UI design
+  for chat answers, easy to support and work from".
+  - *Columns* (automations.js `columns (5.30)` before `fnList`): FN
+    entries carry `cols:1` (table: every arg after the list) or `col:1`
+    (bullets, numbered, field, sort, where, sum); `colArg(f, i)`. In
+    `exEval`, a call or a bare (no-ns) ref in a column position becomes
+    `colOf(node, scope)` = `{__col, label, get(item, i)}` - evaluated per
+    item with locals `{vars:{item, this, loop}, fields:item}` and
+    `ctx.item`, so a string literal naming one of the item's fields is the
+    field (`isField`; `date("createDate", …)` as the owner wrote it).
+    `fieldOf` and `mdTable` take columns (header = `colLabel`: the field it
+    reads, or `as(value, "Heading")` - new FN `as`, 41 functions).
+    `parsePh` walks with `inCol`: bare refs in a column are not `refs`, so
+    `check()` does not ask where they come from.
+  - *Highlight* (page, after `apFx`): `apHlWire(root)` from `apPaint` -
+    every `.apfx > .in` gets `.hlon` (text `color:transparent`, caret and
+    selection its own) and a sibling `.aphl` overlay (pointer-events none,
+    the field's font/padding/line-height copied, `white-space` pre or
+    pre-wrap, scroll synced by transform, size from offset* and a
+    ResizeObserver, a textarea's scroll bar added to padding-right, an
+    input clipped to its content box with `clip-path`). `apHlHtml` /
+    `apHlTag` → `.htag` with `.hb` braces, `.hv` names, `.hns`
+    input/record, `.hs` secret, `.hf` functions (`.bad` unknown), `.hq`,
+    `.hn`, `.hp` filters, `.hk` blocks. A global rule makes `<i>` blocks:
+    `.aphl i` is forced inline. Switch `S.settings.apHl` (more menu item
+    `hl`).
+  - *Answer layout* (`chatProse`, banner comment before `chatRich`):
+    `chatUI().rich` (default true; switch in the chat sheet, section
+    *Answers*). `PROSE_RICH` lets `proseInline` turn `[Done]`… into
+    `.chst` tags. Paragraphs: 2+ `**Label:** value` lines → `proseFacts`
+    (`.chfacts`, values `.chfv[data-cp]`); `Note:/Tip:/Important:/Warning:/
+    Caution:` → `proseCallout` (`.chcall.note|tip|imp|warn|caut`); quotes
+    `> [!NOTE]` … → callout; ordered lists `ol.chsteps`; `- [ ]` lists →
+    `{tasks: proseTasks(items)}`; headings kept as `{head}` objects; the
+    assembly makes `proseGroup(title, parts)` (`.tkg` card: `.tkgh` with
+    `.tkgn` number, `.tkgt` title, `.tkgs` state (s0/s1/s2 shown by
+    class), `.tkgc` count, `[data-tkall]`, `[data-tkcopy]`, `[data-tkfold]`;
+    `.tkgbar`; `.tkgb` body) from the heading to its last checklist - what
+    follows stays outside. Item keys `CHAT.tkn` and group numbers
+    `CHAT.tgn` are reset per `chatSay` (counted across fenced parts);
+    `CHAT.ticks` = `r.ticks` is set around `chatSay` in `chatRenderBot`
+    (`.say.rich`). `chatTasksRefresh(root)` sets done/cur/counts and the
+    `.tksum` line (2+ groups); `chatTick(btn, on)` keeps `r.ticks[k]` 1/0
+    (overrides the source's [x]). Clicks in the `#chatLog` handler (data-tk,
+    data-tkall, data-tkcopy, fold on title/number, `[data-cp]` copy unless
+    text is selected). Inline code gets `data-cp` in rich mode. Class
+    names: `.chtg` was taken (the teach panel), hence `tk*`. CSS `ANSWER
+    LAYOUT (5.30)` (last block): only `--ch-*` tokens; status colours mixed
+    with `--ch-ink`; specificity doubled (`ol.chsteps.chsteps`,
+    `ul.tkl.tkl`) to beat Lumen's `.chat[data-lm] .say li`.
+  - *Prompt*: two bullets under HOW TO TALK (one ### group per value with
+    `- [ ]` steps; callouts, `**Label:**` facts, `[Done]` tags, values in
+    inline code) and a made-up example (three policies, groups, a NOTE
+    callout, an ask). No ``` and no `{{` in the prompt.
+  - Docs: README *How do I get help with several requests at once? (task
+    groups)*, *What are the boxes, numbered steps and coloured tags in an
+    answer?*, *How do I format a date … in a column of a table?*, *Why are
+    parts of a box in colour?*; guide 5.30.0 (column section, 41
+    functions, colours in the designer).
+  - Tests: 1 unit (109: the owner's table line word for word, bare names,
+    `as`, bullets/field/sort/where, check silent), 7 e2e (359: overlay
+    pieces and alignment, the switch; three groups, cur/sum, a tick keeps
+    and moves cur, tick all + redraw keeps, layout off = as before).
 
 - **5.29.0** - Owner's photo (company screen: bookmarks, API paths, a
   policy number - never committed): a Condition

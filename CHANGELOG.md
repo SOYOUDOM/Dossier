@@ -6,6 +6,42 @@ holds — which is what to paste into a bug report.
 
 ---
 
+## 5.30.0 - 2026-11-03
+
+**Several requests at once, one card each - answers easier to work from -
+date() in a table column works - and {{ }} in colour.**
+
+- **Task groups in the chat.** Asked to do the same job for several values
+  (three policies, five users), the assistant now answers with **one card
+  per request**: the value and the job as its title, the steps with **tick
+  boxes**, *2/3* done, **Working on** on the first one not finished and
+  **Done** (folded) on the finished ones; over them, *1 of 3 done - Now:
+  …* with a bar. ✓✓ ticks a whole card, the copy button copies it as text.
+  Your ticks are kept with the answer. (Any `### heading` with a `- [ ]`
+  checklist under it is drawn this way.)
+- **Answer layout.** Callout boxes for what not to miss (*Note*, *Tip*,
+  *Important*, *Warning*, *Caution*), numbered steps on a line, a facts
+  table from `**Label:** value` lines (click a value to copy it), coloured
+  status tags (`[Done]`, `[Failed]`, `[Pending]`, `[Working]`,
+  `[Blocked]`), and any value in `code` copied with a click. The
+  assistant's instructions say when to use each. A switch in the chat's
+  settings (**Answers → Answer layout**) puts the plain look back.
+- **Fixed: a function in a table column.** In
+  `{{table(Documents, "fileName", date("createDate","yyyy-MM-dd"))}}` the
+  date was worked out once, on the word "createDate", so the column came out
+  raw. Now a function in a column of `table`, `bullets`, `numbered`,
+  `field`, `sort`, `where` or `sum` is worked out **for each item**, with
+  the item's fields as names (`date(createDate, "dd MMM")`; a field name in
+  quotes works too). New `as(value, "Heading")` names a column.
+- **{{ }} in colour.** In the designer's boxes the `{{ }}`, value names,
+  functions (red and wavy when unknown), words in quotes, numbers and blocks
+  each have their colour. The text itself is unchanged. ⋮ → **Plain boxes**
+  turns it off.
+- README, the guide (version 5.30.0 - replace it in **Library →
+  Sources**) and the assistant's instructions are updated.
+
+---
+
 ## 5.29.0 - 2026-11-03
 
 **Fixed: a Condition with `empty()` or `lower()` always went No - and every

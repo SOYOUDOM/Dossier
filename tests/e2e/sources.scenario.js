@@ -2054,8 +2054,58 @@
   AUTO.ui.fxFor = { el:vb529, at:8, end:8, done:false };
   apFxInsert("{{input.documentType}}");
   check("...and so does one from the {x} list", vb529.value === "{{lower(input.documentType)}}", vb529.value);
+  /* (5.30) the boxes colour what is not plain text */
+  vb529.value = '{{table(docs, date(createDate, "dd MMM"))}} and {{input.documentType}} {{nope(x)}}';
+  vb529.dispatchEvent(new Event("input", { bubbles:true }));
+  const hl530 = vb529.nextElementSibling;
+  check("(5.30) a box's {{ }}: a coloured copy lies over it - functions, names, words in quotes, an unknown function marked",
+        !!hl530 && hl530.classList.contains("aphl") && vb529.classList.contains("hlon") &&
+        [...hl530.querySelectorAll(".hf:not(.bad)")].map(x => x.textContent).join() === "table,date" &&
+        !!hl530.querySelector(".hq") && /documentType/.test([...hl530.querySelectorAll(".hv")].map(x => x.textContent).join()) &&
+        hl530.querySelector(".hf.bad").textContent === "nope" && hl530.textContent === vb529.value &&
+        Math.abs(hl530.getBoundingClientRect().left - vb529.getBoundingClientRect().left) < 1 &&
+        Math.abs(hl530.getBoundingClientRect().width - vb529.getBoundingClientRect().width) < 1, hl530 && hl530.outerHTML.slice(0, 300));
+  S.settings.apHl = false; apPaint(); await sleep(40);
+  check("...and the more menu's switch takes it away", !document.querySelector("#apPane .aphl") && !document.querySelector("#apPane .hlon"));
+  S.settings.apHl = true;
   AUTO.ui.draft = null; AUTO.ui.base = ""; AUTO.ui.mode = "design"; AUTO.ui.run = null; AUTO.ui.tab = "list"; apPaint();
   autoStore().list = autoStore().list.filter(a => a.id !== "Anest529"); touch();
+
+  /* (5.30) an answer for several requests: one card each, ticks kept */
+  openChat();
+  const th530 = chatThread(), n530 = th530.msgs.length;
+  const say530 = "Three requests.\n\n**Requests:** 3\n**Asked by:** Service desk\n\n" +
+    "### P0001 - COI\n- [x] Check it [Done]\n- [ ] Regenerate `P0001`\n\n### P0002 - Contract\n- [ ] Check it\n- [ ] Regenerate\n\n" +
+    "### P0003 - COI\n- [ ] Check it [Pending]\n\n> [!WARNING]\n> P0003 was cancelled.\n\n1. Open it.\n2. Run it.\n\nNote: tokens last 10 minutes.";
+  th530.msgs.push({ who:"you", text:"three requests", at:Date.now() });
+  th530.msgs.push({ who:"bot", reply:{ say:say530, via:"flow" }, at:Date.now() });
+  chatPaint(); await sleep(60);
+  const b530 = () => [...document.querySelectorAll("#chatLog .chb.bot")].pop();
+  let g530 = [...b530().querySelectorAll(".tkg")];
+  check("(5.30) a checklist under each ### heading is a card of its own: the first not finished is 'Working on', a count over all",
+        g530.length === 3 && g530[0].classList.contains("cur") && !g530[1].classList.contains("cur") &&
+        g530[0].querySelector(".tkgc").textContent === "1/2" && /0 of 3 done/.test(b530().querySelector(".tksum").textContent) &&
+        /P0001 - COI/.test(b530().querySelector(".tksum").textContent), g530.map(g => g.className + " " + g.querySelector(".tkgc").textContent).join(" | "));
+  check("...and the rest of the layout: callout, facts, numbered steps, status tags, a value copied with a click",
+        !!b530().querySelector(".chcall.warn") && !!b530().querySelector(".chcall.note") && b530().querySelectorAll(".chfacts dt").length === 2 &&
+        !!b530().querySelector("ol.chsteps") && !!b530().querySelector(".chst.ok") && !!b530().querySelector(".chst.wait") &&
+        !!b530().querySelector("code.inl[data-cp]") && !g530[2].querySelector(".chcall"), b530().querySelector(".say").innerHTML.slice(0, 300));
+  g530[0].querySelectorAll("[data-tk]")[1].click(); await sleep(30);
+  g530 = [...b530().querySelectorAll(".tkg")];
+  check("...a tick finishes a group: Done (folded), the next one is 'Working on', and the tick is kept with the answer",
+        g530[0].classList.contains("done") && g530[1].classList.contains("cur") && /1 of 3 done/.test(b530().querySelector(".tksum").textContent) &&
+        th530.msgs[th530.msgs.length - 1].reply.ticks[2] === 1, JSON.stringify(th530.msgs[th530.msgs.length - 1].reply.ticks));
+  g530[1].querySelector("[data-tkall]").click(); await sleep(30);
+  chatPaint(); await sleep(60);
+  g530 = [...b530().querySelectorAll(".tkg")];
+  check("...'tick all' does a whole group, and drawn again the ticks are still there",
+        g530[0].classList.contains("done") && g530[1].classList.contains("done") && g530[2].classList.contains("cur") &&
+        /2 of 3 done/.test(b530().querySelector(".tksum").textContent));
+  chatUI().rich = false; chatPaint(); await sleep(60);
+  check("(5.30) with Answer layout off, an answer is drawn as before - no cards, no boxes",
+        !b530().querySelector(".tkg,.chcall,.chfacts,.chsteps,.chst") && /\[x\] Check it/.test(b530().textContent));
+  chatUI().rich = true;
+  th530.msgs.splice(n530); chatPaint();
 
   closeChat();
   window.fetch = fetchAu;
