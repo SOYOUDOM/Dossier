@@ -6,6 +6,42 @@ holds — which is what to paste into a bug report.
 
 ---
 
+## 5.29.0 - 2026-11-03
+
+**Fixed: a Condition with `empty()` or `lower()` always went No - and every
+step now shows the values it read and gave.**
+
+- **Fixed: `{{ }}` inside `{{ }}`.** Picking a value from the **/** list or
+  the **{x}** button inside a function's brackets put it in with braces of
+  its own: `{{empty({{input.documentType}})}}`. Nothing could read that. In
+  a Condition the builder turned it into words in quotes, so the test
+  compared the letters with `true` and went **No** even when the input was
+  left empty; in a path or a message the function stayed as text. Now:
+  - a value picked inside `{{ … }}` goes in bare:
+    `{{empty(input.documentType)}}`;
+  - a design that already has it is read the right way - the inner braces,
+    and the quotes around a test side that is one `{{…}}`, are dropped when
+    it is opened (nothing for you to change);
+  - the checker warns about other `{{ }}` inside quotes in a test (*Words
+    in quotes are read as words*), since the value in them is never filled
+    in.
+- **See the value of each step.** Click a card on a run (or after **Try up
+  to here**):
+  - **The test, with the values it had** - `"" == "COI" → No`,
+    `true == true → Yes`;
+  - **Values it read** - every `{{…}}` the step uses, as it was then: a
+    function's answer and the names inside it;
+  - **Values it gave** - what it saved or set, right after the step, or
+    *not saved*;
+  - **When you run it** lists every input, an empty one too.
+  Secrets and hidden values are never shown (🔒), a typed secret is masked
+  inside any value holding it, and the assistant does not get these lists.
+- README: *Why does my Condition with empty() or lower() always go one
+  way?* and *How do I see the value of each step?*; the guide (version
+  5.29.0 - replace it in **Library → Sources**) has both.
+
+---
+
 ## 5.28.0 - 2026-11-03
 
 **You decide what is shown: a token that is fine to see can be shown - and

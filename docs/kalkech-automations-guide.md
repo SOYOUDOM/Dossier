@@ -1,6 +1,6 @@
 # KalKech Automations - the complete guide
 
-Version: 5.28.0
+Version: 5.29.0
 Effective date: 3 November 2026
 
 Everything about Automations in KalKech: what each step does, every box and
@@ -445,6 +445,11 @@ Inside `{{ }}` you can write a value, a part of one, or a function:
 One `{{…}}` alone keeps what it is - a list stays a list. Anything else
 around it makes text with the values written in.
 
+**Inside `{{ }}` names have no braces of their own**: `{{empty(input.documentType)}}`,
+`{{lower(input.policy)}}`, `{{count(docs)}}` - never
+`{{empty({{input.documentType}})}}`. (Since 5.29 KalKech reads that second
+form the right way too, and the / list puts names in bare.)
+
 Functions are worked out on the page, then handed to the tray program for
 that one step - so **a function cannot read a hidden value or a secret**.
 Use the hidden value on its own, or a part of it: `{{token}}`,
@@ -508,6 +513,31 @@ Compare with `==`, `!=`, `>`, `>=`, `<`, `<=`, `contains`, `not contains`,
 the ends; two numbers are compared as numbers. A value never set is empty.
 A condition cannot read a secret. Under each condition box a ✓ says it
 reads well, or a ✕ says what is wrong.
+
+## Why does my Condition with empty() or lower() always go No (or always Yes)?
+
+A test that is false although the input was left empty, or a function -
+`empty()`, `lower()`, `upper()` - that does not seem to work: usually the
+braces. Inside `{{ }}` a name is written bare:
+
+| Right | Wrong |
+|---|---|
+| `{{empty(input.documentType)}} == true` | `{{empty({{input.documentType}})}} == true` |
+| `{{lower(input.type)}} == "coi"` | `{{lower({{input.type}})}} == "coi"` |
+| `{{empty(input.documentType)}} == true` | `"{{empty(input.documentType)}}" == true` |
+
+Before 5.29 the **/** list and the **{x}** button put the wrong form in
+when a value was picked inside a function's brackets, and the Condition
+builder turned it into **words in quotes** - so the test compared the letters
+with `true` and was always **No**, even with the input left empty. Since
+5.29 a value picked inside `{{ … }}` goes in bare, a saved design is read
+the right way (the inner braces and the quotes around one `{{…}}` are
+dropped), and the checker warns about any other `{{ }}` inside quotes
+(*Words in quotes are read as words*).
+
+Other ways to write the same test: `{{input.documentType}} is empty`, or
+`not {{input.documentType}}`. To see what a test saw, run it and click the
+Condition: **The test, with the values it had** (`true == true → Yes`).
 
 ## How do I make an automation go one way or another (a Condition, if / else)?
 
@@ -812,8 +842,9 @@ A test is a real run: an API that changes something does change it.
 - Ask the assistant for the job in your own words.
 
 The run is drawn on the canvas as it goes: ✓ with status and time, ✕
-failed, a spinner while running. Click a card for what it kept and its
-reply. **Stop** stops it between steps or during a wait.
+failed, a spinner while running. Click a card for the values it read and
+gave, and its reply (next question). **Stop** stops it between steps or
+during a wait.
 
 In a conversation, the run's card shows every step while it runs, then
 folds to one line - *3 of 3 steps ran*, or *Failed at "Sign in"* - with the
@@ -823,6 +854,29 @@ draw it on the Automations page.
 **Run history** keeps the last 40 runs, with no hidden value or secret.
 Run for a record, the record's work log gets one line with the values the
 assistant may see.
+
+## How do I see the value of each step, variable or condition (debugging)?
+
+Since 5.29, after a run (or **Try up to here**) click a card on the run:
+
+- **The test, with the values it had** - for a Condition or an *Only run
+  when*: each `{{…}}` written as its value, then the result:
+  `"" == "COI" → No`, `true == true → Yes`. An empty value shows as `""`.
+- **Values it read** - every `{{…}}` the step uses (path, headers, body,
+  value, test) as it was when the step ran: a function's answer
+  (`{{lower(input.policy)}}` p000123x00) and the names inside it
+  (`{{input.policy}}` P000123X00). *(empty)*, or *(no value)* when nothing
+  gave it one.
+- **Values it gave** - what it saved or set (a variable from *Set a value*,
+  a list from *Shape* or *Filter*), as it was right after the step - or
+  *not saved* when the reply did not have it.
+- **When you run it** (the first card): every input, empty ones too.
+  **When it ends**: every value at the end, and the hidden ones by name.
+
+Never shown: a secret (a connection's, or a secret input - 🔒, and masked
+`••••` in any value holding it) or a **Hidden** value (🔒 *only the tray
+program has it*). The assistant does not get these lists. Run history
+keeps them, shorter.
 
 ## How do I let the assistant (the AI) run an automation?
 
@@ -1029,6 +1083,7 @@ the **Connections** tab.
 | *The list must be one value alone, like {{docs}}* | Nothing around the `{{…}}` in **The list**. |
 | *The For each has no steps inside it yet* | Add steps in its lane. |
 | *The Condition has no test yet* | Fill in its test. |
+| *Words in quotes are read as words: the {{ }} in "…" is not filled in* | Take the quotes away: `{{a}} == "x"`, not `"{{a}}" == "x"`. Words and a value mixed cannot be tested in quotes - test the value. |
 | *x looks like a token or password, and it is set to be shown to the assistant* | Choose **🔒 Hidden** - or, when it is fine to share (a short-lived download token), click **Not an issue** beside it. |
 
 ## Why did my run fail? (problems during a run)

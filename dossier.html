@@ -1863,6 +1863,16 @@ button.auchip:hover{border-color:var(--accent);color:var(--accent)}
 .apkv{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:12px;margin:0}
 .apkv dt{color:var(--ink-3)}
 .apkv dd{margin:0;overflow-wrap:anywhere}
+/* (5.29) a step's values in the run view */
+.apdbg{font-size:11.5px;margin-bottom:6px}
+.apdbg dt{min-width:0;max-width:220px}
+.apdbn{font-family:var(--f-mono);font-size:11px;color:var(--ink-2);overflow-wrap:anywhere}
+.apkv dd.mono{font-family:var(--f-mono);font-size:11px;white-space:pre-wrap}
+.apdbx{color:var(--ink-3);font-style:italic}
+.apdbx.bad{color:var(--p1);font-style:normal}
+.apdbf{font-size:11.5px;margin:0 0 10px;padding:7px 9px;border:1px solid var(--rule);border-radius:var(--r-xs);background:var(--paper-2);overflow-wrap:anywhere}
+.apdbf b.ok{color:var(--st-done)}
+.apdbf b.bad{color:var(--p1)}
 .aprunst{margin:0 0 8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .apsumline{font-size:11px;color:var(--ink-3);margin:0 0 10px;overflow-wrap:anywhere}
 .appb .apnote{padding:8px 10px;border-radius:var(--r-xs);font-size:11.5px;line-height:1.55;margin:0 0 10px;max-width:none;overflow-wrap:anywhere}
@@ -10236,6 +10246,7 @@ const STRINGS = {
   AutoChk_emptyIf: "The Condition has no steps under Yes or No.",
   AutoChk_otherBranch: "{{{name}}} is saved in the other branch of a Condition, so it is never there on this path.",
   AutoChk_maybeEmpty: "{{{name}}} is saved on one path of a Condition only - here it is empty when the other path ran.",
+  AutoChk_condQuoted: "Words in quotes are read as words: the {{ }} in \u201c{name}\u201d is not filled in, so the test compares those letters. Take the quotes away to test a value.",
   AutoT_check: "Check, then decide",
   AutoT_checkHint: "Look a status up, and regenerate only when it is ACTIVE - a Condition with Yes and No",
   AutoT_checkName: "Regenerate when active",
@@ -10629,6 +10640,16 @@ const STRINGS = {
   ApRunStarted: "When",
   ApRunValues: "Values",
   ApStepKept: "Values it kept",
+  ApRead: "Values it read",
+  ApReadHint: "Every {{\u2026}} this step uses, as it was when the step ran - a function's answer, and the names inside it.",
+  ApGave: "Values it gave",
+  ApFilled: "The test, with the values it had",
+  ApValEmpty: "(empty)",
+  ApValNone: "(no value)",
+  ApValSecret: "\uD83D\uDD12 a secret - never shown",
+  ApValHidden: "\uD83D\uDD12 hidden - only the tray program has it",
+  ApValErr: "could not be worked out: {why}",
+  ApValNotSaved: "not saved - not in the reply, or the step failed first",
   ApNothingKept: "Nothing was kept.",
   ApTheReply: "The reply",
   ApTestReply: "What came back",
@@ -11149,7 +11170,7 @@ const STATUSES = [
    the status bar, and clicking it copies a line you can paste into a bug
    report — build date and flow protocol included, because those are the two
    things that actually differ between copies. */
-const APP_VERSION = "5.28.0";
+const APP_VERSION = "5.29.0";
 const APP_BUILT = "2026-11-01";
 function buildLine(){
   return "KalKech v" + APP_VERSION + " \u00b7 built " + APP_BUILT +
@@ -30967,7 +30988,8 @@ function apTrigCard(a, probs, run){
   const sel = run ? U.runSel === "trigger" : U.sel === "trigger";
   let sum, extra = "";
   if (run){
-    const ins = Object.keys(run.inputs || {}).filter(k => run.inputs[k]).map(k => k + " = " + run.inputs[k]);
+    /* (5.29) an input left empty is said too: it is often why */
+    const ins = Object.keys(run.inputs || {}).map(k => k + " = " + (run.inputs[k] || '""'));
     sum = ins.length ? ins.join(" · ") : L("ApNoInputs");
     extra = '<span class="apst ok">' + esc(L(run.by === "assistant" ? "AutoByAssistantShort" : "AutoByYouShort")) + "</span>";
   } else {
@@ -31346,13 +31368,16 @@ function apRunPane(run, a){
   const live = !!AUTO.live[run.id];
   const state = run.state === "running" && !live ? "stopped" : run.state;
   if (U.runSel === "trigger"){
-    const ins = Object.keys(run.inputs || {}).filter(k => run.inputs[k]);
+    /* (5.29) every input, an empty one too - "it was empty" is often the
+       answer to "why did it go that way" */
+    const ins = Object.keys(run.inputs || {});
     return apHead("trigger", '<b class="apttl">' + LE("ApTrigger") + "</b>", [], "") +
       '<div class="appb" id="apPaneBody"><dl class="apkv">' +
         "<dt>" + LE("ApRunWho") + "</dt><dd>" + LE(run.by === "assistant" ? (run.asked === false ? "AutoByAssistantNoAsk" : "AutoByAssistant") : "AutoByYou") + "</dd>" +
         (run.record ? "<dt>" + LE("AutoRecordOpt") + "</dt><dd>" + esc(run.record) + "</dd>" : "") +
         "<dt>" + LE("ApRunStarted") + "</dt><dd>" + esc(stamp(run.started)) + (run.ended ? " → " + esc(stamp(run.ended)) : "") + "</dd>" +
-        ins.map(k => "<dt>" + esc((a && (a.inputs.find(i => i.key === k) || {}).label) || k) + "</dt><dd class=\"mono\">" + esc(run.inputs[k]) + "</dd>").join("") +
+        ins.map(k => "<dt>" + esc((a && (a.inputs.find(i => i.key === k) || {}).label) || k) + ' <code class="apdbn">{{input.' + esc(k) + "}}</code></dt>" +
+          (run.inputs[k] ? '<dd class="mono">' + esc(run.inputs[k]) + "</dd>" : '<dd class="apdbx">' + LE("ApValEmpty") + "</dd>")).join("") +
       "</dl></div>";
   }
   if (U.runSel === "finish"){
@@ -31388,10 +31413,26 @@ function apRunPane(run, a){
       ((st.redacted || []).length ? '<div class="apnote soft apred">' + esc(L("AutoRedactedNote", { list:st.redacted.join(", ") })) +
         (a && s ? ' <button class="btn sm" data-apallow="' + esc(st.sid) + '" data-auto="' + esc(a.id) + '" data-names="' + esc(st.redacted.join(",")) + '" type="button">' +
           LE("AutoAllowBtn") + "</button>" : "") + "</div>" : "") +
-      (names.length ? '<h5 class="apsech">' + LE("ApStepKept") + "</h5>" + (kept.length || hid.length ? apValsHtml(kept, hid) : '<p class="apnone">' + LE("ApNothingKept") + "</p>") : "") +
+      (st.filled ? '<h5 class="apsech">' + LE("ApFilled") + '</h5><p class="apdbf mono">' + esc(st.filled) +
+        (st.took ? ' <b class="' + (st.took === "yes" ? "ok" : "bad") + '">\u2192 ' + esc(L(st.took === "yes" ? "ApTookYes" : "ApTookNo")) + "</b>" : "") + "</p>" : "") +
+      ((st.read || []).length ? '<h5 class="apsech" title="' + LE("ApReadHint") + '">' + LE("ApRead") + "</h5>" + apSeenHtml(st.read) : "") +
+      ((st.gave || []).length ? '<h5 class="apsech">' + LE("ApGave") + "</h5>" + apSeenHtml(st.gave, true)
+        : names.length ? '<h5 class="apsech">' + LE("ApStepKept") + "</h5>" + (kept.length || hid.length ? apValsHtml(kept, hid) : '<p class="apnone">' + LE("ApNothingKept") + "</p>") : "") +
       (st.reply ? '<h5 class="apsech">' + LE("ApTheReply") + "</h5>" + autoReplyHtml(st, true) : "") +
       (t && (t.excerpt || t.url) ? '<h5 class="apsech">' + LE("ApTestReply") + "</h5>" + autoTestHtml(s || { kind:st.kind }, st.sid, t, true) : "") +
     "</div>";
+}
+/* (5.29) a step's values, name by name: what it read, or what it gave */
+function apSeenHtml(list, gave){
+  return '<dl class="apkv apdbg">' + list.map(x => {
+    const dd = x.h === "secret" ? '<dd class="apdbx">' + LE("ApValSecret") + "</dd>"
+             : x.h ? '<dd class="apdbx">' + LE("ApValHidden") + "</dd>"
+             : x.m ? '<dd class="apdbx">' + LE(gave ? "ApValNotSaved" : "ApValNone") + "</dd>"
+             : x.e != null ? '<dd class="apdbx bad">' + esc(L("ApValErr", { why:x.e })) + "</dd>"
+             : x.v === "" ? '<dd class="apdbx">' + LE("ApValEmpty") + "</dd>"
+             : '<dd class="mono">' + esc(x.v) + "</dd>";
+    return '<dt><code class="apdbn">{{' + esc(x.n) + "}}</code></dt>" + dd;
+  }).join("") + "</dl>";
 }
 function apStepWord(st){
   if (st.off) return L("ApOffShort");
@@ -32142,7 +32183,8 @@ function apFxInsert(text, caret, after){
   if (!f || !document.body.contains(f.el)) return;
   const el = f.el;
   const at = f.at != null ? f.at : el.value.length, end = f.end != null ? f.end : at;
-  apPutText(el, at, end, text, caret, after);
+  const b = apBare(el.value, at, end, { ins:text, caret:caret });
+  apPutText(el, at, end, b.ins, b.caret, after);
   f.done = true;
 }
 /* text into a box in place of [from, to), the caret at caret (an offset in
@@ -32262,7 +32304,26 @@ function apSlashPick(){
   const to = el.selectionStart;
   const from = SLASH.start;
   apSlashClose();
-  apPutText(el, from, to, x.ins, x.caret, x.ins2);
+  const b = apBare(el.value, from, to, x);
+  apPutText(el, from, to, b.ins, b.caret, x.ins2);
+}
+/* (5.29) inside {{ … }} a value is written bare. Picked there - the
+   brackets of {{empty()}}, say - it goes in without braces of its own:
+   {{empty(input.documentType)}}, not {{empty({{input.documentType}})}},
+   which nothing could read (the Condition builder made it words in
+   quotes, and the test was always No). A tag still open after the caret
+   gets its }} too. */
+function apInTag(text, at){
+  const before = String(text).slice(0, at);
+  return before.lastIndexOf("{{") > before.lastIndexOf("}}");
+}
+function apBare(text, from, to, x){
+  const ins = x.ins, caret = x.caret == null ? ins.length : x.caret;
+  const m = /^\{\{([^{}#\/][^{}]*)\}\}$/.exec(ins);
+  if (!m || !apInTag(text, from)) return { ins:ins, caret:caret };
+  const after = String(text).slice(to);
+  const closed = after.indexOf("}}") >= 0 && (after.indexOf("{{") < 0 || after.indexOf("}}") < after.indexOf("{{"));
+  return { ins:m[1] + (closed ? "" : "}}"), caret:Math.max(0, Math.min(m[1].length, caret - 2)) };
 }
 function apSlashClose(){
   SLASH.el = null;

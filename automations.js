@@ -127,11 +127,39 @@ function nameOk(v){
 }
 function flat(s){ return String(s || "").toLowerCase().replace(/[^a-z0-9ក-៿]+/g, ""); }
 
+/* ── {{ }} written inside {{ }} (5.29) ──────────────────────────────────
+   Inside a {{ }} a value is written bare: {{empty(input.documentType)}},
+   {{lower(name)}}. Written with braces of its own -
+   {{empty({{input.documentType}})}}, which the {x} list and the / list
+   themselves put in before 5.29 - the outer one could not be read: in a
+   path it stayed as text, and in a Condition it became words in quotes,
+   so the test was always No. It can only mean one thing, so it is read
+   that way: the inner braces are dropped. A text whose braces do not
+   pair up is left as it is (the checker says what is wrong with it). */
+function deNest(text){
+  const s = String(text == null ? "" : text);
+  if (s.indexOf("{{") < 0) return s;
+  let out = "", depth = 0, i = 0, changed = false;
+  while (i < s.length){
+    if (s.startsWith("{{", i)){ if (depth) changed = true; else out += "{{"; depth++; i += 2; continue; }
+    if (depth && s.startsWith("}}", i)){ depth--; if (depth) changed = true; else out += "}}"; i += 2; continue; }
+    out += s[i++];
+  }
+  return depth || !changed ? s : out;
+}
+/* ...and a test: also one {{ }} put in quotes - "{{empty(x)}}" - which
+   the Condition builder did with the one it could not read. In quotes a
+   test reads the words as they are, never a value; nobody means the
+   words "{{x}}", so the quotes go. */
+function condFix(src){
+  return deNest(src).replace(/(["'])\s*(\{\{[^{}]*\}\})\s*\1/g, "$2");
+}
+
 /* name/value rows - query, headers, form fields, script values - kept as
    [name, value] pairs so the order you wrote them in is the order they go */
 function pairs(v){
-  return arr(v).map(p => Array.isArray(p) ? [str(p[0], 200).trim(), str(p[1], LIMIT.value)]
-                       : (p && typeof p === "object") ? [str(p.k != null ? p.k : p.name, 200).trim(), str(p.v != null ? p.v : p.value, LIMIT.value)]
+  return arr(v).map(p => Array.isArray(p) ? [str(p[0], 200).trim(), deNest(str(p[1], LIMIT.value))]
+                       : (p && typeof p === "object") ? [str(p.k != null ? p.k : p.name, 200).trim(), deNest(str(p.v != null ? p.v : p.value, LIMIT.value))]
                        : null)
     .filter(p => p && p[0]).slice(0, LIMIT.pairs);
 }
@@ -139,8 +167,8 @@ function pairs(v){
 /* the fields of "Shape a list": [name, what it holds]. One row with no
    name makes a list of plain values (just the names, say) */
 function selFields(v){
-  const rows = arr(v).map(p => Array.isArray(p) ? [str(p[0], 60).trim(), str(p[1], LIMIT.value)]
-                         : (p && typeof p === "object") ? [str(p.k != null ? p.k : p.name, 60).trim(), str(p.v != null ? p.v : p.value, LIMIT.value)]
+  const rows = arr(v).map(p => Array.isArray(p) ? [str(p[0], 60).trim(), deNest(str(p[1], LIMIT.value))]
+                         : (p && typeof p === "object") ? [str(p.k != null ? p.k : p.name, 60).trim(), deNest(str(p.v != null ? p.v : p.value, LIMIT.value))]
                          : null)
     .filter(p => p && (p[0] || p[1].trim())).slice(0, LIMIT.pairs);
   return rows.length > 1 ? rows.filter(p => p[0]) : rows;
@@ -232,17 +260,17 @@ function normStep(s, i, depth, budget){
   const out = { id: idOk(s.id) || ("s" + rnd(6)), kind: kind,
                 name: str(s.name, LIMIT.name).trim(),
                 /* run this step only when... (empty: always) */
-                when: str(s.when, 300).trim(),
+                when: condFix(str(s.when, 300).trim()),
                 onFail: s.onFail === "continue" ? "continue" : "stop" };
   if (kind === "http"){
     const m = String(s.method || "").toUpperCase();
     out.conn = idOk(s.conn);
     out.method = METHODS.indexOf(m) >= 0 ? m : "GET";
-    out.path = str(s.path, 2000).trim();
+    out.path = deNest(str(s.path, 2000).trim());
     out.query = pairs(s.query);
     out.headers = pairs(s.headers);
     out.bodyType = BODIES.indexOf(s.bodyType) >= 0 ? s.bodyType : "none";
-    out.body = str(s.body, LIMIT.body);
+    out.body = deNest(str(s.body, LIMIT.body));
     out.form = pairs(s.form);
     /* which answers count as success: "2xx", "200,201", "2xx,404", "any" */
     out.expect = str(s.expect, 60).trim() || "2xx";
@@ -256,41 +284,41 @@ function normStep(s, i, depth, budget){
   } else if (kind === "wait"){
     out.seconds = clamp(int(s.seconds, 10), 1, LIMIT.wait);
   } else if (kind === "confirm"){
-    out.text = str(s.text, 2000);
+    out.text = deNest(str(s.text, 2000));
   } else if (kind === "if"){
     /* the test, written like any other condition; it has no "only when"
        of its own - it IS one */
     out.when = "";
-    out.cond = str(s.cond, 300).trim();
+    out.cond = condFix(str(s.cond, 300).trim());
     out.yes = normList(s.yes, depth + 1, budget);
     out.no = normList(s.no, depth + 1, budget);
   } else if (kind === "set"){
     /* var, not name: name is the step's own title on its card */
     out.var = str(s.var, 40).trim();
     out.how = SET_HOW.indexOf(s.how) >= 0 ? s.how : "set";
-    out.value = str(s.value, LIMIT.body);
+    out.value = deNest(str(s.value, LIMIT.body));
     out.show = s.show === "ai" ? "ai" : "me";
   } else if (kind === "stop"){
     out.as = STOP_AS.indexOf(s.as) >= 0 ? s.as : "fail";
-    out.text = str(s.text, LIMIT.body);
+    out.text = deNest(str(s.text, LIMIT.body));
   } else if (kind === "each"){
-    out.from = str(s.from, 300).trim();
+    out.from = deNest(str(s.from, 300).trim());
     out.as = str(s.as, 40).trim() || "item";
     out.max = clamp(int(s.max, 50), 1, LIMIT.loop);
     out.do = normList(s.do, depth + 1, budget);
   } else if (kind === "select" || kind === "filter"){
-    out.from = str(s.from, 300).trim();
+    out.from = deNest(str(s.from, 300).trim());
     out.var = str(s.var, 40).trim();
     out.show = s.show === "ai" ? "ai" : "me";
     if (kind === "select") out.fields = selFields(s.fields);
-    else out.cond = str(s.cond, 600).trim();
+    else out.cond = condFix(str(s.cond, 600).trim());
   }
   if (kind === "http" || kind === "script"){
     out.save = arr(s.save).slice(0, LIMIT.saves).map(normSave(kind)).filter(Boolean);
     /* the status is not always the whole story: an API that answers 200
        with {"success": false} has failed. This is read after the values
        are saved, and the step only counts as done when it is true. */
-    out.okWhen = str(s.okWhen, 300).trim();
+    out.okWhen = condFix(str(s.okWhen, 300).trim());
     /* keep the whole reply (or a script's whole output), as it came -
        passwords and tokens masked - for you, or for you and the assistant */
     out.reply = REPLY_SHOWS.indexOf(s.reply) >= 0 ? s.reply : "";
@@ -298,7 +326,7 @@ function normStep(s, i, depth, budget){
        secrets of the run masked, a field named token left as it is */
     if (s.replyRaw === true && out.reply) out.replyRaw = true;
     const r = obj(s.repeat);
-    out.repeat = { until: str(r.until, 300).trim(),
+    out.repeat = { until: condFix(str(r.until, 300).trim()),
                    times: clamp(int(r.times, 10), 1, LIMIT.times),
                    every: clamp(int(r.every, 5), 1, LIMIT.every) };
   }
@@ -378,11 +406,11 @@ function normAuto(a){
     inputs: arr(a.inputs).slice(0, LIMIT.inputs).map(normInput).filter(i => i.key),
     steps: dedupeIds(normList(a.steps, 0, { left:LIMIT.steps })),
     /* the line shown when it finishes: "COI {{coiNumber}} is ready" */
-    result: str(a.result, 8000),
+    result: deNest(str(a.result, 8000)),
     /* ...and when it fails: "Not regenerated: {{errorMessage}}". (5.26)
        Both are Markdown - a heading, a list, a table, a code block - and
        can write out a list: {{#each docs}}- {{name}}{{/each}} */
-    resultFail: str(a.resultFail, 8000),
+    resultFail: deNest(str(a.resultFail, 8000)),
     /* may the assistant start it, and does it ask you first when it does */
     ai: a.ai !== false,
     ask: a.ask !== false,
@@ -392,6 +420,21 @@ function normAuto(a){
 
 /* a past run, as kept in the history: never a hidden value (the page never
    had one), never a secret input, never the reply text */
+/* (5.29) what a step read or gave, as kept: { n, v } a value, { n, h }
+   hidden or a secret (never its value), { n, m } no value, { n, e } an
+   error working it out */
+function seenList(list, vmax){
+  const out = arr(list).slice(0, 16).map(x => {
+    x = obj(x);
+    const n = str(x.n, 120);
+    if (!n) return null;
+    if (x.h) return { n:n, h:x.h === "secret" ? "secret" : "hidden" };
+    if (x.m) return { n:n, m:1 };
+    if (x.e != null) return { n:n, e:str(x.e, 160) };
+    return { n:n, v:str(x.v, vmax) };
+  }).filter(Boolean);
+  return out.length ? out : undefined;
+}
 function normRun(r, replyMax){
   r = obj(r);
   const rmax = replyMax == null ? 20000 : replyMax;
@@ -428,6 +471,9 @@ function normRun(r, replyMax){
                       fails: int(s.fails, 0) || undefined,
                       state: str(s.state, 12), status: int(s.status, 0) || undefined, ms: Math.max(0, int(s.ms, 0)),
                       tries: int(s.tries, 0) || undefined, note: str(s.note, 300) || undefined,
+                      read: seenList(s.read, rmax >= 20000 ? 161 : 100),
+                      gave: seenList(s.gave, rmax >= 20000 ? 161 : 100),
+                      filled: str(s.filled, 400) || undefined,
                       redacted: arr(s.redacted).filter(x => NAME_RE.test(String(x))).slice(0, 12).length
                         ? arr(s.redacted).filter(x => NAME_RE.test(String(x))).slice(0, 12) : undefined,
                       reply: s.reply && rmax ? str(s.reply, rmax) : undefined,
@@ -1286,7 +1332,7 @@ function condRows(src){
 /* one side of a test, as the runner reads it: a {{value}} or a number as it
    is, anything else in quotes */
 function condOperand(v){
-  v = String(v == null ? "" : v).trim();
+  v = deNest(String(v == null ? "" : v).trim());
   if (/^\{\{[^{}]*\}\}$/.test(v) || /^-?\d+(?:\.\d+)?$/.test(v) || /^(true|false)$/i.test(v)) return v;
   return '"' + v.replace(/\\/g, "\\\\").replace(/"/g, '\\"') + '"';
 }
@@ -1462,6 +1508,11 @@ function check(a, ctx){
     if (!src) return;
     const pc = parseCond(src);
     if (pc.error) return add(si, field, "badCond", { why:pc.error });
+    /* (5.29) words in quotes are read as words: a {{value}} inside them is
+       never filled in - "{{a}}-{{b}}" == ... compares those very letters */
+    const lx = lexCond(src);
+    const q = (lx.tokens || []).find(k => k.t === "lit" && k.q && k.v.indexOf("{{") >= 0);
+    if (q) add(si, field, "condQuoted", { warn:true, name:str(q.v, 80) });
     /* a test that could read a secret could be used to guess it, a
        character at a time; the tray program refuses one, and so does this */
     const names = condNames(src);
@@ -1950,6 +2001,86 @@ async function run(a, env){
     return (r && typeof r === "object") ? r : { ok:false, error:"noAnswer" };
   };
   const scopeOf = sc => ({ values:vals, hidden:R.hidden, locals:sc.locals });
+
+  /* (5.29) what each step read and gave, for the run view - so a test
+     that went the wrong way shows why: {{input.documentType}} = (empty),
+     {{empty(input.documentType)}} = true. Every {{…}} in the fields the
+     step uses, worked out here as it was then (a function, and the names
+     inside it), and the values it saved or set. Never a secret: a secret
+     input or a connection's secret is 🔒 (and a typed secret is masked in
+     any value that holds it); a value only the tray program has is
+     "hidden". Values shown to you only stay on this page: none of this
+     goes to the assistant. */
+  const secretIns = a.inputs.filter(i => i.kind === "secret").map(i => "input." + i.key);
+  const isSecretRef = r => r.ns === "secret" || secretIns.indexOf(r.full) >= 0;
+  function preview(v, max){
+    let t = txt(dataOf(v));
+    mask.forEach(m => { if (m && String(m).length >= 3) t = t.split(String(m)).join("\u2022\u2022\u2022\u2022"); });
+    return t.length > (max || 160) ? t.slice(0, max || 160) + "\u2026" : t;
+  }
+  function seeOne(p, scope){
+    if (p.refs.some(isSecretRef)) return { h:"secret" };
+    const r = evalPh(p, scope);
+    if (r.hidden) return { h:"hidden" };
+    if (r.error) return { e:str(r.error, 160) };
+    if (r.ok) return { v:preview(p.filters.length ? r.text : r.v) };
+    return { m:1 };
+  }
+  function readOf(texts, sc, skip){
+    const out = [], seen = {}, scope = scopeOf(sc);
+    const put = (label, p) => {
+      if (seen[label] || out.length >= 16) return;
+      seen[label] = 1;
+      out.push(Object.assign({ n:str(label, 120) }, seeOne(p, scope)));
+    };
+    texts.forEach(t => {
+      if (!t) return;
+      placeholders(t).forEach(p => {
+        if (p.bad === "name" || !p.ast) return;
+        if (!p.simple || p.filters.length) put(p.raw.trim(), p);
+        p.refs.forEach(r => {
+          if (!r.ns && skip && skip.indexOf(r.name) >= 0) return;
+          const label = r.full + partsPath(r.parts);
+          put(label, parsePh(label));
+        });
+      });
+    });
+    return out.length ? out : undefined;
+  }
+  /* a test with each {{…}} written as the value it had: "" == true */
+  function filledOf(src, sc){
+    const scope = scopeOf(sc);
+    return str(String(src || "").replace(PH_RE, (m, inner) => {
+      const p = parsePh(inner);
+      if (p.bad === "name" || !p.ast) return m;
+      const x = seeOne(p, scope);
+      if (x.h) return x.h === "secret" ? "\uD83D\uDD12" : "\uD83D\uDD12" + (p.full || p.raw.trim());
+      if (x.m) return "(no value)";
+      if (x.e) return "(?)";
+      /* a number, true or false as it is; any other text in quotes, so an
+         empty one shows as "" */
+      return /^(-?\d+(\.\d+)?|true|false)$/i.test(x.v) ? x.v : JSON.stringify(x.v);
+    }), 400);
+  }
+  /* the fields a step reads, by its kind */
+  function textsOf(s){
+    const P = rows => arr(rows).map(r => r[1]);
+    if (s.kind === "if") return [s.cond];
+    if (s.kind === "http") return [s.when, s.path, s.body].concat(P(s.query), P(s.headers), P(s.form), [s.okWhen, s.repeat && s.repeat.until]);
+    if (s.kind === "script") return [s.when].concat(P(s.args), [s.okWhen, s.repeat && s.repeat.until]);
+    if (s.kind === "set") return [s.when, s.value];
+    if (s.kind === "each") return [s.when, s.from];
+    if (s.kind === "select") return [s.when, s.from].concat(P(s.fields).filter(t => !/\{\{\s*item\b/.test(String(t))));
+    if (s.kind === "filter") return [s.when, s.from];
+    if (s.kind === "stop" || s.kind === "confirm") return [s.when, s.text];
+    return [s.when];
+  }
+  function gaveOf(s){
+    const names = s.kind === "http" || s.kind === "script" ? arr(s.save).map(v => v.name) : s.var ? [s.var] : [];
+    const out = names.filter(Boolean).slice(0, 12).map(k => R.values[k] ? { n:k, v:preview(R.values[k].v) }
+                                                           : R.hidden.indexOf(k) >= 0 ? { n:k, h:"hidden" } : { n:k, m:1 });
+    return out.length ? out : undefined;
+  }
   tick();
 
   /* "Try up to here": stop after this step. upToId (5.24) names any step;
@@ -2024,6 +2155,11 @@ async function run(a, env){
       if (inLoop){ st.fails = (st.fails || 0) + 1; st.failNote = st.note; }
       if (s.onFail !== "continue") failed = true;
     };
+    try {
+      st.read = readOf(textsOf(s), sc, s.kind === "http" || s.kind === "script" ? arr(s.save).map(v => v.name) : null);
+      if (s.kind === "if") st.filled = filledOf(s.cond, sc);
+      else if (s.when) st.filled = filledOf(s.when, sc);
+    } catch(e){}
     if (s.kind === "if"){
       const c = await cond(s.cond, sc);
       st.ms = Date.now() - began;
@@ -2216,6 +2352,7 @@ async function run(a, env){
       fail(noteOf(e));
     } finally {
       st.ms = (st.ms || 0) + (Date.now() - began);
+      try { st.gave = gaveOf(s); } catch(e){}
       tick();
     }
   }
@@ -2530,7 +2667,9 @@ const api = {
   HOLDS, SET_HOW, STOP_AS, FN, fnList, fieldList, exParse, evalPh, dataOf, txt, dig, asList, partsPath,
   tplParse, render, valueOf, wireText, wireStep, cmpOp, mdTable, unsetOf,
   /* 5.27: automation files */
-  FILE_KIND, exportFile, readFile, planImport, applyImport, baseKey, freeName
+  FILE_KIND, exportFile, readFile, planImport, applyImport, baseKey, freeName,
+  /* 5.29: {{ }} inside {{ }}, and what a run read */
+  deNest, condFix
 };
 if (typeof module !== "undefined" && module.exports) module.exports = api;
 if (root) root.DossierAuto = api;

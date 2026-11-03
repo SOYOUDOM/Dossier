@@ -1903,7 +1903,9 @@ caret with everything the box can use:
 
 Keep typing to narrow it (`/cou` finds `count`), **↑ ↓** to choose,
 **Enter** or **Tab** to put it in - the **/** and what you typed go, and
-the caret lands inside the brackets of a function. **Esc** closes it and
+the caret lands inside the brackets of a function. Pick a value there
+(type **/** again) and it goes in bare - `{{count(docs)}}`, not
+`{{count({{docs}})}}` (since 5.29). **Esc** closes it and
 leaves what you typed. **Ctrl**+**Space** opens it anywhere, without a /.
 The **{x}** button in the corner of a box shows the same list with a box to
 search. (A / in the middle of a word - an address like `/items/` - does not
@@ -1932,6 +1934,33 @@ Functions are worked out on this page, then handed to the tray program as a
 value for that one step - so a function cannot read a **hidden** value or a
 secret (the checker says so). Use the hidden value on its own, or a part of
 it: `{{token}}`, `{{docs[0].downloadToken}}`.
+
+### Why does my Condition with empty() or lower() always go one way?
+
+Inside `{{ }}` a value is written **without braces of its own**:
+
+| Right | Not this |
+|---|---|
+| `{{empty(input.documentType)}}` | `{{empty({{input.documentType}})}}` |
+| `{{lower(input.policy)}}` | `{{lower({{input.policy}})}}` |
+| `{{empty(input.documentType)}} == true` | `"{{empty(input.documentType)}}" == true` |
+
+Before 5.29 the **/** list and the **{x}** button themselves put the second
+form in when you picked a value inside a function's brackets. A Condition
+could not read it: the builder turned it into words in quotes, so the test
+compared the letters `{{empty(...)}}` with `true` - always **No**, even
+with the input left empty. Since 5.29:
+
+- picked inside `{{ … }}`, a value goes in bare: `{{empty(input.documentType)}}`;
+- a design that already has `{{ }}` inside `{{ }}` is read the right way
+  (the inner braces are dropped when it is opened), and a test side that is
+  one `{{…}}` in quotes loses the quotes;
+- words in quotes that hold a `{{ }}` (`"{{a}}-{{b}}"`) are still words:
+  the checker warns, because the value in them is never filled in.
+
+Not sure what a test saw? Run it and click the Condition: **The test, with
+the values it had** shows it as `true == true → Yes` (see *How do I see the
+value of each step?*).
 
 ### How do I make an automation return a list, like a policy's documents?
 
@@ -2389,14 +2418,39 @@ secret in them.
 went, which automation, who started it (you or the assistant), the record
 and the values, when, and how long it took. Click one and it is **drawn on
 the canvas, as it went** - even if the design has changed since - each card
-with its status; click a card for what it kept and its reply. **Open the
-design** from there opens it in the designer.
+with its status; click a card for what it read, what it gave and its reply
+(see *How do I see the value of each step?*). **Open the design** from
+there opens it in the designer.
 
 In a conversation, a run's card shows every step while it runs. When it has
 finished it folds to **one line** - *3 of 3 steps ran*, or *Failed at "Sign
 in" - the answer was 401* - with **steps** to open them, the values and the
 closing line under it, and **See the run** to draw it on the Automations
 page.
+
+### How do I see the value of each step? (debugging a run)
+
+**Since 5.29.** Run the automation (or **Try up to here**), then click a
+card on the run:
+
+- **The test, with the values it had** (a Condition, or a step's *Only
+  run when*): the test with each `{{…}}` written as the value it had -
+  `"" == "COI" → No`, `true == true → Yes`. An empty value shows as `""`.
+- **Values it read** - every `{{…}}` the step uses (path, headers, body,
+  values, the test), as it was when the step ran: a function's answer
+  (`{{lower(input.policy)}}  p000123x00`) and the names inside it
+  (`{{input.policy}}  P000123X00`). *(empty)* when it was empty, *(no
+  value)* when nothing gave it one.
+- **Values it gave** - what it saved or set, as it was right after the step
+  (a *Set a value* that adds to a list shows the list at that moment), or
+  *not saved* when the reply did not have it.
+- **When you run it** (the first card) lists every input, empty ones too.
+
+Never shown: a connection's **secret** or a **secret input** (🔒 *a secret*;
+a typed secret is masked `••••` inside any value that holds it), and a value
+saved **Hidden** (🔒 *hidden - only the tray program has it*). These lists
+stay on your PC: the assistant does not get them. The run history keeps
+them too, shorter.
 
 ### How do I let the assistant run an automation - and stop it asking me?
 

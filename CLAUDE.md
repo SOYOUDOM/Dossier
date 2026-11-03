@@ -37,7 +37,7 @@ are careful not to attract attention from their security team.
 | `flow/*.md` | Guides: `CONTRACT.md` (request/reply/actions), `POWER-AUTOMATE.md`, `BAU-RUNBOOKS.md`, `SOURCES.md` (setup + troubleshooting for Sources), `SPEED.md`, `SERVICENOW.md`. |
 | `scripts/bridge/DossierBridge.cs` | The tray program (C# 5, WinForms): serves the page on 127.0.0.1, keeps the workspace in SQL LocalDB when available (or the SQL Server named in Setup, since 5.21), runs scripts, and (5.22) carries out automation steps and keeps their secrets (DPAPI). `KalKech.bat` compiles it with the Windows `csc.exe` whenever the `.cs` is newer than the `.exe`. |
 | `lang/en.xml`, `lang/km.xml` | Language packs (English, Khmer). Missing keys fall back to the English `STRINGS` table in `dossier.html`. |
-| `docs/` | `kalkech-automations-guide.md` (5.27.2, now 5.28.0: the whole of Automations for the owner's Sources - keep it in step with every automations change, verify its facts against the code; one `##` question per topic, ~1,100-character passages), `HOW-THE-AI-WORKS.md` (the whole AI pipeline for beginners, plus a reusable blueprint) and `how-the-ai-works.html` (the same as a self-contained picture page). Keep both in step with the code when the pipeline changes (numbers: 60 records, 10 notes, 30 lessons, 14,000 characters, 66 actions / 44 writes). |
+| `docs/` | `kalkech-automations-guide.md` (5.27.2, now 5.29.0: the whole of Automations for the owner's Sources - keep it in step with every automations change, verify its facts against the code; one `##` question per topic, ~1,100-character passages), `HOW-THE-AI-WORKS.md` (the whole AI pipeline for beginners, plus a reusable blueprint) and `how-the-ai-works.html` (the same as a self-contained picture page). Keep both in step with the code when the pipeline changes (numbers: 60 records, 10 notes, 30 lessons, 14,000 characters, 66 actions / 44 writes). |
 | `tests/` | `sources.test.js`, `diagram.test.js`, `automations.test.js` (node:test), `e2e/run.js` + `e2e/sources.scenario.js` (real browser), `bridge/run.js` (compiles the bridge with mcs/csc, runs it headless against a made-up API: 74 checks), `fixtures/` (made-up documents; `make-pdf.js` regenerates the PDFs; `auto-conditions.json`, the condition cases both readers must agree on). |
 
 A *workspace* is a folder the user picks (File System Access API):
@@ -92,13 +92,13 @@ A *workspace* is a folder the user picks (File System Access API):
 - Commit messages: clear summary + body; no model names in commits, code or
   docs. Do not open a pull request unless the owner asks.
 - Work so far is on branch `claude/chat-panel-pixel-art-gifs-d822hq`
-  (latest: 5.28.0). Follow the branch instructions of your own session.
+  (latest: 5.29.0). Follow the branch instructions of your own session.
 
 ## Testing
 
 ```
-node --test                                   # 106 unit tests (Sources, grounding, names check, code origin, flow reply fields, diagrams, automations)
-node tests/e2e/run.js                         # the app in headless Chrome/Edge: 345 checks (CHROME=<path> to choose)
+node --test                                   # 108 unit tests (Sources, grounding, names check, code origin, flow reply fields, diagrams, automations)
+node tests/e2e/run.js                         # the app in headless Chrome/Edge: 352 checks (CHROME=<path> to choose)
 node tests/bridge/run.js                      # the bridge's automation routes, built and run (mcs+mono or csc): 74 checks
 node flow/check-prompt.js                     # after editing flow/prompt.txt ...
 python3 flow/embed-prompt.py                  # ... then copy it into flow.js (PROMPT_BUILTIN)
@@ -131,6 +131,47 @@ Also useful:
   `DossierFlow.validate`. `tests/e2e/run.js` is a working example of all of it.
 
 ## Recent history (newest first)
+
+- **5.29.0** - Owner's photo (company screen: bookmarks, API paths, a
+  policy number - never committed): a Condition
+  `"{{empty({{input.documentType}})}}" == true` went No with the input
+  empty; "lower and empty are not work well"; "add a value debugging".
+  - *Cause*: the / list and {x} (`apSuggest` items `{{name}}`, functions
+    `{{fn()}}` with the caret inside) inserted `{{input.x}}` inside an
+    open tag; `PH_RE`/`TAG_RE` (`[^{}]*`) cannot read nested tags; the
+    builder's `condOperand` quoted the unreadable operand, so the test
+    compared a literal. Not caught by `check()`.
+  - *Fix* (automations.js): `deNest(text)` drops braces nested inside a
+    tag (unbalanced text left alone; JSON, blocks untouched), `condFix(src)`
+    = deNest + unquote a quoted literal that is exactly one tag. Applied in
+    `normStep` (when, cond, okWhen, repeat.until, filter cond → condFix;
+    path, body, text, value, from, `pairs`/`selFields` values → deNest),
+    `normAuto` result/resultFail, and `condOperand`. So saved designs mend
+    on load. `check()` → `condQuoted` (warn) for any other quoted literal
+    holding `{{`. Page: `apBare(text, from, to, item)` / `apInTag` - a
+    `{{x}}` item picked inside an open tag goes in bare (closing `}}`
+    added when the tag is not closed), used by `apSlashPick` and
+    `apFxInsert`.
+  - *Values* (run()): `st.read` (`readOf(textsOf(s), sc, skip)`: every tag
+    in the step's fields - the expression when not a plain name, then each
+    ref; `seeOne` → `{n, v}` / `{n, h:"secret"|"hidden"}` / `{n, m:1}` /
+    `{n, e}`; secret = `secret.*` or a secret input; typed secrets masked
+    in previews; ≤16, 160 chars; an http/script step skips its own save
+    names), `st.filled` (`filledOf`: the test with each tag as its value;
+    numbers/true/false bare, text JSON-quoted), `st.gave` (`gaveOf`: save
+    names / `s.var` after the step). `normRun` keeps them (`seenList`; 100
+    chars in history). Only `say` goes to the model (flowContext), so
+    these never reach the assistant. Page: `apRunPane` sections *The test,
+    with the values it had* (`.apdbf`), *Values it read* / *Values it gave*
+    (`apSeenHtml`, `.apdbg`), the trigger pane lists every input (empty →
+    *(empty)*), the run's trigger card shows `key = ""`.
+  - Docs: README *Why does my Condition with empty() or lower() always go
+    one way?* and *How do I see the value of each step? (debugging a run)*;
+    guide 5.29.0 (two sections, checker row; 66 passages; the owner's
+    wording ranks them first).
+  - Tests: 2 unit (108), 7 e2e (352: an old design mends, runs Yes, the
+    pane shows the filled test and values, gave, trigger empty input, / and
+    {x} insert bare). Bridge unchanged (74).
 
 - **5.28.0** - Owner: "I set Leave out token and Keep policyNumber,
   fileName but it is still hidden ... not every property named token is

@@ -2012,6 +2012,51 @@
   check("...and the designer's bar: the to-fix pill, more, Save and Test one height", bar528.every(x => x > 0 && x === bar528[0]), bar528.join("/"));
   AUTO.ui.draft = null; AUTO.ui.mode = "design"; AUTO.ui.run = null; AUTO.ui.tab = "list"; apPaint();
 
+  /* (5.29) {{ }} inside {{ }}: the owner's Condition, as 5.28 saved it -
+     "{{empty({{input.documentType}})}}" == true, always No */
+  const s529 = autoStore();
+  s529.list.push({ id:"Anest529", name:"Nest 529", inputs:[{ key:"documentType", label:"Document type", required:false }],
+    steps:[{ id:"c529", kind:"if", cond:'"{{empty({{input.documentType}})}}" == true',
+             yes:[{ id:"y529", kind:"set", var:"went", value:"yes" }], no:[{ id:"n529", kind:"set", var:"went", value:"no" }] }] });
+  /* a new store object: read again, as when a workspace is opened */
+  S.settings.automations = JSON.parse(JSON.stringify(s529)); touch();
+  const d529 = autoStore().list.find(a => a.id === "Anest529");
+  check("(5.29) a Condition saved with {{ }} inside {{ }} and in quotes reads again: {{empty(input.documentType)}} == true",
+        d529 && d529.steps[0].cond === "{{empty(input.documentType)}} == true", d529 && d529.steps[0].cond);
+  let r529 = await autoPanelRun(d529, { documentType:"" }, { by:"me" });
+  check("...and with Document type left empty it goes Yes", r529.steps[0].took === "yes" && r529.values.went && r529.values.went.v === "yes", JSON.stringify(r529.steps[0]));
+  AUTO.ui.runSel = "c529"; apPaint(); await sleep(60);
+  const pane529 = $("apPaneBody") ? $("apPaneBody").textContent : "";
+  check("(5.29) the run shows the test with the values it had, and every value the step read",
+        /true == true/.test(pane529) && /Yes/.test(pane529) && /Values it read/.test(pane529) &&
+        /\{\{empty\(input\.documentType\)\}\}\s*true/.test(pane529) && /\{\{input\.documentType\}\}\s*\(empty\)/.test(pane529), pane529.slice(0, 400));
+  AUTO.ui.runSel = "y529"; apPaint(); await sleep(40);
+  check("...and what a step gave", /Values it gave/.test($("apPaneBody").textContent) && /\{\{went\}\}\s*yes/.test($("apPaneBody").textContent), $("apPaneBody").textContent.slice(0, 300));
+  AUTO.ui.runSel = "trigger"; apPaint(); await sleep(40);
+  check("...and the trigger lists an input left empty, as empty", /Document type/.test($("apPaneBody").textContent) && /\(empty\)/.test($("apPaneBody").textContent),
+        $("apPaneBody").textContent.slice(0, 300));
+  /* picked inside {{ … }}, a value goes in bare */
+  AUTO.ui.mode = "design"; AUTO.ui.run = null; autoEdit("Anest529"); await sleep(60);
+  apSelect("y529"); await sleep(60);
+  const vb529 = document.querySelector('#apPane [data-f$=".value"]');
+  vb529.focus(); vb529.value = ""; vb529.dispatchEvent(new Event("input", { bubbles:true }));
+  typeIn26(vb529, "/upp");
+  await sleep(50);
+  vb529.dispatchEvent(new KeyboardEvent("keydown", { key:"Enter", bubbles:true, cancelable:true }));
+  await sleep(40);
+  typeIn26(vb529, "/documentT");
+  await sleep(50);
+  vb529.dispatchEvent(new KeyboardEvent("keydown", { key:"Enter", bubbles:true, cancelable:true }));
+  await sleep(40);
+  check("(5.29) a value picked from / inside a function's brackets goes in without braces of its own",
+        vb529.value === "{{upper(input.documentType)}}", vb529.value);
+  vb529.value = "{{lower()}}"; vb529.dispatchEvent(new Event("input", { bubbles:true }));
+  AUTO.ui.fxFor = { el:vb529, at:8, end:8, done:false };
+  apFxInsert("{{input.documentType}}");
+  check("...and so does one from the {x} list", vb529.value === "{{lower(input.documentType)}}", vb529.value);
+  AUTO.ui.draft = null; AUTO.ui.base = ""; AUTO.ui.mode = "design"; AUTO.ui.run = null; AUTO.ui.tab = "list"; apPaint();
+  autoStore().list = autoStore().list.filter(a => a.id !== "Anest529"); touch();
+
   closeChat();
   window.fetch = fetchAu;
   Object.assign(DB, { bridge:auWas.bridge, port:auWas.port, token:auWas.token });

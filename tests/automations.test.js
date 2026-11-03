@@ -953,3 +953,55 @@ test("5.28 a value the tray program kept hidden although shown: the run says whi
   assert.deepEqual(R.hidden, ["docs"]);
   assert.deepEqual(A.normRun(R).steps[0].redacted, ["docs"], "kept in the run history");
 });
+
+test("5.29 {{ }} inside {{ }} is read as a bare name; a test side that is one value in quotes loses them", async () => {
+  assert.equal(A.deNest("{{empty({{input.documentType}})}}"), "{{empty(input.documentType)}}");
+  assert.equal(A.deNest("/x/{{lower({{input.a}})}}/{{b}}"), "/x/{{lower(input.a)}}/{{b}}");
+  assert.equal(A.deNest("{{a({{b}}, {{c}})}} and {{d}}"), "{{a(b, c)}} and {{d}}");
+  /* nothing else moves: blocks, JSON, braces that do not pair up */
+  ["{{#each docs}}- {{name}}{{/each}}", '{"a":{"b":{{input.x}}}}', "{{{x}}}", "{{a}", "no braces"].forEach(t => assert.equal(A.deNest(t), t));
+  assert.equal(A.condFix('"{{empty({{input.documentType}})}}" == true'), "{{empty(input.documentType)}} == true");
+  assert.equal(A.condFix("{{a}} == '{{b}}' and {{c}} contains \"x {{d}}\""), "{{a}} == {{b}} and {{c}} contains \"x {{d}}\"");
+  assert.equal(A.condOperand("{{empty({{input.documentType}})}}"), "{{empty(input.documentType)}}");
+  /* the owner's design, as saved by 5.28: always No - now Yes when the input is empty */
+  const a = A.normAuto({ name:"t", inputs:[{ key:"documentType", label:"Document type" }],
+    steps:[{ id:"c1", kind:"if", cond:'"{{empty({{input.documentType}})}}" == true',
+             yes:[{ id:"y", kind:"set", var:"went", value:"{{upper({{input.documentType}})}}yes" }], no:[{ id:"n", kind:"set", var:"went", value:"no" }] }] });
+  assert.equal(a.steps[0].cond, "{{empty(input.documentType)}} == true");
+  assert.equal(a.steps[0].yes[0].value, "{{upper(input.documentType)}}yes");
+  assert.deepEqual(A.check(a, {}), []);
+  const call = async (op, b) => {
+    if (op !== "check") return { ok:true };
+    const p = A.parseCond(b.when);
+    return p.error ? { ok:false, error:p.error } : { ok:true, result:A.evalCond(p.ast, ph => b.values[ph.full] == null ? undefined : String(b.values[ph.full])) };
+  };
+  const env = v => ({ values:v, call, sleep:async () => true, ask:async () => true });
+  assert.equal((await A.run(a, env({ "input.documentType":"" }))).steps[0].took, "yes");
+  assert.equal((await A.run(a, env({}))).steps[0].took, "yes", "not given at all");
+  assert.equal((await A.run(a, env({ "input.documentType":"COI" }))).steps[0].took, "no");
+  /* words in quotes that hold a {{ }} are never filled in: the checker says so */
+  const b = A.normAuto({ name:"q", steps:[{ kind:"if", cond:'"{{a}}-{{b}}" == "x"', yes:[{ kind:"stop", as:"ok" }] }] });
+  assert.ok(A.check(b, {}).some(p => p.code === "condQuoted" && p.warn));
+});
+
+test("5.29 a run keeps what each step read and gave - never a secret, never a hidden value", async () => {
+  const a = A.normAuto({ name:"d", inputs:[{ key:"documentType", label:"Doc" }, { key:"pw", label:"Password", kind:"secret" }],
+    steps:[{ id:"c1", kind:"if", cond:"{{empty(input.documentType)}} == true and {{lower(input.pw)}} != 'x'",
+             yes:[{ id:"y", kind:"set", var:"went", value:"{{upper(input.documentType)}}-{{input.pw}}" }] },
+           { id:"h", kind:"http", conn:"C", path:"/x/{{lower(input.documentType)}}/{{input.pw}}",
+             save:[{ name:"tok", from:"json", path:"t", show:"hidden" }, { name:"n", from:"json", path:"n" }, { name:"gone", from:"json", path:"g" }] }] });
+  const call = async op => op === "check" ? { ok:true, result:true } : op === "step" ? { ok:true, status:200, saved:{ n:"5" }, hidden:["tok"] } : { ok:true };
+  const R = await A.run(a, { values:{ "input.documentType":"", "input.pw":"s3cretpw" }, mask:["s3cretpw"],
+    conns:[{ id:"C", name:"c", base:"https://x.example.local" }], call, sleep:async () => true, ask:async () => true });
+  const [c, y, h] = R.steps;
+  assert.deepEqual(c.read, [{ n:"empty(input.documentType)", v:"true" }, { n:"input.documentType", v:"" },
+                            { n:"lower(input.pw)", h:"secret" }, { n:"input.pw", h:"secret" }]);
+  assert.equal(c.filled, "true == true and 🔒 != 'x'");
+  assert.deepEqual(y.gave, [{ n:"went", v:"-••••" }], "a typed secret is masked in a value that holds it");
+  assert.deepEqual(h.gave, [{ n:"tok", h:"hidden" }, { n:"n", v:"5" }, { n:"gone", m:1 }]);
+  const kept = A.normRun(R, 2000);
+  assert.deepEqual(kept.steps[0].read, c.read, "kept in the history");
+  assert.equal(kept.steps[0].filled, c.filled);
+  const whole = JSON.stringify(R.steps) + JSON.stringify(kept.steps);
+  assert.ok(whole.indexOf("s3cretpw") < 0, "the secret is in no step's record");
+});
