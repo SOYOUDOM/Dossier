@@ -1697,6 +1697,11 @@ public class DossierBridge
         //  what must never go back to the page: every secret used, every
         //  hidden value, the values typed as secret - and their encodings
         public List<string> Known = new List<string>();
+        //  (5.28) the ones that are secrets for certain - the connection's,
+        //  the values typed as secret, the values saved hidden - apart from
+        //  the ones only guessed (a field named token): what the owner lets
+        //  through is still masked with these
+        public List<string> Hard = new List<string>();
         public DateTime Last = DateTime.UtcNow;
     }
 
@@ -1708,7 +1713,10 @@ public class DossierBridge
         {
             string ws = Workspace == null ? "" : Path.GetFileName(Workspace);
             bool scripts = Workspace != null && Directory.Exists(Path.Combine(Workspace, "scripts"));
-            Respond(net, 200, "application/json", Bytes(new JOut().B("ok", true).N("version", 1)
+            //  level: what this copy can do, for the page to say when the
+            //  program is older than the page (2: 5.28 - shown anyway,
+            //  whole replies as they are, field names in any capitals)
+            Respond(net, 200, "application/json", Bytes(new JOut().B("ok", true).N("version", 1).N("level", 2)
                 .S("workspace", ws).B("scripts", scripts).B("windows", IsWindows).S("user", Environment.UserName).ToString()));
             return;
         }
@@ -1814,9 +1822,12 @@ public class DossierBridge
         public List<string> ShapedOut = new List<string>();
         //  every value a save row left out: masked in this step's whole reply
         public List<string> LeftOut = new List<string>();
+        //  (5.28) the step's whole reply as it is: only the hard secrets masked
+        public bool ReplyRaw;
         public StepCtx(JObj req, AutoRun run)
         {
             Run = run;
+            ReplyRaw = JB(JO(req, "step"), "replyRaw");
             JObj v = JO(req, "values");
             if (v != null) foreach (string k in v.Keys) if (k.Length <= 80) Values[k] = TextOf(v.Get(k));
             foreach (object o in JA(req, "shaped")) if (o is string) Shaped.Add((string)o);
@@ -1843,7 +1854,8 @@ public class DossierBridge
         return new JOut().B("ok", false).S("error", c == null ? error : Redact(error, c.Run)).ToString();
     }
 
-    static void AddKnown(AutoRun run, string v)
+    static void AddKnown(AutoRun run, string v) { AddKnown(run, v, true); }
+    static void AddKnown(AutoRun run, string v, bool hard)
     {
         if (v == null || v.Length < 4) return;
         lock (run)
@@ -1854,7 +1866,11 @@ public class DossierBridge
             try { forms.Add(Uri.EscapeDataString(v)); } catch (Exception) { }
             string j = Json(v);
             forms.Add(j.Substring(1, j.Length - 2));
-            foreach (string f in forms) if (f.Length >= 4 && !run.Known.Contains(f)) run.Known.Add(f);
+            foreach (string f in forms)
+            {
+                if (f.Length >= 4 && !run.Known.Contains(f)) run.Known.Add(f);
+                if (hard && f.Length >= 4 && !run.Hard.Contains(f)) run.Hard.Add(f);
+            }
         }
     }
 
@@ -2484,7 +2500,7 @@ public class DossierBridge
             //  token) is masked in whatever goes back from now on
             foreach (string g in r.Gone)
             {
-                if (g.StartsWith("secret:")) AddKnown(c.Run, g.Substring(7));
+                if (g.StartsWith("secret:")) AddKnown(c.Run, g.Substring(7), false);
                 string t = g.Substring(g.IndexOf(':') + 1);
                 if (!c.LeftOut.Contains(t)) c.LeftOut.Add(t);
             }
@@ -2511,14 +2527,25 @@ public class DossierBridge
         //  holds a secret or a hidden value of this run, or is shaped like a
         //  token or a password field, is kept HIDDEN instead - the steps
         //  after it still get it; the page is told it was held back.
+        //  (5.28) Unless the owner said "Show it as it is" for that value:
+        //  then only the hard secrets of the run are masked in it, and a
+        //  field named token, or a value shaped like one, goes back as it is.
+        List<string> allowed = new List<string>();
+        foreach (SaveRow r in rows) if (r.Allow && !allowed.Contains(r.Name)) allowed.Add(r.Name);
         List<string> keys = new List<string>(saved.Keys);
         foreach (string k in keys)
         {
             string v = saved[k];
+            if (allowed.Contains(k))
+            {
+                string hv = RedactHard(v, c.Run);
+                if (hv != v) saved[k] = hv;
+                continue;
+            }
             if (Redact(v, c.Run) == v && !LooksSecret(v)) continue;
             //  (a shaped one keeps its whole copy, which has the rest)
             lock (c.Run) { if (!c.ShapedOut.Contains(k)) c.Run.Hidden[k] = v; }
-            AddKnown(c.Run, v);
+            AddKnown(c.Run, v, false);
             c.ShapedOut.Remove(k);
             saved.Remove(k);
             if (!hidden.Contains(k)) hidden.Add(k);
@@ -2532,6 +2559,7 @@ public class DossierBridge
         public string Name, Show, On, V;     // V: null when the reply did not have it
         public string Whole;                 // (5.26) before fields were left out; null when none were
         public List<string> Gone = new List<string>();
+        public bool Allow;                   // (5.28) shown as it is: only hard secrets masked
     }
 
     //  a value as it goes back: a list longer than a page should hold is cut
@@ -2592,23 +2620,29 @@ public class DossierBridge
         foreach (string k in j.Keys)
         {
             object val = j.Get(k);
+            //  (5.28) names typed by hand: "policynumber" is policyNumber
             if (keep.Count > 0)
             {
-                bool hit = keep.Contains(k);
-                foreach (string x in keep) if (x.StartsWith(k + ".")) hit = true;
+                bool hit = NameIn(keep, k);
+                foreach (string x in keep) if (x.StartsWith(k + ".", StringComparison.OrdinalIgnoreCase)) hit = true;
                 if (!hit) continue;
             }
-            if (drop.Contains(k)) { GoneOf(k, val, gone); continue; }
+            if (NameIn(drop, k)) { GoneOf(k, val, gone); continue; }
             List<string> subKeep = new List<string>(), subDrop = new List<string>();
-            foreach (string x in keep) if (x.StartsWith(k + ".")) subKeep.Add(x.Substring(k.Length + 1));
+            foreach (string x in keep) if (x.StartsWith(k + ".", StringComparison.OrdinalIgnoreCase)) subKeep.Add(x.Substring(k.Length + 1));
             foreach (string x in drop)
             {
                 if (x.IndexOf('.') < 0) subDrop.Add(x);
-                else if (x.StartsWith(k + ".")) subDrop.Add(x.Substring(k.Length + 1));
+                else if (x.StartsWith(k + ".", StringComparison.OrdinalIgnoreCase)) subDrop.Add(x.Substring(k.Length + 1));
             }
             n.Set(k, Shape(val, subKeep, subDrop, gone));
         }
         return n;
+    }
+    static bool NameIn(List<string> names, string k)
+    {
+        foreach (string x in names) if (string.Equals(x, k, StringComparison.OrdinalIgnoreCase)) return true;
+        return false;
     }
     //  gone gets "secret:" + the text of one that looks like a secret (masked
     //  in all that goes back for the rest of the run), and the text of every
@@ -2672,6 +2706,7 @@ public class DossierBridge
                 catch (RegexMatchTimeoutException) { c.Errors.Add("the pattern for " + name + " took too long"); }
             }
             row.Name = name; row.Show = show; row.On = on; row.V = v;
+            row.Allow = show != "hidden" && JB(sv, "allow");
             rows.Add(row);
         }
     }
@@ -2718,11 +2753,12 @@ public class DossierBridge
         //  hidden value of the run - this step's included - masked out
         if (replyText != null)
         {
-            string rp = Redact(replyText, c.Run);
+            //  (5.28) "as it is": only the hard secrets of the run masked
+            string rp = c.ReplyRaw ? RedactHard(replyText, c.Run) : Redact(replyText, c.Run);
             //  (5.26) and what its saves left out, longest first
             List<string> lo = new List<string>(c.LeftOut);
             lo.Sort(delegate(string x, string y) { return y.Length.CompareTo(x.Length); });
-            foreach (string t in lo) rp = rp.Replace(t, Dots);
+            if (!c.ReplyRaw) foreach (string t in lo) rp = rp.Replace(t, Dots);
             bool rcut = bodyCut;
             if (rp.Length > 200000) { rp = rp.Substring(0, 200000); rcut = true; }
             o.S("reply", rp).B("replyCut", rcut);
@@ -2862,6 +2898,19 @@ public class DossierBridge
         RegexOptions.IgnoreCase);
     static readonly Regex RedactAuth = new Regex("\\b(Bearer|Basic|Negotiate|NTLM|Digest)\\s+[A-Za-z0-9\\-._~+/=]{8,}", RegexOptions.IgnoreCase);
     static readonly Regex RedactJwt = new Regex("\\beyJ[A-Za-z0-9_-]{5,}\\.[A-Za-z0-9_-]{5,}\\.[A-Za-z0-9_-]*");
+
+    //  (5.28) only what is a secret for certain: the connection's secrets,
+    //  the values typed as secret, the values saved hidden (and their
+    //  encodings) - none of the guessing below
+    static string RedactHard(string text, AutoRun run)
+    {
+        if (string.IsNullOrEmpty(text) || run == null) return text ?? "";
+        List<string> hard;
+        lock (run) hard = new List<string>(run.Hard);
+        hard.Sort(delegate(string a, string b) { return b.Length.CompareTo(a.Length); });
+        foreach (string k in hard) if (k.Length >= 4) text = text.Replace(k, Dots);
+        return text;
+    }
 
     static string Redact(string text, AutoRun run)
     {

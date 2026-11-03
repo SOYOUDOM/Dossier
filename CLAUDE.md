@@ -37,8 +37,8 @@ are careful not to attract attention from their security team.
 | `flow/*.md` | Guides: `CONTRACT.md` (request/reply/actions), `POWER-AUTOMATE.md`, `BAU-RUNBOOKS.md`, `SOURCES.md` (setup + troubleshooting for Sources), `SPEED.md`, `SERVICENOW.md`. |
 | `scripts/bridge/DossierBridge.cs` | The tray program (C# 5, WinForms): serves the page on 127.0.0.1, keeps the workspace in SQL LocalDB when available (or the SQL Server named in Setup, since 5.21), runs scripts, and (5.22) carries out automation steps and keeps their secrets (DPAPI). `KalKech.bat` compiles it with the Windows `csc.exe` whenever the `.cs` is newer than the `.exe`. |
 | `lang/en.xml`, `lang/km.xml` | Language packs (English, Khmer). Missing keys fall back to the English `STRINGS` table in `dossier.html`. |
-| `docs/` | `kalkech-automations-guide.md` (5.27.2: the whole of Automations for the owner's Sources - keep it in step with every automations change, verify its facts against the code; one `##` question per topic, ~1,100-character passages), `HOW-THE-AI-WORKS.md` (the whole AI pipeline for beginners, plus a reusable blueprint) and `how-the-ai-works.html` (the same as a self-contained picture page). Keep both in step with the code when the pipeline changes (numbers: 60 records, 10 notes, 30 lessons, 14,000 characters, 66 actions / 44 writes). |
-| `tests/` | `sources.test.js`, `diagram.test.js`, `automations.test.js` (node:test), `e2e/run.js` + `e2e/sources.scenario.js` (real browser), `bridge/run.js` (compiles the bridge with mcs/csc, runs it headless against a made-up API: 67 checks), `fixtures/` (made-up documents; `make-pdf.js` regenerates the PDFs; `auto-conditions.json`, the condition cases both readers must agree on). |
+| `docs/` | `kalkech-automations-guide.md` (5.27.2, now 5.28.0: the whole of Automations for the owner's Sources - keep it in step with every automations change, verify its facts against the code; one `##` question per topic, ~1,100-character passages), `HOW-THE-AI-WORKS.md` (the whole AI pipeline for beginners, plus a reusable blueprint) and `how-the-ai-works.html` (the same as a self-contained picture page). Keep both in step with the code when the pipeline changes (numbers: 60 records, 10 notes, 30 lessons, 14,000 characters, 66 actions / 44 writes). |
+| `tests/` | `sources.test.js`, `diagram.test.js`, `automations.test.js` (node:test), `e2e/run.js` + `e2e/sources.scenario.js` (real browser), `bridge/run.js` (compiles the bridge with mcs/csc, runs it headless against a made-up API: 74 checks), `fixtures/` (made-up documents; `make-pdf.js` regenerates the PDFs; `auto-conditions.json`, the condition cases both readers must agree on). |
 
 A *workspace* is a folder the user picks (File System Access API):
 `dossier.json` (everything), `backups/`, `tasks/<record>/` attachments,
@@ -92,14 +92,14 @@ A *workspace* is a folder the user picks (File System Access API):
 - Commit messages: clear summary + body; no model names in commits, code or
   docs. Do not open a pull request unless the owner asks.
 - Work so far is on branch `claude/chat-panel-pixel-art-gifs-d822hq`
-  (latest: 5.27.4). Follow the branch instructions of your own session.
+  (latest: 5.28.0). Follow the branch instructions of your own session.
 
 ## Testing
 
 ```
-node --test                                   # 104 unit tests (Sources, grounding, names check, code origin, flow reply fields, diagrams, automations)
-node tests/e2e/run.js                         # the app in headless Chrome/Edge: 334 checks (CHROME=<path> to choose)
-node tests/bridge/run.js                      # the bridge's automation routes, built and run (mcs+mono or csc): 67 checks
+node --test                                   # 106 unit tests (Sources, grounding, names check, code origin, flow reply fields, diagrams, automations)
+node tests/e2e/run.js                         # the app in headless Chrome/Edge: 345 checks (CHROME=<path> to choose)
+node tests/bridge/run.js                      # the bridge's automation routes, built and run (mcs+mono or csc): 74 checks
 node flow/check-prompt.js                     # after editing flow/prompt.txt ...
 python3 flow/embed-prompt.py                  # ... then copy it into flow.js (PROMPT_BUILTIN)
 node tests/fixtures/make-pdf.js               # regenerate the PDF fixtures
@@ -131,6 +131,65 @@ Also useful:
   `DossierFlow.validate`. `tests/e2e/run.js` is a working example of all of it.
 
 ## Recent history (newest first)
+
+- **5.28.0** - Owner: "I set Leave out token and Keep policyNumber,
+  fileName but it is still hidden ... not every property named token is
+  dangerous (a short-lived download token) ... let me share the whole
+  reply ... an ignore / not-an-issue button on the alert; keep your
+  auto-hiding but let me switch it off" (their sample reply is company
+  data: never committed; tests use made-up `policyNumber`/`fileName`/
+  `token` values). Plus 13 alignment fixes the owner approved from a list.
+  - *Cause found*: the current bridge does shape that reply; likely an old
+    tray program (pre-5.26 ignores keep/drop and `/auto/info` always said
+    version 1, so the page showed Ready) or names in other capitals.
+  - *Bridge*: `/auto/info` `level` 2 (page `AUTO_LEVEL` = 2 → `autoInfo`
+    sets `stale` → `apBridgePaint` "Tray program is out of date", `warn`,
+    title `AutoStaleBridge`). `AutoRun.Hard` = real secrets only
+    (connection secrets, typed-secret inputs, hidden values):
+    `AddKnown(run, v, hard)`; GoneOf "secret:" values and auto-redacted
+    values are not hard. `RedactHard(text, run)` masks only those. Save row
+    `allow` (`SaveRow.Allow`, only when not hidden): `Outcome` skips the
+    Redact/LooksSecret hide rule for it and applies `RedactHard`. Step
+    `replyRaw` (`StepCtx.ReplyRaw`): the whole reply gets `RedactHard`
+    instead of `Redact`, and no LeftOut masking. `Shape`: names
+    case-insensitive (`NameIn`, OrdinalIgnoreCase). Answer `redacted[]`
+    names what was kept hidden although shown.
+  - *automations.js*: `normSave` keeps `allow` (not for hidden), `normStep`
+    `replyRaw` (only with `reply`), `stepWire` passes both; `check()`'s
+    `aiSeesSecret` skips `allow`; `run()`/`normRun` keep `st.redacted`
+    (NAME_RE, ≤12); `planImport` clears `allow`/`replyRaw` and counts
+    `unallowed` (like `ask` forced true).
+  - *Page*: `label.apallow` tick boxes in `apValues` (save rows; whole
+    reply), checker item `ok:i` "Not an issue - show "x" as it is"
+    (`AutoNotAnIssue`), run pane note `.apnote.apred` with
+    `[data-apallow]` → `autoAllowNames(autoId, sid, names)` (saved design,
+    and the open draft + base), import note `AutoImpUnallowed`.
+  - *Lining up* (CSS `LINING THINGS UP (5.28)`, last block of the
+    stylesheet): `input.in`/`select.in` `line-height:16px` (Consolas vs
+    Segoe UI made 3 px differences; all one-line boxes now 30 px);
+    `.apfr>.btn` and `.inpair>.btn` stretch (Setup year row wrapped in
+    `.inpair`); `.apbar2` controls 32 px; `.apnm2` `field-sizing:content`;
+    `.aushow`/`.auon` flex; `.apacts` 28 px; import rows: `apMini` under
+    the name (`.auimpn .apmini`); `.wkh` buttons stretch; `.cbar .paste/.go`
+    28 px; `--sbw` = `#main`'s scroll bar width (`sbwSync()`,
+    ResizeObserver on `#main`, page px) → margin on `.compose` children
+    and `#clearF`, so the top edges meet the cards' edge; Quiet/Classic
+    `.find` 190 px from 1280 px (tab `.kb` hidden 1280-1500); Studio's open
+    sidebar uses the `--lyi-*` line icons (ink-3, accent when on).
+  - *Audit tools* (scratchpad, not in the repo): a checker injected into
+    the page that flags side-by-side controls of different heights/tops,
+    run over 8 looks × 8 views × 7 panels + chat + every designer pane,
+    with Windows font names aliased to local fonts (`@font-face
+    {font-family:"Segoe UI"; src:local(...)}`; `Consolas` → a mono font).
+    Before: 9 + 13 kinds of mismatch; after: 2 expected ones (a bar taller
+    than its buttons; filter pills vs selects).
+  - Docs: README *Why is a value I marked for me kept hidden? How do I show
+    it anyway?*, whole reply "As it is", troubleshooting rows; guide 5.28.0
+    (new section *Why is a value I set to be shown still kept hidden?*,
+    file fields `allow`/`replyRaw`, checker/run rows; 63 passages).
+  - Tests: 2 unit (106), 7 bridge (74), 11 e2e (345: stale badge, run
+    note + Show it from now on, next run shows it, tick boxes, Not an
+    issue, two alignment checks).
 
 - **5.27.4** - Owner: "is the new document fill all the knowledge yet?" -
   an audit of the guide against the README and the code found gaps, now

@@ -55,6 +55,7 @@ const DOCS = [
   { name:"Card.png", type:"PNG", date:"2026-10-02", downloadToken:"dl-8e4b0d22f3", links:{ self:"/d/2", sig:"sig-dd33ee44ff" } },
   { name:"Wording.pdf", type:"PDF", date:"2026-10-03", downloadToken:"dl-9d5c1e33a4", links:{ self:"/d/3", sig:"sig-gg55hh66ii" } }];
 const USER = "svc_test", PASS = "pw-Secret-42", KEY = "key-0123456789abcdef";
+const FILE_TOKENS = ["5f2b9a10-1111-4c2d-9e8f-000000000001", "5f2b9a10-2222-4c2d-9e8f-000000000002"];
 function readBody(req){ return new Promise(r => { const b = []; req.on("data", c => b.push(c)); req.on("end", () => r(Buffer.concat(b).toString("utf8"))); }); }
 function startApi(){
   return new Promise(res => {
@@ -101,6 +102,12 @@ function startApi(){
         /* (5.26) a list of documents, each with a download token */
         mm = /^\/documents\/([^/]+)$/.exec(rest);
         if (mm) return send(200, { policy:decodeURIComponent(mm[1]), documents:DOCS.map(d => Object.assign({}, d)) });
+        /* (5.28) a list whose items carry a short-lived download token, in a
+           field named "token" - the owner's to show, when they say so */
+        mm = /^\/files\/([^/]+)$/.exec(rest);
+        if (mm){ const pn = decodeURIComponent(mm[1]);
+          return send(200, { result:[0, 1].map(i => ({ policyNumber:pn, fileName:pn + "_COI_2026102" + i + ".pdf", fileType:"PDF", token:FILE_TOKENS[i] })),
+                             success:true }); }
         mm = /^\/download\/([^/]+)$/.exec(rest);
         if (mm){
           const d = DOCS.find(x => x.downloadToken === decodeURIComponent(mm[1]));
@@ -469,6 +476,38 @@ function startElsewhere(){
     a = await script(sstep("leaks" + ext, [["pass", "{{secret.password}}"]], { save:[{ name:"out", from:"output", show:"ai" }] }), {}, CAUTH);
     check("a script handed a secret that prints it: masked, and its output kept hidden",
           a.ok && JSON.stringify(a).indexOf(PASS) < 0 && a.hidden.indexOf("out") >= 0 && a.redacted.indexOf("out") >= 0, JSON.stringify(a));
+
+    /* ── (5.28) the owner's call: shown as it is ──────────────────────── */
+    r = await fetch(B + "/auto/info", { headers:{ "X-Dossier-Token":hand.token } });
+    j = await r.json();
+    check("(5.28) /auto/info says what this copy can do (level 2)", j.level === 2, JSON.stringify(j));
+    const fstep = (save, extra) => Object.assign({ kind:"http", name:"Files", conn:"Cpol", method:"GET", path:"/files/{{input.policy}}", save:save }, extra || {});
+    const files = async (save, opts) => {
+      const o = opts || {};
+      const fa = A.normAuto({ name:"Files", inputs:[{ key:"policy", kind:o.secret ? "secret" : "text" }], steps:[fstep(save, o.step)] });
+      return A.run(fa, { conns:[CPOL], call:callLogged, values:{ "input.policy":o.policy || "P000777Z99" }, mask:o.secret ? ["input.policy"] : [],
+                         sleep:async () => true, ask:async () => true, tick:() => {}, stopped:() => false });
+    };
+    let F = await files([{ name:"files", from:"json", path:"result", show:"ai" }]);
+    check("(5.28) a list with a field named token, not shaped: still kept hidden by default - and the page is told why",
+          F.hidden.indexOf("files") >= 0 && (F.steps[0].redacted || []).indexOf("files") >= 0, JSON.stringify(F.steps[0]));
+    F = await files([{ name:"files", from:"json", path:"result", show:"ai", allow:true }]);
+    check("(5.28) Show it as it is: the same list comes back whole, download tokens and all",
+          F.state === "ok" && F.values.files && F.values.files.v.indexOf(FILE_TOKENS[0]) >= 0 && F.values.files.v.indexOf("P000777Z99_COI_20261020.pdf") >= 0,
+          JSON.stringify(F.values));
+    F = await files([{ name:"files", from:"json", path:"result", show:"ai", allow:true }], { secret:true });
+    check("(5.28) ...and a real secret in it - here a value typed as secret - is still masked",
+          F.values.files && F.values.files.v.indexOf("P000777Z99") < 0 && F.values.files.v.indexOf(FILE_TOKENS[1]) >= 0, JSON.stringify(F.values));
+    F = await files([{ name:"files", from:"json", path:"result", show:"ai", keep:"POLICYNUMBER, filename" }]);
+    check("(5.28) Keep only with the names in other capitals: kept (policyNumber, fileName), the token gone",
+          F.values.files && /"policyNumber":"P000777Z99"/.test(F.values.files.v) && /"fileName"/.test(F.values.files.v) && F.values.files.v.indexOf("token") < 0,
+          JSON.stringify(F.values));
+    F = await files([{ name:"files", from:"json", path:"result", show:"ai", drop:"Token" }], { step:{ reply:"ai" } });
+    check("(5.28) the whole reply, as before: the tokens masked in it",
+          F.steps[0].reply && F.steps[0].reply.indexOf(FILE_TOKENS[0]) < 0 && F.steps[0].reply.indexOf("P000777Z99_COI") >= 0, F.steps[0].reply);
+    F = await files([{ name:"files", from:"json", path:"result", show:"ai", drop:"token" }], { step:{ reply:"ai", replyRaw:true }, secret:true });
+    check("(5.28) the whole reply as it is: the tokens shown, a value typed as secret still masked",
+          F.steps[0].reply && F.steps[0].reply.indexOf(FILE_TOKENS[0]) >= 0 && F.steps[0].reply.indexOf("P000777Z99") < 0, F.steps[0].reply);
 
     /* ── the page never got a secret, a token or a password ──────────── */
     const page = everything.join("\n");

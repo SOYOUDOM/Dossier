@@ -920,3 +920,36 @@ test("5.27 import: a file of connections only brings them in; skipped designs le
   assert.equal(A.planImport(many, full, {}).error, "tooMany");
   assert.equal(A.planImport({ error:"json" }, st, {}).error, "json");
 });
+
+test("5.28 Show it as it is: kept only for a shown value, sent to the tray program, ends the warning; a file cannot switch it on", () => {
+  const conns = [A.normConn({ id:"C1", name:"Docs", base:"https://docs.example.local" })];
+  const a = A.normAuto({ name:"Docs", steps:[{ kind:"http", conn:"C1", path:"/docs", reply:"ai", replyRaw:true,
+    save:[{ name:"docs", from:"json", path:"result", show:"ai", drop:"token", allow:true },
+          { name:"token", from:"json", path:"t", show:"ai" },
+          { name:"key", from:"json", path:"k", show:"hidden", allow:true }] }] });
+  const sv = a.steps[0].save;
+  assert.deepEqual([sv[0].allow, sv[1].allow, sv[2].allow, a.steps[0].replyRaw], [true, undefined, undefined, true], "not for a hidden value");
+  const w = A.stepWire(a.steps[0], {});
+  assert.deepEqual([w.save[0].allow, w.save[2].allow, w.replyRaw], [true, undefined, true]);
+  /* no whole reply kept: no "as it is" either */
+  assert.equal(A.normAuto({ name:"x", steps:[{ kind:"http", replyRaw:true }] }).steps[0].replyRaw, undefined);
+  /* the warning on a value named like a secret - gone once they say so */
+  assert.ok(A.check(a, { conns }).some(p => p.code === "aiSeesSecret" && p.name === "token"));
+  sv[1].allow = true;
+  assert.ok(!A.check(A.normAuto(a), { conns }).some(p => p.code === "aiSeesSecret"));
+  /* imported: their call, made on this PC - not the file's */
+  const plan = A.planImport(A.readFile({ kind:"kalkech.automations", automations:[A.normAuto(a)], connections:conns }), A.normStore({}), {});
+  const ia = plan.autos[0].a;
+  assert.equal(plan.autos[0].unallowed, 3);
+  assert.ok(!ia.steps[0].save.some(v => v.allow) && !ia.steps[0].replyRaw);
+});
+
+test("5.28 a value the tray program kept hidden although shown: the run says which", async () => {
+  const a = A.normAuto({ name:"Docs", steps:[{ kind:"http", conn:"C1", path:"/docs", save:[{ name:"docs", from:"json", path:"result", show:"ai" }] }] });
+  const conns = [A.normConn({ id:"C1", name:"Docs", base:"https://docs.example.local" })];
+  const R = await A.run(a, { conns, values:{}, sleep:async () => true, ask:async () => true, tick:() => {}, stopped:() => false,
+    call:async op => op === "step" ? { ok:true, status:200, saved:{}, hidden:["docs"], redacted:["docs", "bad name!"], missing:[] } : { ok:true } });
+  assert.deepEqual(R.steps[0].redacted, ["docs"]);
+  assert.deepEqual(R.hidden, ["docs"]);
+  assert.deepEqual(A.normRun(R).steps[0].redacted, ["docs"], "kept in the run history");
+});

@@ -6,6 +6,60 @@ holds — which is what to paste into a bug report.
 
 ---
 
+## 5.28.0 - 2026-11-03
+
+**You decide what is shown: a token that is fine to see can be shown - and
+boxes and buttons line up.**
+
+- **Show it as it is.** KalKech hides a value you marked *Me only* or *Me
+  and the assistant* when it *looks* like a secret - a list with a field
+  named `token`, a long random string. Not every token is dangerous: a
+  download token that works for a few minutes is fine to see. Now each
+  value has a tick box **Show it as it is** (step → **Values**), and the
+  whole reply has **As it is - do not mask fields named like tokens**.
+  With it ticked the value is shown, and given to the assistant when marked
+  for it, as the API sent it. Still masked even then: a connection's
+  secret, a value typed into a secret input, and a value saved **Hidden**
+  in the same run.
+- **The run says why.** When a value was kept hidden, the step on the run
+  says which ones, with the button **Show it from now on**.
+- **Not an issue.** The checker's warning *looks like a token or password,
+  and it is set to be shown to the assistant* has a **Not an issue** choice
+  beside it, which ticks **Show it as it is** for you.
+- **Leave out** and **Keep only** match field names in any case (`token`
+  also leaves out `Token`).
+- **Tray program is out of date.** The Automations page now says so when
+  the KalKech program by the clock is older than the page (one older than
+  5.26 ignores Leave out and Keep only, so a list with a token stays hidden
+  as a whole - and it used to say *Ready* all the same). Quit it from its
+  icon and run `KalKech.bat` again - it builds the new one.
+- An automation brought in from a file never has these boxes ticked: you
+  tick them again yourself, on this PC.
+- **Lining things up**, found by checking every look, page and panel with
+  the fonts Windows uses:
+  - every one-line box is now the same height, whatever its font (a code
+    box such as a JSON path sat 3 px lower than a list box beside it);
+  - *Connection*: **New…** and **Edit** as tall as the list;
+  - the designer's bar: the to-fix pill, **⋮**, Run, Save and Test one
+    height; the name box as wide as the name, so *Not saved* sits beside
+    it;
+  - a value's **Shown to** has room for *Me and the assistant*;
+  - an automation's line: **Run** as tall as **⋯**;
+  - **Import**: the kinds of each automation's steps sit under its name
+    instead of squeezing it;
+  - **Week**: *This week* as tall as **‹ ›** and Week/Month;
+  - **Setup → Special days**: the year box and its button one height;
+  - the message bar: *Paste a message* and *Log it* one height;
+  - the message bar and the filters end where the cards below end, not
+    where the scroll bar ends;
+  - **Quiet** and **Classic**: the search box shows *Search everything…*
+    (between 1280 and 1500 px wide the tabs' number hints make way);
+  - **Studio**'s sidebar: the same line icons as when it is folded.
+- The guide (`docs/kalkech-automations-guide.md`, version 5.28.0 - replace
+  it in **Library → Sources**) and the README explain all of it.
+
+---
+
 ## 5.27.4 - 2026-11-01
 
 **The automations guide is complete - and a Ctrl+Z fix in the designer.**

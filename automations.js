@@ -207,6 +207,13 @@ function normSave(kind){
       if (keep) out.keep = keep;
       if (drop) out.drop = drop;
     }
+    /* (5.28) "Show it as it is": the tray program hides a shown value
+       that LOOKS like a secret - a field named token, a JWT. That is a
+       guess, and the owner knows their API better: a short-lived download
+       token is theirs to show. With allow, only the real secrets of the run
+       (the connection's, the values typed as secret, the values saved
+       hidden) are still masked in it. Only for a value that is shown. */
+    if (x.allow === true && out.show !== "hidden") out.allow = true;
     return out;
   };
 }
@@ -287,6 +294,9 @@ function normStep(s, i, depth, budget){
     /* keep the whole reply (or a script's whole output), as it came -
        passwords and tokens masked - for you, or for you and the assistant */
     out.reply = REPLY_SHOWS.indexOf(s.reply) >= 0 ? s.reply : "";
+    /* (5.28) ...and, when they say so, without the guessing: only the real
+       secrets of the run masked, a field named token left as it is */
+    if (s.replyRaw === true && out.reply) out.replyRaw = true;
     const r = obj(s.repeat);
     out.repeat = { until: str(r.until, 300).trim(),
                    times: clamp(int(r.times, 10), 1, LIMIT.times),
@@ -418,6 +428,8 @@ function normRun(r, replyMax){
                       fails: int(s.fails, 0) || undefined,
                       state: str(s.state, 12), status: int(s.status, 0) || undefined, ms: Math.max(0, int(s.ms, 0)),
                       tries: int(s.tries, 0) || undefined, note: str(s.note, 300) || undefined,
+                      redacted: arr(s.redacted).filter(x => NAME_RE.test(String(x))).slice(0, 12).length
+                        ? arr(s.redacted).filter(x => NAME_RE.test(String(x))).slice(0, 12) : undefined,
                       reply: s.reply && rmax ? str(s.reply, rmax) : undefined,
                       replyShow: s.reply && rmax && (s.replyShow === "ai" || s.replyShow === "me") ? s.replyShow : undefined,
                       replyCut: s.reply && rmax && (s.replyCut || String(s.reply).length > rmax) ? true : undefined };
@@ -1561,7 +1573,7 @@ function check(a, ctx){
       else if (locals && locals[v.name]) add(si, "save", "varLocal", { name:v.name });
       if (["json", "header", "regex"].indexOf(v.from) >= 0 && !v.path) add(si, "save", "savePath", { name:v.name });
       if (v.from === "regex" && v.path){ try { new RegExp(v.path); } catch(e){ add(si, "save", "badRegex", { name:v.name }); } }
-      if (v.show === "ai" && /pass|secret|token|key|cookie|session|credential/i.test(v.name))
+      if (v.show === "ai" && !v.allow && /pass|secret|token|key|cookie|session|credential/i.test(v.name))
         add(si, "save", "aiSeesSecret", { name:v.name, warn:true });
       mine[v.name] = 1;
     });
@@ -1885,10 +1897,12 @@ function stepWire(s, ctx){
     /* (5.26) the fields to keep, or to leave out, of a list or an object */
     if (v.keep) o.keep = v.keep;
     if (v.drop) o.drop = v.drop;
+    if (v.allow) o.allow = true;
     return o;
   });
   w.okWhen = s.okWhen || "";
   w.reply = s.reply || "";
+  if (s.replyRaw) w.replyRaw = true;
   return w;
 }
 function connWire(c){
@@ -2172,6 +2186,11 @@ async function run(a, env){
            that ran last - for the "only when" of the next one */
         if (resp.status != null && resp.status !== "") vals.status = String(resp.status);
         st.missing = arr(resp.missing).length ? arr(resp.missing).slice(0, 12) : undefined;
+        /* (5.28) a value set to be shown that the tray program kept hidden,
+           because it looked like a secret: the run says so, with a way to
+           let it through next time */
+        const red = arr(resp.redacted).filter(k => NAME_RE.test(k));
+        st.redacted = red.length ? red.slice(0, 12) : undefined;
         /* the whole reply, when the step keeps it - on success and on
            failure alike, since the error reply is the one worth reading */
         if (s.reply && resp.reply != null){
@@ -2430,13 +2449,20 @@ function planImport(file, store, ctx){
     const noAsk = a.ai && a.ask === false;
     /* whatever the file says: the assistant asks you before it runs one */
     a.ask = true;
+    /* (5.28) and nothing that looks like a secret is shown because a file
+       says so: "Show it as it is" is the owner's call, made on this PC */
+    let unallowed = 0;
+    flatSteps(a.steps).forEach(x => {
+      (x.s.save || []).forEach(v => { if (v.allow){ delete v.allow; unallowed++; } });
+      if (x.s.replyRaw){ delete x.s.replyRaw; unallowed++; }
+    });
     const byId = raw.id != null ? store.list.find(x => x.id === a.id) : null;
     const byName = byId ? null : store.list.find(x => flat(x.name) === flat(a.name));
     const ex = byId || byName || null;
     const strip = x => JSON.stringify(Object.assign({}, x, { updated:"", ask:true }));
     const same = !!byId && strip(normAuto(byId)) === strip(a);
     out.autos.push({ a:a, existing:ex, match:byId ? "id" : byName ? "name" : "", how:same ? "skip" : byId ? "replace" : "add",
-                     same:same, noAsk:noAsk, scripts:uniq(need),
+                     same:same, noAsk:noAsk, unallowed:unallowed, scripts:uniq(need),
                      probs:check(a, { conns:connsAfter, scripts:scripts }) });
   });
   const adds = out.autos.filter(p => p.how !== "skip" && p.how !== "replace").length;

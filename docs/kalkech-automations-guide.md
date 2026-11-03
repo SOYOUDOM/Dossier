@@ -1,7 +1,7 @@
 # KalKech Automations - the complete guide
 
-Version: 5.27.4
-Effective date: 1 November 2026
+Version: 5.28.0
+Effective date: 3 November 2026
 
 Everything about Automations in KalKech: what each step does, every box and
 switch, the limits, and what to do when something goes wrong. It is written
@@ -295,6 +295,8 @@ In the step's **Values** tab press **Save a value** (up to 12 per step):
 - **When to keep it** - **On success** (the default), **On failure** (read
   from the error reply), or **Always**.
 - **Keep only** / **Leave out** - for a list or object read from JSON.
+- **Show it as it is** - a tick box (not for Hidden): show the value even
+  when it looks like a token or a password. Your decision; off by default.
 
 The quickest way: open the **Test** tab, press **Try up to here**, and click
 a part of the reply - it becomes a saved value.
@@ -326,11 +328,38 @@ it as **🔒 Hidden** - or **Me only** when you want to see it yourself.
 
 A value marked for you or the assistant that looks like a token or a
 password, or that contains one of the run's secrets or hidden values, is
-**kept hidden anyway**, and the card says so. Secrets are never shown to
-anyone.
+**kept hidden anyway**, and the run says so - unless you tick **Show it as
+it is** (see the next question). Secrets are never shown to anyone.
 
 *Set a value*, *Shape a list* and *Filter a list* have only **Me only** and
 **Me and the assistant**.
+
+## Why is a value I set to be shown still kept hidden? (Show it as it is, Not an issue)
+
+KalKech is careful: a value marked *Me only* or *Me and the assistant* that
+LOOKS like a secret - a long random string, a sign-in token (`eyJ…`), a list
+with a field named `token`, `password`, `secret`, `key`, `cookie` or
+`session` - is kept hidden instead. Click the step on the run: the side
+panel says *Kept hidden although it is set to be shown - it looked like a
+secret*, with the button **Show it from now on**.
+
+Not every token is dangerous - a short-lived download token is fine to see
+and to share with the assistant. You decide:
+
+- **Show it as it is** - the tick box under the value (step → **Values**),
+  or **Show it from now on** after a run. From the next run the value is
+  shown, and given to the assistant when marked for it, as the API sent it.
+- **As it is - do not mask fields named like tokens** - the same for a
+  step's whole reply (under **Keep the whole reply**).
+- **Not an issue** - in the checker's list (the pill at the top of the
+  designer), beside the warning *looks like a token or password*: it ticks
+  **Show it as it is** for that value, and the warning goes.
+
+Still masked even then: a connection's **secret**, a value typed into a
+**secret input**, and a value saved **🔒 Hidden** in the same run. An
+imported automation has these boxes off. They need the tray program from
+5.28 - if the page says **Tray program is out of date**, quit the icon by
+the clock and run `KalKech.bat` again.
 
 ## How do I keep only some fields of a list, or leave fields out?
 
@@ -350,8 +379,9 @@ later step can still use a left-out field: `{{docs[0].downloadToken}}`, or
 `{{item.downloadToken}}` in a For each.
 
 Without **Leave out**, a list with a field named like a token or password is
-kept hidden as a whole, and nobody sees it. **Keep only** and **Leave out**
-work only on values read from JSON.
+kept hidden as a whole, and nobody sees it - unless you tick **Show it as
+it is**. **Keep only** and **Leave out** work only on values read from
+JSON. Their field names match in any case: `token` also leaves out `Token`.
 
 When the reply itself is the list - it starts with `[`, with no name around
 it - the JSON path is `$`.
@@ -698,8 +728,10 @@ In the step's **Values** tab, **Keep the whole reply**:
 - **Yes - for me and the assistant** - the assistant reads it too (up to
   about 9,000 characters), to explain an error in the API's own words.
 
-Passwords, keys and tokens are masked in it first. The run history keeps a
-short copy (2,000 characters).
+Passwords, keys and tokens are masked in it first. A token that is fine to
+see (a download link's)? Tick **As it is - do not mask fields named like
+tokens**: then only the connection's secrets, secret inputs and Hidden
+values are masked. The run history keeps a short copy (2,000 characters).
 
 ## How do I format the closing message at the end (When it ends)?
 
@@ -922,14 +954,16 @@ default is in brackets; anything with a default can be left out.
   `path`, `query` and `headers` (lists of `["name", "value"]`), `bodyType`
   (`none` / `json` / `form` / `xml` / `text`; `none`), `body`, `form` (a
   list of pairs), `expect` (`2xx`), `save`, `okWhen` (success also needs),
-  `reply` (`""` / `me` / `ai`), `repeat` (`until`, `times` 10, `every` 5).
+  `reply` (`""` / `me` / `ai`), `replyRaw` (`true` = the whole reply as it
+  is; off after an import), `repeat` (`until`, `times` 10, `every` 5).
 - **`script`**: `scriptFile` (the file name, `clear-cache.bat`), `args`
   (`[["env", "{{input.env}}"]]`), `conn` (secrets from), `timeout` (120),
   `expect` (`0`), `save`, `okWhen`, `reply`, `repeat`.
 - **A save row** (in `save`): `name`, `from` (`json` / `header` /
   `status` / `regex` / `body`, a script's `output` / `exit`; `json`),
   `path`, `show` (`hidden` / `me` / `ai`; `me`), `on` (`ok` / `fail` /
-  `any`; `ok`), `keep`, `drop` (text, names with commas).
+  `any`; `ok`), `keep`, `drop` (text, names with commas), `allow` (`true` =
+  Show it as it is; off after an import).
 
 ## Automation file fields: Condition, For each, Set, Shape, Filter, Wait, Ask me, Stop
 
@@ -995,7 +1029,7 @@ the **Connections** tab.
 | *The list must be one value alone, like {{docs}}* | Nothing around the `{{…}}` in **The list**. |
 | *The For each has no steps inside it yet* | Add steps in its lane. |
 | *The Condition has no test yet* | Fill in its test. |
-| *x looks like a token or password, and it is set to be shown to the assistant* | Choose **🔒 Hidden**. |
+| *x looks like a token or password, and it is set to be shown to the assistant* | Choose **🔒 Hidden** - or, when it is fine to share (a short-lived download token), click **Not an issue** beside it. |
 
 ## Why did my run fail? (problems during a run)
 
@@ -1003,6 +1037,8 @@ the **Connections** tab.
 |---|---|
 | *Automations need the KalKech icon by the clock* | Start `KalKech.bat`. |
 | *older copy that does not know automations* | Quit KalKech from its icon and run `KalKech.bat` again. |
+| *Tray program is out of date* (top of the page) | The same: quit the icon, run `KalKech.bat` again. Until then Leave out, Keep only and Show it as it is may not work. |
+| *Kept hidden although it is set to be shown - it looked like a secret* | Not an error: KalKech was careful. Fine to see? **Show it from now on**. |
 | *the secret "password" … has not been saved on this PC (Automations page, Connections tab …)* | Open the connection, **Set…** the secret. |
 | *the address … has changed since its secret … was saved* | If the new address is right, set the secret again. |
 | *the answer was 401* | The sign-in was refused: check the secret or the token step. |
@@ -1032,8 +1068,8 @@ log**): method, address, status and time - never a value.
 - Scripts: only `.bat`/`.cmd` files in the workspace `scripts` folder,
   values checked, a time limit, no PowerShell.
 - No code runs from a design: no JavaScript, no eval.
-- The assistant proposes; you agree. It never sees a secret, a token, or a
-  value you did not mark for it.
+- The assistant proposes; you agree. It never sees a secret, or a value you
+  did not mark for it - nor a token unless you ticked **Show it as it is**.
 
 ## Example: a list of users without their private fields
 

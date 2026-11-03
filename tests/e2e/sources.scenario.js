@@ -1211,7 +1211,7 @@
     const p = u.slice("http://127.0.0.1:1".length);
     const J = o => new Response(JSON.stringify(o), { status:200, headers:{ "Content-Type":"application/json" } });
     const method = (init && init.method) || "GET";
-    if (p === "/auto/info") return J({ ok:true, version:1, workspace:"e2e-sources", scripts:true, windows:true });
+    if (p === "/auto/info") return J({ ok:true, version:1, level:AB.level == null ? 2 : AB.level, workspace:"e2e-sources", scripts:true, windows:true });
     if (p.indexOf("/secrets") === 0){
       const q = new URLSearchParams(p.split("?")[1] || "");
       if (method === "GET"){
@@ -1243,7 +1243,7 @@
     const st = b.step || {};
     AB.paths.push(String(st.path || "").replace(/\{\{([^{}]*)\}\}/g, (m, inner) => { const v = look(DossierAuto.parsePh(inner)); return v == null ? "" : encodeURIComponent(v); }));
     await sleep(30);
-    let saved = {}, hidden = [], status = 200, ok = true, replyText = null, shaped = [];
+    let saved = {}, hidden = [], status = 200, ok = true, replyText = null, shaped = [], red = [];
     if (/\/documents$/.test(st.path)){
       /* (5.26) a list, each item with a download token: shown without it */
       keep.docs = JSON.stringify(AB.docs);
@@ -1277,10 +1277,18 @@
         if (x !== undefined) saved[v.name] = DossierAuto.asText(x);
       });
       if (st.reply) replyText = JSON.stringify(json);
+    } else if (/\/files$/.test(st.path)){
+      /* (5.28) a list with a field named token: kept hidden, and said so,
+         unless the owner ticked Show it as it is */
+      const list = [{ policyNumber:"P000777Z99", fileName:"P000777Z99_COI.pdf", token:"tok-5f2b9a10" }];
+      (st.save || []).forEach(v => {
+        if (v.allow) saved[v.name] = JSON.stringify(list);
+        else { keep[v.name] = JSON.stringify(list); hidden.push(v.name); red.push(v.name); }
+      });
     } else { ok = false; status = 404; }
     let until = null;
     if (ok && b.until) until = DossierAuto.evalCond(DossierAuto.parseCond(b.until).ast, ph => saved[ph.full] != null ? saved[ph.full] : look(ph));
-    const ans = { ok, status, ms:30, saved, hidden, shaped, missing:[], redacted:[], until, excerpt:"", error:ok ? "" : "the answer was " + status };
+    const ans = { ok, status, ms:30, saved, hidden, shaped, missing:[], redacted:red, until, excerpt:"", error:ok ? "" : "the answer was " + status };
     if (replyText != null){ ans.reply = replyText; ans.replyCut = false; }
     return J(ans);
   };
@@ -1951,6 +1959,58 @@
   AUTO.ui.draft = null; AUTO.ui.mode = "design"; AUTO.ui.run = null; AUTO.ui.tab = "list"; apPaint();
   const marks274 = S.undo.filter(u => u.label === "e2e: the last change to the records").length;
   if (marks274) S.undo = S.undo.filter(u => u.label !== "e2e: the last change to the records");
+
+  /* (5.28) the owner's call on what only LOOKS like a secret */
+  AB.level = 1; AUTO.info = null; AUTO.ui.draft = null; AUTO.ui.tab = "list"; apPaint();
+  await apBridgePaint(true);
+  check("(5.28) a tray program older than the page is called out of date, not ready",
+        /out of date/.test($("apBridge").textContent) && !$("apBridge").hidden && /KalKech\.bat again/.test($("apBridge").title), $("apBridge").outerHTML);
+  AB.level = 2; AUTO.info = null; await apBridgePaint(true);
+  const c528 = autoStore().conns[0];
+  const a528 = DossierAuto.normAuto({ id:"Afiles528", name:"Files 528", steps:[{ id:"sf528", kind:"http", name:"Files", conn:c528.id, method:"GET", path:"/files",
+    save:[{ name:"files", from:"json", path:"result", show:"ai" }] }], result:"{{files}}" });
+  autoStore().list.push(a528); touch();
+  let r528 = await autoPanelRun(autoStore().list.find(a => a.id === "Afiles528"), {}, { by:"me" });
+  AUTO.ui.runSel = "sf528"; apPaint(); await sleep(60);
+  const al528 = document.querySelector('#vAuto .apred [data-apallow="sf528"]');
+  check("(5.28) a value kept hidden although set to be shown: the run says why, with Show it from now on",
+        r528.hidden.indexOf("files") >= 0 && !!al528 && /looked like a secret/.test(document.querySelector("#vAuto .apred").textContent));
+  al528.click(); await sleep(60);
+  check("...which lets it through in the saved design", autoStore().list.find(a => a.id === "Afiles528").steps[0].save[0].allow === true);
+  r528 = await autoPanelRun(autoStore().list.find(a => a.id === "Afiles528"), {}, { by:"me" });
+  check("...and the next run shows it", r528.state === "ok" && !!r528.values.files && /tok-5f2b9a10/.test(r528.values.files.v) &&
+        AB.posts.filter(x => x.p === "/auto/step").pop().b.step.save[0].allow === true, JSON.stringify(r528.values));
+  AUTO.ui.mode = "design"; AUTO.ui.run = null; autoEdit("Afiles528"); await sleep(60);
+  AUTO.ui.sel = "sf528"; AUTO.ui.ptab.http = "values"; apPaint(); await sleep(40);
+  const cb528 = document.querySelector('#apPane .apallow input[data-f$="save.0.allow"]');
+  check("(5.28) the save row has Show it as it is, ticked now", !!cb528 && cb528.checked);
+  AUTO.ui.draft.steps[0].save[0].show = "hidden"; apPaint(); await sleep(30);
+  check("...not for a value saved hidden", !document.querySelector('#apPane .apallow input[data-f$="save.0.allow"]'));
+  AUTO.ui.draft.steps[0].save[0].show = "ai";
+  AUTO.ui.draft.steps[0].reply = "ai"; apPaint(); await sleep(30);
+  check("(5.28) Keep the whole reply has its own As it is", !!document.querySelector('#apPane .apallow input[data-f$="replyRaw"]'));
+  AUTO.ui.draft.steps[0].save.push({ name:"token", from:"json", path:"t", show:"ai", on:"ok" }); apPaint(); await sleep(30);
+  $("apChk").click(); await sleep(60);
+  const ok528 = [...$("apPop").querySelectorAll('[data-pk^="ok:"]')].find(x => /token/.test(x.textContent));
+  check("(5.28) the warning about a value named like a secret has Not an issue", !!ok528, $("apPop").textContent);
+  ok528.click(); await sleep(60);
+  check("...which ticks Show it as it is, and the warning is gone",
+        AUTO.ui.draft.steps[0].save[1].allow === true && !apProbs().some(p => p.code === "aiSeesSecret"));
+  /* (5.28) lining up: a code box and a list box side by side are one
+     height whatever their fonts, a button beside a box is as tall as it,
+     and the designer's bar is one height */
+  AUTO.ui.ptab.http = "params"; apPaint(); await sleep(40);
+  const h528 = el => el ? Math.round(el.getBoundingClientRect().height) : -1;
+  const meth528 = document.querySelector('#apPane select.in.apmeth'), path528 = document.querySelector('#apPane input.in.mono[data-f$=".path"]');
+  const conn528 = document.querySelector('#apPane select.in[data-f$=".conn"]');
+  const new528 = conn528 && conn528.parentElement.querySelector(".btn");
+  check("(5.28) a code box and a list box in one row are one height, and New... beside the connection is as tall",
+        h528(meth528) > 0 && h528(meth528) === h528(path528) && h528(new528) === h528(conn528),
+        [h528(meth528), h528(path528), h528(conn528), h528(new528)].join("/"));
+  const bar528 = [".apbar2 .apchk", '.apbar2 [data-ap="more"]', '.apbar2 [data-ap="save"]', '.apbar2 [data-ap="test"]']
+    .map(s => h528(document.querySelector("#vAuto " + s)));
+  check("...and the designer's bar: the to-fix pill, more, Save and Test one height", bar528.every(x => x > 0 && x === bar528[0]), bar528.join("/"));
+  AUTO.ui.draft = null; AUTO.ui.mode = "design"; AUTO.ui.run = null; AUTO.ui.tab = "list"; apPaint();
 
   closeChat();
   window.fetch = fetchAu;

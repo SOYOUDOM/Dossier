@@ -1839,6 +1839,52 @@ like a password or token field. Anything else in the reply is shown as it
 is, so give it to the assistant only when that helps. The run history keeps
 only a short copy (2,000 characters).
 
+When the reply has a token that is fine to see - a short-lived download
+link, say - tick **As it is - do not mask fields named like tokens** under
+**Keep the whole reply** (since 5.28). Then only the run's real secrets
+are masked: a connection's secret, a value typed into a secret input, and
+a value saved as **Hidden**.
+
+### Why is a value I marked for me kept hidden? How do I show it anyway?
+
+KalKech checks every value you mark *Me only* or *Me and the assistant*.
+When it looks like a password or a token - a long random string, a sign-in
+token (`eyJ…`), a list with a field named `token`, `password`, `secret`,
+`key`, `cookie` or `session` - or contains one of the run's secrets, the
+KalKech program keeps it **hidden** instead, to be safe. The run says so in
+the side panel (click the step on the run): *Kept hidden although it is set
+to be shown - it looked like a secret … : docs*, with the button **Show it
+from now on**.
+
+Not every token is dangerous: a download token that works for a few
+minutes is fine to see and to give to the assistant. It is your decision:
+
+- **Show it as it is** - the tick box under the value, in the step's
+  **Values** tab (or **Show it from now on** after a run). From the next
+  run it is shown, and given to the assistant when marked for it, as the
+  API sent it.
+- **As it is - do not mask fields named like tokens** - the same for a
+  step's whole reply (under **Keep the whole reply**).
+- **Not an issue** - the checker (the pill at the top of the designer)
+  warns when a value named like a secret (`token`, `password`, `apiKey`…)
+  goes to the assistant. Click it and choose **Not an issue - show
+  "token" as it is** to tick the box for you; the warning goes.
+
+What stays masked even then: a **connection's secret**, a value typed into a
+**secret input**, and a value saved as **Hidden** in the same run. Those are
+real passwords, and they are never shown.
+
+Rather leave out just the token? Write it in **Leave out** on the value
+(`token`) - the rest of the list is shown, and later steps can still use
+the token: `{{docs[0].token}}`.
+
+An automation brought in from a file never has these boxes ticked (like
+**Ask before running**): you tick them again yourself, on this PC.
+
+These need the KalKech program from 5.28. If the Automations page says
+**Tray program is out of date**, right-click the KalKech icon by the clock
+→ **Quit**, then run `KalKech.bat` again - it builds the new program.
+
 ### How do I put a value or a function in a box quickly?
 
 Type **/** in a box that takes values (since 5.26) - the path of a request,
@@ -1913,7 +1959,9 @@ the run - so a later step can still use them: `{{docs[0].downloadToken}}`,
 or `{{doc.downloadToken}}` inside a *For each*. A left-out value that looks
 like a secret is masked in every reply after it. Without **Leave out**, a
 list with a field named like a token or password is kept hidden as a whole
-(as before 5.26), and nobody sees it. The starter **A list, written out**
+(as before 5.26), and nobody sees it - unless you tick **Show it as it is**
+under the value (since 5.28). Field names in **Leave out** and **Keep
+only** match in any case: `token` also leaves out `Token`. The starter **A list, written out**
 (on the Automations page, **New**) is this, ready to fill in.
 
 ### How do I do something for each item of a list (a For each)?
@@ -2156,7 +2204,9 @@ the error reply) or *Always* - and **who may see it**:
 
 A value marked for you or the assistant that looks like a token or a
 password (or that contains one of the run's secrets) is **kept hidden
-anyway**, and the card says so.
+anyway**, and the run says which ones - with a button to show them from
+then on. You decide: see *Why is a value I marked for me kept hidden?*
+below.
 
 Values are filled in once, each made safe for where it goes: in the path it
 stays one piece (`/` becomes `%2F`), in a JSON body it stays inside its
@@ -2422,6 +2472,8 @@ The failed step says why, in words. The usual ones:
 |---|---|
 | *Automations need the KalKech icon by the clock* | Start `KalKech.bat`. |
 | *older copy that does not know automations* | Quit KalKech from its icon (right-click → Quit) and run `KalKech.bat` again. |
+| *Tray program is out of date* (on the Automations page) | The same: Quit from its icon, run `KalKech.bat` again. Until then, **Show it as it is** and **Leave out**/**Keep only** may not work. |
+| *Kept hidden although it is set to be shown - it looked like a secret* | KalKech was careful. If the value is fine to see, press **Show it from now on** (see *Why is a value I marked for me kept hidden?*). |
 | *the secret "password" … has not been saved on this PC* | Open the connection, **Set…** the secret. |
 | *the address … has changed since its secret … was saved* | If the new address is right, set the secret again. |
 | *the answer was 401 Unauthorized* | The sign-in was refused: check the secret, or the sign-in step's saved token. |
@@ -2460,8 +2512,10 @@ never a value.
   folder, values checked for characters cmd.exe would act on, a time limit,
   no PowerShell.
 - **The assistant** proposes; you agree - unless you switched that off for
-  one automation you trust. It never sees a secret, a token, or a value you
-  did not mark for it.
+  one automation you trust. It never sees a secret, or a value you did not
+  mark for it - nor a token, unless you ticked **Show it as it is** for
+  that value (a connection's secret and a secret input stay masked even
+  then).
 - Exports carry the designs and connections, never a secret. An imported
   connection gets no secret until you set one on this PC.
 

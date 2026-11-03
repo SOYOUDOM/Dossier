@@ -1585,6 +1585,12 @@ button.auchip:hover{border-color:var(--accent);color:var(--accent)}
 .apbridge.ok{color:var(--st-done)}
 .apbridge.ok span{color:var(--ink-2)}
 .apbridge.bad{color:var(--p1)}
+.apbridge.warn{color:var(--p2)}
+.appline.warn{color:var(--p2)}
+/* (5.28) Show it as it is */
+.apallow{display:flex;align-items:center;gap:7px;margin:6px 0 2px;font-size:11.5px;color:var(--ink-2);cursor:pointer;width:fit-content}
+.apallow .cb{margin:0}
+.apnote.apred .btn{margin-left:6px;vertical-align:middle}
 .apaion{display:inline-flex;align-items:center;gap:7px;font-size:11.5px;color:var(--ink-2);padding-bottom:8px;cursor:pointer;white-space:nowrap}
 .apscroll{flex:1;min-height:0;overflow:auto}
 .apsplit{display:flex;flex:1;min-height:0;position:relative}
@@ -6846,6 +6852,74 @@ body.chsizing .app,body.chsizing .pet{transition:none!important}
 #sbRun{--ic:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M13 2.5L5 13.5h6l-1 8 8-11h-6z'/%3E%3C/svg%3E")}
 /* ═══ /THE SIDEBAR AND THE TOP BAR ═══ */
 
+/* ═══ LINING THINGS UP (5.28) ════════════════════════════════════════════
+   An audit of every look, view and panel with the fonts Windows has
+   (Segoe UI or Aptos for words, Consolas or Cascadia Mono for code) found
+   boxes and buttons of different heights side by side. The main cause:
+   a one-line box took its height from the font ("line-height: normal"),
+   and Consolas is about 3 px shorter than Segoe UI at the same size - so a
+   code box (a JSON path, a name) sat lower than a word box (a list) next
+   to it. A fixed line height makes every one-line box 30 px, whatever its
+   font. The rest are buttons that now take the height of the box or bar
+   they sit in. */
+input.in:not([type="checkbox"]):not([type="radio"]),select.in{line-height:16px}
+/* a button beside a box (Connection: New... and Edit) is as tall as it */
+.apfr>.btn{align-self:stretch}
+/* the year box and its button in Setup -> Special days */
+.inpair{display:flex;gap:6px;flex:0 0 auto}
+.inpair>.btn{align-self:stretch}
+/* the designer's bar: the to-fix pill, the more button and the buttons
+   one height (Nova's buttons are 33 px, the pill was 28) */
+.apbar2 :is(.btn,.apchk){height:32px;box-sizing:border-box}
+.apbar2 .apib{width:32px;height:32px}
+/* its name box as wide as the name, so "Not saved" sits beside it */
+@supports (field-sizing:content){
+  .apnm2{field-sizing:content;width:auto;max-width:min(420px,40vw)}
+}
+/* a value's "Shown to" needs more room than "Kept when" */
+.apsave .apfr.apsub>.in.aushow{flex:1.7 1 165px}
+.apsave .apfr.apsub>.in.auon{flex:1 1 105px}
+/* an automation's line: Run as tall as the more button */
+.apacts>:is(.btn,.apib){height:28px;box-sizing:border-box}
+/* Import: the kinds of its steps under its name, not squeezing it */
+.auimpn .apmini{margin:3px 0 1px;flex-wrap:wrap}
+/* Week and Month: the This week button and the switch as tall as < > */
+.wkh>.btn,.wkh>.calsw{align-self:stretch}
+.wkh>.btn{display:inline-flex;align-items:center}
+/* the message bar: Paste a message and Log it one height */
+.cbar .paste,.cbar .go{height:28px;display:inline-flex;align-items:center;gap:6px;box-sizing:border-box}
+/* the list below scrolls and its scroll bar takes some width; the message
+   bar and the filters above keep that width free (--sbw is measured by
+   sbwSync()), so their right edges line up with the cards' */
+.compose>:is(.cbar,.readout){margin-right:var(--sbw,0px)}
+#clearF{margin-right:var(--sbw,0px)}
+/* Quiet and Classic: the search box was cut to "Search everythi". With
+   the window under 1500 px the tabs' number hints (1-8) make way for it */
+@media (min-width:1280px){
+  :root:is([data-ui="classic"],[data-ui="quiet"]):not([data-navmin]) .find{min-width:190px}
+}
+@media (min-width:1280px) and (max-width:1500px){
+  :root:is([data-ui="classic"],[data-ui="quiet"]):not([data-navmin]) .tabs button .kb{display:none}
+}
+/* Studio's open sidebar: the same line icons as the folded one, not
+   characters from the font (each font drew them at its own size and
+   height) */
+@media (min-width:901px){
+  :root[data-ui="studio"]:not([data-look="nova"]) .tabs button[data-v="day"]::before{--ic:var(--lyi-day)}
+  :root[data-ui="studio"]:not([data-look="nova"]) .tabs button[data-v="board"]::before{--ic:var(--lyi-board)}
+  :root[data-ui="studio"]:not([data-look="nova"]) .tabs button[data-v="register"]::before{--ic:var(--lyi-register)}
+  :root[data-ui="studio"]:not([data-look="nova"]) .tabs button[data-v="week"]::before{--ic:var(--lyi-week)}
+  :root[data-ui="studio"]:not([data-look="nova"]) .tabs button[data-v="library"]::before{--ic:var(--lyi-library)}
+  :root[data-ui="studio"]:not([data-look="nova"]) .tabs button[data-v="insight"]::before{--ic:var(--lyi-insight)}
+  :root[data-ui="studio"]:not([data-look="nova"]) .tabs button[data-v="assist"]::before{--ic:var(--lyi-assist)}
+  :root[data-ui="studio"]:not([data-look="nova"]) .tabs button[data-v="auto"]::before{--ic:var(--lyi-auto)}
+  :root[data-ui="studio"]:not([data-look="nova"]) .tabs button[data-v]::before{content:"";width:18px;height:18px;font-size:0;flex:0 0 auto;
+    background:currentColor;-webkit-mask:var(--ic) center/contain no-repeat;mask:var(--ic) center/contain no-repeat}
+  :root[data-ui="studio"]:not([data-look="nova"]):not([data-navmin]) body:not(.chatting) .tabs button[data-v]:not(.on):not(:hover)::before{background:var(--ink-3)}
+  :root[data-ui="studio"]:not([data-look="nova"]):not([data-navmin]) .tabs button.on[data-v]::before{background:var(--accent)}
+}
+/* ═══ /LINING THINGS UP ═══ */
+
 </style>
 </head>
 <body>
@@ -10023,6 +10097,17 @@ const STRINGS = {
   AutoShow_me: "Me only",
   AutoShow_ai: "Me and the assistant",
   AutoAddSave: "Save a value",
+  AutoAllow: "Show it as it is",
+  AutoAllowHint: "KalKech hides a shown value when it LOOKS like a secret - a field named token, or a value shaped like one. Tick this when you know it is fine to show (a short-lived download token, say). Your connection's secrets, values typed as secret and values saved hidden are still masked in it.",
+  AutoReplyRaw: "As it is - do not mask fields named like tokens",
+  AutoReplyRawHint: "Only your connection's secrets, values typed as secret and values saved hidden are masked in the reply. Everything else is shown - to you, and to the assistant when it may read the reply.",
+  AutoRedactedNote: "Kept hidden although it is set to be shown - it looked like a secret (a field named token, or a value shaped like one): {list}.",
+  AutoAllowBtn: "Show it from now on",
+  AutoAllowDone: "From the next run, {list} is shown as it is. Your secrets stay masked in it.",
+  AutoNotAnIssue: "Not an issue - show “{name}” as it is",
+  AutoStaleBridge: "The KalKech program by the clock is older than this page. Leave out, Keep only and Show it as it is need the new one: quit it (right-click the icon, Quit) and start KalKech.bat again.",
+  ApBridgeStale: "Tray program is out of date",
+  AutoImpUnallowed: "{n} value(s) set in the file to be shown as they are will stay hidden here if they look like secrets - tick Show it as it is again if you want.",
   AutoAddRow: "Add",
   AutoMore: "Conditions, repeat, and failure",
   AutoWhen: "Only run when",
@@ -11064,7 +11149,7 @@ const STATUSES = [
    the status bar, and clicking it copies a line you can paste into a bug
    report — build date and flow protocol included, because those are the two
    things that actually differ between copies. */
-const APP_VERSION = "5.27.4";
+const APP_VERSION = "5.28.0";
 const APP_BUILT = "2026-11-01";
 function buildLine(){
   return "KalKech v" + APP_VERSION + " \u00b7 built " + APP_BUILT +
@@ -25757,10 +25842,10 @@ async function renderModal(){
     '<div class="brow" style="margin-bottom:8px">' +
       "<button class=\"btn sm\" id=\"holSeed\">" + L("RestoreTheCambodiaList") + "</button>" +
       "<button class=\"btn sm\" id=\"holWipe\">" + L("RemoveThemAll") + "</button></div>" +
-    '<div style="display:flex;gap:6px;align-items:center;margin-bottom:10px">' +
+    '<div style="display:flex;gap:6px;align-items:flex-start;margin-bottom:10px"><span class="inpair">' +
       '<input class="in" id="holY" type="number" min="2000" max="2100" step="1" value="' +
       (new Date().getFullYear() + 1) + '" style="max-width:96px">' +
-      "<button class=\"btn sm\" id=\"holYear\">" + L("AddThatYearsFixedDates") + "</button>" +
+      "<button class=\"btn sm\" id=\"holYear\">" + L("AddThatYearsFixedDates") + "</button></span>" +
       '<span style="font-size:10.5px;color:var(--ink-3);line-height:1.5">' +
       L("The") + KH_FIXED.length + L("AnniversariesThatNeverMove") + KH_LUNAR +
       L("AreLunarAddThoseByHand") +
@@ -29427,9 +29512,15 @@ function autoMs(op, body){
   const s = (body && body.step) || {}, c = (body && body.conn) || {};
   return ((body.kind === "script" ? +s.timeout || 120 : +c.timeout || 30) + 15) * 1000;
 }
+/* (5.28) what this page needs of the tray program: 2 - values shown as
+   they are, whole replies as they are, field names in any capitals. An
+   older copy still runs automations, but ignores those, and says nothing:
+   the page says it is out of date instead of "ready". */
+const AUTO_LEVEL = 2;
 async function autoInfo(fresh){
   if (!fresh && AUTO.info && Date.now() - AUTO.infoAt < 20000) return AUTO.info;
   const r = await autoReq("GET", "/auto/info", undefined, 6000);
+  if (r && r.ok && (+r.level || 1) < AUTO_LEVEL) r.stale = true;
   AUTO.info = r; AUTO.infoAt = Date.now();
   return r;
 }
@@ -30384,9 +30475,11 @@ async function apBridgePaint(fresh){
   const b = $("apBridge"); if (!b) return;
   const ok = info && info.ok;
   const quiet = b.classList.contains("quiet");
-  b.className = "apbridge " + (ok ? "ok" : "bad") + (quiet ? " quiet" : "");
-  b.hidden = quiet && !!ok;
-  b.innerHTML = apIc("dot", "fill") + "<span>" + LE(ok ? "ApBridgeOk" : info && info.old ? "ApBridgeOld" : "ApBridgeBad") + "</span>";
+  const stale = ok && info.stale;
+  b.className = "apbridge " + (stale ? "warn" : ok ? "ok" : "bad") + (quiet ? " quiet" : "");
+  b.hidden = quiet && !!ok && !stale;
+  b.innerHTML = apIc("dot", "fill") + "<span>" + LE(stale ? "ApBridgeStale" : ok ? "ApBridgeOk" : info && info.old ? "ApBridgeOld" : "ApBridgeBad") + "</span>";
+  if (stale){ b.title = L("AutoStaleBridge"); return; }
   b.title = ok ? L("AutoBridgeOk", { ws:info.workspace || L("AutoNoWs") }) +
                  (info.workspace && FS.name && info.workspace !== FS.name ? " " + L("AutoBridgeOtherWs", { ws:info.workspace, here:FS.name }) : "")
                : info && info.old ? L("AutoOldBridge") : L("AutoNoBridge");
@@ -30766,8 +30859,8 @@ function apMoreMenu(btn){
     apItem("zfit", "fit", L("ApZoomFit"), "", { kind:"finish" }) +
     apItem("zreset", "search", L("ApZoomReset"), "", { kind:"finish" }) +
     apItem("exp", "exp", L("AutoExpThis"), L("AutoExpOneHint"), { kind:"finish" }) +
-    '<div class="appline ' + (ok ? "ok" : "bad") + '">' + apIc("dot", "fill") + "<span>" +
-      LE(ok ? "ApBridgeOk" : info && info.old ? "ApBridgeOld" : "ApBridgeBad") + "</span></div>";
+    '<div class="appline ' + (ok && info.stale ? "warn" : ok ? "ok" : "bad") + '"' + (ok && info.stale ? ' title="' + LE("AutoStaleBridge") + '"' : "") + ">" + apIc("dot", "fill") + "<span>" +
+      LE(ok && info.stale ? "ApBridgeStale" : ok ? "ApBridgeOk" : info && info.old ? "ApBridgeOld" : "ApBridgeBad") + "</span></div>";
   apPop(btn, html, k => {
     if (k === "undo") return apUndo(true);
     if (k === "redo") return apUndo(false);
@@ -31073,6 +31166,9 @@ function apValues(a, s, P){
           autoField(P + "save." + j + ".show", v.show, { select:DossierAuto.SHOWS.map(x => [x, L("AutoShow_" + x)]), cls:"aushow " + v.show, redraw:true }) +
           "<small>" + LE("ApKeptWhen") + "</small>" +
           autoField(P + "save." + j + ".on", v.on, { select:DossierAuto.SAVE_ON.map(x => [x, L("AutoOn_" + x)]), cls:"auon " + v.on, redraw:true }) + "</div>" +
+        /* (5.28) the owner's call: shown even when it looks like a secret */
+        (v.show !== "hidden" ? '<label class="apallow" title="' + LE("AutoAllowHint") + '">' + autoField(P + "save." + j + ".allow", !!v.allow, { check:true, redraw:true }) +
+          "<span>" + LE("AutoAllow") + "</span></label>" : "") +
         /* (5.26) a list or an object: only some of its fields */
         (v.from === "json" ? '<div class="apfr apsub apshape"><small title="' + LE("ApDropHint") + '">' + LE("ApDrop") + "</small>" +
             autoField(P + "save." + j + ".drop", v.drop || "", { mono:true, ph:"downloadToken" }) +
@@ -31082,7 +31178,9 @@ function apValues(a, s, P){
     '<button class="btn sm apadd2" data-ap="addsave" data-p="' + esc(P + "save") + '" type="button">' + apIc("plus") + "<span>" + LE("AutoAddSave") + "</span></button>" +
     (s.save.some(v => v.from === "json") ? '<p class="aphint">' + LE("ApShapeHint") + "</p>" : "") +
     '<div class="apsep2"></div>' +
-    apRow(L("AutoReply"), autoField(P + "reply", s.reply, { select:DossierAuto.REPLY_SHOWS.map(x => [x, L("AutoReply_" + (x || "none"))]), redraw:true }), L("AutoReplyHint"));
+    apRow(L("AutoReply"), autoField(P + "reply", s.reply, { select:DossierAuto.REPLY_SHOWS.map(x => [x, L("AutoReply_" + (x || "none"))]), redraw:true }), L("AutoReplyHint")) +
+    (s.reply ? '<label class="apallow" title="' + LE("AutoReplyRawHint") + '">' + autoField(P + "replyRaw", !!s.replyRaw, { check:true, redraw:true }) +
+      "<span>" + LE("AutoReplyRaw") + "</span></label>" : "");
 }
 function apCond(path, v, ph){
   return apFx(autoField(path, v, { mono:true, ph:ph })) + '<span class="apcok" data-cok="' + esc(path) + '">' + apCondOk(v) + "</span>";
@@ -31287,6 +31385,9 @@ function apRunPane(run, a){
       (s ? '<p class="apsumline mono">' + esc(apSum(s)) + "</p>" : "") +
       (st.note && (st.state === "fail" || st.state === "no") ? '<div class="apnote bad">' + esc(autoNoteText(st, a)) + "</div>" : "") +
       ((st.missing || []).length ? '<div class="apnote soft">' + esc(L("AutoMissing", { list:st.missing.join(", ") })) + "</div>" : "") +
+      ((st.redacted || []).length ? '<div class="apnote soft apred">' + esc(L("AutoRedactedNote", { list:st.redacted.join(", ") })) +
+        (a && s ? ' <button class="btn sm" data-apallow="' + esc(st.sid) + '" data-auto="' + esc(a.id) + '" data-names="' + esc(st.redacted.join(",")) + '" type="button">' +
+          LE("AutoAllowBtn") + "</button>" : "") + "</div>" : "") +
       (names.length ? '<h5 class="apsech">' + LE("ApStepKept") + "</h5>" + (kept.length || hid.length ? apValsHtml(kept, hid) : '<p class="apnone">' + LE("ApNothingKept") + "</p>") : "") +
       (st.reply ? '<h5 class="apsech">' + LE("ApTheReply") + "</h5>" + autoReplyHtml(st, true) : "") +
       (t && (t.excerpt || t.url) ? '<h5 class="apsech">' + LE("ApTestReply") + "</h5>" + autoTestHtml(s || { kind:st.kind }, st.sid, t, true) : "") +
@@ -31782,9 +31883,11 @@ function autoImportDialog(opts){
           if (p.same) notes.push('<small class="ok">' + LE("AutoImpSame") + "</small>");
           if (ex && editing(ex.id)) notes.push("<small>" + LE("AutoImpEditing") + "</small>");
           if (p.noAsk) notes.push("<small>" + LE("AutoImpNoAsk") + "</small>");
+          if (p.unallowed) notes.push("<small>" + esc(L("AutoImpUnallowed", { n:p.unallowed })) + "</small>");
           if (p.scripts.length) notes.push('<small class="warn">' + esc(L("AutoImpScripts", { list:p.scripts.join(", ") })) + "</small>");
-          return '<div class="auimprow' + (how(p, i) === "skip" ? " off" : "") + '">' + apMini(p.a) +
-            '<span class="auimpn"><b>' + esc(p.a.name) + "</b><small>" + esc(L("AutoImpSteps", { n:DossierAuto.flatSteps(p.a.steps).length })) +
+          /* (5.28) the kinds of its steps under the name, not beside it */
+          return '<div class="auimprow' + (how(p, i) === "skip" ? " off" : "") + '">' +
+            '<span class="auimpn"><b>' + esc(p.a.name) + '</b><span class="apmini" aria-hidden="true">' + apMini(p.a) + "</span><small>" + esc(L("AutoImpSteps", { n:DossierAuto.flatSteps(p.a.steps).length })) +
               (p.a.inputs.length ? " · " + esc(p.a.inputs.map(x => x.label || x.key).join(", ")) : "") + " · " +
               (hard ? '<span class="bad">' + esc(L("AutoImpFix", { n:hard })) + "</span>" : '<span class="ok">' + LE("AutoImpReady") + "</span>") +
               "</small>" + notes.join("") + "</span>" +
@@ -31878,8 +31981,36 @@ function apCheckMenu(btn){
   const U = AUTO.ui, probs = apProbs();
   if (!probs.length) return toast(L("AutoProbsNone"));
   const html = probs.map((p, i) => '<button class="appi prob ' + (p.warn ? "soft" : "bad") + '" type="button" role="menuitem" data-pk="' + i + '">' + apIc("warn") +
-    "<span>" + esc(autoProbText(p, U.draft)) + "</span></button>").join("");
-  apPop(btn, html, k => apGoProb(probs[+k]), "chkpop");
+    "<span>" + esc(autoProbText(p, U.draft)) + "</span></button>" +
+    /* (5.28) a value that only LOOKS like a secret: the owner can say so */
+    (p.code === "aiSeesSecret" && p.id ? '<button class="appi prob ok" type="button" role="menuitem" data-pk="ok:' + i + '">' + apIc("ok") +
+      "<span>" + esc(L("AutoNotAnIssue", { name:p.name })) + "</span></button>" : "")).join("");
+  apPop(btn, html, k => {
+    if (/^ok:/.test(k)){
+      const p = probs[+k.slice(3)], f = p && DossierAuto.findStep(U.draft, p.id);
+      const v = f && (f.s.save || []).find(x => x.name === p.name);
+      if (!v) return;
+      apSnap(); v.allow = true; apPaint();
+      return toast(L("AutoAllowDone", { list:p.name }));
+    }
+    apGoProb(probs[+k]);
+  }, "chkpop");
+}
+/* (5.28) "Show it from now on", from a run: the saved design (and the one
+   open in the designer, if it is that one) lets these values through */
+function autoAllowNames(autoId, sid, names){
+  const st = autoStore(), a = st.list.find(x => x.id === autoId);
+  const set = d => { const f = d && DossierAuto.findStep(d, sid); (f ? f.s.save || [] : []).forEach(v => { if (names.indexOf(v.name) >= 0 && v.show !== "hidden") v.allow = true; }); return !!f; };
+  if (!a || !set(a)) return;
+  a.updated = new Date().toISOString();
+  const U = AUTO.ui;
+  if (U.draft && U.draft.id === autoId){
+    set(U.draft);
+    const base = U.base ? JSON.parse(U.base) : null;
+    if (base){ set(base); U.base = JSON.stringify(base); }
+  }
+  touch();
+  toast(L("AutoAllowDone", { list:names.join(", ") }));
 }
 function apGoProb(p){
   const U = AUTO.ui;
@@ -32179,6 +32310,10 @@ function apSlashOn(){ return !!SLASH.el && !!SLASH.box && SLASH.box.style.displa
       if (b.dataset.acs){ if (await autoSecretDialog(real, b.dataset.acs)){ AUTO.secrets = {}; apConnSecretsPaint(); apSecretsPaint(); } }
       else { await autoSecretsDrop(real, b.dataset.acd); apConnSecretsPaint(); apSecretsPaint(); }
       return;
+    }
+    if ((b = t.closest("[data-apallow]"))){
+      autoAllowNames(b.dataset.auto, b.dataset.apallow, b.dataset.names.split(",").filter(Boolean));
+      b.disabled = true; return;
     }
     if ((b = t.closest("[data-ac]"))) return apConnAct(b.dataset.ac, b);
     if ((b = t.closest("[data-apcid]"))) return apConnOpen(b.dataset.apcid);
@@ -34156,6 +34291,23 @@ $("navBtn").addEventListener("click", e => { e.stopPropagation(); layoutToggle("
 $("topBtn").addEventListener("click", e => { e.stopPropagation(); layoutToggle("topMin"); });
 /* Prism's sliding light follows the tabs when the sidebar changes width */
 if (window.ResizeObserver) new ResizeObserver(() => { if (prismOn()) prismInd(); }).observe($("tabs"));
+/* (5.28) the width the list's scroll bar takes: the message bar and the
+   filters above keep it free (CSS --sbw), so their right edges line up
+   with the cards' and not with the scroll bar's. The list's box gets
+   narrower when its scroll bar comes and wider when it goes, which is
+   what the observer sees. In page pixels, as offsetWidth is. */
+let SBW = -1;
+function sbwSync(){
+  const m = $("main");
+  if (!m) return;
+  const cs = getComputedStyle(m);
+  const w = Math.max(0, Math.round(m.offsetWidth - m.clientWidth - (parseFloat(cs.borderLeftWidth) || 0) - (parseFloat(cs.borderRightWidth) || 0)));
+  if (w === SBW) return;
+  SBW = w;
+  document.documentElement.style.setProperty("--sbw", w + "px");
+}
+if (window.ResizeObserver) new ResizeObserver(sbwSync).observe($("main"));
+sbwSync();
 
 /* Ask: the input, the buttons inside answers, and the ways out. */
 $("chatBtn").addEventListener("click", openChat);
