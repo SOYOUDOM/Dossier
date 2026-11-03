@@ -6,6 +6,13 @@
 > (`Dossier`), so nothing has to move. `KalKech.bat` starts it; `Resolv.bat`
 > and `Dossier.bat` still work and pass straight through.
 
+> **Since 5.31 KalKech runs in safe mode.** `KalKech.bat` only opens
+> `dossier.html` in Edge or Chrome: nothing is compiled, nothing runs in the
+> background, nothing starts with Windows. The tray program
+> (`DossierBridge.exe`: the SQL database, the script runner, Automations)
+> is optional, for a PC where IT approved it - see
+> [Safe mode](#safe-mode-kalkech-without-the-tray-program).
+
 **A support-operations record that runs as one HTML file, with no install, no
 server and no network.** Everything it knows lives in a folder you choose, as
 plain JSON and ordinary files that stay readable without this app.
@@ -99,15 +106,17 @@ git clone https://github.com/SOYOUDOM/Resolv
 1. **Make a folder for your records**, anywhere but the clone —
    `Documents\Dossier` will do. To start with the demo rather than an empty
    sheet, copy `demo\dossier.json` into it as `dossier.json`.
-2. **Double-click `KalKech.bat`** in the clone. The first time it takes a
-   few seconds to set itself up; after that it opens
-   `http://127.0.0.1:5500/dossier.html` in your browser and sits as an icon
-   by the clock — no window. It asks once which folder holds your records
-   (the one from step 1), and creates the database for you if SQL Server
-   LocalDB is on the PC. Without LocalDB it still works, and your records
-   stay in `dossier.json`. (You can also just open `dossier.html` directly —
-   everything works except Windows notifications and the database.)
-   **Is your SQL Server not LocalDB?** If SSMS shows another server name
+2. **Double-click `KalKech.bat`** in the clone. It opens `dossier.html` in
+   Edge or Chrome - that is all it does (safe mode, since 5.31). Your records
+   are kept in `dossier.json` in the folder from step 1. (Opening
+   `dossier.html` yourself is the same thing.)
+   *Only on a PC where IT approved the tray program*: turn safe mode off in
+   **Menu → Setup → Safe mode** and start `scripts\bridge\KalKech-tray.bat`
+   instead. It sets itself up the first time, then opens
+   `http://127.0.0.1:5500/dossier.html` and sits as an icon by the clock,
+   keeps the records in SQL Server LocalDB when the PC has it, runs your
+   scripts and carries out Automations.
+   **Is your SQL Server not LocalDB?** (tray program only) If SSMS shows another server name
    when you connect (`.\SQLEXPRESS`, your PC's name …), type that name in
    **Menu → Setup → Database (SQL Server)** — see
    [How do I use a different SQL Server?](#how-do-i-use-a-different-sql-server-the-server-name-in-ssms)
@@ -131,13 +140,19 @@ With the demo copied in you should immediately see:
 > Setup → export now and then, and prefer a folder where one is possible.
 
 > **Windows notifications need `http://`.** Chrome and Edge refuse the
-> Notification API on `file://` with no way to allow it. `KalKech.bat` hands
+> Notification API on `file://` with no way to allow it. In safe mode (the
+> default) KalKech is opened from the folder, so reminders appear inside
+> KalKech while its tab is open. The tray program (`KalKech-tray.bat`, only
+> where IT approved it) hands
 > the page out at `http://127.0.0.1:5500/dossier.html` - the same program that
 > keeps your records in the database, with no window of its own - so there is
 > only ever one thing to start. With no SQL Server on the PC it serves the
 > page on its own.
 
 #### KalKech.bat says "KalKech is running, and this copy of it is out of date", then "Windows cannot find ... DossierBridge.exe" - why?
+
+*(Before 5.31 `KalKech.bat` was the tray program's starter; since 5.31 that
+is `scripts\bridge\KalKech-tray.bat`, and what follows applies to it.)*
 
 That happened in 5.20.0 when you cloned KalKech into a **new folder** while
 the copy in the **old folder** was still running. The starter saw a KalKech
@@ -186,7 +201,10 @@ that starts with Windows.
 | `fonts/NotoSansKhmer-*.woff2` | ~33 KB | optional | Bundled Khmer typeface, so Khmer renders without fetching a webfont. `OFL.txt` is its licence. |
 | `fonts/Inter-latin.woff2` | ~48 KB | optional | Inter, the typeface of the Lumen chat skin, embedded in `dossier.html` the same way. `Inter-OFL.txt` is its licence. |
 | `scripts/dossier-runner.bat` | 3.4 KB | optional | The runner. Executes what KalKech queues. No PowerShell anywhere. |
-| `KalKech.bat` | ~6 KB | **start here** | **The one thing to double-click.** Builds and starts KalKech as an icon by the clock — the page at `http://127.0.0.1:5500/dossier.html`, the database created and migrated by itself, your scripts' runner hidden. `startup` / `startup off` for starting with Windows. |
+| `KalKech.bat` | ~2 KB | **start here** | **The one thing to double-click.** Opens `dossier.html` in Edge or Chrome - nothing else (safe mode, since 5.31). |
+| `scripts/bridge/KalKech-tray.bat` | ~7 KB | optional | **Only where IT approved it.** Builds and starts the tray program: the page at `http://127.0.0.1:5500/dossier.html`, the SQL database, your scripts' runner, Automations. Asks first. `startup` / `startup off` for starting with Windows. (Until 5.31 this was `KalKech.bat`.) |
+| `scripts/safe-cleanup.bat` | ~2 KB | once | Takes KalKech's old entries out of Windows start-up (Run key `Dossier`, the `Dossier runner` task, `Dossier.bat` in Startup). Nothing else. |
+| `docs/TRAY-PROGRAM-FOR-IT.md` | ~5 KB | — | What the tray program does, for an IT or security team deciding whether to allow it. |
 | `Resolv.bat`, `Dossier.bat` | ~1 KB | — | The old names, kept so shortcuts and habits keep working: they pass straight through to `KalKech.bat`. |
 | `scripts/dossier-serve.bat` | ~1 KB | — | Kept so nothing that points at it breaks: passes through to `KalKech.bat`. |
 | `scripts/open-morning-tabs.bat` | 1.8 KB | demo | Opens the tabs you start the day with, once a day. |
@@ -209,7 +227,7 @@ that starts with Windows.
 | `sql/check-json-paths.py` | ~3 KB | — | Walks every JSON path the loader reads against a workspace holding one of everything. A wrong path loads nothing, quietly. |
 | `scripts/check-bat.py` | ~4 KB | — | The five things that have actually gone wrong in a `.bat`: an argument used as a path (`%1` stops at the first space, and a work folder is `OneDrive - Contoso Ltd`), a redirect on an `if` line (cmd performs it whether the condition holds or not), LF line endings, a byte over 7 bits, a call to PowerShell. |
 | `scripts/dossier-sql.bat` | ~7 KB | optional | The launcher: `init`, `push`, `pull`, `check`, `history`, `find`. Defaults to `(localdb)\MSSQLLocalDB`. |
-| `scripts/dossier-bridge.bat` | ~1 KB | — | Kept so nothing that points at it breaks: passes through to `KalKech.bat`, arguments and all. |
+| `scripts/dossier-bridge.bat` | ~1 KB | — | Kept so nothing that points at it breaks: passes through to `KalKech.bat` (safe mode - it only opens the page). |
 | `scripts/bridge/DossierBridge.cs` | ~150 KB | optional | KalKech, running: the tray icon and its menu, the page, the database (created, migrated, written, and its history kept), the hidden runner, and the steps of your automations - with their secrets, kept encrypted for your Windows account. C# 5 and Windows Forms, so `csc.exe` from the .NET Framework builds it with nothing installed. |
 | `flow/prompt.txt` | ~15 KB | **the assistant's instructions** | What the model reads, with ten places KalKech fills in before every question. Edit it in Notepad and the next question uses it — nothing to change in Power Automate. Your own version goes in your records folder as `dossier-prompt.txt`, where updates never touch it. |
 | `flow/embed-prompt.py` | ~1 KB | — | Copies `flow/prompt.txt` into `flow.js`, for a page opened straight from the folder, which cannot read the file beside it. |
@@ -1176,9 +1194,67 @@ Old exports (before 5.17, one file with everything) still import: the
 window offers every part they have. A runbook library file (*Library →
 Export library*) can be imported here too.
 
+### Safe mode: KalKech without the tray program
+
+**Since 5.31, and the default.** KalKech runs only as a page in your
+browser. It does **not** use the KalKech tray program (`DossierBridge.exe`):
+
+- `KalKech.bat` only opens `dossier.html` in Edge or Chrome - nothing is
+  compiled, installed or started in the background;
+- no icon by the clock, nothing starts with Windows, nothing listens on the
+  network;
+- your records are kept in `dossier.json` in your folder;
+- no script runner is written, started or scheduled, and no double-click
+  file is written: **Run** copies the script's command for you to run;
+- Automations can be designed, exported and imported, but not run (the
+  assistant is not offered them);
+- the assistant still works, through your own Power Automate flow.
+
+The footer says **dossier.json · safe mode**; **Menu → Setup → Safe mode**
+says what it means and holds the switch.
+
+#### My company's security flagged DossierBridge.exe - what do I do?
+
+1. If the KalKech icon is by the clock, quit it (right-click → **Quit**).
+2. Run `scripts\safe-cleanup.bat` once. It removes the start-up entries the
+   tray program made, so nothing tries to start it when you sign in. (Or:
+   Task Manager → Startup apps → turn KalKech/Dossier off, and delete the
+   *Dossier runner* task in Task Scheduler if you made one.)
+3. Double-click `KalKech.bat`. It opens KalKech in your browser, in safe mode.
+
+Do not rename, move or rebuild the program to get past the security tool.
+If you need the tray program's features, give your IT or security team
+`docs\TRAY-PROGRAM-FOR-IT.md` and ask them to approve it (they can build
+and sign it themselves).
+
+#### My records were in the SQL database - where are they now?
+
+The first time a folder that was kept in the database is opened in safe
+mode, KalKech asks: **Open from dossier.json**. That file is the copy the
+tray program wrote after every save, so it has your records; the question
+says how many and when they were saved. Say yes and the folder keeps its
+records in `dossier.json` from then on (`.dossier-store.json` says it was in
+the database until that day). The database itself is not changed or
+deleted. No readable `dossier.json`? KalKech offers the newest backup in
+`backups\` instead.
+
+**Files attached while the database was on** were kept in the database, not
+in the folder. In safe mode they cannot be opened - KalKech says so. Your IT
+team can copy them out (table `dbo.Attachment`), or open them on a PC where
+the tray program is approved.
+
+#### How do I turn safe mode off?
+
+Only on a PC where your IT or security team approved the tray program:
+**Menu → Setup → Safe mode → Turn safe mode off…** (it asks first), then
+start `scripts\bridge\KalKech-tray.bat`. Everything below about the
+database, the script runner and Automations then works as before. When the
+database and `dossier.json` differ, the newer one is used.
+
 ### 4.1 The database as the store
 
-**Double-click `KalKech.bat`.** That is the whole of it. There is no window
+*Tray program only - safe mode off (see above).*
+**Double-click `scripts\bridge\KalKech-tray.bat`.** That is the whole of it. There is no window
 afterwards: KalKech is the icon beside the clock, and its menu is how you
 open it, see what it is doing, make it start with Windows, and quit it.
 
@@ -1246,8 +1322,8 @@ the **Server name** box — copy exactly that.
 
 **To change it:**
 
-1. Start KalKech as usual (`KalKech.bat`, the icon by the clock must be
-   running).
+1. Start the tray program (`scripts\bridge\KalKech-tray.bat`, safe mode
+   off - the icon by the clock must be running).
 2. **Menu → Setup → Database (SQL Server)**. It shows the server in use, where
    that name came from, and whether it is connected.
 3. Type the server name and press **Test**. Nothing changes yet: KalKech only
@@ -1280,7 +1356,7 @@ restart, and a second copy of KalKech cloned on the same PC finds it too.
   and cannot change it.
 - **The section says "an older copy is running"?** After updating KalKech,
   quit it from the icon by the clock (right-click → Quit) and run
-  `KalKech.bat` again; it rebuilds itself.
+  `KalKech-tray.bat` again; it rebuilds itself.
 
 ### Your work cannot be emptied by accident
 
@@ -1618,11 +1694,15 @@ run them** - one switch for all of them.
 
 ### What do I need on my PC for automations?
 
-The **KalKech icon by the clock** - the program `KalKech.bat` starts. A page
+The **KalKech icon by the clock** - the tray program, which
+`scripts\bridge\KalKech-tray.bat` starts - and **safe mode off**. A page
 in a browser cannot call your company's APIs or start a script, so the steps
-are carried out by that program, and the secrets are kept there. After you
-update KalKech, quit it once from the icon (right-click → **Quit**) and run
-`KalKech.bat` again: it rebuilds itself with automations in it. Until then
+are carried out by that program, and the secrets are kept there. In safe
+mode (the default since 5.31) automations can be designed, exported and
+imported, but not run: the page says *Safe mode - not run*. Use the tray
+program only on a PC where IT approved it (`docs\TRAY-PROGRAM-FOR-IT.md`).
+After you update KalKech, quit it once from the icon (right-click →
+**Quit**) and run `KalKech-tray.bat` again: it rebuilds itself. Until then
 the Automations panel says an older copy is running.
 
 At the top right of the Automations page a dot and a word say whether it is
@@ -1883,7 +1963,7 @@ An automation brought in from a file never has these boxes ticked (like
 
 These need the KalKech program from 5.28. If the Automations page says
 **Tray program is out of date**, right-click the KalKech icon by the clock
-→ **Quit**, then run `KalKech.bat` again - it builds the new program.
+→ **Quit**, then run `scripts\bridge\KalKech-tray.bat` again - it builds the new program.
 
 ### How do I put a value or a function in a box quickly?
 
@@ -2554,9 +2634,10 @@ The failed step says why, in words. The usual ones:
 
 | It says | What to do |
 |---|---|
-| *Automations need the KalKech icon by the clock* | Start `KalKech.bat`. |
-| *older copy that does not know automations* | Quit KalKech from its icon (right-click → Quit) and run `KalKech.bat` again. |
-| *Tray program is out of date* (on the Automations page) | The same: Quit from its icon, run `KalKech.bat` again. Until then, **Show it as it is** and **Leave out**/**Keep only** may not work. |
+| *Safe mode is on, so automations do not run* | Expected in safe mode (the default). They need the tray program - only where IT approved it. |
+| *Automations need the KalKech icon by the clock* | Start `scripts\bridge\KalKech-tray.bat` (safe mode off). |
+| *older copy that does not know automations* | Quit KalKech from its icon (right-click → Quit) and run `KalKech-tray.bat` again. |
+| *Tray program is out of date* (on the Automations page) | The same: Quit from its icon, run `KalKech-tray.bat` again. Until then, **Show it as it is** and **Leave out**/**Keep only** may not work. |
 | *Kept hidden although it is set to be shown - it looked like a secret* | KalKech was careful. If the value is fine to see, press **Show it from now on** (see *Why is a value I marked for me kept hidden?*). |
 | *the secret "password" … has not been saved on this PC* | Open the connection, **Set…** the secret. |
 | *the address … has changed since its secret … was saved* | If the new address is right, set the secret again. |
@@ -4908,8 +4989,12 @@ model from scratch was tried, measured, and rejected on the numbers.
   inside the browser, which is theirs to clear; export a copy now and then.
   Scripts cannot run from a browser store, since there is no folder for the
   runner to watch.
-- **Notifications need `http://`**, not `file://`. Start KalKech with
-  `KalKech.bat`, which hands the page out from `127.0.0.1`.
+- **Notifications need `http://`**, not `file://`. In safe mode (the
+  default) reminders appear inside KalKech only; the tray program
+  (`KalKech-tray.bat`, where IT approved it) hands the page out from
+  `127.0.0.1`.
+- **Safe mode has no database, script runner or Automations runs.** They
+  need the tray program, which safe mode does not use (see *Safe mode*).
 - **Sources search by words, not by meaning.** Passages are found by the
   words of the question (with a short list of the words people use for the
   same thing - *fix* and *remediate*, *how long* and *timeframe*), not by a

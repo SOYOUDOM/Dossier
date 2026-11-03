@@ -147,8 +147,9 @@ node tests/fixtures/make-pdf.js   # remakes the PDF fixture
 ## 5. Deployment and migration
 
 1. Update the KalKech folder (the new `sources.js` sits beside `dossier.html`).
-2. Quit KalKech from its tray icon and start `KalKech.bat` again, then reload
-   any open KalKech tab.
+2. Close any open KalKech tab and double-click `KalKech.bat` again. (With the
+   optional tray program: quit it from its tray icon and start
+   `scripts\bridge\KalKech-tray.bat` again, then reload the tab.)
 3. Nothing to migrate: a workspace with no `sources/` folder simply has no
    documents yet. Add your runbooks and standards from **Library → Sources**.
 4. If you use your own `dossier-prompt.txt`, copy the *THEIR DOCUMENTS

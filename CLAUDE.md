@@ -18,7 +18,10 @@ out of the header in 5.14 at the owner's request.)
 
 The owner uses it at work, on Windows, in Edge/Chrome, started with
 `KalKech.bat` (`Resolv.bat` and `Dossier.bat` pass through to it). Their company network blocks unknown outside services and they
-are careful not to attract attention from their security team.
+are careful not to attract attention from their security team. In 5.31 their
+security team flagged `DossierBridge.exe` as a threat, so since 5.31 **safe
+mode is the default**: `KalKech.bat` only opens `dossier.html`, and the tray
+program is opt-in (see the rules).
 
 ## The pieces
 
@@ -35,9 +38,11 @@ are careful not to attract attention from their security team.
 | `flow/relay.html` | The **only** page that touches the network: a sandboxed iframe that posts to the flow URL. |
 | `flow/prompt.txt` | The model's instructions, with `{message} {today} {weekday} {calendar} {workspace} {actions} {history} {memory} {attached} {sources}` filled in per question. A user's own copy can live in the workspace as `dossier-prompt.txt`. |
 | `flow/*.md` | Guides: `CONTRACT.md` (request/reply/actions), `POWER-AUTOMATE.md`, `BAU-RUNBOOKS.md`, `SOURCES.md` (setup + troubleshooting for Sources), `SPEED.md`, `SERVICENOW.md`. |
-| `scripts/bridge/DossierBridge.cs` | The tray program (C# 5, WinForms): serves the page on 127.0.0.1, keeps the workspace in SQL LocalDB when available (or the SQL Server named in Setup, since 5.21), runs scripts, and (5.22) carries out automation steps and keeps their secrets (DPAPI). `KalKech.bat` compiles it with the Windows `csc.exe` whenever the `.cs` is newer than the `.exe`. |
+| `scripts/bridge/DossierBridge.cs` | The tray program (C# 5, WinForms): serves the page on 127.0.0.1, keeps the workspace in SQL LocalDB when available (or the SQL Server named in Setup, since 5.21), runs scripts, and (5.22) carries out automation steps and keeps their secrets (DPAPI). Since 5.31 it is **optional**: `scripts/bridge/KalKech-tray.bat` (the old `KalKech.bat`, moved) asks Y/N, then compiles it with the Windows `csc.exe` whenever the `.cs` is newer than the `.exe`; the page ignores it while safe mode is on. |
+| `KalKech.bat` | 5.31: the safe starter - only opens `dossier.html` in Edge/Chrome (CRLF, ASCII; `scripts/check-bat.py`). |
+| `scripts/safe-cleanup.bat` | 5.31: removes the old start-up entries (HKCU Run value `Dossier`, task `Dossier runner`, Startup `Dossier.bat`). |
 | `lang/en.xml`, `lang/km.xml` | Language packs (English, Khmer). Missing keys fall back to the English `STRINGS` table in `dossier.html`. |
-| `docs/` | `kalkech-automations-guide.md` (5.27.2, now 5.30.0: the whole of Automations for the owner's Sources - keep it in step with every automations change, verify its facts against the code; one `##` question per topic, ~1,100-character passages), `HOW-THE-AI-WORKS.md` (the whole AI pipeline for beginners, plus a reusable blueprint) and `how-the-ai-works.html` (the same as a self-contained picture page). Keep both in step with the code when the pipeline changes (numbers: 60 records, 10 notes, 30 lessons, 14,000 characters, 66 actions / 44 writes). |
+| `docs/` | `kalkech-automations-guide.md` (5.27.2, now 5.31.0: the whole of Automations for the owner's Sources - keep it in step with every automations change, verify its facts against the code; one `##` question per topic, ~1,100-character passages), `HOW-THE-AI-WORKS.md` (the whole AI pipeline for beginners, plus a reusable blueprint) and `how-the-ai-works.html` (the same as a self-contained picture page), `TRAY-PROGRAM-FOR-IT.md` (5.31: everything the tray program does, for the owner's IT/security team). Keep both in step with the code when the pipeline changes (numbers: 60 records, 10 notes, 30 lessons, 14,000 characters, 66 actions / 44 writes). |
 | `tests/` | `sources.test.js`, `diagram.test.js`, `automations.test.js` (node:test), `e2e/run.js` + `e2e/sources.scenario.js` (real browser), `bridge/run.js` (compiles the bridge with mcs/csc, runs it headless against a made-up API: 74 checks), `fixtures/` (made-up documents; `make-pdf.js` regenerates the PDFs; `auto-conditions.json`, the condition cases both readers must agree on). |
 
 A *workspace* is a folder the user picks (File System Access API):
@@ -84,6 +89,14 @@ A *workspace* is a folder the user picks (File System Access API):
   completely in 5.8** because the company blocks it and it could look
   suspicious to their security team — do not bring back outside services,
   idle/lock monitoring, or keep-awake code.
+- **Safe mode is the default (5.31) - keep KalKech harmless-looking by
+  being harmless.** With `safeMode()` true (unless `settings.safe === false`)
+  the page never contacts 127.0.0.1 and nothing builds, starts, schedules or
+  adds a program to start-up. New features must work in safe mode or be
+  clearly tray-only (and switched off there). Never help hide, rename,
+  obfuscate, re-sign or otherwise disguise the tray program to get past
+  security tools: the answer to a flag is safe mode, or IT approval
+  (`docs/TRAY-PROGRAM-FOR-IT.md`).
 - **The repository may be public: never commit anything from the owner's
   company** — no document text, names, emails, screenshots. Test fixtures are
   made up.
@@ -92,13 +105,13 @@ A *workspace* is a folder the user picks (File System Access API):
 - Commit messages: clear summary + body; no model names in commits, code or
   docs. Do not open a pull request unless the owner asks.
 - Work so far is on branch `claude/chat-panel-pixel-art-gifs-d822hq`
-  (latest: 5.30.0). Follow the branch instructions of your own session.
+  (latest: 5.31.0). Follow the branch instructions of your own session.
 
 ## Testing
 
 ```
 node --test                                   # 109 unit tests (Sources, grounding, names check, code origin, flow reply fields, diagrams, automations)
-node tests/e2e/run.js                         # the app in headless Chrome/Edge: 359 checks (CHROME=<path> to choose)
+node tests/e2e/run.js                         # the app in headless Chrome/Edge: 368 checks (CHROME=<path> to choose)
 node tests/bridge/run.js                      # the bridge's automation routes, built and run (mcs+mono or csc): 74 checks
 node flow/check-prompt.js                     # after editing flow/prompt.txt ...
 python3 flow/embed-prompt.py                  # ... then copy it into flow.js (PROMPT_BUILTIN)
@@ -111,7 +124,7 @@ Also useful:
   `<script>` without `src` and `new Function()` it in Node) after edits.
 - **Bridge**: C# 5 only (no `$""`, no `?.`). Check with
   `mcs -nologo -target:winexe -langversion:5 -r:System.Windows.Forms.dll -r:System.Drawing.dll -r:System.Data.dll -r:System.Security.dll scripts/bridge/DossierBridge.cs`
-  (System.Security for DPAPI since 5.22; `KalKech.bat` has the same reference).
+  (System.Security for DPAPI since 5.22; `scripts/bridge/KalKech-tray.bat` has the same reference).
   Keep its *code* ASCII - write `"\u2022"`, not the character: csc reads a
   file with no BOM in the PC's ANSI code page (`tests/bridge/run.js` checks).
   In a cloud session Mono may need `apt-get install mono-mcs mono-runtime
@@ -131,6 +144,41 @@ Also useful:
   `DossierFlow.validate`. `tests/e2e/run.js` is a working example of all of it.
 
 ## Recent history (newest first)
+
+- **5.31.0** - Owner: their company's security team flagged
+  `DossierBridge.exe` as a threat; "please make everything safe and no
+  threatening". (Declined: renaming/disguising the exe to avoid detection.)
+  - *Starters*: `KalKech.bat` now only opens `dossier.html` (Edge, then
+    Chrome, then the default program). The old starter is
+    `scripts/bridge/KalKech-tray.bat` (`git mv`; SRC/EXE `%~dp0`), with a
+    warning and `choice /c YN` before it builds/starts and before
+    `:startup` writes the Run key. `scripts/safe-cleanup.bat` deletes the
+    Run value `Dossier`, the `Dossier runner` task and Startup
+    `Dossier.bat`. `check-bat.py` also checks `scripts/bridge`.
+  - *Page* (`SAFE MODE (5.31)` banner after `const DB`): `safeMode()`;
+    `dbFind`, `sqlHand`, `dbRehello`, `autoReq` (→ `{nobridge, safe}`)
+    return early; `openWorkspace`: a folder that used the database
+    (`everDb`) and no DB → `safeLeaveDb(mark, handshake)` (asks
+    `SafeLeaveAsk`; no records in `dossier.json` → newest backup with
+    records, after `keepFileCopy`; writes STORE_MARK `{store:"file",
+    was:"sql", left}`; removes `.bridge.json`), else `SafeLeaveBanner`.
+    `runnerOn()` = `settings.runner && !safeMode()` everywhere the runner
+    was read; `installRunner`/`writeLauncher`/`sRunnerCmd` blocked
+    (launcher → command copied). `autoForFlow()` → [] (the model is not
+    offered automations). Setup `#safeBox` (`renderSafeBox`, `safeSet(on)`;
+    off asks, on writes the mark file when the DB was in use). Status bar
+    `StoreSafe`, `openAttachment` row → `SafeFileInDb`, `dbDiagnose` →
+    `DiagSafe`, SQL box/runner/automations notes (`.apsafe`,
+    `ApBridgeSafe`). Strings `Safe*`; old tray strings name
+    `KalKech-tray.bat`. CSS `SAFE MODE (5.31)` (last block).
+  - Docs: README safe mode section (three "How do I" questions), file
+    table, troubleshooting; guide 5.31.0 (automations need the tray);
+    `docs/TRAY-PROGRAM-FOR-IT.md`.
+  - Tests: e2e workspaces set `safe:false` (they test tray features with
+    a stand-in); 9 new e2e checks (368: nothing sent to 127.0.0.1, a
+    DB folder opens from `dossier.json` with the mark rewritten and the
+    handshake gone, a DB attachment message, Setup box, Automations note,
+    runner off, turning it off asks).
 
 - **5.30.0** - Owner: "the chat sends a bullet list when it supports
   several requests - I get confused which one I am on or finished: group

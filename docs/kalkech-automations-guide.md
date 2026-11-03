@@ -1,6 +1,6 @@
 # KalKech Automations - the complete guide
 
-Version: 5.30.0
+Version: 5.31.0
 Effective date: 3 November 2026
 
 Everything about Automations in KalKech: what each step does, every box and
@@ -106,14 +106,21 @@ the run history (the last 40 runs, without hidden values or secrets).
 
 ## What do I need on my PC for automations?
 
-The **KalKech icon by the clock** - the tray program that `KalKech.bat`
-starts. A browser page cannot call your company's APIs or start a script, so
+The **KalKech icon by the clock** - the tray program, started by
+`scripts\bridge\KalKech-tray.bat` - **and safe mode off** (Setup → Safe
+mode). A browser page cannot call your company's APIs or start a script, so
 the steps are carried out by that program, and the secrets are kept there.
 
-The top right of the Automations page says *Tray program ready*, *not
-running* or *too old*. After an update to KalKech, quit the program once
-(right-click the icon → **Quit**) and run `KalKech.bat` again: it rebuilds
-itself.
+**Safe mode** (the default since 5.31) does not use the tray program: you
+can design, export and import automations, but **not run or test them** -
+the page says *Safe mode - not run*, and the assistant is not offered them.
+Use the tray program only on a PC where your IT or security team approved it
+(`docs\TRAY-PROGRAM-FOR-IT.md`); a company security tool may flag it.
+
+The top right of the Automations page says *Safe mode - not run*, *Tray
+program ready*, *not running* or *too old*. After an update to KalKech, quit
+the program once (right-click the icon → **Quit**) and run
+`KalKech-tray.bat` again: it rebuilds itself.
 
 ## How do I make a new automation?
 
@@ -363,7 +370,7 @@ Still masked even then: a connection's **secret**, a value typed into a
 **secret input**, and a value saved **🔒 Hidden** in the same run. An
 imported automation has these boxes off. They need the tray program from
 5.28 - if the page says **Tray program is out of date**, quit the icon by
-the clock and run `KalKech.bat` again.
+the clock and run `KalKech-tray.bat` again.
 
 ## How do I keep only some fields of a list, or leave fields out?
 
@@ -1117,9 +1124,10 @@ the **Connections** tab.
 
 | It says | What to do |
 |---|---|
-| *Automations need the KalKech icon by the clock* | Start `KalKech.bat`. |
-| *older copy that does not know automations* | Quit KalKech from its icon and run `KalKech.bat` again. |
-| *Tray program is out of date* (top of the page) | The same: quit the icon, run `KalKech.bat` again. Until then Leave out, Keep only and Show it as it is may not work. |
+| *Safe mode is on, so automations do not run* | Expected in safe mode (the default since 5.31). Running needs the tray program and safe mode off - only where IT approved it. |
+| *Automations need the KalKech icon by the clock* | Start `scripts\bridge\KalKech-tray.bat` (safe mode off). |
+| *older copy that does not know automations* | Quit KalKech from its icon and run `KalKech-tray.bat` again. |
+| *Tray program is out of date* (top of the page) | The same: quit the icon, run `KalKech-tray.bat` again. Until then Leave out, Keep only and Show it as it is may not work. |
 | *Kept hidden although it is set to be shown - it looked like a secret* | Not an error: KalKech was careful. Fine to see? **Show it from now on**. |
 | *the secret "password" … has not been saved on this PC (Automations page, Connections tab …)* | Open the connection, **Set…** the secret. |
 | *the address … has changed since its secret … was saved* | If the new address is right, set the secret again. |

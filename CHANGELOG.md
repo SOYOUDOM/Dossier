@@ -6,6 +6,48 @@ holds — which is what to paste into a bug report.
 
 ---
 
+## 5.31.0 - 2026-11-03
+
+**Safe mode, on by default: KalKech is now only a web page and a folder.
+No program is built, started, kept running or added to Windows start-up.**
+
+- **`KalKech.bat` only opens `dossier.html`** in Edge or Chrome. It no
+  longer compiles anything, starts nothing in the background and touches
+  nothing in Windows start-up. (`Resolv.bat` and `Dossier.bat` still pass
+  through to it.)
+- **The tray program is optional.** Its starter moved to
+  `scripts\bridge\KalKech-tray.bat`, says what it is about to do, and asks
+  **Y/N** before it builds or starts `DossierBridge.exe`, and again before
+  *Start with Windows*. Use it only on a PC where your IT or security team
+  has approved it. `docs/TRAY-PROGRAM-FOR-IT.md` is a note to give them:
+  everything the tray program does, and how they can build and sign it
+  themselves.
+- **`scripts\safe-cleanup.bat`** (run once, by hand) removes what older
+  versions added to Windows start-up: the `Dossier` value in the Run key,
+  the `Dossier runner` scheduled task, and `Dossier.bat` in the Startup
+  folder. It removes nothing else.
+- **In safe mode the page never looks for the tray program** (nothing is
+  sent to `127.0.0.1`). A folder that was kept in the SQL database opens
+  from its `dossier.json` (the copy written after every save) once you say
+  so; the database itself is not changed or deleted. If that copy has no
+  records, KalKech offers the newest backup that has. Files attached while
+  the database was on stay in the database; the record says so when you
+  open one.
+- **Switched off in safe mode:** the script runner (no scheduled task, no
+  `.bat`/`.cmd` launchers written - the command is copied for you to run by
+  hand), the SQL Server box, and running or testing **Automations** (you can
+  still design, export and import them; the assistant is not offered them).
+  Records, routines, scripts (copy), runbooks, notes, Sources, the chat and
+  your Power Automate flow work as before.
+- **Setup → Safe mode** shows what is on and off, and has the switch. Turning
+  it off asks first and says to do it only with IT's approval.
+- README (*My company's security flagged DossierBridge.exe - what do I
+  do?*, *My records were in the SQL database - where are they now?*, *How
+  do I turn safe mode off?*) and the automations guide (version 5.31.0) are
+  updated.
+
+---
+
 ## 5.30.0 - 2026-11-03
 
 **Several requests at once, one card each - answers easier to work from -

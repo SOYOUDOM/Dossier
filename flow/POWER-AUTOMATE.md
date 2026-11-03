@@ -477,8 +477,8 @@ KalKech looks for the prompt in this order and uses the first one it finds:
 | | |
 |---|---|
 | `dossier-prompt.txt` **in your records folder** | Your own version. Updates to KalKech never touch that folder, so this is the place for changes you make yourself. **Setup → Ask through Power Automate → Copy the template** gives you the current text to start from. Delete the file to go back to the one that ships. |
-| `flow/prompt.txt` beside `dossier.html` | The one that ships with KalKech, and the one updated when the prompt is improved. Read when KalKech.bat hands out the page. |
-| the copy inside `flow.js` | Always there, for a page opened straight from the folder, which is not allowed to read a file beside it. `python flow/embed-prompt.py` refreshes it after `flow/prompt.txt` changes. |
+| `flow/prompt.txt` beside `dossier.html` | The one that ships with KalKech, and the one updated when the prompt is improved. Read when the optional tray program (`scripts\bridge\KalKech-tray.bat`) hands out the page. |
+| the copy inside `flow.js` | Always there, for a page opened straight from the folder (safe mode, `KalKech.bat` - the usual way since 5.31), which is not allowed to read a file beside it. `python flow/embed-prompt.py` refreshes it after `flow/prompt.txt` changes. |
 
 **Setup → Ask through Power Automate** shows which one is in use, and
 **Preview the request** shows exactly what the model will read, filled in.

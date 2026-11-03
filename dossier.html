@@ -7059,6 +7059,17 @@ input.in:not([type="checkbox"]):not([type="radio"]),select.in{line-height:16px}
 .chat[data-skin="neon"] :is(.tkg,.chcall,.chfacts,.tksum,.tkb,.tkgn){border-radius:0}
 @media (prefers-reduced-motion:reduce){ .tksbar i,.tkgbar i,.tkg{transition:none} }
 
+/* ═══ SAFE MODE (5.31) ═══════════════════════════════════════════════════ */
+.safebox{border:1px solid var(--rule);border-radius:var(--r-sm);padding:10px 12px;background:var(--paper-2)}
+.safebox.on{border-color:color-mix(in srgb,var(--st-done) 40%,var(--rule));background:color-mix(in srgb,var(--st-done) 6%,var(--paper-2))}
+.safest{margin:0 0 4px;font-size:12.5px}
+.safebox.on .safest b{color:var(--st-done)}
+.safebox.off .safest b{color:var(--p2)}
+.safelist{margin:6px 0 0;padding-left:18px;font-size:12px;color:var(--ink-2);line-height:1.7}
+.sbsafe{color:var(--st-done)}
+.apnote.apsafe{margin:10px 18px 0}
+.apbridge.safe{color:var(--st-done)}
+
 </style>
 </head>
 <body>
@@ -8846,7 +8857,7 @@ const STRINGS = {
   DiagBadHandshake: ".bridge.json is here but unreadable. Stop the bridge, delete it, start the bridge again.",
   DiagHandshake: ".bridge.json says port {p0}, written {p1}",
   DiagNoAnswer: "Nothing answered on 127.0.0.1:{p0}.",
-  DiagNoAnswerFix: "KalKech wrote that file and then stopped. Start KalKech.bat again.",
+  DiagNoAnswerFix: "KalKech wrote that file and then stopped. Start KalKech-tray.bat (scripts\\bridge) again.",
   DiagRefused: "The bridge answered {p0} \u2014 a stale token. Reopen the workspace.",
   DiagBridge: "Bridge is up: database {p0} on {p1}, schema {p2}",
   DiagHolds: "The database holds {p0} record(s).",
@@ -8856,12 +8867,12 @@ const STRINGS = {
   StoreSql: "SQL Server",
   StoreSqlWhy: "database {p0} on {p1}, through the bridge. dossier.json is written as an export.",
   StoreFile: "dossier.json",
-  StoreFileWhy: "the file in this folder. To keep them in SQL Server instead, start KalKech.bat and choose THIS folder from the icon by the clock \u2192 Workspace folder\u2026, then reopen the workspace.",
-  DbStopped: "<b>KalKech's database is not answering</b>, and this workspace keeps its records there rather than in a file. Nothing has been opened and nothing will be written. Start <b>KalKech.bat</b> (or the icon by the clock) and press Try again. If this PC's SQL Server has another name, press <b>SQL Server name\u2026</b>. {p0}",
+  StoreFileWhy: "the file in this folder. To keep them in SQL Server instead, start KalKech-tray.bat (scripts\\bridge) and choose THIS folder from the icon by the clock \u2192 Workspace folder\u2026, then reopen the workspace.",
+  DbStopped: "<b>KalKech's database is not answering</b>, and this workspace keeps its records there rather than in a file. Nothing has been opened and nothing will be written. Start <b>KalKech-tray.bat (scripts\\bridge)</b> (or the icon by the clock) and press Try again. If this PC's SQL Server has another name, press <b>SQL Server name\u2026</b>. {p0}",
   DbStoppedPlain: "",
   DbRetry: "Try again",
   DbHowTo: "What is this?",
-  DbHowToSay: "KalKech is a page in a browser and cannot talk to SQL Server itself. KalKech.bat starts one small program that can \u2014 the same one that hands out this page. It has no window: it is the KalKech icon by the clock, where Quit stops it and Start with Windows keeps it there every morning.",
+  DbHowToSay: "KalKech is a page in a browser and cannot talk to SQL Server itself. KalKech-tray.bat (scripts\\bridge) starts one small program that can \u2014 the same one that hands out this page. It has no window: it is the KalKech icon by the clock, where Quit stops it and Start with Windows keeps it there every morning.",
   DbStillStopped: "Still nothing on 127.0.0.1. Is the KalKech icon by the clock there?",
   /* Setup → Database (SQL Server): the server name, chosen per PC */
   SqlHead: "Database (SQL Server)",
@@ -8871,7 +8882,7 @@ const STRINGS = {
   SqlFromDefault: "the default",
   SqlFromSetup: "chosen here",
   SqlFromEnv: "set by DOSSIER_SQL",
-  SqlFromCmd: "given to KalKech.bat",
+  SqlFromCmd: "given to KalKech-tray.bat",
   SqlConnected: "connected \u2014 database {p0}",
   SqlNotConnected: "not connected: {p0}",
   SqlNotConnectedPlain: "not connected",
@@ -8901,8 +8912,8 @@ const STRINGS = {
   SqlCopied: "Your workspace was copied there.",
   SqlCopiedFiles: "{n} attachment(s) copied.",
   SqlFailed: "Nothing was changed. {p0}",
-  SqlNoBridge: "This needs the KalKech icon by the clock (start KalKech.bat). It is not running, so there is no SQL Server to choose.",
-  SqlOldBridge: "The KalKech icon by the clock is running an older copy. Quit it from the icon and run KalKech.bat again to get this setting.",
+  SqlNoBridge: "This needs the KalKech icon by the clock (start KalKech-tray.bat (scripts\\bridge)). It is not running, so there is no SQL Server to choose.",
+  SqlOldBridge: "The KalKech icon by the clock is running an older copy. Quit it from the icon and run KalKech-tray.bat (scripts\\bridge) again to get this setting.",
   SqlBannerBtn: "SQL Server name\u2026",
   DbOn: "records in {p0} on {p1}",
   DbStarting: "<b>Starting the database\u2026</b> LocalDB takes a few seconds to wake. Nothing is opened, and nothing written, until it answers.",
@@ -9191,7 +9202,8 @@ const STRINGS = {
   RemindersOffHint: "Nothing will remind you. Turn this on, or press the bell in the top right.",
   RemindersGrantedHint: "Reminders appear in KalKech and as Windows notifications, even when the tab is behind Outlook.",
   RemindersNoneHint: "This browser cannot raise Windows notifications, so reminders appear inside KalKech only.",
-  RemindersBlockedHint: "Windows notifications are blocked for this page, so reminders only appear inside KalKech. Click the padlock beside the address and set Notifications to Allow. Opening dossier.html straight from the folder blocks them too \u2014 run <b>dossier-bridge.bat</b>, which hands the page out from 127.0.0.1 where permission can be given.",
+  RemindersBlockedHint: "Windows notifications are blocked for this page, so reminders only appear inside KalKech. Click the padlock beside the address and set Notifications to Allow. Opening dossier.html straight from the folder blocks them too \u2014 the tray program (<b>KalKech-tray.bat</b>, scripts\\bridge, not in safe mode) hands the page out from 127.0.0.1 where permission can be given.",
+  SafeRemindersHint: "Safe mode: KalKech is opened straight from the folder, where Windows does not let a page show notifications. Reminders appear inside KalKech while its tab is open - keep it open, even behind Outlook.",
   ScheduleDoesNothingElse: "It will raise a record on the sheet and nothing more \u2014 no notification, no script. Set <b>Remind me</b> to be told each time, or attach a script under <b>What it does</b>.",
   Assist: "Assist",
   AiNoEngine: "assist.js is not in this folder. Put it next to dossier.html and reload — everything else works without it.",
@@ -10007,8 +10019,8 @@ const STRINGS = {
   Tab_Automations: "Automations",
   AutoIntro: "An automation does one support job for you. It calls your APIs and runs your scripts, one step after another, and passes values from one step to the next - for example: sign in, then regenerate a certificate with the token. You design it once here. Then you run it, or ask the assistant to. Passwords and keys are kept by the KalKech program by the clock, encrypted for your Windows account: the assistant never sees them, and it sees only the values you mark for it.",
   AutoNoModule: "automations.js is missing from the KalKech folder, so automations are not available. Download KalKech again, or put automations.js back next to dossier.html.",
-  AutoNoBridge: "Automations need the KalKech icon by the clock (start KalKech.bat). It is not running, or this page cannot reach it.",
-  AutoOldBridge: "The KalKech program by the clock is an older copy that does not know automations. Quit it (right-click the icon, Quit) and start KalKech.bat again.",
+  AutoNoBridge: "Automations need the KalKech icon by the clock (start KalKech-tray.bat (scripts\\bridge)). It is not running, or this page cannot reach it.",
+  AutoOldBridge: "The KalKech program by the clock is an older copy that does not know automations. Quit it (right-click the icon, Quit) and start KalKech-tray.bat (scripts\\bridge) again.",
   AutoBridgeSaid: "The KalKech program answered {n}.",
   AutoTimedOut: "No answer from the KalKech program in time. The step may still have run - check before you run it again.",
   AutoBridgeOk: "Ready: the KalKech program by the clock runs the steps. Scripts come from the scripts folder of {ws}.",
@@ -10244,7 +10256,7 @@ const STRINGS = {
   AutoAllowBtn: "Show it from now on",
   AutoAllowDone: "From the next run, {list} is shown as it is. Your secrets stay masked in it.",
   AutoNotAnIssue: "Not an issue - show “{name}” as it is",
-  AutoStaleBridge: "The KalKech program by the clock is older than this page. Leave out, Keep only and Show it as it is need the new one: quit it (right-click the icon, Quit) and start KalKech.bat again.",
+  AutoStaleBridge: "The KalKech program by the clock is older than this page. Leave out, Keep only and Show it as it is need the new one: quit it (right-click the icon, Quit) and start KalKech-tray.bat (scripts\\bridge) again.",
   ApBridgeStale: "Tray program is out of date",
   AutoImpUnallowed: "{n} value(s) set in the file to be shown as they are will stay hidden here if they look like secrets - tick Show it as it is again if you want.",
   AutoAddRow: "Add",
@@ -10769,6 +10781,48 @@ const STRINGS = {
   ApRunStarted: "When",
   ApRunValues: "Values",
   ApStepKept: "Values it kept",
+  SafeNoTray: "Safe mode is on: KalKech does not use the tray program.",
+  AutoSafeOff: "Safe mode is on, so automations do not run - running them needs the KalKech tray program, which safe mode does not use. You can still design, export and import them. Turn safe mode off (Setup) only if your IT or security team approved the tray program.",
+  AutoSafeSecrets: "Safe mode is on: secrets are kept by the tray program, which safe mode does not use.",
+  AutoSafeNote: "<b>Safe mode is on.</b> Automations can be designed, exported and imported here, but not run - running them needs the KalKech tray program. The assistant is not offered them.",
+  ApBridgeSafe: "Safe mode - not run",
+  SafeLeaveTitle: "Open this folder in safe mode?",
+  SafeLeaveAsk: "This folder's records were kept in the SQL database by the KalKech tray program. In safe mode KalKech reads them from dossier.json in the folder instead - the copy that was written after every save. It has {n} records, saved {p0}. Nothing is deleted: the database stays as it is.",
+  SafeLeaveFiles: "{n} attached file(s) were filed while the database was on: they stay in the database, and cannot be opened in safe mode.",
+  SafeLeaveGo: "Open from dossier.json",
+  SafeLeaveGoHint: "From now on this folder keeps its records in dossier.json",
+  SafeLeaveNothing: "There is no readable dossier.json and no backup with records in this folder, so it cannot be opened without the database. Your records are still in the SQL database: ask IT whether the tray program may run once to take them out, or open them with SSMS.",
+  SafeLeaveBackup: "There is no readable dossier.json in this folder. The newest backup, {p0}, has {n} records. Open from it?",
+  SafeLeaveBackupGo: "Open from the backup",
+  SafeLeaveMarkFail: "Could not mark the folder: ",
+  SafeLeaveBanner: "<b>Safe mode is on</b>, and this folder's records were in the tray program's database. KalKech has not opened it.",
+  SafeLeaveAgain: "Open from dossier.json\u2026",
+  SafeFileInDb: "\u201c{p0}\u201d was filed while the database was on: it is kept in the SQL database, not in this folder, and safe mode does not use the tray program. Your IT team can copy it out of the database (table dbo.Attachment), or open it on a PC where the tray program is approved.",
+  FileInDbOff: "\u201c{p0}\u201d is kept in the SQL database, and the tray program is not running.",
+  SafeRunnerOff: "Safe mode is on: no script runner is written, started or scheduled. Run copies the command for you to run yourself.",
+  SafeLauncherCopied: "Safe mode: no file is written. The command is copied - paste it into a Command Prompt in your scripts folder.",
+  SafeRunnerNote: "<b>Safe mode is on.</b> KalKech does not write, start or schedule a script runner, and writes no double-click files. <b>Run</b> on a record copies the script's command, with its values filled in, for you to run yourself in a Command Prompt.",
+  StoreSafe: "dossier.json \u00b7 safe mode",
+  StoreSafeWhy: "Safe mode: your records are in dossier.json in this folder. KalKech does not use the tray program - no database, no script runner, no automations - so nothing runs in the background.",
+  SafeHead: "Safe mode",
+  SafeIsOn: "Safe mode is on",
+  SafeIsOff: "Safe mode is off",
+  SafeOnText: "KalKech runs only in this browser tab. It does not use the KalKech tray program (DossierBridge.exe):",
+  SafeL1: "no program by the clock, nothing starts with Windows, nothing listens on the network",
+  SafeL2: "your records are kept in dossier.json in your folder (no SQL database)",
+  SafeL3: "no script runner and no double-click files: Run copies the command for you",
+  SafeL4: "automations can be designed, exported and imported, but not run",
+  SafeL5: "the assistant still works, through your own Power Automate flow",
+  SafeOffText: "KalKech uses the KalKech tray program when it runs (scripts\\bridge\\KalKech-tray.bat): the SQL database, the script runner and automations. Keep this only on a PC where your IT or security team approved it.",
+  SafeTurnOff: "Turn safe mode off\u2026",
+  SafeTurnOn: "Turn safe mode on",
+  SafeOffTitle: "Turn safe mode off?",
+  SafeOffAsk: "Only do this on a PC where your IT or security team has approved the KalKech tray program (DossierBridge.exe) - your company's security tools may treat it as a threat. With safe mode off, KalKech uses the tray program when it is running: the SQL database, the script runner and automations.",
+  SafeOffGo: "Yes, IT approved it",
+  SafeOffGoHint: "Then start it with scripts\\bridge\\KalKech-tray.bat",
+  SafeNowOn: "Safe mode is on. Your records are kept in dossier.json, and KalKech no longer uses the tray program.",
+  SafeSqlNote: "Safe mode is on: KalKech does not use a database, so there is nothing to set here. Your records are in dossier.json.",
+  DiagSafe: "Safe mode: the tray program is not used; the records are in dossier.json.",
   Call_note: "Note",
   Call_tip: "Tip",
   Call_imp: "Important",
@@ -10985,6 +11039,9 @@ function paintStore(){
     el.innerHTML = '<b style="color:var(--ok,#5bbf8a)">' + LE("StoreSql") + "</b>";
     el.title = L("StoreSqlWhy", { p0:(DB.info && DB.info.database) || "Dossier",
                                   p1:(DB.info && DB.info.server) || "" });
+  } else if (safeMode()){
+    el.innerHTML = '<b class="sbsafe">' + LE("StoreSafe") + "</b>";
+    el.title = L("StoreSafeWhy");
   } else {
     el.innerHTML = '<b style="color:var(--p2)">' + LE("StoreFile") + "</b>";
     el.title = L("StoreFileWhy");
@@ -11322,7 +11379,7 @@ const STATUSES = [
    the status bar, and clicking it copies a line you can paste into a bug
    report — build date and flow protocol included, because those are the two
    things that actually differ between copies. */
-const APP_VERSION = "5.30.0";
+const APP_VERSION = "5.31.0";
 const APP_BUILT = "2026-11-01";
 function buildLine(){
   return "KalKech v" + APP_VERSION + " \u00b7 built " + APP_BUILT +
@@ -13437,7 +13494,16 @@ async function openWorkspace(handle, quiet){
   const everDb = !!(mark && mark.store === "sql") || handshake;
   await dbFind();
   DB.required = everDb || DB.on;
-  if (everDb && !DB.on){
+  if (everDb && !DB.on && safeMode()){
+    /* (5.31) its records were in the tray program's database; in safe mode
+       they are read from dossier.json, once you agree */
+    if (!(await safeLeaveDb(mark, handshake))){
+      paintFolderName();
+      showBanner(L("SafeLeaveBanner"), [{ label:L("SafeLeaveAgain"), run:() => openWorkspace(FS.root, true) }]);
+      return false;
+    }
+    DB.required = false;
+  } else if (everDb && !DB.on){
     paintFolderName();
     dbSayStopped(DB.why);
     return false;
@@ -13619,6 +13685,25 @@ async function emptyButCopies(){
    and the export written on every save is what makes that survivable. */
 const DB = { on:false, required:false, port:0, token:"", info:null, tried:false, why:"", bridge:false };
 
+/* ═══ SAFE MODE (5.31) ═══════════════════════════════════════════════════
+   The owner's company security flagged DossierBridge.exe, the tray program:
+   a program a .bat file builds with the C# compiler, that runs hidden, starts
+   with Windows, listens on a port, starts cmd.exe and calls APIs is, to a
+   security tool, what malware looks like - however harmless this one is.
+   So KalKech now runs without it, and that is the default:
+   - this page never contacts the tray program (no request to 127.0.0.1);
+   - a folder whose records were kept in its database opens from
+     dossier.json instead (the export it always wrote after every save),
+     once you say so - nothing is lost, the database is left as it is;
+   - no script runner is offered or written, no Task Scheduler line, no
+     double-click .cmd file is written; Run copies the command for you;
+   - Automations can still be designed, exported and imported, but not run,
+     and the assistant is not told about them.
+   Setup → Safe mode turns it off, for a PC where IT approved the tray
+   program (scripts\bridge\KalKech-tray.bat starts it). Nothing is hidden or
+   disguised: the parts that act like that are simply not used. */
+function safeMode(){ return !(S.settings && S.settings.safe === false); }
+
 function dbUrl(path){ return "http://127.0.0.1:" + DB.port + path; }
 
 /* Find the bridge, then ask it whether its database is up.
@@ -13635,6 +13720,8 @@ function dbUrl(path){ return "http://127.0.0.1:" + DB.port + path; }
    write to it, and leave the database behind. */
 async function dbFind(){
   DB.on = false; DB.info = null; DB.tried = true; DB.why = ""; DB.bridge = false;
+  /* (5.31) safe mode: the tray program is not asked for anything */
+  if (safeMode()){ DB.why = L("SafeNoTray"); return false; }
   let hand = null;
   if (location.protocol === "http:" && location.hostname === "127.0.0.1"){
     try {
@@ -13729,6 +13816,7 @@ function fetchIn(url, init, ms){
    new token and perhaps a new port; or the database may be waking. The
    same two ways dbFind asks, without its banner and without its wait. */
 async function dbRehello(){
+  if (safeMode()) return false;
   if (!DB.required && !DB.on) return false;
   let hand = null;
   if (location.protocol === "http:" && location.hostname === "127.0.0.1"){
@@ -13845,6 +13933,93 @@ async function dbAttachDrop(id){
   } catch(e){ /* the row outliving the record is not worth a failed delete */ }
 }
 
+/* (5.31) a folder that was kept in the database, opened in safe mode: the
+   records come from dossier.json - which the tray program wrote after every
+   save - once you agree. The folder is marked as kept in the file from now
+   on (it says it was in the database, and since when it is not); the
+   database itself is not touched, and turning safe mode off later brings
+   the newer of the two back, as every start does. No dossier.json: the
+   newest backup is offered instead, the unreadable file kept aside first. */
+async function safeLeaveDb(mark, handshake){
+  let raw = null, doc = null;
+  try { raw = await FS.readText(FS.root, "dossier.json"); } catch(e){}
+  if (raw != null){ try { doc = JSON.parse(raw); } catch(e){ doc = null; } }
+  if (doc && !Array.isArray(doc.tasks)) doc = null;
+  let n = docCount(doc);
+  const inDb = doc ? doc.tasks.reduce((k, t) => k + (t.files || []).filter(f => f && f.row).length, 0) : 0;
+  if (!n){
+    const b = await newestBackupWithRecords();
+    if (!b){ await askUser(L("SafeLeaveTitle"), L("SafeLeaveNothing"), [{ label:L("Ok") }]); return false; }
+    const a = await askUser(L("SafeLeaveTitle"), L("SafeLeaveBackup", { p0:b.name, n:docCount(b.doc) }),
+      [{ label:L("SafeLeaveBackupGo"), hint:L("SafeLeaveGoHint") }, { label:L("Cancel") }]);
+    if (!a || a.choice !== 0) return false;
+    if (raw != null) await keepFileCopy("unreadable", raw);
+    await FS.writeText(FS.root, "dossier.json", JSON.stringify(b.doc));
+    n = docCount(b.doc);
+  } else {
+    const a = await askUser(L("SafeLeaveTitle"), L("SafeLeaveAsk", { n:n, p0:doc.savedAt ? stamp(doc.savedAt) : "\u2014" }) +
+      (inDb ? " " + L("SafeLeaveFiles", { n:inDb }) : ""),
+      [{ label:L("SafeLeaveGo"), hint:L("SafeLeaveGoHint") }, { label:L("Cancel") }]);
+    if (!a || a.choice !== 0) return false;
+  }
+  try {
+    await FS.writeText(FS.root, STORE_MARK, JSON.stringify({
+      store:"file", was:"sql", wsId:(mark && mark.wsId) || (doc && doc.wsId) || "",
+      database:(mark && mark.database) || "", server:(mark && mark.server) || "",
+      since:(mark && mark.since) || "", left:new Date().toISOString(),
+      note:"Safe mode: this folder's records are kept in dossier.json. They were kept in SQL Server by the KalKech tray program until the date in 'left'; that database was not changed."
+    }, null, 2));
+  } catch(e){ toast(L("SafeLeaveMarkFail") + (e.message || e), { bad:true }); return false; }
+  /* the tray program's handshake, left behind when it was stopped */
+  if (handshake){ try { await FS.root.removeEntry(".bridge.json"); } catch(e){} }
+  return true;
+}
+
+/* Setup → Safe mode: what it means, and the switch. Off only after a clear
+   question - it is the way back to the tray program, which is the part a
+   security tool flags. */
+function renderSafeBox(){
+  const box = $("safeBox"); if (!box) return;
+  const on = safeMode();
+  box.innerHTML = '<div class="safebox ' + (on ? "on" : "off") + '">' +
+    '<p class="safest"><b>' + LE(on ? "SafeIsOn" : "SafeIsOff") + "</b></p>" +
+    '<p class="hint2">' + LE(on ? "SafeOnText" : "SafeOffText") + "</p>" +
+    (on ? '<ul class="safelist">' + ["SafeL1", "SafeL2", "SafeL3", "SafeL4", "SafeL5"].map(k => "<li>" + LE(k) + "</li>").join("") + "</ul>" : "") +
+    '<div class="brow" style="margin-top:8px"><button class="btn sm" id="safeTgl" type="button">' + LE(on ? "SafeTurnOff" : "SafeTurnOn") + "</button></div></div>";
+  $("safeTgl").onclick = () => safeSet(!safeMode());
+}
+async function safeSet(on){
+  if (!on){
+    const a = await askUser(L("SafeOffTitle"), L("SafeOffAsk"),
+      [{ label:L("SafeOffGo"), hint:L("SafeOffGoHint") }, { label:L("Cancel") }]);
+    if (!a || a.choice !== 0) return;
+    S.settings.safe = false; touch();
+    renderSafeBox(); paintStore();
+    /* the tray program, if it runs, is looked for now */
+    if (FS.ok && FS.root) await openWorkspace(FS.root, true);
+    return;
+  }
+  delete S.settings.safe;
+  /* kept in the database until now: what is on the screen is the newest
+     copy, so it goes to dossier.json at once, and the folder says so */
+  if (DB.on || DB.required){
+    try {
+      const was = await readJsonIn(FS.root, STORE_MARK);
+      await FS.writeText(FS.root, STORE_MARK, JSON.stringify({
+        store:"file", was:"sql", wsId:S.wsId || (was && was.wsId) || "",
+        database:(was && was.database) || "", server:(was && was.server) || "",
+        since:(was && was.since) || "", left:new Date().toISOString(),
+        note:"Safe mode: this folder's records are kept in dossier.json. They were kept in SQL Server by the KalKech tray program until the date in 'left'; that database was not changed."
+      }, null, 2));
+    } catch(e){}
+    DB.on = false; DB.required = false; DB.bridge = false;
+  }
+  AUTO.info = null;
+  touch();
+  renderSafeBox(); paintStore();
+  toast(L("SafeNowOn"));
+}
+
 /* The banner that stands in for the whole application when the database is
    the store and the way to it is shut. */
 function dbSayStopped(why){
@@ -13882,6 +14057,7 @@ const SQL_NAME_OK = /^[A-Za-z0-9_.,:\\()\-]{1,128}$/;
 /* the bridge's port and token, found the way dbRehello finds them, without
    touching DB.on: this is asked while the database may well be down */
 async function sqlHand(fresh){
+  if (safeMode()) return null;
   if (!fresh && DB.bridge && DB.port && DB.token) return { port:DB.port, token:DB.token };
   let hand = null;
   if (location.protocol === "http:" && location.hostname === "127.0.0.1"){
@@ -13954,6 +14130,7 @@ async function renderSqlBox(){
   const box = $("sqlBox");
   if (!box) return;
   const intro = '<p class="hint2">' + esc(L("SqlIntro")) + "</p>";
+  if (safeMode()){ box.innerHTML = intro + '<p class="hint2">' + esc(L("SafeSqlNote")) + "</p>"; return; }
   /* the first paint only: after that the box keeps what it shows until the
      answer is in, rather than blinking at every click */
   if (!box.firstChild) box.innerHTML = intro + '<p class="hint2">' + esc(L("SqlLookingUp")) + "</p>";
@@ -14099,6 +14276,8 @@ async function dbDiagnose(){
   const say = [];
   const out = m => { say.push(m); };
   out(L("DiagApp", { p0: APP_VERSION }));
+  /* (5.31) safe mode asks the tray program nothing - so neither does this */
+  if (safeMode()){ out("\u2713 " + L("DiagSafe")); return say; }
 
   /* served by Dossier.bat: the bridge can be asked directly */
   if (location.protocol === "http:" && location.hostname === "127.0.0.1"){
@@ -14463,6 +14642,8 @@ async function openAttachment(t, name){
   try {
     /* a document filed since the bridge arrived is a row, not a file */
     const row = ((t.files || []).find(f => f.name === name) || {}).row;
+    /* (5.31) its bytes are a row in the tray program's database */
+    if (row && !DB.on) return toast(L(safeMode() ? "SafeFileInDb" : "FileInDbOff", { p0:name }), { bad:true, life:9000 });
     const url = row && DB.on ? await dbAttachUrl(row)
                              : URL.createObjectURL(await (await (await taskDir(t, false))
                                                     .getFileHandle(name)).getFile());
@@ -14697,7 +14878,7 @@ function runScriptFor(id, scriptId){
   const vals = (t.scriptArgs || {})[sc.id] || {};
   /* with the runner installed this actually executes; without it, the most a
      browser can do is hand you the line to paste */
-  if (S.settings.runner && FS.ok) return queueRun(t, sc, vals);
+  if (runnerOn() && FS.ok) return queueRun(t, sc, vals);
   const cmd = scriptCommand(sc, vals);
   const blanks = (sc.params || []).filter(x => !vals[x]);
   markScriptUse(sc);
@@ -14924,7 +15105,7 @@ function rowHtml(t){
     '<div class="body"><div class="tt">' + esc(t.title) + '</div><div class="meta">' + chips(t) + "</div></div>" +
     '<div class="side">' +
       ((t.scripts || []).length ? '<button class="mb run" data-act="run" title="' +
-        (S.settings.runner ? L("Run") : L("CopyTheCommandFor")) +
+        (runnerOn() ? L("Run") : L("CopyTheCommandFor")) +
         esc(((scriptById(t.scripts[0]) || {}).name) || L("ThisScript")) + '">$</button>' : "") +
       (sp >= 1 || t.timerStart ? '<span class="tm' + (t.timerStart ? " run" : "") + '">' + mins(sp) + "</span>" : "") +
       /* Nova's two quick actions; hidden in every other look */
@@ -25294,7 +25475,7 @@ function renderDrawer(){
         '<div class="cmdline">' + esc(scriptCommand(sc, vals)) + "</div>" +
         '<div class="brow" style="margin-top:8px">' +
           "<button class=\"btn sm pri\" data-sa=\"run\">" + L("RunNow") + "</button>" +
-          "<button class=\"btn sm\" data-sa=\"launcher\">" + L("MakeADoubleClickFile") + "</button>" +
+          (safeMode() ? "" : "<button class=\"btn sm\" data-sa=\"launcher\">" + L("MakeADoubleClickFile") + "</button>") +
           "<button class=\"btn sm\" data-sa=\"copy\">" + L("CopyCommand") + "</button>" +
           ((sc.params || []).length ? "<button class=\"btn sm\" data-sa=\"fill\">" + L("BuildAFilledCopy") + "</button>" : "") +
         "</div></div>";
@@ -25799,7 +25980,7 @@ async function renderModal(){
         ? "<b>" + LE("StoreSql") + "</b> \u2014 " + esc(L("StoreSqlWhy",
             { p0:(DB.info && DB.info.database) || "Dossier",
               p1:(DB.info && DB.info.server) || "" }))
-        : "<b>" + LE("StoreFile") + "</b> \u2014 " + esc(L("StoreFileWhy"))) +
+        : "<b>" + LE("StoreFile") + "</b> \u2014 " + esc(L(safeMode() ? "StoreSafeWhy" : "StoreFileWhy"))) +
         '<pre class="out" id="wsDiagOut" style="display:none;margin-top:9px"></pre></dd>' +
       "<dt>" + L("FolderAccess") + "</dt><dd>" + (HAS_FS ? L("SupportedByThisBrowser") :
         "<span style=\"color:var(--p2)\">" + L("KeptInThisBrowserInstead") + "</span>") + "</dd>" +
@@ -26098,6 +26279,8 @@ async function renderModal(){
   const sla = S.settings.sla || {};
   $("pSetup").innerHTML =
     fr(L("YourName"), '<input class="in" id="sOwner" value="' + esc(st.owner) + '" placeholder="Shown on reports">') +
+    "<h5 class=\"eyebrow\" style=\"margin:22px 0 8px\">" + LE("SafeHead") + "</h5>" +
+    '<div id="safeBox"></div>' +
     fr(L("Reminders"), '<select class="in" id="sRem"><option value="0"' + (!st.remind ? " selected" : "") +
       ">" + L("Off") + "</option><option value=\"1\"" + (st.remind ? " selected" : "") + ">On</option></select>") +
     (() => {
@@ -26106,6 +26289,7 @@ async function renderModal(){
          nowhere at all. */
       const n = notifyState();
       if (!st.remind)      return '<p class="hint2">' + L("RemindersOffHint") + "</p>";
+      if (safeMode() && location.protocol === "file:" && n !== "granted") return '<p class="hint2">' + L("SafeRemindersHint") + "</p>";
       if (n === "granted") return '<p class="hint2">' + L("RemindersGrantedHint") + "</p>";
       if (n === "none")    return '<p class="hint2">' + L("RemindersNoneHint") + "</p>";
       return '<p class="hint2" style="color:var(--p2)">' + L("RemindersBlockedHint") +
@@ -26127,6 +26311,8 @@ async function renderModal(){
       L("ClosedTabBatAdvice") + "</p>" +
 
     "<h5 class=\"eyebrow\" style=\"margin:20px 0 8px\">" + L("RunningAScript") + "</h5>" +
+    /* (5.31) in safe mode no runner is offered, written or scheduled */
+    (safeMode() ? '<p class="hint2">' + L("SafeRunnerNote") + "</p>" :
     '<p style="font-size:12px;color:var(--ink-2);line-height:1.75;margin:0 0 10px">' +
       L("APageInABrowserCannot") +
       L("ShouldNotInstallSoDossierWrites") +
@@ -26157,7 +26343,7 @@ async function renderModal(){
       ';margin:8px 0 0;line-height:1.6">' +
       (st.rootPath
         ? L("WriteTheFileThenEitherRun")
-        : L("PutYourWorkspacesFullPathIn")) + "</p>" +
+        : L("PutYourWorkspacesFullPathIn")) + "</p>") +
 
     "<h5 class=\"eyebrow\" style=\"margin:20px 0 8px\">" + L("TargetDates") + "</h5>" +
     '<p style="font-size:11.5px;color:var(--ink-2);line-height:1.7;margin:0 0 10px">' +
@@ -26309,6 +26495,7 @@ async function renderModal(){
 
     "<h5 class=\"eyebrow\" style=\"margin:22px 0 8px\">" + L("SqlHead") + "</h5>" +
     '<div id="sqlBox"></div>';
+  renderSafeBox();
   paintReflect();
   paintBrief();
   renderMemory();
@@ -26904,7 +27091,7 @@ function wireModal(){
   const hd = $("sHold"); if (hd) hd.onchange = e => { S.settings.autoBlock = e.target.value === "1"; touch(); };
   on("sRunner", installRunner);
   on("sRunTest", testRunner);
-  on("sRunnerCmd", () => copyText(runnerCommand(),
+  on("sRunnerCmd", () => safeMode() ? toast(L("SafeRunnerOff"), { bad:true }) : copyText(runnerCommand(),
     L("PasteItIntoATerminalIt")));
   if ($("sRun")) $("sRun").onchange = e => {
     S.settings.runner = e.target.value === "1";
@@ -29270,6 +29457,8 @@ window.addEventListener("resize", () => { if (SRC.menuBtn) srcMenuClose(); });
    scripts/ — so a stray request cannot be turned into "run this arbitrary
    line", only into "run one of the scripts you put there yourself".
    ════════════════════════════════════════════════════════════════════════ */
+/* (5.31) the runner is used only outside safe mode */
+function runnerOn(){ return !!S.settings.runner && !safeMode(); }
 function runnerCommand(){
   const root = String(S.settings.rootPath || "").replace(/[\\/]+$/, "");
   const p = (root ? root + "\\" : "") + "scripts\\dossier-runner.bat";
@@ -29479,7 +29668,7 @@ const RUNQ = {};
    that must fire whether Dossier is open or not, point Windows Task
    Scheduler straight at the .bat; that is what it is for. */
 async function queueDueRoutines(){
-  if (!FS.ok || !S.settings.runner || SWEEP.busy) return;
+  if (!FS.ok || !runnerOn() || SWEEP.busy) return;
   const now = new Date(), k = today();
   const due = S.routines.filter(r => r.autoRun && !r.paused && (r.scripts || []).length &&
                                      routineLastDue(r, now));
@@ -29553,7 +29742,7 @@ function runnerElsewhere(){
 function paintRunner(){
   const el = $("sbRun");
   if (!el) return;
-  if (!S.settings.runner){ el.hidden = true; return; }
+  if (!runnerOn()){ el.hidden = true; return; }
   el.hidden = false;
   if (runnerElsewhere()){
     el.innerHTML = '<b style="color:var(--p2)">' + LE("Foot_RunnerElsewhere") + "</b>";
@@ -29569,7 +29758,7 @@ function paintRunner(){
 
 /* one sentence, or "" when there is nothing to say */
 function runnerTrouble(){
-  if (!S.settings.runner) return "";
+  if (!runnerOn()) return "";
   if (!S.routines.some(r => r.autoRun && (r.scripts || []).length) &&
       !S.scripts.length) return "";
   if (runnerElsewhere())
@@ -29643,6 +29832,7 @@ async function testRunner(){
 }
 
 async function installRunner(){
+  if (safeMode()) return toast(L("SafeRunnerOff"), { bad:true, life:8000 });
   if (!FS.ok) return toast(L("LanguageNeedsWorkspace"), { bad:true });
   try {
     const dir = await scriptsDir(true);
@@ -29660,6 +29850,8 @@ async function installRunner(){
    it and the script runs, with its output kept beside the record. Nothing to
    install and nothing to leave open — the cost is the double-click. */
 async function writeLauncher(t, sc, vals){
+  /* (5.31) a web page writing a file that runs is what safe mode is not */
+  if (safeMode()){ markScriptUse(sc); return copyText(scriptCommand(sc, vals), L("SafeLauncherCopied")); }
   if (!FS.ok) return toast("Pick a workspace folder first", { bad:true });
   const args = (sc.params || []).map(k => (vals && vals[k]) || "").filter(Boolean)
     .map(v => '"' + String(v).replace(/"/g, '') + '"').join(" ");
@@ -29825,6 +30017,8 @@ function autoScripts(){ return S.scripts.map(sc => ({ id:sc.id, name:sc.name, fi
    request that timed out is NOT sent again: it may have been carried out,
    and calling a "regenerate" twice is not a harmless retry. */
 async function autoReq(method, path, body, ms){
+  /* (5.31) safe mode: automations are designed here, never run */
+  if (safeMode()) return { ok:false, nobridge:true, safe:true, error:L("AutoSafeOff") };
   for (let i = 0; i < 2; i++){
     const hand = await sqlHand(i > 0);
     if (!hand) return { ok:false, nobridge:true, error:L("AutoNoBridge") };
@@ -30312,7 +30506,7 @@ async function autoRunAsk(a, given, opts){
   }
   const info = await autoInfo();
   if (!info || !info.ok){
-    const msg = (info && info.old) ? L("AutoOldBridge") : L("AutoNoBridge");
+    const msg = (info && info.safe) ? L("AutoSafeOff") : (info && info.old) ? L("AutoOldBridge") : L("AutoNoBridge");
     if (opts.where === "chat") chatBot({ say:"", note:msg });
     else toast(msg, { bad:true, life:7000 });
     return null;
@@ -30380,7 +30574,7 @@ function autoPanelRun(a, inputs, opts){
    workspace.automations: the jobs it may propose (DossierAuto.forAI);
    runAutomation: one of them, proposed - put to you like any other change,
    unless you switched the asking off for that one. */
-function autoForFlow(){ return autoOk() ? DossierAuto.forAI(autoStore()) : []; }
+function autoForFlow(){ return autoOk() && !safeMode() ? DossierAuto.forAI(autoStore()) : []; }
 /* is the assistant allowed to start this one at all */
 function autoAiMay(a){ return !!a && autoStore().aiCan && a.ai; }
 /* "run regenerate COI for P10234X56" (or start, do): one of theirs, by its
@@ -30819,7 +31013,8 @@ async function apBridgePaint(fresh){
   const stale = ok && info.stale;
   b.className = "apbridge " + (stale ? "warn" : ok ? "ok" : "bad") + (quiet ? " quiet" : "");
   b.hidden = quiet && !!ok && !stale;
-  b.innerHTML = apIc("dot", "fill") + "<span>" + LE(stale ? "ApBridgeStale" : ok ? "ApBridgeOk" : info && info.old ? "ApBridgeOld" : "ApBridgeBad") + "</span>";
+  b.innerHTML = apIc("dot", "fill") + "<span>" + LE(stale ? "ApBridgeStale" : ok ? "ApBridgeOk" : info && info.safe ? "ApBridgeSafe" : info && info.old ? "ApBridgeOld" : "ApBridgeBad") + "</span>";
+  if (info && info.safe){ b.className = "apbridge safe" + (quiet ? " quiet" : ""); b.hidden = false; b.title = L("AutoSafeOff"); return; }
   if (stale){ b.title = L("AutoStaleBridge"); return; }
   b.title = ok ? L("AutoBridgeOk", { ws:info.workspace || L("AutoNoWs") }) +
                  (info.workspace && FS.name && info.workspace !== FS.name ? " " + L("AutoBridgeOtherWs", { ws:info.workspace, here:FS.name }) : "")
@@ -30851,7 +31046,8 @@ function apHomeHtml(){
     '<span class="apbridge" id="apBridge">' + apIc("dot", "fill") + "<span>" + LE("VaultLooking") + "</span></span>" +
     '<label class="apaion" title="' + LE("AutoAiCanHint") + '"><input type="checkbox" class="cb" id="apAiCan"' + (st.aiCan ? " checked" : "") + ">" +
       "<span>" + LE("ApAiCanShort") + "</span></label>" +
-    "</div>";
+    "</div>" +
+    (safeMode() ? '<div class="apnote soft apsafe">' + LE("AutoSafeNote") + "</div>" : "");
   if (U.tab === "conns") h += apConnsHtml();
   else if (U.tab === "runs") h += '<div class="apscroll" id="apScroll">' + apRunsHtml() + "</div>";
   else h += '<div class="apscroll" id="apScroll">' + apListPage() + "</div>";
@@ -31018,7 +31214,7 @@ async function apConnSecretsPaint(){
   if (!real) return;
   const info = await autoInfo();
   if (!$("auSecs")) return;
-  if (!info || !info.ok){ $("auSecs").textContent = info && info.old ? L("AutoOldBridge") : L("AutoNoBridge"); return; }
+  if (!info || !info.ok){ $("auSecs").textContent = info && info.safe ? L("AutoSafeSecrets") : info && info.old ? L("AutoOldBridge") : L("AutoNoBridge"); return; }
   const s = await autoSecretsOf(real, true);
   const got = (s && s.names) || {};
   const box = $("auSecs"); if (!box) return;
@@ -39275,11 +39471,11 @@ setInterval(() => {
 }, 1000);
 setInterval(checkReminders, 30000);
 /* the runner may have fired a routine minutes ago; collect what it left */
-setInterval(() => { if (S.settings.runner) sweepAutoRuns(); }, 45000);
+setInterval(() => { if (runnerOn()) sweepAutoRuns(); }, 45000);
 /* every half minute is fine: a cron slot is a minute wide at its finest */
 setInterval(queueDueRoutines, 30000);
 setTimeout(queueDueRoutines, 4000);
-setInterval(() => { if (S.settings.runner) checkRunner().then(paintRunner); }, 15000);
+setInterval(() => { if (runnerOn()) checkRunner().then(paintRunner); }, 15000);
 
 /* ═══ BOOT ═══════════════════════════════════════════════════════════════ */
 function seedDemo(){

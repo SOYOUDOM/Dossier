@@ -15,7 +15,7 @@
   const fh = await ws.getFileHandle("dossier.json", { create:true });
   const w = await fh.createWritable();
   await w.write(JSON.stringify({ app:"dossier", version:3, savedAt:"2026-09-29T08:00:00.000Z", wsId:"wE2E", seq:1,
-    settings:{ chatUI:{ skin:"lumen", skinPicked:true, confirm:true } }, routines:[], scripts:[], incidents:[], chats:[], tasks:[] }));
+    settings:{ safe:false, chatUI:{ skin:"lumen", skinPicked:true, confirm:true } }, routines:[], scripts:[], incidents:[], chats:[], tasks:[] }));
   await w.close();
   await openWorkspace(ws, true);
   if (typeof hideBanner === "function") hideBanner();
@@ -948,7 +948,7 @@
   const fhI = await wsI.getFileHandle("dossier.json", { create:true });
   const wI = await fhI.createWritable();
   await wI.write(JSON.stringify({ app:"dossier", version:3, savedAt:"2026-10-05T08:00:00.000Z", wsId:"wImp", seq:0,
-    settings:{ flow:{ on:true, url:"https://flow.example/its-own" } }, routines:[], scripts:[], incidents:[], chats:[],
+    settings:{ safe:false, flow:{ on:true, url:"https://flow.example/its-own" } }, routines:[], scripts:[], incidents:[], chats:[],
     tasks:[{ id:"own1", code:"D-0001", title:"Only in the second workspace", status:"open", created:"2026-10-05" }] }));
   await wI.close();
   await openWorkspace(wsI, true);
@@ -1964,7 +1964,7 @@
   AB.level = 1; AUTO.info = null; AUTO.ui.draft = null; AUTO.ui.tab = "list"; apPaint();
   await apBridgePaint(true);
   check("(5.28) a tray program older than the page is called out of date, not ready",
-        /out of date/.test($("apBridge").textContent) && !$("apBridge").hidden && /KalKech\.bat again/.test($("apBridge").title), $("apBridge").outerHTML);
+        /out of date/.test($("apBridge").textContent) && !$("apBridge").hidden && /KalKech-tray\.bat/.test($("apBridge").title), $("apBridge").outerHTML);
   AB.level = 2; AUTO.info = null; await apBridgePaint(true);
   const c528 = autoStore().conns[0];
   const a528 = DossierAuto.normAuto({ id:"Afiles528", name:"Files 528", steps:[{ id:"sf528", kind:"http", name:"Files", conn:c528.id, method:"GET", path:"/files",
@@ -2107,7 +2107,63 @@
   chatUI().rich = true;
   th530.msgs.splice(n530); chatPaint();
 
+  /* (5.31) safe mode: KalKech without the tray program - the default */
   closeChat();
+  const fetch531 = window.fetch;
+  let to531 = 0;
+  window.fetch = (u, i) => { if (/^http:\/\/127\.0\.0\.1/.test(String(u))) to531++; return fetch531(u, i); };
+  delete S.settings.safe;
+  AUTO.info = null;
+  const f531 = await dbFind(), h531 = await sqlHand(true), i531 = await autoInfo(true), r531 = await dbRehello();
+  check("(5.31) safe mode is the default: the tray program is never asked anything",
+        safeMode() && !f531 && !h531 && i531 && i531.safe && !i531.ok && !r531 && to531 === 0 && autoForFlow().length === 0,
+        JSON.stringify({ f531, h531, i531, r531, to531 }));
+  /* a folder whose records were in the database */
+  try { await root.removeEntry("e2e-safe", { recursive:true }); } catch (e) {}
+  const ws531 = await root.getDirectoryHandle("e2e-safe", { create:true });
+  const put531 = async (name, obj) => { const h = await ws531.getFileHandle(name, { create:true }); const w = await h.createWritable(); await w.write(JSON.stringify(obj)); await w.close(); };
+  await put531("dossier.json", { app:"dossier", version:3, savedAt:"2026-11-02T09:00:00.000Z", wsId:"wSafe", seq:2, settings:{},
+    routines:[], scripts:[], incidents:[], chats:[],
+    tasks:[{ id:"s1", code:"D-0001", title:"Kept in the database", status:"open", created:"2026-11-01",
+             files:[{ name:"scan.pdf", size:10, type:"application/pdf", added:"2026-11-01", row:"r1" }] },
+           { id:"s2", code:"D-0002", title:"Also kept there", status:"open", created:"2026-11-02" }] });
+  await put531(".dossier-store.json", { store:"sql", wsId:"wSafe", database:"Dossier", server:"(localdb)\\MSSQLLocalDB", since:"2026-10-01" });
+  await put531(".bridge.json", { port:1, token:"t" });
+  const open531 = openWorkspace(ws531, true);
+  await until(() => $("ask").classList.contains("on"), 4000);
+  const askText531 = $("askM").textContent;
+  check("(5.31) a folder kept in the database asks first, says where the records come from, and about files in the database",
+        $("ask").classList.contains("on") && /dossier\.json/.test(askText531) && /2 records/.test(askText531) && /1 attached file/.test(askText531), askText531);
+  $("askO").querySelector('.opt[data-i="0"]').click();
+  await open531;
+  const mark531 = JSON.parse(await (await (await ws531.getFileHandle(".dossier-store.json")).getFile()).text());
+  let hand531 = true; try { await ws531.getFileHandle(".bridge.json"); } catch (e) { hand531 = false; }
+  check("...and opens from dossier.json: the records are there, the folder now says file (it was sql), the old handshake gone, nothing asked of the tray",
+        S.tasks.length === 2 && !DB.on && mark531.store === "file" && mark531.was === "sql" && !!mark531.left && !hand531 && to531 === 0,
+        JSON.stringify({ n:S.tasks.length, mark531, hand531, to531 }));
+  await openAttachment(S.tasks.find(t => t.id === "s1"), "scan.pdf");
+  check("...a file filed in the database says why it cannot open, nothing is asked", to531 === 0);
+  openModal("setup"); await sleep(120);
+  check("(5.31) Setup says safe mode is on, with what it means, and no database to choose",
+        /Safe mode is on/.test($("safeBox").textContent) && /nothing starts with Windows/.test($("safeBox").textContent) &&
+        /Safe mode is on/.test($("sqlBox").textContent), $("safeBox").textContent.slice(0, 200));
+  closeModal();
+  setView("auto"); AUTO.ui.draft = null; AUTO.ui.tab = "list"; apPaint(); await sleep(80);
+  check("(5.31) the Automations page says they are designed here but not run", !!document.querySelector("#vAuto .apsafe") &&
+        /not run/.test(document.querySelector("#vAuto .apsafe").textContent));
+  setView("day");
+  check("(5.31) no runner and no double-click files: Run copies the command", !runnerOn() &&
+        (() => { S.settings.runner = true; const r = runnerOn(); S.settings.runner = false; return !r; })() &&
+        /Safe mode/.test(L("SafeLauncherCopied")) && to531 === 0);
+  /* turned off: asked first */
+  const off531 = safeSet(false);
+  await until(() => $("ask").classList.contains("on"), 3000);
+  check("(5.31) turning safe mode off asks first, about IT's approval", /approved/.test($("askM").textContent), $("askM").textContent);
+  $("askO").querySelector('.opt[data-i="1"]').click();
+  await off531;
+  check("...and Cancel leaves it on", safeMode());
+  window.fetch = fetch531;
+
   window.fetch = fetchAu;
   Object.assign(DB, { bridge:auWas.bridge, port:auWas.port, token:auWas.token });
   S.settings.flow = auWas.flow;

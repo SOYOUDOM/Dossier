@@ -27,7 +27,9 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 bad = 0
 
-bats = [os.path.join(HERE, n) for n in os.listdir(HERE)] + [os.path.join(ROOT, n) for n in os.listdir(ROOT)]
+BRIDGE = os.path.join(HERE, "bridge")
+bats = [os.path.join(HERE, n) for n in os.listdir(HERE)] + [os.path.join(ROOT, n) for n in os.listdir(ROOT)] + \
+       [os.path.join(BRIDGE, n) for n in os.listdir(BRIDGE)]
 for path in sorted(p for p in bats if p.lower().endswith(".bat")):
     name = os.path.relpath(path, ROOT)
     raw = open(path, "rb").read()
